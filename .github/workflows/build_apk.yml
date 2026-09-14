@@ -19,6 +19,9 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Configurar Gradle
+        uses: gradle/actions/setup-gradle@v3
+
       - name: Configurar Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -30,6 +33,9 @@ jobs:
           rm -rf android
           flutter create --org com.gastoscan.ai --project-name gastoscan_ai --platforms android .
           cp android_template/AndroidManifest.xml android/app/src/main/AndroidManifest.xml
+          sed -i 's|https\\://services.gradle.org/distributions/gradle-.*-all.zip|https\\://services.gradle.org/distributions/gradle-8.10.2-bin.zip|g' android/gradle/wrapper/gradle-wrapper.properties
+          sed -i 's|https://services.gradle.org/distributions/gradle-.*-all.zip|https://services.gradle.org/distributions/gradle-8.10.2-bin.zip|g' android/gradle/wrapper/gradle-wrapper.properties
+          cat android/gradle/wrapper/gradle-wrapper.properties
 
       - name: Instalar paquetes
         run: flutter pub get
