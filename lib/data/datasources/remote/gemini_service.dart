@@ -4,7 +4,6 @@ import 'package:cloud_functions/cloud_functions.dart';
 import '../../models/gemini_extraction_result.dart';
 
 class GeminiService {
-  /// Procesa los bytes de la imagen del recibo utilizando el Cloud Function proxy
   Future<GeminiExtractionResult> analyzeReceiptImage({
     required Uint8List imageBytes,
     required String apiKey,
@@ -24,15 +23,14 @@ class GeminiService {
 
       final jsonResult = Map<String, dynamic>.from(data as Map);
       return GeminiExtractionResult.fromJson(jsonResult);
-
     } on FirebaseFunctionsException catch (e) {
       if (e.code == 'unauthenticated') {
         throw Exception('No estas autenticado para procesar la imagen.');
       } else {
-        throw Exception('Error del servidor (\): ');
+        throw Exception('Error del servidor (${e.code}): ${e.message}');
       }
     } catch (e) {
-      throw Exception('Fallo al conectar con el servidor: ');
+      throw Exception('Fallo al conectar con el servidor: $e');
     }
   }
 }
