@@ -31,3 +31,9 @@
 **/android/captures/
 **/android/local.properties
 **/android/**/GeneratedPluginRegistrant.java
+
+# Local builds & tokens
+*.apk
+*.zip
+token.txt
+*.log
