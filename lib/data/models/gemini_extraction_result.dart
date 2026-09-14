@@ -52,11 +52,12 @@ class GeminiExtractionResult {
     final itemsList = <ItemGastoModel>[];
     if (json['items'] is List) {
       for (final rawItem in (json['items'] as List)) {
-        if (rawItem is Map<String, dynamic>) {
-          final desc = rawItem['descripcion']?.toString() ?? 'Producto/Servicio';
-          final cant = (rawItem['cantidad'] as num?)?.toDouble() ?? 1.0;
-          final precio = (rawItem['precio_unitario'] as num?)?.toDouble() ?? 0.0;
-          final total = (rawItem['total'] as num?)?.toDouble() ?? (cant * precio);
+        if (rawItem is Map) {
+          final itemMap = Map<String, dynamic>.from(rawItem);
+          final desc = itemMap['descripcion']?.toString() ?? 'Producto/Servicio';
+          final cant = (itemMap['cantidad'] as num?)?.toDouble() ?? 1.0;
+          final precio = (itemMap['precio_unitario'] as num?)?.toDouble() ?? 0.0;
+          final total = (itemMap['total'] as num?)?.toDouble() ?? (cant * precio);
 
           itemsList.add(ItemGastoModel(
             descripcion: desc,
