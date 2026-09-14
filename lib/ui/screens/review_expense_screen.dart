@@ -61,14 +61,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     if (data.tasaCambioDetectada != null && data.tasaCambioDetectada! > 0) {
       _fuenteTasa = 'Tasa detectada en el comprobante';
     } else {
-      _fuenteTasa = 'Tasa oficial BCV automática';
+      _fuenteTasa = 'Buscando tasa de la fecha...';
       if (_selectedMoneda == 'VES') {
-        ExchangeRateService.getTodayRate(tipo: settings.tipoTasa).then((tasaFresca) {
-          if (mounted && _selectedMoneda == 'VES' && (data.tasaCambioDetectada == null || data.tasaCambioDetectada! <= 0)) {
-            _tasaCambioCtrl.text = tasaFresca.toStringAsFixed(2);
-            _recalcularTotalUsd();
-          }
-        });
+        _actualizarTasaPorFecha(_selectedFecha);
       }
     }
 
@@ -106,6 +101,27 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     setState(() {});
   }
 
+  Future<void> _actualizarTasaPorFecha(String fecha) async {
+    if (_selectedMoneda != 'VES') return;
+
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    setState(() {
+      _fuenteTasa = 'Buscando tasa del $fecha...';
+    });
+
+    final tasa = await ExchangeRateService.getRateForDate(fecha, tipo: settings.tipoTasa);
+    if (mounted && _selectedMoneda == 'VES') {
+      setState(() {
+        _tasaCambioCtrl.text = tasa.toStringAsFixed(2);
+        final today = DateTime.now().toIso8601String().substring(0, 10);
+        _fuenteTasa = (fecha == today)
+            ? 'Tasa oficial BCV (Hoy)'
+            : 'Tasa oficial BCV ($fecha)';
+        _recalcularTotalUsd();
+      });
+    }
+  }
+
   Future<void> _selectDate() async {
     final initialDate = DateTime.tryParse(_selectedFecha) ?? DateTime.now();
     final picked = await showDatePicker(
@@ -129,9 +145,14 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     );
 
     if (picked != null) {
+      final nuevaFecha = DateFormatter.toIsoDate(picked);
       setState(() {
-        _selectedFecha = DateFormatter.toIsoDate(picked);
+        _selectedFecha = nuevaFecha;
       });
+      // Si la factura no traía tasa fija impresa, busca la tasa correspondiente a la fecha elegida
+      if (widget.extractedData.tasaCambioDetectada == null || widget.extractedData.tasaCambioDetectada! <= 0) {
+        _actualizarTasaPorFecha(nuevaFecha);
+      }
     }
   }
 
