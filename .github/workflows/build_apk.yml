@@ -25,33 +25,11 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Regenerar estructura nativa de Android compatible
+      - name: Generar plataforma Android nativa y aplicar permisos
         run: |
           rm -rf android
           flutter create --org com.gastoscan.ai --project-name gastoscan_ai --platforms android .
-
-      - name: Inyectar permisos en AndroidManifest
-        run: |
-          python3 -c "
-          manifest_path = 'android/app/src/main/AndroidManifest.xml'
-          with open(manifest_path, 'r', encoding='utf-8') as f:
-              content = f.read()
-
-          permissions = '''
-              <uses-permission android:name="android.permission.INTERNET"/>
-              <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-              <uses-permission android:name="android.permission.CAMERA"/>
-              <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
-              <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
-          '''
-
-          if '<uses-permission' not in content:
-              content = content.replace('<application', permissions + '
-    <application')
-              with open(manifest_path, 'w', encoding='utf-8') as f:
-                  f.write(content)
-          print('Permisos agregados con exito')
-          "
+          cp android_template/AndroidManifest.xml android/app/src/main/AndroidManifest.xml
 
       - name: Instalar paquetes
         run: flutter pub get
