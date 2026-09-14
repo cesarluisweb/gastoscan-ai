@@ -36,7 +36,7 @@ dependencies:
 
   # Exportación y Compartir Archivos
   csv: ^6.0.0
-  share_plus: ^9.0.0
+  share_plus: ^13.3.0
 
 dev_dependencies:
   flutter_test:
