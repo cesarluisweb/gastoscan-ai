@@ -87,7 +87,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: 12),
                 const Text(
-                  'Ingresa tu clave de Google AI Studio (modelo Gemini 1.5 Flash). Permite procesar hasta 1.500 facturas diarias de forma gratuita.',
+                  'Ingresa tu clave de Google AI Studio (modelo Gemini Flash). Permite procesar recibos y facturas automáticamente con IA.',
                   style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
                 ),
                 const SizedBox(height: 16),

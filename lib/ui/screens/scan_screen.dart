@@ -61,7 +61,7 @@ class _ScanScreenState extends State<ScanScreen> {
       final compressedBytes = await ImageService.compressImage(_selectedImage!);
 
       setState(() {
-        _statusText = 'Extrayendo datos con Gemini 1.5 Flash...';
+        _statusText = 'Extrayendo datos con Gemini Flash AI...';
       });
 
       final extractionResult = await _geminiService.analyzeReceiptImage(
