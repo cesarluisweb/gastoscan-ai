@@ -30,7 +30,14 @@ jobs:
           rm -rf android
           flutter create --org com.gastoscan.ai --project-name gastoscan_ai --platforms android .
           cp android_template/AndroidManifest.xml android/app/src/main/AndroidManifest.xml
-          sed -i 's|-all.zip|-bin.zip|g' android/gradle/wrapper/gradle-wrapper.properties
+
+      - name: Descargar Gradle 9.3.1 con reintentos automaticos
+        run: |
+          echo "Descargando gradle-9.3.1-bin.zip..."
+          curl -fL --retry 10 --retry-delay 5 --retry-connrefused -o /tmp/gradle-9.3.1-bin.zip https://services.gradle.org/distributions/gradle-9.3.1-bin.zip
+          ls -lh /tmp/gradle-9.3.1-bin.zip
+          # Configurar wrapper para usar el archivo local descargado
+          sed -i 's|distributionUrl=.*|distributionUrl=file\:/tmp/gradle-9.3.1-bin.zip|g' android/gradle/wrapper/gradle-wrapper.properties
           cat android/gradle/wrapper/gradle-wrapper.properties
 
       - name: Instalar paquetes
