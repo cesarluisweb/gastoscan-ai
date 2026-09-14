@@ -7,6 +7,7 @@ class GeminiExtractionResult {
   final double totalOriginal;
   final double impuestoIva;
   final String categoriaSugerida;
+  final double? tasaCambioDetectada;
   final List<ItemGastoModel> items;
 
   GeminiExtractionResult({
@@ -16,6 +17,7 @@ class GeminiExtractionResult {
     required this.totalOriginal,
     required this.impuestoIva,
     required this.categoriaSugerida,
+    this.tasaCambioDetectada,
     required this.items,
   });
 
@@ -76,6 +78,9 @@ class GeminiExtractionResult {
       ));
     }
 
+    // Tasa de cambio detectada (si está impresa en la factura)
+    final tasaDetectada = (json['tasa_cambio'] as num?)?.toDouble();
+
     return GeminiExtractionResult(
       comercio: comercio,
       fecha: fecha,
@@ -83,6 +88,7 @@ class GeminiExtractionResult {
       totalOriginal: totalOriginal,
       impuestoIva: impuestoIva,
       categoriaSugerida: categoria,
+      tasaCambioDetectada: tasaDetectada,
       items: itemsList,
     );
   }

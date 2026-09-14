@@ -15,6 +15,7 @@ Devuelve EXCLUSIVAMENTE un objeto JSON válido con la siguiente estructura, sin 
   "fecha": "YYYY-MM-DD",
   "moneda": "VES" | "USD" | "EUR",
   "total_original": 0.00,
+  "tasa_cambio": 0.00,
   "impuesto_iva": 0.00,
   "categoria_sugerida": "Alimentación" | "Salud" | "Educación" | "Hogar" | "Servicios" | "Transporte" | "Otros",
   "items": [
@@ -26,7 +27,7 @@ Devuelve EXCLUSIVAMENTE un objeto JSON válido con la siguiente estructura, sin 
     }
   ]
 }
-Si un dato no es legible, coloca null. Si es un comprobante de Pago Móvil o transferencia bancaria, coloca en "comercio" el beneficiario y en "items" una sola línea con el concepto.
+Si un dato no es legible o no aplica (ej. tasa de cambio no impresa), coloca null. Si es un comprobante de Pago Móvil o transferencia bancaria, coloca en "comercio" el beneficiario y en "items" una sola línea con el concepto.
 ''';
 
   /// Procesa los bytes de la imagen del recibo utilizando Gemini 1.5 Flash

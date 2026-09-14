@@ -10,6 +10,7 @@ import '../../data/models/item_gasto_model.dart';
 import '../../providers/gasto_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/image_service.dart';
+import '../../services/exchange_rate_service.dart';
 
 class ReviewExpenseScreen extends StatefulWidget {
   final File imageFile;
@@ -37,6 +38,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
   late String _selectedMoneda;
   late String _selectedCategoria;
   late List<ItemGastoModel> _items;
+  String _fuenteTasa = 'Tasa oficial BCV automática';
   bool _isSaving = false;
 
   @override
@@ -53,8 +55,22 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
 
     _totalOriginalCtrl = TextEditingController(text: data.totalOriginal.toStringAsFixed(2));
 
-    double tasaInicial = settings.tasaCambioVesUsd;
+    double tasaInicial = data.tasaCambioDetectada ?? settings.tasaCambioVesUsd;
     _tasaCambioCtrl = TextEditingController(text: tasaInicial.toStringAsFixed(2));
+
+    if (data.tasaCambioDetectada != null && data.tasaCambioDetectada! > 0) {
+      _fuenteTasa = 'Tasa detectada en el comprobante';
+    } else {
+      _fuenteTasa = 'Tasa oficial BCV automática';
+      if (_selectedMoneda == 'VES') {
+        ExchangeRateService.getTodayRate(tipo: settings.tipoTasa).then((tasaFresca) {
+          if (mounted && _selectedMoneda == 'VES' && (data.tasaCambioDetectada == null || data.tasaCambioDetectada! <= 0)) {
+            _tasaCambioCtrl.text = tasaFresca.toStringAsFixed(2);
+            _recalcularTotalUsd();
+          }
+        });
+      }
+    }
 
     double totalUsdCalculado;
     if (_selectedMoneda == 'USD') {
@@ -308,9 +324,24 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     TextFormField(
                       controller: _tasaCambioCtrl,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Tasa de Cambio (VES / USD)',
-                        prefixIcon: Icon(Icons.currency_exchange, color: AppColors.textSecondary),
+                        prefixIcon: const Icon(Icons.currency_exchange, color: AppColors.textSecondary),
+                        helperText: _fuenteTasa,
+                        helperStyle: const TextStyle(color: AppColors.primary, fontSize: 11),
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.sync, color: AppColors.primary, size: 20),
+                          tooltip: 'Sincronizar tasa BCV de hoy',
+                          onPressed: () async {
+                            final settings = Provider.of<SettingsProvider>(context, listen: false);
+                            final tasa = await ExchangeRateService.getTodayRate(tipo: settings.tipoTasa);
+                            setState(() {
+                              _tasaCambioCtrl.text = tasa.toStringAsFixed(2);
+                              _fuenteTasa = 'Tasa oficial BCV sincronizada';
+                              _recalcularTotalUsd();
+                            });
+                          },
+                        ),
                       ),
                       onChanged: (_) => _recalcularTotalUsd(),
                     ),

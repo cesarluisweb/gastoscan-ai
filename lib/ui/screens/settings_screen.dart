@@ -172,7 +172,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Icon(Icons.currency_exchange, color: AppColors.warning, size: 20),
                     SizedBox(width: 8),
                     Text(
-                      'Moneda y Tasa de Cambio',
+                      'Tasa de Cambio Automática',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -181,16 +181,58 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _tasaCambioCtrl,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(
-                    labelText: 'Tasa de Cambio Predeterminada (VES por USD)',
-                    prefixIcon: Icon(Icons.price_change_outlined, color: AppColors.textSecondary),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Tasa Oficial BCV del Día:',
+                            style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Bs. ${settings.tasaCambioVesUsd.toStringAsFixed(2)} / USD',
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: settings.isSyncingRate
+                            ? null
+                            : () async {
+                                await settings.actualizarTasaAutomatica();
+                                _tasaCambioCtrl.text = settings.tasaCambioVesUsd.toStringAsFixed(2);
+                              },
+                        icon: settings.isSyncingRate
+                            ? const SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                              )
+                            : const Icon(Icons.sync, size: 16),
+                        label: const Text('Actualizar'),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
                   value: settings.monedaPrincipal,
                   decoration: const InputDecoration(

@@ -46,7 +46,8 @@ class _ScanScreenState extends State<ScanScreen> {
     if (_selectedImage == null) return;
 
     final settings = Provider.of<SettingsProvider>(context, listen: false);
-    if (settings.apiKey.trim().isEmpty) {
+    final keyToUse = settings.effectiveApiKey;
+    if (keyToUse.isEmpty) {
       _showApiKeyRequiredDialog();
       return;
     }
@@ -65,7 +66,7 @@ class _ScanScreenState extends State<ScanScreen> {
 
       final extractionResult = await _geminiService.analyzeReceiptImage(
         imageBytes: compressedBytes,
-        apiKey: settings.apiKey,
+        apiKey: keyToUse,
       );
 
       if (!mounted) return;
