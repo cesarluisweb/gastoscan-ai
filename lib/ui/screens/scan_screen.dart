@@ -46,11 +46,7 @@ class _ScanScreenState extends State<ScanScreen> {
     if (_selectedImage == null) return;
 
     final settings = Provider.of<SettingsProvider>(context, listen: false);
-    final keyToUse = settings.effectiveApiKey;
-    if (keyToUse.isEmpty) {
-      _showApiKeyRequiredDialog();
-      return;
-    }
+    final keyToUse = 'proxy';
 
     setState(() {
       _isProcessing = true;
@@ -106,36 +102,7 @@ class _ScanScreenState extends State<ScanScreen> {
     }
   }
 
-  void _showApiKeyRequiredDialog() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.card,
-        title: const Text('Clave de API Requerida', style: TextStyle(color: AppColors.textPrimary)),
-        content: const Text(
-          'Para procesar facturas mediante IA, debes ingresar tu API Key gratuita de Google AI Studio.',
-          style: TextStyle(color: AppColors.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
-              );
-            },
-            child: const Text('Configurar Ahora'),
-          ),
-        ],
-      ),
-    );
-  }
-
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
