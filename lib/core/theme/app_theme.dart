@@ -13,7 +13,6 @@ class AppTheme {
         secondary: AppColors.secondary,
         surface: AppColors.surface,
         error: AppColors.error,
-        background: AppColors.background,
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.background,
@@ -27,12 +26,12 @@ class AppTheme {
           letterSpacing: -0.5,
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: const CardThemeData(
         color: AppColors.card,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: AppColors.border, width: 1),
+          borderRadius: BorderRadius.all(Radius.circular(16)),
+          side: BorderSide(color: AppColors.border, width: 1),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
