@@ -6,20 +6,19 @@ import '../data/models/gasto_model.dart';
 import '../core/utils/currency_formatter.dart';
 
 class ExportService {
-  /// Genera un archivo CSV estructurado con todos los gastos e ítems
+  /// Genera un archivo CSV estructurado con todos los gastos e items
   static String generateCsvData(List<GastoModel> gastos) {
     final List<List<dynamic>> rows = [];
 
-    // Encabezados CSV
     rows.add([
       'ID',
       'Fecha',
       'Comercio / Beneficiario',
-      'Categoría',
+      'Categoria',
       'Moneda Original',
       'Total Original',
       'Total USD',
-      'Desglose de Ítems',
+      'Desglose de Items',
       'Registrado En',
     ]);
 
@@ -48,8 +47,8 @@ class ExportService {
   static String generateMarkdownReport(List<GastoModel> gastos, {required String periodo}) {
     final buffer = StringBuffer();
     buffer.writeln('# Reporte de Gastos - GastoScan AI');
-    buffer.writeln('**Período:** $periodo');
-    buffer.writeln('**Fecha de Generación:** ${DateTime.now().toIso8601String().substring(0, 10)}');
+    buffer.writeln('**Periodo:** $periodo');
+    buffer.writeln('**Fecha de Generacion:** ${DateTime.now().toIso8601String().substring(0, 10)}');
     buffer.writeln('');
 
     double totalGeneralUsd = 0.0;
@@ -63,7 +62,7 @@ class ExportService {
     buffer.writeln('');
 
     buffer.writeln('### Detalle de Facturas y Comprobantes');
-    buffer.writeln('| Fecha | Comercio | Categoría | Moneda | Total Orig. | Total USD | Ítems |');
+    buffer.writeln('| Fecha | Comercio | Categoria | Moneda | Total Orig. | Total USD | Items |');
     buffer.writeln('| :--- | :--- | :--- | :--- | :--- | :--- | :--- |');
 
     for (final g in gastos) {
@@ -76,7 +75,7 @@ class ExportService {
     return buffer.toString();
   }
 
-  /// Guarda el CSV o Markdown en el almacenamiento local y activa el menú para compartir
+  /// Guarda el CSV o Markdown en el almacenamiento local y activa el menu para compartir
   static Future<void> exportAndShare({
     required String content,
     required String filename,
@@ -86,12 +85,13 @@ class ExportService {
     final filePath = '${tempDir.path}/$filename';
     final file = File(filePath);
 
-    // Escribe el archivo con codificación UTF-8
     await file.writeAsString(content, flush: true);
 
-    await Share.shareXFiles(
-      [XFile(filePath, mimeType: mimeType)],
-      subject: 'Exportación GastoScan AI - $filename',
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(filePath, mimeType: mimeType)],
+        subject: 'Exportacion GastoScan AI - $filename',
+      ),
     );
   }
 }
