@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../models/gemini_extraction_result.dart';
 
 class GeminiService {
@@ -9,6 +10,11 @@ class GeminiService {
     required String apiKey,
   }) async {
     try {
+      // Intentar forzar la autenticacion anonima si se perdio
+      if (FirebaseAuth.instance.currentUser == null) {
+        await FirebaseAuth.instance.signInAnonymously();
+      }
+
       final base64Image = base64Encode(imageBytes);
       final callable = FirebaseFunctions.instance.httpsCallable('analyzeReceipt');
 
@@ -25,7 +31,7 @@ class GeminiService {
       return GeminiExtractionResult.fromJson(jsonResult);
     } on FirebaseFunctionsException catch (e) {
       if (e.code == 'unauthenticated') {
-        throw Exception('No estas autenticado para procesar la imagen.');
+        throw Exception('No estas autenticado en Firebase. Revisa que el login anónimo esté activo en la consola.');
       } else {
         throw Exception('Error del servidor (${e.code}): ${e.message}');
       }
