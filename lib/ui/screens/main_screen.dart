@@ -19,6 +19,22 @@ class MainScreen extends StatefulWidget {
   State<MainScreen> createState() => _MainScreenState();
 }
 
+class _CustomCenterDockedFabLocation extends FloatingActionButtonLocation {
+  const _CustomCenterDockedFabLocation();
+
+  @override
+  Offset getOffset(ScaffoldPrelayoutGeometry scaffoldGeometry) {
+    final double fabX = (scaffoldGeometry.scaffoldSize.width - scaffoldGeometry.floatingActionButtonSize.width) / 2.0;
+    
+    // El centerDocked normal centra el botón exactamente en el borde (50% arriba, 50% abajo).
+    // Si bajamos el botón un 25% de su propio tamaño, quedará un 25% por encima del borde y 75% por debajo.
+    final double defaultY = scaffoldGeometry.contentBottom - (scaffoldGeometry.floatingActionButtonSize.height / 2.0);
+    final double fabY = defaultY + (scaffoldGeometry.floatingActionButtonSize.height * 0.25);
+    
+    return Offset(fabX, fabY);
+  }
+}
+
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
@@ -135,7 +151,7 @@ class _MainScreenState extends State<MainScreen> {
         ),
         child: const Icon(Icons.add, color: AppColors.textPrimary, size: 32), // Icono +
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButtonLocation: const _CustomCenterDockedFabLocation(),
       bottomNavigationBar: BottomAppBar(
         color: AppColors.surface,
         shape: const CircularNotchedRectangle(),
