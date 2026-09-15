@@ -12,38 +12,53 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  late TextEditingController _apiKeyCtrl;
-  late TextEditingController _tasaCambioCtrl;
+  final _apiKeyCtrl = TextEditingController();
+  final _tasaCambioCtrl = TextEditingController();
+  final _presupuestoCtrl = TextEditingController();
   bool _obscureApiKey = true;
 
   @override
   void initState() {
     super.initState();
-    final settings = Provider.of<SettingsProvider>(context, listen: false);
-    _apiKeyCtrl = TextEditingController(text: settings.apiKey);
-    _tasaCambioCtrl = TextEditingController(text: settings.tasaCambioVesUsd.toString());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final settings = Provider.of<SettingsProvider>(context, listen: false);
+      _apiKeyCtrl.text = settings.apiKey;
+      _tasaCambioCtrl.text = settings.tasaCambioVesUsd.toString();
+      if (settings.presupuestoMensual > 0) {
+        _presupuestoCtrl.text = settings.presupuestoMensual.toStringAsFixed(2);
+      }
+    });
   }
 
   @override
   void dispose() {
     _apiKeyCtrl.dispose();
     _tasaCambioCtrl.dispose();
+    _presupuestoCtrl.dispose();
     super.dispose();
   }
 
-  void _guardarConfiguracion() {
+  void _guardarConfiguracion() async {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
-    settings.setApiKey(_apiKeyCtrl.text);
+    await settings.setApiKey(_apiKeyCtrl.text);
 
-    final tasa = double.tryParse(_tasaCambioCtrl.text);
-    if (tasa != null && tasa > 0) {
-      settings.setTasaCambio(tasa);
+    final tasa = double.tryParse(_tasaCambioCtrl.text.replaceAll(',', '.'));
+    if (tasa != null) {
+      await settings.setTasaCambio(tasa);
     }
 
+    final presupuesto = double.tryParse(_presupuestoCtrl.text.replaceAll(',', '.'));
+    if (presupuesto != null) {
+      await settings.setPresupuestoMensual(presupuesto);
+    } else if (_presupuestoCtrl.text.trim().isEmpty) {
+      await settings.setPresupuestoMensual(0.0);
+    }
+
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Configuración guardada correctamente'),
-        backgroundColor: AppColors.primaryDark,
+        content: Text('Ajustes guardados correctamente'),
+        backgroundColor: AppColors.success,
       ),
     );
     Navigator.pop(context);
@@ -246,6 +261,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onChanged: (val) {
                     if (val != null) settings.setMonedaPrincipal(val);
                   },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _presupuestoCtrl,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(
+                    labelText: 'Presupuesto Mensual (USD)',
+                    hintText: 'Ej. 300',
+                    prefixIcon: Icon(Icons.account_balance_wallet_outlined, color: AppColors.textSecondary),
+                  ),
                 ),
               ],
             ),

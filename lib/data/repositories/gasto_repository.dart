@@ -32,4 +32,8 @@ class GastoRepository {
   Future<Map<String, double>> obtenerTotalesPorCategoria(int year, int month) {
     return _dbHelper.getCategoryTotals(year, month);
   }
+
+  Future<Map<String, dynamic>?> buscarPrecioAnterior(String descripcion) {
+    return _dbHelper.findPreviousPrice(descripcion);
+  }
 }

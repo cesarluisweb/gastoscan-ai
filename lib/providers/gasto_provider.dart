@@ -84,4 +84,8 @@ class GastoProvider with ChangeNotifier {
   Future<List<GastoModel>> obtenerTodosParaExportar() async {
     return await _repository.obtenerGastos();
   }
+
+  Future<Map<String, dynamic>?> buscarPrecioAnterior(String descripcion) async {
+    return await _repository.buscarPrecioAnterior(descripcion);
+  }
 }

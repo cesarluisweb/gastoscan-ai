@@ -161,6 +161,7 @@ class DashboardScreen extends StatelessWidget {
               totalUsd: gastoProvider.totalMesUsd,
               totalVes: gastoProvider.totalMesVes,
               periodo: '$mesNombre $anio',
+              presupuesto: Provider.of<SettingsProvider>(context).presupuestoMensual,
             ),
             const SizedBox(height: 16),
             if (gastoProvider.totalesPorCategoria.isNotEmpty) ...[

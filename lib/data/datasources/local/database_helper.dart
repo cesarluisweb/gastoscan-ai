@@ -201,6 +201,32 @@ class DatabaseHelper {
     return categoryMap;
   }
 
+  /// Busca la última vez que se compró un producto similar para comparar precio.
+  /// Devuelve un Map con {'precio_unitario': 0.0, 'fecha': 'YYYY-MM-DD'} o null si no lo encuentra.
+  Future<Map<String, dynamic>?> findPreviousPrice(String descripcion) async {
+    final db = await instance.database;
+    
+    // Buscar coincidencia parcial (ignorar mayusculas, espacios extras)
+    final searchTerm = '%${descripcion.trim()}%';
+    
+    final result = await db.rawQuery('''
+      SELECT i.precio_unitario, g.fecha 
+      FROM items_gasto i
+      JOIN gastos g ON i.gasto_id = g.id
+      WHERE i.descripcion LIKE ?
+      ORDER BY g.fecha DESC, g.id DESC
+      LIMIT 1
+    ''', [searchTerm]);
+
+    if (result.isNotEmpty) {
+      return {
+        'precio_unitario': (result.first['precio_unitario'] as num?)?.toDouble() ?? 0.0,
+        'fecha': result.first['fecha'] as String,
+      };
+    }
+    return null;
+  }
+
   Future<void> close() async {
     final db = await instance.database;
     db.close();

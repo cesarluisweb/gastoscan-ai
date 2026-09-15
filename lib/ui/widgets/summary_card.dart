@@ -6,12 +6,14 @@ class SummaryCard extends StatelessWidget {
   final double totalUsd;
   final double totalVes;
   final String periodo;
+  final double presupuesto;
 
   const SummaryCard({
     Key? key,
     required this.totalUsd,
     required this.totalVes,
     required this.periodo,
+    this.presupuesto = 0.0,
   }) : super(key: key);
 
   @override
@@ -83,6 +85,53 @@ class SummaryCard extends StatelessWidget {
               ),
             ],
           ),
+          if (presupuesto > 0) ...[
+            const SizedBox(height: 16),
+            Builder(
+              builder: (context) {
+                final double percent = (totalUsd / presupuesto).clamp(0.0, 1.0);
+                Color barColor = AppColors.success;
+                if (percent >= 0.9) {
+                  barColor = AppColors.error;
+                } else if (percent >= 0.75) {
+                  barColor = AppColors.warning;
+                }
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Presupuesto: ${CurrencyFormatter.formatUsd(presupuesto)}',
+                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                        ),
+                        Text(
+                          '${(percent * 100).toStringAsFixed(1)}%',
+                          style: TextStyle(
+                            color: barColor,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: percent,
+                        backgroundColor: AppColors.surface,
+                        valueColor: AlwaysStoppedAnimation<Color>(barColor),
+                        minHeight: 6,
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
         ],
       ),
     );

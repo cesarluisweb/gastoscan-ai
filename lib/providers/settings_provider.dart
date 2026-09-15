@@ -8,9 +8,10 @@ class SettingsProvider with ChangeNotifier {
   bool _guardarFotos = AppConstants.defaultGuardarFotos;
   double _tasaCambioVesUsd = AppConstants.defaultTasaCambio;
   String _monedaPrincipal = AppConstants.defaultMoneda;
-  String _tipoTasa = 'oficial'; // 'oficial' (BCV) o 'paralelo'
+  String _tipoTasa = 'oficial'; // 'oficial' o 'paralelo'
   bool _isSyncingRate = false;
   bool _isInitialized = false;
+  double _presupuestoMensual = 0.0;
 
   String get apiKey => _apiKey;
   String get effectiveApiKey => _apiKey.trim().isNotEmpty ? _apiKey.trim() : AppConstants.defaultApiKey.trim();
@@ -20,6 +21,7 @@ class SettingsProvider with ChangeNotifier {
   String get tipoTasa => _tipoTasa;
   bool get isSyncingRate => _isSyncingRate;
   bool get isInitialized => _isInitialized;
+  double get presupuestoMensual => _presupuestoMensual;
 
   SettingsProvider() {
     loadSettings();
@@ -32,6 +34,7 @@ class SettingsProvider with ChangeNotifier {
     _tasaCambioVesUsd = prefs.getDouble(AppConstants.prefTasaCambio) ?? AppConstants.defaultTasaCambio;
     _monedaPrincipal = prefs.getString(AppConstants.prefMonedaPrincipal) ?? AppConstants.defaultMoneda;
     _tipoTasa = prefs.getString('tipo_tasa') ?? 'oficial';
+    _presupuestoMensual = prefs.getDouble('presupuesto_mensual') ?? 0.0;
     _isInitialized = true;
     notifyListeners();
 
@@ -80,6 +83,13 @@ class SettingsProvider with ChangeNotifier {
     _monedaPrincipal = moneda;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(AppConstants.prefMonedaPrincipal, _monedaPrincipal);
+    notifyListeners();
+  }
+
+  Future<void> setPresupuestoMensual(double monto) async {
+    _presupuestoMensual = monto;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('presupuesto_mensual', _presupuestoMensual);
     notifyListeners();
   }
 }
