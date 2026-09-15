@@ -46,6 +46,9 @@ jobs:
       - name: Instalar paquetes
         run: flutter pub get
 
+      - name: Generar Iconos de App
+        run: flutter pub run flutter_launcher_icons
+
       - name: Compilar APK Release
         run: flutter build apk --release --no-tree-shake-icons --dart-define=GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}"
 
