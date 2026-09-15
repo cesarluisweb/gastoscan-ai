@@ -46,7 +46,7 @@ class GeminiService {
     }
   }
 
-  Future<String> chatWithAnalyst({
+  Future<Map<String, dynamic>> chatWithAnalyst({
     required List<Map<String, String>> messages,
     required Map<String, dynamic> contextData,
   }) async {
@@ -62,8 +62,8 @@ class GeminiService {
         'contextData': contextData,
       });
 
-      final data = response.data as Map;
-      return data['text'] as String;
+      // La Cloud Function ahora puede devolver { text: "..." } o { functionCall: { ... } }
+      return Map<String, dynamic>.from(response.data as Map);
     } on FirebaseFunctionsException catch (e) {
       throw Exception('Error del servidor (${e.code}): ${e.message}');
     } catch (e) {

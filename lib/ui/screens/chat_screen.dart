@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../providers/gasto_provider.dart';
+import '../../providers/settings_provider.dart';
+import '../../data/models/gasto_model.dart';
+import '../../data/models/item_gasto_model.dart';
 import '../../data/datasources/remote/gemini_service.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -44,17 +47,67 @@ class _ChatScreenState extends State<ChatScreen> {
         'total_ves': gastoProvider.totalMesVes,
       };
 
-      final response = await _geminiService.chatWithAnalyst(
+      final responseMap = await _geminiService.chatWithAnalyst(
         messages: _messages,
         contextData: contextData,
       );
 
-      setState(() {
-        _messages.add({'role': 'assistant', 'text': response});
-      });
+      if (responseMap.containsKey('functionCall')) {
+        final call = responseMap['functionCall'] as Map;
+        if (call['name'] == 'registrar_gasto') {
+          final args = call['args'] as Map;
+          
+          // Construir el gasto
+          final settings = Provider.of<SettingsProvider>(context, listen: false);
+          final double totalUsd = (args['total_usd'] as num).toDouble();
+          final String comercio = args['comercio'] ?? 'General';
+          final String fecha = args['fecha'] ?? DateTime.now().toIso8601String().substring(0, 10);
+          final String categoria = args['categoria'] ?? 'Otros';
+          
+          final List itemsList = args['items'] ?? [];
+          final List<ItemGastoModel> itemsGasto = itemsList.map((item) {
+            final double precioUnit = (item['precio_unitario'] as num).toDouble();
+            final double cant = (item['cantidad'] as num).toDouble();
+            return ItemGastoModel(
+              descripcion: item['descripcion'] ?? 'Artículo',
+              cantidad: cant,
+              precioUnitario: precioUnit,
+              total: precioUnit * cant,
+            );
+          }).toList();
+
+          final nuevoGasto = GastoModel(
+            fecha: fecha,
+            comercio: comercio,
+            moneda: 'USD', // Por simplicidad de la IA
+            totalOriginal: totalUsd,
+            totalUsd: totalUsd,
+            categoria: categoria,
+            creadoEn: DateTime.now().toIso8601String(),
+          );
+
+          final success = await gastoProvider.agregarGasto(nuevoGasto, itemsGasto);
+
+          setState(() {
+            if (success) {
+              _messages.add({
+                'role': 'assistant',
+                'text': '¡Listo! He registrado tu compra en "$comercio" por \$${totalUsd.toStringAsFixed(2)}.'
+              });
+            } else {
+              _messages.add({'role': 'assistant', 'text': 'Hubo un error al intentar guardar el gasto.'});
+            }
+          });
+        }
+      } else {
+        final String textResponse = responseMap['text'] ?? '';
+        setState(() {
+          _messages.add({'role': 'assistant', 'text': textResponse});
+        });
+      }
     } catch (e) {
       setState(() {
-        _messages.add({'role': 'assistant', 'text': 'Error: '});
+        _messages.add({'role': 'assistant', 'text': 'Error: $e'});
       });
     } finally {
       setState(() {
