@@ -106,4 +106,20 @@ class GeminiExtractionResult {
       matchedShoppingItemIds: matchedIds,
     );
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'comercio': comercio,
+      'fecha': fecha,
+      'moneda': moneda,
+      'total_original': totalOriginal,
+      'impuesto_iva': impuestoIva,
+      'categoria_sugerida': categoriaSugerida,
+      'tasa_cambio': tasaCambioDetectada,
+      'items': items.map((i) => i.toMap()).toList(),
+      'items_comprados_ids': matchedShoppingItemIds,
+    };
+  }
+
+  Map<String, dynamic> toJson() => toMap();
 }

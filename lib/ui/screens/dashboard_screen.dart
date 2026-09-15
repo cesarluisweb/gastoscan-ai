@@ -281,7 +281,7 @@ class DashboardScreen extends StatelessWidget {
         // Al tocar, abrir el primero listo
         final item = scanQueue.readyItems.first;
         final data = jsonDecode(item['extracted_data']);
-        final result = GeminiExtractionResult.fromMap(data);
+        final result = GeminiExtractionResult.fromJson(data);
         final file = File(item['image_path']);
 
         Navigator.push(
