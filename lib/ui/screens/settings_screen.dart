@@ -12,17 +12,14 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  final _apiKeyCtrl = TextEditingController();
   final _tasaCambioCtrl = TextEditingController();
   final _presupuestoCtrl = TextEditingController();
-  bool _obscureApiKey = true;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final settings = Provider.of<SettingsProvider>(context, listen: false);
-      _apiKeyCtrl.text = settings.apiKey;
       _tasaCambioCtrl.text = settings.tasaCambioVesUsd.toString();
       if (settings.presupuestoMensual > 0) {
         _presupuestoCtrl.text = settings.presupuestoMensual.toStringAsFixed(2);
@@ -32,7 +29,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   void dispose() {
-    _apiKeyCtrl.dispose();
     _tasaCambioCtrl.dispose();
     _presupuestoCtrl.dispose();
     super.dispose();
@@ -40,7 +36,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _guardarConfiguracion() async {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
-    await settings.setApiKey(_apiKeyCtrl.text);
 
     final tasa = double.tryParse(_tasaCambioCtrl.text.replaceAll(',', '.'));
     if (tasa != null) {
@@ -75,58 +70,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Sección de Inteligencia Artificial
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.card,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
-                  children: [
-                    Icon(Icons.auto_awesome, color: AppColors.primary, size: 20),
-                    SizedBox(width: 8),
-                    Text(
-                      'Google Gemini AI',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Ingresa tu clave de Google AI Studio (modelo Gemini Flash). Permite procesar recibos y facturas automáticamente con IA.',
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _apiKeyCtrl,
-                  obscureText: _obscureApiKey,
-                  decoration: InputDecoration(
-                    labelText: 'Gemini API Key',
-                    prefixIcon: const Icon(Icons.vpn_key_outlined, color: AppColors.textSecondary),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscureApiKey ? Icons.visibility_off : Icons.visibility,
-                        color: AppColors.textSecondary,
-                      ),
-                      onPressed: () => setState(() => _obscureApiKey = !_obscureApiKey),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Sección de Almacenamiento y Privacidad
+          // Sección de Configuración Financiera
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(

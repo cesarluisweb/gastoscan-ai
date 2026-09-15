@@ -67,7 +67,7 @@ class _ScanScreenState extends State<ScanScreen> {
 
       if (!mounted) return;
 
-      Navigator.pushReplacement(
+      await Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => ReviewExpenseScreen(
@@ -76,6 +76,15 @@ class _ScanScreenState extends State<ScanScreen> {
           ),
         ),
       );
+
+      // Limpiar el estado al regresar
+      if (mounted) {
+        setState(() {
+          _selectedImage = null;
+          _isProcessing = false;
+          _statusText = null;
+        });
+      }
     } catch (e) {
       setState(() {
         _isProcessing = false;
@@ -108,6 +117,7 @@ class _ScanScreenState extends State<ScanScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Escanear Comprobante'),
+        automaticallyImplyLeading: false,
       ),
       body: Stack(
         children: [

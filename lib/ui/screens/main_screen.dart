@@ -18,7 +18,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _pages = [
     const DashboardScreen(),
     const ChatScreen(),
-    const SizedBox.shrink(), // Placeholder para el boton de escanear
+    const ScanScreen(),
     const SettingsScreen(),
   ];
 
@@ -36,16 +36,9 @@ class _MainScreenState extends State<MainScreen> {
         unselectedItemColor: AppColors.textSecondary,
         type: BottomNavigationBarType.fixed,
         onTap: (index) {
-          if (index == 2) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const ScanScreen()),
-            );
-          } else {
-            setState(() {
-              _currentIndex = index;
-            });
-          }
+          setState(() {
+            _currentIndex = index;
+          });
         },
         items: const [
           BottomNavigationBarItem(
