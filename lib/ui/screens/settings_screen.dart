@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../providers/settings_provider.dart';
@@ -224,6 +225,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ElevatedButton(
             onPressed: _guardarConfiguracion,
             child: const Text('Guardar Ajustes'),
+          ),
+          const SizedBox(height: 16),
+          TextButton(
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+            },
+            child: const Text('Cerrar Sesión', style: TextStyle(color: AppColors.error)),
           ),
         ],
       ),

@@ -13,12 +13,20 @@ class GastoRepository {
     return _dbHelper.updateGasto(gasto, items);
   }
 
+  Future<void> actualizarGastoSyncStatus(GastoModel gasto) {
+    return _dbHelper.updateGastoSyncStatus(gasto);
+  }
+
   Future<int> eliminarGasto(int id) {
     return _dbHelper.deleteGasto(id);
   }
 
   Future<List<GastoModel>> obtenerGastos() {
     return _dbHelper.getAllGastos();
+  }
+
+  Future<List<GastoModel>> obtenerGastosNoSincronizados() {
+    return _dbHelper.getUnsyncedGastos();
   }
 
   Future<List<GastoModel>> obtenerGastosPorMes(int year, int month) {

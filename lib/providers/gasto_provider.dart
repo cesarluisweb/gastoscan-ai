@@ -1,4 +1,6 @@
 import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../data/models/gasto_model.dart';
 import '../data/models/item_gasto_model.dart';
 import '../data/repositories/gasto_repository.dart';
@@ -55,6 +57,7 @@ class GastoProvider with ChangeNotifier {
     try {
       await _repository.guardarGasto(gasto, items);
       await cargarDatos();
+      syncToFirestore(); // Intentar sincronizar en segundo plano
       return true;
     } catch (e) {
       _errorMessage = 'Error al guardar el gasto: ${e.toString()}';
@@ -65,13 +68,40 @@ class GastoProvider with ChangeNotifier {
 
   Future<bool> actualizarGasto(GastoModel gasto, List<ItemGastoModel> items) async {
     try {
-      await _repository.actualizarGasto(gasto, items);
+      final gastoAActualizar = gasto.copyWith(synced: 0); // Marcar como no sincronizado
+      await _repository.actualizarGasto(gastoAActualizar, items);
       await cargarDatos();
+      syncToFirestore();
       return true;
     } catch (e) {
       _errorMessage = 'Error al actualizar el gasto: ${e.toString()}';
       notifyListeners();
       return false;
+    }
+  }
+
+  Future<void> syncToFirestore() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null || user.isAnonymous) return;
+
+      final unsyncedGastos = await _repository.obtenerGastosNoSincronizados();
+      
+      for (var gasto in unsyncedGastos) {
+        final docRef = gasto.firestoreId != null 
+          ? FirebaseFirestore.instance.collection('users').doc(user.uid).collection('gastos').doc(gasto.firestoreId)
+          : FirebaseFirestore.instance.collection('users').doc(user.uid).collection('gastos').doc();
+          
+        final data = gasto.toMap();
+        data['firestore_id'] = docRef.id;
+        
+        await docRef.set(data);
+        
+        final syncedGasto = gasto.copyWith(firestoreId: docRef.id, synced: 1);
+        await _repository.actualizarGastoSyncStatus(syncedGasto);
+      }
+    } catch (e) {
+      debugPrint("Error al sincronizar con Firestore: $e");
     }
   }
 

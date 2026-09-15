@@ -21,10 +21,19 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _createDB,
+      onUpgrade: _upgradeDB,
       onConfigure: _onConfigure,
     );
+  }
+
+  Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      // Agregar columnas para sincronizacion con Firebase
+      await db.execute('ALTER TABLE gastos ADD COLUMN firestore_id TEXT');
+      await db.execute('ALTER TABLE gastos ADD COLUMN synced INTEGER DEFAULT 0');
+    }
   }
 
   Future<void> _onConfigure(Database db) async {
@@ -44,7 +53,9 @@ class DatabaseHelper {
         total_usd REAL NOT NULL,
         categoria TEXT NOT NULL,
         ruta_foto_local TEXT,
-        creado_en TEXT NOT NULL
+        creado_en TEXT NOT NULL,
+        firestore_id TEXT,
+        synced INTEGER DEFAULT 0
       )
     ''');
 
@@ -124,6 +135,36 @@ class DatabaseHelper {
       gastosList.add(GastoModel.fromMap(map, items: items));
     }
     return gastosList;
+  }
+
+  Future<List<GastoModel>> getUnsyncedGastos() async {
+    final db = await instance.database;
+    final result = await db.query(
+      'gastos',
+      where: 'synced = 0 OR synced IS NULL',
+    );
+    final List<GastoModel> gastosList = [];
+    for (final map in result) {
+      final gastoId = map['id'] as int;
+      final itemsResult = await db.query(
+        'items_gasto',
+        where: 'gasto_id = ?',
+        whereArgs: [gastoId],
+      );
+      final items = itemsResult.map((i) => ItemGastoModel.fromMap(i)).toList();
+      gastosList.add(GastoModel.fromMap(map, items: items));
+    }
+    return gastosList;
+  }
+
+  Future<void> updateGastoSyncStatus(GastoModel gasto) async {
+    final db = await instance.database;
+    await db.update(
+      'gastos',
+      {'firestore_id': gasto.firestoreId, 'synced': gasto.synced},
+      where: 'id = ?',
+      whereArgs: [gasto.id],
+    );
   }
 
   /// Obtiene los gastos de un mes y año específicos
@@ -210,7 +251,7 @@ class DatabaseHelper {
     final searchTerm = '%${descripcion.trim()}%';
     
     final result = await db.rawQuery('''
-      SELECT i.precio_unitario, g.fecha, g.moneda, g.total_original, g.total_usd 
+      SELECT i.precio_unitario, g.fecha, g.moneda, g.total_original, g.total_usd, g.comercio
       FROM items_gasto i
       JOIN gastos g ON i.gasto_id = g.id
       WHERE i.descripcion LIKE ?
@@ -236,6 +277,7 @@ class DatabaseHelper {
       return {
         'precio_usd': precioUsd,
         'fecha': row['fecha'] as String,
+        'comercio': row['comercio'] as String,
       };
     }
     return null;

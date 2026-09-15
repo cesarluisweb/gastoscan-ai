@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../providers/gasto_provider.dart';
 import '../../core/constants/app_colors.dart';
 import 'dashboard_screen.dart';
 import 'settings_screen.dart';
@@ -14,6 +16,14 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<GastoProvider>(context, listen: false).syncToFirestore();
+    });
+  }
 
   final List<Widget> _pages = [
     const DashboardScreen(),

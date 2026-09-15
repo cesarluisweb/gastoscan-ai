@@ -11,6 +11,8 @@ class GastoModel {
   final String? rutaFotoLocal;
   final String creadoEn;
   final List<ItemGastoModel> items;
+  final String? firestoreId;
+  final int synced;
 
   GastoModel({
     this.id,
@@ -23,6 +25,8 @@ class GastoModel {
     this.rutaFotoLocal,
     required this.creadoEn,
     this.items = const [],
+    this.firestoreId,
+    this.synced = 0,
   });
 
   Map<String, dynamic> toMap() {
@@ -36,6 +40,9 @@ class GastoModel {
       'categoria': categoria,
       'ruta_foto_local': rutaFotoLocal,
       'creado_en': creadoEn,
+      'items': items.map((i) => i.toMap()).toList(),
+      'firestore_id': firestoreId,
+      'synced': synced,
     };
   }
 
@@ -51,6 +58,8 @@ class GastoModel {
       rutaFotoLocal: map['ruta_foto_local'] as String?,
       creadoEn: map['creado_en'] as String? ?? DateTime.now().toIso8601String(),
       items: items,
+      firestoreId: map['firestore_id'] as String?,
+      synced: map['synced'] as int? ?? 0,
     );
   }
 
@@ -65,6 +74,8 @@ class GastoModel {
     String? rutaFotoLocal,
     String? creadoEn,
     List<ItemGastoModel>? items,
+    String? firestoreId,
+    int? synced,
   }) {
     return GastoModel(
       id: id ?? this.id,
@@ -77,6 +88,8 @@ class GastoModel {
       rutaFotoLocal: rutaFotoLocal ?? this.rutaFotoLocal,
       creadoEn: creadoEn ?? this.creadoEn,
       items: items ?? this.items,
+      firestoreId: firestoreId ?? this.firestoreId,
+      synced: synced ?? this.synced,
     );
   }
 }
