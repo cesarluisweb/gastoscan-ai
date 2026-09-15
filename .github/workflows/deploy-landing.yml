@@ -1,22 +1,35 @@
-name: Deploy Landing + APK
+name: Build & Deploy
 
 on:
+  push:
+    branches: [main]
   release:
     types: [published]
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download APK from release
-        uses: robinraju/release-downloader@v1.12
+      - name: Setup Java
+        uses: actions/setup-java@v4
         with:
-          tag: ${{ github.event.release.tag_name }}
-          fileName: "app-release.apk"
-          out-file-path: "landing/public/"
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.24.0"
+          channel: stable
+
+      - name: Build APK
+        run: flutter build apk --release
+
+      - name: Copy APK to landing
+        run: cp build/app/outputs/flutter-apk/app-release.apk landing/public/app-release.apk
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
