@@ -3,6 +3,7 @@ import '../../core/constants/app_colors.dart';
 import 'dashboard_screen.dart';
 import 'settings_screen.dart';
 import 'scan_screen.dart';
+import 'chat_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({Key? key}) : super(key: key);
@@ -16,6 +17,7 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _pages = [
     const DashboardScreen(),
+    const ChatScreen(),
     const SizedBox.shrink(), // Placeholder para el boton de escanear
     const SettingsScreen(),
   ];
@@ -34,7 +36,7 @@ class _MainScreenState extends State<MainScreen> {
         unselectedItemColor: AppColors.textSecondary,
         type: BottomNavigationBarType.fixed,
         onTap: (index) {
-          if (index == 1) {
+          if (index == 2) {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const ScanScreen()),
@@ -50,6 +52,11 @@ class _MainScreenState extends State<MainScreen> {
             icon: Icon(Icons.home_outlined),
             activeIcon: Icon(Icons.home),
             label: 'Inicio',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.auto_awesome_outlined),
+            activeIcon: Icon(Icons.auto_awesome),
+            label: 'Asistente',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.document_scanner_outlined),

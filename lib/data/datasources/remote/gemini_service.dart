@@ -39,4 +39,29 @@ class GeminiService {
       throw Exception('Fallo al conectar con el servidor: $e');
     }
   }
+
+  Future<String> chatWithAnalyst({
+    required List<Map<String, String>> messages,
+    required Map<String, dynamic> contextData,
+  }) async {
+    try {
+      if (FirebaseAuth.instance.currentUser == null) {
+        await FirebaseAuth.instance.signInAnonymously();
+      }
+
+      final callable = FirebaseFunctions.instance.httpsCallable('chatWithAnalyst');
+
+      final response = await callable.call({
+        'messages': messages,
+        'contextData': contextData,
+      });
+
+      final data = response.data as Map;
+      return data['text'] as String;
+    } on FirebaseFunctionsException catch (e) {
+      throw Exception('Error del servidor (${e.code}): ${e.message}');
+    } catch (e) {
+      throw Exception('Fallo al conectar con el chat: $e');
+    }
+  }
 }
