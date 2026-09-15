@@ -1,9 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../data/models/gasto_model.dart';
 import '../data/models/item_gasto_model.dart';
 import '../data/repositories/gasto_repository.dart';
+import '../data/datasources/local/database_helper.dart';
 
 class GastoProvider with ChangeNotifier {
   final GastoRepository _repository = GastoRepository();
@@ -53,9 +55,15 @@ class GastoProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> agregarGasto(GastoModel gasto, List<ItemGastoModel> items) async {
+  Future<bool> agregarGasto(GastoModel gasto, List<ItemGastoModel> items, {List<int>? shoppingItemIds}) async {
     try {
-      await _repository.guardarGasto(gasto, items);
+      final newId = await _repository.guardarGasto(gasto, items);
+      
+      if (shoppingItemIds != null && shoppingItemIds.isNotEmpty) {
+        final dbHelper = DatabaseHelper.instance;
+        await dbHelper.markShoppingItemsAsPurchased(shoppingItemIds, newId);
+      }
+
       await cargarDatos();
       syncToFirestore(); // Intentar sincronizar en segundo plano
       return true;
@@ -77,6 +85,48 @@ class GastoProvider with ChangeNotifier {
       _errorMessage = 'Error al actualizar el gasto: ${e.toString()}';
       notifyListeners();
       return false;
+    }
+  }
+
+  Future<void> vincularCuentaGoogle() async {
+    try {
+      final auth = FirebaseAuth.instance;
+      final user = auth.currentUser;
+      if (user == null) return;
+
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) return; // User canceled
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      if (user.isAnonymous) {
+        try {
+          await user.linkWithCredential(credential);
+          await syncToFirestore(); // Sync all existing anonymous data
+        } on FirebaseAuthException catch (e) {
+          if (e.code == 'credential-already-in-use') {
+            // El usuario ya tenia una cuenta. Iniciar sesion con ella.
+            await auth.signInWithCredential(credential);
+            
+            // Forzar que los datos locales SQLite suban y se fusionen
+            final gastos = await _repository.obtenerGastos();
+            for (var g in gastos) {
+              await _repository.actualizarGastoSyncStatus(g.copyWith(synced: 0));
+            }
+            await syncToFirestore();
+          } else {
+            rethrow;
+          }
+        }
+      } else {
+        // Ya no es anonimo
+      }
+    } catch (e) {
+      debugPrint("Error al vincular Google: $e");
     }
   }
 

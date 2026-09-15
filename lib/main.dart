@@ -7,13 +7,21 @@ import 'core/theme/app_theme.dart';
 import 'providers/gasto_provider.dart';
 import 'providers/settings_provider.dart';
 import 'ui/screens/main_screen.dart';
-import 'ui/screens/login_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  
+  try {
+    if (FirebaseAuth.instance.currentUser == null) {
+      await FirebaseAuth.instance.signInAnonymously();
+    }
+  } catch (e) {
+    debugPrint("Error signing in anonymously: $e");
+  }
+
   runApp(const GastoScanApp());
 }
 
@@ -28,21 +36,10 @@ class GastoScanApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => GastoProvider()),
       ],
       child: MaterialApp(
-        title: 'GastoScan AI',
+        title: 'Rinde Más',
         debugShowCheckedModeBanner: false,
-        theme: AppTheme.darkTheme,
-        home: StreamBuilder<User?>(
-          stream: FirebaseAuth.instance.authStateChanges(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Scaffold(body: Center(child: CircularProgressIndicator()));
-            }
-            if (snapshot.hasData && snapshot.data != null && !snapshot.data!.isAnonymous) {
-              return const MainScreen();
-            }
-            return const LoginScreen();
-          },
-        ),
+        theme: AppTheme.lightTheme,
+        home: const MainScreen(),
       ),
     );
   }

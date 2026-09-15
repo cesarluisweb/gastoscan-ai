@@ -2,6 +2,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../../models/gasto_model.dart';
 import '../../models/item_gasto_model.dart';
+import '../../models/shopping_item_model.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -21,7 +22,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
       onConfigure: _onConfigure,
@@ -33,6 +34,18 @@ class DatabaseHelper {
       // Agregar columnas para sincronizacion con Firebase
       await db.execute('ALTER TABLE gastos ADD COLUMN firestore_id TEXT');
       await db.execute('ALTER TABLE gastos ADD COLUMN synced INTEGER DEFAULT 0');
+    }
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE shopping_items (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          is_purchased INTEGER DEFAULT 0,
+          gasto_id INTEGER,
+          created_at TEXT NOT NULL,
+          FOREIGN KEY (gasto_id) REFERENCES gastos (id) ON DELETE SET NULL
+        )
+      ''');
     }
   }
 
@@ -69,6 +82,18 @@ class DatabaseHelper {
         precio_unitario REAL NOT NULL,
         total REAL NOT NULL,
         FOREIGN KEY (gasto_id) REFERENCES gastos (id) ON DELETE CASCADE
+      )
+    ''');
+
+    // Tabla shopping_items
+    await db.execute('''
+      CREATE TABLE shopping_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        is_purchased INTEGER DEFAULT 0,
+        gasto_id INTEGER,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (gasto_id) REFERENCES gastos (id) ON DELETE SET NULL
       )
     ''');
 
@@ -281,6 +306,60 @@ class DatabaseHelper {
       };
     }
     return null;
+  }
+
+  // --- SHOPPING LIST CRUD ---
+  
+  Future<List<ShoppingItemModel>> getPendingShoppingItems() async {
+    final db = await instance.database;
+    final result = await db.query(
+      'shopping_items',
+      where: 'is_purchased = 0',
+      orderBy: 'id DESC',
+    );
+    return result.map((m) => ShoppingItemModel.fromMap(m)).toList();
+  }
+
+  Future<List<ShoppingItemModel>> getAllShoppingItems() async {
+    final db = await instance.database;
+    final result = await db.query(
+      'shopping_items',
+      orderBy: 'is_purchased ASC, id DESC',
+    );
+    return result.map((m) => ShoppingItemModel.fromMap(m)).toList();
+  }
+
+  Future<int> insertShoppingItem(ShoppingItemModel item) async {
+    final db = await instance.database;
+    return await db.insert('shopping_items', item.toMap());
+  }
+
+  Future<void> updateShoppingItemStatus(int id, bool isPurchased, {int? gastoId}) async {
+    final db = await instance.database;
+    await db.update(
+      'shopping_items',
+      {
+        'is_purchased': isPurchased ? 1 : 0,
+        'gasto_id': gastoId,
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<void> deleteShoppingItem(int id) async {
+    final db = await instance.database;
+    await db.delete('shopping_items', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> markShoppingItemsAsPurchased(List<int> ids, int gastoId) async {
+    if (ids.isEmpty) return;
+    final db = await instance.database;
+    final placeholders = List.filled(ids.length, '?').join(',');
+    await db.rawUpdate(
+      'UPDATE shopping_items SET is_purchased = 1, gasto_id = ? WHERE id IN ($placeholders)',
+      [gastoId, ...ids],
+    );
   }
 
   Future<void> close() async {

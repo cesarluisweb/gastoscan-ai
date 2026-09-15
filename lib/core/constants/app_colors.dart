@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // Fondos Oscuros Minimalistas
-  static const Color background = Color(0xFF0F172A); // Slate 900
-  static const Color surface = Color(0xFF1E293B);    // Slate 800
-  static const Color card = Color(0xFF1E293B);
-  static const Color cardLighter = Color(0xFF334155); // Slate 700
+  // Fondos Claros
+  static const Color background = Color(0xFFF9FAFB); // Gris súper claro
+  static const Color surface = Color(0xFFFFFFFF);    // Blanco
+  static const Color card = Color(0xFFFFFFFF);       // Blanco
+  static const Color cardLighter = Color(0xFFF3F4F6); // Gris claro
 
-  // Colores de Acento (Fintech / Éxito)
-  static const Color primary = Color(0xFF10B981);     // Esmeralda vibrante
-  static const Color primaryLight = Color(0xFF34D399);
-  static const Color primaryDark = Color(0xFF059669);
-  static const Color secondary = Color(0xFF06B6D4);   // Cyan
+  // Colores de Acento (Rinde Más - Amarillo Cashea)
+  static const Color primary = Color(0xFFFFE700);     // Amarillo vibrante
+  static const Color primaryLight = Color(0xFFFFF066);
+  static const Color primaryDark = Color(0xFFE5CF00);
+  static const Color secondary = Color(0xFF0F172A);   // Azul oscuro casi negro
   
   // Alertas y Estados
   static const Color error = Color(0xFFEF4444);
@@ -19,11 +19,11 @@ class AppColors {
   static const Color info = Color(0xFF3B82F6);
 
   // Textos y Bordes
-  static const Color textPrimary = Color(0xFFF8FAFC);
-  static const Color textSecondary = Color(0xFF94A3B8);
-  static const Color textMuted = Color(0xFF64748B);
-  static const Color border = Color(0xFF334155);
-  static const Color divider = Color(0xFF1E293B);
+  static const Color textPrimary = Color(0xFF111827); // Negro/Gris muy oscuro
+  static const Color textSecondary = Color(0xFF6B7280); // Gris medio
+  static const Color textMuted = Color(0xFF9CA3AF);
+  static const Color border = Color(0xFFE5E7EB);
+  static const Color divider = Color(0xFFF3F4F6);
 
   // Paleta de Categorías para Gráficos
   static const Map<String, Color> categoryColors = {

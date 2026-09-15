@@ -3,23 +3,29 @@ import 'dart:typed_data';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../models/gemini_extraction_result.dart';
+import '../../models/shopping_item_model.dart';
 
 class GeminiService {
   Future<GeminiExtractionResult> analyzeReceiptImage({
     required Uint8List imageBytes,
     required String apiKey,
+    List<ShoppingItemModel>? pendingShoppingItems,
   }) async {
     try {
-      // Intentar forzar la autenticacion anonima si se perdio
       if (FirebaseAuth.instance.currentUser == null) {
         await FirebaseAuth.instance.signInAnonymously();
       }
 
       final base64Image = base64Encode(imageBytes);
       final callable = FirebaseFunctions.instance.httpsCallable('analyzeReceipt');
+      
+      final shoppingListContext = pendingShoppingItems != null && pendingShoppingItems.isNotEmpty
+          ? pendingShoppingItems.map((e) => {'id': e.id, 'name': e.name}).toList()
+          : [];
 
       final response = await callable.call({
         'imageBase64': base64Image,
+        'shoppingList': shoppingListContext,
       });
 
       final data = response.data;

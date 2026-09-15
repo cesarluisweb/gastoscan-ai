@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 
 class AppTheme {
-  static ThemeData get darkTheme {
+  static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
+      brightness: Brightness.light,
       scaffoldBackgroundColor: AppColors.background,
-      colorScheme: const ColorScheme.dark(
+      colorScheme: const ColorScheme.light(
         primary: AppColors.primary,
-        onPrimary: Colors.black,
+        onPrimary: AppColors.textPrimary,
         secondary: AppColors.secondary,
         surface: AppColors.surface,
         error: AppColors.error,

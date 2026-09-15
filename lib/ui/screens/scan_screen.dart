@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../data/datasources/remote/gemini_service.dart';
+import '../../data/datasources/local/database_helper.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/image_service.dart';
 import 'review_expense_screen.dart';
@@ -57,12 +58,18 @@ class _ScanScreenState extends State<ScanScreen> {
       final compressedBytes = await ImageService.compressImage(_selectedImage!);
 
       setState(() {
+        _statusText = 'Obteniendo lista de compras pendiente...';
+      });
+      final pendingItems = await DatabaseHelper.instance.getPendingShoppingItems();
+
+      setState(() {
         _statusText = 'Extrayendo datos con Gemini Flash AI...';
       });
 
       final extractionResult = await _geminiService.analyzeReceiptImage(
         imageBytes: compressedBytes,
         apiKey: keyToUse,
+        pendingShoppingItems: pendingItems,
       );
 
       if (!mounted) return;

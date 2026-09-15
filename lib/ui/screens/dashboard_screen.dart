@@ -2,15 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/date_formatter.dart';
-import '../../core/utils/export_service.dart';
 import '../../providers/gasto_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/export_service.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/category_chart.dart';
 import '../widgets/expense_card.dart';
-import '../widgets/month_selector.dart';
-import '../widgets/summary_header.dart';
 import 'scan_screen.dart';
 import 'settings_screen.dart';
 import 'review_expense_screen.dart';
@@ -74,31 +71,8 @@ class DashboardScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('GastoScan AI'),
+        title: const Text('Rinde Más'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            tooltip: 'Agregar manual',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ReviewExpenseScreen(
-                    extractedData: GeminiExtractionResult(
-                      comercio: '',
-                      fecha: DateTime.now().toIso8601String().substring(0, 10),
-                      moneda: 'USD',
-                      totalOriginal: 0.0,
-                      tasaCambioDetectada: null,
-                      impuestoIva: 0.0,
-                      categoriaSugerida: 'Otros',
-                      items: [],
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.file_download_outlined),
             tooltip: 'Exportar Reportes',

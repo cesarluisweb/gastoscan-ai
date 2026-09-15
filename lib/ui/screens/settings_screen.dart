@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../providers/settings_provider.dart';
+import '../../providers/gasto_provider.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);
@@ -63,15 +64,81 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final settings = Provider.of<SettingsProvider>(context);
 
+    final user = FirebaseAuth.instance.currentUser;
+    final isAnon = user == null || user.isAnonymous;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Configuración'),
+        title: const Text('Perfil'),
         automaticallyImplyLeading: false,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Sección de Configuración Financiera
+          // Sección de Cuenta y Sincronización
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.card,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.primary.withOpacity(0.5), width: 2),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(isAnon ? Icons.cloud_off : Icons.cloud_done, color: AppColors.primary, size: 24),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Respaldo en la Nube',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  isAnon
+                      ? 'Inicia sesión con Google para no perder tus datos si cambias de teléfono. Tus gastos actuales se guardarán.'
+                      : 'Sincronización activa. Cuenta vinculada a:\n${user.email}',
+                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                ),
+                const SizedBox(height: 16),
+                if (isAnon)
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.login),
+                      label: const Text('Vincular con Google'),
+                      onPressed: () async {
+                        await Provider.of<GastoProvider>(context, listen: false).vincularCuentaGoogle();
+                        setState(() {}); // Refrescar UI tras login
+                      },
+                    ),
+                  )
+                else
+                  SizedBox(
+                    width: double.infinity,
+                    child: TextButton.icon(
+                      icon: const Icon(Icons.logout, color: AppColors.error),
+                      label: const Text('Cerrar Sesión', style: TextStyle(color: AppColors.error)),
+                      onPressed: () async {
+                        await FirebaseAuth.instance.signOut();
+                        await FirebaseAuth.instance.signInAnonymously();
+                        setState(() {});
+                      },
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Sección de Almacenamiento y Fotos
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -225,13 +292,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ElevatedButton(
             onPressed: _guardarConfiguracion,
             child: const Text('Guardar Ajustes'),
-          ),
-          const SizedBox(height: 16),
-          TextButton(
-            onPressed: () async {
-              await FirebaseAuth.instance.signOut();
-            },
-            child: const Text('Cerrar Sesión', style: TextStyle(color: AppColors.error)),
           ),
         ],
       ),

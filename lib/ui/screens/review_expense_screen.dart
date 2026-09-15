@@ -249,25 +249,36 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       creadoEn: widget.existingGasto?.creadoEn ?? DateTime.now().toIso8601String(),
     );
 
-    bool success;
-    if (widget.existingGasto != null) {
-      success = await gastoProvider.actualizarGasto(nuevoGasto, _items);
-    } else {
-      success = await gastoProvider.agregarGasto(nuevoGasto, _items);
-    }
-
-    if (!mounted) return;
-    setState(() => _isSaving = false);
-
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Gasto registrado con éxito'),
-          backgroundColor: AppColors.primaryDark,
-        ),
-      );
-      Navigator.pop(context);
-    } else {
+      bool success;
+      if (widget.existingGasto != null) {
+        success = await gastoProvider.actualizarGasto(nuevoGasto, _items);
+      } else {
+        final matchedIds = widget.extractedData?.matchedShoppingItemIds ?? [];
+        success = await gastoProvider.agregarGasto(nuevoGasto, _items, shoppingItemIds: matchedIds);
+      }
+  
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+  
+      if (success) {
+        final matchedIds = widget.extractedData?.matchedShoppingItemIds ?? [];
+        if (matchedIds.isNotEmpty) {
+           ScaffoldMessenger.of(context).showSnackBar(
+             SnackBar(
+               content: Text('Gasto registrado y ${matchedIds.length} ítem(s) de tu lista marcados como comprados.'),
+               backgroundColor: AppColors.primaryDark,
+             ),
+           );
+        } else {
+           ScaffoldMessenger.of(context).showSnackBar(
+             const SnackBar(
+               content: Text('Gasto registrado con éxito'),
+               backgroundColor: AppColors.primaryDark,
+             ),
+           );
+        }
+        Navigator.pop(context);
+      } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(gastoProvider.errorMessage ?? 'Error al guardar'),

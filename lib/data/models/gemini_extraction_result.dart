@@ -9,6 +9,7 @@ class GeminiExtractionResult {
   final String categoriaSugerida;
   final double? tasaCambioDetectada;
   final List<ItemGastoModel> items;
+  final List<int> matchedShoppingItemIds;
 
   GeminiExtractionResult({
     required this.comercio,
@@ -19,6 +20,7 @@ class GeminiExtractionResult {
     required this.categoriaSugerida,
     this.tasaCambioDetectada,
     required this.items,
+    this.matchedShoppingItemIds = const [],
   });
 
   factory GeminiExtractionResult.fromJson(Map<String, dynamic> json) {
@@ -82,6 +84,16 @@ class GeminiExtractionResult {
     // Tasa de cambio detectada (si está impresa en la factura)
     final tasaDetectada = (json['tasa_cambio'] as num?)?.toDouble();
 
+    // IDs de lista de compras vinculados
+    final matchedIds = <int>[];
+    if (json['items_comprados_ids'] is List) {
+      for (final id in (json['items_comprados_ids'] as List)) {
+        if (id is num) {
+          matchedIds.add(id.toInt());
+        }
+      }
+    }
+
     return GeminiExtractionResult(
       comercio: comercio,
       fecha: fecha,
@@ -91,6 +103,7 @@ class GeminiExtractionResult {
       categoriaSugerida: categoria,
       tasaCambioDetectada: tasaDetectada,
       items: itemsList,
+      matchedShoppingItemIds: matchedIds,
     );
   }
 }
