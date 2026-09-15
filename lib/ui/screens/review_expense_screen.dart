@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
@@ -42,8 +42,13 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
   late String _selectedFecha;
   late String _selectedMoneda;
   late String _selectedCategoria;
+
+  String _formatDouble(double value) {
+    if (value == 0) return '';
+    return value.truncateToDouble() == value ? value.toInt().toString() : value.toString();
+  }
   late List<ItemGastoModel> _items;
-  String _fuenteTasa = 'Tasa oficial BCV automática';
+  String _fuenteTasa = 'Tasa oficial BCV automÃ¡tica';
   bool _isSaving = false;
 
   @override
@@ -58,7 +63,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       _selectedMoneda = gasto.moneda;
       _selectedCategoria = gasto.categoria;
       _items = List.from(gasto.items);
-      _totalOriginalCtrl = TextEditingController(text: gasto.totalOriginal.toStringAsFixed(2));
+      _totalOriginalCtrl = TextEditingController(text: _formatDouble(gasto.totalOriginal));
       _totalUsdCtrl = TextEditingController(text: gasto.totalUsd.toStringAsFixed(2));
       
       double tasa = 0;
@@ -75,7 +80,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       _selectedCategoria = data.categoriaSugerida;
       _items = List.from(data.items);
 
-      _totalOriginalCtrl = TextEditingController(text: data.totalOriginal.toStringAsFixed(2));
+      _totalOriginalCtrl = TextEditingController(text: _formatDouble(data.totalOriginal));
 
       double tasaInicial = data.tasaCambioDetectada ?? settings.tasaCambioVesUsd;
       _tasaCambioCtrl = TextEditingController(text: tasaInicial.toStringAsFixed(2));
@@ -192,7 +197,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       setState(() {
         _selectedFecha = nuevaFecha;
       });
-      // Si la factura no traía tasa fija impresa, busca la tasa correspondiente a la fecha elegida
+      // Si la factura no traÃ­a tasa fija impresa, busca la tasa correspondiente a la fecha elegida
       if (widget.existingGasto == null && (widget.extractedData?.tasaCambioDetectada == null || widget.extractedData!.tasaCambioDetectada! <= 0)) {
         _actualizarTasaPorFecha(nuevaFecha);
       }
@@ -202,7 +207,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
   void _addItem() {
     setState(() {
       _items.add(ItemGastoModel(
-        descripcion: 'Nuevo concepto',
+        descripcion: '',
         cantidad: 1.0,
         precioUnitario: 0.0,
         total: 0.0,
@@ -264,7 +269,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       setState(() => _isSaving = false);
   
       if (success) {
-        // Si venía de la cola offline, lo borramos de ahí
+        // Si venÃ­a de la cola offline, lo borramos de ahÃ­
         if (widget.queueItemId != null) {
           final queueProvider = Provider.of<ScanQueueProvider>(context, listen: false);
           await queueProvider.removeItem(widget.queueItemId!);
@@ -274,14 +279,14 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         if (matchedIds.isNotEmpty) {
            ScaffoldMessenger.of(context).showSnackBar(
              SnackBar(
-               content: Text('Gasto registrado y ${matchedIds.length} ítem(s) de tu lista marcados como comprados.'),
+               content: Text('Gasto registrado y ${matchedIds.length} Ã­tem(s) de tu lista marcados como comprados.'),
                backgroundColor: AppColors.primaryDark,
              ),
            );
         } else {
            ScaffoldMessenger.of(context).showSnackBar(
              const SnackBar(
-               content: Text('Gasto registrado con éxito'),
+               content: Text('Gasto registrado con Ã©xito'),
                backgroundColor: AppColors.primaryDark,
              ),
            );
@@ -313,7 +318,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     builder: (ctx) => AlertDialog(
                       backgroundColor: AppColors.card,
                       title: const Text('Descartar Factura', style: TextStyle(color: AppColors.textPrimary)),
-                      content: const Text('¿Seguro que deseas descartar esta factura escaneada? No se guardará en tu historial.', style: TextStyle(color: AppColors.textSecondary)),
+                      content: const Text('Â¿Seguro que deseas descartar esta factura escaneada? No se guardarÃ¡ en tu historial.', style: TextStyle(color: AppColors.textSecondary)),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(ctx, false),
@@ -354,7 +359,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Información General',
+                    'InformaciÃ³n General',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                   ),
                   const SizedBox(height: 16),
@@ -371,7 +376,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     onTap: _selectDate,
                     child: InputDecorator(
                       decoration: const InputDecoration(
-                        labelText: 'Fecha de Emisión',
+                        labelText: 'Fecha de EmisiÃ³n',
                         prefixIcon: Icon(Icons.calendar_today_outlined, color: AppColors.textSecondary),
                       ),
                       child: Text(
@@ -384,7 +389,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                   DropdownButtonFormField<String>(
                     value: _selectedCategoria,
                     decoration: const InputDecoration(
-                      labelText: 'Categoría',
+                      labelText: 'CategorÃ­a',
                       prefixIcon: Icon(Icons.category_outlined, color: AppColors.textSecondary),
                     ),
                     dropdownColor: AppColors.surface,
@@ -410,7 +415,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Montos y Conversión',
+                    'Montos y ConversiÃ³n',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                   ),
                   const SizedBox(height: 16),
@@ -441,7 +446,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                           keyboardType: const TextInputType.numberWithOptions(decimal: true),
                           decoration: const InputDecoration(labelText: 'Monto Original'),
                           onChanged: (_) => _recalcularTotalUsd(),
-                          validator: (val) => (double.tryParse(val ?? '') == null) ? 'Inválido' : null,
+                          validator: (val) => (double.tryParse(val ?? '') == null) ? 'InvÃ¡lido' : null,
                         ),
                       ),
                     ],
@@ -481,7 +486,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                       labelText: 'Total Equivalente (USD)',
                       prefixIcon: Icon(Icons.attach_money, color: AppColors.primary),
                     ),
-                    validator: (val) => (double.tryParse(val ?? '') == null) ? 'Inválido' : null,
+                    validator: (val) => (double.tryParse(val ?? '') == null) ? 'InvÃ¡lido' : null,
                   ),
                 ],
               ),
@@ -501,7 +506,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        'Desglose de Ítems',
+                        'Desglose de Ãtems',
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                       ),
                       TextButton.icon(
@@ -515,7 +520,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                   if (_items.isEmpty)
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 8),
-                      child: Text('No hay ítems detallados.', style: TextStyle(color: AppColors.textMuted)),
+                      child: Text('No hay Ã­tems detallados.', style: TextStyle(color: AppColors.textMuted)),
                     )
                   else
                       ..._items.asMap().entries.map((entry) {
@@ -540,7 +545,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                             priceWarning = Padding(
                               padding: const EdgeInsets.only(top: 4, left: 4),
                               child: Text(
-                                '🔺 Está ${diff.toStringAsFixed(0)}% más caro que en $prevComercio',
+                                'ðŸ”º EstÃ¡ ${diff.toStringAsFixed(0)}% mÃ¡s caro que en $prevComercio',
                                 style: const TextStyle(color: AppColors.error, fontSize: 11, fontWeight: FontWeight.w600),
                               ),
                             );
@@ -549,7 +554,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                             priceWarning = Padding(
                               padding: const EdgeInsets.only(top: 4, left: 4),
                               child: Text(
-                                '🟩 Te salió un ${diff.toStringAsFixed(0)}% más económico que en $prevComercio',
+                                'ðŸŸ© Te saliÃ³ un ${diff.toStringAsFixed(0)}% mÃ¡s econÃ³mico que en $prevComercio',
                                 style: const TextStyle(color: AppColors.primary, fontSize: 11, fontWeight: FontWeight.w600),
                               ),
                             );
@@ -569,6 +574,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                       initialValue: item.descripcion,
                                       decoration: const InputDecoration(
                                         labelText: 'Desc.',
+                                        hintText: 'Concepto',
                                         contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                                       ),
                                       onChanged: (v) => _items[idx] = _items[idx].copyWith(descripcion: v),
@@ -578,7 +584,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                   Expanded(
                                     flex: 1,
                                     child: TextFormField(
-                                      initialValue: item.cantidad.toString(),
+                                      initialValue: _formatDouble(item.cantidad),
                                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                                       decoration: const InputDecoration(
                                         labelText: 'Cant.',
@@ -590,6 +596,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                           cantidad: cant,
                                           total: cant * _items[idx].precioUnitario,
                                         );
+                                        _recalcularTotal();
                                       },
                                     ),
                                   ),
@@ -597,18 +604,19 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                   Expanded(
                                     flex: 1,
                                     child: TextFormField(
-                                      initialValue: item.precioUnitario.toStringAsFixed(2),
+                                      initialValue: _formatDouble(item.precioUnitario),
                                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                                       decoration: const InputDecoration(
                                         labelText: 'Precio',
                                         contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                                       ),
                                       onChanged: (v) {
-                                        final precio = double.tryParse(v) ?? 0.0;
+                                        final prec = double.tryParse(v) ?? 0.0;
                                         _items[idx] = _items[idx].copyWith(
-                                          precioUnitario: precio,
-                                          total: _items[idx].cantidad * precio,
+                                          precioUnitario: prec,
+                                          total: _items[idx].cantidad * prec,
                                         );
+                                        _recalcularTotal();
                                       },
                                     ),
                                   ),
@@ -617,7 +625,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                     flex: 1,
                                     child: TextFormField(
                                       key: ValueKey('total_$idx\_${_items[idx].total}'),
-                                      initialValue: _items[idx].total.toStringAsFixed(2),
+                                      initialValue: _formatDouble(_items[idx].total),
                                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                                       decoration: const InputDecoration(
                                         labelText: 'Total',
@@ -630,6 +638,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                           total: tot,
                                           precioUnitario: cant > 0 ? tot / cant : 0.0,
                                         );
+                                        _recalcularTotal();
                                       },
                                     ),
                                   ),

@@ -22,7 +22,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 4,
+      version: 5,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
       onConfigure: _onConfigure,
@@ -31,7 +31,6 @@ class DatabaseHelper {
 
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
-      // Agregar columnas para sincronizacion con Firebase
       await db.execute('ALTER TABLE gastos ADD COLUMN firestore_id TEXT');
       await db.execute('ALTER TABLE gastos ADD COLUMN synced INTEGER DEFAULT 0');
     }
@@ -57,6 +56,14 @@ class DatabaseHelper {
           created_at TEXT NOT NULL
         )
       ''');
+    }
+    if (oldVersion < 5) {
+      // El campo items faltaba en las migraciones previas
+      try {
+        await db.execute('ALTER TABLE gastos ADD COLUMN items TEXT');
+      } catch (e) {
+        // Puede que ya exista si el usuario instaló desde cero en v4
+      }
     }
   }
 
