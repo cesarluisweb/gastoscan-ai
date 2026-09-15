@@ -316,7 +316,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           SizedBox(height: 4),
           Text(
-            'Presiona "Escanear Factura" para digitalizar tu primer comprobante.',
+            'Presiona "+" para registrar tu primera compra.',
             textAlign: TextAlign.center,
             style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
           ),

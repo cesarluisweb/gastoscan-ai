@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
@@ -147,6 +147,17 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       _totalUsdCtrl.text = original.toStringAsFixed(2);
     }
     setState(() {});
+  }
+
+  void _recalcularTotal() {
+    double sum = 0.0;
+    for (var item in _items) {
+      sum += item.total;
+    }
+    if (sum > 0) {
+      _totalOriginalCtrl.text = _formatDouble(sum);
+      _recalcularTotalUsd();
+    }
   }
 
   Future<void> _actualizarTasaPorFecha(String fecha) async {
