@@ -88,7 +88,7 @@ class _ScanScreenState extends State<ScanScreen> {
       final pendingItems = await DatabaseHelper.instance.getPendingShoppingItems();
 
       setState(() {
-        _statusText = 'Extrayendo datos con Gemini Flash AI...';
+        _statusText = 'Leyendo factura...';
       });
 
       final extractionResult = await _geminiService.analyzeReceiptImage(
@@ -143,7 +143,7 @@ class _ScanScreenState extends State<ScanScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Escanear Comprobante'),
+        title: const Text('Escanear Factura'),
         automaticallyImplyLeading: false,
       ),
       body: Stack(
@@ -196,7 +196,7 @@ class _ScanScreenState extends State<ScanScreen> {
           ),
           const SizedBox(height: 20),
           const Text(
-            'Digitaliza tus comprobantes',
+            'Digitaliza tus facturas',
             style: TextStyle(
               color: AppColors.textPrimary,
               fontSize: 18,
@@ -207,7 +207,7 @@ class _ScanScreenState extends State<ScanScreen> {
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 32),
             child: Text(
-              'Toma una foto a una factura física o carga una captura de Pago Móvil / Transferencia.',
+              'Toma una foto a una factura física o sube una imagen de tu galería.',
               textAlign: TextAlign.center,
               style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
             ),
@@ -238,7 +238,7 @@ class _ScanScreenState extends State<ScanScreen> {
           child: OutlinedButton.icon(
             onPressed: () => _pickImage(ImageSource.gallery),
             icon: const Icon(Icons.photo_library_outlined),
-            label: const Text('Galería / Pago Móvil'),
+            label: const Text('Galería'),
           ),
         ),
         const SizedBox(width: 12),
@@ -303,7 +303,7 @@ class _ScanScreenState extends State<ScanScreen> {
               ),
               const SizedBox(height: 8),
               const Text(
-                'Gemini está extrayendo comercios, montos e ítems.',
+                'Detectando comercio, montos y productos.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
               ),

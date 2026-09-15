@@ -276,7 +276,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 8),
               child: Text(
-                'Comprobantes Registrados',
+                'Facturas Registradas',
                 style: TextStyle(
                   color: AppColors.textPrimary,
                   fontSize: 16,
@@ -325,7 +325,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       context: context,
                       builder: (ctx) => AlertDialog(
                         backgroundColor: AppColors.card,
-                        title: const Text('Eliminar Comprobante', style: TextStyle(color: AppColors.textPrimary)),
+                        title: const Text('Eliminar Factura', style: TextStyle(color: AppColors.textPrimary)),
                         content: Text(
                           '¿Deseas eliminar el gasto de "${gasto.comercio}"?',
                           style: const TextStyle(color: AppColors.textSecondary),
@@ -370,7 +370,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Icon(Icons.receipt_long_outlined, size: 48, color: AppColors.textMuted),
           SizedBox(height: 12),
           Text(
-            'Sin comprobantes en este mes',
+            'Sin facturas este mes',
             style: TextStyle(
               color: AppColors.textPrimary,
               fontWeight: FontWeight.bold,

@@ -86,7 +86,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       _tasaCambioCtrl = TextEditingController(text: tasaInicial.toStringAsFixed(2));
 
       if (data.tasaCambioDetectada != null && data.tasaCambioDetectada! > 0) {
-        _fuenteTasa = 'Tasa detectada en el comprobante';
+        _fuenteTasa = 'Tasa detectada en la factura';
       } else {
         _fuenteTasa = 'Buscando tasa de la fecha...';
         if (_selectedMoneda == 'VES') {
@@ -425,94 +425,6 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Montos y Conversión',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        flex: 2,
-                        child: DropdownButtonFormField<String>(
-                          value: _selectedMoneda,
-                          decoration: const InputDecoration(labelText: 'Moneda'),
-                          dropdownColor: AppColors.surface,
-                          items: AppConstants.monedas.map((m) {
-                            return DropdownMenuItem(value: m, child: Text(m));
-                          }).toList(),
-                          onChanged: (val) {
-                            if (val != null) {
-                              _selectedMoneda = val;
-                              _recalcularTotalUsd();
-                            }
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        flex: 3,
-                        child: TextFormField(
-                          controller: _totalOriginalCtrl,
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                          decoration: const InputDecoration(labelText: 'Monto Original'),
-                          onChanged: (_) => _recalcularTotalUsd(),
-                          validator: (val) => (double.tryParse(val ?? '') == null) ? 'Inválido' : null,
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (_selectedMoneda == 'VES') ...[
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _tasaCambioCtrl,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      decoration: InputDecoration(
-                        labelText: 'Tasa de Cambio (VES / USD)',
-                        prefixIcon: const Icon(Icons.currency_exchange, color: AppColors.textSecondary),
-                        helperText: _fuenteTasa,
-                        helperStyle: const TextStyle(color: AppColors.primary, fontSize: 11),
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.sync, color: AppColors.primary, size: 20),
-                          tooltip: 'Sincronizar tasa BCV de hoy',
-                          onPressed: () async {
-                            final settings = Provider.of<SettingsProvider>(context, listen: false);
-                            final tasa = await ExchangeRateService.getTodayRate(tipo: settings.tipoTasa);
-                            setState(() {
-                              _tasaCambioCtrl.text = tasa.toStringAsFixed(2);
-                              _fuenteTasa = 'Tasa oficial BCV sincronizada';
-                              _recalcularTotalUsd();
-                            });
-                          },
-                        ),
-                      ),
-                      onChanged: (_) => _recalcularTotalUsd(),
-                    ),
-                  ],
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _totalUsdCtrl,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(
-                      labelText: 'Total Equivalente (USD)',
-                      prefixIcon: Icon(Icons.attach_money, color: AppColors.primary),
-                    ),
-                    validator: (val) => (double.tryParse(val ?? '') == null) ? 'Inválido' : null,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.card,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -664,6 +576,97 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                           ),
                         );
                       }).toList(),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.card,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Monto Total',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text('Moneda', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                  const SizedBox(height: 6),
+                  SizedBox(
+                    width: double.infinity,
+                    child: SegmentedButton<String>(
+                      segments: AppConstants.monedas.map((m) {
+                        return ButtonSegment<String>(
+                          value: m,
+                          label: Text(m, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        );
+                      }).toList(),
+                      selected: {_selectedMoneda},
+                      onSelectionChanged: (newSelection) {
+                        setState(() {
+                          _selectedMoneda = newSelection.first;
+                          _recalcularTotalUsd();
+                        });
+                      },
+                      showSelectedIcon: false,
+                      style: const ButtonStyle(
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _totalOriginalCtrl,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                      labelText: 'Monto Original ($_selectedMoneda)',
+                      prefixIcon: const Icon(Icons.payments_outlined, color: AppColors.textSecondary),
+                    ),
+                    onChanged: (_) => _recalcularTotalUsd(),
+                    validator: (val) => (double.tryParse(val ?? '') == null) ? 'Inválido' : null,
+                  ),
+                  if (_selectedMoneda == 'VES') ...[
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _tasaCambioCtrl,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: InputDecoration(
+                        labelText: 'Tasa de Cambio (VES / USD)',
+                        prefixIcon: const Icon(Icons.currency_exchange, color: AppColors.textSecondary),
+                        helperText: _fuenteTasa,
+                        helperStyle: const TextStyle(color: AppColors.primary, fontSize: 11),
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.sync, color: AppColors.primary, size: 20),
+                          tooltip: 'Sincronizar tasa BCV de hoy',
+                          onPressed: () async {
+                            final settings = Provider.of<SettingsProvider>(context, listen: false);
+                            final tasa = await ExchangeRateService.getTodayRate(tipo: settings.tipoTasa);
+                            setState(() {
+                              _tasaCambioCtrl.text = tasa.toStringAsFixed(2);
+                              _fuenteTasa = 'Tasa oficial BCV sincronizada';
+                              _recalcularTotalUsd();
+                            });
+                          },
+                        ),
+                      ),
+                      onChanged: (_) => _recalcularTotalUsd(),
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _totalUsdCtrl,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(
+                      labelText: 'Total Equivalente (USD)',
+                      prefixIcon: Icon(Icons.attach_money, color: AppColors.primary),
+                    ),
+                    validator: (val) => (double.tryParse(val ?? '') == null) ? 'Inválido' : null,
+                  ),
                 ],
               ),
             ),

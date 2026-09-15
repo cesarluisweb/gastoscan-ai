@@ -61,7 +61,7 @@ class ExportService {
     buffer.writeln('- **Monto Consolidado (USD):** ${CurrencyFormatter.formatUsd(totalGeneralUsd)}');
     buffer.writeln('');
 
-    buffer.writeln('### Detalle de Facturas y Comprobantes');
+    buffer.writeln('### Detalle de Facturas');
     buffer.writeln('| Fecha | Comercio | Categoria | Moneda | Total Orig. | Total USD | Items |');
     buffer.writeln('| :--- | :--- | :--- | :--- | :--- | :--- | :--- |');
 

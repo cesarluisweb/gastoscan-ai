@@ -27,7 +27,7 @@ class NotificationService {
 
   static const String defaultNotificationTitle = '¡Te extrañamos en Rinde Más!';
   static const String defaultNotificationBody =
-      'Han pasado 3 días desde tu último registro. ¡No olvides anotar tus comprobantes!';
+      'Han pasado 3 días desde tu último registro. ¡No olvides registrar tus facturas!';
 
   // Estado interno para observabilidad y pruebas
   bool _isInitialized = false;
