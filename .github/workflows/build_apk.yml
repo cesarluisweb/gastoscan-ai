@@ -46,25 +46,6 @@ jobs:
           rm -rf android
           flutter create --org com.gastoscan.ai --project-name gastoscan_ai --platforms android .
           cp android_template/AndroidManifest.xml android/app/src/main/AndroidManifest.xml
-          
-      - name: Inyectar Keystore en build.gradle
-        run: |
-          python3 -c "
-          with open('android/app/build.gradle', 'r') as f: content = f.read()
-          signing_config = '''
-              signingConfigs {
-                  release {
-                      storeFile file('../../android_template/rindemas.jks')
-                      storePassword 'rindemas123'
-                      keyAlias 'rindemas'
-                      keyPassword 'rindemas123'
-                  }
-              }
-          '''
-          content = content.replace('buildTypes {', signing_config + '\n    buildTypes {')
-          content = content.replace('signingConfig signingConfigs.debug', 'signingConfig signingConfigs.release')
-          with open('android/app/build.gradle', 'w') as f: f.write(content)
-          "
 
       - name: Descargar Gradle 9.3.1 con reintentos automaticos
         run: |
@@ -83,6 +64,16 @@ jobs:
 
       - name: Compilar APK Release
         run: flutter build apk --release --no-tree-shake-icons --dart-define=GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}"
+        
+      - name: Firmar APK con Keystore de Produccion
+        run: |
+          BUILD_TOOLS=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1)
+          # Alineacion
+          $BUILD_TOOLS/zipalign -v -p 4 build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/app-release-aligned.apk
+          # Firma
+          $BUILD_TOOLS/apksigner sign --ks android_template/rindemas.jks --ks-pass pass:rindemas123 --ks-key-alias rindemas --key-pass pass:rindemas123 --out build/app/outputs/flutter-apk/app-release-signed.apk build/app/outputs/flutter-apk/app-release-aligned.apk
+          # Reemplazar el original
+          mv build/app/outputs/flutter-apk/app-release-signed.apk build/app/outputs/flutter-apk/app-release.apk
 
       - name: Publicar Release (Descarga Directa)
         uses: ncipollo/release-action@v1
@@ -93,4 +84,4 @@ jobs:
           body: "Descarga directa de la ultima version estable de GastoScan AI."
           allowUpdates: true
           makeLatest: true
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: "${{ secrets.GITHUB_TOKEN }}"
