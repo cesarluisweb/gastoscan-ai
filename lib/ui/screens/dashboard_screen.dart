@@ -4,6 +4,9 @@ import '../../core/constants/app_colors.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../providers/gasto_provider.dart';
 import '../../providers/settings_provider.dart';
+import '../../providers/scan_queue_provider.dart';
+import 'dart:io';
+import 'dart:convert';
 import '../../services/export_service.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/category_chart.dart';
@@ -66,6 +69,7 @@ class DashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final gastoProvider = Provider.of<GastoProvider>(context);
+    final scanQueue = Provider.of<ScanQueueProvider>(context);
     final mesNombre = DateFormatter.getMonthName(gastoProvider.selectedMonth);
     final anio = gastoProvider.selectedYear;
 
@@ -88,7 +92,7 @@ class DashboardScreen extends StatelessWidget {
                   children: [
                     Icon(Icons.table_chart_outlined, color: AppColors.primary, size: 18),
                     SizedBox(width: 8),
-                    Text('Exportar a CSV (.csv)', style: TextStyle(color: AppColors.textPrimary)),
+                    Text('Exportar a Excel (.csv)', style: TextStyle(color: AppColors.textPrimary)),
                   ],
                 ),
               ),
@@ -96,7 +100,7 @@ class DashboardScreen extends StatelessWidget {
                 value: 'md',
                 child: Row(
                   children: [
-                    Icon(Icons.description_outlined, color: AppColors.secondary, size: 18),
+                    Icon(Icons.description_outlined, color: AppColors.primary, size: 18),
                     SizedBox(width: 8),
                     Text('Exportar a Markdown (.md)', style: TextStyle(color: AppColors.textPrimary)),
                   ],
@@ -107,11 +111,16 @@ class DashboardScreen extends StatelessWidget {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () => gastoProvider.cargarDatos(),
+        onRefresh: () async {
+          await gastoProvider.cargarDatos();
+          await scanQueue.processPendingItems();
+        },
         color: AppColors.primary,
         child: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           children: [
+            if (scanQueue.readyItems.isNotEmpty)
+              _buildQueueBanner(context, scanQueue),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -262,6 +271,57 @@ class DashboardScreen extends StatelessWidget {
             style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildQueueBanner(BuildContext context, ScanQueueProvider scanQueue) {
+    return GestureDetector(
+      onTap: () {
+        // Al tocar, abrir el primero listo
+        final item = scanQueue.readyItems.first;
+        final data = jsonDecode(item['extracted_data']);
+        final result = GeminiExtractionResult.fromMap(data);
+        final file = File(item['image_path']);
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ReviewExpenseScreen(
+              imageFile: file.existsSync() ? file : null,
+              extractedData: result,
+              queueItemId: item['id'], // Pasamos el ID para borrarlo luego
+            ),
+          ),
+        ).then((_) {
+          // Actualizar lista si canceló o guardó
+          scanQueue.loadReadyItems();
+        });
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.primaryLight,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.primary),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.notifications_active, color: AppColors.primaryDark),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Tienes ${scanQueue.readyItems.length} factura(s) en cola listas para revisar.',
+                style: const TextStyle(
+                  color: AppColors.secondary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: AppColors.primaryDark),
+          ],
+        ),
       ),
     );
   }

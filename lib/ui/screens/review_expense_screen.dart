@@ -11,17 +11,20 @@ import '../../providers/gasto_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/image_service.dart';
 import '../../services/exchange_rate_service.dart';
+import '../../providers/scan_queue_provider.dart';
 
 class ReviewExpenseScreen extends StatefulWidget {
   final File? imageFile;
   final GeminiExtractionResult? extractedData;
   final GastoModel? existingGasto;
+  final int? queueItemId;
 
   const ReviewExpenseScreen({
     Key? key,
     this.imageFile,
     this.extractedData,
     this.existingGasto,
+    this.queueItemId,
   }) : super(key: key);
 
   @override
@@ -261,6 +264,12 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       setState(() => _isSaving = false);
   
       if (success) {
+        // Si venía de la cola offline, lo borramos de ahí
+        if (widget.queueItemId != null) {
+          final queueProvider = Provider.of<ScanQueueProvider>(context, listen: false);
+          await queueProvider.removeItem(widget.queueItemId!);
+        }
+
         final matchedIds = widget.extractedData?.matchedShoppingItemIds ?? [];
         if (matchedIds.isNotEmpty) {
            ScaffoldMessenger.of(context).showSnackBar(
@@ -288,13 +297,46 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Revisar y Confirmar'),
-      ),
-      body: Form(
+    @override
+    Widget build(BuildContext context) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Revisar y Confirmar'),
+          actions: [
+            if (widget.queueItemId != null)
+              IconButton(
+                icon: const Icon(Icons.delete_outline, color: AppColors.error),
+                tooltip: 'Descartar Factura',
+                onPressed: () async {
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      backgroundColor: AppColors.card,
+                      title: const Text('Descartar Factura', style: TextStyle(color: AppColors.textPrimary)),
+                      content: const Text('¿Seguro que deseas descartar esta factura escaneada? No se guardará en tu historial.', style: TextStyle(color: AppColors.textSecondary)),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: const Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, true),
+                          child: const Text('Descartar', style: TextStyle(color: AppColors.error)),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirm == true) {
+                    final queueProvider = Provider.of<ScanQueueProvider>(context, listen: false);
+                    await queueProvider.removeItem(widget.queueItemId!);
+                    if (!mounted) return;
+                    Navigator.pop(context);
+                  }
+                },
+              ),
+          ],
+        ),
+        body: Form(
         key: _formKey,
         child: ListView(
           padding: const EdgeInsets.all(16),

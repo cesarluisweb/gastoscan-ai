@@ -6,6 +6,7 @@ import 'firebase_options.dart';
 import 'core/theme/app_theme.dart';
 import 'providers/gasto_provider.dart';
 import 'providers/settings_provider.dart';
+import 'providers/scan_queue_provider.dart';
 import 'ui/screens/main_screen.dart';
 
 void main() async {
@@ -34,6 +35,7 @@ class GastoScanApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => GastoProvider()),
+        ChangeNotifierProvider(create: (_) => ScanQueueProvider()),
       ],
       child: MaterialApp(
         title: 'Rinde Más',

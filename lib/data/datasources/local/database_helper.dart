@@ -22,7 +22,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
       onConfigure: _onConfigure,
@@ -44,6 +44,17 @@ class DatabaseHelper {
           gasto_id INTEGER,
           created_at TEXT NOT NULL,
           FOREIGN KEY (gasto_id) REFERENCES gastos (id) ON DELETE SET NULL
+        )
+      ''');
+    }
+    if (oldVersion < 4) {
+      await db.execute('''
+        CREATE TABLE scan_queue (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          image_path TEXT NOT NULL,
+          status TEXT NOT NULL,
+          extracted_data TEXT,
+          created_at TEXT NOT NULL
         )
       ''');
     }
@@ -94,6 +105,17 @@ class DatabaseHelper {
         gasto_id INTEGER,
         created_at TEXT NOT NULL,
         FOREIGN KEY (gasto_id) REFERENCES gastos (id) ON DELETE SET NULL
+      )
+    ''');
+
+    // Tabla scan_queue
+    await db.execute('''
+      CREATE TABLE scan_queue (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        image_path TEXT NOT NULL,
+        status TEXT NOT NULL,
+        extracted_data TEXT,
+        created_at TEXT NOT NULL
       )
     ''');
 
@@ -359,6 +381,60 @@ class DatabaseHelper {
     await db.rawUpdate(
       'UPDATE shopping_items SET is_purchased = 1, gasto_id = ? WHERE id IN ($placeholders)',
       [gastoId, ...ids],
+    );
+  }
+
+  // ==========================================
+  // OPERACIONES PARA SCAN_QUEUE
+  // ==========================================
+
+  Future<int> insertScanQueueItem(String imagePath) async {
+    final db = await instance.database;
+    return await db.insert('scan_queue', {
+      'image_path': imagePath,
+      'status': 'pending',
+      'created_at': DateTime.now().toIso8601String(),
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> getPendingScanQueueItems() async {
+    final db = await instance.database;
+    return await db.query(
+      'scan_queue',
+      where: 'status = ?',
+      whereArgs: ['pending'],
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getReadyScanQueueItems() async {
+    final db = await instance.database;
+    return await db.query(
+      'scan_queue',
+      where: 'status = ?',
+      whereArgs: ['ready'],
+    );
+  }
+
+  Future<int> updateScanQueueItem(int id, String status, {String? extractedData}) async {
+    final db = await instance.database;
+    final data = <String, dynamic>{'status': status};
+    if (extractedData != null) {
+      data['extracted_data'] = extractedData;
+    }
+    return await db.update(
+      'scan_queue',
+      data,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<int> deleteScanQueueItem(int id) async {
+    final db = await instance.database;
+    return await db.delete(
+      'scan_queue',
+      where: 'id = ?',
+      whereArgs: [id],
     );
   }
 

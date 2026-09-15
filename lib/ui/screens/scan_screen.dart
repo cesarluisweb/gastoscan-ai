@@ -6,6 +6,7 @@ import '../../core/constants/app_colors.dart';
 import '../../data/datasources/remote/gemini_service.dart';
 import '../../data/datasources/local/database_helper.dart';
 import '../../providers/settings_provider.dart';
+import '../../providers/scan_queue_provider.dart';
 import '../../services/image_service.dart';
 import 'review_expense_screen.dart';
 import 'settings_screen.dart';
@@ -98,23 +99,18 @@ class _ScanScreenState extends State<ScanScreen> {
         _statusText = null;
       });
 
-      showDialog(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: AppColors.card,
-          title: const Text('Error en el Procesamiento', style: TextStyle(color: AppColors.error)),
-          content: Text(
-            e.toString().replaceAll('Exception: ', ''),
-            style: const TextStyle(color: AppColors.textPrimary),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Entendido', style: TextStyle(color: AppColors.primary)),
-            ),
-          ],
+      // Guardar en la cola offline si falla
+      final queueProvider = Provider.of<ScanQueueProvider>(context, listen: false);
+      await queueProvider.addPendingItem(_selectedImage!.path);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Sin conexión. La factura se guardó en cola y se procesará cuando haya internet.'),
+          backgroundColor: AppColors.info,
+          duration: Duration(seconds: 4),
         ),
       );
+      Navigator.pop(context); // Volver al inicio
     }
   }
 
