@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../providers/gasto_provider.dart';
+import '../../providers/settings_provider.dart';
 import '../../services/export_service.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/category_chart.dart';

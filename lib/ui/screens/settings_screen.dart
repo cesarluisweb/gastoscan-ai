@@ -58,7 +58,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Ajustes guardados correctamente'),
-        backgroundColor: AppColors.success,
+        backgroundColor: AppColors.primary,
       ),
     );
     Navigator.pop(context);

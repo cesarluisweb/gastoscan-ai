@@ -90,7 +90,7 @@ class SummaryCard extends StatelessWidget {
             Builder(
               builder: (context) {
                 final double percent = (totalUsd / presupuesto).clamp(0.0, 1.0);
-                Color barColor = AppColors.success;
+                Color barColor = AppColors.primary;
                 if (percent >= 0.9) {
                   barColor = AppColors.error;
                 } else if (percent >= 0.75) {
