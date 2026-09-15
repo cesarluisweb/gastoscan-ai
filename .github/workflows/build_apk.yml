@@ -28,11 +28,43 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Generar y guardar Keystore Permanente
+        run: |
+          if [ ! -f "android_template/rindemas.jks" ]; then
+            keytool -genkey -v -keystore android_template/rindemas.jks -keyalg RSA -keysize 2048 -validity 10000 -alias rindemas -dname "CN=RindeMas, OU=App, O=RindeMas, L=Caracas, ST=Caracas, C=VE" -storepass rindemas123 -keypass rindemas123
+            git config --global user.email "bot@gastoscan.ai"
+            git config --global user.name "GastoScan Bot"
+            git add android_template/rindemas.jks
+            git commit -m "chore: generar keystore de produccion para Google Sign-In"
+            git push
+          fi
+          echo "==== HUELLA SHA-1 PARA FIREBASE ===="
+          keytool -list -v -keystore android_template/rindemas.jks -alias rindemas -storepass rindemas123 -keypass rindemas123 | grep SHA1
+
       - name: Generar plataforma Android nativa y aplicar permisos
         run: |
           rm -rf android
           flutter create --org com.gastoscan.ai --project-name gastoscan_ai --platforms android .
           cp android_template/AndroidManifest.xml android/app/src/main/AndroidManifest.xml
+          
+      - name: Inyectar Keystore en build.gradle
+        run: |
+          python3 -c "
+          with open('android/app/build.gradle', 'r') as f: content = f.read()
+          signing_config = '''
+              signingConfigs {
+                  release {
+                      storeFile file('../../android_template/rindemas.jks')
+                      storePassword 'rindemas123'
+                      keyAlias 'rindemas'
+                      keyPassword 'rindemas123'
+                  }
+              }
+          '''
+          content = content.replace('buildTypes {', signing_config + '\n    buildTypes {')
+          content = content.replace('signingConfig signingConfigs.debug', 'signingConfig signingConfigs.release')
+          with open('android/app/build.gradle', 'w') as f: f.write(content)
+          "
 
       - name: Descargar Gradle 9.3.1 con reintentos automaticos
         run: |
