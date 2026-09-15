@@ -5,6 +5,9 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -46,8 +49,13 @@ jobs:
       - name: Compilar APK Release
         run: flutter build apk --release --no-tree-shake-icons --dart-define=GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}"
 
-      - name: Guardar instalador APK descargable
-        uses: actions/upload-artifact@v4
+      - name: Publicar Release (Descarga Directa)
+        uses: ncipollo/release-action@v1
         with:
-          name: GastoScanAI-Android-APK
-          path: build/app/outputs/flutter-apk/app-release.apk
+          artifacts: "build/app/outputs/flutter-apk/app-release.apk"
+          tag: "latest"
+          name: "Ultima Version"
+          body: "Descarga directa de la ultima version estable de GastoScan AI."
+          allowUpdates: true
+          makeLatest: true
+          token: ${{ secrets.GITHUB_TOKEN }}
