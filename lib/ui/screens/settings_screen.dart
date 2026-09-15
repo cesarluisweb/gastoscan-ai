@@ -61,7 +61,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         backgroundColor: AppColors.primary,
       ),
     );
-    Navigator.pop(context);
   }
 
   @override
@@ -71,6 +70,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Configuración'),
+        automaticallyImplyLeading: false,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),

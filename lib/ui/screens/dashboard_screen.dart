@@ -102,16 +102,6 @@ class DashboardScreen extends StatelessWidget {
               ),
             ],
           ),
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            tooltip: 'Ajustes',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
-              );
-            },
-          ),
         ],
       ),
       body: RefreshIndicator(
@@ -237,19 +227,6 @@ class DashboardScreen extends StatelessWidget {
               }).toList(),
             const SizedBox(height: 80),
           ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const ScanScreen()),
-          );
-        },
-        icon: const Icon(Icons.document_scanner_outlined),
-        label: const Text(
-          'Escanear Factura',
-          style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
     );
