@@ -202,15 +202,15 @@ class DatabaseHelper {
   }
 
   /// Busca la última vez que se compró un producto similar para comparar precio.
-  /// Devuelve un Map con {'precio_unitario': 0.0, 'fecha': 'YYYY-MM-DD'} o null si no lo encuentra.
+  /// Siempre devuelve el precio equivalente en USD para evitar falsos aumentos por inflación.
   Future<Map<String, dynamic>?> findPreviousPrice(String descripcion) async {
     final db = await instance.database;
     
-    // Buscar coincidencia parcial (ignorar mayusculas, espacios extras)
+    // Búsqueda simple, podríamos mejorar la precisión después
     final searchTerm = '%${descripcion.trim()}%';
     
     final result = await db.rawQuery('''
-      SELECT i.precio_unitario, g.fecha 
+      SELECT i.precio_unitario, g.fecha, g.moneda, g.total_original, g.total_usd 
       FROM items_gasto i
       JOIN gastos g ON i.gasto_id = g.id
       WHERE i.descripcion LIKE ?
@@ -219,9 +219,23 @@ class DatabaseHelper {
     ''', [searchTerm]);
 
     if (result.isNotEmpty) {
+      final row = result.first;
+      final moneda = row['moneda'] as String;
+      double precioUnitario = (row['precio_unitario'] as num?)?.toDouble() ?? 0.0;
+      
+      double precioUsd = precioUnitario;
+      if (moneda != 'USD') {
+        final totalOrig = (row['total_original'] as num?)?.toDouble() ?? 0.0;
+        final totalUsd = (row['total_usd'] as num?)?.toDouble() ?? 0.0;
+        if (totalUsd > 0 && totalOrig > 0) {
+          final tasa = totalOrig / totalUsd;
+          precioUsd = precioUnitario / tasa;
+        }
+      }
+
       return {
-        'precio_unitario': (result.first['precio_unitario'] as num?)?.toDouble() ?? 0.0,
-        'fecha': result.first['fecha'] as String,
+        'precio_usd': precioUsd,
+        'fecha': row['fecha'] as String,
       };
     }
     return null;

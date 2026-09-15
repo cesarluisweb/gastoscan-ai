@@ -96,6 +96,26 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       }
       _totalUsdCtrl = TextEditingController(text: totalUsdCalculado.toStringAsFixed(2));
     }
+    
+    // Verificar precios anteriores para los items recien cargados
+    _verificarPreciosAnteriores();
+  }
+
+  Map<int, Map<String, dynamic>> _priceComparisons = {};
+
+  Future<void> _verificarPreciosAnteriores() async {
+    final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
+    for (int i = 0; i < _items.length; i++) {
+      final desc = _items[i].descripcion;
+      if (desc.trim().length > 3) { // Ignorar muy cortos
+        final previo = await gastoProvider.buscarPrecioAnterior(desc);
+        if (previo != null && mounted) {
+          setState(() {
+            _priceComparisons[i] = previo;
+          });
+        }
+      }
+    }
   }
 
   @override
@@ -445,91 +465,129 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                       child: Text('No hay ítems detallados.', style: TextStyle(color: AppColors.textMuted)),
                     )
                   else
-                    ..._items.asMap().entries.map((entry) {
-                      final idx = entry.key;
-                      final item = entry.value;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 6),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              flex: 2,
-                              child: TextFormField(
-                                initialValue: item.descripcion,
-                                decoration: const InputDecoration(
-                                  labelText: 'Desc.',
-                                  contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                ),
-                                onChanged: (v) => _items[idx] = _items[idx].copyWith(descripcion: v),
+                      ..._items.asMap().entries.map((entry) {
+                        final idx = entry.key;
+                        final item = entry.value;
+                        
+                        Widget? priceWarning;
+                        if (_priceComparisons.containsKey(idx)) {
+                          final prevData = _priceComparisons[idx]!;
+                          final prevUsd = prevData['precio_usd'] as double;
+                          final prevFecha = prevData['fecha'] as String;
+                          
+                          double currentUsd = item.precioUnitario;
+                          if (_selectedMoneda == 'VES') {
+                            final tasa = double.tryParse(_tasaCambioCtrl.text.replaceAll(',', '.')) ?? 1.0;
+                            if (tasa > 0) currentUsd = currentUsd / tasa;
+                          }
+
+                          if (currentUsd > (prevUsd * 1.05)) { // 5% de tolerancia
+                            priceWarning = Padding(
+                              padding: const EdgeInsets.only(top: 4, left: 4),
+                              child: Text(
+                                '🔺 Aumentó respecto al $prevFecha (era \$${prevUsd.toStringAsFixed(2)})',
+                                style: const TextStyle(color: AppColors.error, fontSize: 11, fontWeight: FontWeight.w600),
                               ),
-                            ),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              flex: 1,
-                              child: TextFormField(
-                                initialValue: item.cantidad.toString(),
-                                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                decoration: const InputDecoration(
-                                  labelText: 'Cant.',
-                                  contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                ),
-                                onChanged: (v) {
-                                  final cant = double.tryParse(v) ?? 1.0;
-                                  _items[idx] = _items[idx].copyWith(
-                                    cantidad: cant,
-                                    total: cant * _items[idx].precioUnitario,
-                                  );
-                                },
+                            );
+                          } else if (currentUsd < (prevUsd * 0.95)) {
+                            priceWarning = Padding(
+                              padding: const EdgeInsets.only(top: 4, left: 4),
+                              child: Text(
+                                '🟩 Más barato que el $prevFecha (era \$${prevUsd.toStringAsFixed(2)})',
+                                style: const TextStyle(color: AppColors.primary, fontSize: 11, fontWeight: FontWeight.w600),
                               ),
-                            ),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              flex: 1,
-                              child: TextFormField(
-                                initialValue: item.precioUnitario.toStringAsFixed(2),
-                                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                decoration: const InputDecoration(
-                                  labelText: 'Precio',
-                                  contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                ),
-                                onChanged: (v) {
-                                  final precio = double.tryParse(v) ?? 0.0;
-                                  _items[idx] = _items[idx].copyWith(
-                                    precioUnitario: precio,
-                                    total: _items[idx].cantidad * precio,
-                                  );
-                                },
+                            );
+                          }
+                        }
+
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    flex: 2,
+                                    child: TextFormField(
+                                      initialValue: item.descripcion,
+                                      decoration: const InputDecoration(
+                                        labelText: 'Desc.',
+                                        contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                      ),
+                                      onChanged: (v) => _items[idx] = _items[idx].copyWith(descripcion: v),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    flex: 1,
+                                    child: TextFormField(
+                                      initialValue: item.cantidad.toString(),
+                                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                      decoration: const InputDecoration(
+                                        labelText: 'Cant.',
+                                        contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                      ),
+                                      onChanged: (v) {
+                                        final cant = double.tryParse(v) ?? 1.0;
+                                        _items[idx] = _items[idx].copyWith(
+                                          cantidad: cant,
+                                          total: cant * _items[idx].precioUnitario,
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    flex: 1,
+                                    child: TextFormField(
+                                      initialValue: item.precioUnitario.toStringAsFixed(2),
+                                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                      decoration: const InputDecoration(
+                                        labelText: 'Precio',
+                                        contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                      ),
+                                      onChanged: (v) {
+                                        final precio = double.tryParse(v) ?? 0.0;
+                                        _items[idx] = _items[idx].copyWith(
+                                          precioUnitario: precio,
+                                          total: _items[idx].cantidad * precio,
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    flex: 1,
+                                    child: TextFormField(
+                                      key: ValueKey('total_$idx\_${_items[idx].total}'),
+                                      initialValue: _items[idx].total.toStringAsFixed(2),
+                                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                      decoration: const InputDecoration(
+                                        labelText: 'Total',
+                                        contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                      ),
+                                      onChanged: (v) {
+                                        final tot = double.tryParse(v) ?? 0.0;
+                                        final cant = _items[idx].cantidad;
+                                        _items[idx] = _items[idx].copyWith(
+                                          total: tot,
+                                          precioUnitario: cant > 0 ? tot / cant : 0.0,
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.remove_circle_outline, color: AppColors.error, size: 20),
+                                    onPressed: () => _removeItem(idx),
+                                  ),
+                                ],
                               ),
-                            ),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              flex: 1,
-                              child: TextFormField(
-                                key: ValueKey('total_$idx\_${_items[idx].total}'),
-                                initialValue: _items[idx].total.toStringAsFixed(2),
-                                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                decoration: const InputDecoration(
-                                  labelText: 'Total',
-                                  contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                ),
-                                onChanged: (v) {
-                                  final tot = double.tryParse(v) ?? 0.0;
-                                  final cant = _items[idx].cantidad;
-                                  _items[idx] = _items[idx].copyWith(
-                                    total: tot,
-                                    precioUnitario: cant > 0 ? tot / cant : 0.0,
-                                  );
-                                },
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.remove_circle_outline, color: AppColors.error, size: 20),
-                              onPressed: () => _removeItem(idx),
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
+                              if (priceWarning != null) priceWarning,
+                            ],
+                          ),
+                        );
+                      }).toList(),
                 ],
               ),
             ),
