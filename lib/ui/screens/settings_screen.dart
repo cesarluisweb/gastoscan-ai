@@ -101,12 +101,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  isAnon
-                      ? 'Inicia sesión con Google para no perder tus datos si cambias de teléfono. Tus gastos actuales se guardarán.'
-                      : 'Sincronización activa. Cuenta vinculada a:\n${user.email}',
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
-                ),
+                if (!isAnon && user.photoURL != null)
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundImage: NetworkImage(user.photoURL!),
+                        radius: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Sincronización activa.\n${user.email}',
+                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                        ),
+                      ),
+                    ],
+                  )
+                else
+                  Text(
+                    isAnon
+                        ? 'Inicia sesión con Google para no perder tus datos si cambias de teléfono. Tus gastos actuales se guardarán.'
+                        : 'Sincronización activa. Cuenta vinculada a:\n${user.email}',
+                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                  ),
                 const SizedBox(height: 16),
                 if (isAnon)
                   SizedBox(
@@ -115,7 +132,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       icon: const Icon(Icons.login),
                       label: const Text('Vincular con Google'),
                       onPressed: () async {
-                        await Provider.of<GastoProvider>(context, listen: false).vincularCuentaGoogle();
+                        final error = await Provider.of<GastoProvider>(context, listen: false).vincularCuentaGoogle();
+                        if (error != null) {
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error: $error')),
+                          );
+                        }
                         setState(() {}); // Refrescar UI tras login
                       },
                     ),

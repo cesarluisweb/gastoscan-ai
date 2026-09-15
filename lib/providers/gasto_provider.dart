@@ -97,14 +97,14 @@ class GastoProvider with ChangeNotifier {
     }
   }
 
-  Future<void> vincularCuentaGoogle() async {
+  Future<String?> vincularCuentaGoogle() async {
     try {
       final auth = FirebaseAuth.instance;
       final user = auth.currentUser;
-      if (user == null) return;
+      if (user == null) return "No hay sesión local activa";
 
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) return; // User canceled
+      if (googleUser == null) return null; // User canceled, no error
 
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
@@ -128,14 +128,16 @@ class GastoProvider with ChangeNotifier {
             }
             await syncToFirestore();
           } else {
-            rethrow;
+            return e.message ?? e.toString();
           }
         }
       } else {
         // Ya no es anonimo
       }
+      return null;
     } catch (e) {
       debugPrint("Error al vincular Google: $e");
+      return e.toString();
     }
   }
 
