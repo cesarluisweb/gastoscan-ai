@@ -49,8 +49,16 @@ jobs:
 
       - name: Habilitar Desugaring en build.gradle
         run: |
-          sed -i 's/compileOptions {/compileOptions {\n        coreLibraryDesugaringEnabled true/g' android/app/build.gradle
-          echo "dependencies { coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4' }" >> android/app/build.gradle
+          if [ -f "android/app/build.gradle.kts" ]; then
+            sed -i 's/compileOptions {/compileOptions {\n        isCoreLibraryDesugaringEnabled = true/g' android/app/build.gradle.kts
+            echo 'dependencies { coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4") }' >> android/app/build.gradle.kts
+          elif [ -f "android/app/build.gradle" ]; then
+            sed -i 's/compileOptions {/compileOptions {\n        coreLibraryDesugaringEnabled true/g' android/app/build.gradle
+            echo "dependencies { coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4' }" >> android/app/build.gradle
+          else
+            echo "No build file found!"
+            exit 1
+          fi
 
       - name: Descargar Gradle 9.3.1 con reintentos automaticos
         run: |
