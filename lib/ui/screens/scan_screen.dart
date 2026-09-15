@@ -12,18 +12,25 @@ import 'review_expense_screen.dart';
 import 'settings_screen.dart';
 
 class ScanScreen extends StatefulWidget {
-  const ScanScreen({Key? key}) : super(key: key);
+  final ImagePicker? imagePicker;
+  const ScanScreen({Key? key, this.imagePicker}) : super(key: key);
 
   @override
   State<ScanScreen> createState() => _ScanScreenState();
 }
 
 class _ScanScreenState extends State<ScanScreen> {
-  final ImagePicker _picker = ImagePicker();
+  late final ImagePicker _picker;
   final GeminiService _geminiService = GeminiService();
   File? _selectedImage;
   bool _isProcessing = false;
   String? _statusText;
+
+  @override
+  void initState() {
+    super.initState();
+    _picker = widget.imagePicker ?? ImagePicker();
+  }
 
   Future<void> _pickImage(ImageSource source) async {
     try {
@@ -36,18 +43,10 @@ class _ScanScreenState extends State<ScanScreen> {
             });
           } else {
             final queueProvider = Provider.of<ScanQueueProvider>(context, listen: false);
-            for (var file in pickedFiles) {
-              await queueProvider.addPendingItem(file.path);
-            }
+            final paths = pickedFiles.map((file) => file.path).toList();
+            await queueProvider.enqueueMultiple(paths);
             if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('${pickedFiles.length} facturas añadidas a la cola de procesamiento en segundo plano.'),
-                backgroundColor: AppColors.primary,
-                duration: const Duration(seconds: 4),
-              ),
-            );
-            Navigator.pop(context); // Volver al inicio
+            Navigator.pop(context); // Volver al inicio de forma silenciosa e inmediata
           }
         }
       } else {

@@ -48,7 +48,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     return value.truncateToDouble() == value ? value.toInt().toString() : value.toString();
   }
   late List<ItemGastoModel> _items;
-  String _fuenteTasa = 'Tasa oficial BCV automÃ¡tica';
+  String _fuenteTasa = 'Tasa oficial BCV automática';
   bool _isSaving = false;
 
   @override
@@ -71,7 +71,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         tasa = gasto.totalOriginal / gasto.totalUsd;
       }
       _tasaCambioCtrl = TextEditingController(text: tasa.toStringAsFixed(2));
-      _fuenteTasa = 'Tasa histA3rica del gasto';
+      _fuenteTasa = 'Tasa histórica del gasto';
     } else {
       final data = widget.extractedData!;
       _comercioCtrl = TextEditingController(text: data.comercio);
@@ -290,14 +290,14 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         if (matchedIds.isNotEmpty) {
            ScaffoldMessenger.of(context).showSnackBar(
              SnackBar(
-               content: Text('Gasto registrado y ${matchedIds.length} Ã­tem(s) de tu lista marcados como comprados.'),
+               content: Text('Gasto registrado y ${matchedIds.length} ítem(s) de tu lista marcados como comprados.'),
                backgroundColor: AppColors.primaryDark,
              ),
            );
         } else {
            ScaffoldMessenger.of(context).showSnackBar(
              const SnackBar(
-               content: Text('Gasto registrado con Ã©xito'),
+               content: Text('Gasto registrado con éxito'),
                backgroundColor: AppColors.primaryDark,
              ),
            );
@@ -329,7 +329,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     builder: (ctx) => AlertDialog(
                       backgroundColor: AppColors.card,
                       title: const Text('Descartar Factura', style: TextStyle(color: AppColors.textPrimary)),
-                      content: const Text('Â¿Seguro que deseas descartar esta factura escaneada? No se guardarÃ¡ en tu historial.', style: TextStyle(color: AppColors.textSecondary)),
+                      content: const Text('¿Seguro que deseas descartar esta factura escaneada? No se guardará en tu historial.', style: TextStyle(color: AppColors.textSecondary)),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(ctx, false),
@@ -370,7 +370,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'InformaciÃ³n General',
+                    'Información General',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                   ),
                   const SizedBox(height: 16),
@@ -387,7 +387,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     onTap: _selectDate,
                     child: InputDecorator(
                       decoration: const InputDecoration(
-                        labelText: 'Fecha de EmisiÃ³n',
+                        labelText: 'Fecha de Emisión',
                         prefixIcon: Icon(Icons.calendar_today_outlined, color: AppColors.textSecondary),
                       ),
                       child: Text(
@@ -400,7 +400,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                   DropdownButtonFormField<String>(
                     value: _selectedCategoria,
                     decoration: const InputDecoration(
-                      labelText: 'CategorÃ­a',
+                      labelText: 'Categoría',
                       prefixIcon: Icon(Icons.category_outlined, color: AppColors.textSecondary),
                     ),
                     dropdownColor: AppColors.surface,
@@ -426,7 +426,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Montos y ConversiÃ³n',
+                    'Montos y Conversión',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                   ),
                   const SizedBox(height: 16),
@@ -457,7 +457,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                           keyboardType: const TextInputType.numberWithOptions(decimal: true),
                           decoration: const InputDecoration(labelText: 'Monto Original'),
                           onChanged: (_) => _recalcularTotalUsd(),
-                          validator: (val) => (double.tryParse(val ?? '') == null) ? 'InvÃ¡lido' : null,
+                          validator: (val) => (double.tryParse(val ?? '') == null) ? 'Inválido' : null,
                         ),
                       ),
                     ],
@@ -497,7 +497,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                       labelText: 'Total Equivalente (USD)',
                       prefixIcon: Icon(Icons.attach_money, color: AppColors.primary),
                     ),
-                    validator: (val) => (double.tryParse(val ?? '') == null) ? 'InvÃ¡lido' : null,
+                    validator: (val) => (double.tryParse(val ?? '') == null) ? 'Inválido' : null,
                   ),
                 ],
               ),
@@ -517,7 +517,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        'Desglose de Ãtems',
+                        'Desglose de Ítems',
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                       ),
                       TextButton.icon(
@@ -531,7 +531,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                   if (_items.isEmpty)
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 8),
-                      child: Text('No hay Ã­tems detallados.', style: TextStyle(color: AppColors.textMuted)),
+                      child: Text('No hay ítems detallados.', style: TextStyle(color: AppColors.textMuted)),
                     )
                   else
                       ..._items.asMap().entries.map((entry) {
@@ -556,7 +556,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                             priceWarning = Padding(
                               padding: const EdgeInsets.only(top: 4, left: 4),
                               child: Text(
-                                'ðŸ”º EstÃ¡ ${diff.toStringAsFixed(0)}% mÃ¡s caro que en $prevComercio',
+                                '🔺 Está ${diff.toStringAsFixed(0)}% más caro que en $prevComercio',
                                 style: const TextStyle(color: AppColors.error, fontSize: 11, fontWeight: FontWeight.w600),
                               ),
                             );
@@ -565,7 +565,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                             priceWarning = Padding(
                               padding: const EdgeInsets.only(top: 4, left: 4),
                               child: Text(
-                                'ðŸŸ© Te saliÃ³ un ${diff.toStringAsFixed(0)}% mÃ¡s econÃ³mico que en $prevComercio',
+                                '🟢 Te salió un ${diff.toStringAsFixed(0)}% más económico que en $prevComercio',
                                 style: const TextStyle(color: AppColors.primary, fontSize: 11, fontWeight: FontWeight.w600),
                               ),
                             );

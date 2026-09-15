@@ -3,12 +3,14 @@ import 'package:path/path.dart';
 import '../../models/gasto_model.dart';
 import '../../models/item_gasto_model.dart';
 import '../../models/shopping_item_model.dart';
+import '../../models/categoria_model.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
 
   DatabaseHelper._init();
+  DatabaseHelper.test();
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -22,7 +24,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 5,
+      version: 7,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
       onConfigure: _onConfigure,
@@ -65,6 +67,27 @@ class DatabaseHelper {
         // Puede que ya exista si el usuario instaló desde cero en v4
       }
     }
+    if (oldVersion < 6) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS categorias (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          nombre TEXT NOT NULL UNIQUE,
+          presupuesto_mensual REAL NOT NULL DEFAULT 0.0
+        )
+      ''');
+      try {
+        await db.execute('ALTER TABLE categorias ADD COLUMN presupuesto_mensual REAL NOT NULL DEFAULT 0.0');
+      } catch (e) {
+        // La columna ya existe si se creó recién
+      }
+    }
+    if (oldVersion < 7) {
+      try {
+        await db.execute('ALTER TABLE gastos ADD COLUMN items TEXT');
+      } catch (e) {
+        // La columna ya existe si el usuario actualizó desde v4
+      }
+    }
   }
 
   Future<void> _onConfigure(Database db) async {
@@ -85,6 +108,7 @@ class DatabaseHelper {
         categoria TEXT NOT NULL,
         ruta_foto_local TEXT,
         creado_en TEXT NOT NULL,
+        items TEXT,
         firestore_id TEXT,
         synced INTEGER DEFAULT 0
       )
@@ -123,6 +147,15 @@ class DatabaseHelper {
         status TEXT NOT NULL,
         extracted_data TEXT,
         created_at TEXT NOT NULL
+      )
+    ''');
+
+    // Tabla categorias
+    await db.execute('''
+      CREATE TABLE categorias (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombre TEXT NOT NULL UNIQUE,
+        presupuesto_mensual REAL NOT NULL DEFAULT 0.0
       )
     ''');
 
@@ -443,6 +476,104 @@ class DatabaseHelper {
       where: 'id = ?',
       whereArgs: [id],
     );
+  }
+
+  // ==========================================
+  // OPERACIONES PARA CATEGORIAS Y PRESUPUESTOS
+  // ==========================================
+
+  /// Inserta una nueva categoría o reemplaza en caso de conflicto
+  Future<int> insertCategoria(CategoriaModel categoria) async {
+    final db = await instance.database;
+    return await db.insert(
+      'categorias',
+      categoria.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  /// Actualiza una categoría existente
+  Future<int> updateCategoria(CategoriaModel categoria) async {
+    final db = await instance.database;
+    return await db.update(
+      'categorias',
+      categoria.toMap(),
+      where: 'id = ?',
+      whereArgs: [categoria.id],
+    );
+  }
+
+  /// Define o actualiza el presupuesto mensual de una categoría (búsqueda insensible a mayúsculas)
+  Future<void> setPresupuestoCategoria(String categoriaNombre, double presupuesto) async {
+    final db = await instance.database;
+    final trimmedName = categoriaNombre.trim();
+    final existing = await db.query(
+      'categorias',
+      where: 'LOWER(nombre) = ?',
+      whereArgs: [trimmedName.toLowerCase()],
+      limit: 1,
+    );
+
+    if (existing.isNotEmpty) {
+      await db.update(
+        'categorias',
+        {'presupuesto_mensual': presupuesto},
+        where: 'id = ?',
+        whereArgs: [existing.first['id']],
+      );
+    } else {
+      await db.insert('categorias', {
+        'nombre': trimmedName,
+        'presupuesto_mensual': presupuesto,
+      });
+    }
+  }
+
+  /// Obtiene todas las categorías registradas
+  Future<List<CategoriaModel>> getAllCategorias() async {
+    final db = await instance.database;
+    final result = await db.query('categorias', orderBy: 'nombre ASC');
+    return result.map((m) => CategoriaModel.fromMap(m)).toList();
+  }
+
+  /// Obtiene una categoría por su nombre
+  Future<CategoriaModel?> getCategoriaPorNombre(String categoriaNombre) async {
+    final db = await instance.database;
+    final result = await db.query(
+      'categorias',
+      where: 'LOWER(nombre) = ?',
+      whereArgs: [categoriaNombre.trim().toLowerCase()],
+      limit: 1,
+    );
+    if (result.isNotEmpty) {
+      return CategoriaModel.fromMap(result.first);
+    }
+    return null;
+  }
+
+  /// Obtiene el presupuesto mensual de una categoría
+  Future<double> getPresupuestoPorCategoria(String categoriaNombre) async {
+    final cat = await getCategoriaPorNombre(categoriaNombre);
+    return cat?.presupuestoMensual ?? 0.0;
+  }
+
+  /// Obtiene un mapa con todos los presupuestos asignados {categoria: presupuesto}
+  Future<Map<String, double>> getAllPresupuestosCategorias() async {
+    final db = await instance.database;
+    final result = await db.query('categorias');
+    final Map<String, double> presupuestos = {};
+    for (final row in result) {
+      final name = row['nombre'] as String;
+      final budget = (row['presupuesto_mensual'] as num?)?.toDouble() ?? 0.0;
+      presupuestos[name] = budget;
+    }
+    return presupuestos;
+  }
+
+  /// Elimina una categoría por su ID
+  Future<int> deleteCategoria(int id) async {
+    final db = await instance.database;
+    return await db.delete('categorias', where: 'id = ?', whereArgs: [id]);
   }
 
   Future<void> close() async {

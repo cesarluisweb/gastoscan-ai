@@ -1,41 +1,66 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_constants.dart';
 import '../../core/utils/currency_formatter.dart';
 
 class CategoryChart extends StatelessWidget {
   final Map<String, double> categoryTotals;
+  final Map<String, double> categoryBudgets;
+  final void Function(String categoria, double budget)? onSetBudget;
 
-  const CategoryChart({Key? key, required this.categoryTotals}) : super(key: key);
+  const CategoryChart({
+    Key? key,
+    required this.categoryTotals,
+    this.categoryBudgets = const {},
+    this.onSetBudget,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    if (categoryTotals.isEmpty) {
+    // Si no hay totales ni presupuestos configurados, no renderizar nada
+    if (categoryTotals.isEmpty && categoryBudgets.isEmpty) {
       return const SizedBox.shrink();
     }
 
-    final double totalSuma = categoryTotals.values.fold(0.0, (prev, elem) => prev + elem);
-    if (totalSuma <= 0) return const SizedBox.shrink();
+    final double totalSuma =
+        categoryTotals.values.fold(0.0, (prev, elem) => prev + elem);
 
+    // Preparar secciones del gráfico circular
     final List<PieChartSectionData> sections = [];
-    categoryTotals.forEach((cat, monto) {
-      final color = AppColors.categoryColors[cat] ?? AppColors.textSecondary;
-      final porcentaje = (monto / totalSuma) * 100;
+    if (totalSuma > 0) {
+      categoryTotals.forEach((cat, monto) {
+        if (monto <= 0) return;
+        final color = AppColors.categoryColors[cat] ?? AppColors.textSecondary;
+        final porcentaje = (monto / totalSuma) * 100;
 
-      sections.add(
-        PieChartSectionData(
-          color: color,
-          value: monto,
-          title: porcentaje >= 8 ? '${porcentaje.toStringAsFixed(0)}%' : '',
-          radius: 40,
-          titleStyle: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+        sections.add(
+          PieChartSectionData(
+            color: color,
+            value: monto,
+            title: porcentaje >= 8 ? '${porcentaje.toStringAsFixed(0)}%' : '',
+            radius: 40,
+            titleStyle: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
-        ),
-      );
-    });
+        );
+      });
+    }
+
+    // Obtener lista consolidada y ordenada de categorías para presupuestos
+    final Set<String> allCategoryKeys = {
+      ...categoryTotals.keys,
+      ...categoryBudgets.keys,
+    };
+    final List<String> sortedCategories = allCategoryKeys.toList()
+      ..sort((a, b) {
+        final spentA = _getSpent(a);
+        final spentB = _getSpent(b);
+        return spentB.compareTo(spentA);
+      });
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -47,73 +72,430 @@ class CategoryChart extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Distribución por Categorías',
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Distribución y Presupuestos',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              TextButton.icon(
+                key: const Key('add_category_budget_button'),
+                icon: const Icon(Icons.add, size: 16),
+                label: const Text('Presupuesto', style: TextStyle(fontSize: 12)),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.secondary,
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                onPressed: () => _showBudgetDialog(context),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          SizedBox(
-            height: 150,
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: PieChart(
-                    PieChartData(
-                      sections: sections,
-                      centerSpaceRadius: 35,
-                      sectionsSpace: 2,
+          if (sections.isNotEmpty && totalSuma > 0) ...[
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 150,
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: PieChart(
+                      PieChartData(
+                        sections: sections,
+                        centerSpaceRadius: 35,
+                        sectionsSpace: 2,
+                      ),
                     ),
                   ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    flex: 4,
+                    child: ListView(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      children: categoryTotals.entries.map((entry) {
+                        final color = AppColors.categoryColors[entry.key] ??
+                            AppColors.textSecondary;
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 2),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 10,
+                                height: 10,
+                                decoration: BoxDecoration(
+                                  color: color,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  entry.key,
+                                  style: const TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 12,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              Text(
+                                CurrencyFormatter.formatUsd(entry.value),
+                                style: const TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          if (sortedCategories.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            const Divider(color: AppColors.border, height: 1),
+            const SizedBox(height: 12),
+            const Row(
+              children: [
+                Icon(
+                  Icons.account_balance_wallet_outlined,
+                  size: 14,
+                  color: AppColors.textSecondary,
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  flex: 4,
-                  child: ListView(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    children: categoryTotals.entries.map((entry) {
-                      final color = AppColors.categoryColors[entry.key] ?? AppColors.textSecondary;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 2),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 10,
-                              height: 10,
-                              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                entry.key,
-                                style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            Text(
-                              CurrencyFormatter.formatUsd(entry.value),
-                              style: const TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
+                SizedBox(width: 6),
+                Text(
+                  'Control de Presupuestos por Categoría',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
             ),
-          ),
+            const SizedBox(height: 8),
+            ...sortedCategories.map((cat) => _buildCategoryBudgetItem(context, cat)),
+          ],
         ],
       ),
+    );
+  }
+
+  double _getSpent(String category) {
+    if (categoryTotals.containsKey(category)) {
+      return categoryTotals[category]!;
+    }
+    for (final entry in categoryTotals.entries) {
+      if (entry.key.toLowerCase().trim() == category.toLowerCase().trim()) {
+        return entry.value;
+      }
+    }
+    return 0.0;
+  }
+
+  double _getBudget(String category) {
+    if (categoryBudgets.containsKey(category)) {
+      return categoryBudgets[category]!;
+    }
+    for (final entry in categoryBudgets.entries) {
+      if (entry.key.toLowerCase().trim() == category.toLowerCase().trim()) {
+        return entry.value;
+      }
+    }
+    return 0.0;
+  }
+
+  Widget _buildCategoryBudgetItem(BuildContext context, String cat) {
+    final double spent = _getSpent(cat);
+    final double budget = _getBudget(cat);
+    final bool hasBudget = budget > 0;
+    final bool isExceeded = hasBudget && spent > budget;
+    final Color categoryColor = isExceeded
+        ? AppColors.error
+        : (AppColors.categoryColors[cat] ?? AppColors.primary);
+
+    return Container(
+      key: Key('category_budget_item_$cat'),
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: isExceeded
+            ? AppColors.error.withOpacity(0.06)
+            : AppColors.cardLighter,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: isExceeded
+              ? AppColors.error.withOpacity(0.4)
+              : AppColors.border,
+          width: isExceeded ? 1.5 : 1.0,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: categoryColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  cat,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+              Text(
+                hasBudget
+                    ? '${CurrencyFormatter.formatUsd(spent)} / ${CurrencyFormatter.formatUsd(budget)}'
+                    : CurrencyFormatter.formatUsd(spent),
+                style: TextStyle(
+                  color: isExceeded ? AppColors.error : AppColors.textPrimary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+              const SizedBox(width: 6),
+              IconButton(
+                key: Key('edit_budget_$cat'),
+                icon: const Icon(
+                  Icons.edit_outlined,
+                  size: 16,
+                  color: AppColors.textSecondary,
+                ),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                onPressed: () => _showBudgetDialog(
+                  context,
+                  initialCategory: cat,
+                  currentBudget: budget,
+                ),
+              ),
+            ],
+          ),
+          if (hasBudget) ...[
+            const SizedBox(height: 6),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                key: Key('category_progress_$cat'),
+                value: isExceeded
+                    ? 1.0
+                    : (budget > 0 ? (spent / budget).clamp(0.0, 1.0) : 0.0),
+                color: isExceeded
+                    ? AppColors.error
+                    : (AppColors.categoryColors[cat] ?? AppColors.primary),
+                backgroundColor: isExceeded
+                    ? AppColors.error.withOpacity(0.2)
+                    : AppColors.border,
+                minHeight: 6,
+              ),
+            ),
+          ],
+          if (isExceeded) ...[
+            const SizedBox(height: 6),
+            Container(
+              key: Key('excess_alert_$cat'),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: AppColors.error.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: AppColors.error),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    color: AppColors.error,
+                    size: 14,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Presupuesto superado por ${CurrencyFormatter.formatUsd(spent - budget)}',
+                    style: const TextStyle(
+                      color: AppColors.error,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ] else if (!hasBudget) ...[
+            const SizedBox(height: 2),
+            InkWell(
+              key: Key('assign_budget_prompt_$cat'),
+              onTap: () => _showBudgetDialog(
+                context,
+                initialCategory: cat,
+                currentBudget: 0.0,
+              ),
+              child: const Text(
+                '+ Asignar presupuesto mensual',
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 11,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _showBudgetDialog(
+    BuildContext context, {
+    String? initialCategory,
+    double? currentBudget,
+  }) {
+    final categoryCtrl = TextEditingController(text: initialCategory ?? '');
+    final amountCtrl = TextEditingController(
+      text: (currentBudget != null && currentBudget > 0)
+          ? currentBudget.toStringAsFixed(0)
+          : '',
+    );
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              title: Text(
+                initialCategory != null
+                    ? 'Presupuesto: $initialCategory'
+                    : 'Definir Presupuesto',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                  fontSize: 16,
+                ),
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (initialCategory == null) ...[
+                      const Text(
+                        'Categoría:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      TextField(
+                        key: const Key('input_categoria_nombre'),
+                        controller: categoryCtrl,
+                        decoration: InputDecoration(
+                          hintText: 'Ej. Comida, Alimentación, etc.',
+                          filled: true,
+                          fillColor: AppColors.cardLighter,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(color: AppColors.border),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 6,
+                        children: AppConstants.categorias.take(4).map((c) {
+                          return ActionChip(
+                            label: Text(c, style: const TextStyle(fontSize: 11)),
+                            onPressed: () {
+                              categoryCtrl.text = c;
+                              setStateDialog(() {});
+                            },
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                    const Text(
+                      'Límite mensual (USD):',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    TextField(
+                      key: const Key('input_presupuesto_monto'),
+                      controller: amountCtrl,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      decoration: InputDecoration(
+                        prefixText: '\$ ',
+                        hintText: '50.00',
+                        filled: true,
+                        fillColor: AppColors.cardLighter,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: AppColors.border),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text(
+                    'Cancelar',
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
+                ),
+                ElevatedButton(
+                  key: const Key('btn_guardar_presupuesto'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: AppColors.secondary,
+                  ),
+                  onPressed: () {
+                    final catName =
+                        (initialCategory ?? categoryCtrl.text).trim();
+                    final amount = double.tryParse(
+                            amountCtrl.text.replaceAll(',', '.')) ??
+                        0.0;
+                    if (catName.isNotEmpty && amount >= 0) {
+                      onSetBudget?.call(catName, amount);
+                      Navigator.of(dialogContext).pop();
+                    }
+                  },
+                  child: const Text('Guardar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }

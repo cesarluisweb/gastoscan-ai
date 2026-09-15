@@ -7,17 +7,34 @@ import '../services/image_service.dart';
 import 'dart:io';
 
 class ScanQueueProvider with ChangeNotifier {
-  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
-  final GeminiService _geminiService = GeminiService();
+  final DatabaseHelper _dbHelper;
+  final GeminiService _geminiService;
+  final bool autoProcess;
 
   List<Map<String, dynamic>> _readyItems = [];
   List<Map<String, dynamic>> get readyItems => _readyItems;
 
+  List<Map<String, dynamic>> _pendingItems = [];
+  List<Map<String, dynamic>> get pendingItems => _pendingItems;
+  int get pendingCount => _pendingItems.length;
+
   bool _isProcessing = false;
   bool get isProcessing => _isProcessing;
 
-  ScanQueueProvider() {
-    loadReadyItems();
+  ScanQueueProvider({
+    DatabaseHelper? dbHelper,
+    GeminiService? geminiService,
+    this.autoProcess = true,
+  })  : _dbHelper = dbHelper ?? DatabaseHelper.instance,
+        _geminiService = geminiService ?? GeminiService() {
+    if (autoProcess) {
+      loadQueue();
+    }
+  }
+
+  Future<void> loadQueue() async {
+    await loadReadyItems();
+    await loadPendingItems();
     processPendingItems(); // Intenta procesar al iniciar
   }
 
@@ -26,19 +43,55 @@ class ScanQueueProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> addPendingItem(String imagePath) async {
+  Future<void> loadPendingItems() async {
+    _pendingItems = await _dbHelper.getPendingScanQueueItems();
+    notifyListeners();
+  }
+
+  Future<void> enqueue(String imagePath) async {
     await _dbHelper.insertScanQueueItem(imagePath);
-    // Intentar procesar enseguida si hay internet
+    await loadPendingItems();
     processPendingItems();
+  }
+
+  Future<void> enqueueMultiple(List<String> imagePaths) async {
+    for (final path in imagePaths) {
+      await _dbHelper.insertScanQueueItem(path);
+    }
+    await loadPendingItems();
+    processPendingItems();
+  }
+
+  Future<void> addPendingItem(String imagePath) async {
+    await enqueue(imagePath);
+  }
+
+  void setProcessing(bool value) {
+    _isProcessing = value;
+    notifyListeners();
+  }
+
+  void setPendingItems(List<Map<String, dynamic>> items) {
+    _pendingItems = List.from(items);
+    notifyListeners();
+  }
+
+  void setReadyItems(List<Map<String, dynamic>> items) {
+    _readyItems = List.from(items);
+    notifyListeners();
   }
 
   Future<void> processPendingItems() async {
     if (_isProcessing) return;
     _isProcessing = true;
+    await loadPendingItems();
     notifyListeners();
 
     try {
       final pending = await _dbHelper.getPendingScanQueueItems();
+      _pendingItems = List.from(pending);
+      notifyListeners();
+
       for (final item in pending) {
         final int id = item['id'];
         final String imagePath = item['image_path'];
@@ -47,7 +100,7 @@ class ScanQueueProvider with ChangeNotifier {
         if (await file.exists()) {
           try {
             final compressedBytes = await ImageService.compressImage(file);
-            final pendingShopping = await DatabaseHelper.instance.getPendingShoppingItems();
+            final pendingShopping = await _dbHelper.getPendingShoppingItems();
 
             final extracted = await _geminiService.analyzeReceiptImage(
               imageBytes: compressedBytes,
@@ -63,10 +116,12 @@ class ScanQueueProvider with ChangeNotifier {
         } else {
           await _dbHelper.deleteScanQueueItem(id);
         }
+        await loadPendingItems();
       }
       await loadReadyItems();
     } finally {
       _isProcessing = false;
+      await loadPendingItems();
       notifyListeners();
     }
   }
@@ -74,5 +129,6 @@ class ScanQueueProvider with ChangeNotifier {
   Future<void> removeItem(int id) async {
     await _dbHelper.deleteScanQueueItem(id);
     await loadReadyItems();
+    await loadPendingItems();
   }
 }

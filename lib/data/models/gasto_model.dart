@@ -40,7 +40,6 @@ class GastoModel {
       'categoria': categoria,
       'ruta_foto_local': rutaFotoLocal,
       'creado_en': creadoEn,
-      'items': items.map((i) => i.toMap()).toList(),
       'firestore_id': firestoreId,
       'synced': synced,
     };

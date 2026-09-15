@@ -1,6 +1,7 @@
 import '../datasources/local/database_helper.dart';
 import '../models/gasto_model.dart';
 import '../models/item_gasto_model.dart';
+import '../models/categoria_model.dart';
 
 class GastoRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
@@ -43,5 +44,25 @@ class GastoRepository {
 
   Future<Map<String, dynamic>?> buscarPrecioAnterior(String descripcion) {
     return _dbHelper.findPreviousPrice(descripcion);
+  }
+
+  Future<Map<String, double>> obtenerPresupuestosCategorias() {
+    return _dbHelper.getAllPresupuestosCategorias();
+  }
+
+  Future<void> guardarPresupuestoCategoria(String categoria, double presupuesto) {
+    return _dbHelper.setPresupuestoCategoria(categoria, presupuesto);
+  }
+
+  Future<List<CategoriaModel>> obtenerCategorias() {
+    return _dbHelper.getAllCategorias();
+  }
+
+  Future<int> guardarCategoria(CategoriaModel categoria) {
+    return _dbHelper.insertCategoria(categoria);
+  }
+
+  Future<double> obtenerPresupuestoPorCategoria(String categoria) {
+    return _dbHelper.getPresupuestoPorCategoria(categoria);
   }
 }

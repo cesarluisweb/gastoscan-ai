@@ -20,6 +20,7 @@ class GastoProvider with ChangeNotifier {
   double _totalMesUsd = 0.0;
   double _totalMesVes = 0.0;
   Map<String, double> _totalesPorCategoria = {};
+  Map<String, double> _presupuestosPorCategoria = {};
 
   List<GastoModel> get gastos => _gastos;
   bool get isLoading => _isLoading;
@@ -29,6 +30,7 @@ class GastoProvider with ChangeNotifier {
   double get totalMesUsd => _totalMesUsd;
   double get totalMesVes => _totalMesVes;
   Map<String, double> get totalesPorCategoria => _totalesPorCategoria;
+  Map<String, double> get presupuestosPorCategoria => _presupuestosPorCategoria;
 
   GastoProvider() {
     cargarDatos();
@@ -47,6 +49,7 @@ class GastoProvider with ChangeNotifier {
       _totalMesVes = totales['VES'] ?? 0.0;
 
       _totalesPorCategoria = await _repository.obtenerTotalesPorCategoria(_selectedYear, _selectedMonth);
+      _presupuestosPorCategoria = await _repository.obtenerPresupuestosCategorias();
     } catch (e) {
       _errorMessage = 'Error al cargar los gastos: ${e.toString()}';
     } finally {
@@ -179,5 +182,51 @@ class GastoProvider with ChangeNotifier {
 
   Future<Map<String, dynamic>?> buscarPrecioAnterior(String descripcion) async {
     return await _repository.buscarPrecioAnterior(descripcion);
+  }
+
+  /// Define o actualiza el presupuesto mensual de una categoría
+  Future<void> setPresupuestoCategoria(String categoria, double presupuesto) async {
+    try {
+      await _repository.guardarPresupuestoCategoria(categoria, presupuesto);
+      _presupuestosPorCategoria[categoria] = presupuesto;
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = 'Error al guardar presupuesto: ${e.toString()}';
+      notifyListeners();
+    }
+  }
+
+  /// Obtiene el presupuesto asignado a una categoría (búsqueda insensible a mayúsculas)
+  double getPresupuestoCategoria(String categoria) {
+    if (_presupuestosPorCategoria.containsKey(categoria)) {
+      return _presupuestosPorCategoria[categoria]!;
+    }
+    for (final entry in _presupuestosPorCategoria.entries) {
+      if (entry.key.toLowerCase().trim() == categoria.toLowerCase().trim()) {
+        return entry.value;
+      }
+    }
+    return 0.0;
+  }
+
+  /// Obtiene el gasto mensual total acumulado en una categoría (búsqueda insensible a mayúsculas)
+  double getSpentForCategory(String categoria) {
+    if (_totalesPorCategoria.containsKey(categoria)) {
+      return _totalesPorCategoria[categoria]!;
+    }
+    for (final entry in _totalesPorCategoria.entries) {
+      if (entry.key.toLowerCase().trim() == categoria.toLowerCase().trim()) {
+        return entry.value;
+      }
+    }
+    return 0.0;
+  }
+
+  /// Determina si una categoría ha superado su presupuesto mensual asignado
+  bool isCategoryOverBudget(String categoria) {
+    final budget = getPresupuestoCategoria(categoria);
+    if (budget <= 0) return false;
+    final spent = getSpentForCategory(categoria);
+    return spent > budget;
   }
 }
