@@ -17,8 +17,23 @@ import 'review_expense_screen.dart';
 import '../../data/models/gasto_model.dart';
 import '../../data/models/gemini_extraction_result.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  bool _isSearching = false;
+  final TextEditingController _searchCtrl = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
 
   void _exportarCsv(BuildContext context) async {
     final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
@@ -75,39 +90,69 @@ class DashboardScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Rinde Más'),
+        title: _isSearching
+            ? TextField(
+                controller: _searchCtrl,
+                autofocus: true,
+                style: const TextStyle(color: AppColors.textPrimary),
+                decoration: const InputDecoration(
+                  hintText: 'Buscar gasto o comercio...',
+                  border: InputBorder.none,
+                ),
+                onChanged: (val) {
+                  setState(() {
+                    _searchQuery = val.toLowerCase();
+                  });
+                },
+              )
+            : const Text('Rinde Más'),
         actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.file_download_outlined),
-            tooltip: 'Exportar Reportes',
-            color: AppColors.surface,
-            onSelected: (val) {
-              if (val == 'csv') _exportarCsv(context);
-              if (val == 'md') _exportarMarkdown(context);
+          IconButton(
+            icon: Icon(_isSearching ? Icons.close : Icons.search),
+            onPressed: () {
+              setState(() {
+                if (_isSearching) {
+                  _isSearching = false;
+                  _searchCtrl.clear();
+                  _searchQuery = '';
+                } else {
+                  _isSearching = true;
+                }
+              });
             },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'csv',
-                child: Row(
-                  children: [
-                    Icon(Icons.table_chart_outlined, color: AppColors.primary, size: 18),
-                    SizedBox(width: 8),
-                    Text('Exportar a Excel (.csv)', style: TextStyle(color: AppColors.textPrimary)),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'md',
-                child: Row(
-                  children: [
-                    Icon(Icons.description_outlined, color: AppColors.primary, size: 18),
-                    SizedBox(width: 8),
-                    Text('Exportar a Markdown (.md)', style: TextStyle(color: AppColors.textPrimary)),
-                  ],
-                ),
-              ),
-            ],
           ),
+          if (!_isSearching)
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.file_download_outlined),
+              tooltip: 'Exportar Reportes',
+              color: AppColors.surface,
+              onSelected: (val) {
+                if (val == 'csv') _exportarCsv(context);
+                if (val == 'md') _exportarMarkdown(context);
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'csv',
+                  child: Row(
+                    children: [
+                      Icon(Icons.table_chart_outlined, color: AppColors.primary, size: 18),
+                      SizedBox(width: 8),
+                      Text('Exportar a Excel (.csv)', style: TextStyle(color: AppColors.textPrimary)),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'md',
+                  child: Row(
+                    children: [
+                      Icon(Icons.text_snippet_outlined, color: AppColors.primary, size: 18),
+                      SizedBox(width: 8),
+                      Text('Exportar como Texto', style: TextStyle(color: AppColors.textPrimary)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
         ],
       ),
       body: RefreshIndicator(
@@ -195,7 +240,12 @@ class DashboardScreen extends StatelessWidget {
             else if (gastoProvider.gastos.isEmpty)
               _buildEmptyState()
             else
-              ...gastoProvider.gastos.map((gasto) {
+              ...gastoProvider.gastos.where((gasto) {
+                if (_searchQuery.isEmpty) return true;
+                final matchComercio = gasto.comercio.toLowerCase().contains(_searchQuery);
+                final matchItems = gasto.items.any((item) => item.descripcion.toLowerCase().contains(_searchQuery));
+                return matchComercio || matchItems;
+              }).map((gasto) {
                 return ExpenseCard(
                   gasto: gasto,
                   onEdit: () {

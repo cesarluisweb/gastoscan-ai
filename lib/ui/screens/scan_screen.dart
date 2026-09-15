@@ -27,15 +27,40 @@ class _ScanScreenState extends State<ScanScreen> {
 
   Future<void> _pickImage(ImageSource source) async {
     try {
-      final pickedFile = await _picker.pickImage(
-        source: source,
-        imageQuality: 90,
-      );
+      if (source == ImageSource.gallery) {
+        final pickedFiles = await _picker.pickMultiImage(imageQuality: 90);
+        if (pickedFiles.isNotEmpty) {
+          if (pickedFiles.length == 1) {
+            setState(() {
+              _selectedImage = File(pickedFiles.first.path);
+            });
+          } else {
+            final queueProvider = Provider.of<ScanQueueProvider>(context, listen: false);
+            for (var file in pickedFiles) {
+              await queueProvider.addPendingItem(file.path);
+            }
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('${pickedFiles.length} facturas añadidas a la cola de procesamiento en segundo plano.'),
+                backgroundColor: AppColors.primary,
+                duration: const Duration(seconds: 4),
+              ),
+            );
+            Navigator.pop(context); // Volver al inicio
+          }
+        }
+      } else {
+        final pickedFile = await _picker.pickImage(
+          source: source,
+          imageQuality: 90,
+        );
 
-      if (pickedFile != null) {
-        setState(() {
-          _selectedImage = File(pickedFile.path);
-        });
+        if (pickedFile != null) {
+          setState(() {
+            _selectedImage = File(pickedFile.path);
+          });
+        }
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
