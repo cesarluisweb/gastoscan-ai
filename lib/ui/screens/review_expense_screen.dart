@@ -474,6 +474,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                           final prevData = _priceComparisons[idx]!;
                           final prevUsd = prevData['precio_usd'] as double;
                           final prevFecha = prevData['fecha'] as String;
+                          final prevComercio = prevData['comercio'] as String;
                           
                           double currentUsd = item.precioUnitario;
                           if (_selectedMoneda == 'VES') {
@@ -482,18 +483,20 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                           }
 
                           if (currentUsd > (prevUsd * 1.05)) { // 5% de tolerancia
+                            final diff = ((currentUsd / prevUsd) - 1) * 100;
                             priceWarning = Padding(
                               padding: const EdgeInsets.only(top: 4, left: 4),
                               child: Text(
-                                '🔺 Aumentó respecto al $prevFecha (era \$${prevUsd.toStringAsFixed(2)})',
+                                '🔺 Está ${diff.toStringAsFixed(0)}% más caro que en $prevComercio',
                                 style: const TextStyle(color: AppColors.error, fontSize: 11, fontWeight: FontWeight.w600),
                               ),
                             );
                           } else if (currentUsd < (prevUsd * 0.95)) {
+                            final diff = (1 - (currentUsd / prevUsd)) * 100;
                             priceWarning = Padding(
                               padding: const EdgeInsets.only(top: 4, left: 4),
                               child: Text(
-                                '🟩 Más barato que el $prevFecha (era \$${prevUsd.toStringAsFixed(2)})',
+                                '🟩 Te salió un ${diff.toStringAsFixed(0)}% más económico que en $prevComercio',
                                 style: const TextStyle(color: AppColors.primary, fontSize: 11, fontWeight: FontWeight.w600),
                               ),
                             );
