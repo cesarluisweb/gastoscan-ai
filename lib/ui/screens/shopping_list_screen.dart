@@ -12,6 +12,7 @@ class ShoppingListScreen extends StatefulWidget {
 
 class _ShoppingListScreenState extends State<ShoppingListScreen> {
   final _ctrl = TextEditingController();
+  final _focusNode = FocusNode();
   List<ShoppingItemModel> _items = [];
   bool _isLoading = true;
 
@@ -19,6 +20,13 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
   void initState() {
     super.initState();
     _loadItems();
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    _focusNode.dispose();
+    super.dispose();
   }
 
   Future<void> _loadItems() async {
@@ -33,7 +41,10 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
 
   Future<void> _add() async {
     final text = _ctrl.text.trim();
-    if (text.isEmpty) return;
+    if (text.isEmpty) {
+      _focusNode.requestFocus();
+      return;
+    }
     final newItem = ShoppingItemModel(
       name: text,
       createdAt: DateTime.now().toIso8601String(),
@@ -41,6 +52,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
     await DatabaseHelper.instance.insertShoppingItem(newItem);
     _ctrl.clear();
     _loadItems();
+    _focusNode.requestFocus();
   }
 
   Future<void> _toggle(ShoppingItemModel item) async {
@@ -69,11 +81,12 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                 Expanded(
                   child: TextField(
                     controller: _ctrl,
+                    focusNode: _focusNode,
+                    onEditingComplete: _add,
                     decoration: const InputDecoration(
                       hintText: 'Ej. Harina Pan',
                       prefixIcon: Icon(Icons.shopping_cart_checkout),
                     ),
-                    onSubmitted: (_) => _add(),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -88,8 +101,9 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _items.isEmpty
-                    ? const Center(child: Text('Tu lista estA? vacA-a.', style: TextStyle(color: AppColors.textSecondary)))
+                    ? const Center(child: Text('Tu lista está vacía.', style: TextStyle(color: AppColors.textSecondary)))
                     : ListView.builder(
+                        padding: const EdgeInsets.only(bottom: 80),
                         itemCount: _items.length,
                         itemBuilder: (context, index) {
                           final item = _items[index];

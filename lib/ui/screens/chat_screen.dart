@@ -25,7 +25,7 @@ class _ChatScreenState extends State<ChatScreen> {
     super.initState();
     _messages.add({
       'role': 'assistant',
-      'text': 'Hola, soy tu analista financiero. Puedo analizar tus gastos de este mes. ^Que te gustarAiDa saber?',
+      'text': 'Hola, soy tu analista financiero. Puedo analizar tus gastos de este mes. ¿Qué te gustaría saber?',
     });
   }
 
@@ -156,7 +156,7 @@ class _ChatScreenState extends State<ChatScreen> {
               child: CircularProgressIndicator(),
             ),
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.only(left: 8, right: 8, top: 8, bottom: 40),
             color: AppColors.surface,
             child: Row(
               children: [
