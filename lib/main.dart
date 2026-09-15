@@ -7,6 +7,7 @@ import 'core/theme/app_theme.dart';
 import 'providers/gasto_provider.dart';
 import 'providers/settings_provider.dart';
 import 'providers/scan_queue_provider.dart';
+import 'services/notification_service.dart';
 import 'ui/screens/main_screen.dart';
 
 void main() async {
@@ -21,6 +22,14 @@ void main() async {
     }
   } catch (e) {
     debugPrint("Error signing in anonymously: $e");
+  }
+
+  // Inicializar Notificaciones Locales y programar recordatorio de inactividad
+  try {
+    await NotificationService.instance.initialize();
+    await NotificationService.instance.recordActivityAndReschedule();
+  } catch (e) {
+    debugPrint("Error initializing notifications: $e");
   }
 
   runApp(const GastoScanApp());

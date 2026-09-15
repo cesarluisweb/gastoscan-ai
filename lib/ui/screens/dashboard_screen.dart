@@ -9,6 +9,7 @@ import '../../providers/scan_queue_provider.dart';
 import 'dart:io';
 import 'dart:convert';
 import '../../services/export_service.dart';
+import '../../services/notification_service.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/category_chart.dart';
 import '../widgets/expense_card.dart';
@@ -29,6 +30,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _isSearching = false;
   final TextEditingController _searchCtrl = TextEditingController();
   String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    // Registrar actividad del usuario y reprogramar recordatorio de inactividad a 3 días
+    NotificationService.instance.recordActivityAndReschedule();
+  }
 
   @override
   void dispose() {

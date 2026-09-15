@@ -22,8 +22,8 @@
 | 1 | M1: Subida Múltiple de Facturas | Image picker multi-image support, enqueue all selected images to ScanQueueProvider, navigate back to Dashboard, verify yellow processing banner | None | DONE |
 | 2 | M2: Buscador de Gastos | DashboardScreen AppBar search icon, filter controller, real-time expense list filtering by commerce/product | None | DONE |
 | 3 | M3: Presupuestos por Categoría | SQLite budget storage / category budget field, budget edit UI, monthly expense calculation, red progress/alert UI in Dashboard | None | DONE |
-| 4 | M4: Recordatorios de Inactividad | flutter_local_notifications integration, Android permissions in AndroidManifest.xml, 3-day inactivity scheduling service, activity tracking | None | PLANNED |
-| 5 | M5: E2E Verification & Auditing | Programmatic test suite across all 4 requirements, run flutter tests, Reviewer verification, Challenger stress-test, and Forensic Auditor verification | M1, M2, M3, M4 | PLANNED |
+| 4 | M4: Recordatorios de Inactividad | flutter_local_notifications integration, Android permissions in AndroidManifest.xml, 3-day inactivity scheduling service, activity tracking | None | DONE |
+| 5 | M5: E2E Verification & Auditing | Programmatic test suite across all 4 requirements, run flutter tests, Reviewer verification, Challenger stress-test, and Forensic Auditor verification | M1, M2, M3, M4 | DONE |
 
 ## Interface Contracts
 ### Scanner ↔ ScanQueueProvider

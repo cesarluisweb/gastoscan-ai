@@ -4,7 +4,10 @@ import '../models/item_gasto_model.dart';
 import '../models/categoria_model.dart';
 
 class GastoRepository {
-  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+  final DatabaseHelper _dbHelper;
+
+  GastoRepository({DatabaseHelper? dbHelper})
+      : _dbHelper = dbHelper ?? DatabaseHelper.instance;
 
   Future<int> guardarGasto(GastoModel gasto, List<ItemGastoModel> items) {
     return _dbHelper.insertGasto(gasto, items);

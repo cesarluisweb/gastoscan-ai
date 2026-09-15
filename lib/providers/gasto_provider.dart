@@ -6,9 +6,10 @@ import '../data/models/gasto_model.dart';
 import '../data/models/item_gasto_model.dart';
 import '../data/repositories/gasto_repository.dart';
 import '../data/datasources/local/database_helper.dart';
+import '../services/notification_service.dart';
 
 class GastoProvider with ChangeNotifier {
-  final GastoRepository _repository = GastoRepository();
+  final GastoRepository _repository;
 
   List<GastoModel> _gastos = [];
   bool _isLoading = false;
@@ -32,8 +33,11 @@ class GastoProvider with ChangeNotifier {
   Map<String, double> get totalesPorCategoria => _totalesPorCategoria;
   Map<String, double> get presupuestosPorCategoria => _presupuestosPorCategoria;
 
-  GastoProvider() {
-    cargarDatos();
+  GastoProvider({GastoRepository? repository, bool autoLoad = true})
+      : _repository = repository ?? GastoRepository() {
+    if (autoLoad) {
+      cargarDatos();
+    }
   }
 
   Future<void> cargarDatos() async {
@@ -69,6 +73,7 @@ class GastoProvider with ChangeNotifier {
 
       await cargarDatos();
       syncToFirestore(); // Intentar sincronizar en segundo plano
+      NotificationService.instance.recordActivityAndReschedule();
       return true;
     } catch (e) {
       _errorMessage = 'Error al guardar el gasto: ${e.toString()}';
@@ -83,6 +88,7 @@ class GastoProvider with ChangeNotifier {
       await _repository.actualizarGasto(gastoAActualizar, items);
       await cargarDatos();
       syncToFirestore();
+      NotificationService.instance.recordActivityAndReschedule();
       return true;
     } catch (e) {
       _errorMessage = 'Error al actualizar el gasto: ${e.toString()}';

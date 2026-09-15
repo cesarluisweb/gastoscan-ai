@@ -40,6 +40,10 @@ dependencies:
   csv: ^6.0.0
   share_plus: ^13.3.0
 
+  # Notificaciones Locales y Recordatorios
+  flutter_local_notifications: ^17.2.2
+  timezone: ^0.9.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
