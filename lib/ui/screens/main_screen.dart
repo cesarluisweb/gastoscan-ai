@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../providers/gasto_provider.dart';
 import '../../core/constants/app_colors.dart';
+import '../../data/models/gemini_extraction_result.dart';
 import 'dashboard_screen.dart';
 import 'settings_screen.dart';
 import 'scan_screen.dart';
@@ -94,7 +95,18 @@ class _MainScreenState extends State<MainScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const ReviewExpenseScreen(),
+                      builder: (context) => ReviewExpenseScreen(
+                        extractedData: GeminiExtractionResult(
+                          comercio: '',
+                          fecha: DateTime.now().toIso8601String().substring(0, 10),
+                          moneda: 'USD',
+                          totalOriginal: 0.0,
+                          tasaCambioDetectada: null,
+                          impuestoIva: 0.0,
+                          categoriaSugerida: 'Otros',
+                          items: [],
+                        ),
+                      ),
                     ),
                   );
                 },
@@ -116,16 +128,20 @@ class _MainScreenState extends State<MainScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddMenu(context),
-        backgroundColor: AppColors.primary,
-        elevation: 4,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.qr_code_scanner, color: AppColors.textPrimary, size: 28),
+        backgroundColor: AppColors.surface, // Blanco
+        elevation: 2,
+        shape: const CircleBorder(
+          side: BorderSide(color: AppColors.primary, width: 3), // Borde amarillo
+        ),
+        child: const Icon(Icons.add, color: AppColors.textPrimary, size: 32), // Icono +
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: BottomAppBar(
         color: AppColors.surface,
         shape: const CircularNotchedRectangle(),
-        notchMargin: 8.0,
+        notchMargin: 6.0,
+        padding: EdgeInsets.zero,
+        height: 65, // Reducir altura
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
@@ -150,8 +166,8 @@ class _MainScreenState extends State<MainScreen> {
     return InkWell(
       onTap: () => _onTabTapped(index),
       borderRadius: BorderRadius.circular(16),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
@@ -161,11 +177,11 @@ class _MainScreenState extends State<MainScreen> {
               color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
               size: 24,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             Text(
               label,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
               ),
