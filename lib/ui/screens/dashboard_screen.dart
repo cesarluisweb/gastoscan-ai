@@ -10,23 +10,26 @@ import '../widgets/category_chart.dart';
 import '../widgets/expense_card.dart';
 import 'scan_screen.dart';
 import 'settings_screen.dart';
+import 'review_expense_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({Key? key}) : super(key: key);
 
   void _exportarCsv(BuildContext context) async {
     final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
-    final todosLosGastos = await gastoProvider.obtenerTodosParaExportar();
+    final gastosMes = gastoProvider.gastos;
 
-    if (todosLosGastos.isEmpty) {
+    if (gastosMes.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No hay gastos registrados para exportar.')),
+        const SnackBar(content: Text('No hay gastos en este mes para exportar.')),
       );
       return;
     }
 
-    final csvContent = ExportService.generateCsvData(todosLosGastos);
-    final fileName = 'gastos_${DateTime.now().toIso8601String().substring(0, 10)}.csv';
+    final csvContent = ExportService.generateCsvData(gastosMes);
+    final mes = DateFormatter.getMonthName(gastoProvider.selectedMonth);
+    final anio = gastoProvider.selectedYear;
+    final fileName = 'gastos_${mes}_$anio.csv';
 
     await ExportService.exportAndShare(
       content: csvContent,
@@ -37,18 +40,19 @@ class DashboardScreen extends StatelessWidget {
 
   void _exportarMarkdown(BuildContext context) async {
     final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
-    final todosLosGastos = await gastoProvider.obtenerTodosParaExportar();
+    final gastosMes = gastoProvider.gastos;
 
-    if (todosLosGastos.isEmpty) {
+    if (gastosMes.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No hay gastos registrados para exportar.')),
+        const SnackBar(content: Text('No hay gastos en este mes para exportar.')),
       );
       return;
     }
 
-    final periodo = '${DateFormatter.getMonthName(gastoProvider.selectedMonth)} ${gastoProvider.selectedYear}';
-    final mdContent = ExportService.generateMarkdownReport(todosLosGastos, periodo: periodo);
-    final fileName = 'reporte_gastos_${DateTime.now().toIso8601String().substring(0, 10)}.md';
+    final mes = DateFormatter.getMonthName(gastoProvider.selectedMonth);
+    final anio = gastoProvider.selectedYear;
+    final mdContent = ExportService.generateMarkdownReport(gastosMes, periodo: '$mes $anio');
+    final fileName = 'reporte_${mes}_$anio.md';
 
     await ExportService.exportAndShare(
       content: mdContent,
@@ -193,6 +197,16 @@ class DashboardScreen extends StatelessWidget {
               ...gastoProvider.gastos.map((gasto) {
                 return ExpenseCard(
                   gasto: gasto,
+                  onEdit: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ReviewExpenseScreen(
+                          existingGasto: gasto,
+                        ),
+                      ),
+                    );
+                  },
                   onDelete: () async {
                     final confirm = await showDialog<bool>(
                       context: context,

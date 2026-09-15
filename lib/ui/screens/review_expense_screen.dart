@@ -13,13 +13,15 @@ import '../../services/image_service.dart';
 import '../../services/exchange_rate_service.dart';
 
 class ReviewExpenseScreen extends StatefulWidget {
-  final File imageFile;
-  final GeminiExtractionResult extractedData;
+  final File? imageFile;
+  final GeminiExtractionResult? extractedData;
+  final GastoModel? existingGasto;
 
   const ReviewExpenseScreen({
     Key? key,
-    required this.imageFile,
-    required this.extractedData,
+    this.imageFile,
+    this.extractedData,
+    this.existingGasto,
   }) : super(key: key);
 
   @override
@@ -44,38 +46,56 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
   @override
   void initState() {
     super.initState();
-    final data = widget.extractedData;
     final settings = Provider.of<SettingsProvider>(context, listen: false);
 
-    _comercioCtrl = TextEditingController(text: data.comercio);
-    _selectedFecha = data.fecha;
-    _selectedMoneda = data.moneda;
-    _selectedCategoria = data.categoriaSugerida;
-    _items = List.from(data.items);
-
-    _totalOriginalCtrl = TextEditingController(text: data.totalOriginal.toStringAsFixed(2));
-
-    double tasaInicial = data.tasaCambioDetectada ?? settings.tasaCambioVesUsd;
-    _tasaCambioCtrl = TextEditingController(text: tasaInicial.toStringAsFixed(2));
-
-    if (data.tasaCambioDetectada != null && data.tasaCambioDetectada! > 0) {
-      _fuenteTasa = 'Tasa detectada en el comprobante';
-    } else {
-      _fuenteTasa = 'Buscando tasa de la fecha...';
-      if (_selectedMoneda == 'VES') {
-        _actualizarTasaPorFecha(_selectedFecha);
+    if (widget.existingGasto != null) {
+      final gasto = widget.existingGasto!;
+      _comercioCtrl = TextEditingController(text: gasto.comercio);
+      _selectedFecha = gasto.fecha;
+      _selectedMoneda = gasto.moneda;
+      _selectedCategoria = gasto.categoria;
+      _items = List.from(gasto.items);
+      _totalOriginalCtrl = TextEditingController(text: gasto.totalOriginal.toStringAsFixed(2));
+      _totalUsdCtrl = TextEditingController(text: gasto.totalUsd.toStringAsFixed(2));
+      
+      double tasa = 0;
+      if (gasto.moneda == 'VES' && gasto.totalUsd > 0) {
+        tasa = gasto.totalOriginal / gasto.totalUsd;
       }
-    }
-
-    double totalUsdCalculado;
-    if (_selectedMoneda == 'USD') {
-      totalUsdCalculado = data.totalOriginal;
-    } else if (_selectedMoneda == 'VES') {
-      totalUsdCalculado = tasaInicial > 0 ? (data.totalOriginal / tasaInicial) : data.totalOriginal;
+      _tasaCambioCtrl = TextEditingController(text: tasa.toStringAsFixed(2));
+      _fuenteTasa = 'Tasa histA3rica del gasto';
     } else {
-      totalUsdCalculado = data.totalOriginal;
+      final data = widget.extractedData!;
+      _comercioCtrl = TextEditingController(text: data.comercio);
+      _selectedFecha = data.fecha;
+      _selectedMoneda = data.moneda;
+      _selectedCategoria = data.categoriaSugerida;
+      _items = List.from(data.items);
+
+      _totalOriginalCtrl = TextEditingController(text: data.totalOriginal.toStringAsFixed(2));
+
+      double tasaInicial = data.tasaCambioDetectada ?? settings.tasaCambioVesUsd;
+      _tasaCambioCtrl = TextEditingController(text: tasaInicial.toStringAsFixed(2));
+
+      if (data.tasaCambioDetectada != null && data.tasaCambioDetectada! > 0) {
+        _fuenteTasa = 'Tasa detectada en el comprobante';
+      } else {
+        _fuenteTasa = 'Buscando tasa de la fecha...';
+        if (_selectedMoneda == 'VES') {
+          _actualizarTasaPorFecha(_selectedFecha);
+        }
+      }
+
+      double totalUsdCalculado;
+      if (_selectedMoneda == 'USD') {
+        totalUsdCalculado = data.totalOriginal;
+      } else if (_selectedMoneda == 'VES') {
+        totalUsdCalculado = tasaInicial > 0 ? (data.totalOriginal / tasaInicial) : data.totalOriginal;
+      } else {
+        totalUsdCalculado = data.totalOriginal;
+      }
+      _totalUsdCtrl = TextEditingController(text: totalUsdCalculado.toStringAsFixed(2));
     }
-    _totalUsdCtrl = TextEditingController(text: totalUsdCalculado.toStringAsFixed(2));
   }
 
   @override
@@ -150,7 +170,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         _selectedFecha = nuevaFecha;
       });
       // Si la factura no traía tasa fija impresa, busca la tasa correspondiente a la fecha elegida
-      if (widget.extractedData.tasaCambioDetectada == null || widget.extractedData.tasaCambioDetectada! <= 0) {
+      if (widget.existingGasto == null && (widget.extractedData?.tasaCambioDetectada == null || widget.extractedData!.tasaCambioDetectada! <= 0)) {
         _actualizarTasaPorFecha(nuevaFecha);
       }
     }
@@ -181,16 +201,24 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
 
     String? rutaFotoFinal;
-    if (settings.guardarFotos) {
-      rutaFotoFinal = await ImageService.saveImagePermanently(widget.imageFile);
+    if (widget.existingGasto != null) {
+      rutaFotoFinal = widget.existingGasto!.rutaFotoLocal;
+      if (widget.imageFile != null && settings.guardarFotos) {
+        rutaFotoFinal = await ImageService.saveImagePermanently(widget.imageFile!);
+      }
     } else {
-      await ImageService.deleteTempFile(widget.imageFile);
+      if (settings.guardarFotos && widget.imageFile != null) {
+        rutaFotoFinal = await ImageService.saveImagePermanently(widget.imageFile!);
+      } else if (widget.imageFile != null) {
+        await ImageService.deleteTempFile(widget.imageFile!);
+      }
     }
 
     final totalOrig = double.tryParse(_totalOriginalCtrl.text) ?? 0.0;
     final totalUsd = double.tryParse(_totalUsdCtrl.text) ?? 0.0;
 
     final nuevoGasto = GastoModel(
+      id: widget.existingGasto?.id,
       fecha: _selectedFecha,
       comercio: _comercioCtrl.text.trim(),
       moneda: _selectedMoneda,
@@ -198,10 +226,15 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       totalUsd: totalUsd,
       categoria: _selectedCategoria,
       rutaFotoLocal: rutaFotoFinal,
-      creadoEn: DateTime.now().toIso8601String(),
+      creadoEn: widget.existingGasto?.creadoEn ?? DateTime.now().toIso8601String(),
     );
 
-    final success = await gastoProvider.agregarGasto(nuevoGasto, _items);
+    bool success;
+    if (widget.existingGasto != null) {
+      success = await gastoProvider.actualizarGasto(nuevoGasto, _items);
+    } else {
+      success = await gastoProvider.agregarGasto(nuevoGasto, _items);
+    }
 
     if (!mounted) return;
     setState(() => _isSaving = false);
@@ -420,17 +453,17 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                         child: Row(
                           children: [
                             Expanded(
-                              flex: 3,
+                              flex: 2,
                               child: TextFormField(
                                 initialValue: item.descripcion,
                                 decoration: const InputDecoration(
-                                  labelText: 'Descripción',
-                                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                  labelText: 'Desc.',
+                                  contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                                 ),
                                 onChanged: (v) => _items[idx] = _items[idx].copyWith(descripcion: v),
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 4),
                             Expanded(
                               flex: 1,
                               child: TextFormField(
@@ -449,11 +482,31 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                 },
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 4),
                             Expanded(
-                              flex: 2,
+                              flex: 1,
                               child: TextFormField(
-                                initialValue: item.total.toStringAsFixed(2),
+                                initialValue: item.precioUnitario.toStringAsFixed(2),
+                                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                decoration: const InputDecoration(
+                                  labelText: 'Precio',
+                                  contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                ),
+                                onChanged: (v) {
+                                  final precio = double.tryParse(v) ?? 0.0;
+                                  _items[idx] = _items[idx].copyWith(
+                                    precioUnitario: precio,
+                                    total: _items[idx].cantidad * precio,
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              flex: 1,
+                              child: TextFormField(
+                                key: ValueKey('total_$idx\_${_items[idx].total}'),
+                                initialValue: _items[idx].total.toStringAsFixed(2),
                                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                                 decoration: const InputDecoration(
                                   labelText: 'Total',
@@ -461,7 +514,11 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                 ),
                                 onChanged: (v) {
                                   final tot = double.tryParse(v) ?? 0.0;
-                                  _items[idx] = _items[idx].copyWith(total: tot);
+                                  final cant = _items[idx].cantidad;
+                                  _items[idx] = _items[idx].copyWith(
+                                    total: tot,
+                                    precioUnitario: cant > 0 ? tot / cant : 0.0,
+                                  );
                                 },
                               ),
                             ),
@@ -491,16 +548,27 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
   }
 
   Widget _buildImageHeader() {
+    Widget imageWidget;
+    if (widget.imageFile != null) {
+      imageWidget = Image.file(widget.imageFile!, fit: BoxFit.cover);
+    } else if (widget.existingGasto?.rutaFotoLocal != null) {
+      final file = File(widget.existingGasto!.rutaFotoLocal!);
+      if (file.existsSync()) {
+        imageWidget = Image.file(file, fit: BoxFit.cover);
+      } else {
+        imageWidget = const Center(child: Icon(Icons.image_not_supported, color: AppColors.textMuted, size: 48));
+      }
+    } else {
+      imageWidget = const Center(child: Icon(Icons.receipt_long, color: AppColors.textMuted, size: 48));
+    }
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
       child: Container(
         height: 140,
         width: double.infinity,
         color: Colors.black,
-        child: Image.file(
-          widget.imageFile,
-          fit: BoxFit.cover,
-        ),
+        child: imageWidget,
       ),
     );
   }

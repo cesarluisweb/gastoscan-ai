@@ -63,6 +63,18 @@ class GastoProvider with ChangeNotifier {
     }
   }
 
+  Future<bool> actualizarGasto(GastoModel gasto, List<ItemGastoModel> items) async {
+    try {
+      await _repository.actualizarGasto(gasto, items);
+      await cargarDatos();
+      return true;
+    } catch (e) {
+      _errorMessage = 'Error al actualizar el gasto: ${e.toString()}';
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<bool> eliminarGasto(int id) async {
     try {
       await _repository.eliminarGasto(id);

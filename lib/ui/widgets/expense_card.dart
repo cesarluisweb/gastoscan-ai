@@ -7,11 +7,13 @@ import '../../data/models/gasto_model.dart';
 class ExpenseCard extends StatefulWidget {
   final GastoModel gasto;
   final VoidCallback onDelete;
+  final VoidCallback onEdit;
 
   const ExpenseCard({
     Key? key,
     required this.gasto,
     required this.onDelete,
+    required this.onEdit,
   }) : super(key: key);
 
   @override
@@ -153,8 +155,19 @@ class _ExpenseCardState extends State<ExpenseCard> {
                     color: AppColors.surface,
                     onSelected: (val) {
                       if (val == 'delete') widget.onDelete();
+                      if (val == 'edit') widget.onEdit();
                     },
                     itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit_outlined, color: AppColors.primary, size: 18),
+                            SizedBox(width: 8),
+                            Text('Editar', style: TextStyle(color: AppColors.textPrimary)),
+                          ],
+                        ),
+                      ),
                       const PopupMenuItem(
                         value: 'delete',
                         child: Row(
