@@ -29,7 +29,7 @@ class ReviewExpenseScreen extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<ReviewExpenseScreen> creatEstáte() => _ReviewExpenseScreenState();
+  State<ReviewExpenseScreen> createState() => _ReviewExpenseScreenState();
 }
 
 class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
@@ -737,7 +737,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                       prefixIcon: const Icon(Icons.payments_outlined, color: AppColors.textSecondary),
                     ),
                     onChanged: (_) => _recalcularTotalUsd(),
-                    validator: (val) => (double.tryParse(val ?? '') == null) ? 'InvÃ¡lido' : null,
+                    validator: (val) => (double.tryParse(val ?? '') == null) ? 'Inválido' : null,
                   ),
                   if (_selectedMoneda == 'VES') ...[
                     const SizedBox(height: 12),
@@ -774,7 +774,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                       labelText: 'Total Equivalente (USD)',
                       prefixIcon: Icon(Icons.attach_money, color: AppColors.primaryDark),
                     ),
-                    validator: (val) => (double.tryParse(val ?? '') == null) ? 'InvÃ¡lido' : null,
+                    validator: (val) => (double.tryParse(val ?? '') == null) ? 'Inválido' : null,
                   ),
                 ],
               ),
