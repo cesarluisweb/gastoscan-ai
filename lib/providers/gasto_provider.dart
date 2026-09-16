@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -101,7 +101,7 @@ class GastoProvider with ChangeNotifier {
     try {
       final auth = FirebaseAuth.instance;
       final user = auth.currentUser;
-      if (user == null) return "No hay sesión local activa";
+      if (user == null) return "No hay sesiÃ³n local activa";
 
       final GoogleSignInAccount? googleUser = await GoogleSignIn(
         serverClientId: '758679432067-p4lll1b5vfia32fndd68gjif6bmfmvel.apps.googleusercontent.com',
@@ -117,12 +117,19 @@ class GastoProvider with ChangeNotifier {
       if (user.isAnonymous) {
         try {
           await user.linkWithCredential(credential);
+          await user.updateProfile(displayName: googleUser.displayName, photoURL: googleUser.photoUrl);
+          await user.reload();
           await syncToFirestore(); // Sync all existing anonymous data
         } on FirebaseAuthException catch (e) {
           if (e.code == 'credential-already-in-use') {
-            // El usuario ya tenia una cuenta. Iniciar sesion con ella.
-            await auth.signInWithCredential(credential);
+            // El usuario ya tenía una cuenta. Iniciar sesión con ella.
+            final userCred = await auth.signInWithCredential(credential);
             
+            if (userCred.user != null) {
+              await userCred.user!.updateProfile(displayName: googleUser.displayName, photoURL: googleUser.photoUrl);
+              await userCred.user!.reload();
+            }
+
             // Forzar que los datos locales SQLite suban y se fusionen
             final gastos = await _repository.obtenerGastos();
             for (var g in gastos) {
@@ -194,7 +201,7 @@ class GastoProvider with ChangeNotifier {
     return await _repository.buscarPrecioAnterior(descripcion);
   }
 
-  /// Define o actualiza el presupuesto mensual de una categoría
+  /// Define o actualiza el presupuesto mensual de una categorÃ­a
   Future<void> setPresupuestoCategoria(String categoria, double presupuesto) async {
     try {
       await _repository.guardarPresupuestoCategoria(categoria, presupuesto);
@@ -206,7 +213,7 @@ class GastoProvider with ChangeNotifier {
     }
   }
 
-  /// Obtiene el presupuesto asignado a una categoría (búsqueda insensible a mayúsculas)
+  /// Obtiene el presupuesto asignado a una categorÃ­a (bÃºsqueda insensible a mayÃºsculas)
   double getPresupuestoCategoria(String categoria) {
     if (_presupuestosPorCategoria.containsKey(categoria)) {
       return _presupuestosPorCategoria[categoria]!;
@@ -219,7 +226,7 @@ class GastoProvider with ChangeNotifier {
     return 0.0;
   }
 
-  /// Obtiene el gasto mensual total acumulado en una categoría (búsqueda insensible a mayúsculas)
+  /// Obtiene el gasto mensual total acumulado en una categorÃ­a (bÃºsqueda insensible a mayÃºsculas)
   double getSpentForCategory(String categoria) {
     if (_totalesPorCategoria.containsKey(categoria)) {
       return _totalesPorCategoria[categoria]!;
@@ -232,7 +239,7 @@ class GastoProvider with ChangeNotifier {
     return 0.0;
   }
 
-  /// Determina si una categoría ha superado su presupuesto mensual asignado
+  /// Determina si una categorÃ­a ha superado su presupuesto mensual asignado
   bool isCategoryOverBudget(String categoria) {
     final budget = getPresupuestoCategoria(categoria);
     if (budget <= 0) return false;

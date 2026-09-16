@@ -1,10 +1,11 @@
-class ItemGastoModel {
+﻿class ItemGastoModel {
   final int? id;
   final int? gastoId;
   final String descripcion;
   final double cantidad;
   final double precioUnitario;
   final double total;
+  final String categoria;
 
   ItemGastoModel({
     this.id,
@@ -13,6 +14,7 @@ class ItemGastoModel {
     required this.cantidad,
     required this.precioUnitario,
     required this.total,
+    this.categoria = 'Otros',
   });
 
   Map<String, dynamic> toMap() {
@@ -23,6 +25,7 @@ class ItemGastoModel {
       'cantidad': cantidad,
       'precio_unitario': precioUnitario,
       'total': total,
+      'categoria': categoria,
     };
   }
 
@@ -30,10 +33,11 @@ class ItemGastoModel {
     return ItemGastoModel(
       id: map['id'] as int?,
       gastoId: map['gasto_id'] as int?,
-      descripcion: map['descripcion'] as String? ?? 'Sin descripción',
+      descripcion: map['descripcion'] as String? ?? 'Sin descripciÃ³n',
       cantidad: (map['cantidad'] as num?)?.toDouble() ?? 1.0,
       precioUnitario: (map['precio_unitario'] as num?)?.toDouble() ?? 0.0,
       total: (map['total'] as num?)?.toDouble() ?? 0.0,
+      categoria: map['categoria'] as String? ?? 'Otros',
     );
   }
 
@@ -44,6 +48,7 @@ class ItemGastoModel {
     double? cantidad,
     double? precioUnitario,
     double? total,
+    String? categoria,
   }) {
     return ItemGastoModel(
       id: id ?? this.id,
@@ -52,6 +57,7 @@ class ItemGastoModel {
       cantidad: cantidad ?? this.cantidad,
       precioUnitario: precioUnitario ?? this.precioUnitario,
       total: total ?? this.total,
+      categoria: categoria ?? this.categoria,
     );
   }
 }

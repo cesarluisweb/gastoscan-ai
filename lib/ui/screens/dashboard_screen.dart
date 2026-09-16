@@ -165,7 +165,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   value: 'category_budget',
                   child: Row(
                     children: [
-                      Icon(Icons.account_balance_wallet_outlined, color: AppColors.primary, size: 18),
+                      Icon(Icons.account_balance_wallet_outlined, color: AppColors.primaryDark, size: 18),
                       SizedBox(width: 8),
                       Text('Presupuesto por Categoría', style: TextStyle(color: AppColors.textPrimary)),
                     ],
@@ -175,7 +175,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   value: 'csv',
                   child: Row(
                     children: [
-                      Icon(Icons.table_chart_outlined, color: AppColors.primary, size: 18),
+                      Icon(Icons.table_chart_outlined, color: AppColors.primaryDark, size: 18),
                       SizedBox(width: 8),
                       Text('Exportar a Excel (.csv)', style: TextStyle(color: AppColors.textPrimary)),
                     ],
@@ -185,7 +185,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   value: 'md',
                   child: Row(
                     children: [
-                      Icon(Icons.text_snippet_outlined, color: AppColors.primary, size: 18),
+                      Icon(Icons.text_snippet_outlined, color: AppColors.primaryDark, size: 18),
                       SizedBox(width: 8),
                       Text('Exportar como Texto', style: TextStyle(color: AppColors.textPrimary)),
                     ],

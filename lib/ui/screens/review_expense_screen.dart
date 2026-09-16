@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -29,7 +29,7 @@ class ReviewExpenseScreen extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<ReviewExpenseScreen> createState() => _ReviewExpenseScreenState();
+  State<ReviewExpenseScreen> creatEstáte() => _ReviewExpenseScreenState();
 }
 
 class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
@@ -49,7 +49,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     return value.truncateToDouble() == value ? value.toInt().toString() : value.toString();
   }
   late List<ItemGastoModel> _items;
-  String _fuenteTasa = 'Tasa oficial BCV automática';
+  String _fuenteTasa = 'Tasa oficial BCV automÃ¡tica';
   bool _isSaving = false;
 
   @override
@@ -72,7 +72,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         tasa = gasto.totalOriginal / gasto.totalUsd;
       }
       _tasaCambioCtrl = TextEditingController(text: tasa.toStringAsFixed(2));
-      _fuenteTasa = 'Tasa histórica del gasto';
+      _fuenteTasa = 'Tasa histÃ³rica del gasto';
     } else {
       final data = widget.extractedData!;
       _comercioCtrl = TextEditingController(text: data.comercio);
@@ -209,7 +209,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       setState(() {
         _selectedFecha = nuevaFecha;
       });
-      // Si la factura no traÃ­a tasa fija impresa, busca la tasa correspondiente a la fecha elegida
+      // Si la factura no traÃƒÂ­a tasa fija impresa, busca la tasa correspondiente a la fecha elegida
       if (widget.existingGasto == null && (widget.extractedData?.tasaCambioDetectada == null || widget.extractedData!.tasaCambioDetectada! <= 0)) {
         _actualizarTasaPorFecha(nuevaFecha);
       }
@@ -281,7 +281,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       setState(() => _isSaving = false);
   
       if (success) {
-        // Si venÃ­a de la cola offline, lo borramos de ahÃ­
+        // Si venÃƒÂ­a de la cola offline, lo borramos de ahÃƒÂ­
         if (widget.queueItemId != null) {
           final queueProvider = Provider.of<ScanQueueProvider>(context, listen: false);
           await queueProvider.removeItem(widget.queueItemId!);
@@ -308,7 +308,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                 ],
               ),
               content: const Text(
-                'Tu compra quedó registrada. Vincula tu cuenta de Google para no perderla si cambias de teléfono.',
+                'Tu compra quedÃ³ registrada. Vincula tu cuenta de Google para no perderla si cambias de telÃ©fono.',
                 style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
               ),
               actions: [
@@ -324,13 +324,21 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     foregroundColor: AppColors.secondary,
                   ),
                   onPressed: () async {
-                    Navigator.pop(ctx);
                     final error = await Provider.of<GastoProvider>(context, listen: false).vincularCuentaGoogle();
-                    if (error != null && mounted) {
+                    if (!mounted) return;
+                    if (error != null) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Error: $error')),
                       );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Cuenta vinculada con Ã©xito', style: TextStyle(color: Colors.black)),
+                          backgroundColor: AppColors.primary,
+                        ),
+                      );
                     }
+                    Navigator.pop(ctx);
                   },
                 ),
               ],
@@ -341,14 +349,14 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
           if (matchedIds.isNotEmpty) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Gasto registrado y ${matchedIds.length} ítem(s) de tu lista marcados como comprados.'),
+                content: Text('Gasto registrado y ${matchedIds.length} Ã­tem(s) de tu lista marcados como comprados.'),
                 backgroundColor: AppColors.primaryDark,
               ),
             );
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Gasto registrado con éxito'),
+                content: Text('Gasto registrado con Ã©xito'),
                 backgroundColor: AppColors.primaryDark,
               ),
             );
@@ -356,7 +364,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         }
 
         if (mounted) {
-          Navigator.pop(context);
+          Navigator.of(context).popUntil((route) => route.isFirst);
         }
       } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -384,7 +392,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     builder: (ctx) => AlertDialog(
                       backgroundColor: AppColors.card,
                       title: const Text('Descartar Factura', style: TextStyle(color: AppColors.textPrimary)),
-                      content: const Text('¿Seguro que deseas descartar esta factura escaneada? No se guardará en tu historial.', style: TextStyle(color: AppColors.textSecondary)),
+                      content: const Text('Â¿Seguro que deseas descartar Está factura escaneada? No se guardarÃ¡ en tu historial.', style: TextStyle(color: AppColors.textSecondary)),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(ctx, false),
@@ -425,7 +433,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Información General',
+                    'InformaciÃ³n General',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                   ),
                   const SizedBox(height: 16),
@@ -442,7 +450,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     onTap: _selectDate,
                     child: InputDecorator(
                       decoration: const InputDecoration(
-                        labelText: 'Fecha de Emisión',
+                        labelText: 'Fecha de EmisiÃ³n',
                         prefixIcon: Icon(Icons.calendar_today_outlined, color: AppColors.textSecondary),
                       ),
                       child: Text(
@@ -455,7 +463,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                   DropdownButtonFormField<String>(
                     value: _selectedCategoria,
                     decoration: const InputDecoration(
-                      labelText: 'Categoría',
+                      labelText: 'CategorÃ­a',
                       prefixIcon: Icon(Icons.category_outlined, color: AppColors.textSecondary),
                     ),
                     dropdownColor: AppColors.surface,
@@ -484,13 +492,13 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        'Desglose de Ítems',
+                        'Desglose de Ãtems',
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                       ),
                       TextButton.icon(
                         onPressed: _addItem,
-                        icon: const Icon(Icons.add, size: 16, color: AppColors.primary),
-                        label: const Text('Agregar', style: TextStyle(color: AppColors.primary)),
+                        icon: const Icon(Icons.add, size: 16, color: AppColors.primaryDark),
+                        label: const Text('Agregar', style: TextStyle(color: AppColors.primaryDark)),
                       ),
                     ],
                   ),
@@ -498,7 +506,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                   if (_items.isEmpty)
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 8),
-                      child: Text('No hay ítems detallados.', style: TextStyle(color: AppColors.textMuted)),
+                      child: Text('No hay Ã­tems detallados.', style: TextStyle(color: AppColors.textMuted)),
                     )
                   else
                       ..._items.asMap().entries.map((entry) {
@@ -523,7 +531,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                             priceWarning = Padding(
                               padding: const EdgeInsets.only(top: 4, left: 4),
                               child: Text(
-                                '🔺 Está ${diff.toStringAsFixed(0)}% más caro que en $prevComercio',
+                                'ðŸ”º EstÃ¡ ${diff.toStringAsFixed(0)}% mÃ¡s caro que en $prevComercio',
                                 style: const TextStyle(color: AppColors.error, fontSize: 11, fontWeight: FontWeight.w600),
                               ),
                             );
@@ -532,102 +540,132 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                             priceWarning = Padding(
                               padding: const EdgeInsets.only(top: 4, left: 4),
                               child: Text(
-                                '🟢 Te salió un ${diff.toStringAsFixed(0)}% más económico que en $prevComercio',
-                                style: const TextStyle(color: AppColors.primary, fontSize: 11, fontWeight: FontWeight.w600),
+                                'ðŸŸ¢ Te saliÃ³ un ${diff.toStringAsFixed(0)}% mÃ¡s econÃ³mico que en $prevComercio',
+                                style: const TextStyle(color: AppColors.primaryDark, fontSize: 11, fontWeight: FontWeight.w600),
                               ),
                             );
                           }
                         }
 
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 6),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    flex: 2,
-                                    child: TextFormField(
-                                      initialValue: item.descripcion,
-                                      decoration: const InputDecoration(
-                                        labelText: 'Desc.',
-                                        hintText: 'Concepto',
-                                        contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                        return Card(
+                          margin: const EdgeInsets.symmetric(vertical: 6),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: const BorderSide(color: AppColors.border),
+                          ),
+                          elevation: 0,
+                          color: AppColors.surface,
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: TextFormField(
+                                        initialValue: item.descripcion,
+                                        decoration: const InputDecoration(
+                                          labelText: 'DescripciÃ³n del Producto',
+                                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                        ),
+                                        onChanged: (v) => _items[idx] = _items[idx].copyWith(descripcion: v),
                                       ),
-                                      onChanged: (v) => _items[idx] = _items[idx].copyWith(descripcion: v),
                                     ),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Expanded(
-                                    flex: 1,
-                                    child: TextFormField(
-                                      initialValue: _formatDouble(item.cantidad),
-                                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                      decoration: const InputDecoration(
-                                        labelText: 'Cant.',
-                                        contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                    IconButton(
+                                      icon: const Icon(Icons.delete_outline, color: AppColors.error),
+                                      onPressed: () => _removeItem(idx),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: TextFormField(
+                                        initialValue: _formatDouble(item.cantidad),
+                                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                        decoration: const InputDecoration(
+                                          labelText: 'Cant.',
+                                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                        ),
+                                        onChanged: (v) {
+                                          final cant = double.tryParse(v) ?? 1.0;
+                                          _items[idx] = _items[idx].copyWith(
+                                            cantidad: cant,
+                                            total: cant * _items[idx].precioUnitario,
+                                          );
+                                          _recalcularTotal();
+                                        },
                                       ),
-                                      onChanged: (v) {
-                                        final cant = double.tryParse(v) ?? 1.0;
-                                        _items[idx] = _items[idx].copyWith(
-                                          cantidad: cant,
-                                          total: cant * _items[idx].precioUnitario,
-                                        );
-                                        _recalcularTotal();
-                                      },
                                     ),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Expanded(
-                                    flex: 1,
-                                    child: TextFormField(
-                                      initialValue: _formatDouble(item.precioUnitario),
-                                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                      decoration: const InputDecoration(
-                                        labelText: 'Precio',
-                                        contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: TextFormField(
+                                        initialValue: _formatDouble(item.precioUnitario),
+                                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                        decoration: const InputDecoration(
+                                          labelText: 'Precio',
+                                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                        ),
+                                        onChanged: (v) {
+                                          final prec = double.tryParse(v) ?? 0.0;
+                                          _items[idx] = _items[idx].copyWith(
+                                            precioUnitario: prec,
+                                            total: _items[idx].cantidad * prec,
+                                          );
+                                          _recalcularTotal();
+                                        },
                                       ),
-                                      onChanged: (v) {
-                                        final prec = double.tryParse(v) ?? 0.0;
-                                        _items[idx] = _items[idx].copyWith(
-                                          precioUnitario: prec,
-                                          total: _items[idx].cantidad * prec,
-                                        );
-                                        _recalcularTotal();
-                                      },
                                     ),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Expanded(
-                                    flex: 1,
-                                    child: TextFormField(
-                                      key: ValueKey('total_$idx\_${_items[idx].total}'),
-                                      initialValue: _formatDouble(_items[idx].total),
-                                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                      decoration: const InputDecoration(
-                                        labelText: 'Total',
-                                        contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: TextFormField(
+                                        key: ValueKey('total_$idx\_${_items[idx].total}'),
+                                        initialValue: _formatDouble(_items[idx].total),
+                                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                        decoration: const InputDecoration(
+                                          labelText: 'Total',
+                                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                        ),
+                                        onChanged: (v) {
+                                          final tot = double.tryParse(v) ?? 0.0;
+                                          final cant = _items[idx].cantidad;
+                                          _items[idx] = _items[idx].copyWith(
+                                            total: tot,
+                                            precioUnitario: cant > 0 ? tot / cant : 0.0,
+                                          );
+                                          _recalcularTotal();
+                                        },
                                       ),
-                                      onChanged: (v) {
-                                        final tot = double.tryParse(v) ?? 0.0;
-                                        final cant = _items[idx].cantidad;
-                                        _items[idx] = _items[idx].copyWith(
-                                          total: tot,
-                                          precioUnitario: cant > 0 ? tot / cant : 0.0,
-                                        );
-                                        _recalcularTotal();
-                                      },
                                     ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                DropdownButtonFormField<String>(
+                                  value: AppConstants.categorias.contains(item.categoria) ? item.categoria : 'Otros',
+                                  decoration: const InputDecoration(
+                                    labelText: 'CategorÃ­a',
+                                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                                   ),
-                                  IconButton(
-                                    icon: const Icon(Icons.remove_circle_outline, color: AppColors.error, size: 20),
-                                    onPressed: () => _removeItem(idx),
-                                  ),
+                                  dropdownColor: AppColors.surface,
+                                  items: AppConstants.categorias.map((cat) {
+                                    return DropdownMenuItem(value: cat, child: Text(cat, overflow: TextOverflow.ellipsis));
+                                  }).toList(),
+                                  onChanged: (val) {
+                                    if (val != null) {
+                                      setState(() {
+                                        _items[idx] = _items[idx].copyWith(categoria: val);
+                                      });
+                                    }
+                                  },
+                                ),
+                                if (priceWarning != null) ...[
+                                  const SizedBox(height: 8),
+                                  priceWarning,
                                 ],
-                              ),
-                              if (priceWarning != null) priceWarning,
-                            ],
+                              ],
+                            ),
                           ),
                         );
                       }).toList(),
@@ -669,8 +707,24 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                         });
                       },
                       showSelectedIcon: false,
-                      style: const ButtonStyle(
+                      style: ButtonStyle(
                         visualDensity: VisualDensity.compact,
+                        backgroundColor: MaterialStateProperty.resolveWith<Color>(
+                          (Set<MaterialState> states) {
+                            if (states.contains(MaterialState.selected)) {
+                              return AppColors.secondary;
+                            }
+                            return AppColors.surface;
+                          },
+                        ),
+                        foregroundColor: MaterialStateProperty.resolveWith<Color>(
+                          (Set<MaterialState> states) {
+                            if (states.contains(MaterialState.selected)) {
+                              return Colors.white;
+                            }
+                            return AppColors.textPrimary;
+                          },
+                        ),
                       ),
                     ),
                   ),
@@ -683,7 +737,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                       prefixIcon: const Icon(Icons.payments_outlined, color: AppColors.textSecondary),
                     ),
                     onChanged: (_) => _recalcularTotalUsd(),
-                    validator: (val) => (double.tryParse(val ?? '') == null) ? 'Inválido' : null,
+                    validator: (val) => (double.tryParse(val ?? '') == null) ? 'InvÃ¡lido' : null,
                   ),
                   if (_selectedMoneda == 'VES') ...[
                     const SizedBox(height: 12),
@@ -694,9 +748,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                         labelText: 'Tasa de Cambio (VES / USD)',
                         prefixIcon: const Icon(Icons.currency_exchange, color: AppColors.textSecondary),
                         helperText: _fuenteTasa,
-                        helperStyle: const TextStyle(color: AppColors.primary, fontSize: 11),
+                        helperStyle: const TextStyle(color: AppColors.primaryDark, fontSize: 11),
                         suffixIcon: IconButton(
-                          icon: const Icon(Icons.sync, color: AppColors.primary, size: 20),
+                          icon: const Icon(Icons.sync, color: AppColors.primaryDark, size: 20),
                           tooltip: 'Sincronizar tasa BCV de hoy',
                           onPressed: () async {
                             final settings = Provider.of<SettingsProvider>(context, listen: false);
@@ -718,9 +772,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     decoration: const InputDecoration(
                       labelText: 'Total Equivalente (USD)',
-                      prefixIcon: Icon(Icons.attach_money, color: AppColors.primary),
+                      prefixIcon: Icon(Icons.attach_money, color: AppColors.primaryDark),
                     ),
-                    validator: (val) => (double.tryParse(val ?? '') == null) ? 'Inválido' : null,
+                    validator: (val) => (double.tryParse(val ?? '') == null) ? 'InvÃ¡lido' : null,
                   ),
                 ],
               ),

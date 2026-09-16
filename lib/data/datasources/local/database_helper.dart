@@ -24,7 +24,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 7,
+      version: 8,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
       onConfigure: _onConfigure,
@@ -88,6 +88,13 @@ class DatabaseHelper {
         // La columna ya existe si el usuario actualizó desde v4
       }
     }
+    if (oldVersion < 8) {
+      try {
+        await db.execute("ALTER TABLE items_gasto ADD COLUMN categoria TEXT DEFAULT 'Otros'");
+      } catch (e) {
+        // La columna ya existe
+      }
+    }
   }
 
   Future<void> _onConfigure(Database db) async {
@@ -123,6 +130,7 @@ class DatabaseHelper {
         cantidad REAL NOT NULL,
         precio_unitario REAL NOT NULL,
         total REAL NOT NULL,
+        categoria TEXT DEFAULT 'Otros',
         FOREIGN KEY (gasto_id) REFERENCES gastos (id) ON DELETE CASCADE
       )
     ''');

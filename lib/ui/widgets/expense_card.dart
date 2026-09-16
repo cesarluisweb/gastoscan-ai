@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
@@ -25,11 +25,11 @@ class _ExpenseCardState extends State<ExpenseCard> {
 
   IconData _getCategoryIcon(String categoria) {
     switch (categoria) {
-      case 'Alimentación':
+      case 'AlimentaciÃƒÂ³n':
         return Icons.shopping_cart_outlined;
       case 'Salud':
         return Icons.medical_services_outlined;
-      case 'Educación':
+      case 'EducaciÃƒÂ³n':
         return Icons.school_outlined;
       case 'Hogar':
         return Icons.home_outlined;
@@ -105,18 +105,22 @@ class _ExpenseCardState extends State<ExpenseCard> {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: AppColors.surface,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                widget.gasto.categoria,
-                                style: TextStyle(
-                                  color: catColor,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
+                            Flexible(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: AppColors.surface,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  widget.gasto.categoria,
+                                  style: TextStyle(
+                                    color: catColor,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ),
@@ -125,6 +129,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
                       ],
                     ),
                   ),
+                  const SizedBox(width: 12),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
@@ -162,7 +167,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
                         value: 'edit',
                         child: Row(
                           children: [
-                            Icon(Icons.edit_outlined, color: AppColors.primary, size: 18),
+                            Icon(Icons.edit_outlined, color: AppColors.primaryDark, size: 18),
                             SizedBox(width: 8),
                             Text('Editar', style: TextStyle(color: AppColors.textPrimary)),
                           ],
@@ -195,7 +200,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Desglose de Ítems:',
+                    'Desglose de ÃƒÂtems:',
                     style: TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 12,
