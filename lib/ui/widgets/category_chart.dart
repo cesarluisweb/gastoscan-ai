@@ -4,12 +4,12 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/utils/currency_formatter.dart';
 
-class CategoríatelessWidget {
+class CategoryChart extends StatelessWidget {
   final Map<String, double> categoryTotals;
   final Map<String, double> categoryBudgets;
   final void Function(String categoria, double budget)? onSetBudget;
 
-  const Categoríart({
+  const CategoryChart({
     Key? key,
     required this.categoryTotals,
     this.categoryBudgets = const {},
@@ -55,7 +55,7 @@ class CategoríatelessWidget {
       ...categoryTotals.keys,
       ...categoryBudgets.keys,
     };
-    final List<String> sortedCategoríategoryKeys.toList()
+    final List<String> sortedCategories = allCategoryKeys.toList()
       ..sort((a, b) {
         final spentA = _getSpent(a);
         final spentB = _getSpent(b);
@@ -186,7 +186,7 @@ class CategoríatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            ...sortedCategoríat)),
+            ...sortedCategories.map((cat) => _buildCategoryBudgetItem(context, cat)),
           ],
         ],
       ),
@@ -217,7 +217,7 @@ class CategoríatelessWidget {
     return 0.0;
   }
 
-  Widget _buildCategoríat) {
+  Widget _buildCategoryBudgetItem(BuildContext context, String cat) {
     final double spent = _getSpent(cat);
     final double budget = _getBudget(cat);
     final bool hasBudget = budget > 0;
@@ -288,7 +288,7 @@ class CategoríatelessWidget {
                 constraints: const BoxConstraints(),
                 onPressed: () => _showBudgetDialog(
                   context,
-                  initialCategoríat,
+                  initialCategory: cat,
                   currentBudget: budget,
                 ),
               ),
@@ -349,7 +349,7 @@ class CategoríatelessWidget {
               key: Key('assign_budget_prompt_$cat'),
               onTap: () => _showBudgetDialog(
                 context,
-                initialCategoríat,
+                initialCategory: cat,
                 currentBudget: 0.0,
               ),
               child: const Text(
@@ -480,7 +480,7 @@ class CategoríatelessWidget {
                   ),
                   onPressed: () {
                     final catName =
-                        (initialCategoríategoryCtrl.text).trim();
+                        (initialCategory ?? categoryCtrl.text).trim();
                     final amount = double.tryParse(
                             amountCtrl.text.replaceAll(',', '.')) ??
                         0.0;

@@ -167,7 +167,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       Icon(Icons.account_balance_wallet_outlined, color: AppColors.primaryDark, size: 18),
                       SizedBox(width: 8),
-                      Text('Presupuesto por Categoríary)),
+                      Text('Presupuesto por Categoría', style: TextStyle(color: AppColors.textPrimary)),
                     ],
                   ),
                 ),
@@ -259,18 +259,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
               presupuesto: Provider.of<SettingsProvider>(context).presupuestoMensual,
             ),
             const SizedBox(height: 16),
-            if (gastoProvider.totalesPorCategoría.isNotEmpty ||
-                gastoProvider.presupuestosPorCategoría.isNotEmpty) ...[
-              Categoríart(
-                categoryTotals: gastoProvider.totalesPorCategoría,
-                categoryBudgets: gastoProvider.presupuestosPorCategoría,
+            if (gastoProvider.totalesPorCategoria.isNotEmpty ||
+                gastoProvider.presupuestosPorCategoria.isNotEmpty) ...[
+              CategoryChart(
+                categoryTotals: gastoProvider.totalesPorCategoria,
+                categoryBudgets: gastoProvider.presupuestosPorCategoria,
                 onSetBudget: (categoria, budget) async {
-                  await gastoProvider.setPresupuestoCategoría, budget);
+                  await gastoProvider.setPresupuestoCategoria(categoria, budget);
                 },
               ),
               const SizedBox(height: 16),
             ] else ...[
-              _buildCategoríartSilhouette(),
+              _buildCategoryChartSilhouette(),
               const SizedBox(height: 16),
             ],
             const Padding(
@@ -528,7 +528,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildCategoríartSilhouette() {
+  Widget _buildCategoryChartSilhouette() {
     return Container(
       key: const Key('category_chart_silhouette'),
       padding: const EdgeInsets.all(16),
@@ -700,7 +700,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     final catName = (categoriaInicial ?? catCtrl.text).trim();
                     final amount = double.tryParse(montoCtrl.text.replaceAll(',', '.')) ?? 0.0;
                     if (catName.isNotEmpty && amount >= 0) {
-                      await gastoProvider.setPresupuestoCategoríamount);
+                      await gastoProvider.setPresupuestoCategoria(catName, amount);
                       Navigator.of(dContext).pop();
                     }
                   },

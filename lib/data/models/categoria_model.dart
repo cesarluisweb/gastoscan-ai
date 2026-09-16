@@ -1,9 +1,9 @@
-class CategoríaModel {
+class CategoriaModel {
   final int? id;
   final String nombre;
   final double presupuestoMensual;
 
-  CategoríaModel({
+  CategoriaModel({
     this.id,
     required this.nombre,
     this.presupuestoMensual = 0.0,
@@ -22,8 +22,8 @@ class CategoríaModel {
     };
   }
 
-  factory Categoríap) {
-    return CategoríaModel(
+  factory CategoriaModel.fromMap(Map<String, dynamic> map) {
+    return CategoriaModel(
       id: map['id'] as int?,
       nombre: (map['nombre'] ?? map['name'] ?? map['categoria'] ?? '') as String,
       presupuestoMensual: (map['presupuesto_mensual'] ??
@@ -34,12 +34,12 @@ class CategoríaModel {
     );
   }
 
-  CategoríaModel copyWith({
+  CategoriaModel copyWith({
     int? id,
     String? nombre,
     double? presupuestoMensual,
   }) {
-    return CategoríaModel(
+    return CategoriaModel(
       id: id ?? this.id,
       nombre: nombre ?? this.nombre,
       presupuestoMensual: presupuestoMensual ?? this.presupuestoMensual,
@@ -49,7 +49,7 @@ class CategoríaModel {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is CategoríaModel &&
+      other is CategoriaModel &&
           runtimeType == other.runtimeType &&
           id == other.id &&
           nombre == other.nombre &&
@@ -61,8 +61,8 @@ class CategoríaModel {
 
   @override
   String toString() =>
-      'Categoríal)';
+      'CategoriaModel(id: $id, nombre: $nombre, presupuestoMensual: $presupuestoMensual)';
 }
 
 /// Convenience alias
-typedef CategoríaModel;
+typedef CategoryModel = CategoriaModel;

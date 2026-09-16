@@ -315,7 +315,7 @@ class DatabaseHelper {
   }
 
   /// Calcula el desglose de gastos en USD agrupado por categoría para el gráfico
-  Future<Map<String, double>> getCategoríasync {
+  Future<Map<String, double>> getCategoryTotals(int year, int month) async {
     final db = await instance.database;
     final monthStr = month.toString().padLeft(2, '0');
     final pattern = '$year-$monthStr%';
@@ -491,7 +491,7 @@ class DatabaseHelper {
   // ==========================================
 
   /// Inserta una nueva categoría o reemplaza en caso de conflicto
-  Future<int> insertCategoríasync {
+  Future<int> insertCategoria(CategoriaModel categoria) async {
     final db = await instance.database;
     return await db.insert(
       'categorias',
@@ -501,7 +501,7 @@ class DatabaseHelper {
   }
 
   /// Actualiza una categoría existente
-  Future<int> updateCategoríasync {
+  Future<int> updateCategoria(CategoriaModel categoria) async {
     final db = await instance.database;
     return await db.update(
       'categorias',
@@ -512,7 +512,7 @@ class DatabaseHelper {
   }
 
   /// Define o actualiza el presupuesto mensual de una categoría (búsqueda insensible a mayúsculas)
-  Future<void> setPresupuestoCategoríasync {
+  Future<void> setPresupuestoCategoria(String categoriaNombre, double presupuesto) async {
     final db = await instance.database;
     final trimmedName = categoriaNombre.trim();
     final existing = await db.query(
@@ -538,14 +538,14 @@ class DatabaseHelper {
   }
 
   /// Obtiene todas las categorías registradas
-  Future<List<Categoríasync {
+  Future<List<CategoriaModel>> getAllCategorias() async {
     final db = await instance.database;
     final result = await db.query('categorias', orderBy: 'nombre ASC');
-    return result.map((m) => Categoríap(m)).toList();
+    return result.map((m) => CategoriaModel.fromMap(m)).toList();
   }
 
   /// Obtiene una categoría por su nombre
-  Future<Categoríasync {
+  Future<CategoriaModel?> getCategoriaPorNombre(String categoriaNombre) async {
     final db = await instance.database;
     final result = await db.query(
       'categorias',
@@ -554,19 +554,19 @@ class DatabaseHelper {
       limit: 1,
     );
     if (result.isNotEmpty) {
-      return Categoríap(result.first);
+      return CategoriaModel.fromMap(result.first);
     }
     return null;
   }
 
   /// Obtiene el presupuesto mensual de una categoría
-  Future<double> getPresupuestoPorCategoríasync {
-    final cat = await getCategoríaNombre);
+  Future<double> getPresupuestoPorCategoria(String categoriaNombre) async {
+    final cat = await getCategoriaPorNombre(categoriaNombre);
     return cat?.presupuestoMensual ?? 0.0;
   }
 
   /// Obtiene un mapa con todos los presupuestos asignados {categoria: presupuesto}
-  Future<Map<String, double>> getAllPresupuestosCategoríasync {
+  Future<Map<String, double>> getAllPresupuestosCategorias() async {
     final db = await instance.database;
     final result = await db.query('categorias');
     final Map<String, double> presupuestos = {};
@@ -579,7 +579,7 @@ class DatabaseHelper {
   }
 
   /// Elimina una categoría por su ID
-  Future<int> deleteCategoríasync {
+  Future<int> deleteCategoria(int id) async {
     final db = await instance.database;
     return await db.delete('categorias', where: 'id = ?', whereArgs: [id]);
   }

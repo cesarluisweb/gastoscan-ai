@@ -41,31 +41,31 @@ class GastoRepository {
     return _dbHelper.getMonthlyTotals(year, month);
   }
 
-  Future<Map<String, double>> obtenerTotalesPorCategoríar, int month) {
-    return _dbHelper.getCategoríar, month);
+  Future<Map<String, double>> obtenerTotalesPorCategoria(int year, int month) {
+    return _dbHelper.getCategoryTotals(year, month);
   }
 
   Future<Map<String, dynamic>?> buscarPrecioAnterior(String descripcion) {
     return _dbHelper.findPreviousPrice(descripcion);
   }
 
-  Future<Map<String, double>> obtenerPresupuestosCategorías() {
-    return _dbHelper.getAllPresupuestosCategorías();
+  Future<Map<String, double>> obtenerPresupuestosCategorias() {
+    return _dbHelper.getAllPresupuestosCategorias();
   }
 
-  Future<void> guardarPresupuestoCategoría, double presupuesto) {
-    return _dbHelper.setPresupuestoCategoría, presupuesto);
+  Future<void> guardarPresupuestoCategoria(String categoria, double presupuesto) {
+    return _dbHelper.setPresupuestoCategoria(categoria, presupuesto);
   }
 
-  Future<List<Categorías() {
-    return _dbHelper.getAllCategorías();
+  Future<List<CategoriaModel>> obtenerCategorias() {
+    return _dbHelper.getAllCategorias();
   }
 
-  Future<int> guardarCategoría) {
-    return _dbHelper.insertCategoría);
+  Future<int> guardarCategoria(CategoriaModel categoria) {
+    return _dbHelper.insertCategoria(categoria);
   }
 
-  Future<double> obtenerPresupuestoPorCategoría) {
-    return _dbHelper.getPresupuestoPorCategoría);
+  Future<double> obtenerPresupuestoPorCategoria(String categoria) {
+    return _dbHelper.getPresupuestoPorCategoria(categoria);
   }
 }
