@@ -36,7 +36,7 @@ Devuelve EXCLUSIVAMENTE un objeto JSON válido con la siguiente estructura, sin 
       "cantidad": 1.0,
       "precio_unitario": 0.00,
       "total": 0.00,
-      "categoria": "Alimentación" | "Salud" | "Educación" | "Hogar" | "Servicios" | "Transporte" | "Otros"
+      "categoria": "Alimentación" | "Salud" | "Higiene" | "Educación" | "Hogar" | "Servicios" | "Transporte" | "Otros"
     }
   ]
 }

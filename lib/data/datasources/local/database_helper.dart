@@ -314,17 +314,26 @@ class DatabaseHelper {
     };
   }
 
-  /// Calcula el desglose de gastos en USD agrupado por categoría para el gráfico
+  /// Calcula el desglose de gastos en USD agrupado por categoría de cada ítem para el gráfico
   Future<Map<String, double>> getCategoryTotals(int year, int month) async {
     final db = await instance.database;
     final monthStr = month.toString().padLeft(2, '0');
     final pattern = '$year-$monthStr%';
 
     final result = await db.rawQuery('''
-      SELECT categoria, SUM(total_usd) as total
-      FROM gastos
-      WHERE fecha LIKE ?
-      GROUP BY categoria
+      SELECT 
+        i.categoria, 
+        SUM(
+          CASE 
+            WHEN g.total_original > 0 
+            THEN (i.total / g.total_original) * g.total_usd 
+            ELSE 0 
+          END
+        ) as total
+      FROM items_gasto i
+      JOIN gastos g ON i.gasto_id = g.id
+      WHERE g.fecha LIKE ?
+      GROUP BY i.categoria
       ORDER BY total DESC
     ''', [pattern]);
 

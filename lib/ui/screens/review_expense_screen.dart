@@ -42,7 +42,6 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
 
   late String _selectedFecha;
   late String _selectedMoneda;
-  late String _selectedCategoria;
 
   String _formatDouble(double value) {
     if (value == 0) return '';
@@ -62,7 +61,6 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       _comercioCtrl = TextEditingController(text: gasto.comercio);
       _selectedFecha = gasto.fecha;
       _selectedMoneda = gasto.moneda;
-      _selectedCategoria = gasto.categoria;
       _items = List.from(gasto.items);
       _totalOriginalCtrl = TextEditingController(text: _formatDouble(gasto.totalOriginal));
       _totalUsdCtrl = TextEditingController(text: gasto.totalUsd.toStringAsFixed(2));
@@ -78,7 +76,6 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       _comercioCtrl = TextEditingController(text: data.comercio);
       _selectedFecha = data.fecha;
       _selectedMoneda = data.moneda;
-      _selectedCategoria = data.categoriaSugerida;
       _items = List.from(data.items);
 
       _totalOriginalCtrl = TextEditingController(text: _formatDouble(data.totalOriginal));
@@ -264,7 +261,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       moneda: _selectedMoneda,
       totalOriginal: totalOrig,
       totalUsd: totalUsd,
-      categoria: _selectedCategoria,
+      categoria: _items.isNotEmpty ? _items.first.categoria : 'Otros',
       rutaFotoLocal: rutaFotoFinal,
       creadoEn: widget.existingGasto?.creadoEn ?? DateTime.now().toIso8601String(),
     );
@@ -459,21 +456,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    value: _selectedCategoria,
-                    decoration: const InputDecoration(
-                      labelText: 'Categoría',
-                      prefixIcon: Icon(Icons.category_outlined, color: AppColors.textSecondary),
-                    ),
-                    dropdownColor: AppColors.surface,
-                    items: AppConstants.categorias.map((cat) {
-                      return DropdownMenuItem(value: cat, child: Text(cat));
-                    }).toList(),
-                    onChanged: (val) {
-                      if (val != null) setState(() => _selectedCategoria = val);
-                    },
-                  ),
+
                 ],
               ),
             ),

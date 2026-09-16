@@ -6,7 +6,6 @@ class GeminiExtractionResult {
   final String moneda;
   final double totalOriginal;
   final double impuestoIva;
-  final String categoriaSugerida;
   final double? tasaCambioDetectada;
   final List<ItemGastoModel> items;
   final List<int> matchedShoppingItemIds;
@@ -17,7 +16,6 @@ class GeminiExtractionResult {
     required this.moneda,
     required this.totalOriginal,
     required this.impuestoIva,
-    required this.categoriaSugerida,
     this.tasaCambioDetectada,
     required this.items,
     this.matchedShoppingItemIds = const [],
@@ -45,13 +43,10 @@ class GeminiExtractionResult {
     final totalOriginal = (json['total_original'] as num?)?.toDouble() ?? 0.0;
     final impuestoIva = (json['impuesto_iva'] as num?)?.toDouble() ?? 0.0;
 
-    // Categoría
-    final categoriaRaw = json['categoria_sugerida']?.toString() ?? 'Otros';
-    const validCategorias = ['Alimentación', 'Salud', 'Educación', 'Hogar', 'Servicios', 'Transporte', 'Otros'];
-    final categoria = validCategorias.contains(categoriaRaw) ? categoriaRaw : 'Otros';
-
     // Ítems de la factura
     final itemsList = <ItemGastoModel>[];
+    const validCategorias = ['Alimentación', 'Salud', 'Educación', 'Hogar', 'Servicios', 'Transporte', 'Otros'];
+    
     if (json['items'] is List) {
       for (final rawItem in (json['items'] as List)) {
         if (rawItem is Map) {
@@ -103,7 +98,6 @@ class GeminiExtractionResult {
       moneda: moneda,
       totalOriginal: totalOriginal,
       impuestoIva: impuestoIva,
-      categoriaSugerida: categoria,
       tasaCambioDetectada: tasaDetectada,
       items: itemsList,
       matchedShoppingItemIds: matchedIds,
@@ -117,7 +111,6 @@ class GeminiExtractionResult {
       'moneda': moneda,
       'total_original': totalOriginal,
       'impuesto_iva': impuestoIva,
-      'categoria_sugerida': categoriaSugerida,
       'tasa_cambio': tasaCambioDetectada,
       'items': items.map((i) => i.toMap()).toList(),
       'items_comprados_ids': matchedShoppingItemIds,
