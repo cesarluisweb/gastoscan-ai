@@ -46,9 +46,24 @@ jobs:
           rm -rf android
           flutter create --org com.gastoscan.ai --project-name gastoscan_ai --platforms android .
           cp android_template/AndroidManifest.xml android/app/src/main/AndroidManifest.xml
+          if [ -f "android_template/google-services.json" ]; then
+            cp android_template/google-services.json android/app/google-services.json
+          fi
 
-      - name: Habilitar Desugaring en build.gradle
+      - name: Habilitar Desugaring y Google Services en build.gradle
         run: |
+          # 1. Habilitar Google Services Plugin (si existe el archivo JSON)
+          if [ -f "android_template/google-services.json" ]; then
+            if [ -f "android/build.gradle.kts" ]; then
+              sed -i 's/plugins {/plugins {\n    id("com.google.gms.google-services") version "4.4.2" apply false/g' android/build.gradle.kts
+              sed -i 's/plugins {/plugins {\n    id("com.google.gms.google-services")/g' android/app/build.gradle.kts
+            elif [ -f "android/build.gradle" ]; then
+              sed -i 's/dependencies {/dependencies {\n        classpath "com.google.gms:google-services:4.4.2"/g' android/build.gradle
+              echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
+            fi
+          fi
+
+          # 2. Habilitar Desugaring
           if [ -f "android/app/build.gradle.kts" ]; then
             sed -i 's/compileOptions {/compileOptions {\n        isCoreLibraryDesugaringEnabled = true/g' android/app/build.gradle.kts
             echo 'dependencies { coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4") }' >> android/app/build.gradle.kts
