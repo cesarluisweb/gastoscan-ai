@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -823,10 +823,13 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     File? fileToShow;
     if (widget.imageFile != null) {
       fileToShow = widget.imageFile;
-    } else if (widget.existingGasto?.rutaFotoLocal != null) {
-      final file = File(widget.existingGasto!.rutaFotoLocal!);
-      if (file.existsSync()) {
-        fileToShow = file;
+    } else {
+      final existingRuta = widget.existingGasto?.rutaFotoLocal;
+      if (existingRuta != null) {
+        final file = File(existingRuta);
+        if (file.existsSync()) {
+          fileToShow = file;
+        }
       }
     }
 
