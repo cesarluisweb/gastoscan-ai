@@ -214,7 +214,7 @@ class GastoProvider with ChangeNotifier {
     }
   }
 
-  /// Obtiene el presupuesto asignado a una categorías)
+  /// Obtiene el presupuesto asignado a una categoría (búsqueda insensible a mayúsculas)
   double getPresupuestoCategoria(String categoria) {
     if (_presupuestosPorCategoria.containsKey(categoria)) {
       return _presupuestosPorCategoria[categoria]!;
@@ -227,7 +227,7 @@ class GastoProvider with ChangeNotifier {
     return 0.0;
   }
 
-  /// Obtiene el gasto mensual total acumulado en una categorías)
+  /// Obtiene el gasto mensual total acumulado en una categoría (búsqueda insensible a mayúsculas)
   double getSpentForCategory(String categoria) {
     if (_totalesPorCategoria.containsKey(categoria)) {
       return _totalesPorCategoria[categoria]!;
@@ -240,7 +240,7 @@ class GastoProvider with ChangeNotifier {
     return 0.0;
   }
 
-  /// Determina si una categoríado
+  /// Determina si una categoría ha superado su presupuesto mensual asignado
   bool isCategoryOverBudget(String categoria) {
     final budget = getPresupuestoCategoria(categoria);
     if (budget <= 0) return false;
