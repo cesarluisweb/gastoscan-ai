@@ -62,7 +62,7 @@ class ExportService {
     buffer.writeln('');
 
     buffer.writeln('### Detalle de Facturas');
-    buffer.writeln('| Fecha | Comercio | Categoríal USD | Items |');
+    buffer.writeln('| Fecha | Comercio | Categoría | Moneda | Total Orig. | Total USD | Items |');
     buffer.writeln('| :--- | :--- | :--- | :--- | :--- | :--- | :--- |');
 
     for (final g in gastos) {
