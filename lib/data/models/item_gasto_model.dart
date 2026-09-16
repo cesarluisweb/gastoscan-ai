@@ -33,7 +33,7 @@
     return ItemGastoModel(
       id: map['id'] as int?,
       gastoId: map['gasto_id'] as int?,
-      descripcion: map['descripcion'] as String? ?? 'Sin descripciÃ³n',
+      descripcion: map['descripcion'] as String? ?? 'Sin descripción',
       cantidad: (map['cantidad'] as num?)?.toDouble() ?? 1.0,
       precioUnitario: (map['precio_unitario'] as num?)?.toDouble() ?? 0.0,
       total: (map['total'] as num?)?.toDouble() ?? 0.0,
