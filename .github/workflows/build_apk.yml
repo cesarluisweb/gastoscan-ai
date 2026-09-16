@@ -54,7 +54,13 @@ jobs:
         run: |
           # 1. Habilitar Google Services Plugin (si existe el archivo JSON)
           if [ -f "android_template/google-services.json" ]; then
-            if [ -f "android/build.gradle.kts" ]; then
+            if [ -f "android/settings.gradle.kts" ]; then
+              sed -i 's/plugins {/plugins {\n    id("com.google.gms.google-services") version "4.4.2" apply false/g' android/settings.gradle.kts
+              sed -i 's/plugins {/plugins {\n    id("com.google.gms.google-services")/g' android/app/build.gradle.kts
+            elif [ -f "android/settings.gradle" ]; then
+              sed -i 's/plugins {/plugins {\n    id "com.google.gms.google-services" version "4.4.2" apply false/g' android/settings.gradle
+              sed -i 's/plugins {/plugins {\n    id "com.google.gms.google-services"/g' android/app/build.gradle
+            elif [ -f "android/build.gradle.kts" ]; then
               sed -i 's/plugins {/plugins {\n    id("com.google.gms.google-services") version "4.4.2" apply false/g' android/build.gradle.kts
               sed -i 's/plugins {/plugins {\n    id("com.google.gms.google-services")/g' android/app/build.gradle.kts
             elif [ -f "android/build.gradle" ]; then
