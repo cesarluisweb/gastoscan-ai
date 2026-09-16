@@ -88,7 +88,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: [
                 Row(
                   children: [
-                    Icon(isAnon ? Icons.cloud_off : Icons.cloud_done, color: AppColors.primary, size: 24),
+                    Icon(isAnon ? Icons.cloud_off : Icons.cloud_done, color: AppColors.primaryDark, size: 24),
                     const SizedBox(width: 8),
                     const Text(
                       'Respaldo en la Nube',
@@ -189,7 +189,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 8),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  activeColor: AppColors.primary,
+                  activeColor: AppColors.primaryDark,
                   title: const Text(
                     'Guardar copia de fotos en el dispositivo',
                     style: TextStyle(color: AppColors.textPrimary, fontSize: 14),

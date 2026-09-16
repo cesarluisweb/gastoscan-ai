@@ -60,12 +60,15 @@ class GeminiExtractionResult {
           final cant = (itemMap['cantidad'] as num?)?.toDouble() ?? 1.0;
           final precio = (itemMap['precio_unitario'] as num?)?.toDouble() ?? 0.0;
           final total = (itemMap['total'] as num?)?.toDouble() ?? (cant * precio);
+          final catItemRaw = itemMap['categoria']?.toString() ?? 'Otros';
+          final catItem = validCategorias.contains(catItemRaw) ? catItemRaw : 'Otros';
 
           itemsList.add(ItemGastoModel(
             descripcion: desc,
             cantidad: cant,
             precioUnitario: precio,
             total: total,
+            categoria: catItem,
           ));
         }
       }

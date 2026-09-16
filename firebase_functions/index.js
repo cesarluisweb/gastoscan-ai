@@ -1,4 +1,4 @@
-﻿const { onCall, HttpsError } = require("firebase-functions/v2/https");
+const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { defineString } = require("firebase-functions/params");
 
 const geminiApiKey = defineString("GEMINI_API_KEY");
@@ -30,16 +30,17 @@ Devuelve EXCLUSIVAMENTE un objeto JSON válido con la siguiente estructura, sin 
   "total_original": 0.00,
   "tasa_cambio": 0.00,
   "impuesto_iva": 0.00,
-  "categoria_sugerida": "Alimentación" | "Salud" | "Educación" | "Hogar" | "Servicios" | "Transporte" | "Otros",
   "items": [
     {
       "descripcion": "Nombre del producto o servicio",
       "cantidad": 1.0,
       "precio_unitario": 0.00,
-      "total": 0.00
+      "total": 0.00,
+      "categoria": "Alimentación" | "Salud" | "Educación" | "Hogar" | "Servicios" | "Transporte" | "Otros"
     }
   ]
 }
+Para cada ítem, identifica la "categoria" correcta basándote en el nombre del producto (por ejemplo, si el producto es arroz o comida, asigna "Alimentación"). 
 Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago Móvil o transferencia bancaria, coloca en "comercio" el beneficiario y en "items" una sola línea con el concepto.
 `;
 

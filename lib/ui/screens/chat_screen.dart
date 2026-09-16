@@ -173,7 +173,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
                 const SizedBox(width: 8),
                 IconButton(
-                  icon: const Icon(Icons.send, color: AppColors.primary),
+                  icon: const Icon(Icons.send, color: AppColors.primaryDark),
                   onPressed: _isLoading ? null : _sendMessage,
                 ),
               ],

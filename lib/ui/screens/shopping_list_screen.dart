@@ -91,7 +91,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                 ),
                 const SizedBox(width: 8),
                 IconButton(
-                  icon: const Icon(Icons.add_circle, size: 40, color: AppColors.primary),
+                  icon: const Icon(Icons.add_circle, size: 40, color: AppColors.primaryDark),
                   onPressed: _add,
                 ),
               ],
@@ -112,7 +112,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                             leading: Checkbox(
                               value: isPurchased,
                               onChanged: (_) => _toggle(item),
-                              activeColor: AppColors.primary,
+                              activeColor: AppColors.primaryDark,
                             ),
                             title: Text(
                               item.name,

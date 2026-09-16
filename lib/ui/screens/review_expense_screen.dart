@@ -498,7 +498,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                       TextButton.icon(
                         onPressed: _addItem,
                         icon: const Icon(Icons.add, size: 16, color: AppColors.primaryDark),
-                        label: const Text('Agregar', style: TextStyle(color: AppColors.primaryDark)),
+                        label: const Text('Agregar', style: TextStyle(color: AppColors.textPrimary)),
                       ),
                     ],
                   ),
@@ -541,7 +541,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                               padding: const EdgeInsets.only(top: 4, left: 4),
                               child: Text(
                                 '🟢 Te salió un ${diff.toStringAsFixed(0)}% más económico que en $prevComercio',
-                                style: const TextStyle(color: AppColors.primaryDark, fontSize: 11, fontWeight: FontWeight.w600),
+                                style: const TextStyle(color: AppColors.textPrimary, fontSize: 11, fontWeight: FontWeight.w600),
                               ),
                             );
                           }
@@ -748,7 +748,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                         labelText: 'Tasa de Cambio (VES / USD)',
                         prefixIcon: const Icon(Icons.currency_exchange, color: AppColors.textSecondary),
                         helperText: _fuenteTasa,
-                        helperStyle: const TextStyle(color: AppColors.primaryDark, fontSize: 11),
+                        helperStyle: const TextStyle(color: AppColors.textPrimary, fontSize: 11),
                         suffixIcon: IconButton(
                           icon: const Icon(Icons.sync, color: AppColors.primaryDark, size: 20),
                           tooltip: 'Sincronizar tasa BCV de hoy',
