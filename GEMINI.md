@@ -1,13 +1,17 @@
-﻿# Reglas Técnicas del Proyecto (Control de Gastos VE)
+# Reglas Técnicas del Proyecto (Control de Gastos VE)
 
-## 1. NPM y Google Drive
+## 1. Google Drive Sync vs. Ejecución de Comandos
 **IMPORTANTE:** Este proyecto se encuentra dentro de un directorio sincronizado por Google Drive.
-NUNCA ejecutes comandos como 
-pm install o 
-pm run build directamente dentro de este directorio, ya que el cliente de Google Drive bloqueará los archivos (
-ode_modules), provocando errores \EBUSY\, \EPERM\ o \EBADF\.
-*Workaround:* Si necesitas compilar o instalar dependencias, copia la carpeta entera a una ubicación local temporal (ej. C:\Users\cesar\Desktop\landing_temp), ejecuta allí los comandos, y luego copia únicamente la salida (ej. dist/) de vuelta al proyecto.
+- NUNCA ejecutes comandos pesados como `npm install` o `npm run build` directamente dentro de este directorio, ya que el cliente de Google Drive bloqueará los archivos, provocando errores.
+- **Conflicto de Edición IA:** Si modificas código y notas que tus cambios desaparecen o se revierten misteriosamente, es Google Drive pisándolos. En ese caso, **DEBES** copiar los archivos afectados a una carpeta temporal (ej. `C:\Users\cesar\Desktop\temp_fix`), editarlos allí, devolverlos al proyecto usando comandos seguros y hacer `git commit` de inmediato.
 
-## 2. Codificación en PowerShell
-Cuando necesites crear o modificar archivos de texto o código utilizando el comando Set-Content en PowerShell, **SIEMPRE** debes usar el parámetro -Encoding UTF8.
-Si omites este parámetro, Windows usará una codificación heredada y romperá todos los caracteres especiales (acentos, ñ, etc.) en español, lo que dañará el diseño y los textos en pantalla.
+## 2. Codificación en PowerShell y Scripts
+- Al modificar archivos de texto usando `Set-Content` en PowerShell, **SIEMPRE** debes usar el parámetro `-Encoding UTF8`. Si lo omites, Windows romperá todos los acentos y caracteres especiales en español.
+- **Prohibición de Redirección:** NUNCA uses el operador de redirección `>` para crear archivos o scripts desde PowerShell (ej. `echo "..." > script.py`), ya que esto guarda en UTF-16 LE y corrompe el código. Siempre usa tuberías: `... | Out-File script.py -Encoding utf8`.
+
+## 3. Autenticación de Google en CI (Firebase)
+La compilación en GitHub Actions borra y regenera la carpeta `android`. Para evitar el Error 10 de Google Sign-In por la ausencia del archivo `google-services.json`, **siempre** debes pasar explícitamente el `serverClientId` (Web Client ID) como parámetro directo en el constructor de `GoogleSignIn()` en el código Dart. No dependas del plugin nativo de Gradle para inyectar este ID.
+
+## 4. Guía de Diseño UI (Colores)
+- **Prohibido textos amarillos:** NUNCA apliques los colores de acento amarillos (`AppColors.primary` o `AppColors.primaryDark`) a textos regulares, descripciones o etiquetas. Todos los textos deben usar `AppColors.textPrimary` (negro/oscuro) para garantizar su legibilidad.
+- El color amarillo (`AppColors.primaryDark` preferiblemente) queda reservado de forma estricta y exclusiva para **iconos**, contenedores de fondo y símbolos gráficos de acción.
