@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "758679432067",
+    "project_id": "gastoscan-ai",
+    "storage_bucket": "gastoscan-ai.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:758679432067:android:6119f0b0002ccdf87024b6",
+        "android_client_info": {
+          "package_name": "com.gastoscan.ai"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "758679432067-7fcdeslgd48q9mttptu0olaolshcflpk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.gastoscan.ai",
+            "certificate_hash": "d3850d17340bee8de4161db8faddd5121f020d10"
+          }
+        },
+        {
+          "client_id": "758679432067-p4lll1b5vfia32fndd68gjif6bmfmvel.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA5HMxpemkmCC-uKwMIyP9TP3Cxf8MDq8o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "758679432067-p4lll1b5vfia32fndd68gjif6bmfmvel.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
