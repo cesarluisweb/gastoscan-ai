@@ -376,7 +376,22 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     @override
     Widget build(BuildContext context) {
       return Scaffold(
-        appBar: AppBar(
+
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size.fromHeight(50),
+            ),
+            onPressed: _isSaving ? null : _guardarGasto,
+            child: _isSaving
+                ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
+                : const Text('Guardar Gasto', style: TextStyle(color: Colors.black, fontSize: 16)),
+          ),
+        ),
+      ),
+      appBar: AppBar(
           title: const Text('Revisar y Confirmar'),
           actions: [
             if (widget.queueItemId != null)
@@ -761,13 +776,6 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _isSaving ? null : _guardarGasto,
-              child: _isSaving
-                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
-                  : const Text('Guardar Gasto'),
             ),
             const SizedBox(height: 24),
           ],
