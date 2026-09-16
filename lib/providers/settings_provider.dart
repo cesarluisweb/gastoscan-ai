@@ -1,9 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../core/constants/app_constants.dart';
 import '../services/exchange_rate_service.dart';
 
 class SettingsProvider with ChangeNotifier {
+  final _secureStorage = const FlutterSecureStorage();
+  
   String _apiKey = '';
   bool _guardarFotos = AppConstants.defaultGuardarFotos;
   double _tasaCambioVesUsd = AppConstants.defaultTasaCambio;
@@ -29,7 +32,21 @@ class SettingsProvider with ChangeNotifier {
 
   Future<void> loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
-    _apiKey = prefs.getString(AppConstants.prefApiKey) ?? '';
+    
+    String? secureKey = await _secureStorage.read(key: AppConstants.prefApiKey);
+    if (secureKey == null) {
+      String oldKey = prefs.getString(AppConstants.prefApiKey) ?? '';
+      if (oldKey.isNotEmpty) {
+        await _secureStorage.write(key: AppConstants.prefApiKey, value: oldKey);
+        await prefs.remove(AppConstants.prefApiKey);
+        _apiKey = oldKey;
+      } else {
+        _apiKey = '';
+      }
+    } else {
+      _apiKey = secureKey;
+    }
+
     _guardarFotos = prefs.getBool(AppConstants.prefGuardarFotos) ?? AppConstants.defaultGuardarFotos;
     _tasaCambioVesUsd = prefs.getDouble(AppConstants.prefTasaCambio) ?? AppConstants.defaultTasaCambio;
     _monedaPrincipal = prefs.getString(AppConstants.prefMonedaPrincipal) ?? AppConstants.defaultMoneda;
@@ -60,8 +77,7 @@ class SettingsProvider with ChangeNotifier {
 
   Future<void> setApiKey(String key) async {
     _apiKey = key.trim();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(AppConstants.prefApiKey, _apiKey);
+    await _secureStorage.write(key: AppConstants.prefApiKey, value: _apiKey);
     notifyListeners();
   }
 

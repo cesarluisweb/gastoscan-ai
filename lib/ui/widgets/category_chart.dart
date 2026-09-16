@@ -4,12 +4,12 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/utils/currency_formatter.dart';
 
-class CategoryChart extends StatelessWidget {
+class CategoríatelessWidget {
   final Map<String, double> categoryTotals;
   final Map<String, double> categoryBudgets;
   final void Function(String categoria, double budget)? onSetBudget;
 
-  const CategoryChart({
+  const Categoríart({
     Key? key,
     required this.categoryTotals,
     this.categoryBudgets = const {},
@@ -55,7 +55,7 @@ class CategoryChart extends StatelessWidget {
       ...categoryTotals.keys,
       ...categoryBudgets.keys,
     };
-    final List<String> sortedCategories = allCategoryKeys.toList()
+    final List<String> sortedCategoríategoryKeys.toList()
       ..sort((a, b) {
         final spentA = _getSpent(a);
         final spentB = _getSpent(b);
@@ -186,7 +186,7 @@ class CategoryChart extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            ...sortedCategories.map((cat) => _buildCategoryBudgetItem(context, cat)),
+            ...sortedCategoríat)),
           ],
         ],
       ),
@@ -217,7 +217,7 @@ class CategoryChart extends StatelessWidget {
     return 0.0;
   }
 
-  Widget _buildCategoryBudgetItem(BuildContext context, String cat) {
+  Widget _buildCategoríat) {
     final double spent = _getSpent(cat);
     final double budget = _getBudget(cat);
     final bool hasBudget = budget > 0;
@@ -288,7 +288,7 @@ class CategoryChart extends StatelessWidget {
                 constraints: const BoxConstraints(),
                 onPressed: () => _showBudgetDialog(
                   context,
-                  initialCategory: cat,
+                  initialCategoríat,
                   currentBudget: budget,
                 ),
               ),
@@ -349,7 +349,7 @@ class CategoryChart extends StatelessWidget {
               key: Key('assign_budget_prompt_$cat'),
               onTap: () => _showBudgetDialog(
                 context,
-                initialCategory: cat,
+                initialCategoríat,
                 currentBudget: 0.0,
               ),
               child: const Text(
@@ -480,7 +480,7 @@ class CategoryChart extends StatelessWidget {
                   ),
                   onPressed: () {
                     final catName =
-                        (initialCategory ?? categoryCtrl.text).trim();
+                        (initialCategoríategoryCtrl.text).trim();
                     final amount = double.tryParse(
                             amountCtrl.text.replaceAll(',', '.')) ??
                         0.0;

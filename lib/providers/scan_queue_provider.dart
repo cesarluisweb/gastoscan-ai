@@ -111,7 +111,7 @@ class ScanQueueProvider with ChangeNotifier {
             final jsonStr = jsonEncode(extracted.toMap());
             await _dbHelper.updateScanQueueItem(id, 'ready', extractedData: jsonStr);
           } catch (e) {
-            print('Fallo al procesar item en cola offline: $e');
+            debugPrint('Fallo al procesar item en cola offline: $e');
           }
         } else {
           await _dbHelper.deleteScanQueueItem(id);

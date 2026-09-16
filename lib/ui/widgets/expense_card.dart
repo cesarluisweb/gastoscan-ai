@@ -25,11 +25,13 @@ class _ExpenseCardState extends State<ExpenseCard> {
 
   IconData _getCategoryIcon(String categoria) {
     switch (categoria) {
-      case 'AlimentaciÃƒÂ³n':
+      case 'Alimentación':
         return Icons.shopping_cart_outlined;
       case 'Salud':
         return Icons.medical_services_outlined;
-      case 'EducaciÃƒÂ³n':
+      case 'Higiene':
+        return Icons.cleaning_services_outlined;
+      case 'Educación':
         return Icons.school_outlined;
       case 'Hogar':
         return Icons.home_outlined;
@@ -200,7 +202,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Desglose de ÃƒÂtems:',
+                    'Desglose de Ítems:',
                     style: TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 12,

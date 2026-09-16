@@ -299,7 +299,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
               backgroundColor: AppColors.card,
               title: const Row(
                 children: [
-                  Icon(Icons.cloud_done_outlined, color: AppColors.primaryDark),
+                  Icon(Icons.cloud_done_outlined, color: Colors.green),
                   SizedBox(width: 8),
                   Text(
                     'Compra registrada',
@@ -392,7 +392,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     builder: (ctx) => AlertDialog(
                       backgroundColor: AppColors.card,
                       title: const Text('Descartar Factura', style: TextStyle(color: AppColors.textPrimary)),
-                      content: const Text('Â¿Seguro que deseas descartar Está factura escaneada? No se guardarÃ¡ en tu historial.', style: TextStyle(color: AppColors.textSecondary)),
+                      content: const Text('¿Seguro que deseas descartar esta factura escaneada? No se guardará en tu historial.', style: TextStyle(color: AppColors.textSecondary)),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(ctx, false),

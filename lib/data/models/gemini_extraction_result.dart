@@ -47,8 +47,8 @@ class GeminiExtractionResult {
 
     // Categoría
     final categoriaRaw = json['categoria_sugerida']?.toString() ?? 'Otros';
-    const validCategorias = ['Alimentación', 'Salud', 'Educación', 'Hogar', 'Servicios', 'Transporte', 'Otros'];
-    final categoria = validCategorias.contains(categoriaRaw) ? categoriaRaw : 'Otros';
+    const validCategoríaciónsporte', 'Otros'];
+    final categoria = validCategoríaw : 'Otros';
 
     // Ítems de la factura
     final itemsList = <ItemGastoModel>[];

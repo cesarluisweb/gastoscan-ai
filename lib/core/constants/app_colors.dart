@@ -25,7 +25,7 @@ class AppColors {
   static const Color border = Color(0xFFE5E7EB);
   static const Color divider = Color(0xFFF3F4F6);
 
-  // Paleta de Categorías para Gráficos
+  // Paleta de Categoría Gráficos
   static const Map<String, Color> categoryColors = {
     'Alimentación': Color(0xFF10B981), // Verde
     'Salud': Color(0xFFEF4444),        // Rojo

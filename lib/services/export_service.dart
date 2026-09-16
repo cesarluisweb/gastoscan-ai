@@ -14,7 +14,7 @@ class ExportService {
       'ID',
       'Fecha',
       'Comercio / Beneficiario',
-      'Categoria',
+      'Categoría',
       'Moneda Original',
       'Total Original',
       'Total USD',
@@ -62,7 +62,7 @@ class ExportService {
     buffer.writeln('');
 
     buffer.writeln('### Detalle de Facturas');
-    buffer.writeln('| Fecha | Comercio | Categoria | Moneda | Total Orig. | Total USD | Items |');
+    buffer.writeln('| Fecha | Comercio | Categoríal USD | Items |');
     buffer.writeln('| :--- | :--- | :--- | :--- | :--- | :--- | :--- |');
 
     for (final g in gastos) {
