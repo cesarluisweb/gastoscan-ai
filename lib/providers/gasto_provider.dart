@@ -103,7 +103,9 @@ class GastoProvider with ChangeNotifier {
       final user = auth.currentUser;
       if (user == null) return "No hay sesión local activa";
 
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      final GoogleSignInAccount? googleUser = await GoogleSignIn(
+        serverClientId: '758679432067-p4lll1b5vfia32fndd68gjif6bmfmvel.apps.googleusercontent.com',
+      ).signIn();
       if (googleUser == null) return null; // User canceled, no error
 
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
