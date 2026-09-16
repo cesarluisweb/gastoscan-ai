@@ -739,29 +739,102 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     );
   }
 
+  void _verImagenCompleta(File file) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (ctx) => Scaffold(
+          backgroundColor: Colors.black,
+          appBar: AppBar(
+            backgroundColor: Colors.black,
+            foregroundColor: Colors.white,
+            elevation: 0,
+            title: const Text('Comprobante', style: TextStyle(color: Colors.white, fontSize: 16)),
+          ),
+          body: Center(
+            child: InteractiveViewer(
+              panEnabled: true,
+              minScale: 0.5,
+              maxScale: 4.0,
+              child: Image.file(file),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildImageHeader() {
-    Widget imageWidget;
+    File? fileToShow;
     if (widget.imageFile != null) {
-      imageWidget = Image.file(widget.imageFile!, fit: BoxFit.cover);
+      fileToShow = widget.imageFile;
     } else if (widget.existingGasto?.rutaFotoLocal != null) {
       final file = File(widget.existingGasto!.rutaFotoLocal!);
       if (file.existsSync()) {
-        imageWidget = Image.file(file, fit: BoxFit.cover);
-      } else {
-        imageWidget = const Center(child: Icon(Icons.image_not_supported, color: AppColors.textMuted, size: 48));
+        fileToShow = file;
       }
+    }
+
+    Widget imageWidget;
+    if (fileToShow != null) {
+      imageWidget = Image.file(fileToShow, fit: BoxFit.cover);
+    } else if (widget.existingGasto?.rutaFotoLocal != null) {
+      imageWidget = const Center(child: Icon(Icons.image_not_supported, color: AppColors.textMuted, size: 48));
     } else {
       imageWidget = const Center(child: Icon(Icons.receipt_long, color: AppColors.textMuted, size: 48));
     }
 
-    return ClipRRect(
+    final header = ClipRRect(
       borderRadius: BorderRadius.circular(16),
       child: Container(
         height: 140,
         width: double.infinity,
         color: Colors.black,
-        child: imageWidget,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            imageWidget,
+            if (fileToShow != null)
+              Positioned(
+                right: 12,
+                bottom: 12,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.65),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.white24),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.zoom_in, color: Colors.white, size: 16),
+                      SizedBox(width: 4),
+                      Text(
+                        'Tocar para ampliar',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
+
+    if (fileToShow != null) {
+      return GestureDetector(
+        onTap: () => _verImagenCompleta(fileToShow!),
+        child: header,
+      );
+    }
+
+    return header;
   }
 }
