@@ -270,7 +270,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               const SizedBox(height: 16),
             ] else ...[
-              _buildEmptyCategoryBudgetPrompt(context, gastoProvider),
+              _buildCategoryChartSilhouette(),
               const SizedBox(height: 16),
             ],
             const Padding(
@@ -528,9 +528,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildEmptyCategoryBudgetPrompt(BuildContext context, GastoProvider gastoProvider) {
+  Widget _buildCategoryChartSilhouette() {
     return Container(
-      key: const Key('empty_category_budget_prompt'),
+      key: const Key('category_chart_silhouette'),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.card,
@@ -540,44 +540,68 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          const Text(
+            'Distribución por Categorías',
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
             children: [
-              Icon(Icons.account_balance_wallet_outlined, color: AppColors.primaryDark, size: 20),
-              SizedBox(width: 8),
-              Text(
-                'Presupuestos por Categoría',
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
+              SizedBox(
+                width: 90,
+                height: 90,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    SizedBox(
+                      width: 80,
+                      height: 80,
+                      child: CircularProgressIndicator(
+                        value: 1.0,
+                        strokeWidth: 14,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          AppColors.border.withOpacity(0.6),
+                        ),
+                      ),
+                    ),
+                    const Icon(
+                      Icons.pie_chart_outline_rounded,
+                      size: 32,
+                      color: AppColors.textMuted,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Tus estadísticas',
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Al registrar compras, verás aquí la distribución de tus gastos por rubro.',
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Define límites mensuales para tus categorías y recibe alertas visuales cuando te excedas.',
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 12,
-            ),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              key: const Key('btn_definir_presupuesto'),
-              icon: const Icon(Icons.add, size: 16),
-              label: const Text('Definir Presupuesto por Categoría'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.secondary,
-                side: const BorderSide(color: AppColors.primaryDark),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              onPressed: () => _mostrarDialogoPresupuesto(context, gastoProvider),
-            ),
           ),
         ],
       ),

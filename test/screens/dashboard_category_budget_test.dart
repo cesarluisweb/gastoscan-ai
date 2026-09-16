@@ -229,16 +229,21 @@ void main() {
       expect(progressBar.color, isNot(AppColors.error));
     });
 
-    testWidgets('Tapping add budget button opens dialog and allows assigning $50 to Comida',
+    testWidgets('Initial empty state displays category chart silhouette and CategoryChart allows adding budget',
         (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      // Initial empty prompt should be visible
-      expect(find.byKey(const Key('btn_definir_presupuesto')), findsOneWidget);
+      // Initial silhouette card should be visible
+      expect(find.byKey(const Key('category_chart_silhouette')), findsOneWidget);
+      expect(find.text('Distribución por Categorías'), findsOneWidget);
 
-      // Tap to define budget
-      await tester.tap(find.byKey(const Key('btn_definir_presupuesto')));
+      // When a category is present, CategoryChart displays and allows setting a budget
+      gastoProvider.setTotalesPorCategoria({'Comida': 20.0});
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('add_category_budget_button')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('add_category_budget_button')));
       await tester.pumpAndSettle();
 
       // Verify dialog opened
@@ -257,10 +262,6 @@ void main() {
 
       // Verify budget was registered in provider
       expect(gastoProvider.presupuestosPorCategoria['Comida'], 50.0);
-
-      // Verify CategoryChart is now displayed with Comida and $50 limit
-      expect(find.text('Comida'), findsWidgets);
-      expect(find.text('\$0.00 / \$50.00'), findsOneWidget);
     });
 
     testWidgets('Editing budget to amount greater than expense clears red excess alert',

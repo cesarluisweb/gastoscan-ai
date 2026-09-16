@@ -25,7 +25,7 @@ class _ChatScreenState extends State<ChatScreen> {
     super.initState();
     _messages.add({
       'role': 'assistant',
-      'text': 'Hola, soy tu analista financiero. Puedo analizar tus gastos de este mes. ¿Qué te gustaría saber?',
+      'text': 'Puedo ayudarte con lo que necesites dentro de Rinde Más: responder preguntas sobre tus gastos del mes o registrar compras directamente. ¿Qué deseas consultar?',
     });
   }
 

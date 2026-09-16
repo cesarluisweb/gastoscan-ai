@@ -88,7 +88,7 @@ class _MainScreenState extends State<MainScreen> {
                   child: const Icon(Icons.document_scanner, color: AppColors.textPrimary),
                 ),
                 title: const Text('Escanear Factura (IA)', style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: const Text('Toma una foto y extrae los datos mágicamente'),
+                subtitle: const Text('Toma una foto para registrar los datos automáticamente'),
                 onTap: () {
                   Navigator.pop(ctx);
                   // Navegar al tab de Scan o abrir ScanScreen directamente encima

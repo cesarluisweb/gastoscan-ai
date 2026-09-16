@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/utils/date_formatter.dart';
@@ -286,23 +287,77 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
           await queueProvider.removeItem(widget.queueItemId!);
         }
 
-        final matchedIds = widget.extractedData?.matchedShoppingItemIds ?? [];
-        if (matchedIds.isNotEmpty) {
-           ScaffoldMessenger.of(context).showSnackBar(
-             SnackBar(
-               content: Text('Gasto registrado y ${matchedIds.length} ítem(s) de tu lista marcados como comprados.'),
-               backgroundColor: AppColors.primaryDark,
-             ),
-           );
+        final user = FirebaseAuth.instance.currentUser;
+        final isAnon = user == null || user.isAnonymous;
+
+        if (isAnon && widget.existingGasto == null) {
+          await showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (ctx) => AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              backgroundColor: AppColors.card,
+              title: const Row(
+                children: [
+                  Icon(Icons.cloud_done_outlined, color: AppColors.primaryDark),
+                  SizedBox(width: 8),
+                  Text(
+                    'Compra registrada',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                  ),
+                ],
+              ),
+              content: const Text(
+                'Tu compra quedó registrada. Vincula tu cuenta de Google para no perderla si cambias de teléfono.',
+                style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Ahora no', style: TextStyle(color: AppColors.textSecondary)),
+                ),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.login, size: 18),
+                  label: const Text('Vincular con Google'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: AppColors.secondary,
+                  ),
+                  onPressed: () async {
+                    Navigator.pop(ctx);
+                    final error = await Provider.of<GastoProvider>(context, listen: false).vincularCuentaGoogle();
+                    if (error != null && mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error: $error')),
+                      );
+                    }
+                  },
+                ),
+              ],
+            ),
+          );
         } else {
-           ScaffoldMessenger.of(context).showSnackBar(
-             const SnackBar(
-               content: Text('Gasto registrado con éxito'),
-               backgroundColor: AppColors.primaryDark,
-             ),
-           );
+          final matchedIds = widget.extractedData?.matchedShoppingItemIds ?? [];
+          if (matchedIds.isNotEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Gasto registrado y ${matchedIds.length} ítem(s) de tu lista marcados como comprados.'),
+                backgroundColor: AppColors.primaryDark,
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Gasto registrado con éxito'),
+                backgroundColor: AppColors.primaryDark,
+              ),
+            );
+          }
         }
-        Navigator.pop(context);
+
+        if (mounted) {
+          Navigator.pop(context);
+        }
       } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
