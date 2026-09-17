@@ -30,7 +30,7 @@ class GeminiService {
 
       final data = response.data;
       if (data == null) {
-        throw Exception('Respuesta vacia del servidor.');
+        throw Exception('Respuesta vacía del servidor.');
       }
 
       final jsonResult = Map<String, dynamic>.from(data as Map);
@@ -42,7 +42,7 @@ class GeminiService {
         throw Exception('Error del servidor (${e.code}): ${e.message}');
       }
     } catch (e) {
-      throw Exception('Fallo al conectar con el servidor: $e');
+      throw Exception('Error interno: $e');
     }
   }
 

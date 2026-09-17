@@ -122,19 +122,32 @@ class _ScanScreenState extends State<ScanScreen> {
         _isProcessing = false;
         _statusText = null;
       });
+      
+      final errorStr = e.toString().toLowerCase();
+      final isNetworkError = errorStr.contains('socketexception') || errorStr.contains('fallo al conectar');
 
-      // Guardar en la cola offline si falla
-      final queueProvider = Provider.of<ScanQueueProvider>(context, listen: false);
-      await queueProvider.addPendingItem(_selectedImage!.path);
+      if (isNetworkError) {
+        // Guardar en la cola offline si falla
+        final queueProvider = Provider.of<ScanQueueProvider>(context, listen: false);
+        queueProvider.addPendingItem(_selectedImage!.path);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Sin conexión. La factura se guardó en cola y se procesará cuando haya internet.'),
-          backgroundColor: AppColors.info,
-          duration: Duration(seconds: 4),
-        ),
-      );
-      Navigator.pop(context); // Volver al inicio
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sin conexión. La factura se guardó en cola y se procesará cuando haya internet.'),
+            backgroundColor: AppColors.info,
+            duration: Duration(seconds: 4),
+          ),
+        );
+        Navigator.pop(context); // Volver al inicio
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 8),
+          ),
+        );
+      }
     }
   }
 

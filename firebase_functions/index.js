@@ -15,7 +15,7 @@ exports.analyzeReceipt = functions.https.onCall(async (data, context) => {
     }
 
     const key = geminiApiKey.value();
-    const model = "gemini-2.5-flash";
+    const model = "gemini-1.5-flash";
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
 
     const systemPrompt = `
