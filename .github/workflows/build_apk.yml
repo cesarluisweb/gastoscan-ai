@@ -123,6 +123,12 @@ jobs:
           # Reemplazar el original
           mv build/app/outputs/flutter-apk/app-release-signed.apk build/app/outputs/flutter-apk/app-release.apk
 
+      - name: Limpiar Release Asset Anterior
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete-asset latest app-release.apk --yes || true
+
       - name: Publicar Release (Descarga Directa)
         uses: ncipollo/release-action@v1
         with:
@@ -131,5 +137,14 @@ jobs:
           name: "Ultima Version"
           body: "Descarga directa de la ultima version estable de GastoScan AI."
           allowUpdates: true
+          replacesArtifacts: true
           makeLatest: true
           token: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Guardar Artefacto del Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 14
