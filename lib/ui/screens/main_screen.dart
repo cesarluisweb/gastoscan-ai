@@ -11,6 +11,7 @@ import 'scan_screen.dart';
 import 'chat_screen.dart';
 import 'shopping_list_screen.dart';
 import 'review_expense_screen.dart'; // Para agregar manual
+import '../widgets/voice_expense_sheet.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({Key? key}) : super(key: key);
@@ -96,6 +97,19 @@ class _MainScreenState extends State<MainScreen> {
                     context,
                     MaterialPageRoute(builder: (context) => const ScanScreen()),
                   );
+                },
+              ),
+              const Divider(),
+              ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: AppColors.primary,
+                  child: const Icon(Icons.mic, color: AppColors.textPrimary),
+                ),
+                title: const Text('Dictar Gasto (Voz)', style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: const Text('Habla y la IA organizará los datos de tu compra'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  VoiceExpenseSheet.show(context);
                 },
               ),
               const Divider(),

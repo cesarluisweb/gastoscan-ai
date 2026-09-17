@@ -40,3 +40,5 @@ firebase_functions/node_modules/
 firebase_functions/package-lock.json
 *.py
 update_function.js
+.env*
+*.env

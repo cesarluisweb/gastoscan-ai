@@ -91,4 +91,94 @@ class GeminiService {
       throw Exception('Fallo al conectar con el chat: $e');
     }
   }
+
+  Future<GeminiExtractionResult> parseVoiceExpense(String spokenText) async {
+    try {
+      final responseMap = await chatWithAnalyst(
+        messages: [
+          {
+            'role': 'user',
+            'text': 'Registra este gasto: "$spokenText". Asume que la fecha es hoy si no la menciono. Extrae los productos, precios y la categoría adecuada para cada uno.',
+          }
+        ],
+        contextData: {
+          'fecha_hoy': DateTime.now().toIso8601String().substring(0, 10),
+        },
+      );
+
+      if (responseMap.containsKey('functionCall')) {
+        final call = responseMap['functionCall'] as Map;
+        if (call['name'] == 'registrar_gasto') {
+          final args = call['args'] as Map;
+          final double totalUsd = (args['total_usd'] as num?)?.toDouble() ?? 0.0;
+          final String comercio = args['comercio'] ?? 'Varios';
+          final String fecha = args['fecha'] ?? DateTime.now().toIso8601String().substring(0, 10);
+          final String categoria = args['categoria'] ?? 'Otros';
+          final List itemsList = args['items'] ?? [];
+
+          List<ItemGastoModel> itemsGasto = itemsList.map((item) {
+            final double cant = (item['cantidad'] as num?)?.toDouble() ?? 1.0;
+            final double precioUnit = (item['precio_unitario'] as num?)?.toDouble() ?? totalUsd;
+            return ItemGastoModel(
+              descripcion: item['descripcion'] ?? 'Artículo',
+              cantidad: cant,
+              precioUnitario: precioUnit,
+              total: precioUnit * cant,
+              categoria: item['categoria'] ?? categoria,
+            );
+          }).toList();
+
+          if (itemsGasto.isEmpty) {
+            itemsGasto = [
+              ItemGastoModel(
+                descripcion: spokenText,
+                cantidad: 1.0,
+                precioUnitario: totalUsd,
+                total: totalUsd,
+                categoria: categoria,
+              ),
+            ];
+          }
+
+          return GeminiExtractionResult(
+            comercio: comercio,
+            fecha: fecha,
+            moneda: 'USD',
+            totalOriginal: totalUsd,
+            tasaCambioDetectada: null,
+            impuestoIva: 0.0,
+            items: itemsGasto,
+          );
+        }
+      }
+    } catch (e) {
+      // Fallback si falla la llamada de red
+    }
+
+    // Fallback básico si la IA no devolvió functionCall o hubo un corte
+    double montoFallback = 0.0;
+    final regexMonto = RegExp(r'(\d+([.,]\d+)?)');
+    final match = regexMonto.firstMatch(spokenText);
+    if (match != null) {
+      montoFallback = double.tryParse(match.group(1)!.replaceAll(',', '.')) ?? 0.0;
+    }
+
+    return GeminiExtractionResult(
+      comercio: 'Gasto por voz',
+      fecha: DateTime.now().toIso8601String().substring(0, 10),
+      moneda: 'USD',
+      totalOriginal: montoFallback,
+      tasaCambioDetectada: null,
+      impuestoIva: 0.0,
+      items: [
+        ItemGastoModel(
+          descripcion: spokenText,
+          cantidad: 1.0,
+          precioUnitario: montoFallback,
+          total: montoFallback,
+          categoria: 'Alimentación',
+        ),
+      ],
+    );
+  }
 }
