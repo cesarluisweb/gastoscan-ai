@@ -59,17 +59,36 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
     };
 
     try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
 
-      const responseText = await response.text();
+    let response;
+    let responseText = "";
+    let retries = 3;
+    let delay = 1000;
+    
+    for (let i = 0; i < retries; i++) {
+      try {
+        response = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
 
-      if (!response.ok) {
-        throw new functions.https.HttpsError("internal", `Error API Gemini: ${response.status} URL: ${url} Resp: ${responseText}`);
+        responseText = await response.text();
+
+        if (response.ok) {
+          break; // Exito
+        } else if (response.status === 503 && i < retries - 1) {
+          console.warn(`Intento ${i+1} falló con 503. Reintentando en ${delay}ms...`);
+          await new Promise(res => setTimeout(res, delay));
+          delay *= 2; // Exponential backoff
+        } else {
+          throw new functions.https.HttpsError("internal", `Error API Gemini: ${response.status} URL: ${url} Resp: ${responseText}`);
+        }
+      } catch (err) {
+        if (i === retries - 1) throw err;
       }
+    }
+
 
       const parsedData = JSON.parse(responseText);
       const candidates = parsedData.candidates || [];
