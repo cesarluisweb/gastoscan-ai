@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../models/gemini_extraction_result.dart';
+import '../../models/item_gasto_model.dart';
 import '../../models/shopping_item_model.dart';
 
 class GeminiService {
