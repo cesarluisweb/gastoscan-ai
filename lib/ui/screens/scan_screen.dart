@@ -14,7 +14,15 @@ import 'settings_screen.dart';
 class ScanScreen extends StatefulWidget {
   final ImagePicker? imagePicker;
   final ImageSource? initialSource;
-  const ScanScreen({Key? key, this.imagePicker, this.initialSource}) : super(key: key);
+  final GeminiService? geminiService;
+  final DatabaseHelper? dbHelper;
+  const ScanScreen({
+    Key? key,
+    this.imagePicker,
+    this.initialSource,
+    this.geminiService,
+    this.dbHelper,
+  }) : super(key: key);
 
   @override
   State<ScanScreen> createState() => _ScanScreenState();
@@ -22,7 +30,8 @@ class ScanScreen extends StatefulWidget {
 
 class _ScanScreenState extends State<ScanScreen> {
   late final ImagePicker _picker;
-  final GeminiService _geminiService = GeminiService();
+  late final GeminiService _geminiService;
+  late final DatabaseHelper _dbHelper;
   File? _selectedImage;
   bool _isProcessing = false;
   String? _statusText;
@@ -31,6 +40,8 @@ class _ScanScreenState extends State<ScanScreen> {
   void initState() {
     super.initState();
     _picker = widget.imagePicker ?? ImagePicker();
+    _geminiService = widget.geminiService ?? GeminiService();
+    _dbHelper = widget.dbHelper ?? DatabaseHelper.instance;
     if (widget.initialSource != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _pickImage(widget.initialSource!);
@@ -75,7 +86,7 @@ class _ScanScreenState extends State<ScanScreen> {
   }
 
   Future<void> _processWithGemini() async {
-    if (_selectedImage == null) return;
+    if (_selectedImage == null || _isProcessing) return;
 
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     final keyToUse = 'proxy';
@@ -89,12 +100,12 @@ class _ScanScreenState extends State<ScanScreen> {
       final compressedBytes = await ImageService.compressImage(_selectedImage!);
 
       setState(() {
-        _statusText = 'Obteniendo lista de compras pendiente...';
+        _statusText = 'Consultando lista de compras...';
       });
-      final pendingItems = await DatabaseHelper.instance.getPendingShoppingItems();
+      final pendingItems = await _dbHelper.getPendingShoppingItems();
 
       setState(() {
-        _statusText = 'Leyendo factura...';
+        _statusText = 'Analizando factura...';
       });
 
       final extractionResult = await _geminiService.analyzeReceiptImage(
@@ -124,31 +135,34 @@ class _ScanScreenState extends State<ScanScreen> {
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _isProcessing = false;
         _statusText = null;
       });
       
       final errorStr = e.toString().toLowerCase();
-      final isNetworkError = errorStr.contains('socketexception') || errorStr.contains('fallo al conectar');
+      final isNetworkError = errorStr.contains('socketexception') ||
+          errorStr.contains('fallo al conectar');
 
       if (isNetworkError) {
-        // Guardar en la cola offline si falla
+        // Guardar en la cola offline si falla la conexión
         final queueProvider = Provider.of<ScanQueueProvider>(context, listen: false);
         queueProvider.addPendingItem(_selectedImage!.path);
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Sin conexión. La factura se guardó en cola y se procesará cuando haya internet.'),
+            content: Text('Sin conexión. Factura guardada en cola para procesar luego.'),
             backgroundColor: AppColors.info,
             duration: Duration(seconds: 4),
           ),
         );
         Navigator.pop(context); // Volver al inicio
       } else {
+        final cleanMsg = e.toString().replaceFirst('Exception: ', '');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text(cleanMsg),
             backgroundColor: AppColors.error,
             duration: const Duration(seconds: 8),
           ),
@@ -163,29 +177,23 @@ class _ScanScreenState extends State<ScanScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Escanear Factura'),
-        automaticallyImplyLeading: false,
       ),
-      body: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              children: [
-                Expanded(
-                  child: _selectedImage == null
-                      ? _buildEmptyState()
-                      : _buildImagePreview(),
-                ),
-                const SizedBox(height: 20),
-                if (_selectedImage == null)
-                  _buildCaptureOptions()
-                else
-                  _buildActionButtons(),
-              ],
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          children: [
+            Expanded(
+              child: _selectedImage == null
+                  ? _buildEmptyState()
+                  : _buildImagePreview(),
             ),
-          ),
-          if (_isProcessing) _buildLoadingOverlay(),
-        ],
+            const SizedBox(height: 20),
+            if (_selectedImage == null)
+              _buildCaptureOptions()
+            else
+              _buildActionButtons(),
+          ],
+        ),
       ),
     );
   }
@@ -237,16 +245,58 @@ class _ScanScreenState extends State<ScanScreen> {
   }
 
   Widget _buildImagePreview() {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        width: double.infinity,
-        color: Colors.black,
-        child: Image.file(
-          _selectedImage!,
-          fit: BoxFit.contain,
+    return Stack(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            width: double.infinity,
+            height: double.infinity,
+            color: Colors.black,
+            child: Image.file(
+              _selectedImage!,
+              fit: BoxFit.contain,
+            ),
+          ),
         ),
-      ),
+        if (_isProcessing)
+          Positioned(
+            top: 16,
+            left: 16,
+            right: 16,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.75),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white24),
+              ),
+              child: Row(
+                children: [
+                  const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      _statusText ?? 'Analizando factura...',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -277,7 +327,7 @@ class _ScanScreenState extends State<ScanScreen> {
       children: [
         Expanded(
           child: OutlinedButton(
-            onPressed: () => setState(() => _selectedImage = null),
+            onPressed: _isProcessing ? null : () => setState(() => _selectedImage = null),
             child: const Text('Reintentar'),
           ),
         ),
@@ -285,51 +335,21 @@ class _ScanScreenState extends State<ScanScreen> {
         Expanded(
           flex: 2,
           child: ElevatedButton.icon(
-            onPressed: _processWithGemini,
-            icon: const Icon(Icons.auto_awesome),
-            label: const Text('Procesar con IA'),
+            onPressed: _isProcessing ? null : _processWithGemini,
+            icon: _isProcessing
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.black87,
+                    ),
+                  )
+                : const Icon(Icons.auto_awesome),
+            label: Text(_isProcessing ? 'Analizando...' : 'Procesar con IA'),
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildLoadingOverlay() {
-    return Container(
-      color: Colors.black87,
-      child: Center(
-        child: Container(
-          padding: const EdgeInsets.all(28),
-          margin: const EdgeInsets.symmetric(horizontal: 32),
-          decoration: BoxDecoration(
-            color: AppColors.card,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const CircularProgressIndicator(color: AppColors.primary),
-              const SizedBox(height: 24),
-              Text(
-                _statusText ?? 'Procesando...',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Detectando comercio, montos y productos.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

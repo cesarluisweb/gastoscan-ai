@@ -18,39 +18,21 @@ class GeminiService {
       }
 
       final base64Image = base64Encode(imageBytes);
-      final callable = FirebaseFunctions.instance.httpsCallable('analyzeReceipt');
+      final callable = FirebaseFunctions.instance.httpsCallable(
+        'analyzeReceipt',
+        options: HttpsCallableOptions(timeout: const Duration(minutes: 3)),
+      );
       
       final shoppingListContext = pendingShoppingItems != null && pendingShoppingItems.isNotEmpty
           ? pendingShoppingItems.map((e) => {'id': e.id, 'name': e.name}).toList()
           : [];
 
-      // Client-side retry logic for intermittent network or server issues
-      dynamic responseData;
-      int retries = 3;
-      int delayMs = 2000;
-      for (int i = 0; i < retries; i++) {
-        try {
-          final response = await callable.call({
-            'imageBase64': base64Image,
-            'shoppingList': shoppingListContext,
-          });
-          responseData = response.data;
-          break; // Success
-        } on FirebaseFunctionsException catch (e) {
-          if (e.code == 'unauthenticated' || e.code == 'invalid-argument') {
-            rethrow; // Do not retry unrecoverable errors
-          }
-          if (i == retries - 1) rethrow;
-          await Future.delayed(Duration(milliseconds: delayMs));
-          delayMs *= 2; // Exponential backoff
-        } catch (e) {
-          if (i == retries - 1) rethrow;
-          await Future.delayed(Duration(milliseconds: delayMs));
-          delayMs *= 2;
-        }
-      }
+      final response = await callable.call({
+        'imageBase64': base64Image,
+        'shoppingList': shoppingListContext,
+      });
 
-      final data = responseData;
+      final data = response.data;
       if (data == null) {
         throw Exception('Respuesta vacía del servidor.');
       }
@@ -59,9 +41,18 @@ class GeminiService {
       return GeminiExtractionResult.fromJson(jsonResult);
     } on FirebaseFunctionsException catch (e) {
       if (e.code == 'unauthenticated') {
-        throw Exception('No estas autenticado en Firebase. Revisa que el login anónimo esté activo en la consola.');
+        throw Exception('No estás autenticado en Firebase.');
+      } else if (e.code == 'deadline-exceeded') {
+        throw Exception('Tiempo de espera agotado. El servidor tardó demasiado en procesar.');
+      } else if (e.code == 'resource-exhausted') {
+        throw Exception('Límite de solicitudes alcanzado. Espera unos segundos e intenta nuevamente.');
+      } else if (e.code == 'unavailable') {
+        throw Exception('Servicio no disponible temporalmente. Intenta nuevamente.');
       } else {
-        throw Exception('Error del servidor (${e.code}): ${e.message}');
+        final message = (e.message != null && e.message!.isNotEmpty)
+            ? e.message!
+            : 'Error al procesar la factura en el servidor. Intenta nuevamente.';
+        throw Exception(message);
       }
     } catch (e) {
       throw Exception('Error interno: $e');
@@ -87,7 +78,20 @@ class GeminiService {
       // La Cloud Function ahora puede devolver { text: "..." } o { functionCall: { ... } }
       return Map<String, dynamic>.from(response.data as Map);
     } on FirebaseFunctionsException catch (e) {
-      throw Exception('Error del servidor (${e.code}): ${e.message}');
+      if (e.code == 'unauthenticated') {
+        throw Exception('No estás autenticado en Firebase.');
+      } else if (e.code == 'deadline-exceeded') {
+        throw Exception('Tiempo de espera agotado al conectar con el chat.');
+      } else if (e.code == 'resource-exhausted') {
+        throw Exception('Límite de solicitudes alcanzado. Espera unos segundos e intenta nuevamente.');
+      } else if (e.code == 'unavailable') {
+        throw Exception('Servicio no disponible temporalmente. Intenta nuevamente.');
+      } else {
+        final message = (e.message != null && e.message!.isNotEmpty)
+            ? e.message!
+            : 'Error al comunicarse con el asistente.';
+        throw Exception(message);
+      }
     } catch (e) {
       throw Exception('Fallo al conectar con el chat: $e');
     }
