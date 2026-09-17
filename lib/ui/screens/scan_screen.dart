@@ -13,7 +13,8 @@ import 'settings_screen.dart';
 
 class ScanScreen extends StatefulWidget {
   final ImagePicker? imagePicker;
-  const ScanScreen({Key? key, this.imagePicker}) : super(key: key);
+  final ImageSource? initialSource;
+  const ScanScreen({Key? key, this.imagePicker, this.initialSource}) : super(key: key);
 
   @override
   State<ScanScreen> createState() => _ScanScreenState();
@@ -26,10 +27,15 @@ class _ScanScreenState extends State<ScanScreen> {
   bool _isProcessing = false;
   String? _statusText;
 
-  @override
+    @override
   void initState() {
     super.initState();
     _picker = widget.imagePicker ?? ImagePicker();
+    if (widget.initialSource != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _pickImage(widget.initialSource!);
+      });
+    }
   }
 
   Future<void> _pickImage(ImageSource source) async {

@@ -83,22 +83,37 @@ class _MainScreenState extends State<MainScreen> {
                   ),
                 ),
               ),
-              ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: AppColors.primaryLight,
-                  child: const Icon(Icons.document_scanner, color: AppColors.textPrimary),
+                              ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: AppColors.primaryLight,
+                    child: const Icon(Icons.camera_alt, color: AppColors.textPrimary),
+                  ),
+                  title: const Text('Tomar Foto (IA)', style: TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: const Text('Captura tu recibo con la cámara'),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const ScanScreen(initialSource: ImageSource.camera)),
+                    );
+                  },
                 ),
-                title: const Text('Escanear Factura (IA)', style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: const Text('Toma una foto para registrar los datos automáticamente'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  // Navegar al tab de Scan o abrir ScanScreen directamente encima
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const ScanScreen()),
-                  );
-                },
-              ),
+                const Divider(),
+                ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: AppColors.primaryLight,
+                    child: const Icon(Icons.image, color: AppColors.textPrimary),
+                  ),
+                  title: const Text('Subir de Galería (IA)', style: TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: const Text('Sube un comprobante o screenshot'),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const ScanScreen(initialSource: ImageSource.gallery)),
+                    );
+                  },
+                ),
               const Divider(),
               ListTile(
                 leading: CircleAvatar(
