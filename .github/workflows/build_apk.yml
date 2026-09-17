@@ -66,20 +66,21 @@ jobs:
 
       - name: Habilitar Desugaring y Google Services en build.gradle
         run: |
-          # 1. Habilitar Google Services Plugin (si existe el archivo JSON)
+          # 1. Habilitar Google Services Plugin y Crashlytics Plugin
           if [ -f "android_template/google-services.json" ]; then
             if [ -f "android/settings.gradle.kts" ]; then
-              sed -i 's/plugins {/plugins {\n    id("com.google.gms.google-services") version "4.4.2" apply false/g' android/settings.gradle.kts
-              sed -i 's/plugins {/plugins {\n    id("com.google.gms.google-services")/g' android/app/build.gradle.kts
+              sed -i 's/plugins {/plugins {\n    id("com.google.gms.google-services") version "4.4.2" apply false\n    id("com.google.firebase.crashlytics") version "3.0.2" apply false/g' android/settings.gradle.kts
+              sed -i 's/plugins {/plugins {\n    id("com.google.gms.google-services")\n    id("com.google.firebase.crashlytics")/g' android/app/build.gradle.kts
             elif [ -f "android/settings.gradle" ]; then
-              sed -i 's/plugins {/plugins {\n    id "com.google.gms.google-services" version "4.4.2" apply false/g' android/settings.gradle
-              sed -i 's/plugins {/plugins {\n    id "com.google.gms.google-services"/g' android/app/build.gradle
+              sed -i 's/plugins {/plugins {\n    id "com.google.gms.google-services" version "4.4.2" apply false\n    id "com.google.firebase.crashlytics" version "3.0.2" apply false/g' android/settings.gradle
+              sed -i 's/plugins {/plugins {\n    id "com.google.gms.google-services"\n    id "com.google.firebase.crashlytics"/g' android/app/build.gradle
             elif [ -f "android/build.gradle.kts" ]; then
-              sed -i 's/plugins {/plugins {\n    id("com.google.gms.google-services") version "4.4.2" apply false/g' android/build.gradle.kts
-              sed -i 's/plugins {/plugins {\n    id("com.google.gms.google-services")/g' android/app/build.gradle.kts
+              sed -i 's/plugins {/plugins {\n    id("com.google.gms.google-services") version "4.4.2" apply false\n    id("com.google.firebase.crashlytics") version "3.0.2" apply false/g' android/build.gradle.kts
+              sed -i 's/plugins {/plugins {\n    id("com.google.gms.google-services")\n    id("com.google.firebase.crashlytics")/g' android/app/build.gradle.kts
             elif [ -f "android/build.gradle" ]; then
-              sed -i 's/dependencies {/dependencies {\n        classpath "com.google.gms:google-services:4.4.2"/g' android/build.gradle
+              sed -i 's/dependencies {/dependencies {\n        classpath "com.google.gms:google-services:4.4.2"\n        classpath "com.google.firebase:firebase-crashlytics-gradle:3.0.2"/g' android/build.gradle
               echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
+              echo "apply plugin: 'com.google.firebase.crashlytics'" >> android/app/build.gradle
             fi
           fi
 
