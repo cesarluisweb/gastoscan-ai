@@ -18,3 +18,12 @@ La compilación en GitHub Actions (`build_apk.yml`) ejecuta `flutter create`, lo
 ## 4. Guía de Diseño UI (Colores)
 - **Prohibido textos amarillos:** NUNCA apliques los colores de acento amarillos (`AppColors.primary` o `AppColors.primaryDark`) a textos regulares, descripciones o etiquetas. Todos los textos deben usar `AppColors.textPrimary` (negro/oscuro) para garantizar su legibilidad.
 - El color amarillo (`AppColors.primaryDark` preferiblemente) queda reservado de forma estricta y exclusiva para **iconos**, contenedores de fondo y símbolos gráficos de acción.
+
+## 5. Verificación de CI y Promesas al Usuario
+- **NUNCA** le digas al usuario que la aplicación "ya está lista para descargar" inmediatamente después de hacer un git push.
+- DEBES utilizar la API de GitHub (usando curl a https://api.github.com/repos/cesarluisweb/gastoscan-ai/actions/runs) para monitorear activamente el estado del workflow.
+- Solo puedes notificar éxito cuando el workflow correspondiente al último commit haya finalizado con un estado de success. Si falla, debes intentar leer los logs para autocorregir el error sin que el usuario te lo tenga que pedir.
+
+## 6. Control de Calidad en Dart (Importaciones)
+- El entorno de CI de Flutter detendrá la compilación instantáneamente si falta una importación.
+- Cada vez que utilices una clase, modelo o servicio en un archivo, es **obligatorio** rastrear el origen de esa clase e inyectar el import correspondiente en la cabecera. No asumas que la inyección de código lo incluye automáticamente.
