@@ -116,6 +116,41 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  Widget _buildFormattedMessage(String text, Color textColor) {
+    final List<TextSpan> spans = [];
+    final RegExp regex = RegExp(r'\*\*(.*?)\*\*');
+    int lastMatchEnd = 0;
+
+    for (final Match match in regex.allMatches(text)) {
+      if (match.start > lastMatchEnd) {
+        spans.add(TextSpan(
+          text: text.substring(lastMatchEnd, match.start),
+          style: TextStyle(color: textColor, fontSize: 14),
+        ));
+      }
+      spans.add(TextSpan(
+        text: match.group(1),
+        style: TextStyle(
+          color: textColor,
+          fontWeight: FontWeight.bold,
+          fontSize: 14,
+        ),
+      ));
+      lastMatchEnd = match.end;
+    }
+
+    if (lastMatchEnd < text.length) {
+      spans.add(TextSpan(
+        text: text.substring(lastMatchEnd),
+        style: TextStyle(color: textColor, fontSize: 14),
+      ));
+    }
+
+    return Text.rich(
+      TextSpan(children: spans),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -137,13 +172,17 @@ class _ChatScreenState extends State<ChatScreen> {
                   child: Container(
                     margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width * 0.85,
+                    ),
                     decoration: BoxDecoration(
                       color: isUser ? AppColors.primary : AppColors.card,
                       borderRadius: BorderRadius.circular(16),
+                      border: isUser ? null : Border.all(color: AppColors.border),
                     ),
-                    child: Text(
+                    child: _buildFormattedMessage(
                       msg['text'] ?? '',
-                      style: TextStyle(color: isUser ? Colors.white : AppColors.textPrimary),
+                      AppColors.textPrimary,
                     ),
                   ),
                 );
