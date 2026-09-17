@@ -119,7 +119,7 @@ class _MainScreenState extends State<MainScreen> {
                           totalOriginal: 0.0,
                           tasaCambioDetectada: null,
                           impuestoIva: 0.0,
-                          categoriaSugerida: 'Otros',
+                          
                           items: [],
                         ),
                       ),
