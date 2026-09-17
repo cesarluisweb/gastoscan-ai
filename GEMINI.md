@@ -1,9 +1,9 @@
 # Reglas Técnicas del Proyecto (Control de Gastos VE)
 
-## 1. Google Drive Sync vs. Ejecución de Comandos
-**IMPORTANTE:** Este proyecto se encuentra dentro de un directorio sincronizado por Google Drive.
-- NUNCA ejecutes comandos pesados como `npm install` o `npm run build` directamente dentro de este directorio, ya que el cliente de Google Drive bloqueará los archivos, provocando errores.
-- **Conflicto de Edición IA:** Si modificas código y notas que tus cambios desaparecen o se revierten misteriosamente, es Google Drive pisándolos. En ese caso, **DEBES** copiar los archivos afectados a una carpeta temporal (ej. `C:\Users\cesar\Desktop\temp_fix`), editarlos allí, devolverlos al proyecto usando comandos seguros y hacer `git commit` de inmediato.
+## 1. Entorno de Desarrollo y Ejecución
+**IMPORTANTE:** El repositorio oficial de este proyecto ha sido migrado permanentemente a `C:\Development\Control de gastos VE` para evitar conflictos con Google Drive.
+- Los agentes tienen luz verde para ejecutar comandos nativos (como builds, instalación de dependencias, scripts de modificación masiva) directamente en este directorio.
+- Ya no aplican restricciones de sincronización ni bloqueos de archivos ("Folder In Use"). Toda operación debe hacerse en esta ruta, ignorando cualquier metadato antiguo que referencie al Disco H.
 
 ## 2. Codificación en PowerShell y Scripts
 - Al modificar archivos de texto usando `Set-Content` en PowerShell, **SIEMPRE** debes usar el parámetro `-Encoding UTF8`. Si lo omites, Windows romperá todos los acentos y caracteres especiales en español.
