@@ -77,7 +77,7 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
 
         if (response.ok) {
           break; // Exito
-        } else if (response.status === 503 && i < retries - 1) {
+        } else if ((response.status === 503 || response.status === 429 || response.status >= 500) && i < retries - 1) {
           console.warn(`Intento ${i+1} falló con 503. Reintentando en ${delay}ms...`);
           await new Promise(res => setTimeout(res, delay));
           delay *= 2; // Exponential backoff
@@ -108,6 +108,6 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
       return JSON.parse(rawText);
     } catch (error) {
       console.error(error);
-      throw new functions.https.HttpsError("internal", "Fallo al procesar la factura.", error.message);
+      if (error && error.code) throw error; throw new functions.https.HttpsError("internal", "Fallo al procesar la factura.", error.message);
     }
 });
