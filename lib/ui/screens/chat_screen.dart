@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../../core/constants/app_colors.dart';
 import '../../providers/gasto_provider.dart';
 import '../../providers/settings_provider.dart';
@@ -18,7 +19,10 @@ class _ChatScreenState extends State<ChatScreen> {
   final List<Map<String, String>> _messages = [];
   final TextEditingController _textCtrl = TextEditingController();
   final GeminiService _geminiService = GeminiService();
+  final stt.SpeechToText _speech = stt.SpeechToText();
   bool _isLoading = false;
+  bool _isListening = false;
+  bool _speechAvailable = false;
 
   @override
   void initState() {
@@ -27,6 +31,70 @@ class _ChatScreenState extends State<ChatScreen> {
       'role': 'assistant',
       'text': 'Puedo ayudarte con lo que necesites dentro de Rinde Más: responder preguntas sobre tus gastos del mes o registrar compras directamente. ¿Qué deseas consultar?',
     });
+    _initSpeech();
+  }
+
+  @override
+  void dispose() {
+    _speech.stop();
+    _textCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _initSpeech() async {
+    try {
+      _speechAvailable = await _speech.initialize(
+        onError: (val) {
+          if (mounted) setState(() => _isListening = false);
+        },
+        onStatus: (status) {
+          if (mounted && (status == 'done' || status == 'notListening')) {
+            setState(() => _isListening = false);
+          }
+        },
+      );
+    } catch (e) {
+      _speechAvailable = false;
+    }
+  }
+
+  Future<void> _toggleListening() async {
+    if (!_speechAvailable) {
+      await _initSpeech();
+    }
+
+    if (_isListening) {
+      await _speech.stop();
+      if (mounted) setState(() => _isListening = false);
+    } else {
+      if (_speechAvailable) {
+        if (mounted) setState(() => _isListening = true);
+        await _speech.listen(
+          onResult: (val) {
+            if (mounted) {
+              setState(() {
+                _textCtrl.text = val.recognizedWords;
+                _textCtrl.selection = TextSelection.fromPosition(
+                  TextPosition(offset: _textCtrl.text.length),
+                );
+              });
+            }
+          },
+          listenFor: const Duration(seconds: 30),
+          pauseFor: const Duration(seconds: 3),
+        );
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Reconocimiento de voz no disponible o sin permiso.'),
+              backgroundColor: AppColors.warning,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    }
   }
 
   Future<void> _sendMessage() async {
@@ -199,18 +267,26 @@ class _ChatScreenState extends State<ChatScreen> {
             color: AppColors.surface,
             child: Row(
               children: [
+                IconButton(
+                  icon: Icon(
+                    _isListening ? Icons.mic : Icons.mic_none,
+                    color: _isListening ? AppColors.error : AppColors.textSecondary,
+                  ),
+                  tooltip: _isListening ? 'Detener micrófono' : 'Hablar por micrófono',
+                  onPressed: _isLoading ? null : _toggleListening,
+                ),
                 Expanded(
                   child: TextField(
                     controller: _textCtrl,
-                    decoration: const InputDecoration(
-                      hintText: 'Pregunta algo...',
+                    decoration: InputDecoration(
+                      hintText: _isListening ? 'Escuchando... habla ahora' : 'Pregunta algo...',
                       border: InputBorder.none,
                       filled: true,
                       fillColor: AppColors.card,
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 4),
                 IconButton(
                   icon: const Icon(Icons.send, color: AppColors.primaryDark),
                   onPressed: _isLoading ? null : _sendMessage,

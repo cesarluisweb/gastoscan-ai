@@ -24,6 +24,7 @@ dependencies:
 
   # Procesamiento de IA Multimodal
   http: ^1.2.1
+  speech_to_text: ^7.0.0
 
   # Captura y Optimización de Imágenes
   image_picker: ^1.1.2
