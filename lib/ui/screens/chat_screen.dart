@@ -41,6 +41,8 @@ class _ChatScreenState extends State<ChatScreen> {
     super.dispose();
   }
 
+  String? _spanishLocaleId;
+
   Future<void> _initSpeech() async {
     try {
       _speechAvailable = await _speech.initialize(
@@ -53,6 +55,16 @@ class _ChatScreenState extends State<ChatScreen> {
           }
         },
       );
+      if (_speechAvailable) {
+        final locales = await _speech.locales();
+        for (final loc in locales) {
+          if (loc.localeId.toLowerCase().startsWith('es')) {
+            _spanishLocaleId = loc.localeId;
+            break;
+          }
+        }
+        _spanishLocaleId ??= 'es_ES';
+      }
     } catch (e) {
       _speechAvailable = false;
     }
@@ -70,6 +82,7 @@ class _ChatScreenState extends State<ChatScreen> {
       if (_speechAvailable) {
         if (mounted) setState(() => _isListening = true);
         await _speech.listen(
+          localeId: _spanishLocaleId,
           onResult: (val) {
             if (mounted) {
               setState(() {
@@ -267,14 +280,6 @@ class _ChatScreenState extends State<ChatScreen> {
             color: AppColors.surface,
             child: Row(
               children: [
-                IconButton(
-                  icon: Icon(
-                    _isListening ? Icons.mic : Icons.mic_none,
-                    color: _isListening ? AppColors.error : AppColors.textSecondary,
-                  ),
-                  tooltip: _isListening ? 'Detener micrófono' : 'Hablar por micrófono',
-                  onPressed: _isLoading ? null : _toggleListening,
-                ),
                 Expanded(
                   child: TextField(
                     controller: _textCtrl,
@@ -287,6 +292,14 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                 ),
                 const SizedBox(width: 4),
+                IconButton(
+                  icon: Icon(
+                    _isListening ? Icons.mic : Icons.mic_none,
+                    color: _isListening ? AppColors.error : AppColors.primaryDark,
+                  ),
+                  tooltip: _isListening ? 'Detener micrófono' : 'Hablar por micrófono',
+                  onPressed: _isLoading ? null : _toggleListening,
+                ),
                 IconButton(
                   icon: const Icon(Icons.send, color: AppColors.primaryDark),
                   onPressed: _isLoading ? null : _sendMessage,
