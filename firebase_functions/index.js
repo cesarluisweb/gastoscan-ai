@@ -15,7 +15,7 @@ exports.analyzeReceipt = functions.https.onCall(async (data, context) => {
     }
 
     const key = geminiApiKey.value();
-    const model = "gemini-1.5-flash";
+    const model = "gemini-3.6-flash";
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
 
     const systemPrompt = `
@@ -68,7 +68,7 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
       const responseText = await response.text();
 
       if (!response.ok) {
-        throw new functions.https.HttpsError("internal", `Error API Gemini: ${response.status}`);
+        throw new functions.https.HttpsError("internal", `Error API Gemini: ${response.status} URL: ${url} Resp: ${responseText}`);
       }
 
       const parsedData = JSON.parse(responseText);
