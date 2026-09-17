@@ -111,3 +111,116 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
       if (error && error.code) throw error; throw new functions.https.HttpsError("internal", "Fallo al procesar la factura.", error.message);
     }
 });
+
+
+exports.chatWithAnalyst = functions
+  .runWith({ timeoutSeconds: 60, memory: "256MB" })
+  .https.onCall(async (data, context) => {
+    const { messages, contextData } = data;
+    if (!messages || !Array.isArray(messages)) {
+      throw new functions.https.HttpsError("invalid-argument", "Faltan los mensajes o no es un arreglo.");
+    }
+
+    const key = geminiApiKey.value();
+    const model = "gemini-3.6-flash";
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+
+    const systemPrompt = `Eres un asistente financiero experto y amigable para un usuario en Venezuela.
+Tu objetivo es analizar los gastos mensuales del usuario y responder sus dudas con base en los datos proporcionados.
+Da respuestas cortas, directas y prácticas. Si el usuario gasta mucho en algo, házselo saber.
+Si no hay suficientes datos para responder una pregunta específica, recomiéndale seguir escaneando facturas.
+Evita usar saludos largos o excesos de formalidad, ve directo al punto.
+Aquí están los gastos del usuario de este mes en formato JSON:
+${JSON.stringify(contextData)}
+`;
+
+    // Preparar historial de chat para Gemini
+    const geminiMessages = [
+      { role: "user", parts: [{ text: systemPrompt }] },
+      { role: "model", parts: [{ text: "Entendido, estoy listo para analizar los gastos." }] }
+    ];
+
+    for (const msg of messages) {
+      geminiMessages.push({
+        role: msg.role === "assistant" ? "model" : "user",
+        parts: [{ text: msg.text }]
+      });
+    }
+
+    const payload = {
+      contents: geminiMessages,
+      tools: [
+        {
+          functionDeclarations: [
+            {
+              name: "registrar_gasto",
+              description: "Registra un gasto manual en la aplicación cuando el usuario dicta qué compró.",
+              parameters: {
+                type: "object",
+                properties: {
+                  comercio: { type: "string", description: "Nombre del local o 'General' si no se especifica." },
+                  fecha: { type: "string", description: "Fecha en formato YYYY-MM-DD. Usa la fecha actual si no dice otra." },
+                  total_usd: { type: "number", description: "Monto total estimado en dólares." },
+                  categoria: { type: "string", description: "Una de: Alimentación, Salud, Educación, Hogar, Servicios, Transporte, Otros." },
+                  items: {
+                    type: "array",
+                    description: "Lista de productos comprados y sus precios estimados.",
+                    items: {
+                      type: "object",
+                      properties: {
+                        descripcion: { type: "string" },
+                        cantidad: { type: "number" },
+                        precio_unitario: { type: "number" }
+                      }
+                    }
+                  }
+                },
+                required: ["comercio", "fecha", "total_usd", "categoria", "items"]
+              }
+            }
+          ]
+        }
+      ],
+      generationConfig: {
+        temperature: 0.5,
+      },
+    };
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const responseText = await response.text();
+      if (!response.ok) {
+        console.error("Error respuesta Gemini API:", response.status, responseText);
+        throw new functions.https.HttpsError("internal", `Error API Gemini: ${response.status}`);
+      }
+
+      const responseData = JSON.parse(responseText);
+      const candidates = responseData.candidates || [];
+      if (candidates.length === 0) {
+        throw new functions.https.HttpsError("internal", "Respuesta vacía de Gemini.");
+      }
+
+      const part = candidates[0]?.content?.parts?.[0];
+      
+      if (part?.functionCall) {
+        // La IA decidió llamar a una herramienta
+        return { 
+          functionCall: {
+            name: part.functionCall.name,
+            args: part.functionCall.args
+          } 
+        };
+      }
+
+      return { text: part?.text || "" };
+    } catch (error) {
+      console.error(error);
+      throw new functions.https.HttpsError("internal", "Fallo al conectar con Gemini.", error.message);
+    }
+  });
+
