@@ -23,12 +23,33 @@ class GeminiService {
           ? pendingShoppingItems.map((e) => {'id': e.id, 'name': e.name}).toList()
           : [];
 
-      final response = await callable.call({
-        'imageBase64': base64Image,
-        'shoppingList': shoppingListContext,
-      });
+      // Client-side retry logic for intermittent network or server issues
+      dynamic responseData;
+      int retries = 3;
+      int delayMs = 2000;
+      for (int i = 0; i < retries; i++) {
+        try {
+          final response = await callable.call({
+            'imageBase64': base64Image,
+            'shoppingList': shoppingListContext,
+          });
+          responseData = response.data;
+          break; // Success
+        } on FirebaseFunctionsException catch (e) {
+          if (e.code == 'unauthenticated' || e.code == 'invalid-argument') {
+            rethrow; // Do not retry unrecoverable errors
+          }
+          if (i == retries - 1) rethrow;
+          await Future.delayed(Duration(milliseconds: delayMs));
+          delayMs *= 2; // Exponential backoff
+        } catch (e) {
+          if (i == retries - 1) rethrow;
+          await Future.delayed(Duration(milliseconds: delayMs));
+          delayMs *= 2;
+        }
+      }
 
-      final data = response.data;
+      final data = responseData;
       if (data == null) {
         throw Exception('Respuesta vacía del servidor.');
       }
