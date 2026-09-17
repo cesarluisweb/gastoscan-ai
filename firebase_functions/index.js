@@ -1,19 +1,17 @@
-const { onCall, HttpsError } = require("firebase-functions/v2/https");
+const functions = require("firebase-functions");
 const { defineString } = require("firebase-functions/params");
 
 const geminiApiKey = defineString("GEMINI_API_KEY");
 
-exports.analyzeReceipt = onCall(
-  { region: "us-central1", maxInstances: 10 },
-  async (request) => {
+exports.analyzeReceipt = functions.https.onCall(async (data, context) => {
     // 1. Validar auth
-    if (!request.auth) {
-      throw new HttpsError("unauthenticated", "Debes iniciar sesión.");
+    if (!context.auth) {
+      throw new functions.https.HttpsError("unauthenticated", "Debes iniciar sesión.");
     }
 
-    const imageBase64 = request.data.imageBase64;
+    const imageBase64 = data.imageBase64;
     if (!imageBase64) {
-      throw new HttpsError("invalid-argument", "Falta la imagen base64.");
+      throw new functions.https.HttpsError("invalid-argument", "Falta la imagen base64.");
     }
 
     const key = geminiApiKey.value();
@@ -70,13 +68,13 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
       const responseText = await response.text();
 
       if (!response.ok) {
-        throw new HttpsError("internal", `Error API Gemini: ${response.status}`);
+        throw new functions.https.HttpsError("internal", `Error API Gemini: ${response.status}`);
       }
 
-      const data = JSON.parse(responseText);
-      const candidates = data.candidates || [];
+      const parsedData = JSON.parse(responseText);
+      const candidates = parsedData.candidates || [];
       if (candidates.length === 0) {
-        throw new HttpsError("internal", "Respuesta vacía de Gemini.");
+        throw new functions.https.HttpsError("internal", "Respuesta vacía de Gemini.");
       }
 
       let rawText = candidates[0]?.content?.parts?.[0]?.text || "";
@@ -91,7 +89,6 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
       return JSON.parse(rawText);
     } catch (error) {
       console.error(error);
-      throw new HttpsError("internal", "Fallo al procesar la factura.", error.message);
+      throw new functions.https.HttpsError("internal", "Fallo al procesar la factura.", error.message);
     }
-  }
-);
+});
