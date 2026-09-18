@@ -13,6 +13,7 @@ import '../../providers/settings_provider.dart';
 import '../../services/image_service.dart';
 import '../../services/exchange_rate_service.dart';
 import '../../providers/scan_queue_provider.dart';
+import '../../core/utils/uuid_generator.dart';
 
 class ReviewExpenseScreen extends StatefulWidget {
   final File? imageFile;
@@ -62,15 +63,15 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       _selectedFecha = gasto.fecha;
       _selectedMoneda = gasto.moneda;
       _items = List.from(gasto.items);
-      _totalOriginalCtrl = TextEditingController(text: _formatDouble(gasto.totalOriginal));
-      _totalUsdCtrl = TextEditingController(text: gasto.totalUsd.toStringAsFixed(2));
+      _totalOriginalCtrl = TextEditingController(text: _formatDouble(gasto.totalOriginalDisplay));
+      _totalUsdCtrl = TextEditingController(text: gasto.totalUsdDisplay.toStringAsFixed(2));
       
-      double tasa = 0;
-      if (gasto.moneda == 'VES' && gasto.totalUsd > 0) {
-        tasa = gasto.totalOriginal / gasto.totalUsd;
+      double tasa = gasto.tasaCambio;
+      if (tasa <= 0 && gasto.moneda == 'VES' && gasto.totalUsd > 0) {
+        tasa = gasto.totalOriginalDisplay / gasto.totalUsdDisplay;
       }
       _tasaCambioCtrl = TextEditingController(text: tasa.toStringAsFixed(2));
-      _fuenteTasa = 'Tasa histórica del gasto';
+      _fuenteTasa = gasto.fuenteTasaCambio ?? 'Tasa histórica del gasto';
     } else {
       final data = widget.extractedData!;
       _comercioCtrl = TextEditingController(text: data.comercio);
@@ -253,14 +254,19 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
 
     final totalOrig = double.tryParse(_totalOriginalCtrl.text) ?? 0.0;
     final totalUsd = double.tryParse(_totalUsdCtrl.text) ?? 0.0;
+    final tasa = double.tryParse(_tasaCambioCtrl.text) ?? 1.0;
 
     final nuevoGasto = GastoModel(
       id: widget.existingGasto?.id,
+      uuid: widget.existingGasto?.uuid ?? UuidGenerator.generate(),
       fecha: _selectedFecha,
       comercio: _comercioCtrl.text.trim(),
       moneda: _selectedMoneda,
-      totalOriginal: totalOrig,
-      totalUsd: totalUsd,
+      totalOriginal: (totalOrig * 100).round(),
+      totalUsd: (totalUsd * 100).round(),
+      tasaCambio: tasa,
+      fuenteTasaCambio: _fuenteTasa,
+      fechaTasaCambio: _selectedFecha,
       categoria: _items.isNotEmpty ? _items.first.categoria : 'Otros',
       rutaFotoLocal: rutaFotoFinal,
       creadoEn: widget.existingGasto?.creadoEn ?? DateTime.now().toIso8601String(),

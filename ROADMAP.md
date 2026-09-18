@@ -25,7 +25,7 @@ Este documento centraliza las ideas y mejoras pendientes, ordenadas estratégica
 - **Ingreso de gastos conversacional (Function Calling):** Gemini puede interpretar un texto o audio y ejecutar comandos en la base de datos para guardar gastos manualmente.
 - **Cola Offline de Escaneo:** Si no hay internet, la factura se guarda en cola y se procesa sola cuando vuelve la conexión, notificando al usuario.
 
-## Fase 5: Marketing y Lanzamiento (En Progreso 🔄)
+## Fase 5: Marketing y Lanzamiento (Pausada ⏸️)
 *El paso para empezar a captar usuarios reales.*
 - **Subida de APK/Play Store:** Configurar las llaves criptográficas (Keystore) de Android permanentemente en GitHub Actions.
 - **Landing Page (rindemas.app):** Crear una página web sencilla orientada a la propuesta de valor y captación.
@@ -37,7 +37,7 @@ Este documento centraliza las ideas y mejoras pendientes, ordenadas estratégica
 - **Presupuestos por categoría:** Límite máximo en áreas específicas.
 - **Recordatorios locales:** Notificaciones push si no se registran gastos.
 
-## Fase 7: Arquitectura de Producción y Confiabilidad (Deuda Técnica Crítica)
+## Fase 7: Arquitectura de Producción y Confiabilidad (En Progreso 🔄)
 *Transformar el excelente MVP actual en un producto de grado financiero ("Bank-grade").*
 - **Motor de Sincronización Real (Sync Engine):** Abandonar `synced = 0/1`. Implementar UUIDs locales, marcas de tiempo (`created_at`, `updated_at`, `deleted_at` para borrado lógico/tombstones) y control de versiones para resolver conflictos entre dispositivos.
 - **Precisión Financiera Determinística:** Cambiar almacenamiento de dinero de coma flotante (`double`) a números enteros (centavos/minor units). Separar estrictamente el "Monto Original" del "Monto Convertido" auditando la fuente y fecha de la tasa de cambio. **Regla de oro: La IA interpreta, el código calcula.**

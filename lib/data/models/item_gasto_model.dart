@@ -1,10 +1,10 @@
-﻿class ItemGastoModel {
+class ItemGastoModel {
   final int? id;
   final int? gastoId;
   final String descripcion;
   final double cantidad;
-  final double precioUnitario;
-  final double total;
+  final int precioUnitario;
+  final int total;
   final String categoria;
 
   ItemGastoModel({
@@ -35,8 +35,8 @@
       gastoId: map['gasto_id'] as int?,
       descripcion: map['descripcion'] as String? ?? 'Sin descripción',
       cantidad: (map['cantidad'] as num?)?.toDouble() ?? 1.0,
-      precioUnitario: (map['precio_unitario'] as num?)?.toDouble() ?? 0.0,
-      total: (map['total'] as num?)?.toDouble() ?? 0.0,
+      precioUnitario: (map['precio_unitario'] as num?)?.toInt() ?? 0,
+      total: (map['total'] as num?)?.toInt() ?? 0,
       categoria: map['categoria'] as String? ?? 'Otros',
     );
   }
@@ -46,8 +46,8 @@
     int? gastoId,
     String? descripcion,
     double? cantidad,
-    double? precioUnitario,
-    double? total,
+    int? precioUnitario,
+    int? total,
     String? categoria,
   }) {
     return ItemGastoModel(
@@ -60,4 +60,7 @@
       categoria: categoria ?? this.categoria,
     );
   }
+
+  double get precioUnitarioDisplay => precioUnitario / 100.0;
+  double get totalDisplay => total / 100.0;
 }

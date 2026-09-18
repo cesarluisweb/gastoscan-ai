@@ -24,7 +24,7 @@ class ExportService {
 
     for (final gasto in gastos) {
       final itemsDescription = gasto.items.map((it) {
-        return '${it.cantidad}x ${it.descripcion} (@${it.precioUnitario} = ${it.total})';
+        return '${it.cantidad}x ${it.descripcion} (@${it.precioUnitarioDisplay} = ${it.totalDisplay})';
       }).join('; ');
 
       rows.add([
@@ -33,8 +33,8 @@ class ExportService {
         gasto.comercio,
         gasto.categoria,
         gasto.moneda,
-        gasto.totalOriginal,
-        gasto.totalUsd,
+        gasto.totalOriginalDisplay,
+        gasto.totalUsdDisplay,
         itemsDescription,
         gasto.creadoEn,
       ]);
@@ -53,7 +53,7 @@ class ExportService {
 
     double totalGeneralUsd = 0.0;
     for (final g in gastos) {
-      totalGeneralUsd += g.totalUsd;
+      totalGeneralUsd += g.totalUsdDisplay;
     }
 
     buffer.writeln('### Resumen General');
@@ -68,7 +68,7 @@ class ExportService {
     for (final g in gastos) {
       final itemsSummary = g.items.map((i) => '${i.cantidad}x ${i.descripcion}').join(', ');
       buffer.writeln(
-        '| ${g.fecha} | ${g.comercio} | ${g.categoria} | ${g.moneda} | ${g.totalOriginal} | ${CurrencyFormatter.formatUsd(g.totalUsd)} | $itemsSummary |'
+        '| ${g.fecha} | ${g.comercio} | ${g.categoria} | ${g.moneda} | ${g.totalOriginalDisplay} | ${CurrencyFormatter.formatUsd(g.totalUsdDisplay)} | $itemsSummary |'
       );
     }
 

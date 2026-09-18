@@ -127,8 +127,8 @@ class GeminiService {
             return ItemGastoModel(
               descripcion: item['descripcion'] ?? 'Artículo',
               cantidad: cant,
-              precioUnitario: precioUnit,
-              total: precioUnit * cant,
+              precioUnitario: (precioUnit * 100).round(),
+              total: (precioUnit * cant * 100).round(),
               categoria: item['categoria'] ?? categoria,
             );
           }).toList();
@@ -138,8 +138,8 @@ class GeminiService {
               ItemGastoModel(
                 descripcion: spokenText,
                 cantidad: 1.0,
-                precioUnitario: totalUsd,
-                total: totalUsd,
+                precioUnitario: (totalUsd * 100).round(),
+                total: (totalUsd * 100).round(),
                 categoria: categoria,
               ),
             ];
@@ -179,8 +179,8 @@ class GeminiService {
         ItemGastoModel(
           descripcion: spokenText,
           cantidad: 1.0,
-          precioUnitario: montoFallback,
-          total: montoFallback,
+          precioUnitario: (montoFallback * 100).round(),
+          total: (montoFallback * 100).round(),
           categoria: 'Alimentación',
         ),
       ],

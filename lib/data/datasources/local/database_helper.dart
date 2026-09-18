@@ -24,7 +24,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 8,
+      version: 9,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
       onConfigure: _onConfigure,
@@ -95,6 +95,21 @@ class DatabaseHelper {
         // La columna ya existe
       }
     }
+    if (oldVersion < 9) {
+      await db.execute('ALTER TABLE gastos ADD COLUMN uuid TEXT');
+      await db.execute('ALTER TABLE gastos ADD COLUMN actualizado_en TEXT');
+      await db.execute('ALTER TABLE gastos ADD COLUMN eliminado_en TEXT');
+      await db.execute('ALTER TABLE gastos ADD COLUMN tasa_cambio REAL DEFAULT 1.0');
+      await db.execute('ALTER TABLE gastos ADD COLUMN fuente_tasa_cambio TEXT');
+      await db.execute('ALTER TABLE gastos ADD COLUMN fecha_tasa_cambio TEXT');
+
+      await db.execute("UPDATE gastos SET uuid = lower(hex(randomblob(16))) WHERE uuid IS NULL OR uuid = ''");
+
+      await db.execute('UPDATE gastos SET total_original = CAST(ROUND(total_original * 100) AS INTEGER)');
+      await db.execute('UPDATE gastos SET total_usd = CAST(ROUND(total_usd * 100) AS INTEGER)');
+      await db.execute('UPDATE items_gasto SET precio_unitario = CAST(ROUND(precio_unitario * 100) AS INTEGER)');
+      await db.execute('UPDATE items_gasto SET total = CAST(ROUND(total * 100) AS INTEGER)');
+    }
   }
 
   Future<void> _onConfigure(Database db) async {
@@ -107,14 +122,20 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE gastos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        uuid TEXT NOT NULL,
         fecha TEXT NOT NULL,
         comercio TEXT NOT NULL,
         moneda TEXT NOT NULL,
-        total_original REAL NOT NULL,
-        total_usd REAL NOT NULL,
+        total_original INTEGER NOT NULL,
+        total_usd INTEGER NOT NULL,
+        tasa_cambio REAL DEFAULT 1.0,
+        fuente_tasa_cambio TEXT,
+        fecha_tasa_cambio TEXT,
         categoria TEXT NOT NULL,
         ruta_foto_local TEXT,
         creado_en TEXT NOT NULL,
+        actualizado_en TEXT,
+        eliminado_en TEXT,
         items TEXT,
         firestore_id TEXT,
         synced INTEGER DEFAULT 0
@@ -128,8 +149,8 @@ class DatabaseHelper {
         gasto_id INTEGER NOT NULL,
         descripcion TEXT NOT NULL,
         cantidad REAL NOT NULL,
-        precio_unitario REAL NOT NULL,
-        total REAL NOT NULL,
+        precio_unitario INTEGER NOT NULL,
+        total INTEGER NOT NULL,
         categoria TEXT DEFAULT 'Otros',
         FOREIGN KEY (gasto_id) REFERENCES gastos (id) ON DELETE CASCADE
       )
@@ -213,10 +234,33 @@ class DatabaseHelper {
     return await db.delete('gastos', where: 'id = ?', whereArgs: [id]);
   }
 
-  /// Obtiene todos los gastos ordenados de más reciente a más antiguo
+  /// Obtiene todos los gastos ordenados de más reciente a más antiguo (sin borrados lógicos)
   Future<List<GastoModel>> getAllGastos() async {
     final db = await instance.database;
-    final result = await db.query('gastos', orderBy: 'fecha DESC, id DESC');
+    final result = await db.query(
+      'gastos', 
+      where: 'eliminado_en IS NULL',
+      orderBy: 'fecha DESC, id DESC'
+    );
+    
+    final List<GastoModel> gastosList = [];
+    for (final map in result) {
+      final gastoId = map['id'] as int;
+      final itemsResult = await db.query(
+        'items_gasto',
+        where: 'gasto_id = ?',
+        whereArgs: [gastoId],
+      );
+      final items = itemsResult.map((i) => ItemGastoModel.fromMap(i)).toList();
+      gastosList.add(GastoModel.fromMap(map, items: items));
+    }
+    return gastosList;
+  }
+
+  /// Obtiene TODOS los gastos, incluyendo los borrados lógicos, para resolver conflictos de sincronización
+  Future<List<GastoModel>> getAllGastosConBorrados() async {
+    final db = await instance.database;
+    final result = await db.query('gastos');
     
     final List<GastoModel> gastosList = [];
     for (final map in result) {
@@ -270,7 +314,7 @@ class DatabaseHelper {
 
     final result = await db.query(
       'gastos',
-      where: 'fecha LIKE ?',
+      where: 'fecha LIKE ? AND eliminado_en IS NULL',
       whereArgs: [pattern],
       orderBy: 'fecha DESC, id DESC',
     );
@@ -296,17 +340,18 @@ class DatabaseHelper {
     final pattern = '$year-$monthStr%';
 
     final usdResult = await db.rawQuery(
-      'SELECT SUM(total_usd) as total FROM gastos WHERE fecha LIKE ?',
+      'SELECT SUM(total_usd) as total FROM gastos WHERE fecha LIKE ? AND eliminado_en IS NULL',
       [pattern],
     );
 
     final vesResult = await db.rawQuery(
-      'SELECT SUM(total_original) as total FROM gastos WHERE fecha LIKE ? AND moneda = ?',
+      'SELECT SUM(total_original) as total FROM gastos WHERE fecha LIKE ? AND moneda = ? AND eliminado_en IS NULL',
       [pattern, 'VES'],
     );
 
-    final double totalUsd = (usdResult.first['total'] as num?)?.toDouble() ?? 0.0;
-    final double totalVes = (vesResult.first['total'] as num?)?.toDouble() ?? 0.0;
+    // Dividimos entre 100 porque los montos ahora están en enteros
+    final double totalUsd = ((usdResult.first['total'] as num?)?.toDouble() ?? 0.0) / 100.0;
+    final double totalVes = ((vesResult.first['total'] as num?)?.toDouble() ?? 0.0) / 100.0;
 
     return {
       'USD': totalUsd,
@@ -326,13 +371,13 @@ class DatabaseHelper {
         SUM(
           CASE 
             WHEN g.total_original > 0 
-            THEN (i.total / g.total_original) * g.total_usd 
+            THEN (i.total * 1.0 / g.total_original) * g.total_usd 
             ELSE 0 
           END
         ) as total
       FROM items_gasto i
       JOIN gastos g ON i.gasto_id = g.id
-      WHERE g.fecha LIKE ?
+      WHERE g.fecha LIKE ? AND g.eliminado_en IS NULL
       GROUP BY i.categoria
       ORDER BY total DESC
     ''', [pattern]);
@@ -340,7 +385,8 @@ class DatabaseHelper {
     final Map<String, double> categoryMap = {};
     for (final row in result) {
       final cat = row['categoria'] as String;
-      final total = (row['total'] as num?)?.toDouble() ?? 0.0;
+      // Convertimos los centavos a decimales para mostrar en la UI
+      final total = ((row['total'] as num?)?.toDouble() ?? 0.0) / 100.0;
       categoryMap[cat] = total;
     }
     return categoryMap;
@@ -379,7 +425,7 @@ class DatabaseHelper {
       }
 
       return {
-        'precio_usd': precioUsd,
+        'precio_usd': precioUsd / 100.0, // UI maneja double
         'fecha': row['fecha'] as String,
         'comercio': row['comercio'] as String,
       };

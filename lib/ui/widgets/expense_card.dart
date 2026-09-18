@@ -136,7 +136,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        CurrencyFormatter.formatUsd(widget.gasto.totalUsd),
+                        CurrencyFormatter.formatUsd(widget.gasto.totalUsdDisplay),
                         style: const TextStyle(
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.bold,
@@ -146,7 +146,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
                       if (widget.gasto.moneda != 'USD')
                         Text(
                           CurrencyFormatter.formatAmount(
-                            widget.gasto.totalOriginal,
+                            widget.gasto.totalOriginalDisplay,
                             widget.gasto.moneda,
                           ),
                           style: const TextStyle(
@@ -233,7 +233,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
                             ),
                           ),
                           Text(
-                            CurrencyFormatter.formatAmount(it.total, widget.gasto.moneda),
+                            CurrencyFormatter.formatAmount(it.totalDisplay, widget.gasto.moneda),
                             style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
                           ),
                         ],

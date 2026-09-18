@@ -21,12 +21,33 @@ class GastoRepository {
     return _dbHelper.updateGastoSyncStatus(gasto);
   }
 
-  Future<int> eliminarGasto(int id) {
+  /// Borrado lógico
+  Future<int> eliminarGasto(int id) async {
+    final gastos = await _dbHelper.getAllGastos();
+    final index = gastos.indexWhere((g) => g.id == id);
+    if (index != -1) {
+      final gasto = gastos[index];
+      final gastoBorrado = gasto.copyWith(
+        eliminadoEn: DateTime.now().toIso8601String(),
+        synced: 0,
+      );
+      await _dbHelper.updateGasto(gastoBorrado, gasto.items);
+      return 1;
+    }
+    return 0;
+  }
+
+  /// Borrado físico (usado por el SyncService cuando ya se borró en Firebase)
+  Future<int> eliminarGastoFisico(int id) {
     return _dbHelper.deleteGasto(id);
   }
 
   Future<List<GastoModel>> obtenerGastos() {
     return _dbHelper.getAllGastos();
+  }
+
+  Future<List<GastoModel>> obtenerTodosLosGastosConBorrados() {
+    return _dbHelper.getAllGastosConBorrados();
   }
 
   Future<List<GastoModel>> obtenerGastosNoSincronizados() {

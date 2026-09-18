@@ -61,8 +61,8 @@ class GeminiExtractionResult {
           itemsList.add(ItemGastoModel(
             descripcion: desc,
             cantidad: cant,
-            precioUnitario: precio,
-            total: total,
+            precioUnitario: (precio * 100).round(),
+            total: (total * 100).round(),
             categoria: catItem,
           ));
         }
@@ -74,8 +74,8 @@ class GeminiExtractionResult {
       itemsList.add(ItemGastoModel(
         descripcion: 'Consumo general / Pago',
         cantidad: 1.0,
-        precioUnitario: totalOriginal,
-        total: totalOriginal,
+        precioUnitario: (totalOriginal * 100).round(),
+        total: (totalOriginal * 100).round(),
       ));
     }
 
