@@ -27,3 +27,8 @@ La compilación en GitHub Actions (`build_apk.yml`) ejecuta `flutter create`, lo
 ## 6. Control de Calidad en Dart (Importaciones)
 - El entorno de CI de Flutter detendrá la compilación instantáneamente si falta una importación.
 - Cada vez que utilices una clase, modelo o servicio en un archivo, es **obligatorio** rastrear el origen de esa clase e inyectar el import correspondiente en la cabecera. No asumas que la inyección de código lo incluye automáticamente.
+
+## 7. Gestión de Documentación del Proyecto
+- **Archivos de Planificación:** Siempre que se genere, actualice o discuta un documento estratégico para el proyecto (como ROADMAP.md, PROJECT.md, planes de arquitectura, o guías de estilo), DEBE guardarse directamente en la raíz del repositorio.
+- **Artefactos Prohibidos:** Está estrictamente prohibido dejar estos documentos clave confinados únicamente a los artefactos internos del agente (carpeta .gemini/antigravity/brain/...).
+- **Sincronización:** Tras cualquier actualización a estos documentos, se debe hacer un git commit y git push de inmediato para asegurar que el resto del equipo (humanos y otros agentes) tenga acceso a la fuente de verdad actualizada.
