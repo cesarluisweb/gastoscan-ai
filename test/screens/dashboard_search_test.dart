@@ -132,6 +132,10 @@ void main() {
     );
 
     setUp(() {
+      final TestWidgetsFlutterBinding binding = TestWidgetsFlutterBinding.ensureInitialized();
+      binding.window.physicalSizeTestValue = const Size(1080, 4000);
+      binding.window.devicePixelRatioTestValue = 1.0;
+
       fakeDb = FakeDatabaseHelper();
       scanQueueProvider = ScanQueueProvider(dbHelper: fakeDb, autoProcess: false);
       gastoProvider = FakeGastoProvider(

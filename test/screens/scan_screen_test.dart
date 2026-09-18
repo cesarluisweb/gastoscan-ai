@@ -118,10 +118,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Digitaliza tus comprobantes'), findsOneWidget);
-      expect(find.text('Galería / Pago Móvil'), findsOneWidget);
+      expect(find.text('Galería'), findsOneWidget);
 
       // Tap gallery button to pick multiple images
-      await tester.tap(find.text('Galería / Pago Móvil'));
+      await tester.tap(find.text('Galería'));
       await tester.pumpAndSettle();
 
       // Verify that all 3 images were enqueued into ScanQueueProvider
@@ -173,7 +173,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Tap gallery with no selection
-      await tester.tap(find.text('Galería / Pago Móvil'));
+      await tester.tap(find.text('Galería'));
       await tester.pumpAndSettle();
 
       expect(scanQueueProvider.pendingCount, equals(0));
