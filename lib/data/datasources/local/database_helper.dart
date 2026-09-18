@@ -495,6 +495,15 @@ class DatabaseHelper {
     );
   }
 
+  Future<int> clearPendingScanQueueItems() async {
+    final db = await instance.database;
+    return await db.delete(
+      'scan_queue',
+      where: 'status = ?',
+      whereArgs: ['pending'],
+    );
+  }
+
   // ==========================================
   // OPERACIONES PARA CATEGORIAS Y PRESUPUESTOS
   // ==========================================

@@ -80,7 +80,7 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
-          signal: AbortSignal.timeout(15000)
+          signal: AbortSignal.timeout(9000)
         });
 
         responseText = await response.text();

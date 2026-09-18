@@ -81,9 +81,20 @@ class ScanQueueProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool _cancelRequested = false;
+
+  Future<void> cancelProcessing() async {
+    _cancelRequested = true;
+    await _dbHelper.clearPendingScanQueueItems();
+    _pendingItems = [];
+    _isProcessing = false;
+    notifyListeners();
+  }
+
   Future<void> processPendingItems() async {
     if (_isProcessing) return;
     _isProcessing = true;
+    _cancelRequested = false;
     await loadPendingItems();
     notifyListeners();
 
@@ -93,6 +104,8 @@ class ScanQueueProvider with ChangeNotifier {
       notifyListeners();
 
       for (final item in pending) {
+        if (_cancelRequested) break;
+
         final int id = item['id'];
         final String imagePath = item['image_path'];
         final File file = File(imagePath);
@@ -100,6 +113,8 @@ class ScanQueueProvider with ChangeNotifier {
         if (await file.exists()) {
           try {
             final compressedBytes = await ImageService.compressImage(file);
+            if (_cancelRequested) break;
+
             final pendingShopping = await _dbHelper.getPendingShoppingItems();
 
             final extracted = await _geminiService.analyzeReceiptImage(
@@ -108,6 +123,8 @@ class ScanQueueProvider with ChangeNotifier {
               pendingShoppingItems: pendingShopping,
             );
             
+            if (_cancelRequested) break;
+
             final jsonStr = jsonEncode(extracted.toMap());
             await _dbHelper.updateScanQueueItem(id, 'ready', extractedData: jsonStr);
           } catch (e) {

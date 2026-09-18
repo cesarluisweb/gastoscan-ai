@@ -471,6 +471,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             ),
           ),
+          TextButton(
+            onPressed: () async {
+              await scanQueue.cancelProcessing();
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.error,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              visualDensity: VisualDensity.compact,
+            ),
+            child: const Text(
+              'Cancelar',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+            ),
+          ),
         ],
       ),
     );
