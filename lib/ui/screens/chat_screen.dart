@@ -7,6 +7,7 @@ import '../../providers/settings_provider.dart';
 import '../../data/models/gasto_model.dart';
 import '../../data/models/item_gasto_model.dart';
 import '../../data/datasources/remote/gemini_service.dart';
+import '../../core/utils/uuid_generator.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({Key? key}) : super(key: key);
@@ -152,17 +153,18 @@ class _ChatScreenState extends State<ChatScreen> {
             return ItemGastoModel(
               descripcion: item['descripcion'] ?? 'Artículo',
               cantidad: cant,
-              precioUnitario: precioUnit,
-              total: precioUnit * cant,
+              precioUnitario: (precioUnit * 100).round(),
+              total: (precioUnit * cant * 100).round(),
             );
           }).toList();
 
           final nuevoGasto = GastoModel(
+            uuid: UuidGenerator.generate(),
             fecha: fecha,
             comercio: comercio,
             moneda: 'USD', // Por simplicidad de la IA
-            totalOriginal: totalUsd,
-            totalUsd: totalUsd,
+            totalOriginal: (totalUsd * 100).round(),
+            totalUsd: (totalUsd * 100).round(),
             categoria: categoria,
             creadoEn: DateTime.now().toIso8601String(),
           );

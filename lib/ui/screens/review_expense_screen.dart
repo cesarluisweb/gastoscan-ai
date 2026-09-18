@@ -151,7 +151,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
   void _recalcularTotal() {
     double sum = 0.0;
     for (var item in _items) {
-      sum += item.total;
+      sum += item.totalDisplay;
     }
     if (sum > 0) {
       _totalOriginalCtrl.text = _formatDouble(sum);
@@ -219,8 +219,8 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       _items.add(ItemGastoModel(
         descripcion: '',
         cantidad: 1.0,
-        precioUnitario: 0.0,
-        total: 0.0,
+        precioUnitario: 0,
+        total: 0,
       ));
     });
   }
@@ -524,7 +524,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                           final prevFecha = prevData['fecha'] as String;
                           final prevComercio = prevData['comercio'] as String;
                           
-                          double currentUsd = item.precioUnitario;
+                          double currentUsd = item.precioUnitarioDisplay;
                           if (_selectedMoneda == 'VES') {
                             final tasa = double.tryParse(_tasaCambioCtrl.text.replaceAll(',', '.')) ?? 1.0;
                             if (tasa > 0) currentUsd = currentUsd / tasa;
@@ -597,7 +597,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                           final cant = double.tryParse(v) ?? 1.0;
                                           _items[idx] = _items[idx].copyWith(
                                             cantidad: cant,
-                                            total: cant * _items[idx].precioUnitario,
+                                            total: (cant * _items[idx].precioUnitario).round(),
                                           );
                                           _recalcularTotal();
                                         },
@@ -606,7 +606,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: TextFormField(
-                                        initialValue: _formatDouble(item.precioUnitario),
+                                        initialValue: _formatDouble(item.precioUnitarioDisplay),
                                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                                         decoration: const InputDecoration(
                                           labelText: 'Precio',
@@ -615,8 +615,8 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                         onChanged: (v) {
                                           final prec = double.tryParse(v) ?? 0.0;
                                           _items[idx] = _items[idx].copyWith(
-                                            precioUnitario: prec,
-                                            total: _items[idx].cantidad * prec,
+                                            precioUnitario: (prec * 100).round(),
+                                            total: (_items[idx].cantidad * prec * 100).round(),
                                           );
                                           _recalcularTotal();
                                         },
@@ -625,8 +625,8 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: TextFormField(
-                                        key: ValueKey('total_$idx\_${_items[idx].total}'),
-                                        initialValue: _formatDouble(_items[idx].total),
+                                        key: ValueKey('total_$idx\_${_items[idx].totalDisplay}'),
+                                        initialValue: _formatDouble(_items[idx].totalDisplay),
                                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                                         decoration: const InputDecoration(
                                           labelText: 'Total',
@@ -636,8 +636,8 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                           final tot = double.tryParse(v) ?? 0.0;
                                           final cant = _items[idx].cantidad;
                                           _items[idx] = _items[idx].copyWith(
-                                            total: tot,
-                                            precioUnitario: cant > 0 ? tot / cant : 0.0,
+                                            total: (tot * 100).round(),
+                                            precioUnitario: cant > 0 ? ((tot / cant) * 100).round() : 0,
                                           );
                                           _recalcularTotal();
                                         },
