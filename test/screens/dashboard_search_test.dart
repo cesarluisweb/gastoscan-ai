@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:gastoscan_ai/data/datasources/local/database_helper.dart';
@@ -53,11 +53,11 @@ void main() {
       id: 1,
       uuid: 'uuid-1',
       fecha: '2026-09-15',
-      comercio: 'CafÃ© Venezuela',
+      comercio: 'Café Venezuela',
       moneda: 'USD',
       totalOriginal: 500,
       totalUsd: 500,
-      categoria: 'AlimentaciÃ³n',
+      categoria: 'Alimentación',
       creadoEn: '2026-09-15T10:00:00',
       items: [
         ItemGastoModel(
@@ -85,7 +85,7 @@ void main() {
         ItemGastoModel(
           id: 102,
           gastoId: 2,
-          descripcion: 'CafÃ© Molido 500g',
+          descripcion: 'Café Molido 500g',
           cantidad: 1.0,
           precioUnitario: 350,
           total: 350,
@@ -109,7 +109,7 @@ void main() {
       moneda: 'USD',
       totalOriginal: 1200,
       totalUsd: 1200,
-      categoria: 'AlimentaciÃ³n',
+      categoria: 'Alimentación',
       creadoEn: '2026-09-13T12:00:00',
       items: [
         ItemGastoModel(
@@ -162,7 +162,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Initially app title is shown, search field is not shown
-      expect(find.text('Rinde MÃ¡s'), findsOneWidget);
+      expect(find.text('Rinde Más'), findsOneWidget);
       expect(find.byKey(const Key('dashboard_search_field')), findsNothing);
       expect(find.byIcon(Icons.search), findsOneWidget);
 
@@ -174,7 +174,7 @@ void main() {
       expect(find.byKey(const Key('dashboard_search_field')), findsOneWidget);
       expect(find.text('Buscar por comercio o producto...'), findsOneWidget);
       expect(find.byIcon(Icons.close), findsOneWidget);
-      expect(find.text('Rinde MÃ¡s'), findsNothing);
+      expect(find.text('Rinde Más'), findsNothing);
     });
 
     testWidgets('entering search query immediately filters out non-matching expenses', (tester) async {
@@ -182,7 +182,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // All 3 expenses visible initially
-      expect(find.text('CafÃ© Venezuela'), findsOneWidget);
+      expect(find.text('Café Venezuela'), findsOneWidget);
       expect(find.text('Farmatodo'), findsOneWidget);
       expect(find.text('Automercados Plaza'), findsOneWidget);
 
@@ -193,8 +193,8 @@ void main() {
       await tester.enterText(find.byKey(const Key('dashboard_search_field')), 'Cafe');
       await tester.pumpAndSettle();
 
-      // Matches CafÃ© Venezuela (commerce) and Farmatodo (product 'CafÃ© Molido 500g')
-      expect(find.text('CafÃ© Venezuela'), findsOneWidget);
+      // Matches Café Venezuela (commerce) and Farmatodo (product 'Café Molido 500g')
+      expect(find.text('Café Venezuela'), findsOneWidget);
       expect(find.text('Farmatodo'), findsOneWidget);
       // Automercados Plaza does not match
       expect(find.text('Automercados Plaza'), findsNothing);
@@ -210,7 +210,7 @@ void main() {
       await tester.enterText(find.byKey(const Key('dashboard_search_field')), 'Venezuela');
       await tester.pumpAndSettle();
 
-      expect(find.text('CafÃ© Venezuela'), findsOneWidget);
+      expect(find.text('Café Venezuela'), findsOneWidget);
       expect(find.text('Farmatodo'), findsNothing);
       expect(find.text('Automercados Plaza'), findsNothing);
     });
@@ -227,7 +227,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Farmatodo'), findsOneWidget);
-      expect(find.text('CafÃ© Venezuela'), findsNothing);
+      expect(find.text('Café Venezuela'), findsNothing);
       expect(find.text('Automercados Plaza'), findsNothing);
 
       // Search for product 'Arroz' sold at Automercados Plaza
@@ -236,7 +236,7 @@ void main() {
 
       expect(find.text('Automercados Plaza'), findsOneWidget);
       expect(find.text('Farmatodo'), findsNothing);
-      expect(find.text('CafÃ© Venezuela'), findsNothing);
+      expect(find.text('Café Venezuela'), findsNothing);
     });
 
     testWidgets('clearing search query via close button restores all expenses', (tester) async {
@@ -258,7 +258,7 @@ void main() {
 
       // Search field closed, all expenses restored
       expect(find.byKey(const Key('dashboard_search_field')), findsNothing);
-      expect(find.text('CafÃ© Venezuela'), findsOneWidget);
+      expect(find.text('Café Venezuela'), findsOneWidget);
       expect(find.text('Farmatodo'), findsOneWidget);
       expect(find.text('Automercados Plaza'), findsOneWidget);
     });
@@ -281,7 +281,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // All expenses restored
-      expect(find.text('CafÃ© Venezuela'), findsOneWidget);
+      expect(find.text('Café Venezuela'), findsOneWidget);
       expect(find.text('Farmatodo'), findsOneWidget);
       expect(find.text('Automercados Plaza'), findsOneWidget);
     });
@@ -299,7 +299,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('CafÃ© Venezuela'), findsNothing);
+      expect(find.text('Café Venezuela'), findsNothing);
       expect(find.text('Farmatodo'), findsNothing);
       expect(find.text('Automercados Plaza'), findsNothing);
 
@@ -320,15 +320,15 @@ void main() {
       await tester.enterText(find.byKey(const Key('dashboard_search_field')), 'CAFE');
       await tester.pumpAndSettle();
 
-      expect(find.text('CafÃ© Venezuela'), findsOneWidget);
+      expect(find.text('Café Venezuela'), findsOneWidget);
       expect(find.text('Farmatodo'), findsOneWidget);
       expect(find.text('Automercados Plaza'), findsNothing);
 
-      // Accented cafÃ©
-      await tester.enterText(find.byKey(const Key('dashboard_search_field')), 'cafÃ©');
+      // Accented café
+      await tester.enterText(find.byKey(const Key('dashboard_search_field')), 'café');
       await tester.pumpAndSettle();
 
-      expect(find.text('CafÃ© Venezuela'), findsOneWidget);
+      expect(find.text('Café Venezuela'), findsOneWidget);
       expect(find.text('Farmatodo'), findsOneWidget);
       expect(find.text('Automercados Plaza'), findsNothing);
     });
