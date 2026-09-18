@@ -17,8 +17,8 @@ exports.analyzeReceipt = functions
     }
 
     const key = geminiApiKey.value();
-    const model = "gemini-flash-latest";
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+    const fallbackModels = ["gemini-1.5-flash-latest", "gemini-1.5-flash-8b", "gemini-1.5-pro"];
+    let modelIndex = 0;
 
     const systemPrompt = `
 Analiza la imagen de este recibo o factura comercial. Extrae con precisión quirúrgica todos los datos legibles. 
@@ -68,6 +68,9 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
     let delay = 3500; // 3.5s inicial para respetar límites de tasa de Gemini
     
     for (let i = 0; i < retries; i++) {
+      const currentModel = fallbackModels[modelIndex];
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${key}`;
+
       try {
         response = await fetch(url, {
           method: "POST",
@@ -79,15 +82,23 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
 
         if (response.ok) {
           break; // Exito
-        } else if ((response.status === 503 || response.status === 429 || response.status >= 500) && i < retries - 1) {
+        } else if (response.status === 429) {
+          modelIndex++;
+          if (modelIndex < fallbackModels.length) {
+            console.warn(`429 alcanzado con ${currentModel}. Cambiando a ${fallbackModels[modelIndex]}...`);
+            i--; // No contar este intento contra el límite de reintentos
+            continue; // Reintentar inmediatamente
+          } else {
+            console.error(`Error final API Gemini: 429`, responseText);
+            throw new functions.https.HttpsError("resource-exhausted", "Límite de solicitudes de Gemini alcanzado. Intenta de nuevo en unos momentos.");
+          }
+        } else if ((response.status === 503 || response.status >= 500) && i < retries - 1) {
           console.warn(`Intento ${i + 1} falló con estado ${response.status}. Reintentando en ${delay}ms...`);
           await new Promise((res) => setTimeout(res, delay));
           delay = Math.min(delay * 1.5, 8000); // Backoff progresivo (3.5s -> 5.25s -> max 8s)
         } else {
           console.error(`Error final API Gemini: ${response.status}`, responseText);
-          if (response.status === 429) {
-            throw new functions.https.HttpsError("resource-exhausted", "Límite de solicitudes de Gemini alcanzado. Intenta de nuevo en unos momentos.");
-          } else if (response.status >= 500) {
+          if (response.status >= 500) {
             throw new functions.https.HttpsError("unavailable", "Servicio de Gemini no disponible temporalmente. Intenta más tarde.");
           }
           throw new functions.https.HttpsError("internal", `Error API Gemini: ${response.status}`);
