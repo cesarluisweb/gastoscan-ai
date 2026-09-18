@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../providers/gasto_provider.dart';
+import '../../providers/scan_queue_provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../data/models/gemini_extraction_result.dart';
 import 'dashboard_screen.dart';
@@ -166,10 +167,53 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scanQueue = Provider.of<ScanQueueProvider>(context);
+
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
+      body: Stack(
+        children: [
+          IndexedStack(
+            index: _currentIndex,
+            children: _pages,
+          ),
+          if (_currentIndex != 0 && scanQueue.readyItems.isNotEmpty)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 8,
+              left: 16,
+              right: 16,
+              child: Material(
+                elevation: 4,
+                borderRadius: BorderRadius.circular(12),
+                color: AppColors.primary,
+                child: InkWell(
+                  onTap: () {
+                    setState(() => _currentIndex = 0);
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.receipt_long, color: AppColors.textPrimary),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            '${scanQueue.readyItems.length} factura(s) lista(s) para revisar. Toca aquí.',
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                        const Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.textPrimary),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddMenu(context),
@@ -190,7 +234,13 @@ class _MainScreenState extends State<MainScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _buildTabItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: 'Inicio', index: 0),
+            _buildTabItem(
+              icon: Icons.home_outlined,
+              activeIcon: Icons.home,
+              label: 'Inicio',
+              index: 0,
+              badgeCount: scanQueue.readyItems.length,
+            ),
             _buildTabItem(icon: Icons.shopping_cart_outlined, activeIcon: Icons.shopping_cart, label: 'Lista', index: 1),
             const SizedBox(width: 48), // Espacio para el FAB
             _buildTabItem(icon: Icons.auto_awesome_outlined, activeIcon: Icons.auto_awesome, label: 'Asistente', index: 2),
@@ -206,8 +256,25 @@ class _MainScreenState extends State<MainScreen> {
     required IconData activeIcon,
     required String label,
     required int index,
+    int badgeCount = 0,
   }) {
     final isSelected = _currentIndex == index;
+
+    Widget iconWidget = Icon(
+      isSelected ? activeIcon : icon,
+      color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
+      size: 24,
+    );
+
+    if (badgeCount > 0) {
+      iconWidget = Badge.count(
+        count: badgeCount,
+        backgroundColor: AppColors.primaryDark,
+        textColor: Colors.white,
+        child: iconWidget,
+      );
+    }
+
     return InkWell(
       onTap: () => _onTabTapped(index),
       borderRadius: BorderRadius.circular(16),
@@ -217,11 +284,7 @@ class _MainScreenState extends State<MainScreen> {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              isSelected ? activeIcon : icon,
-              color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
-              size: 24,
-            ),
+            iconWidget,
             const SizedBox(height: 2),
             Text(
               label,

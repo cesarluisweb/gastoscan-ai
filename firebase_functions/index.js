@@ -17,11 +17,16 @@ exports.analyzeReceipt = functions
     }
 
     const key = geminiApiKey.value();
-    const fallbackModels = ["gemini-3.7-flash", "gemini-3.6-flash", "gemini-flash-lite-latest"];
+    const fallbackModels = ["gemini-3.6-flash", "gemini-3.7-flash", "gemini-3.8-flash"];
     let modelIndex = 0;
 
     const systemPrompt = `
-Analiza la imagen de este recibo o factura comercial. Extrae con precisión quirúrgica todos los datos legibles. 
+Analiza la imagen de este recibo o factura comercial con máxima precisión.
+Reglas estrictas para los productos:
+1. "descripcion": Transcribe el nombre legible, claro y completo del producto. Si el texto en la factura viene abreviado o cortado por la impresora térmica (por ejemplo "TOLLAS" -> "Toallas Húmedas", "ARRZ SUP" -> "Arroz Superior"), interpreta el contexto comercial y coloca un nombre descriptivo, limpio y bien escrito en español. No dejes caracteres truncados o incomprensibles.
+2. Cantidades y precios: Extrae con exactitud los montos numéricos (cantidad, precio unitario y total).
+3. "categoria": Asigna a cada ítem individual una de las categorías válidas ("Alimentación", "Salud", "Higiene", "Educación", "Hogar", "Servicios", "Transporte", "Otros") según el tipo de producto.
+
 Devuelve EXCLUSIVAMENTE un objeto JSON válido con la siguiente estructura, sin texto adicional ni bloques markdown:
 {
   "comercio": "Nombre del establecimiento o persona receptora",
@@ -32,7 +37,7 @@ Devuelve EXCLUSIVAMENTE un objeto JSON válido con la siguiente estructura, sin 
   "impuesto_iva": 0.00,
   "items": [
     {
-      "descripcion": "Nombre del producto o servicio",
+      "descripcion": "Nombre claro y completo del producto",
       "cantidad": 1.0,
       "precio_unitario": 0.00,
       "total": 0.00,
@@ -40,7 +45,6 @@ Devuelve EXCLUSIVAMENTE un objeto JSON válido con la siguiente estructura, sin 
     }
   ]
 }
-Para cada ítem, identifica la "categoria" correcta basándote en el nombre del producto (por ejemplo, si el producto es arroz o comida, asigna "Alimentación"). 
 Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago Móvil o transferencia bancaria, coloca en "comercio" el beneficiario y en "items" una sola línea con el concepto.
 `;
 
