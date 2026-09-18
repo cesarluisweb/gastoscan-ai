@@ -41,67 +41,7 @@ jobs:
           echo "==== HUELLA SHA-1 PARA FIREBASE ===="
           keytool -list -v -keystore android_template/rindemas.jks -alias rindemas -storepass rindemas123 -keypass rindemas123 | grep SHA1
 
-      - name: Generar plataforma Android nativa y aplicar permisos
-        run: |
-          rm -rf android
-          flutter create --org com.gastoscan.ai --project-name gastoscan_ai --platforms android .
-          cp android_template/AndroidManifest.xml android/app/src/main/AndroidManifest.xml
-          if [ -f "android_template/google-services.json" ]; then
-            cp android_template/google-services.json android/app/google-services.json
-          fi
-          
-          # Fix package name to match Firebase exactly
-          if [ -f "android/app/build.gradle.kts" ]; then
-            sed -i 's/namespace = "com.gastoscan.ai.gastoscan_ai"/namespace = "com.gastoscan.ai"/g' android/app/build.gradle.kts
-            sed -i 's/applicationId = "com.gastoscan.ai.gastoscan_ai"/applicationId = "com.gastoscan.ai"/g' android/app/build.gradle.kts
-          elif [ -f "android/app/build.gradle" ]; then
-            sed -i 's/namespace "com.gastoscan.ai.gastoscan_ai"/namespace "com.gastoscan.ai"/g' android/app/build.gradle
-            sed -i 's/applicationId "com.gastoscan.ai.gastoscan_ai"/applicationId "com.gastoscan.ai"/g' android/app/build.gradle
-          fi
-          
-          mkdir -p android/app/src/main/kotlin/com/gastoscan/ai
-          mv android/app/src/main/kotlin/com/gastoscan/ai/gastoscan_ai/MainActivity.kt android/app/src/main/kotlin/com/gastoscan/ai/ 2>/dev/null || true
-          rm -rf android/app/src/main/kotlin/com/gastoscan/ai/gastoscan_ai 2>/dev/null || true
-          sed -i 's/package com.gastoscan.ai.gastoscan_ai/package com.gastoscan.ai/g' android/app/src/main/kotlin/com/gastoscan/ai/MainActivity.kt
 
-      - name: Habilitar Desugaring y Google Services en build.gradle
-        run: |
-          # 1. Habilitar Google Services Plugin (si existe el archivo JSON)
-          if [ -f "android_template/google-services.json" ]; then
-            if [ -f "android/settings.gradle.kts" ]; then
-              sed -i 's/plugins {/plugins {\n    id("com.google.gms.google-services") version "4.4.1" apply false/g' android/settings.gradle.kts
-              sed -i 's/plugins {/plugins {\n    id("com.google.gms.google-services")/g' android/app/build.gradle.kts
-            elif [ -f "android/settings.gradle" ]; then
-              sed -i 's/plugins {/plugins {\n    id "com.google.gms.google-services" version "4.4.1" apply false/g' android/settings.gradle
-              sed -i 's/plugins {/plugins {\n    id "com.google.gms.google-services"/g' android/app/build.gradle
-            elif [ -f "android/build.gradle.kts" ]; then
-              sed -i 's/plugins {/plugins {\n    id("com.google.gms.google-services") version "4.4.1" apply false/g' android/build.gradle.kts
-              sed -i 's/plugins {/plugins {\n    id("com.google.gms.google-services")/g' android/app/build.gradle.kts
-            elif [ -f "android/build.gradle" ]; then
-              sed -i 's/dependencies {/dependencies {\n        classpath "com.google.gms:google-services:4.4.1"/g' android/build.gradle
-              echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
-            fi
-          fi
-
-          # 2. Habilitar Desugaring
-          if [ -f "android/app/build.gradle.kts" ]; then
-            sed -i 's/compileOptions {/compileOptions {\n        isCoreLibraryDesugaringEnabled = true/g' android/app/build.gradle.kts
-            echo 'dependencies { coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4") }' >> android/app/build.gradle.kts
-          elif [ -f "android/app/build.gradle" ]; then
-            sed -i 's/compileOptions {/compileOptions {\n        coreLibraryDesugaringEnabled true/g' android/app/build.gradle
-            echo "dependencies { coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4' }" >> android/app/build.gradle
-          else
-            echo "No build file found!"
-            exit 1
-          fi
-
-      - name: Commit Android Folder
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add android/
-          git commit -m "chore(ci): commit generated native android folder" || echo "No changes"
-          git push
 
       - name: Descargar Gradle 9.3.1 con reintentos automaticos
         run: |
@@ -114,6 +54,9 @@ jobs:
 
       - name: Instalar paquetes
         run: flutter pub get
+
+      - name: Ejecutar Unit Tests
+        run: flutter test
 
       - name: Generar Iconos de App
         run: flutter pub run flutter_launcher_icons
