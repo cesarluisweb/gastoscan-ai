@@ -17,7 +17,7 @@ exports.analyzeReceipt = functions
     }
 
     const key = geminiApiKey.value();
-    const fallbackModels = ["gemini-1.5-flash-latest", "gemini-1.5-flash-8b", "gemini-1.5-pro"];
+    const fallbackModels = ["gemini-flash-latest", "gemini-1.5-flash", "gemini-1.5-pro"];
     let modelIndex = 0;
 
     const systemPrompt = `
