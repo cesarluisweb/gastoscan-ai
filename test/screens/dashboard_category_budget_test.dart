@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gastoscan_ai/core/utils/currency_formatter.dart';
 import 'package:provider/provider.dart';
 import 'package:gastoscan_ai/core/constants/app_colors.dart';
 import 'package:gastoscan_ai/data/datasources/local/database_helper.dart';
@@ -174,7 +175,7 @@ void main() {
     }
 
     testWidgets(
-        'R3 Acceptance Criteria: Asignar \$50 a Comida, y registrar un gasto de \$60 en Comida hace que se dibuje un indicador visual de exceso (color rojo) en la UI de esa categorÃ­a',
+        'R3 Acceptance Criteria: Asignar \$50 a Comida, y registrar un gasto de \$60 en Comida hace que se dibuje un indicador visual de exceso (color rojo) en la UI de esa categorÃƒÂ­a',
         (tester) async {
       // 1. Asignar $50 a Comida
       gastoProvider.setPresupuestosPorCategoria({'Comida': 50.0});
@@ -186,7 +187,7 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      // Verificar que la categorÃ­a Comida estÃ© presente en la UI
+      // Verificar que la categorÃƒÂ­a Comida estÃƒÂ© presente en la UI
       expect(find.text('Comida'), findsWidgets);
 
       // Verificar que se muestre el monto gastado y el presupuesto: $60.00 / $50.00
@@ -204,7 +205,7 @@ void main() {
       final boxDecoration = excessAlertWidget.decoration as BoxDecoration;
       expect(boxDecoration.border?.top.color, AppColors.error);
 
-      // Verificar que la barra de progreso de la categorÃ­a Comida sea roja (AppColors.error)
+      // Verificar que la barra de progreso de la categorÃƒÂ­a Comida sea roja (AppColors.error)
       final progressFinder = find.byKey(const Key('category_progress_Comida'));
       expect(progressFinder, findsOneWidget);
       final progressBar = tester.widget<LinearProgressIndicator>(progressFinder);
@@ -241,7 +242,7 @@ void main() {
 
       // Initial silhouette card should be visible
       expect(find.byKey(const Key('category_chart_silhouette')), findsOneWidget);
-      expect(find.text('DistribuciÃ³n por CategorÃ­as'), findsOneWidget);
+      expect(find.text('Tus estadísticas'), findsOneWidget);
 
       // When a category is present, CategoryChart displays and allows setting a budget
       gastoProvider.setTotalesPorCategoria({'Comida': 20.0});

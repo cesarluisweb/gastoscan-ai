@@ -16,9 +16,13 @@ class MockNotificationService extends NotificationService {
 
   MockNotificationService() : super.test();
 
+  bool _scheduled = false;
+  DateTime? _time;
+
   @override
   Future<void> cancelInactivityReminder() async {
     cancelCount++;
+    _scheduled = false;
   }
 
   @override
@@ -27,14 +31,23 @@ class MockNotificationService extends NotificationService {
     String title = NotificationService.defaultNotificationTitle,
     String body = NotificationService.defaultNotificationBody,
   }) async {
+    await cancelInactivityReminder();
     lastDurationPassed = duration;
     scheduleCount++;
+    _scheduled = true;
+    _time = DateTime.now().add(duration);
   }
 
   @override
   Future<void> recordActivityAndReschedule() async {
     recordActivityCount++;
   }
+  
+  @override
+  DateTime? get lastScheduledTime => _time;
+  
+  @override
+  bool get isReminderScheduled => _scheduled;
 }
 
 /// Fake DatabaseHelper para probar GastoProvider sin SQLite real

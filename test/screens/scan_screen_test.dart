@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -117,11 +117,11 @@ void main() {
       await tester.tap(find.byKey(const Key('launch_btn')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Digitaliza tus comprobantes'), findsOneWidget);
-      expect(find.text('Galería'), findsOneWidget);
+      expect(find.text('Digitaliza tus facturas'), findsOneWidget);
+      expect(find.text('GalerÃ­a'), findsOneWidget);
 
       // Tap gallery button to pick multiple images
-      await tester.tap(find.text('Galería'));
+      await tester.tap(find.text('GalerÃ­a'));
       await tester.pumpAndSettle();
 
       // Verify that all 3 images were enqueued into ScanQueueProvider
@@ -135,7 +135,7 @@ void main() {
       // Verify that the UI returned immediately/silently back to Dashboard
       expect(returnedToCaller, isTrue);
       expect(find.byKey(const Key('launch_btn')), findsOneWidget);
-      expect(find.text('Digitaliza tus comprobantes'), findsNothing);
+      expect(find.text('Digitaliza tus facturas'), findsNothing);
     });
 
     testWidgets('empty selection from gallery does not enqueue or pop', (tester) async {
@@ -173,12 +173,12 @@ void main() {
       await tester.pumpAndSettle();
 
       // Tap gallery with no selection
-      await tester.tap(find.text('Galería'));
+      await tester.tap(find.text('GalerÃ­a'));
       await tester.pumpAndSettle();
 
       expect(scanQueueProvider.pendingCount, equals(0));
       expect(returnedToCaller, isFalse);
-      expect(find.text('Digitaliza tus comprobantes'), findsOneWidget);
+      expect(find.text('Digitaliza tus facturas'), findsOneWidget);
     });
   });
 }
