@@ -119,13 +119,12 @@ class GastoProvider with ChangeNotifier {
           await user.linkWithCredential(credential);
           await user.updateProfile(displayName: googleUser.displayName, photoURL: googleUser.photoUrl);
           await user.reload();
-          await syncToFirestore(); // Sync all existing anonymous data
+          await sincronizarConFirestore();
         } on FirebaseAuthException catch (e) {
           if (e.code == 'credential-already-in-use') {
             // El usuario ya tenía una cuenta. Iniciar sesión con ella.
             final userCred = await auth.signInWithCredential(credential);
             
-            final signedInUser = userCred.user;
             if (userCred.user != null) {
               await userCred.user?.updateProfile(displayName: googleUser.displayName, photoURL: googleUser.photoUrl);
               await userCred.user?.reload();
@@ -136,13 +135,13 @@ class GastoProvider with ChangeNotifier {
             for (var g in gastos) {
               await _repository.actualizarGastoSyncStatus(g.copyWith(synced: 0));
             }
-            await syncToFirestore();
+            await sincronizarConFirestore();
           } else {
             return e.message ?? e.toString();
           }
         }
       } else {
-        // Ya no es anonimo
+        await sincronizarConFirestore();
       }
       return null;
     } catch (e) {
@@ -159,25 +158,95 @@ class GastoProvider with ChangeNotifier {
       final unsyncedGastos = await _repository.obtenerGastosNoSincronizados();
       
       for (var gasto in unsyncedGastos) {
-        final docRef = gasto.firestoreId != null 
+        final docRef = gasto.firestoreId != null && gasto.firestoreId!.isNotEmpty
           ? FirebaseFirestore.instance.collection('users').doc(user.uid).collection('gastos').doc(gasto.firestoreId)
           : FirebaseFirestore.instance.collection('users').doc(user.uid).collection('gastos').doc();
           
         final data = gasto.toMap();
         data['firestore_id'] = docRef.id;
+        data['items'] = gasto.items.map((item) => item.toMap()).toList();
         
-        await docRef.set(data);
+        await docRef.set(data, SetOptions(merge: true));
         
         final syncedGasto = gasto.copyWith(firestoreId: docRef.id, synced: 1);
         await _repository.actualizarGastoSyncStatus(syncedGasto);
       }
     } catch (e) {
-      debugPrint("Error al sincronizar con Firestore: $e");
+      debugPrint("Error al sincronizar hacia Firestore: $e");
     }
+  }
+
+  Future<void> syncFromFirestore() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null || user.isAnonymous) return;
+
+      final snapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('gastos')
+          .get();
+
+      if (snapshot.docs.isEmpty) return;
+
+      final localGastos = await _repository.obtenerGastos();
+      final localFirestoreIds = localGastos
+          .map((g) => g.firestoreId)
+          .where((id) => id != null && id.isNotEmpty)
+          .toSet();
+
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        final firestoreId = doc.id;
+
+        // Si este gasto ya existe localmente por su firestore_id, no duplicarlo
+        if (localFirestoreIds.contains(firestoreId)) continue;
+
+        // Deserializar items
+        final itemsRaw = data['items'] as List<dynamic>? ?? [];
+        final items = itemsRaw
+            .map((itemMap) => ItemGastoModel.fromMap(Map<String, dynamic>.from(itemMap as Map)))
+            .toList();
+
+        // Deserializar gasto
+        final gasto = GastoModel.fromMap(data, items: items).copyWith(
+          id: null, // SQLite autoincrementa el id local
+          firestoreId: firestoreId,
+          synced: 1,
+        );
+
+        await _repository.guardarGasto(gasto, items);
+      }
+    } catch (e) {
+      debugPrint("Error al descargar desde Firestore: $e");
+    }
+  }
+
+  Future<void> sincronizarConFirestore() async {
+    await syncToFirestore();
+    await syncFromFirestore();
+    await cargarDatos();
   }
 
   Future<bool> eliminarGasto(int id) async {
     try {
+      final gastos = await _repository.obtenerGastos();
+      final index = gastos.indexWhere((g) => g.id == id);
+      if (index != -1) {
+        final gasto = gastos[index];
+        if (gasto.firestoreId != null && gasto.firestoreId!.isNotEmpty) {
+          final user = FirebaseAuth.instance.currentUser;
+          if (user != null && !user.isAnonymous) {
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(user.uid)
+                .collection('gastos')
+                .doc(gasto.firestoreId)
+                .delete();
+          }
+        }
+      }
+
       await _repository.eliminarGasto(id);
       await cargarDatos();
       return true;

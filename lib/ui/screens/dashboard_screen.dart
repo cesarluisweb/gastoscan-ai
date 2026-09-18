@@ -197,7 +197,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          await gastoProvider.cargarDatos();
+          await gastoProvider.sincronizarConFirestore();
           await scanQueue.loadReadyItems();
           await scanQueue.loadPendingItems();
           await scanQueue.processPendingItems();

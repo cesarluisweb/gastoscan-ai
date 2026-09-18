@@ -44,7 +44,7 @@ class _MainScreenState extends State<MainScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<GastoProvider>(context, listen: false).syncToFirestore();
+      Provider.of<GastoProvider>(context, listen: false).sincronizarConFirestore();
     });
   }
 
