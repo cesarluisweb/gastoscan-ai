@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:gastoscan_ai/data/datasources/local/database_helper.dart';
@@ -51,11 +51,12 @@ void main() {
 
     final gastoCafe = GastoModel(
       id: 1,
+      uuid: 'uuid-1',
       fecha: '2026-09-15',
       comercio: 'Café Venezuela',
       moneda: 'USD',
-      totalOriginal: 5.0,
-      totalUsd: 5.0,
+      totalOriginal: 500,
+      totalUsd: 500,
       categoria: 'Alimentación',
       creadoEn: '2026-09-15T10:00:00',
       items: [
@@ -64,19 +65,20 @@ void main() {
           gastoId: 1,
           descripcion: 'Espresso Doble',
           cantidad: 2.0,
-          precioUnitario: 2.5,
-          total: 5.0,
+          precioUnitario: 250,
+          total: 500,
         ),
       ],
     );
 
     final gastoFarmacia = GastoModel(
       id: 2,
+      uuid: 'uuid-2',
       fecha: '2026-09-14',
       comercio: 'Farmatodo',
       moneda: 'USD',
-      totalOriginal: 8.5,
-      totalUsd: 8.5,
+      totalOriginal: 850,
+      totalUsd: 850,
       categoria: 'Salud',
       creadoEn: '2026-09-14T15:30:00',
       items: [
@@ -85,27 +87,28 @@ void main() {
           gastoId: 2,
           descripcion: 'Café Molido 500g',
           cantidad: 1.0,
-          precioUnitario: 3.5,
-          total: 3.5,
+          precioUnitario: 350,
+          total: 350,
         ),
         ItemGastoModel(
           id: 103,
           gastoId: 2,
           descripcion: 'Aspirina 500mg',
           cantidad: 1.0,
-          precioUnitario: 5.0,
-          total: 5.0,
+          precioUnitario: 500,
+          total: 500,
         ),
       ],
     );
 
     final gastoSupermercado = GastoModel(
       id: 3,
+      uuid: 'uuid-3',
       fecha: '2026-09-13',
       comercio: 'Automercados Plaza',
       moneda: 'USD',
-      totalOriginal: 12.0,
-      totalUsd: 12.0,
+      totalOriginal: 1200,
+      totalUsd: 1200,
       categoria: 'Alimentación',
       creadoEn: '2026-09-13T12:00:00',
       items: [
@@ -114,16 +117,16 @@ void main() {
           gastoId: 3,
           descripcion: 'Arroz Diana 1kg',
           cantidad: 2.0,
-          precioUnitario: 1.5,
-          total: 3.0,
+          precioUnitario: 150,
+          total: 300,
         ),
         ItemGastoModel(
           id: 105,
           gastoId: 3,
           descripcion: 'Aceite Mazeite 1L',
           cantidad: 1.0,
-          precioUnitario: 9.0,
-          total: 9.0,
+          precioUnitario: 900,
+          total: 900,
         ),
       ],
     );

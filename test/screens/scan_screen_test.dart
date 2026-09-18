@@ -46,6 +46,7 @@ class FakeImagePicker extends ImagePicker {
     double? maxHeight,
     int? imageQuality,
     int? limit,
+    bool? requestFullMetadata = true,
   }) async {
     return multiImagesToReturn;
   }

@@ -229,13 +229,14 @@ void main() {
       expect(mockNotifications.recordActivityCount, equals(0));
 
       final dummyGasto = GastoModel(
+        uuid: 'test-uuid-1',
         comercio: 'Supermercado Central',
-        totalUsd: 25.50,
-        totalOriginal: 25.50,
+        totalUsd: 2550,
+        totalOriginal: 2550,
         moneda: 'USD',
         categoria: 'Comida',
         fecha: '2026-09-15',
-        tasaBcv: 36.5,
+        tasaCambio: 36.5,
         creadoEn: DateTime.now().toIso8601String(),
       );
 
@@ -243,8 +244,8 @@ void main() {
         ItemGastoModel(
           descripcion: 'Harina PAN',
           cantidad: 2,
-          precioUnitario: 1.50,
-          total: 3.00,
+          precioUnitario: 150,
+          total: 300,
         ),
       ];
 
@@ -261,13 +262,14 @@ void main() {
 
       final dummyGasto = GastoModel(
         id: 1,
+        uuid: 'test-uuid-2',
         comercio: 'Farmacia',
-        totalUsd: 10.00,
-        totalOriginal: 10.00,
+        totalUsd: 1000,
+        totalOriginal: 1000,
         moneda: 'USD',
         categoria: 'Salud',
         fecha: '2026-09-15',
-        tasaBcv: 36.5,
+        tasaCambio: 36.5,
         creadoEn: DateTime.now().toIso8601String(),
       );
 

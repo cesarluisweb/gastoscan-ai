@@ -129,11 +129,12 @@ void main() {
 
     final gastoComida60 = GastoModel(
       id: 1,
+      uuid: 'uuid-comida-60',
       fecha: '2026-09-15',
       comercio: 'Restaurante Central',
       moneda: 'USD',
-      totalOriginal: 60.0,
-      totalUsd: 60.0,
+      totalOriginal: 6000,
+      totalUsd: 6000,
       categoria: 'Comida',
       creadoEn: '2026-09-15T13:00:00',
       items: [
@@ -142,8 +143,8 @@ void main() {
           gastoId: 1,
           descripcion: 'Almuerzo Familiar',
           cantidad: 1.0,
-          precioUnitario: 60.0,
-          total: 60.0,
+          precioUnitario: 6000,
+          total: 6000,
         ),
       ],
     );

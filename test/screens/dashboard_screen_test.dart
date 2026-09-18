@@ -70,7 +70,7 @@ void main() {
       // Verify yellow processing banner is visible
       expect(find.byKey(const Key('processing_queue_banner')), findsOneWidget);
       expect(find.textContaining('Procesando 2 facturas en cola...'), findsOneWidget);
-      expect(find.text('Extrayendo datos de facturas en segundo plano'), findsOneWidget);
+      expect(find.text('Extrayendo datos en segundo plano'), findsOneWidget);
     });
 
     testWidgets('displays single item text properly in processing banner', (tester) async {
