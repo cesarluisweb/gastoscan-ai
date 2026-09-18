@@ -88,87 +88,22 @@ class _ScanScreenState extends State<ScanScreen> {
   Future<void> _processWithGemini() async {
     if (_selectedImage == null || _isProcessing) return;
 
-    final settings = Provider.of<SettingsProvider>(context, listen: false);
-    final keyToUse = 'proxy';
-
-    setState(() {
-      _isProcessing = true;
-      _statusText = 'Comprimiendo imagen...';
-    });
-
-    try {
-      final compressedBytes = await ImageService.compressImage(_selectedImage!);
-
-      setState(() {
-        _statusText = 'Consultando lista de compras...';
-      });
-      final pendingItems = await _dbHelper.getPendingShoppingItems();
-
-      setState(() {
-        _statusText = 'Analizando factura...';
-      });
-
-      final extractionResult = await _geminiService.analyzeReceiptImage(
-        imageBytes: compressedBytes,
-        apiKey: keyToUse,
-        pendingShoppingItems: pendingItems,
-      );
-
-      if (!mounted) return;
-
-      await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ReviewExpenseScreen(
-            imageFile: _selectedImage!,
-            extractedData: extractionResult,
-          ),
-        ),
-      );
-
-      // Limpiar el estado al regresar
-      if (mounted) {
-        setState(() {
-          _selectedImage = null;
-          _isProcessing = false;
-          _statusText = null;
-        });
-      }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _isProcessing = false;
-        _statusText = null;
-      });
-      
-      final errorStr = e.toString().toLowerCase();
-      final isNetworkError = errorStr.contains('socketexception') ||
-          errorStr.contains('fallo al conectar');
-
-      if (isNetworkError) {
-        // Guardar en la cola offline si falla la conexión
-        final queueProvider = Provider.of<ScanQueueProvider>(context, listen: false);
-        queueProvider.addPendingItem(_selectedImage!.path);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Sin conexión. Factura guardada en cola para procesar luego.'),
-            backgroundColor: AppColors.info,
-            duration: Duration(seconds: 4),
-          ),
-        );
-        Navigator.pop(context); // Volver al inicio
-      } else {
-        final cleanMsg = e.toString().replaceFirst('Exception: ', '');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(cleanMsg),
-            backgroundColor: AppColors.error,
-            duration: const Duration(seconds: 8),
-          ),
-        );
-      }
-    }
+    final queueProvider = Provider.of<ScanQueueProvider>(context, listen: false);
+    
+    // Add to background queue
+    await queueProvider.enqueue(_selectedImage!.path);
+    
+    if (!mounted) return;
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Factura añadida a la cola en segundo plano.'),
+        backgroundColor: AppColors.primary,
+        duration: Duration(seconds: 2),
+      ),
+    );
+    
+    Navigator.pop(context); // Volver al inicio
   }
 
   
