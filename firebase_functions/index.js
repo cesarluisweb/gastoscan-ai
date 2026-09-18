@@ -82,14 +82,14 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
 
         if (response.ok) {
           break; // Exito
-        } else if (response.status === 429) {
+        } else if (response.status === 429 || response.status === 404) {
           modelIndex++;
           if (modelIndex < fallbackModels.length) {
-            console.warn(`429 alcanzado con ${currentModel}. Cambiando a ${fallbackModels[modelIndex]}...`);
+            console.warn(`Error ${response.status} con ${currentModel}. Cambiando a ${fallbackModels[modelIndex]}...`);
             i--; // No contar este intento contra el límite de reintentos
             continue; // Reintentar inmediatamente
           } else {
-            console.error(`Error final API Gemini: 429`, responseText);
+            console.error(`Error final API Gemini: ${response.status}`, responseText);
             throw new functions.https.HttpsError("resource-exhausted", "Límite de solicitudes de Gemini alcanzado. Intenta de nuevo en unos momentos.");
           }
         } else if ((response.status === 503 || response.status >= 500) && i < retries - 1) {
