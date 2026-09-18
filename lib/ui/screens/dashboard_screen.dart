@@ -426,25 +426,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildProcessingBanner(BuildContext context, ScanQueueProvider scanQueue) {
     final count = scanQueue.pendingCount > 0 ? scanQueue.pendingCount : 1;
     final itemText = count == 1 ? 'factura' : 'facturas';
+    final isProcessing = scanQueue.isProcessing;
 
     return Container(
       key: const Key('processing_queue_banner'),
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.primaryLight,
+        color: isProcessing ? AppColors.primaryLight : AppColors.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.primary),
+        border: Border.all(color: isProcessing ? AppColors.primary : AppColors.warning),
       ),
       child: Row(
         children: [
-          const SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(
-              strokeWidth: 2.5,
-              valueColor: AlwaysStoppedAnimation<Color>(AppColors.secondary),
-            ),
+          SizedBox(
+            width: 24,
+            height: 24,
+            child: isProcessing 
+              ? const CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.secondary),
+                )
+              : const Icon(Icons.wifi_off, color: AppColors.warning, size: 24),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -453,17 +456,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Procesando $count $itemText en cola...',
-                  style: const TextStyle(
-                    color: AppColors.secondary,
+                  isProcessing ? 'Procesando $count $itemText en cola...' : 'Pausado: $count $itemText',
+                  style: TextStyle(
+                    color: isProcessing ? AppColors.secondary : AppColors.warning,
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
                   ),
                 ),
                 const SizedBox(height: 2),
-                const Text(
-                  'Extrayendo datos de facturas en segundo plano',
-                  style: TextStyle(
+                Text(
+                  isProcessing ? 'Extrayendo datos en segundo plano' : 'Problemas de red. Toca reintentar.',
+                  style: const TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 12,
                   ),
@@ -471,20 +474,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             ),
           ),
-          TextButton(
-            onPressed: () async {
-              await scanQueue.cancelProcessing();
-            },
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.error,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              visualDensity: VisualDensity.compact,
+          if (isProcessing)
+            TextButton(
+              onPressed: () async {
+                await scanQueue.cancelProcessing();
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.error,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                visualDensity: VisualDensity.compact,
+              ),
+              child: const Text('Cancelar', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            )
+          else
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, color: AppColors.error),
+                  tooltip: 'Descartar',
+                  onPressed: () async {
+                    await scanQueue.cancelProcessing();
+                  },
+                ),
+                TextButton(
+                  onPressed: () async {
+                    await scanQueue.processPendingItems();
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.primaryDark,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  child: const Text('Reintentar', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                ),
+              ],
             ),
-            child: const Text(
-              'Cancelar',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-            ),
-          ),
         ],
       ),
     );

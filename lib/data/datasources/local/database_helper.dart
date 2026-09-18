@@ -518,6 +518,15 @@ class DatabaseHelper {
     );
   }
 
+  Future<List<Map<String, dynamic>>> getErrorScanQueueItems() async {
+    final db = await instance.database;
+    return await db.query(
+      'scan_queue',
+      where: 'status = ?',
+      whereArgs: ['error'],
+    );
+  }
+
   Future<int> updateScanQueueItem(int id, String status, {String? extractedData}) async {
     final db = await instance.database;
     final data = <String, dynamic>{'status': status};

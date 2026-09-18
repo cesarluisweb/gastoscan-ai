@@ -129,17 +129,9 @@ class ScanQueueProvider with ChangeNotifier {
             await _dbHelper.updateScanQueueItem(id, 'ready', extractedData: jsonStr);
           } catch (e) {
             debugPrint('Fallo al procesar item en cola offline: $e');
-            // Fallback para no perder la foto y no atascar la cola
-            final fallback = GeminiExtractionResult(
-              comercio: 'Error al extraer datos',
-              fecha: DateTime.now().toIso8601String().substring(0, 10),
-              moneda: 'USD',
-              totalOriginal: 0.0,
-              impuestoIva: 0.0,
-              items: [],
-            );
-            final jsonStr = jsonEncode(fallback.toMap());
-            await _dbHelper.updateScanQueueItem(id, 'ready', extractedData: jsonStr);
+            // Dejar el item en pending y detener el loop.
+            // Esto hara que isProcessing = false y la UI muestre el estado "Pausado" con opcion a Reintentar.
+            break;
           }
         } else {
           await _dbHelper.deleteScanQueueItem(id);
