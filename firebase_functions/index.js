@@ -76,6 +76,7 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
+          signal: AbortSignal.timeout(15000)
         });
 
         responseText = await response.text();
@@ -101,10 +102,16 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
         }
       } catch (err) {
         if (err instanceof functions.https.HttpsError) throw err;
-        if (i === retries - 1) throw err;
-        console.warn(`Intento ${i + 1} falló por red/excepción: ${err.message}. Reintentando en ${delay}ms...`);
-        await new Promise((res) => setTimeout(res, delay));
-        delay = Math.min(delay * 1.5, 8000);
+        
+        modelIndex++;
+        if (modelIndex < fallbackModels.length) {
+          console.warn(`Timeout o falla de red con ${currentModel} (${err.name || err.message}). Cambiando a ${fallbackModels[modelIndex]}...`);
+          i--; 
+          continue;
+        } else {
+          console.error(`Error final de red/timeout:`, err);
+          throw new functions.https.HttpsError("unavailable", "Falla de conexión o tiempo de espera agotado con los servidores de inteligencia artificial.");
+        }
       }
     }
 
