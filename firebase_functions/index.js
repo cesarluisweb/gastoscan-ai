@@ -82,25 +82,21 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
 
         if (response.ok) {
           break; // Exito
-        } else if (response.status === 429 || response.status === 404) {
+        } else if (response.status === 429 || response.status === 404 || response.status >= 500) {
           modelIndex++;
           if (modelIndex < fallbackModels.length) {
             console.warn(`Error ${response.status} con ${currentModel}. Cambiando a ${fallbackModels[modelIndex]}...`);
-            i--; // No contar este intento contra el límite de reintentos
-            continue; // Reintentar inmediatamente
+            i--; // No contar este intento
+            continue;
           } else {
             console.error(`Error final API Gemini: ${response.status}`, responseText);
-            throw new functions.https.HttpsError("resource-exhausted", "Límite de solicitudes de Gemini alcanzado. Intenta de nuevo en unos momentos.");
-          }
-        } else if ((response.status === 503 || response.status >= 500) && i < retries - 1) {
-          console.warn(`Intento ${i + 1} falló con estado ${response.status}. Reintentando en ${delay}ms...`);
-          await new Promise((res) => setTimeout(res, delay));
-          delay = Math.min(delay * 1.5, 8000); // Backoff progresivo (3.5s -> 5.25s -> max 8s)
-        } else {
-          console.error(`Error final API Gemini: ${response.status}`, responseText);
-          if (response.status >= 500) {
+            if (response.status === 429) {
+              throw new functions.https.HttpsError("resource-exhausted", "Límite de solicitudes de Gemini alcanzado. Intenta de nuevo en unos momentos.");
+            }
             throw new functions.https.HttpsError("unavailable", "Servicio de Gemini no disponible temporalmente. Intenta más tarde.");
           }
+        } else {
+          console.error(`Error final API Gemini: ${response.status}`, responseText);
           throw new functions.https.HttpsError("internal", `Error API Gemini: ${response.status}`);
         }
       } catch (err) {
