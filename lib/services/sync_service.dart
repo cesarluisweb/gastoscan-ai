@@ -141,18 +141,20 @@ class SyncService {
 
       if (user.isAnonymous) {
         try {
-          await user.linkWithCredential(credential);
-          await user.updateProfile(displayName: googleUser.displayName, photoURL: googleUser.photoUrl);
-          await user.reload();
+          final userCred = await user.linkWithCredential(credential);
+          final activeUser = userCred.user ?? auth.currentUser ?? user;
+          await activeUser.updateProfile(displayName: googleUser.displayName, photoURL: googleUser.photoUrl);
+          await activeUser.reload();
           await syncBidirectional();
         } on FirebaseAuthException catch (e) {
           if (e.code == 'credential-already-in-use' ||
               e.code == 'email-already-in-use' ||
               e.code == 'account-exists-with-different-credential') {
             final userCred = await auth.signInWithCredential(credential);
-            if (userCred.user != null) {
-              await userCred.user?.updateProfile(displayName: googleUser.displayName, photoURL: googleUser.photoUrl);
-              await userCred.user?.reload();
+            final activeUser = userCred.user ?? auth.currentUser;
+            if (activeUser != null) {
+              await activeUser.updateProfile(displayName: googleUser.displayName, photoURL: googleUser.photoUrl);
+              await activeUser.reload();
             }
 
             final gastos = await _repository.obtenerGastos();
@@ -165,6 +167,8 @@ class SyncService {
           }
         }
       } else {
+        await user.updateProfile(displayName: googleUser.displayName, photoURL: googleUser.photoUrl);
+        await user.reload();
         await syncBidirectional();
       }
       return null;

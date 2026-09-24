@@ -104,6 +104,7 @@ class GastoProvider with ChangeNotifier {
     final error = await _syncService.vincularCuentaGoogle();
     if (error == null) {
       await cargarDatos(); // Recargar tras sincronizar
+      notifyListeners();
     }
     return error;
   }

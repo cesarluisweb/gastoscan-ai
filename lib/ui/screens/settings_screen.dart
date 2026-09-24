@@ -76,95 +76,154 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           // Sección de Cuenta y Sincronización
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.card,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.primary.withOpacity(0.5), width: 2),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(isAnon ? Icons.cloud_off : Icons.cloud_done, color: AppColors.primaryDark, size: 24),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'Respaldo en la Nube',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ],
+          StreamBuilder<User?>(
+            stream: FirebaseAuth.instance.userChanges(),
+            builder: (context, snapshot) {
+              final user = snapshot.data ?? FirebaseAuth.instance.currentUser;
+              final isAnon = user == null || user.isAnonymous;
+
+              String? photoUrl = user?.photoURL;
+              String? email = user?.email;
+              String? displayName = user?.displayName;
+
+              if (user != null && user.providerData.isNotEmpty) {
+                for (var p in user.providerData) {
+                  photoUrl ??= p.photoURL;
+                  email ??= p.email;
+                  displayName ??= p.displayName;
+                }
+              }
+
+              return Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.card,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.border, width: 1.5),
                 ),
-                const SizedBox(height: 12),
-                if (!isAnon && user.photoURL != null)
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        backgroundImage: NetworkImage(user.photoURL!),
-                        radius: 20,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(isAnon ? Icons.cloud_off : Icons.cloud_done, color: AppColors.primaryDark, size: 24),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Respaldo en la Nube',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    if (!isAnon)
+                      Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 22,
+                            backgroundColor: AppColors.primaryLight,
+                            backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
+                            child: photoUrl == null
+                                ? Text(
+                                    (displayName?.isNotEmpty == true
+                                            ? displayName![0]
+                                            : (email?.isNotEmpty == true ? email![0] : 'U'))
+                                        .toUpperCase(),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.textPrimary,
+                                      fontSize: 16,
+                                    ),
+                                  )
+                                : null,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (displayName != null && displayName.isNotEmpty)
+                                  Text(
+                                    displayName,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                Text(
+                                  email ?? 'Cuenta de Google vinculada',
+                                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                                ),
+                                const SizedBox(height: 2),
+                                const Row(
+                                  children: [
+                                    Icon(Icons.check_circle, size: 14, color: Colors.green),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      'Sincronización activa',
+                                      style: TextStyle(
+                                        color: Colors.green,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      )
+                    else
+                      const Text(
+                        'Inicia sesión con Google para no perder tus datos si cambias de teléfono. Tus gastos actuales se guardarán.',
+                        style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Sincronización activa.\n${user.email}',
-                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                    const SizedBox(height: 16),
+                    if (isAnon)
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          icon: const Icon(Icons.login),
+                          label: const Text('Vincular con Google'),
+                          onPressed: () async {
+                            final error = await Provider.of<GastoProvider>(context, listen: false).vincularCuentaGoogle();
+                            if (!mounted) return;
+                            if (error != null && error != 'CANCELLED') {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Error: $error')),
+                              );
+                            } else if (error == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Cuenta vinculada con éxito', style: TextStyle(color: Colors.black)),
+                                  backgroundColor: AppColors.primary,
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                      )
+                    else
+                      SizedBox(
+                        width: double.infinity,
+                        child: TextButton.icon(
+                          icon: const Icon(Icons.logout, color: AppColors.error),
+                          label: const Text('Cerrar Sesión', style: TextStyle(color: AppColors.error)),
+                          onPressed: () async {
+                            await FirebaseAuth.instance.signOut();
+                            await FirebaseAuth.instance.signInAnonymously();
+                          },
                         ),
                       ),
-                    ],
-                  )
-                else
-                  Text(
-                    isAnon
-                        ? 'Inicia sesión con Google para no perder tus datos si cambias de teléfono. Tus gastos actuales se guardarán.'
-                        : 'Sincronización activa. Cuenta vinculada a:\n${user.email}',
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
-                  ),
-                const SizedBox(height: 16),
-                if (isAnon)
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      icon: const Icon(Icons.login),
-                      label: const Text('Vincular con Google'),
-                      onPressed: () async {
-                        final error = await Provider.of<GastoProvider>(context, listen: false).vincularCuentaGoogle();
-                        if (!mounted) return;
-                        if (error != null && error != 'CANCELLED') {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Error: $error')),
-                          );
-                        } else if (error == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Cuenta vinculada con éxito', style: TextStyle(color: Colors.black)),
-                              backgroundColor: AppColors.primary,
-                            ),
-                          );
-                        }
-                        setState(() {}); // Refrescar UI tras login
-                      },
-                    ),
-                  )
-                else
-                  SizedBox(
-                    width: double.infinity,
-                    child: TextButton.icon(
-                      icon: const Icon(Icons.logout, color: AppColors.error),
-                      label: const Text('Cerrar Sesión', style: TextStyle(color: AppColors.error)),
-                      onPressed: () async {
-                        await FirebaseAuth.instance.signOut();
-                        await FirebaseAuth.instance.signInAnonymously();
-                        setState(() {});
-                      },
-                    ),
-                  ),
-              ],
-            ),
+                  ],
+                ),
+              );
+            },
           ),
           const SizedBox(height: 16),
 
