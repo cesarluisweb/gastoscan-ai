@@ -55,6 +55,26 @@ class FakeDatabaseHelper extends DatabaseHelper {
   }
 
   @override
+  Future<int> insertReadyScanQueueItem(String imagePath, String extractedData) async {
+    final id = _nextId++;
+    readyDb.add({
+      'id': id,
+      'image_path': imagePath,
+      'status': 'ready',
+      'extracted_data': extractedData,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+    return id;
+  }
+
+  @override
+  Future<bool> isImagePathUsedByOtherQueueItems(int currentId, String imagePath) async {
+    final count = pendingDb.where((it) => it['image_path'] == imagePath && it['id'] != currentId).length +
+        readyDb.where((it) => it['image_path'] == imagePath && it['id'] != currentId).length;
+    return count > 0;
+  }
+
+  @override
   Future<List<ShoppingItemModel>> getPendingShoppingItems() async {
     return [];
   }
@@ -154,6 +174,52 @@ void main() {
       ]);
       expect(provider.readyItems.length, equals(1));
       expect(notifications, equals(3));
+    });
+  });
+
+  group('GeminiExtractionResult.listFromJson Tests', () {
+    test('parses single legacy JSON correctly', () {
+      final json = {
+        'comercio': 'Supermercado Central',
+        'fecha': '2026-09-24',
+        'moneda': 'USD',
+        'total_original': 15.50,
+        'items': [
+          {'descripcion': 'Leche', 'cantidad': 2, 'precio_unitario': 2.50, 'total': 5.00}
+        ]
+      };
+
+      final results = GeminiExtractionResult.listFromJson(json);
+      expect(results.length, equals(1));
+      expect(results.first.comercio, equals('Supermercado Central'));
+      expect(results.first.totalOriginal, equals(15.50));
+    });
+
+    test('parses multiple facturas JSON array correctly', () {
+      final json = {
+        'facturas': [
+          {
+            'comercio': 'Farmacia',
+            'fecha': '2026-09-24',
+            'moneda': 'USD',
+            'total_original': 10.00,
+            'items': []
+          },
+          {
+            'comercio': 'Panadería',
+            'fecha': '2026-09-24',
+            'moneda': 'VES',
+            'total_original': 120.00,
+            'items': []
+          }
+        ]
+      };
+
+      final results = GeminiExtractionResult.listFromJson(json);
+      expect(results.length, equals(2));
+      expect(results[0].comercio, equals('Farmacia'));
+      expect(results[1].comercio, equals('Panadería'));
+      expect(results[1].moneda, equals('VES'));
     });
   });
 }

@@ -550,6 +550,26 @@ class DatabaseHelper {
     );
   }
 
+  Future<int> insertReadyScanQueueItem(String imagePath, String extractedData) async {
+    final db = await instance.database;
+    return await db.insert('scan_queue', {
+      'image_path': imagePath,
+      'status': 'ready',
+      'extracted_data': extractedData,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+  }
+
+  Future<bool> isImagePathUsedByOtherQueueItems(int currentId, String imagePath) async {
+    final db = await instance.database;
+    final result = await db.query(
+      'scan_queue',
+      where: 'image_path = ? AND id != ?',
+      whereArgs: [imagePath, currentId],
+    );
+    return result.isNotEmpty;
+  }
+
   Future<int> clearPendingScanQueueItems() async {
     final db = await instance.database;
     return await db.delete(

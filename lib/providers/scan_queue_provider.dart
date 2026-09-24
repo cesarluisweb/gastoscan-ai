@@ -122,7 +122,7 @@ class ScanQueueProvider with ChangeNotifier {
 
             final pendingShopping = await _dbHelper.getPendingShoppingItems();
 
-            final extracted = await _geminiService.analyzeReceiptImage(
+            final extractedList = await _geminiService.analyzeReceiptImage(
               imageBytes: compressedBytes,
               apiKey: 'proxy',
               pendingShoppingItems: pendingShopping,
@@ -130,8 +130,17 @@ class ScanQueueProvider with ChangeNotifier {
             
             if (_cancelRequested) break;
 
-            final jsonStr = jsonEncode(extracted.toMap());
-            await _dbHelper.updateScanQueueItem(id, 'ready', extractedData: jsonStr);
+            if (extractedList.isNotEmpty) {
+              final firstJson = jsonEncode(extractedList.first.toMap());
+              await _dbHelper.updateScanQueueItem(id, 'ready', extractedData: firstJson);
+
+              for (int i = 1; i < extractedList.length; i++) {
+                final extraJson = jsonEncode(extractedList[i].toMap());
+                await _dbHelper.insertReadyScanQueueItem(imagePath, extraJson);
+              }
+            } else {
+              await _dbHelper.deleteScanQueueItem(id);
+            }
           } catch (e) {
             final msg = e.toString().replaceFirst('Exception: ', '').trim();
             _lastError = msg.isNotEmpty ? msg : 'Error al procesar el comprobante.';

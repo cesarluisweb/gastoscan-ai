@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -5,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/utils/date_formatter.dart';
+import '../../data/datasources/local/database_helper.dart';
 import '../../data/models/gasto_model.dart';
 import '../../data/models/gemini_extraction_result.dart';
 import '../../data/models/item_gasto_model.dart';
@@ -231,7 +233,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     });
   }
 
-  Future<void> _guardarGasto() async {
+  Future<void> _guardarGasto({bool revisarSiguiente = false}) async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isSaving = true);
@@ -247,6 +249,11 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     } else {
       if (settings.guardarFotos && widget.imageFile != null) {
         rutaFotoFinal = await ImageService.saveImagePermanently(widget.imageFile!);
+      } else if (widget.imageFile != null && widget.queueItemId != null) {
+        final isUsed = await DatabaseHelper.instance.isImagePathUsedByOtherQueueItems(widget.queueItemId!, widget.imageFile!.path);
+        if (!isUsed) {
+          await ImageService.deleteTempFile(widget.imageFile!);
+        }
       } else if (widget.imageFile != null) {
         await ImageService.deleteTempFile(widget.imageFile!);
       }
@@ -272,191 +279,223 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       creadoEn: widget.existingGasto?.creadoEn ?? DateTime.now().toIso8601String(),
     );
 
-      bool success;
-      if (widget.existingGasto != null) {
-        success = await gastoProvider.actualizarGasto(nuevoGasto, _items);
-      } else {
-        final matchedIds = widget.extractedData?.matchedShoppingItemIds ?? [];
-        success = await gastoProvider.agregarGasto(nuevoGasto, _items, shoppingItemIds: matchedIds);
+    bool success;
+    if (widget.existingGasto != null) {
+      success = await gastoProvider.actualizarGasto(nuevoGasto, _items);
+    } else {
+      final matchedIds = widget.extractedData?.matchedShoppingItemIds ?? [];
+      success = await gastoProvider.agregarGasto(nuevoGasto, _items, shoppingItemIds: matchedIds);
+    }
+
+    if (!mounted) return;
+    setState(() => _isSaving = false);
+
+    if (success) {
+      final queueProvider = Provider.of<ScanQueueProvider>(context, listen: false);
+      if (widget.queueItemId != null) {
+        await queueProvider.removeItem(widget.queueItemId!);
       }
-  
-      if (!mounted) return;
-      setState(() => _isSaving = false);
-  
-      if (success) {
-        // Si venía de la cola offline, lo borramos de ahí
-        if (widget.queueItemId != null) {
-          final queueProvider = Provider.of<ScanQueueProvider>(context, listen: false);
-          await queueProvider.removeItem(widget.queueItemId!);
+
+      // Si el usuario eligió revisar la siguiente y hay más facturas en la cola
+      if (revisarSiguiente && queueProvider.readyItems.isNotEmpty) {
+        final nextItem = queueProvider.readyItems.first;
+        Map<String, dynamic> data = {};
+        if (nextItem['extracted_data'] != null) {
+          data = Map<String, dynamic>.from(jsonDecode(nextItem['extracted_data']));
         }
+        final result = GeminiExtractionResult.fromJson(data);
+        final file = File(nextItem['image_path']);
 
-        final user = FirebaseAuth.instance.currentUser;
-        final isAnon = user == null || user.isAnonymous;
-
-        if (isAnon && widget.existingGasto == null) {
-          final rootMessenger = ScaffoldMessenger.of(context);
-          bool cuentaVinculada = false;
-
-          await showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (ctx) {
-              bool isLinking = false;
-              String? errorMessage;
-
-              return StatefulBuilder(
-                builder: (context, setDialogState) {
-                  return AlertDialog(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    backgroundColor: AppColors.card,
-                    title: const Row(
-                      children: [
-                        Icon(Icons.cloud_done_outlined, color: Colors.green),
-                        SizedBox(width: 8),
-                        Text(
-                          'Compra registrada',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                        ),
-                      ],
-                    ),
-                    content: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Tu compra quedó registrada. Vincula tu cuenta de Google para no perderla si cambias de teléfono.',
-                          style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
-                        ),
-                        if (isLinking) ...[
-                          const SizedBox(height: 20),
-                          const Center(
-                            child: Column(
-                              children: [
-                                CircularProgressIndicator(color: AppColors.secondary),
-                                SizedBox(height: 12),
-                                Text(
-                                  'Conectando con Google...',
-                                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                        if (errorMessage != null) ...[
-                          const SizedBox(height: 16),
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: AppColors.error.withOpacity(0.08),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: AppColors.error.withOpacity(0.3)),
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Icon(Icons.error_outline, color: AppColors.error, size: 20),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    errorMessage!,
-                                    style: const TextStyle(fontSize: 12, color: AppColors.error),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    actions: isLinking
-                        ? []
-                        : [
-                            TextButton(
-                              onPressed: () => Navigator.pop(ctx),
-                              child: const Text('Ahora no', style: TextStyle(color: AppColors.textSecondary)),
-                            ),
-                            ElevatedButton.icon(
-                              icon: const Icon(Icons.login, size: 18),
-                              label: Text(
-                                errorMessage != null ? 'Reintentar vinculación' : 'Vincular con Google',
-                                style: const TextStyle(color: AppColors.secondary),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                                foregroundColor: AppColors.secondary,
-                              ),
-                              onPressed: () async {
-                                setDialogState(() {
-                                  isLinking = true;
-                                  errorMessage = null;
-                                });
-
-                                final error = await Provider.of<GastoProvider>(context, listen: false).vincularCuentaGoogle();
-                                if (!ctx.mounted) return;
-
-                                if (error == 'CANCELLED') {
-                                  setDialogState(() {
-                                    isLinking = false;
-                                  });
-                                } else if (error != null) {
-                                  setDialogState(() {
-                                    isLinking = false;
-                                    errorMessage = error;
-                                  });
-                                } else {
-                                  cuentaVinculada = true;
-                                  Navigator.pop(ctx);
-                                }
-                              },
-                            ),
-                          ],
-                  );
-                },
-              );
-            },
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Gasto registrado. Cargando siguiente factura...'),
+              backgroundColor: AppColors.primaryDark,
+              duration: Duration(seconds: 1),
+            ),
           );
 
-          if (mounted) {
-            Navigator.of(context).popUntil((route) => route.isFirst);
-            if (cuentaVinculada) {
-              rootMessenger.showSnackBar(
-                const SnackBar(
-                  content: Text('Cuenta vinculada con éxito. Gastos sincronizados.', style: TextStyle(color: Colors.black)),
-                  backgroundColor: AppColors.primary,
-                ),
-              );
-            } else {
-              rootMessenger.showSnackBar(
-                const SnackBar(
-                  content: Text('Gasto registrado con éxito'),
-                  backgroundColor: AppColors.primaryDark,
-                ),
-              );
-            }
-          }
-        } else {
-          final matchedIds = widget.extractedData?.matchedShoppingItemIds ?? [];
-          if (matchedIds.isNotEmpty) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Gasto registrado y ${matchedIds.length} ítem(s) de tu lista marcados como comprados.'),
-                backgroundColor: AppColors.primaryDark,
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ReviewExpenseScreen(
+                imageFile: file.existsSync() ? file : null,
+                extractedData: result,
+                queueItemId: nextItem['id'],
+              ),
+            ),
+          );
+        }
+        return;
+      }
+
+      final user = FirebaseAuth.instance.currentUser;
+      final isAnon = user == null || user.isAnonymous;
+
+      if (isAnon && widget.existingGasto == null) {
+        final rootMessenger = ScaffoldMessenger.of(context);
+        bool cuentaVinculada = false;
+
+        await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) {
+            bool isLinking = false;
+            String? errorMessage;
+
+            return StatefulBuilder(
+              builder: (context, setDialogState) {
+                return AlertDialog(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  backgroundColor: AppColors.card,
+                  title: const Row(
+                    children: [
+                      Icon(Icons.cloud_done_outlined, color: Colors.green),
+                      SizedBox(width: 8),
+                      Text(
+                        'Compra registrada',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                      ),
+                    ],
+                  ),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Tu compra quedó registrada. Vincula tu cuenta de Google para no perderla si cambias de teléfono.',
+                        style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                      ),
+                      if (isLinking) ...[
+                        const SizedBox(height: 20),
+                        const Center(
+                          child: Column(
+                            children: [
+                              CircularProgressIndicator(color: AppColors.secondary),
+                              SizedBox(height: 12),
+                              Text(
+                                'Conectando con Google...',
+                                style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      if (errorMessage != null) ...[
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.error.withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: AppColors.error.withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(Icons.error_outline, color: AppColors.error, size: 20),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  errorMessage!,
+                                  style: const TextStyle(fontSize: 12, color: AppColors.error),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  actions: isLinking
+                      ? []
+                      : [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            child: const Text('Ahora no', style: TextStyle(color: AppColors.textSecondary)),
+                          ),
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.login, size: 18),
+                            label: Text(
+                              errorMessage != null ? 'Reintentar vinculación' : 'Vincular con Google',
+                              style: const TextStyle(color: AppColors.secondary),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: AppColors.secondary,
+                            ),
+                            onPressed: () async {
+                              setDialogState(() {
+                                isLinking = true;
+                                errorMessage = null;
+                              });
+
+                              final error = await Provider.of<GastoProvider>(context, listen: false).vincularCuentaGoogle();
+                              if (!ctx.mounted) return;
+
+                              if (error == 'CANCELLED') {
+                                setDialogState(() {
+                                  isLinking = false;
+                                });
+                              } else if (error != null) {
+                                setDialogState(() {
+                                  isLinking = false;
+                                  errorMessage = error;
+                                });
+                              } else {
+                                cuentaVinculada = true;
+                                Navigator.pop(ctx);
+                              }
+                            },
+                          ),
+                        ],
+                );
+              },
+            );
+          },
+        );
+
+        if (mounted) {
+          Navigator.of(context).popUntil((route) => route.isFirst);
+          if (cuentaVinculada) {
+            rootMessenger.showSnackBar(
+              const SnackBar(
+                content: Text('Cuenta vinculada con éxito. Gastos sincronizados.', style: TextStyle(color: Colors.black)),
+                backgroundColor: AppColors.primary,
               ),
             );
           } else {
-            ScaffoldMessenger.of(context).showSnackBar(
+            rootMessenger.showSnackBar(
               const SnackBar(
                 content: Text('Gasto registrado con éxito'),
                 backgroundColor: AppColors.primaryDark,
               ),
             );
           }
-
-          if (mounted) {
-            Navigator.of(context).popUntil((route) => route.isFirst);
-          }
         }
       } else {
+        final matchedIds = widget.extractedData?.matchedShoppingItemIds ?? [];
+        if (matchedIds.isNotEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Gasto registrado y ${matchedIds.length} ítem(s) de tu lista marcados como comprados.'),
+              backgroundColor: AppColors.primaryDark,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Gasto registrado con éxito'),
+              backgroundColor: AppColors.primaryDark,
+            ),
+          );
+        }
+
+        if (mounted) {
+          Navigator.of(context).popUntil((route) => route.isFirst);
+        }
+      }
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(gastoProvider.errorMessage ?? 'Error al guardar'),
@@ -466,60 +505,129 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     }
   }
 
-    @override
-    Widget build(BuildContext context) {
-      return Scaffold(
+  @override
+  Widget build(BuildContext context) {
+    final queueProvider = Provider.of<ScanQueueProvider>(context);
+    final readyCount = queueProvider.readyItems.length;
+    final isQueueItem = widget.queueItemId != null;
+    final hasMoreInQueue = isQueueItem && readyCount > 1;
 
+    return Scaffold(
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size.fromHeight(50),
-            ),
-            onPressed: _isSaving ? null : _guardarGasto,
-            child: _isSaving
-                ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
-                : const Text('Guardar Gasto', style: TextStyle(color: Colors.black, fontSize: 16)),
-          ),
+          child: hasMoreInQueue
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(50),
+                      ),
+                      onPressed: _isSaving ? null : () => _guardarGasto(revisarSiguiente: true),
+                      icon: const Icon(Icons.arrow_forward, color: Colors.black),
+                      label: _isSaving
+                          ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
+                          : Text(
+                              'Guardar y revisar siguiente (${readyCount - 1} más)',
+                              style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                    ),
+                    const SizedBox(height: 8),
+                    OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(44),
+                        side: const BorderSide(color: AppColors.border),
+                      ),
+                      onPressed: _isSaving ? null : () => _guardarGasto(revisarSiguiente: false),
+                      child: const Text(
+                        'Guardar y salir al inicio',
+                        style: TextStyle(color: AppColors.textPrimary, fontSize: 14),
+                      ),
+                    ),
+                  ],
+                )
+              : ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(50),
+                  ),
+                  onPressed: _isSaving ? null : () => _guardarGasto(revisarSiguiente: false),
+                  child: _isSaving
+                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
+                      : const Text('Guardar Gasto', style: TextStyle(color: Colors.black, fontSize: 16)),
+                ),
         ),
       ),
       appBar: AppBar(
-          title: const Text('Revisar y Confirmar'),
-          actions: [
-            if (widget.queueItemId != null)
-              IconButton(
-                icon: const Icon(Icons.delete_outline, color: AppColors.error),
-                tooltip: 'Descartar Factura',
-                onPressed: () async {
-                  final confirm = await showDialog<bool>(
-                    context: context,
-                    builder: (ctx) => AlertDialog(
-                      backgroundColor: AppColors.card,
-                      title: const Text('Descartar Factura', style: TextStyle(color: AppColors.textPrimary)),
-                      content: const Text('¿Seguro que deseas descartar esta factura escaneada? No se guardará en tu historial.', style: TextStyle(color: AppColors.textSecondary)),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx, false),
-                          child: const Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
+        title: Text(
+          isQueueItem && readyCount > 1
+              ? 'Revisar Factura ($readyCount en cola)'
+              : 'Revisar y Confirmar',
+        ),
+        actions: [
+          if (widget.queueItemId != null)
+            IconButton(
+              icon: const Icon(Icons.delete_outline, color: AppColors.error),
+              tooltip: 'Descartar Factura',
+              onPressed: () async {
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    backgroundColor: AppColors.card,
+                    title: const Text('Descartar Factura', style: TextStyle(color: AppColors.textPrimary)),
+                    content: const Text('¿Seguro que deseas descartar esta factura escaneada? No se guardará en tu historial.', style: TextStyle(color: AppColors.textSecondary)),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: const Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: const Text('Descartar', style: TextStyle(color: AppColors.error)),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirm == true) {
+                  final qProvider = Provider.of<ScanQueueProvider>(context, listen: false);
+                  await qProvider.removeItem(widget.queueItemId!);
+                  if (!mounted) return;
+
+                  if (qProvider.readyItems.isNotEmpty) {
+                    final nextItem = qProvider.readyItems.first;
+                    Map<String, dynamic> data = {};
+                    if (nextItem['extracted_data'] != null) {
+                      data = Map<String, dynamic>.from(jsonDecode(nextItem['extracted_data']));
+                    }
+                    final result = GeminiExtractionResult.fromJson(data);
+                    final file = File(nextItem['image_path']);
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Factura descartada. Cargando siguiente...'),
+                        backgroundColor: AppColors.primaryDark,
+                        duration: Duration(seconds: 1),
+                      ),
+                    );
+
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ReviewExpenseScreen(
+                          imageFile: file.existsSync() ? file : null,
+                          extractedData: result,
+                          queueItemId: nextItem['id'],
                         ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx, true),
-                          child: const Text('Descartar', style: TextStyle(color: AppColors.error)),
-                        ),
-                      ],
-                    ),
-                  );
-                  if (confirm == true) {
-                    final queueProvider = Provider.of<ScanQueueProvider>(context, listen: false);
-                    await queueProvider.removeItem(widget.queueItemId!);
-                    if (!mounted) return;
+                      ),
+                    );
+                  } else {
                     Navigator.pop(context);
                   }
-                },
-              ),
-          ],
-        ),
+                }
+              },
+            ),
+        ],
+      ),
         body: Form(
         key: _formKey,
         child: ListView(

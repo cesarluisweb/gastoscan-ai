@@ -7,7 +7,7 @@ import '../../models/item_gasto_model.dart';
 import '../../models/shopping_item_model.dart';
 
 class GeminiService {
-  Future<GeminiExtractionResult> analyzeReceiptImage({
+  Future<List<GeminiExtractionResult>> analyzeReceiptImage({
     required Uint8List imageBytes,
     required String apiKey,
     List<ShoppingItemModel>? pendingShoppingItems,
@@ -38,7 +38,7 @@ class GeminiService {
       }
 
       final jsonResult = Map<String, dynamic>.from(data as Map);
-      return GeminiExtractionResult.fromJson(jsonResult);
+      return GeminiExtractionResult.listFromJson(jsonResult);
     } on FirebaseFunctionsException catch (e) {
       if (e.code == 'unauthenticated') {
         throw Exception('No estás autenticado en Firebase.');

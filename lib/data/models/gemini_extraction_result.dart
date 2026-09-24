@@ -21,6 +21,19 @@ class GeminiExtractionResult {
     this.matchedShoppingItemIds = const [],
   });
 
+  static List<GeminiExtractionResult> listFromJson(Map<String, dynamic> json) {
+    if (json.containsKey('facturas') && json['facturas'] is List) {
+      final list = json['facturas'] as List;
+      if (list.isNotEmpty) {
+        return list
+            .whereType<Map>()
+            .map((item) => GeminiExtractionResult.fromJson(Map<String, dynamic>.from(item)))
+            .toList();
+      }
+    }
+    return [GeminiExtractionResult.fromJson(json)];
+  }
+
   factory GeminiExtractionResult.fromJson(Map<String, dynamic> json) {
     // Comercio / Beneficiario
     final comercioRaw = json['comercio'];
