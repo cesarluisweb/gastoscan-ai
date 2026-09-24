@@ -133,10 +133,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       label: const Text('Vincular con Google'),
                       onPressed: () async {
                         final error = await Provider.of<GastoProvider>(context, listen: false).vincularCuentaGoogle();
-                        if (error != null) {
-                          if (!mounted) return;
+                        if (!mounted) return;
+                        if (error != null && error != 'CANCELLED') {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text('Error: $error')),
+                          );
+                        } else if (error == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Cuenta vinculada con éxito', style: TextStyle(color: Colors.black)),
+                              backgroundColor: AppColors.primary,
+                            ),
                           );
                         }
                         setState(() {}); // Refrescar UI tras login

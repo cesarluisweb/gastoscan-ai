@@ -294,59 +294,146 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         final isAnon = user == null || user.isAnonymous;
 
         if (isAnon && widget.existingGasto == null) {
+          final rootMessenger = ScaffoldMessenger.of(context);
+          bool cuentaVinculada = false;
+
           await showDialog(
             context: context,
             barrierDismissible: false,
-            builder: (ctx) => AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              backgroundColor: AppColors.card,
-              title: const Row(
-                children: [
-                  Icon(Icons.cloud_done_outlined, color: Colors.green),
-                  SizedBox(width: 8),
-                  Text(
-                    'Compra registrada',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                  ),
-                ],
-              ),
-              content: const Text(
-                'Tu compra quedó registrada. Vincula tu cuenta de Google para no perderla si cambias de teléfono.',
-                style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: const Text('Ahora no', style: TextStyle(color: AppColors.textSecondary)),
-                ),
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.login, size: 18),
-                  label: const Text('Vincular con Google'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: AppColors.secondary,
-                  ),
-                  onPressed: () async {
-                    final error = await Provider.of<GastoProvider>(context, listen: false).vincularCuentaGoogle();
-                    if (!mounted) return;
-                    if (error != null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error: $error')),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Cuenta vinculada con éxito', style: TextStyle(color: Colors.black)),
-                          backgroundColor: AppColors.primary,
+            builder: (ctx) {
+              bool isLinking = false;
+              String? errorMessage;
+
+              return StatefulBuilder(
+                builder: (context, setDialogState) {
+                  return AlertDialog(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    backgroundColor: AppColors.card,
+                    title: const Row(
+                      children: [
+                        Icon(Icons.cloud_done_outlined, color: Colors.green),
+                        SizedBox(width: 8),
+                        Text(
+                          'Compra registrada',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                         ),
-                      );
-                    }
-                    Navigator.pop(ctx);
-                  },
-                ),
-              ],
-            ),
+                      ],
+                    ),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Tu compra quedó registrada. Vincula tu cuenta de Google para no perderla si cambias de teléfono.',
+                          style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                        ),
+                        if (isLinking) ...[
+                          const SizedBox(height: 20),
+                          const Center(
+                            child: Column(
+                              children: [
+                                CircularProgressIndicator(color: AppColors.secondary),
+                                SizedBox(height: 12),
+                                Text(
+                                  'Conectando con Google...',
+                                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                        if (errorMessage != null) ...[
+                          const SizedBox(height: 16),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.error.withOpacity(0.08),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: AppColors.error.withOpacity(0.3)),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Icon(Icons.error_outline, color: AppColors.error, size: 20),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    errorMessage!,
+                                    style: const TextStyle(fontSize: 12, color: AppColors.error),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    actions: isLinking
+                        ? []
+                        : [
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx),
+                              child: const Text('Ahora no', style: TextStyle(color: AppColors.textSecondary)),
+                            ),
+                            ElevatedButton.icon(
+                              icon: const Icon(Icons.login, size: 18),
+                              label: Text(
+                                errorMessage != null ? 'Reintentar vinculación' : 'Vincular con Google',
+                                style: const TextStyle(color: AppColors.secondary),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: AppColors.secondary,
+                              ),
+                              onPressed: () async {
+                                setDialogState(() {
+                                  isLinking = true;
+                                  errorMessage = null;
+                                });
+
+                                final error = await Provider.of<GastoProvider>(context, listen: false).vincularCuentaGoogle();
+                                if (!ctx.mounted) return;
+
+                                if (error == 'CANCELLED') {
+                                  setDialogState(() {
+                                    isLinking = false;
+                                  });
+                                } else if (error != null) {
+                                  setDialogState(() {
+                                    isLinking = false;
+                                    errorMessage = error;
+                                  });
+                                } else {
+                                  cuentaVinculada = true;
+                                  Navigator.pop(ctx);
+                                }
+                              },
+                            ),
+                          ],
+                  );
+                },
+              );
+            },
           );
+
+          if (mounted) {
+            Navigator.of(context).popUntil((route) => route.isFirst);
+            if (cuentaVinculada) {
+              rootMessenger.showSnackBar(
+                const SnackBar(
+                  content: Text('Cuenta vinculada con éxito. Gastos sincronizados.', style: TextStyle(color: Colors.black)),
+                  backgroundColor: AppColors.primary,
+                ),
+              );
+            } else {
+              rootMessenger.showSnackBar(
+                const SnackBar(
+                  content: Text('Gasto registrado con éxito'),
+                  backgroundColor: AppColors.primaryDark,
+                ),
+              );
+            }
+          }
         } else {
           final matchedIds = widget.extractedData?.matchedShoppingItemIds ?? [];
           if (matchedIds.isNotEmpty) {
@@ -364,10 +451,10 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
               ),
             );
           }
-        }
 
-        if (mounted) {
-          Navigator.of(context).popUntil((route) => route.isFirst);
+          if (mounted) {
+            Navigator.of(context).popUntil((route) => route.isFirst);
+          }
         }
       } else {
       ScaffoldMessenger.of(context).showSnackBar(
