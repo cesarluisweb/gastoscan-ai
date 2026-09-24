@@ -948,19 +948,6 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                         prefixIcon: const Icon(Icons.currency_exchange, color: AppColors.textSecondary),
                         helperText: _fuenteTasa,
                         helperStyle: const TextStyle(color: AppColors.textPrimary, fontSize: 11),
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.sync, color: AppColors.primaryDark, size: 20),
-                          tooltip: 'Sincronizar tasa BCV de hoy',
-                          onPressed: () async {
-                            final settings = Provider.of<SettingsProvider>(context, listen: false);
-                            final tasa = await ExchangeRateService.getTodayRate(tipo: settings.tipoTasa);
-                            setState(() {
-                              _tasaCambioCtrl.text = tasa.toStringAsFixed(2);
-                              _fuenteTasa = 'Tasa oficial BCV sincronizada';
-                              _recalcularTotalUsd();
-                            });
-                          },
-                        ),
                       ),
                       onChanged: (_) => _recalcularTotalUsd(),
                     ),

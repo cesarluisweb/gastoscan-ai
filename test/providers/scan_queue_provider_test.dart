@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gastoscan_ai/data/datasources/local/database_helper.dart';
+import 'package:gastoscan_ai/data/models/gemini_extraction_result.dart';
 import 'package:gastoscan_ai/data/models/shopping_item_model.dart';
 import 'package:gastoscan_ai/providers/scan_queue_provider.dart';
 
