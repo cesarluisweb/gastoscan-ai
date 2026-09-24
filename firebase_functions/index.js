@@ -3,6 +3,14 @@ const { defineString } = require("firebase-functions/params");
 
 const geminiApiKey = defineString("GEMINI_API_KEY");
 
+const fallbackModels = [
+  "gemini-flash-latest",
+  "gemini-3.5-flash",
+  "gemini-3.6-flash",
+  "gemini-3.7-flash",
+  "gemini-3.8-flash"
+];
+
 exports.analyzeReceipt = functions
   .runWith({ timeoutSeconds: 180, memory: "512MB" })
   .https.onCall(async (data, context) => {
@@ -17,7 +25,6 @@ exports.analyzeReceipt = functions
     }
 
     const key = geminiApiKey.value();
-    const fallbackModels = ["gemini-3.6-flash", "gemini-3.7-flash", "gemini-3.8-flash"];
     let modelIndex = 0;
 
     const systemPrompt = `
@@ -65,60 +72,60 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
     };
 
     try {
+      let response;
+      let responseText = "";
+      const retries = 3;
 
-    let response;
-    let responseText = "";
-    const retries = 3;
-    let delay = 3500; // 3.5s inicial para respetar límites de tasa de Gemini
-    
-    for (let i = 0; i < retries; i++) {
-      const currentModel = fallbackModels[modelIndex];
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${key}`;
+      for (let i = 0; i < retries; i++) {
+        const currentModel = fallbackModels[modelIndex];
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${key}`;
 
-      try {
-        response = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-          signal: AbortSignal.timeout(9000)
-        });
+        try {
+          response = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+            signal: AbortSignal.timeout(25000)
+          });
 
-        responseText = await response.text();
+          responseText = await response.text();
 
-        if (response.ok) {
-          break; // Exito
-        } else if (response.status === 429 || response.status === 404 || response.status >= 500) {
-          modelIndex++;
-          if (modelIndex < fallbackModels.length) {
-            console.warn(`Error ${response.status} con ${currentModel}. Cambiando a ${fallbackModels[modelIndex]}...`);
-            i--; // No contar este intento
-            continue;
+          if (response.ok) {
+            break; // Éxito
+          } else if (response.status === 429 || response.status === 404 || response.status === 503 || response.status >= 500) {
+            modelIndex++;
+            if (modelIndex < fallbackModels.length) {
+              console.warn(`Error ${response.status} con ${currentModel}. Cambiando a ${fallbackModels[modelIndex]}...`);
+              i--; // No gastar intento al saltar de modelo
+              continue;
+            } else {
+              console.error(`Error final API Gemini: ${response.status}`, responseText);
+              if (response.status === 429) {
+                throw new functions.https.HttpsError("resource-exhausted", "Límite de solicitudes de Gemini alcanzado (Error 429). Intenta de nuevo en unos momentos.");
+              }
+              throw new functions.https.HttpsError("unavailable", "Servidores de Gemini saturados o no disponibles temporalmente (Error 503). Intenta más tarde.");
+            }
+          } else if (response.status === 402) {
+            console.error("Error 402 créditos agotados:", responseText);
+            throw new functions.https.HttpsError("resource-exhausted", "Créditos prepagados de Gemini agotados (Error 402). Se requiere recargar saldo en Google AI Studio.");
           } else {
             console.error(`Error final API Gemini: ${response.status}`, responseText);
-            if (response.status === 429) {
-              throw new functions.https.HttpsError("resource-exhausted", "Límite de solicitudes de Gemini alcanzado. Intenta de nuevo en unos momentos.");
-            }
-            throw new functions.https.HttpsError("unavailable", "Servicio de Gemini no disponible temporalmente. Intenta más tarde.");
+            throw new functions.https.HttpsError("internal", `Error API Gemini: ${response.status}`);
           }
-        } else {
-          console.error(`Error final API Gemini: ${response.status}`, responseText);
-          throw new functions.https.HttpsError("internal", `Error API Gemini: ${response.status}`);
-        }
-      } catch (err) {
-        if (err instanceof functions.https.HttpsError) throw err;
-        
-        modelIndex++;
-        if (modelIndex < fallbackModels.length) {
-          console.warn(`Timeout o falla de red con ${currentModel} (${err.name || err.message}). Cambiando a ${fallbackModels[modelIndex]}...`);
-          i--; 
-          continue;
-        } else {
-          console.error(`Error final de red/timeout:`, err);
-          throw new functions.https.HttpsError("unavailable", "Falla de conexión o tiempo de espera agotado con los servidores de inteligencia artificial.");
+        } catch (err) {
+          if (err instanceof functions.https.HttpsError) throw err;
+          
+          modelIndex++;
+          if (modelIndex < fallbackModels.length) {
+            console.warn(`Timeout o falla de red con ${currentModel} (${err.name || err.message}). Cambiando a ${fallbackModels[modelIndex]}...`);
+            i--; 
+            continue;
+          } else {
+            console.error(`Error final de red/timeout:`, err);
+            throw new functions.https.HttpsError("unavailable", "Tiempo de espera agotado al conectar con los servidores de inteligencia artificial.");
+          }
         }
       }
-    }
-
 
       const parsedData = JSON.parse(responseText);
       const candidates = parsedData.candidates || [];
@@ -138,9 +145,10 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
       return JSON.parse(rawText);
     } catch (error) {
       console.error(error);
-      if (error && error.code) throw error; throw new functions.https.HttpsError("internal", "Fallo al procesar la factura.", error.message);
+      if (error && error.code) throw error;
+      throw new functions.https.HttpsError("internal", "Fallo al procesar la factura.", error.message);
     }
-});
+  });
 
 
 exports.chatWithAnalyst = functions
@@ -152,8 +160,7 @@ exports.chatWithAnalyst = functions
     }
 
     const key = geminiApiKey.value();
-    const model = "gemini-3.6-flash";
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+    let modelIndex = 0;
 
     const systemPrompt = `Eres un asistente financiero experto y amigable para un usuario en Venezuela.
 Tu objetivo es analizar los gastos mensuales del usuario y responder sus dudas con base en los datos proporcionados.
@@ -164,7 +171,6 @@ Aquí están los gastos del usuario de este mes en formato JSON:
 ${JSON.stringify(contextData)}
 `;
 
-    // Preparar historial de chat para Gemini
     const geminiMessages = [
       { role: "user", parts: [{ text: systemPrompt }] },
       { role: "model", parts: [{ text: "Entendido, estoy listo para analizar los gastos." }] }
@@ -217,16 +223,36 @@ ${JSON.stringify(contextData)}
     };
 
     try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      let response;
+      let responseText = "";
 
-      const responseText = await response.text();
-      if (!response.ok) {
-        console.error("Error respuesta Gemini API:", response.status, responseText);
-        throw new functions.https.HttpsError("internal", `Error API Gemini: ${response.status}`);
+      for (let i = 0; i < fallbackModels.length; i++) {
+        const currentModel = fallbackModels[modelIndex];
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${key}`;
+
+        try {
+          response = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+            signal: AbortSignal.timeout(20000)
+          });
+
+          responseText = await response.text();
+          if (response.ok) {
+            break;
+          } else {
+            modelIndex++;
+            if (modelIndex < fallbackModels.length) continue;
+            console.error("Error respuesta Gemini API:", response.status, responseText);
+            throw new functions.https.HttpsError("internal", `Error API Gemini: ${response.status}`);
+          }
+        } catch (err) {
+          if (err instanceof functions.https.HttpsError) throw err;
+          modelIndex++;
+          if (modelIndex < fallbackModels.length) continue;
+          throw new functions.https.HttpsError("unavailable", "Fallo al conectar con Gemini.", err.message);
+        }
       }
 
       const responseData = JSON.parse(responseText);
@@ -238,7 +264,6 @@ ${JSON.stringify(contextData)}
       const part = candidates[0]?.content?.parts?.[0];
       
       if (part?.functionCall) {
-        // La IA decidió llamar a una herramienta
         return { 
           functionCall: {
             name: part.functionCall.name,
@@ -250,7 +275,7 @@ ${JSON.stringify(contextData)}
       return { text: part?.text || "" };
     } catch (error) {
       console.error(error);
+      if (error && error.code) throw error;
       throw new functions.https.HttpsError("internal", "Fallo al conectar con Gemini.", error.message);
     }
   });
-

@@ -21,6 +21,9 @@ class ScanQueueProvider with ChangeNotifier {
   bool _isProcessing = false;
   bool get isProcessing => _isProcessing;
 
+  String? _lastError;
+  String? get lastError => _lastError;
+
   ScanQueueProvider({
     DatabaseHelper? dbHelper,
     GeminiService? geminiService,
@@ -85,6 +88,7 @@ class ScanQueueProvider with ChangeNotifier {
 
   Future<void> cancelProcessing() async {
     _cancelRequested = true;
+    _lastError = null;
     await _dbHelper.clearPendingScanQueueItems();
     _pendingItems = [];
     _isProcessing = false;
@@ -95,6 +99,7 @@ class ScanQueueProvider with ChangeNotifier {
     if (_isProcessing) return;
     _isProcessing = true;
     _cancelRequested = false;
+    _lastError = null;
     await loadPendingItems();
     notifyListeners();
 
@@ -128,9 +133,11 @@ class ScanQueueProvider with ChangeNotifier {
             final jsonStr = jsonEncode(extracted.toMap());
             await _dbHelper.updateScanQueueItem(id, 'ready', extractedData: jsonStr);
           } catch (e) {
+            final msg = e.toString().replaceFirst('Exception: ', '').trim();
+            _lastError = msg.isNotEmpty ? msg : 'Error al procesar el comprobante.';
             debugPrint('Fallo al procesar item en cola offline: $e');
             // Dejar el item en pending y detener el loop.
-            // Esto hara que isProcessing = false y la UI muestre el estado "Pausado" con opcion a Reintentar.
+            // Esto hara que isProcessing = false y la UI muestre el estado "Pausado" con el motivo real.
             break;
           }
         } else {

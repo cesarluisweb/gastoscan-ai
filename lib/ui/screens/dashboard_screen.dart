@@ -447,7 +447,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   strokeWidth: 2.5,
                   valueColor: AlwaysStoppedAnimation<Color>(AppColors.secondary),
                 )
-              : const Icon(Icons.wifi_off, color: AppColors.warning, size: 24),
+              : const Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 24),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -465,7 +465,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  isProcessing ? 'Extrayendo datos en segundo plano' : 'Problemas de red. Toca reintentar.',
+                  isProcessing
+                      ? 'Extrayendo datos en segundo plano'
+                      : (scanQueue.lastError ?? 'Fallo al procesar. Toca reintentar.'),
                   style: const TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 12,
