@@ -561,6 +561,11 @@ class _CategoryChartState extends State<CategoryChart> {
     }
 
     return items.map((it) {
+      final double cantidad = (it['cantidad'] as num).toDouble();
+      final String descripcion = it['descripcion'] as String;
+      final String comercio = it['comercio'] as String;
+      final double usd = (it['usd'] as num).toDouble();
+
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(
@@ -568,7 +573,7 @@ class _CategoryChartState extends State<CategoryChart> {
             Expanded(
               flex: 3,
               child: Text(
-                '${it['cantidad'].toStringAsFixed(it['cantidad'] % 1 == 0 ? 0 : 2)}x ${it['descripcion']}',
+                '${cantidad.toStringAsFixed(cantidad % 1 == 0 ? 0 : 2)}x $descripcion',
                 style: const TextStyle(color: AppColors.textPrimary, fontSize: 12),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -576,13 +581,13 @@ class _CategoryChartState extends State<CategoryChart> {
             Expanded(
               flex: 2,
               child: Text(
-                it['comercio'],
+                comercio,
                 style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
             Text(
-              CurrencyFormatter.formatUsd(it['usd']),
+              CurrencyFormatter.formatUsd(usd),
               style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.bold),
             ),
           ],
