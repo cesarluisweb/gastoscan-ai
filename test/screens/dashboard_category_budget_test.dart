@@ -258,24 +258,15 @@ void main() {
 
 
 
-    final gastoComida60 = GastoModel(
-
+    final gastoAlimentación60 = GastoModel(
       id: 1,
-
-      uuid: 'uuid-comida-60',
-
+      uuid: 'uuid-alimentacion-60',
       fecha: '2026-09-15',
-
       comercio: 'Restaurante Central',
-
       moneda: 'USD',
-
       totalOriginal: 6000,
-
       totalUsd: 6000,
-
-      categoria: 'Comida',
-
+      categoria: 'Alimentación',
       creadoEn: '2026-09-15T13:00:00',
 
       items: [
@@ -352,21 +343,21 @@ void main() {
 
     testWidgets(
 
-        'R3 Acceptance Criteria: Asignar \$50 a Comida, y registrar un gasto de \$60 en Comida hace que se dibuje un indicador visual de exceso (color rojo) en la UI de esa categoría',
+        'R3 Acceptance Criteria: Asignar \$50 a Alimentación, y registrar un gasto de \$60 en Alimentación hace que se dibuje un indicador visual de exceso (color rojo) en la UI de esa categoría',
 
         (tester) async {
 
-      // 1. Asignar $50 a Comida
+      // 1. Asignar $50 a Alimentación
 
-      gastoProvider.setPresupuestosPorCategoria({'Comida': 50.0});
+      gastoProvider.setPresupuestosPorCategoria({'Alimentación': 50.0});
 
 
 
-      // 2. Registrar un gasto de $60 en Comida
+      // 2. Registrar un gasto de $60 en Alimentación
 
-      gastoProvider.setGastos([gastoComida60]);
+      gastoProvider.setGastos([gastoAlimentación60]);
 
-      gastoProvider.setTotalesPorCategoria({'Comida': 60.0});
+      gastoProvider.setTotalesPorCategoria({'Alimentación': 60.0});
 
 
 
@@ -376,9 +367,9 @@ void main() {
 
 
 
-      // Verificar que la categoría Comida esté presente en la UI
+      // Verificar que la categoría Alimentación esté presente en la UI
 
-      expect(find.text('Comida'), findsWidgets);
+      expect(find.text('Alimentación'), findsWidgets);
 
 
 
@@ -388,9 +379,9 @@ void main() {
 
 
 
-      // Verificar que se dibuje el indicador visual de exceso (Key: excess_alert_Comida)
+      // Verificar que se dibuje el indicador visual de exceso (Key: excess_alert_Alimentación)
 
-      final excessAlertFinder = find.byKey(const Key('excess_alert_Comida'));
+      final excessAlertFinder = find.byKey(const Key('excess_alert_Alimentación'));
 
       expect(excessAlertFinder, findsOneWidget);
 
@@ -412,9 +403,9 @@ void main() {
 
 
 
-      // Verificar que la barra de progreso de la categoría Comida sea roja (AppColors.error)
+      // Verificar que la barra de progreso de la categoría Alimentación sea roja (AppColors.error)
 
-      final progressFinder = find.byKey(const Key('category_progress_Comida'));
+      final progressFinder = find.byKey(const Key('category_progress_Alimentación'));
 
       expect(progressFinder, findsOneWidget);
 
@@ -428,11 +419,11 @@ void main() {
 
     testWidgets('Category within budget does NOT render the red excess alert', (tester) async {
 
-      // Budget $50 on Comida, but spent is only $30
+      // Budget $50 on Alimentación, but spent is only $30
 
-      gastoProvider.setPresupuestosPorCategoria({'Comida': 50.0});
+      gastoProvider.setPresupuestosPorCategoria({'Alimentación': 50.0});
 
-      gastoProvider.setTotalesPorCategoria({'Comida': 30.0});
+      gastoProvider.setTotalesPorCategoria({'Alimentación': 30.0});
 
 
 
@@ -444,7 +435,7 @@ void main() {
 
       // Verify category is shown
 
-      expect(find.text('Comida'), findsWidgets);
+      expect(find.text('Alimentación'), findsWidgets);
 
       expect(find.text('${CurrencyFormatter.formatUsd(30.0)} / ${CurrencyFormatter.formatUsd(50.0)}'), findsOneWidget);
 
@@ -452,7 +443,7 @@ void main() {
 
       // Excess alert should NOT be present
 
-      expect(find.byKey(const Key('excess_alert_Comida')), findsNothing);
+      expect(find.byKey(const Key('excess_alert_Alimentación')), findsNothing);
 
       expect(find.textContaining('Presupuesto superado'), findsNothing);
 
@@ -460,7 +451,7 @@ void main() {
 
       // Progress bar should NOT be red (AppColors.error)
 
-      final progressFinder = find.byKey(const Key('category_progress_Comida'));
+      final progressFinder = find.byKey(const Key('category_progress_Alimentación'));
 
       expect(progressFinder, findsOneWidget);
 
@@ -492,7 +483,7 @@ void main() {
 
       // When a category is present, CategoryChart displays and allows setting a budget
 
-      gastoProvider.setTotalesPorCategoria({'Comida': 20.0});
+      gastoProvider.setTotalesPorCategoria({'Alimentación': 20.0});
 
       await tester.pumpAndSettle();
 
@@ -538,9 +529,9 @@ void main() {
 
       // Start with exceeded state: $60 spent vs $50 budget
 
-      gastoProvider.setPresupuestosPorCategoria({'Comida': 50.0});
+      gastoProvider.setPresupuestosPorCategoria({'Alimentación': 50.0});
 
-      gastoProvider.setTotalesPorCategoria({'Comida': 60.0});
+      gastoProvider.setTotalesPorCategoria({'Alimentación': 60.0});
 
 
 
@@ -552,13 +543,13 @@ void main() {
 
       // Verify initial excess alert is present
 
-      expect(find.byKey(const Key('excess_alert_Comida')), findsOneWidget);
+      expect(find.byKey(const Key('excess_alert_Alimentación')), findsOneWidget);
 
 
 
-      // Tap edit button on Comida item
+      // Tap edit button on Alimentación item
 
-      final editBtnFinder = find.byKey(const Key('edit_budget_Comida'));
+      final editBtnFinder = find.byKey(const Key('edit_budget_Alimentación'));
 
       expect(editBtnFinder, findsOneWidget);
 
@@ -568,9 +559,9 @@ void main() {
 
 
 
-      // Verify edit dialog opened for Comida
+      // Verify edit dialog opened for Alimentación
 
-      expect(find.text('Presupuesto: Comida'), findsOneWidget);
+      expect(find.text('Presupuesto: Alimentación'), findsOneWidget);
 
 
 
@@ -590,7 +581,7 @@ void main() {
 
       // Budget is now $80, spent is $60 ($60 <= $80)
 
-      expect(gastoProvider.presupuestosPorCategoria['Comida'], 80.0);
+      expect(gastoProvider.presupuestosPorCategoria['Alimentación'], 80.0);
 
       expect(find.text('${CurrencyFormatter.formatUsd(60.0)} / ${CurrencyFormatter.formatUsd(80.0)}'), findsOneWidget);
 
@@ -598,7 +589,7 @@ void main() {
 
       // Red excess alert must no longer be present!
 
-      expect(find.byKey(const Key('excess_alert_Comida')), findsNothing);
+      expect(find.byKey(const Key('excess_alert_Alimentación')), findsNothing);
 
     });
 

@@ -56,7 +56,14 @@ jobs:
         run: flutter pub get
 
       - name: Ejecutar Unit Tests
-        run: flutter test
+        run: flutter test > test_results.txt || (cat test_results.txt && exit 1)
+
+      - name: Guardar Logs de Error
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test_results.txt
 
       - name: Generar Iconos de App
         run: flutter pub run flutter_launcher_icons
