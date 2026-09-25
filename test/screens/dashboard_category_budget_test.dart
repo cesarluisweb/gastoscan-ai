@@ -550,7 +550,7 @@ void main() {
       await tester.tap(find.byKey(const Key('add_category_budget_button')));
       await tester.pumpAndSettle();
 
-      final editBtnFinder = find.byKey(const Key('edit_budget_Alimentación'));
+      final editBtnFinder = find.byKey(const Key('edit_budget_bottom_Alimentación'));
       expect(editBtnFinder, findsOneWidget);
       await tester.tap(editBtnFinder);
       await tester.pumpAndSettle();

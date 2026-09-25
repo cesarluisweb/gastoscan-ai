@@ -432,7 +432,7 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                             ),
                           ),
                           IconButton(
-                            key: Key('edit_budget_$catName'),
+                            key: Key('edit_budget_bottom_$catName'),
                             icon: const Icon(Icons.edit_outlined, size: 18, color: AppColors.textSecondary),
                             onPressed: () => _mostrarDialogoEditarCategoria(
                               categoriaInicial: catName,
