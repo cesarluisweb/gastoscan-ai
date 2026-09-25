@@ -60,10 +60,13 @@ jobs:
 
       - name: Guardar Logs de Error
         if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: test_results.txt
+        run: |
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'actions@github.com'
+          git add test_results.txt
+          git commit -m "chore: ci test failure logs"
+          git push || true
+          exit 1
 
       - name: Generar Iconos de App
         run: flutter pub run flutter_launcher_icons
