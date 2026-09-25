@@ -9,16 +9,7 @@
 ::endgroup::
 ::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart (failed)
 Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart":
-Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: lib/ui/widgets/category_chart.dart:241:21: Error: Can't find ')' to match '('.
-    return Container(
-                    ^
-lib/ui/widgets/category_chart.dart:259:7: Error: No named parameter with the name 'child'.
-      child: Column(
-      ^^^^^
-/opt/hostedtoolcache/flutter/stable-3.47.5-x64/flutter/packages/flutter/lib/src/widgets/basic.dart:5897:9: Context: Found this candidate, but the arguments don't match.
-  const Column({
-        ^^^^^^
-lib/ui/widgets/category_chart.dart:527:23: Error: The getter 'onSetBudget' isn't defined for the type '_CategoryChartState'.
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: lib/ui/widgets/category_chart.dart:525:23: Error: The getter 'onSetBudget' isn't defined for the type '_CategoryChartState'.
  - '_CategoryChartState' is from 'package:gastoscan_ai/ui/widgets/category_chart.dart' ('lib/ui/widgets/category_chart.dart').
 Try correcting the name to the name of an existing getter, or defining a getter or field named 'onSetBudget'.
                       onSetBudget?.call(catName, amount);
@@ -28,24 +19,7 @@ Try correcting the name to the name of an existing getter, or defining a getter 
 ::endgroup::
 ::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart (failed)
 Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart":
-Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: test/screens/dashboard_category_budget_test.dart:261:26: Error: The non-ASCII character 'ó' (U+00F3) can't be used in identifiers, only in strings and comments.
-Try using an US-ASCII letter, a digit, '_' (an underscore), or '$' (a dollar sign).
-    final gastoAlimentación60 = GastoModel(
-                         ^
-test/screens/dashboard_category_budget_test.dart:358:47: Error: The non-ASCII character 'ó' (U+00F3) can't be used in identifiers, only in strings and comments.
-Try using an US-ASCII letter, a digit, '_' (an underscore), or '$' (a dollar sign).
-      gastoProvider.setGastos([gastoAlimentación60]);
-                                              ^
-lib/ui/widgets/category_chart.dart:241:21: Error: Can't find ')' to match '('.
-    return Container(
-                    ^
-lib/ui/widgets/category_chart.dart:259:7: Error: No named parameter with the name 'child'.
-      child: Column(
-      ^^^^^
-/opt/hostedtoolcache/flutter/stable-3.47.5-x64/flutter/packages/flutter/lib/src/widgets/basic.dart:5897:9: Context: Found this candidate, but the arguments don't match.
-  const Column({
-        ^^^^^^
-lib/ui/widgets/category_chart.dart:527:23: Error: The getter 'onSetBudget' isn't defined for the type '_CategoryChartState'.
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: lib/ui/widgets/category_chart.dart:525:23: Error: The getter 'onSetBudget' isn't defined for the type '_CategoryChartState'.
  - '_CategoryChartState' is from 'package:gastoscan_ai/ui/widgets/category_chart.dart' ('lib/ui/widgets/category_chart.dart').
 Try correcting the name to the name of an existing getter, or defining a getter or field named 'onSetBudget'.
                       onSetBudget?.call(catName, amount);
@@ -59,16 +33,7 @@ Try correcting the name to the name of an existing getter, or defining a getter 
 ::endgroup::
 ::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart (failed)
 Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart":
-Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: lib/ui/widgets/category_chart.dart:241:21: Error: Can't find ')' to match '('.
-    return Container(
-                    ^
-lib/ui/widgets/category_chart.dart:259:7: Error: No named parameter with the name 'child'.
-      child: Column(
-      ^^^^^
-/opt/hostedtoolcache/flutter/stable-3.47.5-x64/flutter/packages/flutter/lib/src/widgets/basic.dart:5897:9: Context: Found this candidate, but the arguments don't match.
-  const Column({
-        ^^^^^^
-lib/ui/widgets/category_chart.dart:527:23: Error: The getter 'onSetBudget' isn't defined for the type '_CategoryChartState'.
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: lib/ui/widgets/category_chart.dart:525:23: Error: The getter 'onSetBudget' isn't defined for the type '_CategoryChartState'.
  - '_CategoryChartState' is from 'package:gastoscan_ai/ui/widgets/category_chart.dart' ('lib/ui/widgets/category_chart.dart').
 Try correcting the name to the name of an existing getter, or defining a getter or field named 'onSetBudget'.
                       onSetBudget?.call(catName, amount);
