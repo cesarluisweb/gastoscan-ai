@@ -490,17 +490,16 @@ void main() {
 
 
       expect(find.byKey(const Key('add_category_budget_button')), findsOneWidget);
-
       await tester.tap(find.byKey(const Key('add_category_budget_button')));
-
       await tester.pumpAndSettle();
 
-
+      // Tap the button inside the bottom sheet
+      expect(find.byKey(const Key('btn_asignar_categoria_bottom_sheet')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('btn_asignar_categoria_bottom_sheet')));
+      await tester.pumpAndSettle();
 
       // Verify dialog opened
-
-      expect(find.text('Definir Presupuesto'), findsOneWidget);
-
+      expect(find.text('Asignar Presupuesto'), findsOneWidget);
       expect(find.byKey(const Key('input_presupuesto_monto')), findsOneWidget);
 
       // Enter amount
@@ -547,14 +546,13 @@ void main() {
 
 
 
-      // Tap edit button on Alimentación item
+      // Tap edit button on Alimentación item inside the bottom sheet
+      await tester.tap(find.byKey(const Key('add_category_budget_button')));
+      await tester.pumpAndSettle();
 
       final editBtnFinder = find.byKey(const Key('edit_budget_Alimentación'));
-
       expect(editBtnFinder, findsOneWidget);
-
       await tester.tap(editBtnFinder);
-
       await tester.pumpAndSettle();
 
 

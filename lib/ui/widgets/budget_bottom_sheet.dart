@@ -345,16 +345,18 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Presupuestos por Categoría',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                  const Expanded(
+                    child: Text(
+                      'Presupuestos por Categoría',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
                   ),
                   TextButton.icon(
-                    key: const Key('add_category_budget_button'),
+                    key: const Key('btn_asignar_categoria_bottom_sheet'),
                     icon: const Icon(Icons.add, size: 16, color: AppColors.primaryDark),
                     label: const Text('Asignar Categoría', style: TextStyle(color: AppColors.textPrimary, fontSize: 13)),
                     onPressed: () => _mostrarDialogoEditarCategoria(),
@@ -430,6 +432,7 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                             ),
                           ),
                           IconButton(
+                            key: Key('edit_budget_$catName'),
                             icon: const Icon(Icons.edit_outlined, size: 18, color: AppColors.textSecondary),
                             onPressed: () => _mostrarDialogoEditarCategoria(
                               categoriaInicial: catName,
