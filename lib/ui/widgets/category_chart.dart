@@ -409,7 +409,7 @@ class _CategoryChartState extends State<CategoryChart> {
     String? initialCategory,
     double? currentBudget,
   }) {
-    final categoryCtrl = TextEditingController(text: initialCategory ?? '');
+    final categoryCtrl = TextEditingController(text: initialCategory ?? AppConstants.categorias.first);
     final amountCtrl = TextEditingController(
       text: (currentBudget != null && currentBudget > 0)
           ? currentBudget.toStringAsFixed(0)
@@ -446,11 +446,9 @@ class _CategoryChartState extends State<CategoryChart> {
                         ),
                       ),
                       const SizedBox(height: 6),
-                      TextField(
-                        key: const Key('input_categoria_nombre'),
-                        controller: categoryCtrl,
+                      DropdownButtonFormField<String>(
+                        value: categoryCtrl.text.isEmpty ? AppConstants.categorias.first : categoryCtrl.text,
                         decoration: InputDecoration(
-                          hintText: 'Ej. Comida, Alimentación, etc.',
                           filled: true,
                           fillColor: AppColors.cardLighter,
                           border: OutlineInputBorder(
@@ -458,19 +456,20 @@ class _CategoryChartState extends State<CategoryChart> {
                             borderSide: const BorderSide(color: AppColors.border),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 6,
-                        children: AppConstants.categorias.take(4).map((c) {
-                          return ActionChip(
-                            label: Text(c, style: const TextStyle(fontSize: 11)),
-                            onPressed: () {
-                              categoryCtrl.text = c;
-                              setStateDialog(() {});
-                            },
+                        dropdownColor: AppColors.card,
+                        items: AppConstants.categorias.map((String cat) {
+                          return DropdownMenuItem<String>(
+                            value: cat,
+                            child: Text(cat, style: const TextStyle(color: AppColors.textPrimary)),
                           );
                         }).toList(),
+                        onChanged: (String? newValue) {
+                          if (newValue != null) {
+                            setStateDialog(() {
+                              categoryCtrl.text = newValue;
+                            });
+                          }
+                        },
                       ),
                       const SizedBox(height: 12),
                     ],
