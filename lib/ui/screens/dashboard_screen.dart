@@ -264,6 +264,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               CategoryChart(
                 categoryTotals: gastoProvider.totalesPorCategoria,
                 categoryBudgets: gastoProvider.presupuestosPorCategoria,
+                gastosMes: gastoProvider.gastos,
                 onSetBudget: (categoria, budget) async {
                   await gastoProvider.setPresupuestoCategoria(categoria, budget);
                 },

@@ -510,18 +510,10 @@ void main() {
 
       expect(find.text('Definir Presupuesto'), findsOneWidget);
 
-      expect(find.byKey(const Key('input_categoria_nombre')), findsOneWidget);
-
       expect(find.byKey(const Key('input_presupuesto_monto')), findsOneWidget);
 
-
-
-      // Enter category name and amount
-
-      await tester.enterText(find.byKey(const Key('input_categoria_nombre')), 'Comida');
-
+      // Enter amount
       await tester.enterText(find.byKey(const Key('input_presupuesto_monto')), '50');
-
       await tester.pumpAndSettle();
 
 
@@ -535,9 +527,7 @@ void main() {
 
 
       // Verify budget was registered in provider
-
-      expect(gastoProvider.presupuestosPorCategoria['Comida'], 50.0);
-
+      expect(gastoProvider.presupuestosPorCategoria['Alimentación'], 50.0);
     });
 
 
