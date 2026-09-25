@@ -256,8 +256,6 @@ class _CategoryChartState extends State<CategoryChart> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           GestureDetector(
             behavior: HitTestBehavior.opaque,

@@ -258,7 +258,7 @@ void main() {
 
 
 
-    final gastoAlimentación60 = GastoModel(
+    final gastoAlimentacion60 = GastoModel(
       id: 1,
       uuid: 'uuid-alimentacion-60',
       fecha: '2026-09-15',
@@ -355,7 +355,7 @@ void main() {
 
       // 2. Registrar un gasto de $60 en Alimentación
 
-      gastoProvider.setGastos([gastoAlimentación60]);
+      gastoProvider.setGastos([gastoAlimentacion60]);
 
       gastoProvider.setTotalesPorCategoria({'Alimentación': 60.0});
 
