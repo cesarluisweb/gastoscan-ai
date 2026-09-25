@@ -13,6 +13,7 @@ import '../../services/notification_service.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/category_chart.dart';
 import '../widgets/expense_card.dart';
+import '../widgets/budget_bottom_sheet.dart';
 import 'scan_screen.dart';
 import 'settings_screen.dart';
 import 'review_expense_screen.dart';
@@ -156,7 +157,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               tooltip: 'Exportar Reportes',
               color: AppColors.surface,
               onSelected: (val) {
-                if (val == 'category_budget') _mostrarDialogoPresupuesto(context, gastoProvider);
+                if (val == 'category_budget') BudgetBottomSheet.show(context);
                 if (val == 'csv') _exportarCsv(context);
                 if (val == 'md') _exportarMarkdown(context);
               },
@@ -257,6 +258,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               totalVes: gastoProvider.totalMesVes,
               periodo: '$mesNombre $anio',
               presupuesto: Provider.of<SettingsProvider>(context).presupuestoMensual,
+              onManageBudget: () => BudgetBottomSheet.show(context),
             ),
             const SizedBox(height: 16),
             if (gastoProvider.totalesPorCategoria.isNotEmpty ||

@@ -144,12 +144,21 @@ class GastoProvider with ChangeNotifier {
   Future<void> setPresupuestoCategoria(String categoria, double presupuesto) async {
     try {
       await _repository.guardarPresupuestoCategoria(categoria, presupuesto);
-      _presupuestosPorCategoria[categoria] = presupuesto;
+      if (presupuesto <= 0) {
+        _presupuestosPorCategoria.remove(categoria);
+        _presupuestosPorCategoria.removeWhere((key, value) => key.toLowerCase().trim() == categoria.toLowerCase().trim());
+      } else {
+        _presupuestosPorCategoria[categoria] = presupuesto;
+      }
       notifyListeners();
     } catch (e) {
       _errorMessage = 'Error al guardar presupuesto: ${e.toString()}';
       notifyListeners();
     }
+  }
+
+  Future<void> eliminarPresupuestoCategoria(String categoria) async {
+    await setPresupuestoCategoria(categoria, 0.0);
   }
 
   double getPresupuestoCategoria(String categoria) {

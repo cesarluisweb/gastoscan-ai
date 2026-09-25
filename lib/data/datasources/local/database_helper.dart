@@ -658,15 +658,20 @@ class DatabaseHelper {
     return cat?.presupuestoMensual ?? 0.0;
   }
 
-  /// Obtiene un mapa con todos los presupuestos asignados {categoria: presupuesto}
+  /// Obtiene un mapa con todos los presupuestos asignados (> 0) {categoria: presupuesto}
   Future<Map<String, double>> getAllPresupuestosCategorias() async {
     final db = await instance.database;
-    final result = await db.query('categorias');
+    final result = await db.query(
+      'categorias',
+      where: 'presupuesto_mensual > 0',
+    );
     final Map<String, double> presupuestos = {};
     for (final row in result) {
       final name = row['nombre'] as String;
       final budget = (row['presupuesto_mensual'] as num?)?.toDouble() ?? 0.0;
-      presupuestos[name] = budget;
+      if (budget > 0) {
+        presupuestos[name] = budget;
+      }
     }
     return presupuestos;
   }

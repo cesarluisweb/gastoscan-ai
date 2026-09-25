@@ -6,6 +6,7 @@ import '../../core/utils/currency_formatter.dart';
 
 import '../../data/models/gasto_model.dart';
 import '../../core/utils/date_formatter.dart';
+import 'budget_bottom_sheet.dart';
 
 class CategoryChart extends StatefulWidget {
   final Map<String, double> categoryTotals;
@@ -65,7 +66,7 @@ class _CategoryChartState extends State<CategoryChart> {
     // Obtener lista consolidada y ordenada de categorías para presupuestos
     final Set<String> allCategoryKeys = {
       ...widget.categoryTotals.keys,
-      ...widget.categoryBudgets.keys,
+      ...widget.categoryBudgets.keys.where((k) => (widget.categoryBudgets[k] ?? 0) > 0),
     };
     final List<String> sortedCategories = allCategoryKeys.toList()
       ..sort((a, b) {
@@ -409,130 +410,7 @@ class _CategoryChartState extends State<CategoryChart> {
     String? initialCategory,
     double? currentBudget,
   }) {
-    final categoryCtrl = TextEditingController(text: initialCategory ?? AppConstants.categorias.first);
-    final amountCtrl = TextEditingController(
-      text: (currentBudget != null && currentBudget > 0)
-          ? currentBudget.toStringAsFixed(0)
-          : '',
-    );
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setStateDialog) {
-            return AlertDialog(
-              title: Text(
-                initialCategory != null
-                    ? 'Presupuesto: $initialCategory'
-                    : 'Definir Presupuesto',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                  fontSize: 16,
-                ),
-              ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (initialCategory == null) ...[
-                      const Text(
-                        'Categoría:',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      DropdownButtonFormField<String>(
-                        value: categoryCtrl.text.isEmpty ? AppConstants.categorias.first : categoryCtrl.text,
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: AppColors.cardLighter,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: AppColors.border),
-                          ),
-                        ),
-                        dropdownColor: AppColors.card,
-                        items: AppConstants.categorias.map((String cat) {
-                          return DropdownMenuItem<String>(
-                            value: cat,
-                            child: Text(cat, style: const TextStyle(color: AppColors.textPrimary)),
-                          );
-                        }).toList(),
-                        onChanged: (String? newValue) {
-                          if (newValue != null) {
-                            setStateDialog(() {
-                              categoryCtrl.text = newValue;
-                            });
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                    ],
-                    const Text(
-                      'Límite mensual (USD):',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    TextField(
-                      key: const Key('input_presupuesto_monto'),
-                      controller: amountCtrl,
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
-                      decoration: InputDecoration(
-                        prefixText: '\$ ',
-                        hintText: '50.00',
-                        filled: true,
-                        fillColor: AppColors.cardLighter,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(color: AppColors.border),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: const Text(
-                    'Cancelar',
-                    style: TextStyle(color: AppColors.textSecondary),
-                  ),
-                ),
-                ElevatedButton(
-                  key: const Key('btn_guardar_presupuesto'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: AppColors.secondary,
-                  ),
-                  onPressed: () {
-                    final catName =
-                        (initialCategory ?? categoryCtrl.text).trim();
-                    final amount = double.tryParse(
-                            amountCtrl.text.replaceAll(',', '.')) ??
-                        0.0;
-                    if (catName.isNotEmpty && amount >= 0) {
-                      widget.onSetBudget?.call(catName, amount);
-                      Navigator.of(dialogContext).pop();
-                    }
-                  },
-                  child: const Text('Guardar'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
+    BudgetBottomSheet.show(context);
   }
   List<Widget> _buildCategoryItems(String cat) {
     final List<Map<String, dynamic>> items = [];
