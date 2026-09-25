@@ -522,7 +522,7 @@ class _CategoryChartState extends State<CategoryChart> {
                             amountCtrl.text.replaceAll(',', '.')) ??
                         0.0;
                     if (catName.isNotEmpty && amount >= 0) {
-                      onSetBudget?.call(catName, amount);
+                      widget.onSetBudget?.call(catName, amount);
                       Navigator.of(dialogContext).pop();
                     }
                   },
