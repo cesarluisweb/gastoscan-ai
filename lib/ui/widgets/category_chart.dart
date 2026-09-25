@@ -4,32 +4,44 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/utils/currency_formatter.dart';
 
-class CategoryChart extends StatelessWidget {
+import '../../data/models/gasto_model.dart';
+import '../../core/utils/date_formatter.dart';
+
+class CategoryChart extends StatefulWidget {
   final Map<String, double> categoryTotals;
   final Map<String, double> categoryBudgets;
+  final List<GastoModel> gastosMes;
   final void Function(String categoria, double budget)? onSetBudget;
 
   const CategoryChart({
     Key? key,
     required this.categoryTotals,
     this.categoryBudgets = const {},
+    this.gastosMes = const [],
     this.onSetBudget,
   }) : super(key: key);
 
   @override
+  State<CategoryChart> createState() => _CategoryChartState();
+}
+
+class _CategoryChartState extends State<CategoryChart> {
+  String? _expandedCategory;
+
+  @override
   Widget build(BuildContext context) {
     // Si no hay totales ni presupuestos configurados, no renderizar nada
-    if (categoryTotals.isEmpty && categoryBudgets.isEmpty) {
+    if (widget.categoryTotals.isEmpty && widget.categoryBudgets.isEmpty) {
       return const SizedBox.shrink();
     }
 
     final double totalSuma =
-        categoryTotals.values.fold(0.0, (prev, elem) => prev + elem);
+        widget.categoryTotals.values.fold(0.0, (prev, elem) => prev + elem);
 
     // Preparar secciones del gráfico circular
     final List<PieChartSectionData> sections = [];
     if (totalSuma > 0) {
-      categoryTotals.forEach((cat, monto) {
+      widget.categoryTotals.forEach((cat, monto) {
         if (monto <= 0) return;
         final color = AppColors.categoryColors[cat] ?? AppColors.textSecondary;
         final porcentaje = (monto / totalSuma) * 100;
@@ -52,8 +64,8 @@ class CategoryChart extends StatelessWidget {
 
     // Obtener lista consolidada y ordenada de categorías para presupuestos
     final Set<String> allCategoryKeys = {
-      ...categoryTotals.keys,
-      ...categoryBudgets.keys,
+      ...widget.categoryTotals.keys,
+      ...widget.categoryBudgets.keys,
     };
     final List<String> sortedCategories = allCategoryKeys.toList()
       ..sort((a, b) {
@@ -119,7 +131,7 @@ class CategoryChart extends StatelessWidget {
                     child: ListView(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      children: categoryTotals.entries.map((entry) {
+                      children: widget.categoryTotals.entries.map((entry) {
                         final color = AppColors.categoryColors[entry.key] ??
                             AppColors.textSecondary;
                         return Padding(
@@ -194,10 +206,10 @@ class CategoryChart extends StatelessWidget {
   }
 
   double _getSpent(String category) {
-    if (categoryTotals.containsKey(category)) {
-      return categoryTotals[category]!;
+    if (widget.categoryTotals.containsKey(category)) {
+      return widget.categoryTotals[category]!;
     }
-    for (final entry in categoryTotals.entries) {
+    for (final entry in widget.categoryTotals.entries) {
       if (entry.key.toLowerCase().trim() == category.toLowerCase().trim()) {
         return entry.value;
       }
@@ -206,10 +218,10 @@ class CategoryChart extends StatelessWidget {
   }
 
   double _getBudget(String category) {
-    if (categoryBudgets.containsKey(category)) {
-      return categoryBudgets[category]!;
+    if (widget.categoryBudgets.containsKey(category)) {
+      return widget.categoryBudgets[category]!;
     }
-    for (final entry in categoryBudgets.entries) {
+    for (final entry in widget.categoryBudgets.entries) {
       if (entry.key.toLowerCase().trim() == category.toLowerCase().trim()) {
         return entry.value;
       }
@@ -244,123 +256,150 @@ class CategoryChart extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  color: categoryColor,
-                  shape: BoxShape.circle,
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              setState(() {
+                if (_expandedCategory == cat) {
+                  _expandedCategory = null;
+                } else {
+                  _expandedCategory = cat;
+                }
+              });
+            },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: categoryColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        cat,
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      hasBudget
+                          ? '${CurrencyFormatter.formatUsd(spent)} / ${CurrencyFormatter.formatUsd(budget)}'
+                          : CurrencyFormatter.formatUsd(spent),
+                      style: TextStyle(
+                        color: isExceeded ? AppColors.error : AppColors.textPrimary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                    if (hasBudget) ...[
+                      const SizedBox(width: 6),
+                      IconButton(
+                        key: Key('edit_budget_$cat'),
+                        icon: const Icon(
+                          Icons.edit_outlined,
+                          size: 16,
+                          color: AppColors.textSecondary,
+                        ),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: () => _showBudgetDialog(
+                          context,
+                          initialCategory: cat,
+                          currentBudget: budget,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  cat,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                  ),
-                ),
-              ),
-              Text(
-                hasBudget
-                    ? '${CurrencyFormatter.formatUsd(spent)} / ${CurrencyFormatter.formatUsd(budget)}'
-                    : CurrencyFormatter.formatUsd(spent),
-                style: TextStyle(
-                  color: isExceeded ? AppColors.error : AppColors.textPrimary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
-              ),
-              const SizedBox(width: 6),
-              IconButton(
-                key: Key('edit_budget_$cat'),
-                icon: const Icon(
-                  Icons.edit_outlined,
-                  size: 16,
-                  color: AppColors.textSecondary,
-                ),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                onPressed: () => _showBudgetDialog(
-                  context,
-                  initialCategory: cat,
-                  currentBudget: budget,
-                ),
-              ),
-            ],
-          ),
-          if (hasBudget) ...[
-            const SizedBox(height: 6),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                key: Key('category_progress_$cat'),
-                value: isExceeded
-                    ? 1.0
-                    : (budget > 0 ? (spent / budget).clamp(0.0, 1.0) : 0.0),
-                color: isExceeded
-                    ? AppColors.error
-                    : (AppColors.categoryColors[cat] ?? AppColors.primary),
-                backgroundColor: isExceeded
-                    ? AppColors.error.withOpacity(0.2)
-                    : AppColors.border,
-                minHeight: 6,
-              ),
-            ),
-          ],
-          if (isExceeded) ...[
-            const SizedBox(height: 6),
-            Container(
-              key: Key('excess_alert_$cat'),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: AppColors.error.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: AppColors.error),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.warning_amber_rounded,
-                    color: AppColors.error,
-                    size: 14,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Presupuesto superado por ${CurrencyFormatter.formatUsd(spent - budget)}',
-                    style: const TextStyle(
-                      color: AppColors.error,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 11,
+                if (hasBudget) ...[
+                  const SizedBox(height: 6),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      key: Key('category_progress_$cat'),
+                      value: isExceeded
+                          ? 1.0
+                          : (budget > 0 ? (spent / budget).clamp(0.0, 1.0) : 0.0),
+                      color: isExceeded
+                          ? AppColors.error
+                          : (AppColors.categoryColors[cat] ?? AppColors.primary),
+                      backgroundColor: isExceeded
+                          ? AppColors.error.withOpacity(0.2)
+                          : AppColors.border,
+                      minHeight: 6,
                     ),
                   ),
                 ],
-              ),
+                if (isExceeded) ...[
+                  const SizedBox(height: 6),
+                  Container(
+                    key: Key('excess_alert_$cat'),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: AppColors.error),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.warning_amber_rounded,
+                          color: AppColors.error,
+                          size: 14,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Presupuesto superado por ${CurrencyFormatter.formatUsd(spent - budget)}',
+                          style: const TextStyle(
+                            color: AppColors.error,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ] else if (!hasBudget) ...[
+                  const SizedBox(height: 2),
+                  InkWell(
+                    key: Key('assign_budget_prompt_$cat'),
+                    onTap: () => _showBudgetDialog(
+                      context,
+                      initialCategory: cat,
+                      currentBudget: 0.0,
+                    ),
+                    child: const Text(
+                      '+ Asignar presupuesto mensual',
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 11,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
-          ] else if (!hasBudget) ...[
-            const SizedBox(height: 2),
-            InkWell(
-              key: Key('assign_budget_prompt_$cat'),
-              onTap: () => _showBudgetDialog(
-                context,
-                initialCategory: cat,
-                currentBudget: 0.0,
-              ),
-              child: const Text(
-                '+ Asignar presupuesto mensual',
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 11,
-                  decoration: TextDecoration.underline,
-                ),
-              ),
-            ),
+          ),
+          if (_expandedCategory == cat) ...[
+            const SizedBox(height: 8),
+            const Divider(color: AppColors.border),
+            const SizedBox(height: 8),
+            ..._buildCategoryItems(cat),
           ],
         ],
       ),
@@ -497,5 +536,58 @@ class CategoryChart extends StatelessWidget {
         );
       },
     );
+  }
+  List<Widget> _buildCategoryItems(String cat) {
+    final List<Map<String, dynamic>> items = [];
+    for (final gasto in widget.gastosMes) {
+      for (final item in gasto.items) {
+        if (item.categoria.toLowerCase().trim() == cat.toLowerCase().trim()) {
+           double itemUsd = item.totalDisplay;
+           if (gasto.moneda != 'USD' && gasto.totalOriginalDisplay > 0) {
+             itemUsd = item.totalDisplay * (gasto.totalUsdDisplay / gasto.totalOriginalDisplay);
+           }
+           items.add({
+             'descripcion': item.descripcion,
+             'comercio': gasto.comercio,
+             'usd': itemUsd,
+             'cantidad': item.cantidad,
+           });
+        }
+      }
+    }
+
+    if (items.isEmpty) {
+      return [const Text('No hay compras en esta categoría.', style: TextStyle(color: AppColors.textSecondary, fontSize: 12))];
+    }
+
+    return items.map((it) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            Expanded(
+              flex: 3,
+              child: Text(
+                '${it['cantidad'].toStringAsFixed(it['cantidad'] % 1 == 0 ? 0 : 2)}x ${it['descripcion']}',
+                style: const TextStyle(color: AppColors.textPrimary, fontSize: 12),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            Expanded(
+              flex: 2,
+              child: Text(
+                it['comercio'],
+                style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            Text(
+              CurrencyFormatter.formatUsd(it['usd']),
+              style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      );
+    }).toList();
   }
 }

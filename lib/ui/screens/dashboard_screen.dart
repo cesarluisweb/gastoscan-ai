@@ -655,7 +655,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     String? categoriaInicial,
     double? montoInicial,
   }) {
-    final catCtrl = TextEditingController(text: categoriaInicial ?? '');
+    String selectedCategory = categoriaInicial ?? AppConstants.categorias.first;
     final montoCtrl = TextEditingController(
       text: (montoInicial != null && montoInicial > 0) ? montoInicial.toStringAsFixed(0) : '',
     );
@@ -678,11 +678,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     if (categoriaInicial == null) ...[
                       const Text('Categoría:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
                       const SizedBox(height: 6),
-                      TextField(
-                        key: const Key('input_categoria_nombre'),
-                        controller: catCtrl,
+                      DropdownButtonFormField<String>(
+                        value: selectedCategory,
                         decoration: InputDecoration(
-                          hintText: 'Ej. Comida, Alimentación, Salud...',
                           filled: true,
                           fillColor: AppColors.cardLighter,
                           border: OutlineInputBorder(
@@ -690,19 +688,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             borderSide: const BorderSide(color: AppColors.border),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 6,
-                        children: AppConstants.categorias.take(4).map((c) {
-                          return ActionChip(
-                            label: Text(c, style: const TextStyle(fontSize: 11)),
-                            onPressed: () {
-                              catCtrl.text = c;
-                              setStateDialog(() {});
-                            },
+                        dropdownColor: AppColors.card,
+                        items: AppConstants.categorias.map((String cat) {
+                          return DropdownMenuItem<String>(
+                            value: cat,
+                            child: Text(cat, style: const TextStyle(color: AppColors.textPrimary)),
                           );
                         }).toList(),
+                        onChanged: (String? newValue) {
+                          if (newValue != null) {
+                            setStateDialog(() {
+                              selectedCategory = newValue;
+                            });
+                          }
+                        },
                       ),
                       const SizedBox(height: 12),
                     ],
@@ -738,7 +737,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     foregroundColor: AppColors.secondary,
                   ),
                   onPressed: () async {
-                    final catName = (categoriaInicial ?? catCtrl.text).trim();
+                    final catName = selectedCategory;
                     final amount = double.tryParse(montoCtrl.text.replaceAll(',', '.')) ?? 0.0;
                     if (catName.isNotEmpty && amount >= 0) {
                       await gastoProvider.setPresupuestoCategoria(catName, amount);

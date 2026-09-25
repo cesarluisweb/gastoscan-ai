@@ -97,36 +97,12 @@ class _ExpenseCardState extends State<ExpenseCard> {
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Text(
-                              DateFormatter.formatDate(widget.gasto.fecha),
-                              style: const TextStyle(
-                                color: AppColors.textMuted,
-                                fontSize: 12,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Flexible(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: AppColors.surface,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  widget.gasto.categoria,
-                                  style: TextStyle(
-                                    color: catColor,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ),
-                          ],
+                        Text(
+                          DateFormatter.formatDate(widget.gasto.fecha),
+                          style: const TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ),
@@ -195,7 +171,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: const BoxDecoration(
-                color: Color(0xFF161F2E),
+                color: AppColors.cardLighter,
                 borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
               ),
               child: Column(
@@ -211,29 +187,33 @@ class _ExpenseCardState extends State<ExpenseCard> {
                   ),
                   const SizedBox(height: 8),
                   ...widget.gasto.items.map((it) {
+                    double itemUsd = it.totalDisplay;
+                    if (widget.gasto.moneda != 'USD' && widget.gasto.totalOriginalDisplay > 0) {
+                      itemUsd = it.totalDisplay * (widget.gasto.totalUsdDisplay / widget.gasto.totalOriginalDisplay);
+                    }
+
                     return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 3),
+                      padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${it.cantidad.toStringAsFixed(it.cantidad % 1 == 0 ? 0 : 2)}x ${it.descripcion}',
-                                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                Text(
-                                  it.categoria,
-                                  style: const TextStyle(color: AppColors.primaryDark, fontSize: 10, fontWeight: FontWeight.w600),
-                                ),
-                              ],
+                            flex: 3,
+                            child: Text(
+                              '${it.cantidad.toStringAsFixed(it.cantidad % 1 == 0 ? 0 : 2)}x ${it.descripcion}',
+                              style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: Text(
+                              it.categoria,
+                              style: const TextStyle(color: AppColors.primaryDark, fontSize: 11, fontWeight: FontWeight.w600),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           Text(
-                            CurrencyFormatter.formatAmount(it.totalDisplay, widget.gasto.moneda),
+                            CurrencyFormatter.formatUsd(itemUsd),
                             style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
                           ),
                         ],

@@ -21,6 +21,25 @@ class GeminiExtractionResult {
     this.matchedShoppingItemIds = const [],
   });
 
+  static double _parseAmount(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is num) return value.toDouble();
+    if (value is String) {
+      String s = value.replaceAll(RegExp(r'[^\d.,]'), '').trim();
+      if (s.contains(',') && s.contains('.')) {
+        if (s.lastIndexOf(',') > s.lastIndexOf('.')) {
+          s = s.replaceAll('.', '').replaceAll(',', '.');
+        } else {
+          s = s.replaceAll(',', '');
+        }
+      } else {
+        s = s.replaceAll(',', '.');
+      }
+      return double.tryParse(s) ?? 0.0;
+    }
+    return 0.0;
+  }
+
   static List<GeminiExtractionResult> listFromJson(Map<String, dynamic> json) {
     if (json.containsKey('facturas') && json['facturas'] is List) {
       final list = json['facturas'] as List;
@@ -53,8 +72,8 @@ class GeminiExtractionResult {
     final moneda = ['USD', 'VES', 'EUR'].contains(monedaRaw) ? monedaRaw : 'USD';
 
     // Montos numéricos
-    final totalOriginal = (json['total_original'] as num?)?.toDouble() ?? 0.0;
-    final impuestoIva = (json['impuesto_iva'] as num?)?.toDouble() ?? 0.0;
+    final totalOriginal = _parseAmount(json['total_original']);
+    final impuestoIva = _parseAmount(json['impuesto_iva']);
 
     // Ítems de la factura
     final itemsList = <ItemGastoModel>[];
@@ -65,9 +84,13 @@ class GeminiExtractionResult {
         if (rawItem is Map) {
           final itemMap = Map<String, dynamic>.from(rawItem);
           final desc = itemMap['descripcion']?.toString() ?? 'Producto/Servicio';
-          final cant = (itemMap['cantidad'] as num?)?.toDouble() ?? 1.0;
-          final precio = (itemMap['precio_unitario'] as num?)?.toDouble() ?? 0.0;
-          final total = (itemMap['total'] as num?)?.toDouble() ?? (cant * precio);
+          
+          double cant = _parseAmount(itemMap['cantidad']);
+          if (cant == 0.0) cant = 1.0;
+          
+          final precio = _parseAmount(itemMap['precio_unitario']);
+          double total = _parseAmount(itemMap['total']);
+          if (total == 0.0) total = cant * precio;
           final catItemRaw = itemMap['categoria']?.toString() ?? 'Otros';
           final catItem = validCategorias.contains(catItemRaw) ? catItemRaw : 'Otros';
 
@@ -93,7 +116,8 @@ class GeminiExtractionResult {
     }
 
     // Tasa de cambio detectada (si está impresa en la factura)
-    final tasaDetectada = (json['tasa_cambio'] as num?)?.toDouble();
+    final rawTasa = _parseAmount(json['tasa_cambio']);
+    final tasaDetectada = rawTasa > 0 ? rawTasa : null;
 
     // IDs de lista de compras vinculados
     final matchedIds = <int>[];

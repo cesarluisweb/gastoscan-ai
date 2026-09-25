@@ -32,7 +32,7 @@ Analiza la imagen con máxima precisión. Si la imagen contiene MÚLTIPLES factu
 
 Reglas estrictas para los productos de cada factura:
 1. "descripcion": Transcribe el nombre legible, claro y completo del producto. Si el texto en la factura viene abreviado o cortado por la impresora térmica (por ejemplo "TOLLAS" -> "Toallas Húmedas", "ARRZ SUP" -> "Arroz Superior"), interpreta el contexto comercial y coloca un nombre descriptivo, limpio y bien escrito en español. No dejes caracteres truncados o incomprensibles.
-2. Cantidades y precios: Extrae con exactitud los montos numéricos (cantidad, precio unitario y total).
+2. Cantidades y precios: Extrae con exactitud los montos numéricos (cantidad, precio unitario y total). Usa SIEMPRE el PUNTO (.) como separador de decimales, NUNCA la coma (,) (ej. 12.50, no 12,50). No incluyas símbolos de moneda. Todos los montos deben ser devueltos como números, no como texto.
 3. "categoria": Asigna a cada ítem individual una de las categorías válidas ("Alimentación", "Salud", "Higiene", "Educación", "Hogar", "Servicios", "Transporte", "Otros") según el tipo de producto.
 
 Devuelve EXCLUSIVAMENTE un objeto JSON válido con la siguiente estructura, sin texto adicional ni bloques markdown:

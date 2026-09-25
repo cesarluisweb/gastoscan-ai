@@ -263,6 +263,15 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     final totalUsd = double.tryParse(_totalUsdCtrl.text) ?? 0.0;
     final tasa = double.tryParse(_tasaCambioCtrl.text) ?? 1.0;
 
+    String predominantCat = 'Otros';
+    if (_items.isNotEmpty) {
+      Map<String, double> catTotals = {};
+      for (var item in _items) {
+        catTotals[item.categoria] = (catTotals[item.categoria] ?? 0) + item.totalDisplay;
+      }
+      predominantCat = catTotals.entries.reduce((a, b) => a.value > b.value ? a : b).key;
+    }
+
     final nuevoGasto = GastoModel(
       id: widget.existingGasto?.id,
       uuid: widget.existingGasto?.uuid ?? UuidGenerator.generate(),
@@ -274,7 +283,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       tasaCambio: tasa,
       fuenteTasaCambio: _fuenteTasa,
       fechaTasaCambio: _selectedFecha,
-      categoria: _items.isNotEmpty ? _items.first.categoria : 'Otros',
+      categoria: predominantCat,
       rutaFotoLocal: rutaFotoFinal,
       creadoEn: widget.existingGasto?.creadoEn ?? DateTime.now().toIso8601String(),
     );

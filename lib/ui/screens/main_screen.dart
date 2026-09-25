@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -187,7 +188,25 @@ class _MainScreenState extends State<MainScreen> {
                 color: AppColors.primary,
                 child: InkWell(
                   onTap: () {
-                    setState(() => _currentIndex = 0);
+                    if (scanQueue.readyItems.isNotEmpty) {
+                      final item = scanQueue.readyItems.first;
+                      final data = jsonDecode(item['extracted_data']);
+                      final result = GeminiExtractionResult.fromJson(data);
+                      final file = File(item['image_path']);
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ReviewExpenseScreen(
+                            imageFile: file.existsSync() ? file : null,
+                            extractedData: result,
+                            queueItemId: item['id'],
+                          ),
+                        ),
+                      ).then((_) {
+                        scanQueue.loadReadyItems();
+                      });
+                    }
                   },
                   borderRadius: BorderRadius.circular(12),
                   child: Padding(
