@@ -72,7 +72,7 @@ class GeminiExtractionResult {
     final moneda = ['USD', 'VES', 'EUR'].contains(monedaRaw) ? monedaRaw : 'USD';
 
     // Montos numéricos
-    final totalOriginal = _parseAmount(json['total_original']);
+    double totalOriginal = _parseAmount(json['total_original']);
     final impuestoIva = _parseAmount(json['impuesto_iva']);
 
     // Ítems de la factura
@@ -112,7 +112,41 @@ class GeminiExtractionResult {
         cantidad: 1.0,
         precioUnitario: (totalOriginal * 100).round(),
         total: (totalOriginal * 100).round(),
+        categoria: 'Otros',
       ));
+    }
+
+    // --- VERIFICACIÓN MATEMÁTICA Y CORRECCIÓN DE DECIMALES ---
+    if (itemsList.isNotEmpty && totalOriginal > 0) {
+      double sumItems = 0;
+      for (final item in itemsList) {
+        sumItems += item.totalDisplay;
+      }
+      
+      // Margen de error tolerado (por redondeos o discrepancias menores)
+      if ((sumItems - totalOriginal).abs() > 2.0) {
+        // Caso 1: La IA extrajo los ítems omitiendo el decimal (sumItems es ~100x mayor al total)
+        final ratioItemsToTotal = sumItems / totalOriginal;
+        if (ratioItemsToTotal >= 95.0 && ratioItemsToTotal <= 105.0) {
+          for (int i = 0; i < itemsList.length; i++) {
+            final old = itemsList[i];
+            itemsList[i] = ItemGastoModel(
+              descripcion: old.descripcion,
+              cantidad: old.cantidad,
+              precioUnitario: (old.precioUnitario / 100).round(),
+              total: (old.total / 100).round(),
+              categoria: old.categoria,
+            );
+          }
+        } 
+        // Caso 2: La IA extrajo el total_original omitiendo el decimal (~100x mayor a los ítems)
+        else {
+          final ratioTotalToItems = totalOriginal / sumItems;
+          if (ratioTotalToItems >= 95.0 && ratioTotalToItems <= 105.0) {
+            totalOriginal = totalOriginal / 100;
+          }
+        }
+      }
     }
 
     // Tasa de cambio detectada (si está impresa en la factura)

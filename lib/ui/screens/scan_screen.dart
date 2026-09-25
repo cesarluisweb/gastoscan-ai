@@ -97,7 +97,7 @@ class _ScanScreenState extends State<ScanScreen> {
     
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Factura añadida a la cola en segundo plano.'),
+        content: Text('Factura añadida a la cola en segundo plano.', style: TextStyle(color: Colors.black)),
         backgroundColor: AppColors.primary,
         duration: Duration(seconds: 2),
       ),

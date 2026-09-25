@@ -32,8 +32,9 @@ Analiza la imagen con máxima precisión. Si la imagen contiene MÚLTIPLES factu
 
 Reglas estrictas para los productos de cada factura:
 1. "descripcion": Transcribe el nombre legible, claro y completo del producto. Si el texto en la factura viene abreviado o cortado por la impresora térmica (por ejemplo "TOLLAS" -> "Toallas Húmedas", "ARRZ SUP" -> "Arroz Superior"), interpreta el contexto comercial y coloca un nombre descriptivo, limpio y bien escrito en español. No dejes caracteres truncados o incomprensibles.
-2. Cantidades y precios: Extrae con exactitud los montos numéricos (cantidad, precio unitario y total). Usa SIEMPRE el PUNTO (.) como separador de decimales, NUNCA la coma (,) (ej. 12.50, no 12,50). No incluyas símbolos de moneda. Todos los montos deben ser devueltos como números, no como texto.
-3. "categoria": Asigna a cada ítem individual una de las categorías válidas ("Alimentación", "Salud", "Higiene", "Educación", "Hogar", "Servicios", "Transporte", "Otros") según el tipo de producto.
+2. Decimales: Extrae con exactitud los montos numéricos. Usa SIEMPRE el PUNTO (.) como separador de decimales. Si el precio en la factura usa una coma como decimal (ej. 12,50), DEBES reemplazarla por un punto (12.50), NO la elimines.
+3. Moneda Unificada: Todos los precios extraídos (ítems y total_original) DEBEN estar estrictamente en la misma moneda. Si los ítems están detallados en Bolívares (VES), extrae el total_original en Bolívares (ignorando el total Ref en USD) y coloca "moneda": "VES".
+4. "categoria": Asigna a cada ítem individual una de las categorías válidas ("Alimentación", "Salud", "Higiene", "Educación", "Hogar", "Servicios", "Transporte", "Otros") según el tipo de producto.
 
 Devuelve EXCLUSIVAMENTE un objeto JSON válido con la siguiente estructura, sin texto adicional ni bloques markdown:
 {
