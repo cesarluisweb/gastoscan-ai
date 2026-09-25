@@ -799,10 +799,12 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                         ),
                                         onChanged: (v) {
                                           final cant = double.tryParse(v) ?? 1.0;
-                                          _items[idx] = _items[idx].copyWith(
-                                            cantidad: cant,
-                                            total: (cant * _items[idx].precioUnitario).round(),
-                                          );
+                                          setState(() {
+                                            _items[idx] = _items[idx].copyWith(
+                                              cantidad: cant,
+                                              total: (cant * _items[idx].precioUnitarioDisplay * 100).round(),
+                                            );
+                                          });
                                           _recalcularTotal();
                                         },
                                       ),
@@ -818,10 +820,12 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                         ),
                                         onChanged: (v) {
                                           final prec = double.tryParse(v) ?? 0.0;
-                                          _items[idx] = _items[idx].copyWith(
-                                            precioUnitario: (prec * 100).round(),
-                                            total: (_items[idx].cantidad * prec * 100).round(),
-                                          );
+                                          setState(() {
+                                            _items[idx] = _items[idx].copyWith(
+                                              precioUnitario: (prec * 100).round(),
+                                              total: (_items[idx].cantidad * prec * 100).round(),
+                                            );
+                                          });
                                           _recalcularTotal();
                                         },
                                       ),
@@ -831,20 +835,13 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                       child: TextFormField(
                                         key: ValueKey('total_$idx\_${_items[idx].totalDisplay}'),
                                         initialValue: _formatDouble(_items[idx].totalDisplay),
-                                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                        readOnly: true,
                                         decoration: const InputDecoration(
                                           labelText: 'Total',
+                                          filled: true,
+                                          fillColor: AppColors.cardLighter,
                                           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                                         ),
-                                        onChanged: (v) {
-                                          final tot = double.tryParse(v) ?? 0.0;
-                                          final cant = _items[idx].cantidad;
-                                          _items[idx] = _items[idx].copyWith(
-                                            total: (tot * 100).round(),
-                                            precioUnitario: cant > 0 ? ((tot / cant) * 100).round() : 0,
-                                          );
-                                          _recalcularTotal();
-                                        },
                                       ),
                                     ),
                                   ],

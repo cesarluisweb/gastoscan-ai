@@ -95,8 +95,7 @@ class GeminiExtractionResult {
     final monedaRaw = json['moneda']?.toString().toUpperCase() ?? 'USD';
     final moneda = ['USD', 'VES', 'EUR'].contains(monedaRaw) ? monedaRaw : 'USD';
 
-    // Montos numéricos
-    final totalOriginal = _parseAmount(json['total_original']);
+    double totalOriginal = _parseAmount(json['total_original']);
     final impuestoIva = _parseAmount(json['impuesto_iva']);
 
     // Ítems de la factura
@@ -110,11 +109,11 @@ class GeminiExtractionResult {
           final desc = itemMap['descripcion']?.toString() ?? 'Producto/Servicio';
           
           double cant = _parseAmount(itemMap['cantidad'], isPrice: false);
-          if (cant == 0.0) cant = 1.0;
+          if (cant <= 0.0) cant = 1.0;
           
           final precio = _parseAmount(itemMap['precio_unitario']);
-          double total = _parseAmount(itemMap['total']);
-          if (total == 0.0) total = cant * precio;
+          // El total del ítem se calcula estrictamente como Cantidad * Precio Unitario
+          final totalCalculado = cant * precio;
           final catItemRaw = itemMap['categoria']?.toString() ?? 'Otros';
           final catItem = validCategorias.contains(catItemRaw) ? catItemRaw : 'Otros';
 
@@ -122,10 +121,26 @@ class GeminiExtractionResult {
             descripcion: desc,
             cantidad: cant,
             precioUnitario: (precio * 100).round(),
-            total: (total * 100).round(),
+            total: (totalCalculado * 100).round(),
             categoria: catItem,
           ));
         }
+      }
+    }
+
+    // Agregar impuesto IVA como ítem independiente si aplica y no fue incluido previamente
+    if (impuestoIva > 0) {
+      final yaTieneIva = itemsList.any((it) =>
+          it.descripcion.toLowerCase().contains('iva') ||
+          it.descripcion.toLowerCase().contains('impuesto'));
+      if (!yaTieneIva) {
+        itemsList.add(ItemGastoModel(
+          descripcion: 'Impuesto IVA',
+          cantidad: 1.0,
+          precioUnitario: (impuestoIva * 100).round(),
+          total: (impuestoIva * 100).round(),
+          categoria: 'Otros',
+        ));
       }
     }
 
@@ -137,6 +152,33 @@ class GeminiExtractionResult {
         precioUnitario: (totalOriginal * 100).round(),
         total: (totalOriginal * 100).round(),
       ));
+    }
+
+    // Validación cruzada matemática entre la suma de ítems y el Total Original
+    if (itemsList.isNotEmpty && totalOriginal > 0) {
+      double sumItems = itemsList.fold(0.0, (sum, item) => sum + item.totalDisplay);
+      if (sumItems > 0) {
+        final ratioSumToTotal = sumItems / totalOriginal;
+        final ratioTotalToSum = totalOriginal / sumItems;
+
+        if (ratioSumToTotal >= 90.0 && ratioSumToTotal <= 110.0) {
+          // El totalOriginal omitió los decimales (ej. 56.12 real vs 5612 extraído)
+          totalOriginal = totalOriginal / 100.0;
+        } else if (ratioTotalToSum >= 90.0 && ratioTotalToSum <= 110.0) {
+          // Los ítems omitieron decimales, los escalamos x100
+          for (int i = 0; i < itemsList.length; i++) {
+            final old = itemsList[i];
+            final nuevoPrecioInt = old.precioUnitario * 100;
+            final nuevoTotalInt = (old.cantidad * (nuevoPrecioInt / 100.0) * 100).round();
+            itemsList[i] = old.copyWith(
+              precioUnitario: nuevoPrecioInt,
+              total: nuevoTotalInt,
+            );
+          }
+        }
+      }
+    } else if (itemsList.isNotEmpty && totalOriginal == 0) {
+      totalOriginal = itemsList.fold(0.0, (sum, item) => sum + item.totalDisplay);
     }
 
     // Tasa de cambio detectada (si está impresa en la factura)
