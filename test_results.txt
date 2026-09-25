@@ -1,0 +1,141 @@
+
+::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests initial state has empty categories and budgets
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests setPresupuestoCategoria creates category with budget if not exists
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests setPresupuestoCategoria is case-insensitive
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests getAllPresupuestosCategorias returns all configured category budgets
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests insertCategoria and updateCategoria work correctly
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests deleteCategoria removes the category
+::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart (failed)
+Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart":
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: lib/ui/widgets/category_chart.dart:241:21: Error: Can't find ')' to match '('.
+    return Container(
+                    ^
+lib/ui/widgets/category_chart.dart:259:7: Error: No named parameter with the name 'child'.
+      child: Column(
+      ^^^^^
+/opt/hostedtoolcache/flutter/stable-3.47.5-x64/flutter/packages/flutter/lib/src/widgets/basic.dart:5897:9: Context: Found this candidate, but the arguments don't match.
+  const Column({
+        ^^^^^^
+lib/ui/widgets/category_chart.dart:527:23: Error: The getter 'onSetBudget' isn't defined for the type '_CategoryChartState'.
+ - '_CategoryChartState' is from 'package:gastoscan_ai/ui/widgets/category_chart.dart' ('lib/ui/widgets/category_chart.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'onSetBudget'.
+                      onSetBudget?.call(catName, amount);
+                      ^^^^^^^^^^^
+.
+
+::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart (failed)
+Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart":
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: test/screens/dashboard_category_budget_test.dart:261:26: Error: The non-ASCII character 'ó' (U+00F3) can't be used in identifiers, only in strings and comments.
+Try using an US-ASCII letter, a digit, '_' (an underscore), or '$' (a dollar sign).
+    final gastoAlimentación60 = GastoModel(
+                         ^
+test/screens/dashboard_category_budget_test.dart:358:47: Error: The non-ASCII character 'ó' (U+00F3) can't be used in identifiers, only in strings and comments.
+Try using an US-ASCII letter, a digit, '_' (an underscore), or '$' (a dollar sign).
+      gastoProvider.setGastos([gastoAlimentación60]);
+                                              ^
+lib/ui/widgets/category_chart.dart:241:21: Error: Can't find ')' to match '('.
+    return Container(
+                    ^
+lib/ui/widgets/category_chart.dart:259:7: Error: No named parameter with the name 'child'.
+      child: Column(
+      ^^^^^
+/opt/hostedtoolcache/flutter/stable-3.47.5-x64/flutter/packages/flutter/lib/src/widgets/basic.dart:5897:9: Context: Found this candidate, but the arguments don't match.
+  const Column({
+        ^^^^^^
+lib/ui/widgets/category_chart.dart:527:23: Error: The getter 'onSetBudget' isn't defined for the type '_CategoryChartState'.
+ - '_CategoryChartState' is from 'package:gastoscan_ai/ui/widgets/category_chart.dart' ('lib/ui/widgets/category_chart.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'onSetBudget'.
+                      onSetBudget?.call(catName, amount);
+                      ^^^^^^^^^^^
+.
+
+::endgroup::
+::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart: ScanScreen Multi-Image Selection Tests multi-image selection enqueues all images and pops back to Dashboard
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart: ScanScreen Multi-Image Selection Tests empty selection from gallery does not enqueue or pop
+::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart (failed)
+Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart":
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: lib/ui/widgets/category_chart.dart:241:21: Error: Can't find ')' to match '('.
+    return Container(
+                    ^
+lib/ui/widgets/category_chart.dart:259:7: Error: No named parameter with the name 'child'.
+      child: Column(
+      ^^^^^
+/opt/hostedtoolcache/flutter/stable-3.47.5-x64/flutter/packages/flutter/lib/src/widgets/basic.dart:5897:9: Context: Found this candidate, but the arguments don't match.
+  const Column({
+        ^^^^^^
+lib/ui/widgets/category_chart.dart:527:23: Error: The getter 'onSetBudget' isn't defined for the type '_CategoryChartState'.
+ - '_CategoryChartState' is from 'package:gastoscan_ai/ui/widgets/category_chart.dart' ('lib/ui/widgets/category_chart.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'onSetBudget'.
+                      onSetBudget?.call(catName, amount);
+                      ^^^^^^^^^^^
+.
+
+::endgroup::
+::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests Default singleton instance is available and accessible
+::endgroup::
+::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests 3-day scheduling function defaults to Duration(days: 3)
+NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@289310200' has not been initialized.
+::endgroup::
+::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests Custom duration is respected when specified
+NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@289310200' has not been initialized.
+::endgroup::
+::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests cancelInactivityReminder cancels and clears scheduled state
+NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@289310200' has not been initialized.
+NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+::endgroup::
+::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests Rescheduling logic cancels previous notification and schedules new one
+::endgroup::
+::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests recordActivityAndReschedule updates activity time and reschedules for 3 days
+NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@289310200' has not been initialized.
+::endgroup::
+::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests Channel configuration and constants are correctly defined
+::endgroup::
+::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — Integration with GastoProvider agregarGasto triggers recordActivityAndReschedule on NotificationService
+Error en sincronización bidireccional: [core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()
+::endgroup::
+::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — Integration with GastoProvider actualizarGasto triggers recordActivityAndReschedule on NotificationService
+Error en sincronización bidireccional: [core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()
+::endgroup::
+::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — AndroidManifest Permissions & Configuration Verification android/app/src/main/AndroidManifest.xml contains all required permissions and receivers
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — AndroidManifest Permissions & Configuration Verification AndroidManifest.xml contains permissions and receivers
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — AndroidManifest Permissions & Configuration Verification pubspec.yaml declares flutter_local_notifications and timezone
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests instantiates with required nombre and default presupuestoMensual 0.0
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests instantiates with custom id and presupuestoMensual
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests toMap produces correct key-value map with id
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests toMap omits id when null
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests fromMap parses standard map correctly
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests fromMap parses integer budget as double
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests fromMap supports fallback aliases: name, budget, presupuesto, categoria
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests copyWith updates specified fields correctly
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests equality and hashCode work as expected
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests CategoryModel typedef works interchangeably
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests initial state has empty category budgets and totals
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests setPresupuestoCategoria updates budget for given category
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests getPresupuestoCategoria is case-insensitive
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests isCategoryOverBudget returns true when spent > budget and budget > 0
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests isCategoryOverBudget returns false when spent <= budget
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests isCategoryOverBudget returns false when budget is 0 or unassigned
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests initial state has empty pending and ready items
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests enqueue inserts single image and updates pendingCount
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests enqueueMultiple enqueues all images and updates pendingItems
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests addPendingItem delegates to enqueue and preserves backwards compatibility
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests removeItem removes item from database and refreshes queue
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests manual state mutation helpers update state and notify listeners
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: GeminiExtractionResult.listFromJson Tests parses single legacy JSON correctly
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: GeminiExtractionResult.listFromJson Tests parses multiple facturas JSON array correctly
+::endgroup::
+
+::error::44 tests passed, 3 failed.
