@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -51,7 +51,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     return value.truncateToDouble() == value ? value.toInt().toString() : value.toString();
   }
   late List<ItemGastoModel> _items;
-  String _fuenteTasa = 'Tasa oficial BCV automÃ¡tica';
+  String _fuenteTasa = 'Tasa oficial BCV automática';
   bool _isSaving = false;
 
   @override
@@ -73,7 +73,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         tasa = gasto.totalOriginalDisplay / gasto.totalUsdDisplay;
       }
       _tasaCambioCtrl = TextEditingController(text: tasa.toStringAsFixed(2));
-      _fuenteTasa = gasto.fuenteTasaCambio ?? 'Tasa histÃ³rica del gasto';
+      _fuenteTasa = gasto.fuenteTasaCambio ?? 'Tasa histórica del gasto';
     } else {
       final data = widget.extractedData!;
       _comercioCtrl = TextEditingController(text: data.comercio);
@@ -209,7 +209,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       setState(() {
         _selectedFecha = nuevaFecha;
       });
-      // Si la factura no traÃ­a tasa fija impresa, busca la tasa correspondiente a la fecha elegida
+      // Si la factura no traía tasa fija impresa, busca la tasa correspondiente a la fecha elegida
       if (widget.existingGasto == null && (widget.extractedData?.tasaCambioDetectada == null || widget.extractedData!.tasaCambioDetectada! <= 0)) {
         _actualizarTasaPorFecha(nuevaFecha);
       }
@@ -305,7 +305,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         await queueProvider.removeItem(widget.queueItemId!);
       }
 
-      // Si el usuario eligiÃ³ revisar la siguiente y hay mÃ¡s facturas en la cola
+      // Si el usuario eligió revisar la siguiente y hay más facturas en la cola
       if (revisarSiguiente && queueProvider.readyItems.isNotEmpty) {
         final nextItem = queueProvider.readyItems.first;
         Map<String, dynamic> data = {};
@@ -372,7 +372,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Tu compra quedÃ³ registrada. Vincula tu cuenta de Google para no perderla si cambias de telÃ©fono.',
+                        'Tu compra quedó registrada. Vincula tu cuenta de Google para no perderla si cambias de teléfono.',
                         style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
                       ),
                       if (isLinking) ...[
@@ -426,7 +426,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                           ElevatedButton.icon(
                             icon: const Icon(Icons.login, size: 18),
                             label: Text(
-                              errorMessage != null ? 'Reintentar vinculaciÃ³n' : 'Vincular con Google',
+                              errorMessage != null ? 'Reintentar vinculación' : 'Vincular con Google',
                               style: const TextStyle(color: AppColors.secondary),
                             ),
                             style: ElevatedButton.styleFrom(
@@ -469,14 +469,14 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
           if (cuentaVinculada) {
             rootMessenger.showSnackBar(
               const SnackBar(
-                content: Text('Cuenta vinculada con Ã©xito. Gastos sincronizados.', style: TextStyle(color: Colors.black)),
+                content: Text('Cuenta vinculada con éxito. Gastos sincronizados.', style: TextStyle(color: Colors.black)),
                 backgroundColor: AppColors.primary,
               ),
             );
           } else {
             rootMessenger.showSnackBar(
               const SnackBar(
-                content: Text('Gasto registrado con Ã©xito', style: TextStyle(color: Colors.black)),
+                content: Text('Gasto registrado con éxito', style: TextStyle(color: Colors.black)),
                 backgroundColor: AppColors.primaryDark,
               ),
             );
@@ -487,14 +487,14 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         if (matchedIds.isNotEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Gasto registrado y ${matchedIds.length} Ã­tem(s) de tu lista marcados como comprados.', style: const TextStyle(color: Colors.black)),
+              content: Text('Gasto registrado y ${matchedIds.length} ítem(s) de tu lista marcados como comprados.', style: const TextStyle(color: Colors.black)),
               backgroundColor: AppColors.primaryDark,
             ),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Gasto registrado con Ã©xito', style: TextStyle(color: Colors.black)),
+              content: Text('Gasto registrado con éxito', style: TextStyle(color: Colors.black)),
               backgroundColor: AppColors.primaryDark,
             ),
           );
@@ -538,7 +538,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                       label: _isSaving
                           ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
                           : Text(
-                              'Guardar y revisar siguiente (${readyCount - 1} mÃ¡s)',
+                              'Guardar y revisar siguiente (${readyCount - 1} más)',
                               style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold),
                             ),
                     ),
@@ -584,7 +584,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                   builder: (ctx) => AlertDialog(
                     backgroundColor: AppColors.card,
                     title: const Text('Descartar Factura', style: TextStyle(color: AppColors.textPrimary)),
-                    content: const Text('Â¿Seguro que deseas descartar esta factura escaneada? No se guardarÃ¡ en tu historial.', style: TextStyle(color: AppColors.textSecondary)),
+                    content: const Text('¿Seguro que deseas descartar esta factura escaneada? No se guardará en tu historial.', style: TextStyle(color: AppColors.textSecondary)),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(ctx, false),
@@ -655,7 +655,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'InformaciÃ³n General',
+                    'Información General',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                   ),
                   const SizedBox(height: 16),
@@ -672,7 +672,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     onTap: _selectDate,
                     child: InputDecorator(
                       decoration: const InputDecoration(
-                        labelText: 'Fecha de EmisiÃ³n',
+                        labelText: 'Fecha de Emisión',
                         prefixIcon: Icon(Icons.calendar_today_outlined, color: AppColors.textSecondary),
                       ),
                       child: Text(
@@ -700,7 +700,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        'Desglose de Ãtems',
+                        'Desglose de Ítems',
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                       ),
                       TextButton.icon(
@@ -714,7 +714,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                   if (_items.isEmpty)
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 8),
-                      child: Text('No hay Ã­tems detallados.', style: TextStyle(color: AppColors.textMuted)),
+                      child: Text('No hay ítems detallados.', style: TextStyle(color: AppColors.textMuted)),
                     )
                   else
                       ..._items.asMap().entries.map((entry) {
@@ -739,7 +739,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                             priceWarning = Padding(
                               padding: const EdgeInsets.only(top: 4, left: 4),
                               child: Text(
-                                'ðŸ”º EstÃ¡ ${diff.toStringAsFixed(0)}% mÃ¡s caro que en $prevComercio',
+                                '🔺 Está ${diff.toStringAsFixed(0)}% más caro que en $prevComercio',
                                 style: const TextStyle(color: AppColors.error, fontSize: 11, fontWeight: FontWeight.w600),
                               ),
                             );
@@ -748,7 +748,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                             priceWarning = Padding(
                               padding: const EdgeInsets.only(top: 4, left: 4),
                               child: Text(
-                                'ðŸŸ¢ Te saliÃ³ un ${diff.toStringAsFixed(0)}% mÃ¡s econÃ³mico que en $prevComercio',
+                                '🟢 Te salió un ${diff.toStringAsFixed(0)}% más económico que en $prevComercio',
                                 style: const TextStyle(color: AppColors.textPrimary, fontSize: 11, fontWeight: FontWeight.w600),
                               ),
                             );
@@ -774,7 +774,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                       child: TextFormField(
                                         initialValue: item.descripcion,
                                         decoration: const InputDecoration(
-                                          labelText: 'DescripciÃ³n del Producto',
+                                          labelText: 'Descripción del Producto',
                                           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                                         ),
                                         onChanged: (v) => _items[idx] = _items[idx].copyWith(descripcion: v),
@@ -853,7 +853,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                 DropdownButtonFormField<String>(
                                   value: AppConstants.categorias.contains(item.categoria) ? item.categoria : 'Otros',
                                   decoration: const InputDecoration(
-                                    labelText: 'CategorÃ­a',
+                                    labelText: 'Categoría',
                                     contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                                   ),
                                   dropdownColor: AppColors.surface,
@@ -945,7 +945,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                       prefixIcon: const Icon(Icons.payments_outlined, color: AppColors.textSecondary),
                     ),
                     onChanged: (_) => _recalcularTotalUsd(),
-                    validator: (val) => (double.tryParse(val ?? '') == null) ? 'InvÃ¡lido' : null,
+                    validator: (val) => (double.tryParse(val ?? '') == null) ? 'Inválido' : null,
                   ),
                   if (_selectedMoneda == 'VES') ...[
                     const SizedBox(height: 12),
@@ -969,7 +969,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                       labelText: 'Total Equivalente (USD)',
                       prefixIcon: Icon(Icons.attach_money, color: AppColors.primaryDark),
                     ),
-                    validator: (val) => (double.tryParse(val ?? '') == null) ? 'InvÃ¡lido' : null,
+                    validator: (val) => (double.tryParse(val ?? '') == null) ? 'Inválido' : null,
                   ),
                 ],
               ),
@@ -1083,4 +1083,3 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     return header;
   }
 }
-

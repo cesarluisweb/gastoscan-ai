@@ -21,11 +21,16 @@ class GeminiExtractionResult {
     this.matchedShoppingItemIds = const [],
   });
 
-  static double _parseAmount(dynamic value) {
+  static double _parseAmount(dynamic value, {bool isPrice = true}) {
     if (value == null) return 0.0;
-    if (value is num) return value.toDouble();
-    if (value is String) {
-      String s = value.replaceAll(RegExp(r'[^\d.,]'), '').trim();
+    
+    String s = value.toString().trim();
+    if (s.isEmpty) return 0.0;
+    
+    // Si la cadena ya contiene un punto o coma (ej. "12.50", "12,50", "1.250"),
+    // asumimos que los decimales o separadores de miles ya están explícitos.
+    if (s.contains('.') || s.contains(',')) {
+      s = s.replaceAll(RegExp(r'[^\d.,]'), '');
       if (s.contains(',') && s.contains('.')) {
         if (s.lastIndexOf(',') > s.lastIndexOf('.')) {
           s = s.replaceAll('.', '').replaceAll(',', '.');
@@ -36,8 +41,27 @@ class GeminiExtractionResult {
         s = s.replaceAll(',', '.');
       }
       return double.tryParse(s) ?? 0.0;
+    } else {
+      // No tiene punto ni coma (ej. "1250" o "1").
+      s = s.replaceAll(RegExp(r'[^\d]'), '');
+      if (s.isEmpty) return 0.0;
+      
+      if (isPrice) {
+        // Regla: añadir el punto decimal siempre después del segundo número de derecha a izquierda.
+        if (s.length <= 2) {
+          s = s.padLeft(3, '0'); // "5" -> "005" -> "0.05"
+        }
+        final length = s.length;
+        final integerPart = s.substring(0, length - 2);
+        final decimalPart = s.substring(length - 2);
+        
+        final parsedStr = '$integerPart.$decimalPart';
+        return double.tryParse(parsedStr) ?? 0.0;
+      } else {
+        // Es una cantidad u otro valor que no requiere forzar 2 decimales
+        return double.tryParse(s) ?? 0.0;
+      }
     }
-    return 0.0;
   }
 
   static List<GeminiExtractionResult> listFromJson(Map<String, dynamic> json) {
@@ -72,7 +96,7 @@ class GeminiExtractionResult {
     final moneda = ['USD', 'VES', 'EUR'].contains(monedaRaw) ? monedaRaw : 'USD';
 
     // Montos numéricos
-    double totalOriginal = _parseAmount(json['total_original']);
+    final totalOriginal = _parseAmount(json['total_original']);
     final impuestoIva = _parseAmount(json['impuesto_iva']);
 
     // Ítems de la factura
@@ -85,7 +109,7 @@ class GeminiExtractionResult {
           final itemMap = Map<String, dynamic>.from(rawItem);
           final desc = itemMap['descripcion']?.toString() ?? 'Producto/Servicio';
           
-          double cant = _parseAmount(itemMap['cantidad']);
+          double cant = _parseAmount(itemMap['cantidad'], isPrice: false);
           if (cant == 0.0) cant = 1.0;
           
           final precio = _parseAmount(itemMap['precio_unitario']);
@@ -112,41 +136,7 @@ class GeminiExtractionResult {
         cantidad: 1.0,
         precioUnitario: (totalOriginal * 100).round(),
         total: (totalOriginal * 100).round(),
-        categoria: 'Otros',
       ));
-    }
-
-    // --- VERIFICACIÓN MATEMÁTICA Y CORRECCIÓN DE DECIMALES ---
-    if (itemsList.isNotEmpty && totalOriginal > 0) {
-      double sumItems = 0;
-      for (final item in itemsList) {
-        sumItems += item.totalDisplay;
-      }
-      
-      // Margen de error tolerado (por redondeos o discrepancias menores)
-      if ((sumItems - totalOriginal).abs() > 2.0) {
-        // Caso 1: La IA extrajo los ítems omitiendo el decimal (sumItems es ~100x mayor al total)
-        final ratioItemsToTotal = sumItems / totalOriginal;
-        if (ratioItemsToTotal >= 95.0 && ratioItemsToTotal <= 105.0) {
-          for (int i = 0; i < itemsList.length; i++) {
-            final old = itemsList[i];
-            itemsList[i] = ItemGastoModel(
-              descripcion: old.descripcion,
-              cantidad: old.cantidad,
-              precioUnitario: (old.precioUnitario / 100).round(),
-              total: (old.total / 100).round(),
-              categoria: old.categoria,
-            );
-          }
-        } 
-        // Caso 2: La IA extrajo el total_original omitiendo el decimal (~100x mayor a los ítems)
-        else {
-          final ratioTotalToItems = totalOriginal / sumItems;
-          if (ratioTotalToItems >= 95.0 && ratioTotalToItems <= 105.0) {
-            totalOriginal = totalOriginal / 100;
-          }
-        }
-      }
     }
 
     // Tasa de cambio detectada (si está impresa en la factura)
