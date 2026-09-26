@@ -6,113 +6,915 @@
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests getAllPresupuestosCategorias returns all configured category budgets
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests insertCategoria and updateCategoria work correctly
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests deleteCategoria removes the category
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests displays yellow processing banner when queue has pending items
 ::endgroup::
-::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart (failed)
-Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart":
-Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: lib/ui/widgets/expense_card.dart:201:28: Error: Expected ',' before this.
-                    double itemUsd = it.totalDisplay;
-                           ^^^^^^^
-lib/ui/widgets/expense_card.dart:201:53: Error: Expected ']' before this.
-                    double itemUsd = it.totalDisplay;
-                                                    ^
-lib/ui/widgets/expense_card.dart:201:21: Error: A value of type 'Type' can't be assigned to a variable of type 'Widget'.
- - 'Type' is from 'dart:core'.
- - 'Widget' is from 'package:flutter/src/widgets/framework.dart' ('/opt/hostedtoolcache/flutter/stable-3.47.5-x64/flutter/packages/flutter/lib/src/widgets/framework.dart').
-                    double itemUsd = it.totalDisplay;
-                    ^
-lib/ui/widgets/expense_card.dart:201:38: Error: The getter 'it' isn't defined for the type '_ExpenseCardState'.
- - '_ExpenseCardState' is from 'package:gastoscan_ai/ui/widgets/expense_card.dart' ('lib/ui/widgets/expense_card.dart').
-Try correcting the name to the name of an existing getter, or defining a getter or field named 'it'.
-                    double itemUsd = it.totalDisplay;
-                                     ^^
-lib/ui/widgets/expense_card.dart:201:28: Error: The setter 'itemUsd' isn't defined for the type '_ExpenseCardState'.
- - '_ExpenseCardState' is from 'package:gastoscan_ai/ui/widgets/expense_card.dart' ('lib/ui/widgets/expense_card.dart').
-Try correcting the name to the name of an existing setter, or defining a setter or field named 'itemUsd'.
-                    double itemUsd = it.totalDisplay;
-                           ^^^^^^^
-.
+::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests renders 4 navigation destinations and center FAB (failed)
+══╡ EXCEPTION CAUGHT BY WIDGETS LIBRARY ╞═══════════════════════════════════════════════════════════
+The following FirebaseException was thrown building MoreScreen(dirty, dependencies:
+[_InheritedProviderScope<SettingsProvider?>], state: _MoreScreenState#0bbd5):
+[core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()
 
-::endgroup::
-::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart (failed)
-Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart":
-Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: lib/ui/widgets/expense_card.dart:201:28: Error: Expected ',' before this.
-                    double itemUsd = it.totalDisplay;
-                           ^^^^^^^
-lib/ui/widgets/expense_card.dart:201:53: Error: Expected ']' before this.
-                    double itemUsd = it.totalDisplay;
-                                                    ^
-lib/ui/widgets/expense_card.dart:201:21: Error: A value of type 'Type' can't be assigned to a variable of type 'Widget'.
- - 'Type' is from 'dart:core'.
- - 'Widget' is from 'package:flutter/src/widgets/framework.dart' ('/opt/hostedtoolcache/flutter/stable-3.47.5-x64/flutter/packages/flutter/lib/src/widgets/framework.dart').
-                    double itemUsd = it.totalDisplay;
-                    ^
-lib/ui/widgets/expense_card.dart:201:38: Error: The getter 'it' isn't defined for the type '_ExpenseCardState'.
- - '_ExpenseCardState' is from 'package:gastoscan_ai/ui/widgets/expense_card.dart' ('lib/ui/widgets/expense_card.dart').
-Try correcting the name to the name of an existing getter, or defining a getter or field named 'it'.
-                    double itemUsd = it.totalDisplay;
-                                     ^^
-lib/ui/widgets/expense_card.dart:201:28: Error: The setter 'itemUsd' isn't defined for the type '_ExpenseCardState'.
- - '_ExpenseCardState' is from 'package:gastoscan_ai/ui/widgets/expense_card.dart' ('lib/ui/widgets/expense_card.dart').
-Try correcting the name to the name of an existing setter, or defining a setter or field named 'itemUsd'.
-                    double itemUsd = it.totalDisplay;
-                           ^^^^^^^
-.
+The relevant error-causing widget was:
+  MoreScreen
+  MoreScreen:file:///home/runner/work/gastoscan-ai/gastoscan-ai/lib/ui/screens/main_screen.dart:57:11
+
+When the exception was thrown, this was the stack:
+#0      MethodChannelFirebase.app (package:firebase_core_platform_interface/src/method_channel/method_channel_firebase.dart:190:5)
+#1      Firebase.app (package:firebase_core/src/firebase.dart:79:41)
+#2      FirebaseAuth.instance (package:firebase_auth/src/firebase_auth.dart:38:47)
+#3      _MoreScreenState.build (package:gastoscan_ai/ui/screens/more_screen.dart:99:34)
+#4      StatefulElement.build (package:flutter/src/widgets/framework.dart:5944:27)
+#5      ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5830:15)
+#6      StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#7      Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#8      ComponentElement._firstBuild (package:flutter/src/widgets/framework.dart:5812:5)
+#9      StatefulElement._firstBuild (package:flutter/src/widgets/framework.dart:5986:11)
+#10     ComponentElement.mount (package:flutter/src/widgets/framework.dart:5806:5)
+...     Normal element mounting (27 frames)
+#37     Element.inflateWidget (package:flutter/src/widgets/framework.dart:4600:20)
+#38     MultiChildRenderObjectElement.inflateWidget (package:flutter/src/widgets/framework.dart:7277:36)
+#39     MultiChildRenderObjectElement.mount (package:flutter/src/widgets/framework.dart:7292:32)
+...     Normal element mounting (7 frames)
+#46     Element.inflateWidget (package:flutter/src/widgets/framework.dart:4600:20)
+#47     MultiChildRenderObjectElement.inflateWidget (package:flutter/src/widgets/framework.dart:7277:36)
+#48     MultiChildRenderObjectElement.mount (package:flutter/src/widgets/framework.dart:7292:32)
+...     Normal element mounting (25 frames)
+#73     Element.inflateWidget (package:flutter/src/widgets/framework.dart:4600:20)
+#74     MultiChildRenderObjectElement.inflateWidget (package:flutter/src/widgets/framework.dart:7277:36)
+#75     MultiChildRenderObjectElement.mount (package:flutter/src/widgets/framework.dart:7292:32)
+...     Normal element mounting (370 frames)
+#445    Element.inflateWidget (package:flutter/src/widgets/framework.dart:4600:20)
+#446    MultiChildRenderObjectElement.inflateWidget (package:flutter/src/widgets/framework.dart:7277:36)
+#447    MultiChildRenderObjectElement.mount (package:flutter/src/widgets/framework.dart:7292:32)
+...     Normal element mounting (473 frames)
+#920    _InheritedProviderScopeElement.mount (package:provider/src/inherited_provider.dart:424:11)
+...     Normal element mounting (7 frames)
+#927    _InheritedProviderScopeElement.mount (package:provider/src/inherited_provider.dart:424:11)
+...     Normal element mounting (7 frames)
+#934    _InheritedProviderScopeElement.mount (package:provider/src/inherited_provider.dart:424:11)
+...     Normal element mounting (7 frames)
+#941    SingleChildWidgetElementMixin.mount (package:nested/nested.dart:222:11)
+...     Normal element mounting (7 frames)
+#948    _NestedHookElement.mount (package:nested/nested.dart:187:11)
+...     Normal element mounting (7 frames)
+#955    SingleChildWidgetElementMixin.mount (package:nested/nested.dart:222:11)
+#956    Element.inflateWidget (package:flutter/src/widgets/framework.dart:4600:20)
+#957    Element.updateChild (package:flutter/src/widgets/framework.dart:4066:20)
+#958    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#959    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#960    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
+#961    _InheritedNotifierElement.update (package:flutter/src/widgets/inherited_notifier.dart:108:11)
+#962    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#963    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#964    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#965    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#966    StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#967    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#968    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#969    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#970    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
+#971    _InheritedNotifierElement.update (package:flutter/src/widgets/inherited_notifier.dart:108:11)
+#972    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#973    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#974    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#975    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#976    StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#977    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#978    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#979    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#980    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#981    StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#982    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#983    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#984    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#985    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
+#986    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#987    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#988    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#989    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#990    StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#991    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#992    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#993    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#994    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
+#995    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#996    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#997    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#998    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
+#999    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#1000   _RawViewElement._updateChild (package:flutter/src/widgets/view.dart:488:16)
+#1001   _RawViewElement.update (package:flutter/src/widgets/view.dart:575:5)
+#1002   Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#1003   ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#1004   Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#1005   StatelessElement.update (package:flutter/src/widgets/framework.dart:5908:5)
+#1006   Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#1007   ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#1008   StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#1009   Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#1010   StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#1011   Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#1012   RootElement._rebuild (package:flutter/src/widgets/binding.dart:2091:16)
+#1013   RootElement.update (package:flutter/src/widgets/binding.dart:2069:5)
+#1014   RootElement.performRebuild (package:flutter/src/widgets/binding.dart:2083:7)
+#1015   Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#1016   BuildScope._tryRebuild (package:flutter/src/widgets/framework.dart:2763:15)
+#1017   BuildScope._flushDirtyElements (package:flutter/src/widgets/framework.dart:2820:11)
+#1018   BuildOwner.buildScope (package:flutter/src/widgets/framework.dart:3124:18)
+#1019   AutomatedTestWidgetsFlutterBinding.drawFrame (package:flutter_test/src/binding.dart:2432:19)
+#1020   RendererBinding._handlePersistentFrameCallback (package:flutter/src/rendering/binding.dart:558:5)
+#1021   SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1430:15)
+#1022   SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1345:9)
+#1023   AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:2261:9)
+#1026   TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#1027   AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:2250:27)
+#1028   WidgetTester.pumpWidget.<anonymous closure> (package:flutter_test/src/widget_tester.dart:598:22)
+#1031   TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#1032   WidgetTester.pumpWidget (package:flutter_test/src/widget_tester.dart:595:27)
+#1033   main.<anonymous closure>.<anonymous closure> (file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart:61:20)
+#1034   testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:29)
+<asynchronous suspension>
+#1035   TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 5 frames from dart:async and package:stack_trace)
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+Test failed. See exception logs above.
+The test description was: renders 4 navigation destinations and center FAB
 
 ::endgroup::
 ::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests displays single item text properly in processing banner
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests hides processing banner when queue is empty and not processing
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests displays ready queue banner when items are ready for review
+::endgroup::
+::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests switching tabs changes current active screen (failed)
+══╡ EXCEPTION CAUGHT BY WIDGETS LIBRARY ╞═══════════════════════════════════════════════════════════
+The following FirebaseException was thrown building MoreScreen(dirty, dependencies:
+[_InheritedProviderScope<SettingsProvider?>], state: _MoreScreenState#c72b1):
+[core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()
+
+The relevant error-causing widget was:
+  MoreScreen
+  MoreScreen:file:///home/runner/work/gastoscan-ai/gastoscan-ai/lib/ui/screens/main_screen.dart:57:11
+
+When the exception was thrown, this was the stack:
+#0      MethodChannelFirebase.app (package:firebase_core_platform_interface/src/method_channel/method_channel_firebase.dart:190:5)
+#1      Firebase.app (package:firebase_core/src/firebase.dart:79:41)
+#2      FirebaseAuth.instance (package:firebase_auth/src/firebase_auth.dart:38:47)
+#3      _MoreScreenState.build (package:gastoscan_ai/ui/screens/more_screen.dart:99:34)
+#4      StatefulElement.build (package:flutter/src/widgets/framework.dart:5944:27)
+#5      ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5830:15)
+#6      StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#7      Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#8      ComponentElement._firstBuild (package:flutter/src/widgets/framework.dart:5812:5)
+#9      StatefulElement._firstBuild (package:flutter/src/widgets/framework.dart:5986:11)
+#10     ComponentElement.mount (package:flutter/src/widgets/framework.dart:5806:5)
+...     Normal element mounting (27 frames)
+#37     Element.inflateWidget (package:flutter/src/widgets/framework.dart:4600:20)
+#38     MultiChildRenderObjectElement.inflateWidget (package:flutter/src/widgets/framework.dart:7277:36)
+#39     MultiChildRenderObjectElement.mount (package:flutter/src/widgets/framework.dart:7292:32)
+...     Normal element mounting (7 frames)
+#46     Element.inflateWidget (package:flutter/src/widgets/framework.dart:4600:20)
+#47     MultiChildRenderObjectElement.inflateWidget (package:flutter/src/widgets/framework.dart:7277:36)
+#48     MultiChildRenderObjectElement.mount (package:flutter/src/widgets/framework.dart:7292:32)
+...     Normal element mounting (25 frames)
+#73     Element.inflateWidget (package:flutter/src/widgets/framework.dart:4600:20)
+#74     MultiChildRenderObjectElement.inflateWidget (package:flutter/src/widgets/framework.dart:7277:36)
+#75     MultiChildRenderObjectElement.mount (package:flutter/src/widgets/framework.dart:7292:32)
+...     Normal element mounting (370 frames)
+#445    Element.inflateWidget (package:flutter/src/widgets/framework.dart:4600:20)
+#446    MultiChildRenderObjectElement.inflateWidget (package:flutter/src/widgets/framework.dart:7277:36)
+#447    MultiChildRenderObjectElement.mount (package:flutter/src/widgets/framework.dart:7292:32)
+...     Normal element mounting (473 frames)
+#920    _InheritedProviderScopeElement.mount (package:provider/src/inherited_provider.dart:424:11)
+...     Normal element mounting (7 frames)
+#927    _InheritedProviderScopeElement.mount (package:provider/src/inherited_provider.dart:424:11)
+...     Normal element mounting (7 frames)
+#934    _InheritedProviderScopeElement.mount (package:provider/src/inherited_provider.dart:424:11)
+...     Normal element mounting (7 frames)
+#941    SingleChildWidgetElementMixin.mount (package:nested/nested.dart:222:11)
+...     Normal element mounting (7 frames)
+#948    _NestedHookElement.mount (package:nested/nested.dart:187:11)
+...     Normal element mounting (7 frames)
+#955    SingleChildWidgetElementMixin.mount (package:nested/nested.dart:222:11)
+#956    Element.inflateWidget (package:flutter/src/widgets/framework.dart:4600:20)
+#957    Element.updateChild (package:flutter/src/widgets/framework.dart:4066:20)
+#958    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#959    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#960    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
+#961    _InheritedNotifierElement.update (package:flutter/src/widgets/inherited_notifier.dart:108:11)
+#962    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#963    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#964    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#965    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#966    StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#967    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#968    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#969    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#970    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
+#971    _InheritedNotifierElement.update (package:flutter/src/widgets/inherited_notifier.dart:108:11)
+#972    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#973    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#974    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#975    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#976    StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#977    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#978    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#979    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#980    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#981    StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#982    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#983    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#984    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#985    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
+#986    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#987    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#988    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#989    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#990    StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#991    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#992    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#993    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#994    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
+#995    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#996    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#997    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#998    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
+#999    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#1000   _RawViewElement._updateChild (package:flutter/src/widgets/view.dart:488:16)
+#1001   _RawViewElement.update (package:flutter/src/widgets/view.dart:575:5)
+#1002   Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#1003   ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#1004   Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#1005   StatelessElement.update (package:flutter/src/widgets/framework.dart:5908:5)
+#1006   Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#1007   ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#1008   StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#1009   Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#1010   StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#1011   Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#1012   RootElement._rebuild (package:flutter/src/widgets/binding.dart:2091:16)
+#1013   RootElement.update (package:flutter/src/widgets/binding.dart:2069:5)
+#1014   RootElement.performRebuild (package:flutter/src/widgets/binding.dart:2083:7)
+#1015   Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#1016   BuildScope._tryRebuild (package:flutter/src/widgets/framework.dart:2763:15)
+#1017   BuildScope._flushDirtyElements (package:flutter/src/widgets/framework.dart:2820:11)
+#1018   BuildOwner.buildScope (package:flutter/src/widgets/framework.dart:3124:18)
+#1019   AutomatedTestWidgetsFlutterBinding.drawFrame (package:flutter_test/src/binding.dart:2432:19)
+#1020   RendererBinding._handlePersistentFrameCallback (package:flutter/src/rendering/binding.dart:558:5)
+#1021   SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1430:15)
+#1022   SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1345:9)
+#1023   AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:2261:9)
+#1026   TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#1027   AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:2250:27)
+#1028   WidgetTester.pumpWidget.<anonymous closure> (package:flutter_test/src/widget_tester.dart:598:22)
+#1031   TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#1032   WidgetTester.pumpWidget (package:flutter_test/src/widget_tester.dart:595:27)
+#1033   main.<anonymous closure>.<anonymous closure> (file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart:73:20)
+#1034   testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:29)
+<asynchronous suspension>
+#1035   TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 5 frames from dart:async and package:stack_trace)
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: exactly one matching candidate
+  Actual: _TextWidgetFinder:<Found 0 widgets with text "Respaldo en la Nube": []>
+   Which: means none were found but one was expected
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart:93:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart line 93
+The test description was:
+  switching tabs changes current active screen
+════════════════════════════════════════════════════════════════════════════════════════════════════
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following message was thrown:
+Multiple exceptions (2) were detected during the running of the current test, and at least one was
+unexpected.
+════════════════════════════════════════════════════════════════════════════════════════════════════
+Test failed. See exception logs above.
+The test description was: switching tabs changes current active screen
+
+::endgroup::
+::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping center FAB opens bottom sheet with 4 add options (failed)
+══╡ EXCEPTION CAUGHT BY WIDGETS LIBRARY ╞═══════════════════════════════════════════════════════════
+The following FirebaseException was thrown building MoreScreen(dirty, dependencies:
+[_InheritedProviderScope<SettingsProvider?>], state: _MoreScreenState#2e75e):
+[core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()
+
+The relevant error-causing widget was:
+  MoreScreen
+  MoreScreen:file:///home/runner/work/gastoscan-ai/gastoscan-ai/lib/ui/screens/main_screen.dart:57:11
+
+When the exception was thrown, this was the stack:
+#0      MethodChannelFirebase.app (package:firebase_core_platform_interface/src/method_channel/method_channel_firebase.dart:190:5)
+#1      Firebase.app (package:firebase_core/src/firebase.dart:79:41)
+#2      FirebaseAuth.instance (package:firebase_auth/src/firebase_auth.dart:38:47)
+#3      _MoreScreenState.build (package:gastoscan_ai/ui/screens/more_screen.dart:99:34)
+#4      StatefulElement.build (package:flutter/src/widgets/framework.dart:5944:27)
+#5      ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5830:15)
+#6      StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#7      Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#8      ComponentElement._firstBuild (package:flutter/src/widgets/framework.dart:5812:5)
+#9      StatefulElement._firstBuild (package:flutter/src/widgets/framework.dart:5986:11)
+#10     ComponentElement.mount (package:flutter/src/widgets/framework.dart:5806:5)
+...     Normal element mounting (27 frames)
+#37     Element.inflateWidget (package:flutter/src/widgets/framework.dart:4600:20)
+#38     MultiChildRenderObjectElement.inflateWidget (package:flutter/src/widgets/framework.dart:7277:36)
+#39     MultiChildRenderObjectElement.mount (package:flutter/src/widgets/framework.dart:7292:32)
+...     Normal element mounting (7 frames)
+#46     Element.inflateWidget (package:flutter/src/widgets/framework.dart:4600:20)
+#47     MultiChildRenderObjectElement.inflateWidget (package:flutter/src/widgets/framework.dart:7277:36)
+#48     MultiChildRenderObjectElement.mount (package:flutter/src/widgets/framework.dart:7292:32)
+...     Normal element mounting (25 frames)
+#73     Element.inflateWidget (package:flutter/src/widgets/framework.dart:4600:20)
+#74     MultiChildRenderObjectElement.inflateWidget (package:flutter/src/widgets/framework.dart:7277:36)
+#75     MultiChildRenderObjectElement.mount (package:flutter/src/widgets/framework.dart:7292:32)
+...     Normal element mounting (370 frames)
+#445    Element.inflateWidget (package:flutter/src/widgets/framework.dart:4600:20)
+#446    MultiChildRenderObjectElement.inflateWidget (package:flutter/src/widgets/framework.dart:7277:36)
+#447    MultiChildRenderObjectElement.mount (package:flutter/src/widgets/framework.dart:7292:32)
+...     Normal element mounting (473 frames)
+#920    _InheritedProviderScopeElement.mount (package:provider/src/inherited_provider.dart:424:11)
+...     Normal element mounting (7 frames)
+#927    _InheritedProviderScopeElement.mount (package:provider/src/inherited_provider.dart:424:11)
+...     Normal element mounting (7 frames)
+#934    _InheritedProviderScopeElement.mount (package:provider/src/inherited_provider.dart:424:11)
+...     Normal element mounting (7 frames)
+#941    SingleChildWidgetElementMixin.mount (package:nested/nested.dart:222:11)
+...     Normal element mounting (7 frames)
+#948    _NestedHookElement.mount (package:nested/nested.dart:187:11)
+...     Normal element mounting (7 frames)
+#955    SingleChildWidgetElementMixin.mount (package:nested/nested.dart:222:11)
+#956    Element.inflateWidget (package:flutter/src/widgets/framework.dart:4600:20)
+#957    Element.updateChild (package:flutter/src/widgets/framework.dart:4066:20)
+#958    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#959    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#960    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
+#961    _InheritedNotifierElement.update (package:flutter/src/widgets/inherited_notifier.dart:108:11)
+#962    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#963    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#964    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#965    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#966    StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#967    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#968    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#969    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#970    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
+#971    _InheritedNotifierElement.update (package:flutter/src/widgets/inherited_notifier.dart:108:11)
+#972    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#973    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#974    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#975    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#976    StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#977    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#978    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#979    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#980    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#981    StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#982    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#983    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#984    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#985    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
+#986    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#987    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#988    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#989    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#990    StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#991    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#992    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#993    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#994    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
+#995    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#996    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#997    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#998    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
+#999    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#1000   _RawViewElement._updateChild (package:flutter/src/widgets/view.dart:488:16)
+#1001   _RawViewElement.update (package:flutter/src/widgets/view.dart:575:5)
+#1002   Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#1003   ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#1004   Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#1005   StatelessElement.update (package:flutter/src/widgets/framework.dart:5908:5)
+#1006   Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#1007   ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#1008   StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#1009   Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#1010   StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#1011   Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#1012   RootElement._rebuild (package:flutter/src/widgets/binding.dart:2091:16)
+#1013   RootElement.update (package:flutter/src/widgets/binding.dart:2069:5)
+#1014   RootElement.performRebuild (package:flutter/src/widgets/binding.dart:2083:7)
+#1015   Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#1016   BuildScope._tryRebuild (package:flutter/src/widgets/framework.dart:2763:15)
+#1017   BuildScope._flushDirtyElements (package:flutter/src/widgets/framework.dart:2820:11)
+#1018   BuildOwner.buildScope (package:flutter/src/widgets/framework.dart:3124:18)
+#1019   AutomatedTestWidgetsFlutterBinding.drawFrame (package:flutter_test/src/binding.dart:2432:19)
+#1020   RendererBinding._handlePersistentFrameCallback (package:flutter/src/rendering/binding.dart:558:5)
+#1021   SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1430:15)
+#1022   SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1345:9)
+#1023   AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:2261:9)
+#1026   TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#1027   AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:2250:27)
+#1028   WidgetTester.pumpWidget.<anonymous closure> (package:flutter_test/src/widget_tester.dart:598:22)
+#1031   TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#1032   WidgetTester.pumpWidget (package:flutter_test/src/widget_tester.dart:595:27)
+#1033   main.<anonymous closure>.<anonymous closure> (file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart:99:20)
+#1034   testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:29)
+<asynchronous suspension>
+#1035   TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 5 frames from dart:async and package:stack_trace)
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+Test failed. See exception logs above.
+The test description was: tapping center FAB opens bottom sheet with 4 add options
+
+::endgroup::
+::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests renders all hub sections in main view (failed)
+══╡ EXCEPTION CAUGHT BY WIDGETS LIBRARY ╞═══════════════════════════════════════════════════════════
+The following FirebaseException was thrown building MoreScreen(dirty, dependencies:
+[_InheritedProviderScope<SettingsProvider?>], state: _MoreScreenState#3862b):
+[core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()
+
+The relevant error-causing widget was:
+  MoreScreen
+  MoreScreen:file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart:49:17
+
+When the exception was thrown, this was the stack:
+#0      MethodChannelFirebase.app (package:firebase_core_platform_interface/src/method_channel/method_channel_firebase.dart:190:5)
+#1      Firebase.app (package:firebase_core/src/firebase.dart:79:41)
+#2      FirebaseAuth.instance (package:firebase_auth/src/firebase_auth.dart:38:47)
+#3      _MoreScreenState.build (package:gastoscan_ai/ui/screens/more_screen.dart:99:34)
+#4      StatefulElement.build (package:flutter/src/widgets/framework.dart:5944:27)
+#5      ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5830:15)
+#6      StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#7      Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#8      ComponentElement._firstBuild (package:flutter/src/widgets/framework.dart:5812:5)
+#9      StatefulElement._firstBuild (package:flutter/src/widgets/framework.dart:5986:11)
+#10     ComponentElement.mount (package:flutter/src/widgets/framework.dart:5806:5)
+...     Normal element mounting (260 frames)
+#270    Element.inflateWidget (package:flutter/src/widgets/framework.dart:4600:20)
+#271    MultiChildRenderObjectElement.inflateWidget (package:flutter/src/widgets/framework.dart:7277:36)
+#272    MultiChildRenderObjectElement.mount (package:flutter/src/widgets/framework.dart:7292:32)
+...     Normal element mounting (473 frames)
+#745    _InheritedProviderScopeElement.mount (package:provider/src/inherited_provider.dart:424:11)
+...     Normal element mounting (7 frames)
+#752    _InheritedProviderScopeElement.mount (package:provider/src/inherited_provider.dart:424:11)
+...     Normal element mounting (7 frames)
+#759    SingleChildWidgetElementMixin.mount (package:nested/nested.dart:222:11)
+...     Normal element mounting (7 frames)
+#766    _NestedHookElement.mount (package:nested/nested.dart:187:11)
+...     Normal element mounting (7 frames)
+#773    SingleChildWidgetElementMixin.mount (package:nested/nested.dart:222:11)
+#774    Element.inflateWidget (package:flutter/src/widgets/framework.dart:4600:20)
+#775    Element.updateChild (package:flutter/src/widgets/framework.dart:4066:20)
+#776    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#777    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#778    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
+#779    _InheritedNotifierElement.update (package:flutter/src/widgets/inherited_notifier.dart:108:11)
+#780    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#781    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#782    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#783    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#784    StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#785    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#786    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#787    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#788    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
+#789    _InheritedNotifierElement.update (package:flutter/src/widgets/inherited_notifier.dart:108:11)
+#790    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#791    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#792    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#793    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#794    StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#795    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#796    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#797    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#798    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#799    StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#800    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#801    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#802    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#803    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
+#804    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#805    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#806    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#807    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#808    StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#809    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#810    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#811    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#812    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
+#813    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#814    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#815    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#816    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
+#817    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#818    _RawViewElement._updateChild (package:flutter/src/widgets/view.dart:488:16)
+#819    _RawViewElement.update (package:flutter/src/widgets/view.dart:575:5)
+#820    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#821    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#822    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#823    StatelessElement.update (package:flutter/src/widgets/framework.dart:5908:5)
+#824    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#825    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#826    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#827    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#828    StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#829    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#830    RootElement._rebuild (package:flutter/src/widgets/binding.dart:2091:16)
+#831    RootElement.update (package:flutter/src/widgets/binding.dart:2069:5)
+#832    RootElement.performRebuild (package:flutter/src/widgets/binding.dart:2083:7)
+#833    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#834    BuildScope._tryRebuild (package:flutter/src/widgets/framework.dart:2763:15)
+#835    BuildScope._flushDirtyElements (package:flutter/src/widgets/framework.dart:2820:11)
+#836    BuildOwner.buildScope (package:flutter/src/widgets/framework.dart:3124:18)
+#837    AutomatedTestWidgetsFlutterBinding.drawFrame (package:flutter_test/src/binding.dart:2432:19)
+#838    RendererBinding._handlePersistentFrameCallback (package:flutter/src/rendering/binding.dart:558:5)
+#839    SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1430:15)
+#840    SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1345:9)
+#841    AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:2261:9)
+#844    TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#845    AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:2250:27)
+#846    WidgetTester.pumpWidget.<anonymous closure> (package:flutter_test/src/widget_tester.dart:598:22)
+#849    TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#850    WidgetTester.pumpWidget (package:flutter_test/src/widget_tester.dart:595:27)
+#851    main.<anonymous closure>.<anonymous closure> (file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart:55:20)
+#852    testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:29)
+<asynchronous suspension>
+#853    TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 5 frames from dart:async and package:stack_trace)
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: exactly one matching candidate
+  Actual: _TextWidgetFinder:<Found 0 widgets with text "Más": []>
+   Which: means none were found but one was expected
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart:58:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart line 58
+The test description was:
+  renders all hub sections in main view
+════════════════════════════════════════════════════════════════════════════════════════════════════
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following message was thrown:
+Multiple exceptions (2) were detected during the running of the current test, and at least one was
+unexpected.
+════════════════════════════════════════════════════════════════════════════════════════════════════
+Test failed. See exception logs above.
+The test description was: renders all hub sections in main view
+
+::endgroup::
+::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping shopping list navigates internally and back button returns to hub (failed)
+══╡ EXCEPTION CAUGHT BY WIDGETS LIBRARY ╞═══════════════════════════════════════════════════════════
+The following FirebaseException was thrown building MoreScreen(dirty, dependencies:
+[_InheritedProviderScope<SettingsProvider?>], state: _MoreScreenState#4b84f):
+[core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()
+
+The relevant error-causing widget was:
+  MoreScreen
+  MoreScreen:file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart:49:17
+
+When the exception was thrown, this was the stack:
+#0      MethodChannelFirebase.app (package:firebase_core_platform_interface/src/method_channel/method_channel_firebase.dart:190:5)
+#1      Firebase.app (package:firebase_core/src/firebase.dart:79:41)
+#2      FirebaseAuth.instance (package:firebase_auth/src/firebase_auth.dart:38:47)
+#3      _MoreScreenState.build (package:gastoscan_ai/ui/screens/more_screen.dart:99:34)
+#4      StatefulElement.build (package:flutter/src/widgets/framework.dart:5944:27)
+#5      ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5830:15)
+#6      StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#7      Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#8      ComponentElement._firstBuild (package:flutter/src/widgets/framework.dart:5812:5)
+#9      StatefulElement._firstBuild (package:flutter/src/widgets/framework.dart:5986:11)
+#10     ComponentElement.mount (package:flutter/src/widgets/framework.dart:5806:5)
+...     Normal element mounting (260 frames)
+#270    Element.inflateWidget (package:flutter/src/widgets/framework.dart:4600:20)
+#271    MultiChildRenderObjectElement.inflateWidget (package:flutter/src/widgets/framework.dart:7277:36)
+#272    MultiChildRenderObjectElement.mount (package:flutter/src/widgets/framework.dart:7292:32)
+...     Normal element mounting (473 frames)
+#745    _InheritedProviderScopeElement.mount (package:provider/src/inherited_provider.dart:424:11)
+...     Normal element mounting (7 frames)
+#752    _InheritedProviderScopeElement.mount (package:provider/src/inherited_provider.dart:424:11)
+...     Normal element mounting (7 frames)
+#759    SingleChildWidgetElementMixin.mount (package:nested/nested.dart:222:11)
+...     Normal element mounting (7 frames)
+#766    _NestedHookElement.mount (package:nested/nested.dart:187:11)
+...     Normal element mounting (7 frames)
+#773    SingleChildWidgetElementMixin.mount (package:nested/nested.dart:222:11)
+#774    Element.inflateWidget (package:flutter/src/widgets/framework.dart:4600:20)
+#775    Element.updateChild (package:flutter/src/widgets/framework.dart:4066:20)
+#776    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#777    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#778    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
+#779    _InheritedNotifierElement.update (package:flutter/src/widgets/inherited_notifier.dart:108:11)
+#780    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#781    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#782    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#783    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#784    StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#785    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#786    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#787    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#788    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
+#789    _InheritedNotifierElement.update (package:flutter/src/widgets/inherited_notifier.dart:108:11)
+#790    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#791    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#792    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#793    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#794    StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#795    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#796    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#797    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#798    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#799    StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#800    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#801    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#802    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#803    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
+#804    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#805    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#806    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#807    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#808    StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#809    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#810    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#811    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#812    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
+#813    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#814    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#815    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#816    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
+#817    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#818    _RawViewElement._updateChild (package:flutter/src/widgets/view.dart:488:16)
+#819    _RawViewElement.update (package:flutter/src/widgets/view.dart:575:5)
+#820    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#821    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#822    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#823    StatelessElement.update (package:flutter/src/widgets/framework.dart:5908:5)
+#824    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#825    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#826    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#827    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#828    StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#829    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#830    RootElement._rebuild (package:flutter/src/widgets/binding.dart:2091:16)
+#831    RootElement.update (package:flutter/src/widgets/binding.dart:2069:5)
+#832    RootElement.performRebuild (package:flutter/src/widgets/binding.dart:2083:7)
+#833    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#834    BuildScope._tryRebuild (package:flutter/src/widgets/framework.dart:2763:15)
+#835    BuildScope._flushDirtyElements (package:flutter/src/widgets/framework.dart:2820:11)
+#836    BuildOwner.buildScope (package:flutter/src/widgets/framework.dart:3124:18)
+#837    AutomatedTestWidgetsFlutterBinding.drawFrame (package:flutter_test/src/binding.dart:2432:19)
+#838    RendererBinding._handlePersistentFrameCallback (package:flutter/src/rendering/binding.dart:558:5)
+#839    SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1430:15)
+#840    SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1345:9)
+#841    AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:2261:9)
+#844    TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#845    AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:2250:27)
+#846    WidgetTester.pumpWidget.<anonymous closure> (package:flutter_test/src/widget_tester.dart:598:22)
+#849    TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#850    WidgetTester.pumpWidget (package:flutter_test/src/widget_tester.dart:595:27)
+#851    main.<anonymous closure>.<anonymous closure> (file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart:69:20)
+#852    testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:29)
+<asynchronous suspension>
+#853    TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 5 frames from dart:async and package:stack_trace)
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+The finder "Found 0 widgets with key [<'more_menu_shopping_list'>]: []" (used in a call to "tap()")
+could not find any matching widgets.
+
+When the exception was thrown, this was the stack:
+#0      WidgetController._getElementPoint (package:flutter_test/src/controller.dart:2095:7)
+#1      WidgetController.getCenter (package:flutter_test/src/controller.dart:1947:12)
+#2      WidgetController.tap (package:flutter_test/src/controller.dart:1080:7)
+#3      main.<anonymous closure>.<anonymous closure> (file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart:73:20)
+<asynchronous suspension>
+#4      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#5      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+The test description was:
+  tapping shopping list navigates internally and back button returns to hub
+════════════════════════════════════════════════════════════════════════════════════════════════════
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following message was thrown:
+Multiple exceptions (2) were detected during the running of the current test, and at least one was
+unexpected.
+════════════════════════════════════════════════════════════════════════════════════════════════════
+Test failed. See exception logs above.
+The test description was: tapping shopping list navigates internally and back button returns to hub
+
+::endgroup::
+::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping chat navigates internally and back button returns to hub (failed)
+══╡ EXCEPTION CAUGHT BY WIDGETS LIBRARY ╞═══════════════════════════════════════════════════════════
+The following FirebaseException was thrown building MoreScreen(dirty, dependencies:
+[_InheritedProviderScope<SettingsProvider?>], state: _MoreScreenState#7cbed):
+[core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()
+
+The relevant error-causing widget was:
+  MoreScreen
+  MoreScreen:file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart:49:17
+
+When the exception was thrown, this was the stack:
+#0      MethodChannelFirebase.app (package:firebase_core_platform_interface/src/method_channel/method_channel_firebase.dart:190:5)
+#1      Firebase.app (package:firebase_core/src/firebase.dart:79:41)
+#2      FirebaseAuth.instance (package:firebase_auth/src/firebase_auth.dart:38:47)
+#3      _MoreScreenState.build (package:gastoscan_ai/ui/screens/more_screen.dart:99:34)
+#4      StatefulElement.build (package:flutter/src/widgets/framework.dart:5944:27)
+#5      ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5830:15)
+#6      StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#7      Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#8      ComponentElement._firstBuild (package:flutter/src/widgets/framework.dart:5812:5)
+#9      StatefulElement._firstBuild (package:flutter/src/widgets/framework.dart:5986:11)
+#10     ComponentElement.mount (package:flutter/src/widgets/framework.dart:5806:5)
+...     Normal element mounting (260 frames)
+#270    Element.inflateWidget (package:flutter/src/widgets/framework.dart:4600:20)
+#271    MultiChildRenderObjectElement.inflateWidget (package:flutter/src/widgets/framework.dart:7277:36)
+#272    MultiChildRenderObjectElement.mount (package:flutter/src/widgets/framework.dart:7292:32)
+...     Normal element mounting (473 frames)
+#745    _InheritedProviderScopeElement.mount (package:provider/src/inherited_provider.dart:424:11)
+...     Normal element mounting (7 frames)
+#752    _InheritedProviderScopeElement.mount (package:provider/src/inherited_provider.dart:424:11)
+...     Normal element mounting (7 frames)
+#759    SingleChildWidgetElementMixin.mount (package:nested/nested.dart:222:11)
+...     Normal element mounting (7 frames)
+#766    _NestedHookElement.mount (package:nested/nested.dart:187:11)
+...     Normal element mounting (7 frames)
+#773    SingleChildWidgetElementMixin.mount (package:nested/nested.dart:222:11)
+#774    Element.inflateWidget (package:flutter/src/widgets/framework.dart:4600:20)
+#775    Element.updateChild (package:flutter/src/widgets/framework.dart:4066:20)
+#776    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#777    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#778    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
+#779    _InheritedNotifierElement.update (package:flutter/src/widgets/inherited_notifier.dart:108:11)
+#780    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#781    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#782    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#783    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#784    StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#785    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#786    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#787    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#788    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
+#789    _InheritedNotifierElement.update (package:flutter/src/widgets/inherited_notifier.dart:108:11)
+#790    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#791    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#792    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#793    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#794    StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#795    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#796    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#797    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#798    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#799    StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#800    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#801    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#802    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#803    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
+#804    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#805    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#806    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#807    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#808    StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#809    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#810    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#811    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#812    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
+#813    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#814    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#815    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#816    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
+#817    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#818    _RawViewElement._updateChild (package:flutter/src/widgets/view.dart:488:16)
+#819    _RawViewElement.update (package:flutter/src/widgets/view.dart:575:5)
+#820    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#821    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#822    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#823    StatelessElement.update (package:flutter/src/widgets/framework.dart:5908:5)
+#824    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#825    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
+#826    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
+#827    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#828    StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
+#829    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
+#830    RootElement._rebuild (package:flutter/src/widgets/binding.dart:2091:16)
+#831    RootElement.update (package:flutter/src/widgets/binding.dart:2069:5)
+#832    RootElement.performRebuild (package:flutter/src/widgets/binding.dart:2083:7)
+#833    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
+#834    BuildScope._tryRebuild (package:flutter/src/widgets/framework.dart:2763:15)
+#835    BuildScope._flushDirtyElements (package:flutter/src/widgets/framework.dart:2820:11)
+#836    BuildOwner.buildScope (package:flutter/src/widgets/framework.dart:3124:18)
+#837    AutomatedTestWidgetsFlutterBinding.drawFrame (package:flutter_test/src/binding.dart:2432:19)
+#838    RendererBinding._handlePersistentFrameCallback (package:flutter/src/rendering/binding.dart:558:5)
+#839    SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1430:15)
+#840    SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1345:9)
+#841    AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:2261:9)
+#844    TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#845    AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:2250:27)
+#846    WidgetTester.pumpWidget.<anonymous closure> (package:flutter_test/src/widget_tester.dart:598:22)
+#849    TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#850    WidgetTester.pumpWidget (package:flutter_test/src/widget_tester.dart:595:27)
+#851    main.<anonymous closure>.<anonymous closure> (file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart:90:20)
+#852    testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:29)
+<asynchronous suspension>
+#853    TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 5 frames from dart:async and package:stack_trace)
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+The finder "Found 0 widgets with key [<'more_menu_chat_ai'>]: []" (used in a call to "tap()") could
+not find any matching widgets.
+
+When the exception was thrown, this was the stack:
+#0      WidgetController._getElementPoint (package:flutter_test/src/controller.dart:2095:7)
+#1      WidgetController.getCenter (package:flutter_test/src/controller.dart:1947:12)
+#2      WidgetController.tap (package:flutter_test/src/controller.dart:1080:7)
+#3      main.<anonymous closure>.<anonymous closure> (file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart:94:20)
+<asynchronous suspension>
+#4      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#5      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+The test description was:
+  tapping chat navigates internally and back button returns to hub
+════════════════════════════════════════════════════════════════════════════════════════════════════
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following message was thrown:
+Multiple exceptions (2) were detected during the running of the current test, and at least one was
+unexpected.
+════════════════════════════════════════════════════════════════════════════════════════════════════
+Test failed. See exception logs above.
+The test description was: tapping chat navigates internally and back button returns to hub
+
+::endgroup::
+::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: DashboardScreen Category Budget & Red Excess Alert Tests (R3) R3 Acceptance Criteria: Asignar $50 a Alimentación, y registrar un gasto de $60 en Alimentación hace que se dibuje un indicador visual de exceso (color rojo) en la UI de esa categoría
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: DashboardScreen Category Budget & Red Excess Alert Tests (R3) Category within budget does NOT render the red excess alert
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart: ScanScreen Multi-Image Selection Tests multi-image selection enqueues all images and pops back to Dashboard
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart: ScanScreen Multi-Image Selection Tests empty selection from gallery does not enqueue or pop
-::endgroup::
-::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart (failed)
-Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart":
-Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: lib/ui/widgets/expense_card.dart:201:28: Error: Expected ',' before this.
-                    double itemUsd = it.totalDisplay;
-                           ^^^^^^^
-lib/ui/widgets/expense_card.dart:201:53: Error: Expected ']' before this.
-                    double itemUsd = it.totalDisplay;
-                                                    ^
-lib/ui/widgets/expense_card.dart:201:21: Error: A value of type 'Type' can't be assigned to a variable of type 'Widget'.
- - 'Type' is from 'dart:core'.
- - 'Widget' is from 'package:flutter/src/widgets/framework.dart' ('/opt/hostedtoolcache/flutter/stable-3.47.5-x64/flutter/packages/flutter/lib/src/widgets/framework.dart').
-                    double itemUsd = it.totalDisplay;
-                    ^
-lib/ui/widgets/expense_card.dart:201:38: Error: The getter 'it' isn't defined for the type '_ExpenseCardState'.
- - '_ExpenseCardState' is from 'package:gastoscan_ai/ui/widgets/expense_card.dart' ('lib/ui/widgets/expense_card.dart').
-Try correcting the name to the name of an existing getter, or defining a getter or field named 'it'.
-                    double itemUsd = it.totalDisplay;
-                                     ^^
-lib/ui/widgets/expense_card.dart:201:28: Error: The setter 'itemUsd' isn't defined for the type '_ExpenseCardState'.
- - '_ExpenseCardState' is from 'package:gastoscan_ai/ui/widgets/expense_card.dart' ('lib/ui/widgets/expense_card.dart').
-Try correcting the name to the name of an existing setter, or defining a setter or field named 'itemUsd'.
-                    double itemUsd = it.totalDisplay;
-                           ^^^^^^^
-.
-
-::endgroup::
-::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests instantiates with required nombre and default presupuestoMensual 0.0
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests instantiates with custom id and presupuestoMensual
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests toMap produces correct key-value map with id
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests toMap omits id when null
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests fromMap parses standard map correctly
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests fromMap parses integer budget as double
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests fromMap supports fallback aliases: name, budget, presupuesto, categoria
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests copyWith updates specified fields correctly
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests equality and hashCode work as expected
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests CategoryModel typedef works interchangeably
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: DashboardScreen Category Budget & Red Excess Alert Tests (R3) Initial empty state displays category chart silhouette and CategoryChart allows adding budget
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: DashboardScreen Category Budget & Red Excess Alert Tests (R3) Editing budget to amount greater than expense clears red excess alert
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: DashboardScreen Category Budget & Red Excess Alert Tests (R3) Validation: categories exceeding general budget shows alert and blocks save
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: DashboardScreen Category Budget & Red Excess Alert Tests (R3) General budget exceeded shows general excess alert in CategoryChart
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: DashboardScreen Search Tests (R2) tapping search icon reveals search text field with hint
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: DashboardScreen Search Tests (R2) entering search query immediately filters out non-matching expenses
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests Default singleton instance is available and accessible
 ::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests 3-day scheduling function defaults to Duration(days: 3)
 NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@289310200' has not been initialized.
+NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@819310200' has not been initialized.
 ::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests Custom duration is respected when specified
 NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@289310200' has not been initialized.
+NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@819310200' has not been initialized.
 ::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests cancelInactivityReminder cancels and clears scheduled state
 NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@289310200' has not been initialized.
+NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@819310200' has not been initialized.
 NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::endgroup::
 ::group::✅ Passing tests
@@ -120,7 +922,7 @@ NotificationService: Excepción al cancelar recordatorio: MissingPluginException
 ::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests recordActivityAndReschedule updates activity time and reschedules for 3 days
 NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@289310200' has not been initialized.
+NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@819310200' has not been initialized.
 ::endgroup::
 ::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests Channel configuration and constants are correctly defined
@@ -135,6 +937,22 @@ Error en sincronización bidireccional: [core/no-app] No Firebase App '[DEFAULT]
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — AndroidManifest Permissions & Configuration Verification android/app/src/main/AndroidManifest.xml contains all required permissions and receivers
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — AndroidManifest Permissions & Configuration Verification AndroidManifest.xml contains permissions and receivers
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — AndroidManifest Permissions & Configuration Verification pubspec.yaml declares flutter_local_notifications and timezone
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: DashboardScreen Search Tests (R2) expenses matching by commerce are included
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: DashboardScreen Search Tests (R2) expenses matching by product name are included
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: DashboardScreen Search Tests (R2) clearing search query via close button restores all expenses
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests instantiates with required nombre and default presupuestoMensual 0.0
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests instantiates with custom id and presupuestoMensual
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests toMap produces correct key-value map with id
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests toMap omits id when null
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests fromMap parses standard map correctly
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests fromMap parses integer budget as double
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests fromMap supports fallback aliases: name, budget, presupuesto, categoria
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests copyWith updates specified fields correctly
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests equality and hashCode work as expected
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests CategoryModel typedef works interchangeably
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: DashboardScreen Search Tests (R2) clearing search text restores all expenses while keeping search open
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: DashboardScreen Search Tests (R2) displays friendly empty state message when search yields 0 matches
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: DashboardScreen Search Tests (R2) case-insensitive and diacritic-insensitive search works
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests initial state has empty category budgets and totals
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests setPresupuestoGeneral updates general budget
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests guardarTodoElPresupuesto updates general and category budgets and filters zero budgets
@@ -151,32 +969,20 @@ Error en sincronización bidireccional: [core/no-app] No Firebase App '[DEFAULT]
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests manual state mutation helpers update state and notify listeners
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: GeminiExtractionResult.listFromJson Tests parses single legacy JSON correctly
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: GeminiExtractionResult.listFromJson Tests parses multiple facturas JSON array correctly
-::endgroup::
-::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart (failed)
-Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart":
-Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: lib/ui/widgets/expense_card.dart:201:28: Error: Expected ',' before this.
-                    double itemUsd = it.totalDisplay;
-                           ^^^^^^^
-lib/ui/widgets/expense_card.dart:201:53: Error: Expected ']' before this.
-                    double itemUsd = it.totalDisplay;
-                                                    ^
-lib/ui/widgets/expense_card.dart:201:21: Error: A value of type 'Type' can't be assigned to a variable of type 'Widget'.
- - 'Type' is from 'dart:core'.
- - 'Widget' is from 'package:flutter/src/widgets/framework.dart' ('/opt/hostedtoolcache/flutter/stable-3.47.5-x64/flutter/packages/flutter/lib/src/widgets/framework.dart').
-                    double itemUsd = it.totalDisplay;
-                    ^
-lib/ui/widgets/expense_card.dart:201:38: Error: The getter 'it' isn't defined for the type '_ExpenseCardState'.
- - '_ExpenseCardState' is from 'package:gastoscan_ai/ui/widgets/expense_card.dart' ('lib/ui/widgets/expense_card.dart').
-Try correcting the name to the name of an existing getter, or defining a getter or field named 'it'.
-                    double itemUsd = it.totalDisplay;
-                                     ^^
-lib/ui/widgets/expense_card.dart:201:28: Error: The setter 'itemUsd' isn't defined for the type '_ExpenseCardState'.
- - '_ExpenseCardState' is from 'package:gastoscan_ai/ui/widgets/expense_card.dart' ('lib/ui/widgets/expense_card.dart').
-Try correcting the name to the name of an existing setter, or defining a setter or field named 'itemUsd'.
-                    double itemUsd = it.totalDisplay;
-                           ^^^^^^^
-.
-
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests formatPreferido returns VES when preferred is VES
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests formatPreferido calculates VES using tasaCambio when totalVes is zero/null
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests formatPreferido returns USD when preferred is USD
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests formatSecundario returns opposite currency
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests convertFromUsd converts properly
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: SummaryCard Currency Preference Tests renders USD on top when monedaPrincipal is USD
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: SummaryCard Currency Preference Tests renders VES on top when monedaPrincipal is VES
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: ExpenseCard Currency Preference Tests displays USD as primary when monedaPrincipal is USD
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: ExpenseCard Currency Preference Tests displays VES as primary when monedaPrincipal is VES
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CategoryChart Currency Preference Tests renders category totals and budgets in VES when monedaPrincipal is VES
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays welcome prompt when expenses are empty
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays over budget warning when spent exceeds budget
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays budget alert when spent is 85 percent or more
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests suggests defining budget when no general budget exists
 ::endgroup::
 
-::error::46 tests passed, 4 failed.
+::error::78 tests passed, 6 failed.
