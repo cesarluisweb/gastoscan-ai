@@ -19,6 +19,7 @@ class GastoProvider with ChangeNotifier {
 
   double _totalMesUsd = 0.0;
   double _totalMesVes = 0.0;
+  double _presupuestoGeneral = 0.0;
   Map<String, double> _totalesPorCategoria = {};
   Map<String, double> _presupuestosPorCategoria = {};
 
@@ -29,6 +30,7 @@ class GastoProvider with ChangeNotifier {
   int get selectedMonth => _selectedMonth;
   double get totalMesUsd => _totalMesUsd;
   double get totalMesVes => _totalMesVes;
+  double get presupuestoGeneral => _presupuestoGeneral;
   Map<String, double> get totalesPorCategoria => _totalesPorCategoria;
   Map<String, double> get presupuestosPorCategoria => _presupuestosPorCategoria;
 
@@ -53,7 +55,12 @@ class GastoProvider with ChangeNotifier {
       _totalMesVes = totales['VES'] ?? 0.0;
 
       _totalesPorCategoria = await _repository.obtenerTotalesPorCategoria(_selectedYear, _selectedMonth);
-      _presupuestosPorCategoria = await _repository.obtenerPresupuestosCategorias();
+
+      // Copiar del mes anterior si este mes no tiene registros de presupuesto
+      await _repository.copiarPresupuestosMesAnteriorSiVacio(_selectedYear, _selectedMonth);
+
+      _presupuestoGeneral = await _repository.obtenerPresupuestoGeneralMes(_selectedYear, _selectedMonth);
+      _presupuestosPorCategoria = await _repository.obtenerPresupuestosCategoriasMes(_selectedYear, _selectedMonth);
     } catch (e) {
       _errorMessage = 'Error al cargar los gastos: ${e.toString()}';
     } finally {
@@ -141,9 +148,20 @@ class GastoProvider with ChangeNotifier {
     return await _repository.buscarPrecioAnterior(descripcion);
   }
 
+  Future<void> setPresupuestoGeneral(double monto) async {
+    try {
+      await _repository.guardarPresupuestoGeneralMes(_selectedYear, _selectedMonth, monto);
+      _presupuestoGeneral = monto >= 0 ? monto : 0.0;
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = 'Error al guardar presupuesto general: ${e.toString()}';
+      notifyListeners();
+    }
+  }
+
   Future<void> setPresupuestoCategoria(String categoria, double presupuesto) async {
     try {
-      await _repository.guardarPresupuestoCategoria(categoria, presupuesto);
+      await _repository.guardarPresupuestoCategoriaMes(_selectedYear, _selectedMonth, categoria, presupuesto);
       if (presupuesto <= 0) {
         _presupuestosPorCategoria.remove(categoria);
         _presupuestosPorCategoria.removeWhere((key, value) => key.toLowerCase().trim() == categoria.toLowerCase().trim());
@@ -153,6 +171,19 @@ class GastoProvider with ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _errorMessage = 'Error al guardar presupuesto: ${e.toString()}';
+      notifyListeners();
+    }
+  }
+
+  Future<void> guardarTodoElPresupuesto(double general, Map<String, double> categorias) async {
+    try {
+      await _repository.guardarPresupuestoGeneralMes(_selectedYear, _selectedMonth, general);
+      await _repository.guardarPresupuestosCategoriasMes(_selectedYear, _selectedMonth, categorias);
+      _presupuestoGeneral = general >= 0 ? general : 0.0;
+      _presupuestosPorCategoria = Map.from(categorias)..removeWhere((key, value) => value <= 0);
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = 'Error al guardar presupuestos: ${e.toString()}';
       notifyListeners();
     }
   }

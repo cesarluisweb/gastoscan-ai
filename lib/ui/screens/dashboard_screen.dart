@@ -257,15 +257,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
               totalUsd: gastoProvider.totalMesUsd,
               totalVes: gastoProvider.totalMesVes,
               periodo: '$mesNombre $anio',
-              presupuesto: Provider.of<SettingsProvider>(context).presupuestoMensual,
-              onManageBudget: () => BudgetBottomSheet.show(context),
             ),
             const SizedBox(height: 16),
             if (gastoProvider.totalesPorCategoria.isNotEmpty ||
-                gastoProvider.presupuestosPorCategoria.isNotEmpty) ...[
+                gastoProvider.presupuestosPorCategoria.isNotEmpty ||
+                gastoProvider.presupuestoGeneral > 0) ...[
               CategoryChart(
                 categoryTotals: gastoProvider.totalesPorCategoria,
                 categoryBudgets: gastoProvider.presupuestosPorCategoria,
+                presupuestoGeneral: gastoProvider.presupuestoGeneral,
+                totalGastadoMes: gastoProvider.totalMesUsd,
                 gastosMes: gastoProvider.gastos,
                 onSetBudget: (categoria, budget) async {
                   await gastoProvider.setPresupuestoCategoria(categoria, budget);
@@ -646,6 +647,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 12),
+          TextButton.icon(
+            key: const Key('add_category_budget_button_silhouette'),
+            icon: const Icon(Icons.add_circle_outline, size: 16, color: AppColors.primaryDark),
+            label: const Text(
+              'Asignar presupuesto mensual',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            onPressed: () => BudgetBottomSheet.show(context),
           ),
         ],
       ),

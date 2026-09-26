@@ -7,11 +7,13 @@ import 'package:gastoscan_ai/providers/gasto_provider.dart';
 class MockGastoProvider extends GastoProvider {
   final Map<String, double> _testTotales = {};
   final Map<String, double> _testPresupuestos = {};
+  double _testPresupuestoGeneral = 0.0;
 
   MockGastoProvider({
     Map<String, double>? initialTotales,
     Map<String, double>? initialPresupuestos,
-  }) {
+    double initialPresupuestoGeneral = 0.0,
+  }) : _testPresupuestoGeneral = initialPresupuestoGeneral {
     if (initialTotales != null) _testTotales.addAll(initialTotales);
     if (initialPresupuestos != null) _testPresupuestos.addAll(initialPresupuestos);
   }
@@ -29,14 +31,37 @@ class MockGastoProvider extends GastoProvider {
   }
 
   @override
+  double get presupuestoGeneral => _testPresupuestoGeneral;
+
+  @override
   Map<String, double> get totalesPorCategoria => _testTotales;
 
   @override
   Map<String, double> get presupuestosPorCategoria => _testPresupuestos;
 
   @override
+  Future<void> setPresupuestoGeneral(double monto) async {
+    _testPresupuestoGeneral = monto;
+    notifyListeners();
+  }
+
+  @override
   Future<void> setPresupuestoCategoria(String categoria, double presupuesto) async {
-    _testPresupuestos[categoria] = presupuesto;
+    if (presupuesto <= 0) {
+      _testPresupuestos.remove(categoria);
+    } else {
+      _testPresupuestos[categoria] = presupuesto;
+    }
+    notifyListeners();
+  }
+
+  @override
+  Future<void> guardarTodoElPresupuesto(double general, Map<String, double> categorias) async {
+    _testPresupuestoGeneral = general;
+    _testPresupuestos.clear();
+    categorias.forEach((k, v) {
+      if (v > 0) _testPresupuestos[k] = v;
+    });
     notifyListeners();
   }
 
@@ -87,11 +112,30 @@ void main() {
     });
 
     test('initial state has empty category budgets and totals', () {
+      expect(provider.presupuestoGeneral, 0.0);
       expect(provider.presupuestosPorCategoria, isEmpty);
       expect(provider.totalesPorCategoria, isEmpty);
       expect(provider.getPresupuestoCategoria('Comida'), 0.0);
       expect(provider.getSpentForCategory('Comida'), 0.0);
       expect(provider.isCategoryOverBudget('Comida'), isFalse);
+    });
+
+    test('setPresupuestoGeneral updates general budget', () async {
+      await provider.setPresupuestoGeneral(300.0);
+      expect(provider.presupuestoGeneral, 300.0);
+    });
+
+    test('guardarTodoElPresupuesto updates general and category budgets and filters zero budgets', () async {
+      await provider.guardarTodoElPresupuesto(500.0, {
+        'Alimentacion': 200.0,
+        'Transporte': 100.0,
+        'Salud': 0.0,
+      });
+
+      expect(provider.presupuestoGeneral, 500.0);
+      expect(provider.presupuestosPorCategoria['Alimentacion'], 200.0);
+      expect(provider.presupuestosPorCategoria['Transporte'], 100.0);
+      expect(provider.presupuestosPorCategoria.containsKey('Salud'), isFalse);
     });
 
     test('setPresupuestoCategoria updates budget for given category', () async {

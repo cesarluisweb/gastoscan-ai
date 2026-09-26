@@ -15,7 +15,6 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final _tasaCambioCtrl = TextEditingController();
-  final _presupuestoCtrl = TextEditingController();
 
   @override
   void initState() {
@@ -23,16 +22,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final settings = Provider.of<SettingsProvider>(context, listen: false);
       _tasaCambioCtrl.text = settings.tasaCambioVesUsd.toString();
-      if (settings.presupuestoMensual > 0) {
-        _presupuestoCtrl.text = settings.presupuestoMensual.toStringAsFixed(2);
-      }
     });
   }
 
   @override
   void dispose() {
     _tasaCambioCtrl.dispose();
-    _presupuestoCtrl.dispose();
     super.dispose();
   }
 
@@ -42,13 +37,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final tasa = double.tryParse(_tasaCambioCtrl.text.replaceAll(',', '.'));
     if (tasa != null) {
       await settings.setTasaCambio(tasa);
-    }
-
-    final presupuesto = double.tryParse(_presupuestoCtrl.text.replaceAll(',', '.'));
-    if (presupuesto != null) {
-      await settings.setPresupuestoMensual(presupuesto);
-    } else if (_presupuestoCtrl.text.trim().isEmpty) {
-      await settings.setPresupuestoMensual(0.0);
     }
 
     if (!mounted) return;
@@ -362,16 +350,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onChanged: (val) {
                     if (val != null) settings.setMonedaPrincipal(val);
                   },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _presupuestoCtrl,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(
-                    labelText: 'Presupuesto Mensual (USD)',
-                    hintText: 'Ej. 300',
-                    prefixIcon: Icon(Icons.account_balance_wallet_outlined, color: AppColors.textSecondary),
-                  ),
                 ),
               ],
             ),

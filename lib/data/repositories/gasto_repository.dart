@@ -78,6 +78,30 @@ class GastoRepository {
     return _dbHelper.setPresupuestoCategoria(categoria, presupuesto);
   }
 
+  Future<double> obtenerPresupuestoGeneralMes(int anio, int mes) {
+    return _dbHelper.getPresupuestoGeneral(anio, mes);
+  }
+
+  Future<void> guardarPresupuestoGeneralMes(int anio, int mes, double monto) {
+    return _dbHelper.setPresupuestoGeneral(anio, mes, monto);
+  }
+
+  Future<Map<String, double>> obtenerPresupuestosCategoriasMes(int anio, int mes) {
+    return _dbHelper.getPresupuestosCategorias(anio, mes);
+  }
+
+  Future<void> guardarPresupuestoCategoriaMes(int anio, int mes, String categoria, double presupuesto) {
+    return _dbHelper.setPresupuestoCategoriaMensual(anio, mes, categoria, presupuesto);
+  }
+
+  Future<void> guardarPresupuestosCategoriasMes(int anio, int mes, Map<String, double> presupuestos) {
+    return _dbHelper.setPresupuestosCategorias(anio, mes, presupuestos);
+  }
+
+  Future<bool> copiarPresupuestosMesAnteriorSiVacio(int anio, int mes) {
+    return _dbHelper.copiarPresupuestosMesAnteriorSiVacio(anio, mes);
+  }
+
   Future<List<CategoriaModel>> obtenerCategorias() {
     return _dbHelper.getAllCategorias();
   }

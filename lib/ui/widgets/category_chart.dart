@@ -11,6 +11,8 @@ import 'budget_bottom_sheet.dart';
 class CategoryChart extends StatefulWidget {
   final Map<String, double> categoryTotals;
   final Map<String, double> categoryBudgets;
+  final double presupuestoGeneral;
+  final double totalGastadoMes;
   final List<GastoModel> gastosMes;
   final void Function(String categoria, double budget)? onSetBudget;
 
@@ -18,6 +20,8 @@ class CategoryChart extends StatefulWidget {
     Key? key,
     required this.categoryTotals,
     this.categoryBudgets = const {},
+    this.presupuestoGeneral = 0.0,
+    this.totalGastadoMes = 0.0,
     this.gastosMes = const [],
     this.onSetBudget,
   }) : super(key: key);
@@ -32,7 +36,7 @@ class _CategoryChartState extends State<CategoryChart> {
   @override
   Widget build(BuildContext context) {
     // Si no hay totales ni presupuestos configurados, no renderizar nada
-    if (widget.categoryTotals.isEmpty && widget.categoryBudgets.isEmpty) {
+    if (widget.categoryTotals.isEmpty && widget.categoryBudgets.isEmpty && widget.presupuestoGeneral <= 0) {
       return const SizedBox.shrink();
     }
 
@@ -85,30 +89,13 @@ class _CategoryChartState extends State<CategoryChart> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Distribución y Presupuestos',
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              TextButton.icon(
-                key: const Key('add_category_budget_button'),
-                icon: const Icon(Icons.add, size: 16),
-                label: const Text('Presupuesto', style: TextStyle(fontSize: 12)),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.secondary,
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                onPressed: () => _showBudgetDialog(context),
-              ),
-            ],
+          const Text(
+            'Distribución y Presupuestos',
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           if (sections.isNotEmpty && totalSuma > 0) ...[
             const SizedBox(height: 16),
@@ -176,7 +163,21 @@ class _CategoryChartState extends State<CategoryChart> {
               ),
             ),
           ],
-          if (sortedCategories.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          TextButton.icon(
+            key: const Key('add_category_budget_button'),
+            icon: const Icon(Icons.add_circle_outline, size: 16, color: AppColors.primaryDark),
+            label: const Text(
+              'Asignar presupuesto mensual',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            onPressed: () => _showBudgetDialog(context),
+          ),
+          if (widget.presupuestoGeneral > 0) ...[
             const SizedBox(height: 16),
             const Divider(color: AppColors.border, height: 1),
             const SizedBox(height: 12),
@@ -184,6 +185,31 @@ class _CategoryChartState extends State<CategoryChart> {
               children: [
                 Icon(
                   Icons.account_balance_wallet_outlined,
+                  size: 14,
+                  color: AppColors.textSecondary,
+                ),
+                SizedBox(width: 6),
+                Text(
+                  'Control de Presupuesto Mensual General',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            _buildGeneralBudgetItem(context),
+          ],
+          if (sortedCategories.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            const Divider(color: AppColors.border, height: 1),
+            const SizedBox(height: 12),
+            const Row(
+              children: [
+                Icon(
+                  Icons.label_outline,
                   size: 14,
                   color: AppColors.textSecondary,
                 ),
@@ -200,6 +226,119 @@ class _CategoryChartState extends State<CategoryChart> {
             ),
             const SizedBox(height: 8),
             ...sortedCategories.map((cat) => _buildCategoryBudgetItem(context, cat)),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGeneralBudgetItem(BuildContext context) {
+    final double spent = widget.totalGastadoMes;
+    final double budget = widget.presupuestoGeneral;
+    final bool isExceeded = spent > budget;
+    final double percent = (spent / budget).clamp(0.0, 1.0);
+    final Color progressColor = isExceeded
+        ? AppColors.error
+        : (percent >= 0.75 ? AppColors.warning : AppColors.primaryDark);
+
+    return Container(
+      key: const Key('general_budget_card'),
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isExceeded
+            ? AppColors.error.withOpacity(0.06)
+            : AppColors.cardLighter,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: isExceeded
+              ? AppColors.error.withOpacity(0.4)
+              : AppColors.border,
+          width: isExceeded ? 1.5 : 1.0,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.account_balance_wallet, size: 16, color: AppColors.primaryDark),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'Presupuesto General',
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+              Text(
+                '${CurrencyFormatter.formatUsd(spent)} / ${CurrencyFormatter.formatUsd(budget)}',
+                style: TextStyle(
+                  color: isExceeded ? AppColors.error : AppColors.textPrimary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+              const SizedBox(width: 6),
+              IconButton(
+                key: const Key('edit_general_budget_button'),
+                icon: const Icon(
+                  Icons.edit_outlined,
+                  size: 16,
+                  color: AppColors.textSecondary,
+                ),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                onPressed: () => _showBudgetDialog(context),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              key: const Key('general_budget_progress'),
+              value: percent,
+              color: progressColor,
+              backgroundColor: isExceeded
+                  ? AppColors.error.withOpacity(0.2)
+                  : AppColors.border,
+              minHeight: 6,
+            ),
+          ),
+          if (isExceeded) ...[
+            const SizedBox(height: 6),
+            Container(
+              key: const Key('excess_alert_general'),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: AppColors.error.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: AppColors.error),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    color: AppColors.error,
+                    size: 14,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Presupuesto superado por ${CurrencyFormatter.formatUsd(spent - budget)}',
+                    style: const TextStyle(
+                      color: AppColors.error,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ],
       ),

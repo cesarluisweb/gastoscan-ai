@@ -24,7 +24,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 9,
+      version: 10,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
       onConfigure: _onConfigure,
@@ -110,6 +110,47 @@ class DatabaseHelper {
       await db.execute('UPDATE items_gasto SET precio_unitario = CAST(ROUND(precio_unitario * 100) AS INTEGER)');
       await db.execute('UPDATE items_gasto SET total = CAST(ROUND(total * 100) AS INTEGER)');
     }
+    if (oldVersion < 10) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS presupuestos_mensuales (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          anio INTEGER NOT NULL,
+          mes INTEGER NOT NULL,
+          presupuesto_general REAL NOT NULL DEFAULT 0.0,
+          UNIQUE(anio, mes)
+        )
+      ''');
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS presupuestos_categorias_mensuales (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          anio INTEGER NOT NULL,
+          mes INTEGER NOT NULL,
+          categoria TEXT NOT NULL,
+          presupuesto REAL NOT NULL DEFAULT 0.0,
+          UNIQUE(anio, mes, categoria)
+        )
+      ''');
+      try {
+        final now = DateTime.now();
+        final anio = now.year;
+        final mes = now.month;
+        final cats = await db.query('categorias', where: 'presupuesto_mensual > 0');
+        for (final row in cats) {
+          final catName = row['nombre'] as String;
+          final budget = (row['presupuesto_mensual'] as num?)?.toDouble() ?? 0.0;
+          if (budget > 0) {
+            await db.insert('presupuestos_categorias_mensuales', {
+              'anio': anio,
+              'mes': mes,
+              'categoria': catName,
+              'presupuesto': budget,
+            }, conflictAlgorithm: ConflictAlgorithm.replace);
+          }
+        }
+      } catch (e) {
+        // Ignorar si falla migración inicial
+      }
+    }
   }
 
   Future<void> _onConfigure(Database db) async {
@@ -185,6 +226,29 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nombre TEXT NOT NULL UNIQUE,
         presupuesto_mensual REAL NOT NULL DEFAULT 0.0
+      )
+    ''');
+
+    // Tabla presupuestos_mensuales
+    await db.execute('''
+      CREATE TABLE presupuestos_mensuales (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        anio INTEGER NOT NULL,
+        mes INTEGER NOT NULL,
+        presupuesto_general REAL NOT NULL DEFAULT 0.0,
+        UNIQUE(anio, mes)
+      )
+    ''');
+
+    // Tabla presupuestos_categorias_mensuales
+    await db.execute('''
+      CREATE TABLE presupuestos_categorias_mensuales (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        anio INTEGER NOT NULL,
+        mes INTEGER NOT NULL,
+        categoria TEXT NOT NULL,
+        presupuesto REAL NOT NULL DEFAULT 0.0,
+        UNIQUE(anio, mes, categoria)
       )
     ''');
 
@@ -674,6 +738,142 @@ class DatabaseHelper {
       }
     }
     return presupuestos;
+  }
+
+  // ==========================================
+  // OPERACIONES DE PRESUPUESTOS MENSUALES (V10)
+  // ==========================================
+
+  /// Obtiene el presupuesto general para un mes y año específico
+  Future<double> getPresupuestoGeneral(int anio, int mes) async {
+    final db = await instance.database;
+    final result = await db.query(
+      'presupuestos_mensuales',
+      where: 'anio = ? AND mes = ?',
+      whereArgs: [anio, mes],
+      limit: 1,
+    );
+    if (result.isNotEmpty) {
+      return (result.first['presupuesto_general'] as num?)?.toDouble() ?? 0.0;
+    }
+    return 0.0;
+  }
+
+  /// Define o actualiza el presupuesto general para un mes y año específico
+  Future<void> setPresupuestoGeneral(int anio, int mes, double monto) async {
+    final db = await instance.database;
+    await db.insert(
+      'presupuestos_mensuales',
+      {
+        'anio': anio,
+        'mes': mes,
+        'presupuesto_general': monto >= 0 ? monto : 0.0,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  /// Obtiene los presupuestos de categorías asignados para un mes y año (> 0)
+  Future<Map<String, double>> getPresupuestosCategorias(int anio, int mes) async {
+    final db = await instance.database;
+    final result = await db.query(
+      'presupuestos_categorias_mensuales',
+      where: 'anio = ? AND mes = ? AND presupuesto > 0',
+      whereArgs: [anio, mes],
+    );
+    final Map<String, double> presupuestos = {};
+    for (final row in result) {
+      final name = row['categoria'] as String;
+      final budget = (row['presupuesto'] as num?)?.toDouble() ?? 0.0;
+      if (budget > 0) {
+        presupuestos[name] = budget;
+      }
+    }
+    return presupuestos;
+  }
+
+  /// Define o elimina el presupuesto de una categoría para un mes específico
+  Future<void> setPresupuestoCategoriaMensual(int anio, int mes, String categoriaNombre, double presupuesto) async {
+    final db = await instance.database;
+    final trimmed = categoriaNombre.trim();
+    if (presupuesto <= 0) {
+      await db.delete(
+        'presupuestos_categorias_mensuales',
+        where: 'anio = ? AND mes = ? AND LOWER(categoria) = ?',
+        whereArgs: [anio, mes, trimmed.toLowerCase()],
+      );
+    } else {
+      await db.insert(
+        'presupuestos_categorias_mensuales',
+        {
+          'anio': anio,
+          'mes': mes,
+          'categoria': trimmed,
+          'presupuesto': presupuesto,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
+  }
+
+  /// Guarda todos los presupuestos de categoría de un mes reemplazando los existentes
+  Future<void> setPresupuestosCategorias(int anio, int mes, Map<String, double> presupuestos) async {
+    final db = await instance.database;
+    await db.transaction((txn) async {
+      await txn.delete(
+        'presupuestos_categorias_mensuales',
+        where: 'anio = ? AND mes = ?',
+        whereArgs: [anio, mes],
+      );
+      for (final entry in presupuestos.entries) {
+        if (entry.value > 0) {
+          await txn.insert(
+            'presupuestos_categorias_mensuales',
+            {
+              'anio': anio,
+              'mes': mes,
+              'categoria': entry.key.trim(),
+              'presupuesto': entry.value,
+            },
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
+      }
+    });
+  }
+
+  /// Copia el presupuesto general y por categorías del mes anterior si el mes actual no tiene registros
+  Future<bool> copiarPresupuestosMesAnteriorSiVacio(int anio, int mes) async {
+    final db = await instance.database;
+    final generalCount = Sqflite.firstIntValue(await db.rawQuery(
+      'SELECT COUNT(*) FROM presupuestos_mensuales WHERE anio = ? AND mes = ?',
+      [anio, mes],
+    )) ?? 0;
+    final catCount = Sqflite.firstIntValue(await db.rawQuery(
+      'SELECT COUNT(*) FROM presupuestos_categorias_mensuales WHERE anio = ? AND mes = ?',
+      [anio, mes],
+    )) ?? 0;
+
+    if (generalCount > 0 || catCount > 0) {
+      return false;
+    }
+
+    final int prevMes = mes == 1 ? 12 : mes - 1;
+    final int prevAnio = mes == 1 ? anio - 1 : anio;
+
+    final prevGeneral = await getPresupuestoGeneral(prevAnio, prevMes);
+    final prevCats = await getPresupuestosCategorias(prevAnio, prevMes);
+
+    if (prevGeneral > 0 || prevCats.isNotEmpty) {
+      if (prevGeneral > 0) {
+        await setPresupuestoGeneral(anio, mes, prevGeneral);
+      }
+      if (prevCats.isNotEmpty) {
+        await setPresupuestosCategorias(anio, mes, prevCats);
+      }
+      return true;
+    }
+    return false;
   }
 
   /// Elimina una categoría por su ID

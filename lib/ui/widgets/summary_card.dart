@@ -6,16 +6,12 @@ class SummaryCard extends StatelessWidget {
   final double totalUsd;
   final double totalVes;
   final String periodo;
-  final double presupuesto;
-  final VoidCallback? onManageBudget;
 
   const SummaryCard({
     Key? key,
     required this.totalUsd,
     required this.totalVes,
     required this.periodo,
-    this.presupuesto = 0.0,
-    this.onManageBudget,
   }) : super(key: key);
 
   @override
@@ -75,84 +71,6 @@ class SummaryCard extends StatelessWidget {
               ),
             ],
           ),
-          if (presupuesto > 0) ...[
-            const SizedBox(height: 16),
-            InkWell(
-              onTap: onManageBudget,
-              borderRadius: BorderRadius.circular(8),
-              child: Builder(
-                builder: (context) {
-                  final double percent = (totalUsd / presupuesto).clamp(0.0, 1.0);
-                  Color barColor = AppColors.primary;
-                  if (percent >= 0.9) {
-                    barColor = AppColors.error;
-                  } else if (percent >= 0.75) {
-                    barColor = AppColors.warning;
-                  }
-
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                'Presupuesto: ${CurrencyFormatter.formatUsd(presupuesto)}',
-                                style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-                              ),
-                              if (onManageBudget != null) ...[
-                                const SizedBox(width: 4),
-                                const Icon(Icons.edit_outlined, size: 14, color: AppColors.primaryDark),
-                              ],
-                            ],
-                          ),
-                          Text(
-                            '${(percent * 100).toStringAsFixed(1)}%',
-                            style: TextStyle(
-                              color: barColor,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: percent,
-                          backgroundColor: AppColors.surface,
-                          valueColor: AlwaysStoppedAnimation<Color>(barColor),
-                          minHeight: 6,
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ),
-          ] else if (onManageBudget != null) ...[
-            const SizedBox(height: 12),
-            InkWell(
-              onTap: onManageBudget,
-              child: const Row(
-                children: [
-                  Icon(Icons.add_circle_outline, size: 14, color: AppColors.primaryDark),
-                  SizedBox(width: 4),
-                  Text(
-                    'Asignar presupuesto mensual',
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
         ],
       ),
     );
