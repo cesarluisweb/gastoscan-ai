@@ -137,11 +137,11 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
   }
 
   void _recalcularTotalUsd() {
-    final original = double.tryParse(_totalOriginalCtrl.text) ?? 0.0;
+    final original = double.tryParse(_totalOriginalCtrl.text.replaceAll(',', '.')) ?? 0.0;
     if (_selectedMoneda == 'USD') {
       _totalUsdCtrl.text = original.toStringAsFixed(2);
     } else if (_selectedMoneda == 'VES') {
-      final tasa = double.tryParse(_tasaCambioCtrl.text) ?? 1.0;
+      final tasa = double.tryParse(_tasaCambioCtrl.text.replaceAll(',', '.')) ?? 1.0;
       final enUsd = tasa > 0 ? (original / tasa) : original;
       _totalUsdCtrl.text = enUsd.toStringAsFixed(2);
     } else {
@@ -259,9 +259,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       }
     }
 
-    final totalOrig = double.tryParse(_totalOriginalCtrl.text) ?? 0.0;
-    final totalUsd = double.tryParse(_totalUsdCtrl.text) ?? 0.0;
-    final tasa = double.tryParse(_tasaCambioCtrl.text) ?? 1.0;
+    final totalOrig = double.tryParse(_totalOriginalCtrl.text.replaceAll(',', '.')) ?? 0.0;
+    final totalUsd = double.tryParse(_totalUsdCtrl.text.replaceAll(',', '.')) ?? 0.0;
+    final tasa = double.tryParse(_tasaCambioCtrl.text.replaceAll(',', '.')) ?? 1.0;
 
     String predominantCat = 'Otros';
     if (_items.isNotEmpty) {
@@ -798,7 +798,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                                         ),
                                         onChanged: (v) {
-                                          final cant = double.tryParse(v) ?? 1.0;
+                                          final cant = double.tryParse(v.replaceAll(',', '.')) ?? 1.0;
                                           setState(() {
                                             _items[idx] = _items[idx].copyWith(
                                               cantidad: cant,
@@ -819,7 +819,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                                         ),
                                         onChanged: (v) {
-                                          final prec = double.tryParse(v) ?? 0.0;
+                                          final prec = double.tryParse(v.replaceAll(',', '.')) ?? 0.0;
                                           setState(() {
                                             _items[idx] = _items[idx].copyWith(
                                               precioUnitario: (prec * 100).round(),
@@ -832,15 +832,18 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                     ),
                                     const SizedBox(width: 8),
                                     Expanded(
-                                      child: TextFormField(
-                                        key: ValueKey('total_$idx\_${_items[idx].totalDisplay}'),
-                                        initialValue: _formatDouble(_items[idx].totalDisplay),
-                                        readOnly: true,
-                                        decoration: const InputDecoration(
-                                          labelText: 'Total',
-                                          filled: true,
-                                          fillColor: AppColors.cardLighter,
-                                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(top: 4.0, left: 4.0),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Text('Total', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              _formatDouble(_items[idx].totalDisplay),
+                                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ),
@@ -893,47 +896,6 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                   ),
                   const SizedBox(height: 16),
-                  const Text('Moneda', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                  const SizedBox(height: 6),
-                  SizedBox(
-                    width: double.infinity,
-                    child: SegmentedButton<String>(
-                      segments: AppConstants.monedas.map((m) {
-                        return ButtonSegment<String>(
-                          value: m,
-                          label: Text(m, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        );
-                      }).toList(),
-                      selected: {_selectedMoneda},
-                      onSelectionChanged: (newSelection) {
-                        setState(() {
-                          _selectedMoneda = newSelection.first;
-                          _recalcularTotalUsd();
-                        });
-                      },
-                      showSelectedIcon: false,
-                      style: ButtonStyle(
-                        visualDensity: VisualDensity.compact,
-                        backgroundColor: MaterialStateProperty.resolveWith<Color>(
-                          (Set<MaterialState> states) {
-                            if (states.contains(MaterialState.selected)) {
-                              return AppColors.secondary;
-                            }
-                            return AppColors.surface;
-                          },
-                        ),
-                        foregroundColor: MaterialStateProperty.resolveWith<Color>(
-                          (Set<MaterialState> states) {
-                            if (states.contains(MaterialState.selected)) {
-                              return Colors.white;
-                            }
-                            return AppColors.textPrimary;
-                          },
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
                   TextFormField(
                     controller: _totalOriginalCtrl,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -942,7 +904,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                       prefixIcon: const Icon(Icons.payments_outlined, color: AppColors.textSecondary),
                     ),
                     onChanged: (_) => _recalcularTotalUsd(),
-                    validator: (val) => (double.tryParse(val ?? '') == null) ? 'Inválido' : null,
+                    validator: (val) => (double.tryParse((val ?? '').replaceAll(',', '.')) == null) ? 'Inválido' : null,
                   ),
                   if (_selectedMoneda == 'VES') ...[
                     const SizedBox(height: 12),
@@ -966,7 +928,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                       labelText: 'Total Equivalente (USD)',
                       prefixIcon: Icon(Icons.attach_money, color: AppColors.primaryDark),
                     ),
-                    validator: (val) => (double.tryParse(val ?? '') == null) ? 'Inválido' : null,
+                    validator: (val) => (double.tryParse((val ?? '').replaceAll(',', '.')) == null) ? 'Inválido' : null,
                   ),
                 ],
               ),
