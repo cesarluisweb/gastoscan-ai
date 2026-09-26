@@ -15,6 +15,8 @@ class CategoryChart extends StatefulWidget {
   final double totalGastadoMes;
   final List<GastoModel> gastosMes;
   final void Function(String categoria, double budget)? onSetBudget;
+  final String monedaPrincipal;
+  final double tasaCambio;
 
   const CategoryChart({
     Key? key,
@@ -24,6 +26,8 @@ class CategoryChart extends StatefulWidget {
     this.totalGastadoMes = 0.0,
     this.gastosMes = const [],
     this.onSetBudget,
+    this.monedaPrincipal = 'USD',
+    this.tasaCambio = 1.0,
   }) : super(key: key);
 
   @override
@@ -32,6 +36,15 @@ class CategoryChart extends StatefulWidget {
 
 class _CategoryChartState extends State<CategoryChart> {
   String? _expandedCategory;
+
+  String _fmt(double amountUsd) {
+    if (widget.monedaPrincipal == 'VES') {
+      return CurrencyFormatter.formatVes(
+        amountUsd * (widget.tasaCambio > 0 ? widget.tasaCambio : 1.0),
+      );
+    }
+    return CurrencyFormatter.formatUsd(amountUsd);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -146,7 +159,7 @@ class _CategoryChartState extends State<CategoryChart> {
                                 ),
                               ),
                               Text(
-                                CurrencyFormatter.formatUsd(entry.value),
+                                _fmt(entry.value),
                                 style: const TextStyle(
                                   color: AppColors.textPrimary,
                                   fontSize: 12,
@@ -275,7 +288,7 @@ class _CategoryChartState extends State<CategoryChart> {
                 ),
               ),
               Text(
-                '${CurrencyFormatter.formatUsd(spent)} / ${CurrencyFormatter.formatUsd(budget)}',
+                '${_fmt(spent)} / ${_fmt(budget)}',
                 style: TextStyle(
                   color: isExceeded ? AppColors.error : AppColors.textPrimary,
                   fontWeight: FontWeight.bold,
@@ -329,7 +342,7 @@ class _CategoryChartState extends State<CategoryChart> {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    'Presupuesto superado por ${CurrencyFormatter.formatUsd(spent - budget)}',
+                    'Presupuesto superado por ${_fmt(spent - budget)}',
                     style: const TextStyle(
                       color: AppColors.error,
                       fontWeight: FontWeight.bold,
@@ -434,8 +447,8 @@ class _CategoryChartState extends State<CategoryChart> {
                     ),
                     Text(
                       hasBudget
-                          ? '${CurrencyFormatter.formatUsd(spent)} / ${CurrencyFormatter.formatUsd(budget)}'
-                          : CurrencyFormatter.formatUsd(spent),
+                          ? '${_fmt(spent)} / ${_fmt(budget)}'
+                          : _fmt(spent),
                       style: TextStyle(
                         color: isExceeded ? AppColors.error : AppColors.textPrimary,
                         fontWeight: FontWeight.bold,
@@ -501,7 +514,7 @@ class _CategoryChartState extends State<CategoryChart> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          'Presupuesto superado por ${CurrencyFormatter.formatUsd(spent - budget)}',
+                          'Presupuesto superado por ${_fmt(spent - budget)}',
                           style: const TextStyle(
                             color: AppColors.error,
                             fontWeight: FontWeight.bold,
@@ -601,7 +614,7 @@ class _CategoryChartState extends State<CategoryChart> {
               ),
             ),
             Text(
-              CurrencyFormatter.formatUsd(usd),
+              _fmt(usd),
               style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.bold),
             ),
           ],

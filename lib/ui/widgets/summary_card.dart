@@ -6,16 +6,34 @@ class SummaryCard extends StatelessWidget {
   final double totalUsd;
   final double totalVes;
   final String periodo;
+  final String monedaPrincipal;
+  final double tasaCambio;
 
   const SummaryCard({
     Key? key,
     required this.totalUsd,
     required this.totalVes,
     required this.periodo,
+    this.monedaPrincipal = 'USD',
+    this.tasaCambio = 1.0,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final textoPrincipal = CurrencyFormatter.formatPreferido(
+      totalUsd,
+      totalVes > 0 ? totalVes : null,
+      tasaCambio,
+      monedaPrincipal,
+    );
+
+    final textoSecundario = CurrencyFormatter.formatSecundario(
+      totalUsd,
+      totalVes > 0 ? totalVes : null,
+      tasaCambio,
+      monedaPrincipal,
+    );
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -49,7 +67,7 @@ class SummaryCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            CurrencyFormatter.formatUsd(totalUsd),
+            textoPrincipal,
             style: const TextStyle(
               color: AppColors.textPrimary,
               fontSize: 32,
@@ -63,7 +81,7 @@ class SummaryCard extends StatelessWidget {
               const Icon(Icons.currency_exchange, size: 16, color: AppColors.textSecondary),
               const SizedBox(width: 6),
               Text(
-                'Equivalente en moneda local: ${CurrencyFormatter.formatVes(totalVes)}',
+                textoSecundario,
                 style: const TextStyle(
                   color: AppColors.textSecondary,
                   fontSize: 13,

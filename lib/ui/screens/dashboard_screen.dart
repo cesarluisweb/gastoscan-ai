@@ -106,6 +106,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final gastoProvider = Provider.of<GastoProvider>(context);
     final scanQueue = Provider.of<ScanQueueProvider>(context);
+    final settings = Provider.of<SettingsProvider>(context);
     final mesNombre = DateFormatter.getMonthName(gastoProvider.selectedMonth);
     final anio = gastoProvider.selectedYear;
 
@@ -257,6 +258,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               totalUsd: gastoProvider.totalMesUsd,
               totalVes: gastoProvider.totalMesVes,
               periodo: '$mesNombre $anio',
+              monedaPrincipal: settings.monedaPrincipal,
+              tasaCambio: settings.tasaCambioVesUsd,
             ),
             const SizedBox(height: 16),
             if (gastoProvider.totalesPorCategoria.isNotEmpty ||
@@ -271,6 +274,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 onSetBudget: (categoria, budget) async {
                   await gastoProvider.setPresupuestoCategoria(categoria, budget);
                 },
+                monedaPrincipal: settings.monedaPrincipal,
+                tasaCambio: settings.tasaCambioVesUsd,
               ),
               const SizedBox(height: 16),
             ] else ...[
@@ -314,6 +319,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 return ExpenseCard(
                   key: ValueKey(gasto.id ?? gasto.comercio),
                   gasto: gasto,
+                  monedaPrincipal: settings.monedaPrincipal,
                   onEdit: () {
                     Navigator.push(
                       context,

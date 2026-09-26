@@ -8,12 +8,14 @@ class ExpenseCard extends StatefulWidget {
   final GastoModel gasto;
   final VoidCallback onDelete;
   final VoidCallback onEdit;
+  final String monedaPrincipal;
 
   const ExpenseCard({
     Key? key,
     required this.gasto,
     required this.onDelete,
     required this.onEdit,
+    this.monedaPrincipal = 'USD',
   }) : super(key: key);
 
   @override
@@ -112,24 +114,34 @@ class _ExpenseCardState extends State<ExpenseCard> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        CurrencyFormatter.formatUsd(widget.gasto.totalUsdDisplay),
+                        widget.monedaPrincipal == 'VES'
+                            ? CurrencyFormatter.formatVes(
+                                widget.gasto.moneda == 'VES'
+                                    ? widget.gasto.totalOriginalDisplay
+                                    : widget.gasto.totalUsdDisplay *
+                                        (widget.gasto.tasaCambio > 0 ? widget.gasto.tasaCambio : 1.0),
+                              )
+                            : CurrencyFormatter.formatUsd(widget.gasto.totalUsdDisplay),
                         style: const TextStyle(
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
                       ),
-                      if (widget.gasto.moneda != 'USD')
-                        Text(
-                          CurrencyFormatter.formatAmount(
-                            widget.gasto.totalOriginalDisplay,
-                            widget.gasto.moneda,
-                          ),
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 12,
-                          ),
+                      Text(
+                        widget.monedaPrincipal == 'VES'
+                            ? CurrencyFormatter.formatUsd(widget.gasto.totalUsdDisplay)
+                            : CurrencyFormatter.formatVes(
+                                widget.gasto.moneda == 'VES'
+                                    ? widget.gasto.totalOriginalDisplay
+                                    : widget.gasto.totalUsdDisplay *
+                                        (widget.gasto.tasaCambio > 0 ? widget.gasto.tasaCambio : 1.0),
+                              ),
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
                         ),
+                      ),
                     ],
                   ),
                   const SizedBox(width: 4),
@@ -186,11 +198,18 @@ class _ExpenseCardState extends State<ExpenseCard> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  ...widget.gasto.items.map((it) {
                     double itemUsd = it.totalDisplay;
                     if (widget.gasto.moneda != 'USD' && widget.gasto.totalOriginalDisplay > 0) {
                       itemUsd = it.totalDisplay * (widget.gasto.totalUsdDisplay / widget.gasto.totalOriginalDisplay);
                     }
+                    final double itemDisplay = widget.monedaPrincipal == 'VES'
+                        ? (widget.gasto.moneda == 'VES'
+                            ? it.totalDisplay
+                            : itemUsd * (widget.gasto.tasaCambio > 0 ? widget.gasto.tasaCambio : 1.0))
+                        : itemUsd;
+                    final String itemText = widget.monedaPrincipal == 'VES'
+                        ? CurrencyFormatter.formatVes(itemDisplay)
+                        : CurrencyFormatter.formatUsd(itemDisplay);
 
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -213,7 +232,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
                             ),
                           ),
                           Text(
-                            CurrencyFormatter.formatUsd(itemUsd),
+                            itemText,
                             style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
                           ),
                         ],

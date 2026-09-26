@@ -14,7 +14,7 @@ class AppConstants {
   ];
 
   // Monedas soportadas
-  static const List<String> monedas = ['USD', 'VES', 'EUR'];
+  static const List<String> monedas = ['USD', 'VES'];
 
   // Claves de SharedPreferences
   static const String prefApiKey = 'gemini_api_key';

@@ -14,39 +14,7 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  final _tasaCambioCtrl = TextEditingController();
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final settings = Provider.of<SettingsProvider>(context, listen: false);
-      _tasaCambioCtrl.text = settings.tasaCambioVesUsd.toString();
-    });
-  }
-
-  @override
-  void dispose() {
-    _tasaCambioCtrl.dispose();
-    super.dispose();
-  }
-
-  void _guardarConfiguracion() async {
-    final settings = Provider.of<SettingsProvider>(context, listen: false);
-
-    final tasa = double.tryParse(_tasaCambioCtrl.text.replaceAll(',', '.'));
-    if (tasa != null) {
-      await settings.setTasaCambio(tasa);
-    }
-
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Ajustes guardados correctamente', style: TextStyle(color: Colors.black)),
-        backgroundColor: AppColors.primary,
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -319,7 +287,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ? null
                             : () async {
                                 await settings.actualizarTasaAutomatica();
-                                _tasaCambioCtrl.text = settings.tasaCambioVesUsd.toStringAsFixed(2);
                               },
                         icon: settings.isSyncingRate
                             ? const SizedBox(
@@ -353,12 +320,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 24),
-
-          ElevatedButton(
-            onPressed: _guardarConfiguracion,
-            child: const Text('Guardar Ajustes'),
           ),
         ],
       ),
