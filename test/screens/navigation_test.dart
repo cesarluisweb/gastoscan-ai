@@ -66,7 +66,7 @@ void main() {
       expect(find.text('Análisis'), findsOneWidget);
       expect(find.text('Más'), findsOneWidget);
       expect(find.byType(FloatingActionButton), findsOneWidget);
-      expect(find.byIcon(Icons.add), findsOneWidget);
+      expect(find.descendant(of: find.byType(FloatingActionButton), matching: find.byIcon(Icons.add)), findsOneWidget);
     });
 
     testWidgets('switching tabs changes current active screen', (tester) async {
@@ -103,10 +103,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('¿Qué deseas agregar?'), findsOneWidget);
-      expect(find.text('Tomar Foto (IA)'), findsOneWidget);
-      expect(find.text('Subir de Galería (IA)'), findsOneWidget);
-      expect(find.text('Dictar Gasto (Voz)'), findsOneWidget);
-      expect(find.text('Ingreso Manual'), findsOneWidget);
+      expect(find.text('Registrar gasto'), findsOneWidget);
+      expect(find.text('Escanear factura (IA)'), findsOneWidget);
+      expect(find.text('Subir comprobante (IA)'), findsOneWidget);
+      expect(find.text('Dictar gasto (Voz)'), findsOneWidget);
     });
 
     testWidgets('tapping AI chat button on Inicio navigates to Chat and back returns to Inicio', (tester) async {
