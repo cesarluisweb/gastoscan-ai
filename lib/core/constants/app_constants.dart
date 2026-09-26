@@ -1,5 +1,5 @@
 class AppConstants {
-  static const String appName = 'GastoScan AI';
+  static const String appName = 'Rinde Más';
 
   // Categorías estándar
   static const List<String> categorias = [

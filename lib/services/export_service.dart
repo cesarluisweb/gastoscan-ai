@@ -46,7 +46,7 @@ class ExportService {
   /// Genera un resumen en formato Markdown exportable
   static String generateMarkdownReport(List<GastoModel> gastos, {required String periodo}) {
     final buffer = StringBuffer();
-    buffer.writeln('# Reporte de Gastos - GastoScan AI');
+    buffer.writeln('# Reporte - Rinde Más');
     buffer.writeln('**Periodo:** $periodo');
     buffer.writeln('**Fecha de Generacion:** ${DateTime.now().toIso8601String().substring(0, 10)}');
     buffer.writeln('');
@@ -90,7 +90,7 @@ class ExportService {
     await SharePlus.instance.share(
       ShareParams(
         files: [XFile(filePath, mimeType: mimeType)],
-        subject: 'Exportacion GastoScan AI - $filename',
+        subject: 'Exportación Rinde Más - $filename',
       ),
     );
   }
