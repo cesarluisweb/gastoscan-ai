@@ -120,9 +120,9 @@ class SummaryCard extends StatelessWidget {
                   onTap: () => BudgetBottomSheet.show(context),
                   borderRadius: BorderRadius.circular(6),
                   child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     child: Text(
-                      '+ Definir meta',
+                      '+ Definir presupuesto',
                       style: TextStyle(
                         color: AppColors.secondary,
                         fontSize: 12,

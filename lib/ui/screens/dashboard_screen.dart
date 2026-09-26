@@ -26,12 +26,14 @@ class DashboardScreen extends StatefulWidget {
   final VoidCallback? onNavigateToGastos;
   final VoidCallback? onNavigateToAnalysis;
   final VoidCallback? onNavigateToChat;
+  final VoidCallback? onAddExpense;
 
   const DashboardScreen({
     Key? key,
     this.onNavigateToGastos,
     this.onNavigateToAnalysis,
     this.onNavigateToChat,
+    this.onAddExpense,
   }) : super(key: key);
 
   @override
@@ -175,8 +177,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             const SizedBox(height: 16),
             if (gastoProvider.totalesPorCategoria.isNotEmpty ||
-                gastoProvider.presupuestosPorCategoria.isNotEmpty ||
-                gastoProvider.presupuestoGeneral > 0) ...[
+                gastoProvider.presupuestosPorCategoria.isNotEmpty) ...[
               CategoryChart(
                 categoryTotals: gastoProvider.totalesPorCategoria,
                 categoryBudgets: gastoProvider.presupuestosPorCategoria,
@@ -192,9 +193,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 onNavigateToAnalysis: widget.onNavigateToAnalysis,
               ),
               const SizedBox(height: 16),
-            ] else ...[
-              _buildCategoryChartSilhouette(),
-              const SizedBox(height: 16),
             ],
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
@@ -202,7 +200,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    'Gastos realizados',
+                    'Gastos recientes',
                     style: TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 16,
@@ -332,24 +330,47 @@ class _DashboardScreenState extends State<DashboardScreen> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
       ),
-      child: const Column(
+      child: Column(
         children: [
-          Icon(Icons.receipt_long_outlined, size: 36, color: AppColors.textMuted),
-          SizedBox(height: 8),
-          Text(
-            'Sin facturas este mes',
+          const Icon(Icons.receipt_long_outlined, size: 36, color: AppColors.textMuted),
+          const SizedBox(height: 8),
+          const Text(
+            'Sin gastos este mes',
             style: TextStyle(
               color: AppColors.textPrimary,
               fontWeight: FontWeight.bold,
               fontSize: 14,
             ),
           ),
-          SizedBox(height: 4),
-          Text(
-            'Presiona "+" para registrar tu primera compra.',
+          const SizedBox(height: 4),
+          const Text(
+            'Registra tu primera compra para crear tu historial.',
             textAlign: TextAlign.center,
             style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
           ),
+          if (widget.onAddExpense != null) ...[
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                key: const Key('empty_state_add_expense_btn'),
+                onPressed: widget.onAddExpense,
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text(
+                  'Agregar gasto',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.textPrimary,
+                  side: const BorderSide(color: AppColors.border),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -503,59 +524,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildCategoryChartSilhouette() {
-    return Container(
-      key: const Key('category_chart_silhouette'),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: AppColors.cardLighter,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.pie_chart_outline_rounded,
-              size: 24,
-              color: AppColors.textMuted,
-            ),
-          ),
-          const SizedBox(width: 14),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Distribución por Categorías',
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 2),
-                Text(
-                  'Al registrar compras, verás aquí la distribución de tus gastos por rubro.',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
-                    height: 1.25,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   void _mostrarPickerMes(BuildContext context, GastoProvider gastoProvider) {
     int tempAnio = gastoProvider.selectedYear;

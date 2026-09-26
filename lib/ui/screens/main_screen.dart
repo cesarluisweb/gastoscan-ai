@@ -66,6 +66,7 @@ class _MainScreenState extends State<MainScreen> {
           ),
         );
       },
+      onAddExpense: () => _showAddMenu(context),
     ),
     const ExpenseHistoryScreen(),
     const AnalysisScreen(),
@@ -104,57 +105,12 @@ class _MainScreenState extends State<MainScreen> {
                 ),
               ),
                               ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: AppColors.primaryLight,
-                    child: const Icon(Icons.camera_alt, color: AppColors.textPrimary),
-                  ),
-                  title: const Text('Tomar Foto (IA)', style: TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: const Text('Captura tu recibo con la cámara'),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const ScanScreen(initialSource: ImageSource.camera)),
-                    );
-                  },
-                ),
-                const Divider(),
-                ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: AppColors.primaryLight,
-                    child: const Icon(Icons.image, color: AppColors.textPrimary),
-                  ),
-                  title: const Text('Subir de Galería (IA)', style: TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: const Text('Sube un comprobante o screenshot'),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const ScanScreen(initialSource: ImageSource.gallery)),
-                    );
-                  },
-                ),
-              const Divider(),
-              ListTile(
                 leading: CircleAvatar(
                   backgroundColor: AppColors.primary,
-                  child: const Icon(Icons.mic, color: AppColors.textPrimary),
-                ),
-                title: const Text('Dictar Gasto (Voz)', style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: const Text('Habla y la IA organizará los datos de tu compra'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  VoiceExpenseSheet.show(context);
-                },
-              ),
-              const Divider(),
-              ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: AppColors.cardLighter,
                   child: const Icon(Icons.edit_note, color: AppColors.textPrimary),
                 ),
-                title: const Text('Ingreso Manual', style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: const Text('Registra un gasto sin factura'),
+                title: const Text('Registrar gasto', style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: const Text('Escribe los datos de tu compra'),
                 onTap: () {
                   final settings = Provider.of<SettingsProvider>(context, listen: false);
                   Navigator.pop(ctx);
@@ -182,6 +138,51 @@ class _MainScreenState extends State<MainScreen> {
                       ),
                     ),
                   );
+                },
+              ),
+              const Divider(),
+              ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: AppColors.primaryLight,
+                  child: const Icon(Icons.camera_alt, color: AppColors.textPrimary),
+                ),
+                title: const Text('Escanear factura (IA)', style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: const Text('La IA extrae los datos de la foto'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ScanScreen(initialSource: ImageSource.camera)),
+                  );
+                },
+              ),
+              const Divider(),
+              ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: AppColors.primaryLight,
+                  child: const Icon(Icons.image, color: AppColors.textPrimary),
+                ),
+                title: const Text('Subir comprobante (IA)', style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: const Text('Sube una foto o captura de tu recibo'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ScanScreen(initialSource: ImageSource.gallery)),
+                  );
+                },
+              ),
+              const Divider(),
+              ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: AppColors.primaryLight,
+                  child: const Icon(Icons.mic, color: AppColors.textPrimary),
+                ),
+                title: const Text('Dictar gasto (Voz)', style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: const Text('Habla y la IA organizará tu compra'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  VoiceExpenseSheet.show(context);
                 },
               ),
               const SizedBox(height: 16),
