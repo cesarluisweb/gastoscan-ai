@@ -24,12 +24,15 @@ La compilación en GitHub Actions (`build_apk.yml`) ejecuta `flutter create`, lo
 - **NUNCA** le digas al usuario que la aplicación "ya está lista para descargar" inmediatamente después de hacer un git push.
 - DEBES utilizar la API de GitHub (usando curl a https://api.github.com/repos/cesarluisweb/gastoscan-ai/actions/runs) para monitorear activamente el estado del workflow.
 - Solo puedes notificar éxito cuando el workflow correspondiente al último commit haya finalizado con un estado de success. Si falla, debes intentar leer los logs para autocorregir el error sin que el usuario te lo tenga que pedir.
+- **Lectura de Logs de Error:** La API de GitHub para descargar logs de jobs (`/jobs/{id}/logs`) devuelve `403` en este repositorio. En su lugar, el workflow ya guarda los resultados de pruebas en `test_results.txt` y hace commit automáticamente al fallar. Para leer los errores de CI, haz `git pull --rebase` y luego lee `test_results.txt`.
+- **Sin Flutter Local:** El SDK de Flutter NO está instalado en la máquina del usuario. No intentes ejecutar `flutter test` ni `flutter build` localmente. Todo testing y compilación se ejecuta exclusivamente a través de GitHub Actions CI.
 
 ## 6. Control de Calidad en Dart (Importaciones y Sintaxis)
 - El entorno de CI de Flutter detendrá la compilación instantáneamente si falta una importación.
 - Cada vez que utilices una clase, modelo o servicio en un archivo, es **obligatorio** rastrear el origen de esa clase e inyectar el import correspondiente en la cabecera. No asumas que la inyección de código lo incluye automáticamente.
-- **Identificadores ASCII:** Queda estrictamente prohibido utilizar caracteres no-ASCII (tildes, acentos, 'ñ') en nombres de variables, métodos o nombres de test en Dart (ej. usar `gastoAlimentacion` en lugar de `gastoAlimentación`).
+- **Identificadores ASCII:** Queda strictly prohibido utilizar caracteres no-ASCII (tildes, acentos, 'ñ') en nombres de variables, métodos o nombres de test en Dart (ej. usar `gastoAlimentacion` en lugar de `gastoAlimentación`).
 - **Acceso a Propiedades de Widget:** Al convertir o refactorizar un widget a `StatefulWidget`, asegúrate de acceder a los callbacks y parámetros del constructor usando la referencia `widget.` (ej. `widget.onSetBudget`).
+- **Keys de Widget Globalmente Únicos:** Cuando se creen widgets que coexistan en el árbol visual (Bottom Sheets, Dialogs, Overlays), sus `Key(...)` DEBEN ser globalmente únicos. Si un widget existente ya usa `Key('edit_budget_$cat')`, un nuevo widget que se renderice *encima* NO puede reutilizar esa misma Key. Usa un prefijo diferenciador (ej. `Key('edit_budget_bottom_$cat')`).
 
 ## 7. Gestión de Documentación del Proyecto
 - **Archivos de Planificación:** Siempre que se genere, actualice o discuta un documento estratégico para el proyecto (como ROADMAP.md, PROJECT.md, planes de arquitectura, o guías de estilo), DEBE guardarse directamente en la raíz del repositorio.
