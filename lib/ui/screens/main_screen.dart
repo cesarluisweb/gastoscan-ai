@@ -8,10 +8,10 @@ import '../../providers/scan_queue_provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../data/models/gemini_extraction_result.dart';
 import 'dashboard_screen.dart';
-import 'settings_screen.dart';
+import 'expense_history_screen.dart';
+import 'analysis_screen.dart';
+import 'more_screen.dart';
 import 'scan_screen.dart';
-import 'chat_screen.dart';
-import 'shopping_list_screen.dart';
 import 'review_expense_screen.dart'; // Para agregar manual
 import '../widgets/voice_expense_sheet.dart';
 
@@ -49,12 +49,12 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
-  // Ahora solo 4 pantallas en el tab (Escanear ya no es un tab)
-  final List<Widget> _pages = [
-    const DashboardScreen(),
-    const ShoppingListScreen(),
-    const ChatScreen(),
-    const SettingsScreen(),
+  // 4 pantallas principales
+  late final List<Widget> _pages = [
+    DashboardScreen(onNavigateToGastos: () => _onTabTapped(1)),
+    const ExpenseHistoryScreen(),
+    const AnalysisScreen(),
+    const MoreScreen(),
   ];
 
   void _onTabTapped(int index) {
@@ -260,10 +260,25 @@ class _MainScreenState extends State<MainScreen> {
               index: 0,
               badgeCount: scanQueue.readyItems.length,
             ),
-            _buildTabItem(icon: Icons.shopping_cart_outlined, activeIcon: Icons.shopping_cart, label: 'Lista', index: 1),
+            _buildTabItem(
+              icon: Icons.receipt_long_outlined,
+              activeIcon: Icons.receipt_long,
+              label: 'Gastos',
+              index: 1,
+            ),
             const SizedBox(width: 48), // Espacio para el FAB
-            _buildTabItem(icon: Icons.auto_awesome_outlined, activeIcon: Icons.auto_awesome, label: 'Asistente', index: 2),
-            _buildTabItem(icon: Icons.person_outline, activeIcon: Icons.person, label: 'Perfil', index: 3),
+            _buildTabItem(
+              icon: Icons.bar_chart_outlined,
+              activeIcon: Icons.bar_chart,
+              label: 'Análisis',
+              index: 2,
+            ),
+            _buildTabItem(
+              icon: Icons.more_horiz,
+              activeIcon: Icons.more_horiz,
+              label: 'Más',
+              index: 3,
+            ),
           ],
         ),
       ),

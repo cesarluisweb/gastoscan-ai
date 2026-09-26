@@ -17,6 +17,7 @@ class CategoryChart extends StatefulWidget {
   final void Function(String categoria, double budget)? onSetBudget;
   final String monedaPrincipal;
   final double tasaCambio;
+  final bool showBudgetBars;
 
   const CategoryChart({
     Key? key,
@@ -28,6 +29,7 @@ class CategoryChart extends StatefulWidget {
     this.onSetBudget,
     this.monedaPrincipal = 'USD',
     this.tasaCambio = 1.0,
+    this.showBudgetBars = true,
   }) : super(key: key);
 
   @override
@@ -190,7 +192,7 @@ class _CategoryChartState extends State<CategoryChart> {
             ),
             onPressed: () => _showBudgetDialog(context),
           ),
-          if (widget.presupuestoGeneral > 0) ...[
+          if (widget.showBudgetBars && widget.presupuestoGeneral > 0) ...[
             const SizedBox(height: 16),
             const Divider(color: AppColors.border, height: 1),
             const SizedBox(height: 12),
@@ -215,7 +217,7 @@ class _CategoryChartState extends State<CategoryChart> {
             const SizedBox(height: 8),
             _buildGeneralBudgetItem(context),
           ],
-          if (sortedCategories.isNotEmpty) ...[
+          if (widget.showBudgetBars && sortedCategories.isNotEmpty) ...[
             const SizedBox(height: 16),
             const Divider(color: AppColors.border, height: 1),
             const SizedBox(height: 12),

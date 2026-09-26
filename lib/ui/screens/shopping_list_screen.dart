@@ -4,7 +4,9 @@ import '../../data/datasources/local/database_helper.dart';
 import '../../data/models/shopping_item_model.dart';
 
 class ShoppingListScreen extends StatefulWidget {
-  const ShoppingListScreen({Key? key}) : super(key: key);
+  final bool showBackButton;
+  final VoidCallback? onBack;
+  const ShoppingListScreen({Key? key, this.showBackButton = false, this.onBack}) : super(key: key);
 
   @override
   State<ShoppingListScreen> createState() => _ShoppingListScreenState();
@@ -70,7 +72,13 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Lista de Compras'),
-        automaticallyImplyLeading: false,
+        automaticallyImplyLeading: widget.showBackButton && widget.onBack == null,
+        leading: (widget.showBackButton && widget.onBack != null)
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: widget.onBack,
+              )
+            : null,
       ),
       body: Column(
         children: [

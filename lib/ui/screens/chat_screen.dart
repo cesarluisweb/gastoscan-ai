@@ -10,7 +10,9 @@ import '../../data/datasources/remote/gemini_service.dart';
 import '../../core/utils/uuid_generator.dart';
 
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({Key? key}) : super(key: key);
+  final bool showBackButton;
+  final VoidCallback? onBack;
+  const ChatScreen({Key? key, this.showBackButton = false, this.onBack}) : super(key: key);
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -239,7 +241,13 @@ class _ChatScreenState extends State<ChatScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Asistente IA'),
-        automaticallyImplyLeading: false,
+        automaticallyImplyLeading: widget.showBackButton && widget.onBack == null,
+        leading: (widget.showBackButton && widget.onBack != null)
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: widget.onBack,
+              )
+            : null,
       ),
       body: Column(
         children: [

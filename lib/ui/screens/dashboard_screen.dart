@@ -14,14 +14,17 @@ import '../widgets/summary_card.dart';
 import '../widgets/category_chart.dart';
 import '../widgets/expense_card.dart';
 import '../widgets/budget_bottom_sheet.dart';
+import '../widgets/ai_insight_card.dart';
 import 'scan_screen.dart';
 import 'settings_screen.dart';
 import 'review_expense_screen.dart';
+import 'chat_screen.dart';
 import '../../data/models/gasto_model.dart';
 import '../../data/models/gemini_extraction_result.dart';
 
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({Key? key}) : super(key: key);
+  final VoidCallback? onNavigateToGastos;
+  const DashboardScreen({Key? key, this.onNavigateToGastos}) : super(key: key);
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -152,7 +155,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
               });
             },
           ),
-          if (!_isSearching)
+          if (!_isSearching) ...[
+            IconButton(
+              key: const Key('dashboard_ai_chat_button'),
+              icon: const Icon(Icons.auto_awesome),
+              tooltip: 'Asistente IA',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ChatScreen(showBackButton: true),
+                  ),
+                );
+              },
+            ),
             PopupMenuButton<String>(
               icon: const Icon(Icons.file_download_outlined),
               tooltip: 'Exportar Reportes',
@@ -195,6 +211,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ],
             ),
+          ],
         ],
       ),
       body: RefreshIndicator(
@@ -262,6 +279,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
               tasaCambio: settings.tasaCambioVesUsd,
             ),
             const SizedBox(height: 16),
+            AiInsightCard(
+              gastos: gastoProvider.gastos,
+              presupuestoGeneral: gastoProvider.presupuestoGeneral,
+              totalesPorCategoria: gastoProvider.totalesPorCategoria,
+              totalGastadoMes: gastoProvider.totalMesUsd,
+              monedaPrincipal: settings.monedaPrincipal,
+              tasaCambio: settings.tasaCambioVesUsd,
+            ),
+            const SizedBox(height: 16),
             if (gastoProvider.totalesPorCategoria.isNotEmpty ||
                 gastoProvider.presupuestosPorCategoria.isNotEmpty ||
                 gastoProvider.presupuestoGeneral > 0) ...[
@@ -282,15 +308,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
               _buildCategoryChartSilhouette(),
               const SizedBox(height: 16),
             ],
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8),
-              child: Text(
-                'Facturas Registradas',
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _isSearching ? 'Resultados de Búsqueda' : 'Facturas Registradas',
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  if (!_isSearching && gastoProvider.gastos.length > 5 && widget.onNavigateToGastos != null)
+                    InkWell(
+                      onTap: widget.onNavigateToGastos,
+                      borderRadius: BorderRadius.circular(8),
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Ver todos',
+                              style: TextStyle(
+                                color: AppColors.secondary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
+                            SizedBox(width: 4),
+                            Icon(Icons.arrow_forward_ios, size: 12, color: AppColors.secondary),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
             if (gastoProvider.isLoading)
@@ -315,7 +369,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 return [_buildEmptySearchState()];
               }
 
-              return filteredGastos.map((gasto) {
+              final displayedGastos = (_isSearching || gastoProvider.gastos.length <= 5)
+                  ? filteredGastos
+                  : filteredGastos.take(5).toList();
+
+              final cards = displayedGastos.map<Widget>((gasto) {
                 return ExpenseCard(
                   key: ValueKey(gasto.id ?? gasto.comercio),
                   gasto: gasto,
@@ -358,6 +416,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   },
                 );
               }).toList();
+
+              if (!_isSearching && gastoProvider.gastos.length > 5 && widget.onNavigateToGastos != null) {
+                cards.add(
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: OutlinedButton.icon(
+                      onPressed: widget.onNavigateToGastos,
+                      icon: const Icon(Icons.receipt_long, size: 18),
+                      label: Text(
+                        'Ver todas las facturas (${gastoProvider.gastos.length})',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.textPrimary,
+                        side: const BorderSide(color: AppColors.border),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+              return cards;
             }(),
             const SizedBox(height: 80),
           ],
