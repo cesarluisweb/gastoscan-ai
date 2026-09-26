@@ -29,4 +29,6 @@ class DateFormatter {
     }
     return '';
   }
+
+  static String obtenerNombreMes(int month) => getMonthName(month);
 }
