@@ -98,6 +98,8 @@ class SyncService {
         }
       }
     }
+  }
+
   Future<void> intentarLoginSilencioso() async {
     try {
       final auth = FirebaseAuth.instance;
