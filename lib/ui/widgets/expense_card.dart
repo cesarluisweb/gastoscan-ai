@@ -198,6 +198,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
                     ),
                   ),
                   const SizedBox(height: 8),
+                  ...widget.gasto.items.map((it) {
                     double itemUsd = it.totalDisplay;
                     if (widget.gasto.moneda != 'USD' && widget.gasto.totalOriginalDisplay > 0) {
                       itemUsd = it.totalDisplay * (widget.gasto.totalUsdDisplay / widget.gasto.totalOriginalDisplay);
