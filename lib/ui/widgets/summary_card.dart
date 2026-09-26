@@ -1,3 +1,4 @@
+import 'budget_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/currency_formatter.dart';
@@ -111,6 +112,23 @@ class SummaryCard extends StatelessWidget {
                     color: AppColors.textSecondary,
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
+                  ),
+                )
+              else
+                InkWell(
+                  key: const Key('summary_card_set_budget_btn'),
+                  onTap: () => BudgetBottomSheet.show(context),
+                  borderRadius: BorderRadius.circular(6),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    child: Text(
+                      '+ Definir meta',
+                      style: TextStyle(
+                        color: AppColors.secondary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
             ],

@@ -22,7 +22,7 @@ void main() {
 
       expect(find.byKey(const Key('ai_insight_card')), findsOneWidget);
       expect(find.text('Asistente IA'), findsOneWidget);
-      expect(find.textContaining('Empieza tocando el botón +'), findsOneWidget);
+      expect(find.textContaining('botón +'), findsOneWidget);
     });
 
     testWidgets('displays over budget warning when spent exceeds budget', (tester) async {

@@ -30,7 +30,7 @@ class AiInsightCard extends StatelessWidget {
     final diasRestantes = (diasEnMes - now.day).clamp(1, diasEnMes);
 
     if (gastos.isEmpty) {
-      return '¡Hola! Empieza tocando el botón + para registrar o escanear tu primera factura. Verás cómo todo se organiza automáticamente.';
+      return 'Registra tu primera compra con el botón + para activar estadísticas y recomendaciones automáticas.';
     }
 
     if (presupuestoGeneral > 0) {
@@ -140,7 +140,7 @@ class AiInsightCard extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Chatear',
+                        'Consultar',
                         style: TextStyle(
                           color: AppColors.secondary,
                           fontWeight: FontWeight.bold,

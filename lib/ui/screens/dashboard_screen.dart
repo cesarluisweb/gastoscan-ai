@@ -95,12 +95,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  '$mesNombre $anio',
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                InkWell(
+                  key: const Key('month_selector_title'),
+                  onTap: () => _mostrarPickerMes(context, gastoProvider),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '$mesNombre $anio',
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        const Icon(
+                          Icons.arrow_drop_down,
+                          color: AppColors.textPrimary,
+                          size: 24,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 Row(
@@ -306,8 +325,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildEmptyState() {
     return Container(
-      padding: const EdgeInsets.all(32),
-      margin: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      margin: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(16),
@@ -315,21 +334,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       child: const Column(
         children: [
-          Icon(Icons.receipt_long_outlined, size: 48, color: AppColors.textMuted),
-          SizedBox(height: 12),
+          Icon(Icons.receipt_long_outlined, size: 36, color: AppColors.textMuted),
+          SizedBox(height: 8),
           Text(
             'Sin facturas este mes',
             style: TextStyle(
               color: AppColors.textPrimary,
               fontWeight: FontWeight.bold,
-              fontSize: 15,
+              fontSize: 14,
             ),
           ),
           SizedBox(height: 4),
           Text(
             'Presiona "+" para registrar tu primera compra.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
           ),
         ],
       ),
@@ -487,100 +506,158 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildCategoryChartSilhouette() {
     return Container(
       key: const Key('category_chart_silhouette'),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          const Text(
-            'Distribución por Categorías',
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: AppColors.cardLighter,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.pie_chart_outline_rounded,
+              size: 24,
+              color: AppColors.textMuted,
             ),
           ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              SizedBox(
-                width: 90,
-                height: 90,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    SizedBox(
-                      width: 80,
-                      height: 80,
-                      child: CircularProgressIndicator(
-                        value: 1.0,
-                        strokeWidth: 14,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          AppColors.border.withOpacity(0.6),
-                        ),
-                      ),
-                    ),
-                    const Icon(
-                      Icons.pie_chart_outline_rounded,
-                      size: 32,
-                      color: AppColors.textMuted,
-                    ),
-                  ],
+          const SizedBox(width: 14),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Distribución por Categorías',
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 16),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Tus estadísticas',
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      'Al registrar compras, verás aquí la distribución de tus gastos por rubro.',
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 12,
-                        height: 1.3,
-                      ),
-                    ),
-                  ],
+                SizedBox(height: 2),
+                Text(
+                  'Al registrar compras, verás aquí la distribución de tus gastos por rubro.',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                    height: 1.25,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          TextButton.icon(
-            key: const Key('add_category_budget_button_silhouette'),
-            icon: const Icon(Icons.analytics_outlined, size: 16, color: AppColors.primaryDark),
-            label: const Text(
-              'Ver análisis completo',
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-              ),
+              ],
             ),
-            onPressed: () {
-              if (widget.onNavigateToAnalysis != null) {
-                widget.onNavigateToAnalysis!();
-              } else {
-                BudgetBottomSheet.show(context);
-              }
-            },
           ),
         ],
       ),
+    );
+  }
+
+  void _mostrarPickerMes(BuildContext context, GastoProvider gastoProvider) {
+    int tempAnio = gastoProvider.selectedYear;
+
+    final meses = [
+      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
+
+    showDialog(
+      context: context,
+      builder: (dContext) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              backgroundColor: AppColors.card,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              titlePadding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              contentPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.chevron_left, color: AppColors.textPrimary),
+                    onPressed: () {
+                      setStateDialog(() {
+                        tempAnio--;
+                      });
+                    },
+                  ),
+                  Text(
+                    '$tempAnio',
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.chevron_right, color: AppColors.textPrimary),
+                    onPressed: () {
+                      setStateDialog(() {
+                        tempAnio++;
+                      });
+                    },
+                  ),
+                ],
+              ),
+              content: SizedBox(
+                width: 280,
+                child: GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    childAspectRatio: 2.2,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
+                  ),
+                  itemCount: 12,
+                  itemBuilder: (context, index) {
+                    final mesNum = index + 1;
+                    final isSelected = (mesNum == gastoProvider.selectedMonth && tempAnio == gastoProvider.selectedYear);
+                    return InkWell(
+                      key: Key('month_pick_${mesNum}'),
+                      borderRadius: BorderRadius.circular(8),
+                      onTap: () {
+                        gastoProvider.cambiarMes(tempAnio, mesNum);
+                        Navigator.pop(dContext);
+                      },
+                      child: Container(
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: isSelected ? AppColors.primary : AppColors.cardLighter,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: isSelected ? AppColors.primaryDark : AppColors.border,
+                          ),
+                        ),
+                        child: Text(
+                          meses[index].substring(0, 3),
+                          style: TextStyle(
+                            color: isSelected ? AppColors.secondary : AppColors.textPrimary,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dContext),
+                  child: const Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
