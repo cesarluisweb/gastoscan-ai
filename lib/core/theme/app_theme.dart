@@ -91,6 +91,14 @@ class AppTheme {
         color: AppColors.border,
         thickness: 1,
       ),
+      datePickerTheme: DatePickerThemeData(
+        cancelButtonStyle: TextButton.styleFrom(
+          foregroundColor: AppColors.textPrimary,
+        ),
+        confirmButtonStyle: TextButton.styleFrom(
+          foregroundColor: AppColors.textPrimary,
+        ),
+      ),
     );
   }
 }

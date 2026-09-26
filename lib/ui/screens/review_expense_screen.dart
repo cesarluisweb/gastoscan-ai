@@ -192,11 +192,21 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
+            colorScheme: const ColorScheme.light(
               primary: AppColors.primary,
               onPrimary: Colors.black,
               surface: AppColors.card,
               onSurface: AppColors.textPrimary,
+            ),
+            datePickerTheme: DatePickerThemeData(
+              cancelButtonStyle: TextButton.styleFrom(
+                foregroundColor: AppColors.textPrimary,
+                textStyle: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              confirmButtonStyle: TextButton.styleFrom(
+                foregroundColor: AppColors.textPrimary,
+                textStyle: const TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
           ),
           child: child!,
@@ -832,20 +842,20 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                     ),
                                     const SizedBox(width: 8),
                                     Expanded(
-                                      child: Padding(
-                                        padding: const EdgeInsets.only(top: 4.0, left: 4.0),
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            const Text('Total', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                                            const SizedBox(height: 8),
-                                            Text(
-                                              _formatDouble(_items[idx].totalDisplay),
-                                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                                            ),
-                                          ],
+                                    child: InputDecorator(
+                                      decoration: const InputDecoration(
+                                        labelText: 'Total',
+                                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                      ),
+                                      child: Text(
+                                        _formatDouble(_items[idx].totalDisplay),
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.textPrimary,
                                         ),
                                       ),
+                                    ),
                                     ),
                                   ],
                                 ),
@@ -896,60 +906,58 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                   ),
                   const SizedBox(height: 16),
-                  if (widget.imageFile == null) ...[
-                    const Text('Moneda', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                    const SizedBox(height: 6),
-                    SizedBox(
-                      width: double.infinity,
-                      child: SegmentedButton<String>(
-                        segments: AppConstants.monedas.map((m) {
-                          return ButtonSegment<String>(
-                            value: m,
-                            label: Text(m, style: const TextStyle(fontWeight: FontWeight.bold)),
-                          );
-                        }).toList(),
-                        selected: {_selectedMoneda},
-                        onSelectionChanged: (newSelection) {
-                          setState(() {
-                            _selectedMoneda = newSelection.first;
-                            _recalcularTotalUsd();
-                          });
-                        },
-                        showSelectedIcon: false,
-                        style: ButtonStyle(
-                          visualDensity: VisualDensity.compact,
-                          backgroundColor: MaterialStateProperty.resolveWith<Color>(
-                            (Set<MaterialState> states) {
-                              if (states.contains(MaterialState.selected)) {
-                                return AppColors.secondary;
-                              }
-                              return AppColors.surface;
-                            },
-                          ),
-                          foregroundColor: MaterialStateProperty.resolveWith<Color>(
-                            (Set<MaterialState> states) {
-                              if (states.contains(MaterialState.selected)) {
-                                return Colors.white;
-                              }
-                              return AppColors.textPrimary;
-                            },
-                          ),
+                  const Text('Moneda', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                  const SizedBox(height: 6),
+                  SizedBox(
+                    width: double.infinity,
+                    child: SegmentedButton<String>(
+                      segments: AppConstants.monedas.map((m) {
+                        return ButtonSegment<String>(
+                          value: m,
+                          label: Text(m, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        );
+                      }).toList(),
+                      selected: {_selectedMoneda},
+                      onSelectionChanged: (newSelection) {
+                        setState(() {
+                          _selectedMoneda = newSelection.first;
+                          _recalcularTotalUsd();
+                        });
+                      },
+                      showSelectedIcon: false,
+                      style: ButtonStyle(
+                        visualDensity: VisualDensity.compact,
+                        backgroundColor: MaterialStateProperty.resolveWith<Color>(
+                          (Set<MaterialState> states) {
+                            if (states.contains(MaterialState.selected)) {
+                              return AppColors.secondary;
+                            }
+                            return AppColors.surface;
+                          },
+                        ),
+                        foregroundColor: MaterialStateProperty.resolveWith<Color>(
+                          (Set<MaterialState> states) {
+                            if (states.contains(MaterialState.selected)) {
+                              return Colors.white;
+                            }
+                            return AppColors.textPrimary;
+                          },
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
-                  ],
-                  TextFormField(
-                    controller: _totalOriginalCtrl,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(
-                      labelText: 'Monto Original ($_selectedMoneda)',
-                      prefixIcon: const Icon(Icons.payments_outlined, color: AppColors.textSecondary),
-                    ),
-                    onChanged: (_) => _recalcularTotalUsd(),
-                    validator: (val) => (double.tryParse((val ?? '').replaceAll(',', '.')) == null) ? 'Inválido' : null,
                   ),
+                  const SizedBox(height: 16),
                   if (_selectedMoneda == 'VES') ...[
+                    TextFormField(
+                      controller: _totalOriginalCtrl,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: const InputDecoration(
+                        labelText: 'Monto Original (VES)',
+                        prefixIcon: Icon(Icons.payments_outlined, color: AppColors.textSecondary),
+                      ),
+                      onChanged: (_) => _recalcularTotalUsd(),
+                      validator: (val) => (double.tryParse((val ?? '').replaceAll(',', '.')) == null) ? 'Inválido' : null,
+                    ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _tasaCambioCtrl,
@@ -962,17 +970,31 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                       ),
                       onChanged: (_) => _recalcularTotalUsd(),
                     ),
-                  ],
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _totalUsdCtrl,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(
-                      labelText: 'Total Equivalente (USD)',
-                      prefixIcon: Icon(Icons.attach_money, color: AppColors.primaryDark),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _totalUsdCtrl,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: const InputDecoration(
+                        labelText: 'Total Equivalente (USD)',
+                        prefixIcon: Icon(Icons.attach_money, color: AppColors.primaryDark),
+                      ),
+                      validator: (val) => (double.tryParse((val ?? '').replaceAll(',', '.')) == null) ? 'Inválido' : null,
                     ),
-                    validator: (val) => (double.tryParse((val ?? '').replaceAll(',', '.')) == null) ? 'Inválido' : null,
-                  ),
+                  ] else ...[
+                    TextFormField(
+                      controller: _totalOriginalCtrl,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: const InputDecoration(
+                        labelText: 'Monto Total (USD)',
+                        prefixIcon: Icon(Icons.attach_money, color: AppColors.primaryDark),
+                      ),
+                      onChanged: (val) {
+                        _totalUsdCtrl.text = val;
+                        _recalcularTotalUsd();
+                      },
+                      validator: (val) => (double.tryParse((val ?? '').replaceAll(',', '.')) == null) ? 'Inválido' : null,
+                    ),
+                  ],
                 ],
               ),
             ),
