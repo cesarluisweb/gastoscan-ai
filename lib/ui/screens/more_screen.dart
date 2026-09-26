@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/utils/date_formatter.dart';
@@ -21,6 +22,32 @@ class MoreScreen extends StatefulWidget {
 
 class _MoreScreenState extends State<MoreScreen> {
   MoreSubView _currentSubView = MoreSubView.hub;
+
+  bool get _isFirebaseInitialized {
+    try {
+      return Firebase.apps.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Stream<User?>? get _userStream {
+    if (!_isFirebaseInitialized) return null;
+    try {
+      return FirebaseAuth.instance.userChanges();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  User? get _currentUser {
+    if (!_isFirebaseInitialized) return null;
+    try {
+      return FirebaseAuth.instance.currentUser;
+    } catch (_) {
+      return null;
+    }
+  }
 
   void _exportarCsv(BuildContext context) async {
     final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
@@ -95,158 +122,7 @@ class _MoreScreenState extends State<MoreScreen> {
         padding: const EdgeInsets.only(left: 16, right: 16, top: 12, bottom: 80),
         children: [
           // Sección de Cuenta y Respaldo en la Nube
-          StreamBuilder<User?>(
-            stream: FirebaseAuth.instance.userChanges(),
-            builder: (context, snapshot) {
-              final user = snapshot.data ?? FirebaseAuth.instance.currentUser;
-              final isAnon = user == null || user.isAnonymous;
-
-              String? photoUrl = user?.photoURL;
-              String? email = user?.email;
-              String? displayName = user?.displayName;
-
-              if (user != null && user.providerData.isNotEmpty) {
-                for (var p in user.providerData) {
-                  photoUrl ??= p.photoURL;
-                  email ??= p.email;
-                  displayName ??= p.displayName;
-                }
-              }
-
-              return Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.card,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.border, width: 1.5),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(isAnon ? Icons.cloud_off : Icons.cloud_done,
-                            color: AppColors.primaryDark, size: 24),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'Respaldo en la Nube',
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    if (!isAnon)
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 22,
-                            backgroundColor: AppColors.primaryLight,
-                            backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
-                            child: photoUrl == null
-                                ? Text(
-                                    (displayName?.isNotEmpty == true
-                                            ? displayName![0]
-                                            : (email?.isNotEmpty == true ? email![0] : 'U'))
-                                        .toUpperCase(),
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.textPrimary,
-                                      fontSize: 16,
-                                    ),
-                                  )
-                                : null,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (displayName != null && displayName.isNotEmpty)
-                                  Text(
-                                    displayName,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
-                                      color: AppColors.textPrimary,
-                                    ),
-                                  ),
-                                Text(
-                                  email ?? 'Cuenta de Google vinculada',
-                                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
-                                ),
-                                const SizedBox(height: 2),
-                                const Row(
-                                  children: [
-                                    Icon(Icons.check_circle, size: 14, color: Colors.green),
-                                    SizedBox(width: 4),
-                                    Text(
-                                      'Sincronización activa',
-                                      style: TextStyle(
-                                        color: Colors.green,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      )
-                    else
-                      const Text(
-                        'Inicia sesión con Google para respaldar tus compras y sincronizar entre dispositivos.',
-                        style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
-                      ),
-                    const SizedBox(height: 16),
-                    if (isAnon)
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          icon: const Icon(Icons.login),
-                          label: const Text('Vincular con Google'),
-                          onPressed: () async {
-                            final error = await Provider.of<GastoProvider>(context, listen: false)
-                                .vincularCuentaGoogle();
-                            if (!mounted) return;
-                            if (error != null && error != 'CANCELLED') {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Error: $error')),
-                              );
-                            } else if (error == null) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Cuenta vinculada con éxito',
-                                      style: TextStyle(color: Colors.black)),
-                                  backgroundColor: AppColors.primary,
-                                ),
-                              );
-                            }
-                          },
-                        ),
-                      )
-                    else
-                      SizedBox(
-                        width: double.infinity,
-                        child: TextButton.icon(
-                          icon: const Icon(Icons.logout, color: AppColors.error),
-                          label: const Text('Cerrar Sesión', style: TextStyle(color: AppColors.error)),
-                          onPressed: () async {
-                            await FirebaseAuth.instance.signOut();
-                            await FirebaseAuth.instance.signInAnonymously();
-                          },
-                        ),
-                      ),
-                  ],
-                ),
-              );
-            },
-          ),
+          _buildAccountSection(context),
           const SizedBox(height: 16),
 
           // Herramientas: Lista de Compras y Asistente IA
@@ -465,6 +341,171 @@ class _MoreScreenState extends State<MoreScreen> {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAccountSection(BuildContext context) {
+    final stream = _userStream;
+    if (stream != null) {
+      return StreamBuilder<User?>(
+        stream: stream,
+        builder: (context, snapshot) {
+          final user = snapshot.data ?? _currentUser;
+          return _buildAccountCard(context, user);
+        },
+      );
+    }
+    return _buildAccountCard(context, null);
+  }
+
+  Widget _buildAccountCard(BuildContext context, User? user) {
+    final isAnon = user == null || user.isAnonymous;
+
+    String? photoUrl = user?.photoURL;
+    String? email = user?.email;
+    String? displayName = user?.displayName;
+
+    if (user != null && user.providerData.isNotEmpty) {
+      for (var p in user.providerData) {
+        photoUrl ??= p.photoURL;
+        email ??= p.email;
+        displayName ??= p.displayName;
+      }
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border, width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(isAnon ? Icons.cloud_off : Icons.cloud_done,
+                  color: AppColors.primaryDark, size: 24),
+              const SizedBox(width: 8),
+              const Text(
+                'Respaldo en la Nube',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (!isAnon)
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 22,
+                  backgroundColor: AppColors.primaryLight,
+                  backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
+                  child: photoUrl == null
+                      ? Text(
+                          (displayName?.isNotEmpty == true
+                                  ? displayName![0]
+                                  : (email?.isNotEmpty == true ? email![0] : 'U'))
+                              .toUpperCase(),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                            fontSize: 16,
+                          ),
+                        )
+                      : null,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (displayName != null && displayName.isNotEmpty)
+                        Text(
+                          displayName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      Text(
+                        email ?? 'Cuenta de Google vinculada',
+                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                      ),
+                      const SizedBox(height: 2),
+                      const Row(
+                        children: [
+                          Icon(Icons.check_circle, size: 14, color: Colors.green),
+                          SizedBox(width: 4),
+                          Text(
+                            'Sincronización activa',
+                            style: TextStyle(
+                              color: Colors.green,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            )
+          else
+            const Text(
+              'Inicia sesión con Google para respaldar tus compras y sincronizar entre dispositivos.',
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            ),
+          const SizedBox(height: 16),
+          if (isAnon)
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.login),
+                label: const Text('Vincular con Google'),
+                onPressed: () async {
+                  final error = await Provider.of<GastoProvider>(context, listen: false)
+                      .vincularCuentaGoogle();
+                  if (!mounted) return;
+                  if (error != null && error != 'CANCELLED') {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error: $error')),
+                    );
+                  } else if (error == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Cuenta vinculada con éxito',
+                            style: TextStyle(color: Colors.black)),
+                        backgroundColor: AppColors.primary,
+                      ),
+                    );
+                  }
+                },
+              ),
+            )
+          else
+            SizedBox(
+              width: double.infinity,
+              child: TextButton.icon(
+                icon: const Icon(Icons.logout, color: AppColors.error),
+                label: const Text('Cerrar Sesión', style: TextStyle(color: AppColors.error)),
+                onPressed: () async {
+                  if (_isFirebaseInitialized) {
+                    await FirebaseAuth.instance.signOut();
+                    await FirebaseAuth.instance.signInAnonymously();
+                  }
+                },
+              ),
+            ),
         ],
       ),
     );

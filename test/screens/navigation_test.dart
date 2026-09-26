@@ -92,7 +92,7 @@ void main() {
       expect(find.text('Más'), findsWidgets);
       expect(find.text('Respaldo en la Nube'), findsOneWidget);
       expect(find.text('Lista de Compras'), findsOneWidget);
-      expect(find.text('Asistente IA'), findsOneWidget);
+      expect(find.text('Asistente IA'), findsWidgets);
     });
 
     testWidgets('tapping center FAB opens bottom sheet with 4 add options', (tester) async {

@@ -39,7 +39,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
-    _speech.stop();
+    try {
+      _speech.stop();
+    } catch (_) {}
     _textCtrl.dispose();
     super.dispose();
   }

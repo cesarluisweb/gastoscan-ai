@@ -32,12 +32,20 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
   }
 
   Future<void> _loadItems() async {
-    final items = await DatabaseHelper.instance.getAllShoppingItems();
-    if (mounted) {
-      setState(() {
-        _items = items;
-        _isLoading = false;
-      });
+    try {
+      final items = await DatabaseHelper.instance.getAllShoppingItems();
+      if (mounted) {
+        setState(() {
+          _items = items;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 

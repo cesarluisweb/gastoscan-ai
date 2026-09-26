@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../providers/settings_provider.dart';
@@ -14,13 +15,37 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  bool get _isFirebaseInitialized {
+    try {
+      return Firebase.apps.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
 
+  Stream<User?>? get _userStream {
+    if (!_isFirebaseInitialized) return null;
+    try {
+      return FirebaseAuth.instance.userChanges();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  User? get _currentUser {
+    if (!_isFirebaseInitialized) return null;
+    try {
+      return FirebaseAuth.instance.currentUser;
+    } catch (_) {
+      return null;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final settings = Provider.of<SettingsProvider>(context);
 
-    final user = FirebaseAuth.instance.currentUser;
+    final user = _currentUser;
     final isAnon = user == null || user.isAnonymous;
 
     return Scaffold(
@@ -33,9 +58,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           // Sección de Cuenta y Sincronización
           StreamBuilder<User?>(
-            stream: FirebaseAuth.instance.userChanges(),
+            stream: _userStream ?? const Stream.empty(),
             builder: (context, snapshot) {
-              final user = snapshot.data ?? FirebaseAuth.instance.currentUser;
+              final user = snapshot.data ?? _currentUser;
               final isAnon = user == null || user.isAnonymous;
 
               String? photoUrl = user?.photoURL;
@@ -171,8 +196,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           icon: const Icon(Icons.logout, color: AppColors.error),
                           label: const Text('Cerrar Sesión', style: TextStyle(color: AppColors.error)),
                           onPressed: () async {
-                            await FirebaseAuth.instance.signOut();
-                            await FirebaseAuth.instance.signInAnonymously();
+                            if (_isFirebaseInitialized) {
+                              await FirebaseAuth.instance.signOut();
+                              await FirebaseAuth.instance.signInAnonymously();
+                            }
                           },
                         ),
                       ),
