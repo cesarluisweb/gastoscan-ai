@@ -33,6 +33,7 @@ La compilación en GitHub Actions (`build_apk.yml`) ejecuta `flutter create`, lo
 - **Identificadores ASCII:** Queda strictly prohibido utilizar caracteres no-ASCII (tildes, acentos, 'ñ') en nombres de variables, métodos o nombres de test en Dart (ej. usar `gastoAlimentacion` en lugar de `gastoAlimentación`).
 - **Acceso a Propiedades de Widget:** Al convertir o refactorizar un widget a `StatefulWidget`, asegúrate de acceder a los callbacks y parámetros del constructor usando la referencia `widget.` (ej. `widget.onSetBudget`).
 - **Keys de Widget Globalmente Únicos:** Cuando se creen widgets que coexistan en el árbol visual (Bottom Sheets, Dialogs, Overlays), sus `Key(...)` DEBEN ser globalmente únicos. Si un widget existente ya usa `Key('edit_budget_$cat')`, un nuevo widget que se renderice *encima* NO puede reutilizar esa misma Key. Usa un prefijo diferenciador (ej. `Key('edit_budget_bottom_$cat')`).
+- **Verificación de Miembros y Firmas en Utilidades:** Al invocar métodos de clases utilitarias compartidas (`DateFormatter`, `CurrencyFormatter`, etc.), es obligatorio revisar previamente su definición en el archivo fuente para usar el identificador exacto y evitar roturas de compilación en CI (ej. verificar `getMonthName` vs `obtenerNombreMes`).
 
 ## 7. Gestión de Documentación del Proyecto
 - **Archivos de Planificación:** Siempre que se genere, actualice o discuta un documento estratégico para el proyecto (como ROADMAP.md, PROJECT.md, planes de arquitectura, o guías de estilo), DEBE guardarse directamente en la raíz del repositorio.
@@ -43,3 +44,8 @@ La compilación en GitHub Actions (`build_apk.yml`) ejecuta `flutter create`, lo
 - **Prompt de Decimales:** En los prompts de extracción OCR, NUNCA pidas "no usar comas" (ya que la IA tiende a eliminarlas dejando números inflados). En su lugar, ordena explícitamente: *"Si el precio usa coma (ej. 12,50), reemplázala por un punto (12.50)"*.
 - **Moneda Unificada:** Para facturas venezolanas con ítems en Bolívares (VES) y total en USD ("Ref"), la IA DEBE extraer todos los montos en la moneda principal de los ítems (VES) para evitar descuadres en los cálculos de la app.
 - **Red de Seguridad en Dart:** La aplicación debe mantener una validación matemática local que sume los ítems y los compare con el total de la factura, aplicando autocorrección si la IA omite un separador de decimales.
+
+## 9. Lógica de Negocio: Presupuestos Mensuales
+- **Aislamiento por Mes:** Los presupuestos (general y por categoría) se persisten por mes y año `(anio, mes)` en SQLite. Modificar el presupuesto de un mes nunca debe alterar los meses pasados ni futuros.
+- **Copia Automática de Mes Previo:** Si un mes no tiene presupuestos registrados al consultarse, el sistema debe copiar automáticamente la configuración del mes inmediatamente anterior.
+- **Validación de Asignación:** La suma total de los presupuestos asignados a categorías NO debe superar el presupuesto general mensual. Toda UI de presupuestos debe validar esta condición en tiempo real y bloquear el guardado si se excede.
