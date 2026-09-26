@@ -37,6 +37,7 @@ La compilación en GitHub Actions (`build_apk.yml`) ejecuta `flutter create`, lo
 - **Contenedores Material para ListTile (Flutter 3.24+):** NUNCA envuelvas `ListTile` o `SwitchListTile` directamente dentro de un `Container` con `BoxDecoration(color: ...)`. En su lugar, usa siempre un widget `Material` con `shape: RoundedRectangleBorder(...)` y `clipBehavior: Clip.antiAlias` para evitar aserciones de renderizado de tinta en Flutter 3.24+.
 - **Widget Tests en Pantallas con Scroll:** En pruebas unitarias de pantallas con `ListView` o vistas desplazables, define siempre en `setUp()` el tamaño de viewport (`binding.window.physicalSizeTestValue = const Size(1080, 4000);`) y límpialo en `tearDown()`, o utiliza `skipOffstage: false` en los `find.text(...)` / `find.byKey(...)` de elementos inferiores para evitar falsos negativos por renderizado fuera de pantalla.
 - **Resiliencia de Firebase en UI y Tests:** Todo widget que interactúe con `FirebaseAuth` o servicios nativos debe validar `Firebase.apps.isNotEmpty` antes de instanciar streams o métodos para garantizar que los widget tests se ejecuten limpiamente sin requerir un backend simulado.
+- **Firmas Exactas en Mocks/Fakes de Test:** Al implementar clases simuladas para testing (`FakeGastoProvider`, `FakeSettingsProvider`), es obligatorio replicar exactamente la firma de los métodos de la clase real, verificando si los parámetros son posicionales o nombrados para evitar fallos de compilación en CI.
 
 ## 7. Gestión de Documentación del Proyecto
 - **Archivos de Planificación:** Siempre que se genere, actualice o discuta un documento estratégico para el proyecto (como ROADMAP.md, PROJECT.md, planes de arquitectura, o guías de estilo), DEBE guardarse directamente en la raíz del repositorio.
@@ -52,3 +53,7 @@ La compilación en GitHub Actions (`build_apk.yml`) ejecuta `flutter create`, lo
 - **Aislamiento por Mes:** Los presupuestos (general y por categoría) se persisten por mes y año `(anio, mes)` en SQLite. Modificar el presupuesto de un mes nunca debe alterar los meses pasados ni futuros.
 - **Copia Automática de Mes Previo:** Si un mes no tiene presupuestos registrados al consultarse, el sistema debe copiar automáticamente la configuración del mes inmediatamente anterior.
 - **Validación de Asignación:** La suma total de los presupuestos asignados a categorías NO debe superar el presupuesto general mensual. Toda UI de presupuestos debe validar esta condición en tiempo real y bloquear el guardado si se excede.
+
+## 10. Consistencia de Marca Global
+- **Identidad de Marca Unificada:** El nombre oficial y definitivo de la aplicación es **Rinde Más** (`AppConstants.appName`). Queda estrictamente prohibido utilizar nombres anteriores (como *GastoScan AI* o *GastosCan AI*) en pantallas, reportes exportados (Markdown, CSV), notificaciones, modales o cualquier texto expuesto al usuario.
+
