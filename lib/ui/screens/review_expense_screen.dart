@@ -896,6 +896,49 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                   ),
                   const SizedBox(height: 16),
+                  if (widget.imageFile == null) ...[
+                    const Text('Moneda', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                    const SizedBox(height: 6),
+                    SizedBox(
+                      width: double.infinity,
+                      child: SegmentedButton<String>(
+                        segments: AppConstants.monedas.map((m) {
+                          return ButtonSegment<String>(
+                            value: m,
+                            label: Text(m, style: const TextStyle(fontWeight: FontWeight.bold)),
+                          );
+                        }).toList(),
+                        selected: {_selectedMoneda},
+                        onSelectionChanged: (newSelection) {
+                          setState(() {
+                            _selectedMoneda = newSelection.first;
+                            _recalcularTotalUsd();
+                          });
+                        },
+                        showSelectedIcon: false,
+                        style: ButtonStyle(
+                          visualDensity: VisualDensity.compact,
+                          backgroundColor: MaterialStateProperty.resolveWith<Color>(
+                            (Set<MaterialState> states) {
+                              if (states.contains(MaterialState.selected)) {
+                                return AppColors.secondary;
+                              }
+                              return AppColors.surface;
+                            },
+                          ),
+                          foregroundColor: MaterialStateProperty.resolveWith<Color>(
+                            (Set<MaterialState> states) {
+                              if (states.contains(MaterialState.selected)) {
+                                return Colors.white;
+                              }
+                              return AppColors.textPrimary;
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   TextFormField(
                     controller: _totalOriginalCtrl,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
