@@ -98,6 +98,41 @@ class SyncService {
         }
       }
     }
+  Future<void> intentarLoginSilencioso() async {
+    try {
+      final auth = FirebaseAuth.instance;
+      final currentUser = auth.currentUser;
+
+      if (currentUser != null && !currentUser.isAnonymous) {
+        return;
+      }
+
+      final googleSignIn = GoogleSignIn(
+        serverClientId: '758679432067-p4lll1b5vfia32fndd68gjif6bmfmvel.apps.googleusercontent.com',
+      );
+
+      final GoogleSignInAccount? googleUser = await googleSignIn.signInSilently();
+      if (googleUser == null) return;
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final userCred = await auth.signInWithCredential(credential);
+      final activeUser = userCred.user ?? auth.currentUser;
+      if (activeUser != null) {
+        await activeUser.updateProfile(
+          displayName: googleUser.displayName,
+          photoURL: googleUser.photoUrl,
+        );
+        await activeUser.reload();
+      }
+      await syncBidirectional();
+    } catch (e) {
+      debugPrint("Fallo al autenticar silenciosamente con Google: $e");
+    }
   }
 
   Future<String?> vincularCuentaGoogle() async {

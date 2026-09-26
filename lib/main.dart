@@ -11,6 +11,8 @@ import 'providers/scan_queue_provider.dart';
 import 'services/notification_service.dart';
 import 'ui/screens/main_screen.dart';
 
+import 'services/sync_service.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
@@ -21,13 +23,16 @@ void main() async {
     debugPrint("Firebase initialize error: $e");
   }
 
-  
   try {
+    // Intentar restaurar sesión de Google de forma silenciosa al iniciar
+    final syncService = SyncService();
+    await syncService.intentarLoginSilencioso();
+
     if (FirebaseAuth.instance.currentUser == null) {
       await FirebaseAuth.instance.signInAnonymously();
     }
   } catch (e) {
-    debugPrint("Error signing in anonymously: $e");
+    debugPrint("Error signing in: $e");
   }
 
   // Inicializar Notificaciones Locales y programar recordatorio de inactividad
