@@ -340,11 +340,21 @@ class _MainScreenState extends State<MainScreen> {
       onTap: () => _onTabTapped(index),
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0),
+        width: 60, // Fixed width to ensure indicator is centered and tabs look even
         child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              height: 3,
+              width: isSelected ? 24 : 0,
+              margin: const EdgeInsets.only(bottom: 4),
+              decoration: BoxDecoration(
+                color: AppColors.primaryDark,
+                borderRadius: BorderRadius.circular(1.5),
+              ),
+            ),
             iconWidget,
             const SizedBox(height: 2),
             Text(

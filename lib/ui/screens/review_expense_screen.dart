@@ -664,7 +664,6 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
           padding: const EdgeInsets.all(16),
           children: [
             _buildImageHeader(),
-            const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -1044,66 +1043,70 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
 
   Widget _buildImageHeader() {
     File? fileToShow;
+    bool hasRutaLocal = widget.existingGasto?.rutaFotoLocal != null;
+
     if (widget.imageFile != null) {
       fileToShow = widget.imageFile;
-    } else {
-      final existingRuta = widget.existingGasto?.rutaFotoLocal;
-      if (existingRuta != null) {
-        final file = File(existingRuta);
-        if (file.existsSync()) {
-          fileToShow = file;
-        }
+    } else if (hasRutaLocal) {
+      final file = File(widget.existingGasto!.rutaFotoLocal!);
+      if (file.existsSync()) {
+        fileToShow = file;
       }
+    }
+
+    if (fileToShow == null && !hasRutaLocal) {
+      return const SizedBox.shrink();
     }
 
     Widget imageWidget;
     if (fileToShow != null) {
       imageWidget = Image.file(fileToShow, fit: BoxFit.cover);
-    } else if (widget.existingGasto?.rutaFotoLocal != null) {
-      imageWidget = const Center(child: Icon(Icons.image_not_supported, color: AppColors.textMuted, size: 48));
     } else {
-      imageWidget = const Center(child: Icon(Icons.receipt_long, color: AppColors.textMuted, size: 48));
+      imageWidget = const Center(child: Icon(Icons.image_not_supported, color: AppColors.textMuted, size: 48));
     }
 
-    final header = ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        height: 140,
-        width: double.infinity,
-        color: Colors.black,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            imageWidget,
-            if (fileToShow != null)
-              Positioned(
-                right: 12,
-                bottom: 12,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.65),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white24),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.zoom_in, color: Colors.white, size: 16),
-                      SizedBox(width: 4),
-                      Text(
-                        'Tocar para ampliar',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
+    final header = Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          height: 140,
+          width: double.infinity,
+          color: Colors.black,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              imageWidget,
+              if (fileToShow != null)
+                Positioned(
+                  right: 12,
+                  bottom: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.65),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white24),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.zoom_in, color: Colors.white, size: 16),
+                        SizedBox(width: 4),
+                        Text(
+                          'Tocar para ampliar',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

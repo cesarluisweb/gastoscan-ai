@@ -174,10 +174,7 @@ class MoreScreenState extends State<MoreScreen> {
               children: [
                 ListTile(
                   key: const Key('more_menu_shopping_list'),
-                  leading: CircleAvatar(
-                    backgroundColor: AppColors.primaryLight,
-                    child: const Icon(Icons.shopping_cart_outlined, color: AppColors.textPrimary, size: 20),
-                  ),
+                  leading: const Icon(Icons.shopping_cart_outlined, color: AppColors.primaryDark, size: 24),
                   title: const Text('Lista de Compras',
                       style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                   subtitle: const Text('Prepara tus compras del supermercado',
@@ -192,10 +189,7 @@ class MoreScreenState extends State<MoreScreen> {
                 const Divider(height: 1, color: AppColors.border),
                 ListTile(
                   key: const Key('more_menu_chat_ai'),
-                  leading: CircleAvatar(
-                    backgroundColor: AppColors.primaryLight,
-                    child: const Icon(Icons.auto_awesome, color: AppColors.textPrimary, size: 20),
-                  ),
+                  leading: const Icon(Icons.auto_awesome, color: AppColors.primaryDark, size: 24),
                   title: const Text('Asistente IA',
                       style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                   subtitle: const Text('Consultas inteligentes sobre tus finanzas',
@@ -225,7 +219,7 @@ class MoreScreenState extends State<MoreScreen> {
               children: [
                 const Row(
                   children: [
-                    Icon(Icons.currency_exchange, color: AppColors.warning, size: 20),
+                    Icon(Icons.currency_exchange, color: AppColors.primaryDark, size: 20),
                     SizedBox(width: 8),
                     Text(
                       'Tasa de Cambio Automática',
@@ -322,7 +316,7 @@ class MoreScreenState extends State<MoreScreen> {
                 children: [
                   const Row(
                     children: [
-                      Icon(Icons.storage_outlined, color: AppColors.secondary, size: 20),
+                      Icon(Icons.storage_outlined, color: AppColors.primaryDark, size: 20),
                       SizedBox(width: 8),
                       Text(
                         'Almacenamiento y Fotos',
@@ -366,7 +360,7 @@ class MoreScreenState extends State<MoreScreen> {
             child: Column(
               children: [
                 ListTile(
-                  leading: const Icon(Icons.table_chart_outlined, color: AppColors.secondary),
+                  leading: const Icon(Icons.table_chart_outlined, color: AppColors.primaryDark),
                   title: const Text('Exportar a Excel (.csv)',
                       style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                   trailing: const Icon(Icons.share_outlined, size: 20, color: AppColors.textSecondary),
@@ -374,7 +368,7 @@ class MoreScreenState extends State<MoreScreen> {
                 ),
                 const Divider(height: 1, color: AppColors.border),
                 ListTile(
-                  leading: const Icon(Icons.description_outlined, color: AppColors.secondary),
+                  leading: const Icon(Icons.description_outlined, color: AppColors.primaryDark),
                   title: const Text('Exportar como Texto (.md)',
                       style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                   trailing: const Icon(Icons.share_outlined, size: 20, color: AppColors.textSecondary),
