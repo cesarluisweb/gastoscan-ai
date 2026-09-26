@@ -13,6 +13,9 @@ import 'analysis_screen.dart';
 import 'more_screen.dart';
 import 'scan_screen.dart';
 import 'review_expense_screen.dart'; // Para agregar manual
+import 'chat_screen.dart';
+import '../../data/models/item_gasto_model.dart';
+import '../../providers/settings_provider.dart';
 import '../widgets/voice_expense_sheet.dart';
 
 class MainScreen extends StatefulWidget {
@@ -56,15 +59,20 @@ class _MainScreenState extends State<MainScreen> {
       onNavigateToGastos: () => _onTabTapped(1),
       onNavigateToAnalysis: () => _onTabTapped(2),
       onNavigateToChat: () {
-        _onTabTapped(3);
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _moreScreenKey.currentState?.openChat();
-        });
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const ChatScreen(showBackButton: true),
+          ),
+        );
       },
     ),
     const ExpenseHistoryScreen(),
     const AnalysisScreen(),
-    MoreScreen(key: _moreScreenKey),
+    MoreScreen(
+      key: _moreScreenKey,
+      onNavigateToHome: () => _onTabTapped(0),
+    ),
   ];
 
   void _onTabTapped(int index) {
@@ -148,6 +156,7 @@ class _MainScreenState extends State<MainScreen> {
                 title: const Text('Ingreso Manual', style: TextStyle(fontWeight: FontWeight.bold)),
                 subtitle: const Text('Registra un gasto sin factura'),
                 onTap: () {
+                  final settings = Provider.of<SettingsProvider>(context, listen: false);
                   Navigator.pop(ctx);
                   Navigator.push(
                     context,
@@ -156,12 +165,19 @@ class _MainScreenState extends State<MainScreen> {
                         extractedData: GeminiExtractionResult(
                           comercio: '',
                           fecha: DateTime.now().toIso8601String().substring(0, 10),
-                          moneda: 'USD',
+                          moneda: settings.monedaPrincipal,
                           totalOriginal: 0.0,
                           tasaCambioDetectada: null,
                           impuestoIva: 0.0,
-                          
-                          items: [],
+                          items: [
+                            ItemGastoModel(
+                              descripcion: '',
+                              cantidad: 1.0,
+                              precioUnitario: 0,
+                              total: 0,
+                              categoria: 'Otros',
+                            ),
+                          ],
                         ),
                       ),
                     ),

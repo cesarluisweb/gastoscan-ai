@@ -109,21 +109,43 @@ void main() {
       expect(find.text('Ingreso Manual'), findsOneWidget);
     });
 
-    testWidgets('tapping AI chat button on Inicio navigates to Chat keeping bottom navigation', (tester) async {
+    testWidgets('tapping AI chat button on Inicio navigates to Chat and back returns to Inicio', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
       await tester.tap(find.byKey(const Key('dashboard_ai_chat_button')));
       await tester.pumpAndSettle();
 
-      // Bottom bar is still visible
-      expect(find.text('Inicio'), findsOneWidget);
-      expect(find.text('Gastos'), findsOneWidget);
-      expect(find.text('Análisis'), findsOneWidget);
-      expect(find.text('Más'), findsOneWidget);
-
       // We are in ChatScreen with placeholder
       expect(find.text('Pregunta o pídeme algo...'), findsOneWidget);
+      expect(find.text('Asistente IA'), findsOneWidget);
+
+      // Tapping back returns directly to Inicio
+      await tester.tap(find.byIcon(Icons.arrow_back));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Rinde Más'), findsOneWidget);
+    });
+
+    testWidgets('tapping Asistente IA in Mas and pressing back returns to Inicio', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      // Navigate to Mas tab
+      await tester.tap(find.text('Más'));
+      await tester.pumpAndSettle();
+
+      // Tap Asistente IA
+      await tester.tap(find.byKey(const Key('more_menu_chat_ai')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Asistente IA'), findsOneWidget);
+
+      // Tapping back returns to Inicio
+      await tester.tap(find.byIcon(Icons.arrow_back));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Rinde Más'), findsOneWidget);
     });
   });
 }

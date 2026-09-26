@@ -75,18 +75,29 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       _tasaCambioCtrl = TextEditingController(text: tasa.toStringAsFixed(2));
       _fuenteTasa = gasto.fuenteTasaCambio ?? 'Tasa histórica del gasto';
     } else {
-      final data = widget.extractedData!;
-      _comercioCtrl = TextEditingController(text: data.comercio);
-      _selectedFecha = data.fecha;
-      _selectedMoneda = data.moneda;
-      _items = List.from(data.items);
+      final data = widget.extractedData;
+      _comercioCtrl = TextEditingController(text: data?.comercio ?? '');
+      _selectedFecha = data?.fecha ?? DateTime.now().toIso8601String().substring(0, 10);
+      _selectedMoneda = data?.moneda ?? settings.monedaPrincipal;
+      _items = List.from(data?.items ?? []);
 
-      _totalOriginalCtrl = TextEditingController(text: _formatDouble(data.totalOriginal));
+      if (_items.isEmpty) {
+        _items.add(ItemGastoModel(
+          descripcion: '',
+          cantidad: 1.0,
+          precioUnitario: 0,
+          total: 0,
+          categoria: 'Otros',
+        ));
+      }
 
-      double tasaInicial = data.tasaCambioDetectada ?? settings.tasaCambioVesUsd;
+      final double totalOriginalVal = data?.totalOriginal ?? 0.0;
+      _totalOriginalCtrl = TextEditingController(text: _formatDouble(totalOriginalVal));
+
+      double tasaInicial = data?.tasaCambioDetectada ?? settings.tasaCambioVesUsd;
       _tasaCambioCtrl = TextEditingController(text: tasaInicial.toStringAsFixed(2));
 
-      if (data.tasaCambioDetectada != null && data.tasaCambioDetectada! > 0) {
+      if (data?.tasaCambioDetectada != null && data!.tasaCambioDetectada! > 0) {
         _fuenteTasa = 'Tasa detectada en la factura';
       } else {
         _fuenteTasa = 'Buscando tasa de la fecha...';
@@ -97,13 +108,13 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
 
       double totalUsdCalculado;
       if (_selectedMoneda == 'USD') {
-        totalUsdCalculado = data.totalOriginal;
+        totalUsdCalculado = totalOriginalVal;
       } else if (_selectedMoneda == 'VES') {
-        totalUsdCalculado = tasaInicial > 0 ? (data.totalOriginal / tasaInicial) : data.totalOriginal;
+        totalUsdCalculado = tasaInicial > 0 ? (totalOriginalVal / tasaInicial) : totalOriginalVal;
       } else {
-        totalUsdCalculado = data.totalOriginal;
+        totalUsdCalculado = totalOriginalVal;
       }
-      _totalUsdCtrl = TextEditingController(text: totalUsdCalculado.toStringAsFixed(2));
+      _totalUsdCtrl = TextEditingController(text: totalUsdCalculado > 0 ? totalUsdCalculado.toStringAsFixed(2) : '');
     }
     
     // Verificar precios anteriores para los items recien cargados

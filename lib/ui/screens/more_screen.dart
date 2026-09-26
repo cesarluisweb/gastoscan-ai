@@ -14,7 +14,8 @@ import 'chat_screen.dart';
 enum MoreSubView { hub, shoppingList, chat }
 
 class MoreScreen extends StatefulWidget {
-  const MoreScreen({Key? key}) : super(key: key);
+  final VoidCallback? onNavigateToHome;
+  const MoreScreen({Key? key, this.onNavigateToHome}) : super(key: key);
 
   @override
   State<MoreScreen> createState() => MoreScreenState();
@@ -116,16 +117,34 @@ class MoreScreenState extends State<MoreScreen> {
   @override
   Widget build(BuildContext context) {
     if (_currentSubView == MoreSubView.shoppingList) {
-      return ShoppingListScreen(
-        showBackButton: true,
-        onBack: () => setState(() => _currentSubView = MoreSubView.hub),
+      return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop) return;
+          setState(() => _currentSubView = MoreSubView.hub);
+        },
+        child: ShoppingListScreen(
+          showBackButton: true,
+          onBack: () => setState(() => _currentSubView = MoreSubView.hub),
+        ),
       );
     }
 
     if (_currentSubView == MoreSubView.chat) {
-      return ChatScreen(
-        showBackButton: true,
-        onBack: () => setState(() => _currentSubView = MoreSubView.hub),
+      return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop) return;
+          setState(() => _currentSubView = MoreSubView.hub);
+          widget.onNavigateToHome?.call();
+        },
+        child: ChatScreen(
+          showBackButton: true,
+          onBack: () {
+            setState(() => _currentSubView = MoreSubView.hub);
+            widget.onNavigateToHome?.call();
+          },
+        ),
       );
     }
 
