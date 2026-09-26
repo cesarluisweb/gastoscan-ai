@@ -126,12 +126,13 @@ class _MoreScreenState extends State<MoreScreen> {
           const SizedBox(height: 16),
 
           // Herramientas: Lista de Compras y Asistente IA
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.card,
+          Material(
+            color: AppColors.card,
+            shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border),
+              side: const BorderSide(color: AppColors.border),
             ),
+            clipBehavior: Clip.antiAlias,
             child: Column(
               children: [
                 ListTile(
@@ -270,57 +271,61 @@ class _MoreScreenState extends State<MoreScreen> {
           const SizedBox(height: 16),
 
           // Sección de Almacenamiento y Fotos
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.card,
+          Material(
+            color: AppColors.card,
+            shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border),
+              side: const BorderSide(color: AppColors.border),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
-                  children: [
-                    Icon(Icons.storage_outlined, color: AppColors.secondary, size: 20),
-                    SizedBox(width: 8),
-                    Text(
-                      'Almacenamiento y Fotos',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
+            clipBehavior: Clip.antiAlias,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.storage_outlined, color: AppColors.secondary, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'Almacenamiento y Fotos',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    activeColor: AppColors.primaryDark,
+                    title: const Text(
+                      'Guardar copia de fotos en el dispositivo',
+                      style: TextStyle(color: AppColors.textPrimary, fontSize: 14),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  activeColor: AppColors.primaryDark,
-                  title: const Text(
-                    'Guardar copia de fotos en el dispositivo',
-                    style: TextStyle(color: AppColors.textPrimary, fontSize: 14),
+                    subtitle: const Text(
+                      'Si está desactivado, la foto se elimina inmediatamente tras extraer los datos para ahorrar espacio.',
+                      style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+                    ),
+                    value: settings.guardarFotos,
+                    onChanged: (val) => settings.setGuardarFotos(val),
                   ),
-                  subtitle: const Text(
-                    'Si está desactivado, la foto se elimina inmediatamente tras extraer los datos para ahorrar espacio.',
-                    style: TextStyle(color: AppColors.textMuted, fontSize: 12),
-                  ),
-                  value: settings.guardarFotos,
-                  onChanged: (val) => settings.setGuardarFotos(val),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 16),
 
           // Sección de Exportar Reportes
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.card,
+          Material(
+            color: AppColors.card,
+            shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border),
+              side: const BorderSide(color: AppColors.border),
             ),
+            clipBehavior: Clip.antiAlias,
             child: Column(
               children: [
                 ListTile(
