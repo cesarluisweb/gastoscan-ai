@@ -6,230 +6,15 @@
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests getAllPresupuestosCategorias returns all configured category budgets
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests insertCategoria and updateCategoria work correctly
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests deleteCategoria removes the category
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests renders 4 navigation destinations and center FAB
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests switching tabs changes current active screen
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping center FAB opens bottom sheet with 4 add options
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests displays yellow processing banner when queue has pending items
-::endgroup::
-::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests renders 4 navigation destinations and center FAB (failed)
-══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞═════════════════════════════════════════════════════════
-The following assertion was thrown:
-ListTile background color or ink splashes may be invisible.
-The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its
-background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those
-effects.
-To fix this, wrap the ListTile in its own Material widget, or remove the background color from the
-intermediate DecoratedBox.
-
-ListTile: ListTile-[<'more_menu_shopping_list'>](onTap: Closure: () => void)
-DecoratedBox:
-  DecoratedBox(bg: BoxDecoration(color: Color(alpha: 1.0000, red: 1.0000, green: 1.0000, blue: 1.0000, colorSpace: ColorSpace.sRGB), border: Border.all(BorderSide(color: Color(alpha: 1.0000, red: 0.8980, green: 0.9059, blue: 0.9216, colorSpace: ColorSpace.sRGB))), borderRadius: BorderRadius.circular(16.0)))
-════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞═════════════════════════════════════════════════════════
-The following assertion was thrown:
-ListTile background color or ink splashes may be invisible.
-The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its
-background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those
-effects.
-To fix this, wrap the ListTile in its own Material widget, or remove the background color from the
-intermediate DecoratedBox.
-
-ListTile: ListTile-[<'more_menu_chat_ai'>](onTap: Closure: () => void)
-DecoratedBox:
-  DecoratedBox(bg: BoxDecoration(color: Color(alpha: 1.0000, red: 1.0000, green: 1.0000, blue: 1.0000, colorSpace: ColorSpace.sRGB), border: Border.all(BorderSide(color: Color(alpha: 1.0000, red: 0.8980, green: 0.9059, blue: 0.9216, colorSpace: ColorSpace.sRGB))), borderRadius: BorderRadius.circular(16.0)))
-════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞═════════════════════════════════════════════════════════
-The following assertion was thrown:
-ListTile background color or ink splashes may be invisible.
-The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its
-background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those
-effects.
-To fix this, wrap the ListTile in its own Material widget, or remove the background color from the
-intermediate DecoratedBox.
-
-ListTile:
-  ListTile(selectedColor: Color(alpha: 1.0000, red: 0.9804, green: 0.8000, blue: 0.0824, colorSpace: ColorSpace.sRGB), contentPadding: EdgeInsets.zero, onTap: Closure: () => void)
-DecoratedBox:
-  DecoratedBox(bg: BoxDecoration(color: Color(alpha: 1.0000, red: 1.0000, green: 1.0000, blue: 1.0000, colorSpace: ColorSpace.sRGB), border: Border.all(BorderSide(color: Color(alpha: 1.0000, red: 0.8980, green: 0.9059, blue: 0.9216, colorSpace: ColorSpace.sRGB))), borderRadius: BorderRadius.circular(16.0)))
-════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
-The following message was thrown:
-Multiple exceptions (3) were detected during the running of the current test, and at least one was
-unexpected.
-════════════════════════════════════════════════════════════════════════════════════════════════════
-Test failed. See exception logs above.
-The test description was: renders 4 navigation destinations and center FAB
-
-::endgroup::
-::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests displays single item text properly in processing banner
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests hides processing banner when queue is empty and not processing
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests displays ready queue banner when items are ready for review
 ::endgroup::
-::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests switching tabs changes current active screen (failed)
-══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞═════════════════════════════════════════════════════════
-The following assertion was thrown:
-ListTile background color or ink splashes may be invisible.
-The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its
-background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those
-effects.
-To fix this, wrap the ListTile in its own Material widget, or remove the background color from the
-intermediate DecoratedBox.
-
-ListTile: ListTile-[<'more_menu_shopping_list'>](onTap: Closure: () => void)
-DecoratedBox:
-  DecoratedBox(bg: BoxDecoration(color: Color(alpha: 1.0000, red: 1.0000, green: 1.0000, blue: 1.0000, colorSpace: ColorSpace.sRGB), border: Border.all(BorderSide(color: Color(alpha: 1.0000, red: 0.8980, green: 0.9059, blue: 0.9216, colorSpace: ColorSpace.sRGB))), borderRadius: BorderRadius.circular(16.0)))
-════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞═════════════════════════════════════════════════════════
-The following assertion was thrown:
-ListTile background color or ink splashes may be invisible.
-The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its
-background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those
-effects.
-To fix this, wrap the ListTile in its own Material widget, or remove the background color from the
-intermediate DecoratedBox.
-
-ListTile: ListTile-[<'more_menu_chat_ai'>](onTap: Closure: () => void)
-DecoratedBox:
-  DecoratedBox(bg: BoxDecoration(color: Color(alpha: 1.0000, red: 1.0000, green: 1.0000, blue: 1.0000, colorSpace: ColorSpace.sRGB), border: Border.all(BorderSide(color: Color(alpha: 1.0000, red: 0.8980, green: 0.9059, blue: 0.9216, colorSpace: ColorSpace.sRGB))), borderRadius: BorderRadius.circular(16.0)))
-════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞═════════════════════════════════════════════════════════
-The following assertion was thrown:
-ListTile background color or ink splashes may be invisible.
-The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its
-background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those
-effects.
-To fix this, wrap the ListTile in its own Material widget, or remove the background color from the
-intermediate DecoratedBox.
-
-ListTile:
-  ListTile(selectedColor: Color(alpha: 1.0000, red: 0.9804, green: 0.8000, blue: 0.0824, colorSpace: ColorSpace.sRGB), contentPadding: EdgeInsets.zero, onTap: Closure: () => void)
-DecoratedBox:
-  DecoratedBox(bg: BoxDecoration(color: Color(alpha: 1.0000, red: 1.0000, green: 1.0000, blue: 1.0000, colorSpace: ColorSpace.sRGB), border: Border.all(BorderSide(color: Color(alpha: 1.0000, red: 0.8980, green: 0.9059, blue: 0.9216, colorSpace: ColorSpace.sRGB))), borderRadius: BorderRadius.circular(16.0)))
-════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
-The following message was thrown:
-Multiple exceptions (3) were detected during the running of the current test, and at least one was
-unexpected.
-════════════════════════════════════════════════════════════════════════════════════════════════════
-Test failed. See exception logs above.
-The test description was: switching tabs changes current active screen
-
-::endgroup::
-::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping center FAB opens bottom sheet with 4 add options (failed)
-══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞═════════════════════════════════════════════════════════
-The following assertion was thrown:
-ListTile background color or ink splashes may be invisible.
-The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its
-background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those
-effects.
-To fix this, wrap the ListTile in its own Material widget, or remove the background color from the
-intermediate DecoratedBox.
-
-ListTile: ListTile-[<'more_menu_shopping_list'>](onTap: Closure: () => void)
-DecoratedBox:
-  DecoratedBox(bg: BoxDecoration(color: Color(alpha: 1.0000, red: 1.0000, green: 1.0000, blue: 1.0000, colorSpace: ColorSpace.sRGB), border: Border.all(BorderSide(color: Color(alpha: 1.0000, red: 0.8980, green: 0.9059, blue: 0.9216, colorSpace: ColorSpace.sRGB))), borderRadius: BorderRadius.circular(16.0)))
-════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞═════════════════════════════════════════════════════════
-The following assertion was thrown:
-ListTile background color or ink splashes may be invisible.
-The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its
-background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those
-effects.
-To fix this, wrap the ListTile in its own Material widget, or remove the background color from the
-intermediate DecoratedBox.
-
-ListTile: ListTile-[<'more_menu_chat_ai'>](onTap: Closure: () => void)
-DecoratedBox:
-  DecoratedBox(bg: BoxDecoration(color: Color(alpha: 1.0000, red: 1.0000, green: 1.0000, blue: 1.0000, colorSpace: ColorSpace.sRGB), border: Border.all(BorderSide(color: Color(alpha: 1.0000, red: 0.8980, green: 0.9059, blue: 0.9216, colorSpace: ColorSpace.sRGB))), borderRadius: BorderRadius.circular(16.0)))
-════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞═════════════════════════════════════════════════════════
-The following assertion was thrown:
-ListTile background color or ink splashes may be invisible.
-The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its
-background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those
-effects.
-To fix this, wrap the ListTile in its own Material widget, or remove the background color from the
-intermediate DecoratedBox.
-
-ListTile:
-  ListTile(selectedColor: Color(alpha: 1.0000, red: 0.9804, green: 0.8000, blue: 0.0824, colorSpace: ColorSpace.sRGB), contentPadding: EdgeInsets.zero, onTap: Closure: () => void)
-DecoratedBox:
-  DecoratedBox(bg: BoxDecoration(color: Color(alpha: 1.0000, red: 1.0000, green: 1.0000, blue: 1.0000, colorSpace: ColorSpace.sRGB), border: Border.all(BorderSide(color: Color(alpha: 1.0000, red: 0.8980, green: 0.9059, blue: 0.9216, colorSpace: ColorSpace.sRGB))), borderRadius: BorderRadius.circular(16.0)))
-════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
-The following message was thrown:
-Multiple exceptions (3) were detected during the running of the current test, and at least one was
-unexpected.
-════════════════════════════════════════════════════════════════════════════════════════════════════
-Test failed. See exception logs above.
-The test description was: tapping center FAB opens bottom sheet with 4 add options
-
-::endgroup::
 ::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests renders all hub sections in main view (failed)
-══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞═════════════════════════════════════════════════════════
-The following assertion was thrown:
-ListTile background color or ink splashes may be invisible.
-The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its
-background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those
-effects.
-To fix this, wrap the ListTile in its own Material widget, or remove the background color from the
-intermediate DecoratedBox.
-
-ListTile: ListTile-[<'more_menu_shopping_list'>](onTap: Closure: () => void)
-DecoratedBox:
-  DecoratedBox(bg: BoxDecoration(color: Color(alpha: 1.0000, red: 1.0000, green: 1.0000, blue: 1.0000, colorSpace: ColorSpace.sRGB), border: Border.all(BorderSide(color: Color(alpha: 1.0000, red: 0.8980, green: 0.9059, blue: 0.9216, colorSpace: ColorSpace.sRGB))), borderRadius: BorderRadius.circular(16.0)))
-════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞═════════════════════════════════════════════════════════
-The following assertion was thrown:
-ListTile background color or ink splashes may be invisible.
-The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its
-background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those
-effects.
-To fix this, wrap the ListTile in its own Material widget, or remove the background color from the
-intermediate DecoratedBox.
-
-ListTile: ListTile-[<'more_menu_chat_ai'>](onTap: Closure: () => void)
-DecoratedBox:
-  DecoratedBox(bg: BoxDecoration(color: Color(alpha: 1.0000, red: 1.0000, green: 1.0000, blue: 1.0000, colorSpace: ColorSpace.sRGB), border: Border.all(BorderSide(color: Color(alpha: 1.0000, red: 0.8980, green: 0.9059, blue: 0.9216, colorSpace: ColorSpace.sRGB))), borderRadius: BorderRadius.circular(16.0)))
-════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞═════════════════════════════════════════════════════════
-The following assertion was thrown:
-ListTile background color or ink splashes may be invisible.
-The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its
-background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those
-effects.
-To fix this, wrap the ListTile in its own Material widget, or remove the background color from the
-intermediate DecoratedBox.
-
-ListTile:
-  ListTile(selectedColor: Color(alpha: 1.0000, red: 0.9804, green: 0.8000, blue: 0.0824, colorSpace: ColorSpace.sRGB), contentPadding: EdgeInsets.zero, onTap: Closure: () => void)
-DecoratedBox:
-  DecoratedBox(bg: BoxDecoration(color: Color(alpha: 1.0000, red: 1.0000, green: 1.0000, blue: 1.0000, colorSpace: ColorSpace.sRGB), border: Border.all(BorderSide(color: Color(alpha: 1.0000, red: 0.8980, green: 0.9059, blue: 0.9216, colorSpace: ColorSpace.sRGB))), borderRadius: BorderRadius.circular(16.0)))
-════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞═════════════════════════════════════════════════════════
-The following assertion was thrown:
-ListTile background color or ink splashes may be invisible.
-The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its
-background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those
-effects.
-To fix this, wrap the ListTile in its own Material widget, or remove the background color from the
-intermediate DecoratedBox.
-
-ListTile: ListTile(onTap: Closure: () => void)
-DecoratedBox:
-  DecoratedBox(bg: BoxDecoration(color: Color(alpha: 1.0000, red: 1.0000, green: 1.0000, blue: 1.0000, colorSpace: ColorSpace.sRGB), border: Border.all(BorderSide(color: Color(alpha: 1.0000, red: 0.8980, green: 0.9059, blue: 0.9216, colorSpace: ColorSpace.sRGB))), borderRadius: BorderRadius.circular(16.0)))
-════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞═════════════════════════════════════════════════════════
-The following assertion was thrown:
-ListTile background color or ink splashes may be invisible.
-The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its
-background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those
-effects.
-To fix this, wrap the ListTile in its own Material widget, or remove the background color from the
-intermediate DecoratedBox.
-
-ListTile: ListTile(onTap: Closure: () => void)
-DecoratedBox:
-  DecoratedBox(bg: BoxDecoration(color: Color(alpha: 1.0000, red: 1.0000, green: 1.0000, blue: 1.0000, colorSpace: ColorSpace.sRGB), border: Border.all(BorderSide(color: Color(alpha: 1.0000, red: 0.8980, green: 0.9059, blue: 0.9216, colorSpace: ColorSpace.sRGB))), borderRadius: BorderRadius.circular(16.0)))
-════════════════════════════════════════════════════════════════════════════════════════════════════
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following TestFailure was thrown running a test:
 Expected: exactly one matching candidate
@@ -251,304 +36,15 @@ This was caught by the test expectation on the following line:
 The test description was:
   renders all hub sections in main view
 ════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
-The following message was thrown:
-Multiple exceptions (6) were detected during the running of the current test, and at least one was
-unexpected.
-════════════════════════════════════════════════════════════════════════════════════════════════════
 Test failed. See exception logs above.
 The test description was: renders all hub sections in main view
 
 ::endgroup::
-::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping shopping list navigates internally and back button returns to hub (failed)
-══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞═════════════════════════════════════════════════════════
-The following assertion was thrown:
-ListTile background color or ink splashes may be invisible.
-The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its
-background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those
-effects.
-To fix this, wrap the ListTile in its own Material widget, or remove the background color from the
-intermediate DecoratedBox.
-
-ListTile: ListTile-[<'more_menu_shopping_list'>](onTap: Closure: () => void)
-DecoratedBox:
-  DecoratedBox(bg: BoxDecoration(color: Color(alpha: 1.0000, red: 1.0000, green: 1.0000, blue: 1.0000, colorSpace: ColorSpace.sRGB), border: Border.all(BorderSide(color: Color(alpha: 1.0000, red: 0.8980, green: 0.9059, blue: 0.9216, colorSpace: ColorSpace.sRGB))), borderRadius: BorderRadius.circular(16.0)))
-════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞═════════════════════════════════════════════════════════
-The following assertion was thrown:
-ListTile background color or ink splashes may be invisible.
-The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its
-background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those
-effects.
-To fix this, wrap the ListTile in its own Material widget, or remove the background color from the
-intermediate DecoratedBox.
-
-ListTile: ListTile-[<'more_menu_chat_ai'>](onTap: Closure: () => void)
-DecoratedBox:
-  DecoratedBox(bg: BoxDecoration(color: Color(alpha: 1.0000, red: 1.0000, green: 1.0000, blue: 1.0000, colorSpace: ColorSpace.sRGB), border: Border.all(BorderSide(color: Color(alpha: 1.0000, red: 0.8980, green: 0.9059, blue: 0.9216, colorSpace: ColorSpace.sRGB))), borderRadius: BorderRadius.circular(16.0)))
-════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞═════════════════════════════════════════════════════════
-The following assertion was thrown:
-ListTile background color or ink splashes may be invisible.
-The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its
-background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those
-effects.
-To fix this, wrap the ListTile in its own Material widget, or remove the background color from the
-intermediate DecoratedBox.
-
-ListTile:
-  ListTile(selectedColor: Color(alpha: 1.0000, red: 0.9804, green: 0.8000, blue: 0.0824, colorSpace: ColorSpace.sRGB), contentPadding: EdgeInsets.zero, onTap: Closure: () => void)
-DecoratedBox:
-  DecoratedBox(bg: BoxDecoration(color: Color(alpha: 1.0000, red: 1.0000, green: 1.0000, blue: 1.0000, colorSpace: ColorSpace.sRGB), border: Border.all(BorderSide(color: Color(alpha: 1.0000, red: 0.8980, green: 0.9059, blue: 0.9216, colorSpace: ColorSpace.sRGB))), borderRadius: BorderRadius.circular(16.0)))
-════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞═════════════════════════════════════════════════════════
-The following assertion was thrown:
-ListTile background color or ink splashes may be invisible.
-The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its
-background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those
-effects.
-To fix this, wrap the ListTile in its own Material widget, or remove the background color from the
-intermediate DecoratedBox.
-
-ListTile: ListTile(onTap: Closure: () => void)
-DecoratedBox:
-  DecoratedBox(bg: BoxDecoration(color: Color(alpha: 1.0000, red: 1.0000, green: 1.0000, blue: 1.0000, colorSpace: ColorSpace.sRGB), border: Border.all(BorderSide(color: Color(alpha: 1.0000, red: 0.8980, green: 0.9059, blue: 0.9216, colorSpace: ColorSpace.sRGB))), borderRadius: BorderRadius.circular(16.0)))
-════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞═════════════════════════════════════════════════════════
-The following assertion was thrown:
-ListTile background color or ink splashes may be invisible.
-The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its
-background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those
-effects.
-To fix this, wrap the ListTile in its own Material widget, or remove the background color from the
-intermediate DecoratedBox.
-
-ListTile: ListTile(onTap: Closure: () => void)
-DecoratedBox:
-  DecoratedBox(bg: BoxDecoration(color: Color(alpha: 1.0000, red: 1.0000, green: 1.0000, blue: 1.0000, colorSpace: ColorSpace.sRGB), border: Border.all(BorderSide(color: Color(alpha: 1.0000, red: 0.8980, green: 0.9059, blue: 0.9216, colorSpace: ColorSpace.sRGB))), borderRadius: BorderRadius.circular(16.0)))
-════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞═════════════════════════════════════════════════════════
-The following assertion was thrown:
-ListTile background color or ink splashes may be invisible.
-The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its
-background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those
-effects.
-To fix this, wrap the ListTile in its own Material widget, or remove the background color from the
-intermediate DecoratedBox.
-
-ListTile: ListTile-[<'more_menu_shopping_list'>](onTap: Closure: () => void)
-DecoratedBox:
-  DecoratedBox(bg: BoxDecoration(color: Color(alpha: 1.0000, red: 1.0000, green: 1.0000, blue: 1.0000, colorSpace: ColorSpace.sRGB), border: Border.all(BorderSide(color: Color(alpha: 1.0000, red: 0.8980, green: 0.9059, blue: 0.9216, colorSpace: ColorSpace.sRGB))), borderRadius: BorderRadius.circular(16.0)))
-════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞═════════════════════════════════════════════════════════
-The following assertion was thrown:
-ListTile background color or ink splashes may be invisible.
-The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its
-background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those
-effects.
-To fix this, wrap the ListTile in its own Material widget, or remove the background color from the
-intermediate DecoratedBox.
-
-ListTile: ListTile-[<'more_menu_chat_ai'>](onTap: Closure: () => void)
-DecoratedBox:
-  DecoratedBox(bg: BoxDecoration(color: Color(alpha: 1.0000, red: 1.0000, green: 1.0000, blue: 1.0000, colorSpace: ColorSpace.sRGB), border: Border.all(BorderSide(color: Color(alpha: 1.0000, red: 0.8980, green: 0.9059, blue: 0.9216, colorSpace: ColorSpace.sRGB))), borderRadius: BorderRadius.circular(16.0)))
-════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞═════════════════════════════════════════════════════════
-The following assertion was thrown:
-ListTile background color or ink splashes may be invisible.
-The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its
-background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those
-effects.
-To fix this, wrap the ListTile in its own Material widget, or remove the background color from the
-intermediate DecoratedBox.
-
-ListTile:
-  ListTile(selectedColor: Color(alpha: 1.0000, red: 0.9804, green: 0.8000, blue: 0.0824, colorSpace: ColorSpace.sRGB), contentPadding: EdgeInsets.zero, onTap: Closure: () => void)
-DecoratedBox:
-  DecoratedBox(bg: BoxDecoration(color: Color(alpha: 1.0000, red: 1.0000, green: 1.0000, blue: 1.0000, colorSpace: ColorSpace.sRGB), border: Border.all(BorderSide(color: Color(alpha: 1.0000, red: 0.8980, green: 0.9059, blue: 0.9216, colorSpace: ColorSpace.sRGB))), borderRadius: BorderRadius.circular(16.0)))
-════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞═════════════════════════════════════════════════════════
-The following assertion was thrown:
-ListTile background color or ink splashes may be invisible.
-The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its
-background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those
-effects.
-To fix this, wrap the ListTile in its own Material widget, or remove the background color from the
-intermediate DecoratedBox.
-
-ListTile: ListTile(onTap: Closure: () => void)
-DecoratedBox:
-  DecoratedBox(bg: BoxDecoration(color: Color(alpha: 1.0000, red: 1.0000, green: 1.0000, blue: 1.0000, colorSpace: ColorSpace.sRGB), border: Border.all(BorderSide(color: Color(alpha: 1.0000, red: 0.8980, green: 0.9059, blue: 0.9216, colorSpace: ColorSpace.sRGB))), borderRadius: BorderRadius.circular(16.0)))
-════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞═════════════════════════════════════════════════════════
-The following assertion was thrown:
-ListTile background color or ink splashes may be invisible.
-The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its
-background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those
-effects.
-To fix this, wrap the ListTile in its own Material widget, or remove the background color from the
-intermediate DecoratedBox.
-
-ListTile: ListTile(onTap: Closure: () => void)
-DecoratedBox:
-  DecoratedBox(bg: BoxDecoration(color: Color(alpha: 1.0000, red: 1.0000, green: 1.0000, blue: 1.0000, colorSpace: ColorSpace.sRGB), border: Border.all(BorderSide(color: Color(alpha: 1.0000, red: 0.8980, green: 0.9059, blue: 0.9216, colorSpace: ColorSpace.sRGB))), borderRadius: BorderRadius.circular(16.0)))
-════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
-The following message was thrown:
-Multiple exceptions (10) were detected during the running of the current test, and at least one was
-unexpected.
-════════════════════════════════════════════════════════════════════════════════════════════════════
-Test failed. See exception logs above.
-The test description was: tapping shopping list navigates internally and back button returns to hub
-
-::endgroup::
 ::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping shopping list navigates internally and back button returns to hub
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping chat navigates internally and back button returns to hub
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: DashboardScreen Category Budget & Red Excess Alert Tests (R3) R3 Acceptance Criteria: Asignar $50 a Alimentación, y registrar un gasto de $60 en Alimentación hace que se dibuje un indicador visual de exceso (color rojo) en la UI de esa categoría
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: DashboardScreen Category Budget & Red Excess Alert Tests (R3) Category within budget does NOT render the red excess alert
-::endgroup::
-::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping chat navigates internally and back button returns to hub (failed)
-══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞═════════════════════════════════════════════════════════
-The following assertion was thrown:
-ListTile background color or ink splashes may be invisible.
-The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its
-background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those
-effects.
-To fix this, wrap the ListTile in its own Material widget, or remove the background color from the
-intermediate DecoratedBox.
-
-ListTile: ListTile-[<'more_menu_shopping_list'>](onTap: Closure: () => void)
-DecoratedBox:
-  DecoratedBox(bg: BoxDecoration(color: Color(alpha: 1.0000, red: 1.0000, green: 1.0000, blue: 1.0000, colorSpace: ColorSpace.sRGB), border: Border.all(BorderSide(color: Color(alpha: 1.0000, red: 0.8980, green: 0.9059, blue: 0.9216, colorSpace: ColorSpace.sRGB))), borderRadius: BorderRadius.circular(16.0)))
-════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞═════════════════════════════════════════════════════════
-The following assertion was thrown:
-ListTile background color or ink splashes may be invisible.
-The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its
-background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those
-effects.
-To fix this, wrap the ListTile in its own Material widget, or remove the background color from the
-intermediate DecoratedBox.
-
-ListTile: ListTile-[<'more_menu_chat_ai'>](onTap: Closure: () => void)
-DecoratedBox:
-  DecoratedBox(bg: BoxDecoration(color: Color(alpha: 1.0000, red: 1.0000, green: 1.0000, blue: 1.0000, colorSpace: ColorSpace.sRGB), border: Border.all(BorderSide(color: Color(alpha: 1.0000, red: 0.8980, green: 0.9059, blue: 0.9216, colorSpace: ColorSpace.sRGB))), borderRadius: BorderRadius.circular(16.0)))
-════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞═════════════════════════════════════════════════════════
-The following assertion was thrown:
-ListTile background color or ink splashes may be invisible.
-The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its
-background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those
-effects.
-To fix this, wrap the ListTile in its own Material widget, or remove the background color from the
-intermediate DecoratedBox.
-
-ListTile:
-  ListTile(selectedColor: Color(alpha: 1.0000, red: 0.9804, green: 0.8000, blue: 0.0824, colorSpace: ColorSpace.sRGB), contentPadding: EdgeInsets.zero, onTap: Closure: () => void)
-DecoratedBox:
-  DecoratedBox(bg: BoxDecoration(color: Color(alpha: 1.0000, red: 1.0000, green: 1.0000, blue: 1.0000, colorSpace: ColorSpace.sRGB), border: Border.all(BorderSide(color: Color(alpha: 1.0000, red: 0.8980, green: 0.9059, blue: 0.9216, colorSpace: ColorSpace.sRGB))), borderRadius: BorderRadius.circular(16.0)))
-════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞═════════════════════════════════════════════════════════
-The following assertion was thrown:
-ListTile background color or ink splashes may be invisible.
-The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its
-background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those
-effects.
-To fix this, wrap the ListTile in its own Material widget, or remove the background color from the
-intermediate DecoratedBox.
-
-ListTile: ListTile(onTap: Closure: () => void)
-DecoratedBox:
-  DecoratedBox(bg: BoxDecoration(color: Color(alpha: 1.0000, red: 1.0000, green: 1.0000, blue: 1.0000, colorSpace: ColorSpace.sRGB), border: Border.all(BorderSide(color: Color(alpha: 1.0000, red: 0.8980, green: 0.9059, blue: 0.9216, colorSpace: ColorSpace.sRGB))), borderRadius: BorderRadius.circular(16.0)))
-════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞═════════════════════════════════════════════════════════
-The following assertion was thrown:
-ListTile background color or ink splashes may be invisible.
-The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its
-background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those
-effects.
-To fix this, wrap the ListTile in its own Material widget, or remove the background color from the
-intermediate DecoratedBox.
-
-ListTile: ListTile(onTap: Closure: () => void)
-DecoratedBox:
-  DecoratedBox(bg: BoxDecoration(color: Color(alpha: 1.0000, red: 1.0000, green: 1.0000, blue: 1.0000, colorSpace: ColorSpace.sRGB), border: Border.all(BorderSide(color: Color(alpha: 1.0000, red: 0.8980, green: 0.9059, blue: 0.9216, colorSpace: ColorSpace.sRGB))), borderRadius: BorderRadius.circular(16.0)))
-════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞═════════════════════════════════════════════════════════
-The following assertion was thrown:
-ListTile background color or ink splashes may be invisible.
-The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its
-background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those
-effects.
-To fix this, wrap the ListTile in its own Material widget, or remove the background color from the
-intermediate DecoratedBox.
-
-ListTile: ListTile-[<'more_menu_shopping_list'>](onTap: Closure: () => void)
-DecoratedBox:
-  DecoratedBox(bg: BoxDecoration(color: Color(alpha: 1.0000, red: 1.0000, green: 1.0000, blue: 1.0000, colorSpace: ColorSpace.sRGB), border: Border.all(BorderSide(color: Color(alpha: 1.0000, red: 0.8980, green: 0.9059, blue: 0.9216, colorSpace: ColorSpace.sRGB))), borderRadius: BorderRadius.circular(16.0)))
-════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞═════════════════════════════════════════════════════════
-The following assertion was thrown:
-ListTile background color or ink splashes may be invisible.
-The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its
-background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those
-effects.
-To fix this, wrap the ListTile in its own Material widget, or remove the background color from the
-intermediate DecoratedBox.
-
-ListTile: ListTile-[<'more_menu_chat_ai'>](onTap: Closure: () => void)
-DecoratedBox:
-  DecoratedBox(bg: BoxDecoration(color: Color(alpha: 1.0000, red: 1.0000, green: 1.0000, blue: 1.0000, colorSpace: ColorSpace.sRGB), border: Border.all(BorderSide(color: Color(alpha: 1.0000, red: 0.8980, green: 0.9059, blue: 0.9216, colorSpace: ColorSpace.sRGB))), borderRadius: BorderRadius.circular(16.0)))
-════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞═════════════════════════════════════════════════════════
-The following assertion was thrown:
-ListTile background color or ink splashes may be invisible.
-The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its
-background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those
-effects.
-To fix this, wrap the ListTile in its own Material widget, or remove the background color from the
-intermediate DecoratedBox.
-
-ListTile:
-  ListTile(selectedColor: Color(alpha: 1.0000, red: 0.9804, green: 0.8000, blue: 0.0824, colorSpace: ColorSpace.sRGB), contentPadding: EdgeInsets.zero, onTap: Closure: () => void)
-DecoratedBox:
-  DecoratedBox(bg: BoxDecoration(color: Color(alpha: 1.0000, red: 1.0000, green: 1.0000, blue: 1.0000, colorSpace: ColorSpace.sRGB), border: Border.all(BorderSide(color: Color(alpha: 1.0000, red: 0.8980, green: 0.9059, blue: 0.9216, colorSpace: ColorSpace.sRGB))), borderRadius: BorderRadius.circular(16.0)))
-════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞═════════════════════════════════════════════════════════
-The following assertion was thrown:
-ListTile background color or ink splashes may be invisible.
-The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its
-background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those
-effects.
-To fix this, wrap the ListTile in its own Material widget, or remove the background color from the
-intermediate DecoratedBox.
-
-ListTile: ListTile(onTap: Closure: () => void)
-DecoratedBox:
-  DecoratedBox(bg: BoxDecoration(color: Color(alpha: 1.0000, red: 1.0000, green: 1.0000, blue: 1.0000, colorSpace: ColorSpace.sRGB), border: Border.all(BorderSide(color: Color(alpha: 1.0000, red: 0.8980, green: 0.9059, blue: 0.9216, colorSpace: ColorSpace.sRGB))), borderRadius: BorderRadius.circular(16.0)))
-════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞═════════════════════════════════════════════════════════
-The following assertion was thrown:
-ListTile background color or ink splashes may be invisible.
-The ListTile is wrapped in a DecoratedBox that has a background color. Because ListTile paints its
-background and ink splashes on the nearest Material ancestor, this DecoratedBox will hide those
-effects.
-To fix this, wrap the ListTile in its own Material widget, or remove the background color from the
-intermediate DecoratedBox.
-
-ListTile: ListTile(onTap: Closure: () => void)
-DecoratedBox:
-  DecoratedBox(bg: BoxDecoration(color: Color(alpha: 1.0000, red: 1.0000, green: 1.0000, blue: 1.0000, colorSpace: ColorSpace.sRGB), border: Border.all(BorderSide(color: Color(alpha: 1.0000, red: 0.8980, green: 0.9059, blue: 0.9216, colorSpace: ColorSpace.sRGB))), borderRadius: BorderRadius.circular(16.0)))
-════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
-The following message was thrown:
-Multiple exceptions (10) were detected during the running of the current test, and at least one was
-unexpected.
-════════════════════════════════════════════════════════════════════════════════════════════════════
-Test failed. See exception logs above.
-The test description was: tapping chat navigates internally and back button returns to hub
-
-::endgroup::
-::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: DashboardScreen Category Budget & Red Excess Alert Tests (R3) Initial empty state displays category chart silhouette and CategoryChart allows adding budget
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: DashboardScreen Category Budget & Red Excess Alert Tests (R3) Editing budget to amount greater than expense clears red excess alert
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: DashboardScreen Category Budget & Red Excess Alert Tests (R3) Validation: categories exceeding general budget shows alert and blocks save
@@ -590,6 +86,7 @@ Error en sincronización bidireccional: [core/no-app] No Firebase App '[DEFAULT]
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — AndroidManifest Permissions & Configuration Verification android/app/src/main/AndroidManifest.xml contains all required permissions and receivers
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — AndroidManifest Permissions & Configuration Verification AndroidManifest.xml contains permissions and receivers
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — AndroidManifest Permissions & Configuration Verification pubspec.yaml declares flutter_local_notifications and timezone
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: DashboardScreen Search Tests (R2) tapping search icon reveals search text field with hint
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests instantiates with required nombre and default presupuestoMensual 0.0
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests instantiates with custom id and presupuestoMensual
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests toMap produces correct key-value map with id
@@ -600,17 +97,21 @@ Error en sincronización bidireccional: [core/no-app] No Firebase App '[DEFAULT]
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests copyWith updates specified fields correctly
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests equality and hashCode work as expected
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests CategoryModel typedef works interchangeably
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: DashboardScreen Search Tests (R2) entering search query immediately filters out non-matching expenses
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: DashboardScreen Search Tests (R2) expenses matching by commerce are included
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: DashboardScreen Search Tests (R2) expenses matching by product name are included
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: DashboardScreen Search Tests (R2) clearing search query via close button restores all expenses
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: DashboardScreen Search Tests (R2) clearing search text restores all expenses while keeping search open
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests initial state has empty category budgets and totals
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests setPresupuestoGeneral updates general budget
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests guardarTodoElPresupuesto updates general and category budgets and filters zero budgets
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests setPresupuestoCategoria updates budget for given category
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: DashboardScreen Search Tests (R2) tapping search icon reveals search text field with hint
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests getPresupuestoCategoria is case-insensitive
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests isCategoryOverBudget returns true when spent > budget and budget > 0
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests isCategoryOverBudget returns false when spent <= budget
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests isCategoryOverBudget returns false when budget is 0 or unassigned
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: DashboardScreen Search Tests (R2) entering search query immediately filters out non-matching expenses
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: DashboardScreen Search Tests (R2) expenses matching by commerce are included
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: DashboardScreen Search Tests (R2) displays friendly empty state message when search yields 0 matches
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: DashboardScreen Search Tests (R2) case-insensitive and diacritic-insensitive search works
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests initial state has empty pending and ready items
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests enqueue inserts single image and updates pendingCount
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests enqueueMultiple enqueues all images and updates pendingItems
@@ -619,11 +120,6 @@ Error en sincronización bidireccional: [core/no-app] No Firebase App '[DEFAULT]
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests manual state mutation helpers update state and notify listeners
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: GeminiExtractionResult.listFromJson Tests parses single legacy JSON correctly
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: GeminiExtractionResult.listFromJson Tests parses multiple facturas JSON array correctly
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: DashboardScreen Search Tests (R2) expenses matching by product name are included
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: DashboardScreen Search Tests (R2) clearing search query via close button restores all expenses
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: DashboardScreen Search Tests (R2) clearing search text restores all expenses while keeping search open
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: DashboardScreen Search Tests (R2) displays friendly empty state message when search yields 0 matches
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: DashboardScreen Search Tests (R2) case-insensitive and diacritic-insensitive search works
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests formatPreferido returns VES when preferred is VES
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests formatPreferido calculates VES using tasaCambio when totalVes is zero/null
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests formatPreferido returns USD when preferred is USD
@@ -633,11 +129,11 @@ Error en sincronización bidireccional: [core/no-app] No Firebase App '[DEFAULT]
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: SummaryCard Currency Preference Tests renders VES on top when monedaPrincipal is VES
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: ExpenseCard Currency Preference Tests displays USD as primary when monedaPrincipal is USD
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: ExpenseCard Currency Preference Tests displays VES as primary when monedaPrincipal is VES
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CategoryChart Currency Preference Tests renders category totals and budgets in VES when monedaPrincipal is VES
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays welcome prompt when expenses are empty
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CategoryChart Currency Preference Tests renders category totals and budgets in VES when monedaPrincipal is VES
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays over budget warning when spent exceeds budget
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays budget alert when spent is 85 percent or more
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests suggests defining budget when no general budget exists
 ::endgroup::
 
-::error::78 tests passed, 6 failed.
+::error::83 tests passed, 1 failed.
