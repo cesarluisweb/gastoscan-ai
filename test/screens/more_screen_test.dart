@@ -35,8 +35,17 @@ void main() {
     late FakeSettingsProvider settingsProvider;
 
     setUp(() {
+      final TestWidgetsFlutterBinding binding = TestWidgetsFlutterBinding.ensureInitialized();
+      binding.window.physicalSizeTestValue = const Size(1080, 4000);
+      binding.window.devicePixelRatioTestValue = 1.0;
       gastoProvider = FakeGastoProvider();
       settingsProvider = FakeSettingsProvider();
+    });
+
+    tearDown(() {
+      final TestWidgetsFlutterBinding binding = TestWidgetsFlutterBinding.ensureInitialized();
+      binding.window.clearPhysicalSizeTestValue();
+      binding.window.clearDevicePixelRatioTestValue();
     });
 
     Widget createWidgetUnderTest() {
@@ -60,9 +69,9 @@ void main() {
       expect(find.text('Lista de Compras'), findsOneWidget);
       expect(find.text('Asistente IA'), findsOneWidget);
       expect(find.text('Tasa de Cambio Automática'), findsOneWidget);
-      expect(find.text('Almacenamiento y Fotos'), findsOneWidget);
-      expect(find.text('Exportar a Excel (.csv)'), findsOneWidget);
-      expect(find.text('Exportar como Texto (.md)'), findsOneWidget);
+      expect(find.text('Almacenamiento y Fotos', skipOffstage: false), findsOneWidget);
+      expect(find.text('Exportar a Excel (.csv)', skipOffstage: false), findsOneWidget);
+      expect(find.text('Exportar como Texto (.md)', skipOffstage: false), findsOneWidget);
     });
 
     testWidgets('tapping shopping list navigates internally and back button returns to hub', (tester) async {
