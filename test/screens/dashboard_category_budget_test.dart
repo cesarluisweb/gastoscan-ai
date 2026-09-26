@@ -9,7 +9,7 @@ import 'package:gastoscan_ai/data/models/item_gasto_model.dart';
 import 'package:gastoscan_ai/providers/gasto_provider.dart';
 import 'package:gastoscan_ai/providers/scan_queue_provider.dart';
 import 'package:gastoscan_ai/providers/settings_provider.dart';
-import 'package:gastoscan_ai/ui/screens/dashboard_screen.dart';
+import 'package:gastoscan_ai/ui/screens/analysis_screen.dart';
 
 class FakeDatabaseHelper extends DatabaseHelper {
   FakeDatabaseHelper() : super.test();
@@ -23,24 +23,28 @@ class FakeDatabaseHelper extends DatabaseHelper {
 
 class FakeGastoProvider extends GastoProvider {
   List<GastoModel> _customGastos = [];
-  Map<String, double> _customTotales = {};
-  Map<String, double> _customPresupuestos = {};
+  Map<String, double> _customTotalesPorCategoria = {};
+  Map<String, double> _customPresupuestosPorCategoria = {};
   double _customPresupuestoGeneral = 0.0;
-  double _customTotalUsd = 0.0;
-  double _customTotalVes = 0.0;
 
-  FakeGastoProvider({
-    List<GastoModel>? initialGastos,
-    Map<String, double>? initialTotales,
-    Map<String, double>? initialPresupuestos,
-    double initialPresupuestoGeneral = 0.0,
-  }) : _customPresupuestoGeneral = initialPresupuestoGeneral {
-    if (initialGastos != null) _customGastos = initialGastos;
-    if (initialTotales != null) {
-      _customTotales = initialTotales;
-      _customTotalUsd = initialTotales.values.fold(0.0, (a, b) => a + b);
+  @override
+  List<GastoModel> get gastos => _customGastos;
+
+  @override
+  Map<String, double> get totalesPorCategoria => _customTotalesPorCategoria;
+
+  @override
+  Map<String, double> get presupuestosPorCategoria => _customPresupuestosPorCategoria;
+
+  @override
+  double get presupuestoGeneral => _customPresupuestoGeneral;
+
+  @override
+  double get totalMesUsd {
+    if (_customTotalesPorCategoria.isNotEmpty) {
+      return _customTotalesPorCategoria.values.fold(0.0, (sum, val) => sum + val);
     }
-    if (initialPresupuestos != null) _customPresupuestos = initialPresupuestos;
+    return _customGastos.fold(0.0, (sum, g) => sum + g.totalUsd);
   }
 
   void setGastos(List<GastoModel> gastos) {
@@ -49,38 +53,25 @@ class FakeGastoProvider extends GastoProvider {
   }
 
   void setTotalesPorCategoria(Map<String, double> totales) {
-    _customTotales = Map.from(totales);
-    _customTotalUsd = totales.values.fold(0.0, (a, b) => a + b);
+    _customTotalesPorCategoria = totales;
     notifyListeners();
   }
 
   void setPresupuestosPorCategoria(Map<String, double> presupuestos) {
-    _customPresupuestos = Map.from(presupuestos);
+    _customPresupuestosPorCategoria = presupuestos;
     notifyListeners();
   }
 
-  void setPresupuestoGeneralVal(double monto) {
-    _customPresupuestoGeneral = monto;
+  void setPresupuestoGeneralVal(double amount) {
+    _customPresupuestoGeneral = amount;
     notifyListeners();
   }
 
   @override
-  double get presupuestoGeneral => _customPresupuestoGeneral;
-
-  @override
-  List<GastoModel> get gastos => _customGastos;
-
-  @override
-  Map<String, double> get totalesPorCategoria => _customTotales;
-
-  @override
-  Map<String, double> get presupuestosPorCategoria => _customPresupuestos;
-
-  @override
-  double get totalMesUsd => _customTotalUsd;
-
-  @override
-  double get totalMesVes => _customTotalVes;
+  Future<void> setPresupuestoCategoria(String categoria, double monto) async {
+    _customPresupuestosPorCategoria[categoria] = monto;
+    notifyListeners();
+  }
 
   @override
   Future<void> setPresupuestoGeneral(double monto) async {
@@ -89,45 +80,19 @@ class FakeGastoProvider extends GastoProvider {
   }
 
   @override
-  Future<void> setPresupuestoCategoria(String categoria, double presupuesto) async {
-    if (presupuesto <= 0) {
-      _customPresupuestos.remove(categoria);
-    } else {
-      _customPresupuestos[categoria] = presupuesto;
-    }
-    notifyListeners();
-  }
-
-  @override
-  Future<void> guardarTodoElPresupuesto(double general, Map<String, double> categorias) async {
-    _customPresupuestoGeneral = general;
-    _customPresupuestos.clear();
-    categorias.forEach((k, v) {
-      if (v > 0) _customPresupuestos[k] = v;
-    });
+  Future<void> guardarTodoElPresupuesto({
+    required double presupuestoGeneral,
+    required Map<String, double> presupuestosPorCategoria,
+  }) async {
+    _customPresupuestoGeneral = presupuestoGeneral;
+    _customPresupuestosPorCategoria = Map.from(presupuestosPorCategoria);
     notifyListeners();
   }
 
   @override
   double getPresupuestoCategoria(String categoria) {
-    if (_customPresupuestos.containsKey(categoria)) {
-      return _customPresupuestos[categoria]!;
-    }
-    for (final entry in _customPresupuestos.entries) {
-      if (entry.key.toLowerCase().trim() == categoria.toLowerCase().trim()) {
-        return entry.value;
-      }
-    }
-    return 0.0;
-  }
-
-  @override
-  double getSpentForCategory(String categoria) {
-    if (_customTotales.containsKey(categoria)) {
-      return _customTotales[categoria]!;
-    }
-    for (final entry in _customTotales.entries) {
-      if (entry.key.toLowerCase().trim() == categoria.toLowerCase().trim()) {
+    for (var entry in _customPresupuestosPorCategoria.entries) {
+      if (entry.key.toLowerCase() == categoria.toLowerCase()) {
         return entry.value;
       }
     }
@@ -136,10 +101,9 @@ class FakeGastoProvider extends GastoProvider {
 
   @override
   bool isCategoryOverBudget(String categoria) {
+    final spent = totalesPorCategoria[categoria] ?? 0.0;
     final budget = getPresupuestoCategoria(categoria);
-    if (budget <= 0) return false;
-    final spent = getSpentForCategory(categoria);
-    return spent > budget;
+    return budget > 0 && spent > budget;
   }
 
   @override
@@ -152,7 +116,7 @@ class FakeSettingsProvider extends SettingsProvider {
 }
 
 void main() {
-  group('DashboardScreen Category Budget & Red Excess Alert Tests (R3)', () {
+  group('AnalysisScreen Category Budget & Red Excess Alert Tests (R3)', () {
     late FakeDatabaseHelper fakeDb;
     late ScanQueueProvider scanQueueProvider;
     late FakeGastoProvider gastoProvider;
@@ -199,7 +163,7 @@ void main() {
           ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
         ],
         child: const MaterialApp(
-          home: DashboardScreen(),
+          home: AnalysisScreen(),
         ),
       );
     }
@@ -265,21 +229,18 @@ void main() {
       expect(progressBar.color, isNot(AppColors.error));
     });
 
-    testWidgets('Initial empty state displays category chart silhouette and CategoryChart allows adding budget',
+    testWidgets('Initial empty state displays analysis empty state and allows adding budget',
         (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      // Initial silhouette card should be visible
-      expect(find.byKey(const Key('category_chart_silhouette')), findsOneWidget);
-      expect(find.text('Tus estadísticas'), findsOneWidget);
+      // Initial empty state should be visible
+      expect(find.byKey(const Key('analysis_empty_state')), findsOneWidget);
+      expect(find.text('Sin estadísticas aún'), findsOneWidget);
 
-      // When a category is present, CategoryChart displays and allows setting a budget
-      gastoProvider.setTotalesPorCategoria({'Alimentación': 20.0});
-      await tester.pumpAndSettle();
-
-      expect(find.byKey(const Key('add_category_budget_button')), findsOneWidget);
-      await tester.tap(find.byKey(const Key('add_category_budget_button')));
+      // Tap button in empty state to open budget sheet
+      expect(find.byKey(const Key('analysis_empty_budget_button')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('analysis_empty_budget_button')));
       await tester.pumpAndSettle();
 
       // Verify bottom sheet opened with inputs
@@ -339,7 +300,7 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('add_category_budget_button')));
+      await tester.tap(find.byKey(const Key('analysis_edit_budget_button')));
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byKey(const Key('input_presupuesto_general')), '100');
@@ -351,7 +312,7 @@ void main() {
       expect(btn.onPressed, isNull);
     });
 
-    testWidgets('General budget exceeded shows general excess alert in CategoryChart', (tester) async {
+    testWidgets('General budget exceeded shows general excess alert in AnalysisScreen', (tester) async {
       gastoProvider.setPresupuestoGeneralVal(50.0);
       gastoProvider.setTotalesPorCategoria({'Alimentación': 60.0});
       await tester.pumpWidget(createWidgetUnderTest());

@@ -115,5 +115,27 @@ void main() {
       expect(find.text('Más'), findsOneWidget);
       expect(find.text('Respaldo en la Nube'), findsOneWidget);
     });
+
+    testWidgets('calling openChat navigates directly to chat view', (tester) async {
+      final GlobalKey<MoreScreenState> moreKey = GlobalKey<MoreScreenState>();
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<GastoProvider>.value(value: gastoProvider),
+            ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+          ],
+          child: MaterialApp(
+            home: MoreScreen(key: moreKey),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      moreKey.currentState?.openChat();
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.arrow_back), findsOneWidget);
+      expect(find.text('Asistente IA'), findsOneWidget);
+    });
   });
 }

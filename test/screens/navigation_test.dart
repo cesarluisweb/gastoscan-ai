@@ -108,5 +108,22 @@ void main() {
       expect(find.text('Dictar Gasto (Voz)'), findsOneWidget);
       expect(find.text('Ingreso Manual'), findsOneWidget);
     });
+
+    testWidgets('tapping AI chat button on Inicio navigates to Chat keeping bottom navigation', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('dashboard_ai_chat_button')));
+      await tester.pumpAndSettle();
+
+      // Bottom bar is still visible
+      expect(find.text('Inicio'), findsOneWidget);
+      expect(find.text('Gastos'), findsOneWidget);
+      expect(find.text('Análisis'), findsOneWidget);
+      expect(find.text('Más'), findsOneWidget);
+
+      // We are in ChatScreen with placeholder
+      expect(find.text('Pregunta o pídeme algo...'), findsOneWidget);
+    });
   });
 }

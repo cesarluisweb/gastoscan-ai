@@ -24,85 +24,26 @@ import '../../data/models/gemini_extraction_result.dart';
 
 class DashboardScreen extends StatefulWidget {
   final VoidCallback? onNavigateToGastos;
-  const DashboardScreen({Key? key, this.onNavigateToGastos}) : super(key: key);
+  final VoidCallback? onNavigateToAnalysis;
+  final VoidCallback? onNavigateToChat;
+
+  const DashboardScreen({
+    Key? key,
+    this.onNavigateToGastos,
+    this.onNavigateToAnalysis,
+    this.onNavigateToChat,
+  }) : super(key: key);
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  bool _isSearching = false;
-  final TextEditingController _searchCtrl = TextEditingController();
-  String _searchQuery = '';
-
   @override
   void initState() {
     super.initState();
     // Registrar actividad del usuario y reprogramar recordatorio de inactividad a 3 días
     NotificationService.instance.recordActivityAndReschedule();
-  }
-
-  @override
-  void dispose() {
-    _searchCtrl.dispose();
-    super.dispose();
-  }
-
-  String _normalizeText(String text) {
-    return text
-        .toLowerCase()
-        .replaceAll('á', 'a')
-        .replaceAll('é', 'e')
-        .replaceAll('í', 'i')
-        .replaceAll('ó', 'o')
-        .replaceAll('ú', 'u')
-        .replaceAll('ü', 'u');
-  }
-
-  void _exportarCsv(BuildContext context) async {
-    final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
-    final gastosMes = gastoProvider.gastos;
-
-    if (gastosMes.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No hay gastos en este mes para exportar.')),
-      );
-      return;
-    }
-
-    final csvContent = ExportService.generateCsvData(gastosMes);
-    final mes = DateFormatter.getMonthName(gastoProvider.selectedMonth);
-    final anio = gastoProvider.selectedYear;
-    final fileName = 'gastos_${mes}_$anio.csv';
-
-    await ExportService.exportAndShare(
-      content: csvContent,
-      filename: fileName,
-      mimeType: 'text/csv',
-    );
-  }
-
-  void _exportarMarkdown(BuildContext context) async {
-    final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
-    final gastosMes = gastoProvider.gastos;
-
-    if (gastosMes.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No hay gastos en este mes para exportar.')),
-      );
-      return;
-    }
-
-    final mes = DateFormatter.getMonthName(gastoProvider.selectedMonth);
-    final anio = gastoProvider.selectedYear;
-    final mdContent = ExportService.generateMarkdownReport(gastosMes, periodo: '$mes $anio');
-    final fileName = 'reporte_${mes}_$anio.md';
-
-    await ExportService.exportAndShare(
-      content: mdContent,
-      filename: fileName,
-      mimeType: 'text/markdown',
-    );
   }
 
   @override
@@ -115,103 +56,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: _isSearching
-            ? TextField(
-                key: const Key('dashboard_search_field'),
-                controller: _searchCtrl,
-                autofocus: true,
-                style: const TextStyle(color: AppColors.textPrimary),
-                decoration: const InputDecoration(
-                  hintText: 'Buscar por comercio o producto...',
-                  hintStyle: TextStyle(color: AppColors.textSecondary),
-                  border: InputBorder.none,
-                ),
-                onChanged: (val) {
-                  setState(() {
-                    _searchQuery = val;
-                  });
-                },
-                onSubmitted: (val) {
-                  setState(() {
-                    _searchQuery = val;
-                  });
-                },
-              )
-            : const Text('Rinde Más'),
+        title: const Text('Rinde Más'),
         actions: [
           IconButton(
-            key: const Key('dashboard_search_toggle_button'),
-            icon: Icon(_isSearching ? Icons.close : Icons.search),
-            tooltip: _isSearching ? 'Cerrar búsqueda' : 'Buscar',
+            key: const Key('dashboard_ai_chat_button'),
+            icon: const Icon(Icons.auto_awesome),
+            tooltip: 'Asistente IA',
             onPressed: () {
-              setState(() {
-                if (_isSearching) {
-                  _isSearching = false;
-                  _searchCtrl.clear();
-                  _searchQuery = '';
-                } else {
-                  _isSearching = true;
-                }
-              });
-            },
-          ),
-          if (!_isSearching) ...[
-            IconButton(
-              key: const Key('dashboard_ai_chat_button'),
-              icon: const Icon(Icons.auto_awesome),
-              tooltip: 'Asistente IA',
-              onPressed: () {
+              if (widget.onNavigateToChat != null) {
+                widget.onNavigateToChat!();
+              } else {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => const ChatScreen(showBackButton: true),
                   ),
                 );
-              },
-            ),
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.file_download_outlined),
-              tooltip: 'Exportar Reportes',
-              color: AppColors.surface,
-              onSelected: (val) {
-                if (val == 'category_budget') BudgetBottomSheet.show(context);
-                if (val == 'csv') _exportarCsv(context);
-                if (val == 'md') _exportarMarkdown(context);
-              },
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'category_budget',
-                  child: Row(
-                    children: [
-                      Icon(Icons.account_balance_wallet_outlined, color: AppColors.primaryDark, size: 18),
-                      SizedBox(width: 8),
-                      Text('Presupuesto por Categoría', style: TextStyle(color: AppColors.textPrimary)),
-                    ],
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'csv',
-                  child: Row(
-                    children: [
-                      Icon(Icons.table_chart_outlined, color: AppColors.primaryDark, size: 18),
-                      SizedBox(width: 8),
-                      Text('Exportar a Excel (.csv)', style: TextStyle(color: AppColors.textPrimary)),
-                    ],
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'md',
-                  child: Row(
-                    children: [
-                      Icon(Icons.text_snippet_outlined, color: AppColors.primaryDark, size: 18),
-                      SizedBox(width: 8),
-                      Text('Exportar como Texto', style: TextStyle(color: AppColors.textPrimary)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ],
+              }
+            },
+          ),
         ],
       ),
       body: RefreshIndicator(
@@ -277,6 +140,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               periodo: '$mesNombre $anio',
               monedaPrincipal: settings.monedaPrincipal,
               tasaCambio: settings.tasaCambioVesUsd,
+              presupuestoGeneral: gastoProvider.presupuestoGeneral,
+              mes: gastoProvider.selectedMonth,
+              anio: gastoProvider.selectedYear,
             ),
             const SizedBox(height: 16),
             AiInsightCard(
@@ -286,6 +152,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               totalGastadoMes: gastoProvider.totalMesUsd,
               monedaPrincipal: settings.monedaPrincipal,
               tasaCambio: settings.tasaCambioVesUsd,
+              onChatTap: widget.onNavigateToChat,
             ),
             const SizedBox(height: 16),
             if (gastoProvider.totalesPorCategoria.isNotEmpty ||
@@ -302,6 +169,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 },
                 monedaPrincipal: settings.monedaPrincipal,
                 tasaCambio: settings.tasaCambioVesUsd,
+                showBudgetBars: false,
+                onNavigateToAnalysis: widget.onNavigateToAnalysis,
               ),
               const SizedBox(height: 16),
             ] else ...[
@@ -313,15 +182,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    _isSearching ? 'Resultados de Búsqueda' : 'Facturas Registradas',
-                    style: const TextStyle(
+                  const Text(
+                    'Gastos realizados',
+                    style: TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  if (!_isSearching && gastoProvider.gastos.length > 5 && widget.onNavigateToGastos != null)
+                  if (gastoProvider.gastos.length > 5 && widget.onNavigateToGastos != null)
                     InkWell(
                       onTap: widget.onNavigateToGastos,
                       borderRadius: BorderRadius.circular(8),
@@ -357,21 +226,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             else if (gastoProvider.gastos.isEmpty)
               _buildEmptyState()
             else ...() {
-              final query = _normalizeText(_searchQuery.trim());
-              final filteredGastos = gastoProvider.gastos.where((gasto) {
-                if (query.isEmpty) return true;
-                final matchComercio = _normalizeText(gasto.comercio).contains(query);
-                final matchItems = gasto.items.any((item) => _normalizeText(item.descripcion).contains(query));
-                return matchComercio || matchItems;
-              }).toList();
-
-              if (filteredGastos.isEmpty) {
-                return [_buildEmptySearchState()];
-              }
-
-              final displayedGastos = (_isSearching || gastoProvider.gastos.length <= 5)
-                  ? filteredGastos
-                  : filteredGastos.take(5).toList();
+              final displayedGastos = gastoProvider.gastos.take(5).toList();
 
               final cards = displayedGastos.map<Widget>((gasto) {
                 return ExpenseCard(
@@ -417,15 +272,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 );
               }).toList();
 
-              if (!_isSearching && gastoProvider.gastos.length > 5 && widget.onNavigateToGastos != null) {
+              if (gastoProvider.gastos.length > 5 && widget.onNavigateToGastos != null) {
                 cards.add(
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: OutlinedButton.icon(
+                      key: const Key('btn_ver_todos_los_gastos'),
                       onPressed: widget.onNavigateToGastos,
                       icon: const Icon(Icons.receipt_long, size: 18),
                       label: Text(
-                        'Ver todas las facturas (${gastoProvider.gastos.length})',
+                        'Ver todos los gastos (${gastoProvider.gastos.length})',
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                       style: OutlinedButton.styleFrom(
@@ -480,40 +336,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildEmptySearchState() {
-    return Container(
-      key: const Key('empty_search_state'),
-      padding: const EdgeInsets.all(32),
-      margin: const EdgeInsets.symmetric(vertical: 16),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        children: [
-          const Icon(Icons.search_off_rounded, size: 48, color: AppColors.textMuted),
-          const SizedBox(height: 12),
-          const Text(
-            'No se encontraron gastos',
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.bold,
-              fontSize: 15,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            _searchQuery.trim().isNotEmpty
-                ? 'No hay resultados para "${_searchQuery.trim()}". Intenta con otro término.'
-                : 'No se encontraron gastos que coincidan con la búsqueda.',
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildProcessingBanner(BuildContext context, ScanQueueProvider scanQueue) {
     final count = scanQueue.pendingCount > 0 ? scanQueue.pendingCount : 1;
@@ -739,16 +562,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(height: 12),
           TextButton.icon(
             key: const Key('add_category_budget_button_silhouette'),
-            icon: const Icon(Icons.add_circle_outline, size: 16, color: AppColors.primaryDark),
+            icon: const Icon(Icons.analytics_outlined, size: 16, color: AppColors.primaryDark),
             label: const Text(
-              'Asignar presupuesto mensual',
+              'Ver análisis completo',
               style: TextStyle(
                 color: AppColors.textPrimary,
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
               ),
             ),
-            onPressed: () => BudgetBottomSheet.show(context),
+            onPressed: () {
+              if (widget.onNavigateToAnalysis != null) {
+                widget.onNavigateToAnalysis!();
+              } else {
+                BudgetBottomSheet.show(context);
+              }
+            },
           ),
         ],
       ),

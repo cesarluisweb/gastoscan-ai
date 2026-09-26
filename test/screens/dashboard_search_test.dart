@@ -7,7 +7,7 @@ import 'package:gastoscan_ai/data/models/item_gasto_model.dart';
 import 'package:gastoscan_ai/providers/gasto_provider.dart';
 import 'package:gastoscan_ai/providers/scan_queue_provider.dart';
 import 'package:gastoscan_ai/providers/settings_provider.dart';
-import 'package:gastoscan_ai/ui/screens/dashboard_screen.dart';
+import 'package:gastoscan_ai/ui/screens/expense_history_screen.dart';
 
 class FakeDatabaseHelper extends DatabaseHelper {
   FakeDatabaseHelper() : super.test();
@@ -43,7 +43,7 @@ class FakeSettingsProvider extends SettingsProvider {
 }
 
 void main() {
-  group('DashboardScreen Search Tests (R2)', () {
+  group('ExpenseHistoryScreen Search Tests (R2)', () {
     late FakeDatabaseHelper fakeDb;
     late ScanQueueProvider scanQueueProvider;
     late FakeGastoProvider gastoProvider;
@@ -51,19 +51,19 @@ void main() {
 
     final gastoCafe = GastoModel(
       id: 1,
-      uuid: 'uuid-1',
-      fecha: '2026-09-15',
+      uuid: 'uuid-cafe-1',
+      fecha: '2026-09-20',
       comercio: 'Café Venezuela',
       moneda: 'USD',
       totalOriginal: 500,
       totalUsd: 500,
       categoria: 'Alimentación',
-      creadoEn: '2026-09-15T10:00:00',
+      creadoEn: '2026-09-20T10:00:00',
       items: [
         ItemGastoModel(
-          id: 101,
+          id: 1,
           gastoId: 1,
-          descripcion: 'Espresso Doble',
+          descripcion: 'Café Espresso Doble',
           cantidad: 2.0,
           precioUnitario: 250,
           total: 500,
@@ -73,60 +73,60 @@ void main() {
 
     final gastoFarmacia = GastoModel(
       id: 2,
-      uuid: 'uuid-2',
-      fecha: '2026-09-14',
+      uuid: 'uuid-farma-2',
+      fecha: '2026-09-21',
       comercio: 'Farmatodo',
       moneda: 'USD',
-      totalOriginal: 850,
-      totalUsd: 850,
+      totalOriginal: 1200,
+      totalUsd: 1200,
       categoria: 'Salud',
-      creadoEn: '2026-09-14T15:30:00',
+      creadoEn: '2026-09-21T11:00:00',
       items: [
         ItemGastoModel(
-          id: 102,
-          gastoId: 2,
-          descripcion: 'Café Molido 500g',
-          cantidad: 1.0,
-          precioUnitario: 350,
-          total: 350,
-        ),
-        ItemGastoModel(
-          id: 103,
+          id: 2,
           gastoId: 2,
           descripcion: 'Aspirina 500mg',
           cantidad: 1.0,
-          precioUnitario: 500,
-          total: 500,
+          precioUnitario: 400,
+          total: 400,
+        ),
+        ItemGastoModel(
+          id: 3,
+          gastoId: 2,
+          descripcion: 'Café Molido 500g',
+          cantidad: 1.0,
+          precioUnitario: 800,
+          total: 800,
         ),
       ],
     );
 
     final gastoSupermercado = GastoModel(
       id: 3,
-      uuid: 'uuid-3',
-      fecha: '2026-09-13',
+      uuid: 'uuid-super-3',
+      fecha: '2026-09-22',
       comercio: 'Automercados Plaza',
       moneda: 'USD',
-      totalOriginal: 1200,
-      totalUsd: 1200,
+      totalOriginal: 3500,
+      totalUsd: 3500,
       categoria: 'Alimentación',
-      creadoEn: '2026-09-13T12:00:00',
+      creadoEn: '2026-09-22T15:00:00',
       items: [
         ItemGastoModel(
-          id: 104,
+          id: 4,
           gastoId: 3,
-          descripcion: 'Arroz Diana 1kg',
+          descripcion: 'Arroz Blanco 1kg',
           cantidad: 2.0,
-          precioUnitario: 150,
-          total: 300,
+          precioUnitario: 1000,
+          total: 2000,
         ),
         ItemGastoModel(
-          id: 105,
+          id: 5,
           gastoId: 3,
-          descripcion: 'Aceite Mazeite 1L',
+          descripcion: 'Aceite de Maíz 1L',
           cantidad: 1.0,
-          precioUnitario: 900,
-          total: 900,
+          precioUnitario: 1500,
+          total: 1500,
         ),
       ],
     );
@@ -152,7 +152,7 @@ void main() {
           ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
         ],
         child: const MaterialApp(
-          home: DashboardScreen(),
+          home: ExpenseHistoryScreen(),
         ),
       );
     }
@@ -162,8 +162,8 @@ void main() {
       await tester.pumpAndSettle();
 
       // Initially app title is shown, search field is not shown
-      expect(find.text('Rinde Más'), findsOneWidget);
-      expect(find.byKey(const Key('dashboard_search_field')), findsNothing);
+      expect(find.text('Gastos'), findsOneWidget);
+      expect(find.byKey(const Key('expense_history_search_field')), findsNothing);
       expect(find.byIcon(Icons.search), findsOneWidget);
 
       // Tap search icon
@@ -171,10 +171,10 @@ void main() {
       await tester.pumpAndSettle();
 
       // Search field is revealed with hint text and close icon is present
-      expect(find.byKey(const Key('dashboard_search_field')), findsOneWidget);
+      expect(find.byKey(const Key('expense_history_search_field')), findsOneWidget);
       expect(find.text('Buscar por comercio o producto...'), findsOneWidget);
       expect(find.byIcon(Icons.close), findsOneWidget);
-      expect(find.text('Rinde Más'), findsNothing);
+      expect(find.text('Gastos'), findsNothing);
     });
 
     testWidgets('entering search query immediately filters out non-matching expenses', (tester) async {
@@ -190,7 +190,7 @@ void main() {
       await tester.tap(find.byIcon(Icons.search));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byKey(const Key('dashboard_search_field')), 'Cafe');
+      await tester.enterText(find.byKey(const Key('expense_history_search_field')), 'Cafe');
       await tester.pumpAndSettle();
 
       // Matches Café Venezuela (commerce) and Farmatodo (product 'Café Molido 500g')
@@ -207,7 +207,7 @@ void main() {
       await tester.tap(find.byIcon(Icons.search));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byKey(const Key('dashboard_search_field')), 'Venezuela');
+      await tester.enterText(find.byKey(const Key('expense_history_search_field')), 'Venezuela');
       await tester.pumpAndSettle();
 
       expect(find.text('Café Venezuela'), findsOneWidget);
@@ -223,7 +223,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Search for product 'Aspirina' sold at Farmatodo
-      await tester.enterText(find.byKey(const Key('dashboard_search_field')), 'Aspirina');
+      await tester.enterText(find.byKey(const Key('expense_history_search_field')), 'Aspirina');
       await tester.pumpAndSettle();
 
       expect(find.text('Farmatodo'), findsOneWidget);
@@ -231,7 +231,7 @@ void main() {
       expect(find.text('Automercados Plaza'), findsNothing);
 
       // Search for product 'Arroz' sold at Automercados Plaza
-      await tester.enterText(find.byKey(const Key('dashboard_search_field')), 'Arroz');
+      await tester.enterText(find.byKey(const Key('expense_history_search_field')), 'Arroz');
       await tester.pumpAndSettle();
 
       expect(find.text('Automercados Plaza'), findsOneWidget);
@@ -246,7 +246,7 @@ void main() {
       await tester.tap(find.byIcon(Icons.search));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byKey(const Key('dashboard_search_field')), 'Arroz');
+      await tester.enterText(find.byKey(const Key('expense_history_search_field')), 'Arroz');
       await tester.pumpAndSettle();
 
       expect(find.text('Automercados Plaza'), findsOneWidget);
@@ -257,7 +257,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Search field closed, all expenses restored
-      expect(find.byKey(const Key('dashboard_search_field')), findsNothing);
+      expect(find.byKey(const Key('expense_history_search_field')), findsNothing);
       expect(find.text('Café Venezuela'), findsOneWidget);
       expect(find.text('Farmatodo'), findsOneWidget);
       expect(find.text('Automercados Plaza'), findsOneWidget);
@@ -270,14 +270,14 @@ void main() {
       await tester.tap(find.byIcon(Icons.search));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byKey(const Key('dashboard_search_field')), 'Arroz');
+      await tester.enterText(find.byKey(const Key('expense_history_search_field')), 'Arroz');
       await tester.pumpAndSettle();
 
       expect(find.text('Automercados Plaza'), findsOneWidget);
       expect(find.text('Farmatodo'), findsNothing);
 
       // Clear text
-      await tester.enterText(find.byKey(const Key('dashboard_search_field')), '');
+      await tester.enterText(find.byKey(const Key('expense_history_search_field')), '');
       await tester.pumpAndSettle();
 
       // All expenses restored
@@ -294,7 +294,7 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.enterText(
-        find.byKey(const Key('dashboard_search_field')),
+        find.byKey(const Key('expense_history_search_field')),
         'ProductoInexistente999',
       );
       await tester.pumpAndSettle();
@@ -304,9 +304,8 @@ void main() {
       expect(find.text('Automercados Plaza'), findsNothing);
 
       // Friendly empty state is displayed
-      expect(find.byKey(const Key('empty_search_state')), findsOneWidget);
       expect(find.text('No se encontraron gastos'), findsOneWidget);
-      expect(find.textContaining('No hay resultados para "ProductoInexistente999"'), findsOneWidget);
+      expect(find.textContaining('Intenta con otro término'), findsOneWidget);
     });
 
     testWidgets('case-insensitive and diacritic-insensitive search works', (tester) async {
@@ -317,7 +316,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Uppercase CAFE
-      await tester.enterText(find.byKey(const Key('dashboard_search_field')), 'CAFE');
+      await tester.enterText(find.byKey(const Key('expense_history_search_field')), 'CAFE');
       await tester.pumpAndSettle();
 
       expect(find.text('Café Venezuela'), findsOneWidget);
@@ -325,7 +324,7 @@ void main() {
       expect(find.text('Automercados Plaza'), findsNothing);
 
       // Accented café
-      await tester.enterText(find.byKey(const Key('dashboard_search_field')), 'café');
+      await tester.enterText(find.byKey(const Key('expense_history_search_field')), 'café');
       await tester.pumpAndSettle();
 
       expect(find.text('Café Venezuela'), findsOneWidget);

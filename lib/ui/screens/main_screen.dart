@@ -40,6 +40,7 @@ class _CustomCenterDockedFabLocation extends FloatingActionButtonLocation {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
+  final GlobalKey<MoreScreenState> _moreScreenKey = GlobalKey<MoreScreenState>();
 
   @override
   void initState() {
@@ -51,10 +52,19 @@ class _MainScreenState extends State<MainScreen> {
 
   // 4 pantallas principales
   late final List<Widget> _pages = [
-    DashboardScreen(onNavigateToGastos: () => _onTabTapped(1)),
+    DashboardScreen(
+      onNavigateToGastos: () => _onTabTapped(1),
+      onNavigateToAnalysis: () => _onTabTapped(2),
+      onNavigateToChat: () {
+        _onTabTapped(3);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _moreScreenKey.currentState?.openChat();
+        });
+      },
+    ),
     const ExpenseHistoryScreen(),
     const AnalysisScreen(),
-    const MoreScreen(),
+    MoreScreen(key: _moreScreenKey),
   ];
 
   void _onTabTapped(int index) {

@@ -296,7 +296,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   child: TextField(
                     controller: _textCtrl,
                     decoration: InputDecoration(
-                      hintText: _isListening ? 'Escuchando... habla ahora' : 'Pregunta algo...',
+                      hintText: _isListening ? 'Escuchando... habla ahora' : 'Pregunta o pídeme algo...',
                       border: InputBorder.none,
                       filled: true,
                       fillColor: AppColors.card,

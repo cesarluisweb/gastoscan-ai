@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/date_formatter.dart';
+import '../../core/utils/currency_formatter.dart';
 import '../../providers/gasto_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../widgets/category_chart.dart';
@@ -89,7 +90,9 @@ class AnalysisScreen extends StatelessWidget {
                 child: CircularProgressIndicator(color: AppColors.primary),
               ),
             )
-          else if (hasData)
+          else if (hasData) ...[
+            _buildGeneralBudgetCard(context, gastoProvider, settings),
+            const SizedBox(height: 16),
             CategoryChart(
               categoryTotals: gastoProvider.totalesPorCategoria,
               categoryBudgets: gastoProvider.presupuestosPorCategoria,
@@ -102,11 +105,157 @@ class AnalysisScreen extends StatelessWidget {
               monedaPrincipal: settings.monedaPrincipal,
               tasaCambio: settings.tasaCambioVesUsd,
               showBudgetBars: true,
-            )
-          else
+            ),
+          ] else
             _buildEmptyAnalysisState(context),
 
           const SizedBox(height: 80),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGeneralBudgetCard(
+    BuildContext context,
+    GastoProvider gastoProvider,
+    SettingsProvider settings,
+  ) {
+    final double budget = gastoProvider.presupuestoGeneral;
+    final double spent = gastoProvider.totalMesUsd;
+    final bool hasBudget = budget > 0;
+    final bool isExceeded = hasBudget && spent > budget;
+    final double percent = hasBudget ? (spent / budget).clamp(0.0, 1.0) : 0.0;
+    final int pctUsed = hasBudget ? ((spent / budget) * 100).round() : 0;
+
+    final now = DateTime.now();
+    final isCurrentMonth = (now.month == gastoProvider.selectedMonth &&
+        now.year == gastoProvider.selectedYear);
+    final totalDays = DateTime(
+      gastoProvider.selectedYear,
+      gastoProvider.selectedMonth + 1,
+      0,
+    ).day;
+    final daysRemaining = (totalDays - now.day).clamp(0, 31);
+
+    return Container(
+      key: const Key('general_budget_card'),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isExceeded ? AppColors.error.withOpacity(0.06) : AppColors.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isExceeded ? AppColors.error.withOpacity(0.4) : AppColors.border,
+          width: isExceeded ? 1.5 : 1.0,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.account_balance_wallet, size: 20, color: AppColors.primaryDark),
+                  SizedBox(width: 8),
+                  Text(
+                    'Control de Presupuesto Mensual General',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+              IconButton(
+                icon: const Icon(Icons.edit_outlined, size: 18, color: AppColors.secondary),
+                tooltip: 'Editar Presupuesto',
+                onPressed: () => BudgetBottomSheet.show(context),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (hasBudget) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '${CurrencyFormatter.formatPreferido(spent, null, settings.tasaCambioVesUsd, settings.monedaPrincipal)} / ${CurrencyFormatter.formatPreferido(budget, null, settings.tasaCambioVesUsd, settings.monedaPrincipal)}',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: isExceeded ? AppColors.error : AppColors.textPrimary,
+                  ),
+                ),
+                Text(
+                  '$pctUsed% usado',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: isExceeded ? AppColors.error : AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                value: percent,
+                minHeight: 10,
+                backgroundColor: AppColors.cardLighter,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  isExceeded
+                      ? AppColors.error
+                      : (percent >= 0.85 ? AppColors.warning : AppColors.primaryDark),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            if (isExceeded)
+              Row(
+                key: const Key('excess_alert_general'),
+                children: [
+                  const Icon(Icons.warning_amber_rounded, size: 14, color: AppColors.error),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Presupuesto superado por ${CurrencyFormatter.formatPreferido(spent - budget, null, settings.tasaCambioVesUsd, settings.monedaPrincipal)}',
+                    style: const TextStyle(
+                      color: AppColors.error,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              )
+            else
+              Text(
+                isCurrentMonth
+                    ? 'Te quedan ${CurrencyFormatter.formatPreferido(budget - spent, null, settings.tasaCambioVesUsd, settings.monedaPrincipal)} y faltan $daysRemaining días'
+                    : 'Te sobraron ${CurrencyFormatter.formatPreferido(budget - spent, null, settings.tasaCambioVesUsd, settings.monedaPrincipal)} en este período',
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                ),
+              ),
+          ] else ...[
+            const Text(
+              'Aún no has configurado un presupuesto general para este mes.',
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton.icon(
+              key: const Key('btn_definir_presupuesto_general'),
+              icon: const Icon(Icons.add, size: 16),
+              label: const Text('Definir Presupuesto General'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              ),
+              onPressed: () => BudgetBottomSheet.show(context),
+            ),
+          ],
         ],
       ),
     );

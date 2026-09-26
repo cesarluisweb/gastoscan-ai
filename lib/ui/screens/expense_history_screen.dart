@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_constants.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../providers/gasto_provider.dart';
 import '../../providers/settings_provider.dart';
@@ -20,7 +19,6 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
   bool _isSearching = false;
   final TextEditingController _searchCtrl = TextEditingController();
   String _searchQuery = '';
-  String? _selectedCategory;
 
   @override
   void dispose() {
@@ -39,6 +37,31 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
         .replaceAll('ü', 'u');
   }
 
+  String _getGroupHeader(String fechaStr) {
+    try {
+      final parsed = DateTime.parse(fechaStr);
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final yesterday = today.subtract(const Duration(days: 1));
+      final expenseDate = DateTime(parsed.year, parsed.month, parsed.day);
+
+      final monthName = DateFormatter.getMonthName(parsed.month);
+      final shortMonth = monthName.length > 3 ? monthName.substring(0, 3) : monthName;
+
+      if (expenseDate == today) {
+        return 'Hoy, ${parsed.day} $shortMonth';
+      } else if (expenseDate == yesterday) {
+        return 'Ayer, ${parsed.day} $shortMonth';
+      } else if (parsed.year == now.year) {
+        return '${parsed.day} $shortMonth';
+      } else {
+        return '${parsed.day} $shortMonth ${parsed.year}';
+      }
+    } catch (_) {
+      return fechaStr;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final gastoProvider = Provider.of<GastoProvider>(context);
@@ -46,21 +69,24 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
     final mesNombre = DateFormatter.getMonthName(gastoProvider.selectedMonth);
     final anio = gastoProvider.selectedYear;
 
-    final categories = ['Todas', ...AppConstants.categorias];
-
-    // Filtrar gastos por búsqueda y categoría
+    // Filtrar gastos por búsqueda
     final query = _normalizeText(_searchQuery.trim());
     final filteredGastos = gastoProvider.gastos.where((gasto) {
-      if (_selectedCategory != null && _selectedCategory != 'Todas') {
-        if (gasto.categoria.toLowerCase() != _selectedCategory!.toLowerCase()) {
-          return false;
-        }
-      }
       if (query.isEmpty) return true;
       final matchComercio = _normalizeText(gasto.comercio).contains(query);
       final matchItems = gasto.items.any((item) => _normalizeText(item.descripcion).contains(query));
       return matchComercio || matchItems;
     }).toList();
+
+    // Ordenar descendente y agrupar por fecha
+    final sortedGastos = List<GastoModel>.from(filteredGastos)
+      ..sort((a, b) => b.fecha.compareTo(a.fecha));
+
+    final Map<String, List<GastoModel>> groupedGastos = {};
+    for (final gasto in sortedGastos) {
+      final header = _getGroupHeader(gasto.fecha);
+      groupedGastos.putIfAbsent(header, () => []).add(gasto);
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -152,108 +178,76 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
             ),
           ),
 
-          // Chips horizontales de categorías
-          SizedBox(
-            height: 48,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              itemCount: categories.length,
-              itemBuilder: (context, index) {
-                final cat = categories[index];
-                final isSelected = (_selectedCategory == null && cat == 'Todas') ||
-                    _selectedCategory == cat;
-
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: FilterChip(
-                    label: Text(
-                      cat,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                        color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
-                      ),
-                    ),
-                    selected: isSelected,
-                    onSelected: (selected) {
-                      setState(() {
-                        _selectedCategory = cat == 'Todas' ? null : cat;
-                      });
-                    },
-                    backgroundColor: AppColors.cardLighter,
-                    selectedColor: AppColors.primaryLight,
-                    checkmarkColor: AppColors.textPrimary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(
-                        color: isSelected ? AppColors.primary : AppColors.border,
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          // Lista de Gastos
+          // Lista de Gastos agrupada por fecha
           Expanded(
             child: gastoProvider.isLoading
                 ? const Center(
                     child: CircularProgressIndicator(color: AppColors.primary),
                   )
-                : filteredGastos.isEmpty
-                    ? _buildEmptyState(query.isNotEmpty || _selectedCategory != null)
-                    : ListView.builder(
-                        padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 80),
-                        itemCount: filteredGastos.length,
-                        itemBuilder: (context, index) {
-                          final gasto = filteredGastos[index];
-                          return ExpenseCard(
-                            key: ValueKey('history_${gasto.id ?? gasto.comercio}_$index'),
-                            gasto: gasto,
-                            monedaPrincipal: settings.monedaPrincipal,
-                            onEdit: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ReviewExpenseScreen(
-                                    existingGasto: gasto,
-                                  ),
+                : sortedGastos.isEmpty
+                    ? _buildEmptyState(query.isNotEmpty)
+                    : ListView(
+                        padding: const EdgeInsets.only(left: 16, right: 16, top: 4, bottom: 80),
+                        children: [
+                          for (final entry in groupedGastos.entries) ...[
+                            Padding(
+                              padding: const EdgeInsets.only(top: 14, bottom: 6),
+                              child: Text(
+                                entry.key,
+                                style: const TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
                                 ),
-                              );
-                            },
-                            onDelete: () async {
-                              final confirm = await showDialog<bool>(
-                                context: context,
-                                builder: (ctx) => AlertDialog(
-                                  backgroundColor: AppColors.card,
-                                  title: const Text('Eliminar Factura',
-                                      style: TextStyle(color: AppColors.textPrimary)),
-                                  content: Text(
-                                    '¿Deseas eliminar el gasto de "${gasto.comercio}"?',
-                                    style: const TextStyle(color: AppColors.textSecondary),
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(ctx, false),
-                                      child: const Text('Cancelar',
-                                          style: TextStyle(color: AppColors.textSecondary)),
+                              ),
+                            ),
+                            for (final gasto in entry.value)
+                              ExpenseCard(
+                                key: ValueKey('history_${gasto.id ?? gasto.comercio}_${gasto.uuid}'),
+                                gasto: gasto,
+                                monedaPrincipal: settings.monedaPrincipal,
+                                onEdit: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ReviewExpenseScreen(
+                                        existingGasto: gasto,
+                                      ),
                                     ),
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(ctx, true),
-                                      child: const Text('Eliminar',
-                                          style: TextStyle(color: AppColors.error)),
+                                  );
+                                },
+                                onDelete: () async {
+                                  final confirm = await showDialog<bool>(
+                                    context: context,
+                                    builder: (ctx) => AlertDialog(
+                                      backgroundColor: AppColors.card,
+                                      title: const Text('Eliminar Factura',
+                                          style: TextStyle(color: AppColors.textPrimary)),
+                                      content: Text(
+                                        '¿Deseas eliminar el gasto de "${gasto.comercio}"?',
+                                        style: const TextStyle(color: AppColors.textSecondary),
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(ctx, false),
+                                          child: const Text('Cancelar',
+                                              style: TextStyle(color: AppColors.textSecondary)),
+                                        ),
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(ctx, true),
+                                          child: const Text('Eliminar',
+                                              style: TextStyle(color: AppColors.error)),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                              );
-                              if (confirm == true && gasto.id != null) {
-                                gastoProvider.eliminarGasto(gasto.id!);
-                              }
-                            },
-                          );
-                        },
+                                  );
+                                  if (confirm == true && gasto.id != null) {
+                                    gastoProvider.eliminarGasto(gasto.id!);
+                                  }
+                                },
+                              ),
+                          ],
+                        ],
                       ),
           ),
         ],
@@ -291,7 +285,7 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
             const SizedBox(height: 4),
             Text(
               isFiltered
-                  ? 'Intenta con otro término o selecciona otra categoría.'
+                  ? 'Intenta con otro término de búsqueda.'
                   : 'Presiona "+" para registrar tu primera compra.',
               textAlign: TextAlign.center,
               style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),

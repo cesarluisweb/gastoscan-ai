@@ -17,11 +17,29 @@ class MoreScreen extends StatefulWidget {
   const MoreScreen({Key? key}) : super(key: key);
 
   @override
-  State<MoreScreen> createState() => _MoreScreenState();
+  State<MoreScreen> createState() => MoreScreenState();
 }
 
-class _MoreScreenState extends State<MoreScreen> {
+class MoreScreenState extends State<MoreScreen> {
   MoreSubView _currentSubView = MoreSubView.hub;
+
+  void openChat() {
+    setState(() {
+      _currentSubView = MoreSubView.chat;
+    });
+  }
+
+  void openShoppingList() {
+    setState(() {
+      _currentSubView = MoreSubView.shoppingList;
+    });
+  }
+
+  void returnToHub() {
+    setState(() {
+      _currentSubView = MoreSubView.hub;
+    });
+  }
 
   bool get _isFirebaseInitialized {
     try {

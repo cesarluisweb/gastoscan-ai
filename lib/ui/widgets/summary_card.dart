@@ -8,6 +8,9 @@ class SummaryCard extends StatelessWidget {
   final String periodo;
   final String monedaPrincipal;
   final double tasaCambio;
+  final double presupuestoGeneral;
+  final int? mes;
+  final int? anio;
 
   const SummaryCard({
     Key? key,
@@ -16,6 +19,9 @@ class SummaryCard extends StatelessWidget {
     required this.periodo,
     this.monedaPrincipal = 'USD',
     this.tasaCambio = 1.0,
+    this.presupuestoGeneral = 0.0,
+    this.mes,
+    this.anio,
   }) : super(key: key);
 
   @override
@@ -33,6 +39,41 @@ class SummaryCard extends StatelessWidget {
       tasaCambio,
       monedaPrincipal,
     );
+
+    final hasBudget = presupuestoGeneral > 0;
+    final percentUsed = hasBudget ? (totalUsd / presupuestoGeneral) : 0.0;
+    final isOverBudget = hasBudget && (totalUsd > presupuestoGeneral);
+
+    final now = DateTime.now();
+    final isCurrentMonth = (mes == null || anio == null) ||
+        (now.month == mes && now.year == anio);
+    final totalDaysInMonth = DateTime(now.year, now.month + 1, 0).day;
+    final daysRemaining = (totalDaysInMonth - now.day).clamp(0, 31);
+
+    String remainingMessage = '';
+    if (hasBudget) {
+      if (isOverBudget) {
+        final overAmount = CurrencyFormatter.formatPreferido(
+          totalUsd - presupuestoGeneral,
+          null,
+          tasaCambio,
+          monedaPrincipal,
+        );
+        remainingMessage = 'Has superado tu presupuesto por $overAmount';
+      } else {
+        final remAmount = CurrencyFormatter.formatPreferido(
+          presupuestoGeneral - totalUsd,
+          null,
+          tasaCambio,
+          monedaPrincipal,
+        );
+        if (isCurrentMonth) {
+          remainingMessage = 'Te quedan $remAmount y faltan $daysRemaining días';
+        } else {
+          remainingMessage = 'Te sobraron $remAmount en este período';
+        }
+      }
+    }
 
     return Container(
       width: double.infinity,
@@ -55,14 +96,23 @@ class SummaryCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Gasto Total ($periodo)',
-                style: const TextStyle(
+              const Text(
+                'Este mes has gastado',
+                style: TextStyle(
                   color: AppColors.textSecondary,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
               ),
+              if (hasBudget)
+                Text(
+                  'Meta: ${CurrencyFormatter.formatPreferido(presupuestoGeneral, null, tasaCambio, monedaPrincipal)}',
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: 12),
@@ -89,6 +139,55 @@ class SummaryCard extends StatelessWidget {
               ),
             ],
           ),
+          if (hasBudget) ...[
+            const SizedBox(height: 16),
+            const Divider(color: AppColors.border, height: 1),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${(percentUsed * 100).toStringAsFixed(0)}% del presupuesto usado',
+                  style: TextStyle(
+                    color: isOverBudget ? AppColors.error : AppColors.textPrimary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  isOverBudget ? 'Excedido' : 'Disponible',
+                  style: TextStyle(
+                    color: isOverBudget ? AppColors.error : Colors.green,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                value: percentUsed.clamp(0.0, 1.0),
+                minHeight: 8,
+                backgroundColor: AppColors.cardLighter,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  isOverBudget
+                      ? AppColors.error
+                      : (percentUsed >= 0.85 ? AppColors.warning : AppColors.primaryDark),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              remainingMessage,
+              style: TextStyle(
+                color: isOverBudget ? AppColors.error : AppColors.textSecondary,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ],
       ),
     );

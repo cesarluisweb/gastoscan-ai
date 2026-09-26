@@ -18,6 +18,7 @@ class CategoryChart extends StatefulWidget {
   final String monedaPrincipal;
   final double tasaCambio;
   final bool showBudgetBars;
+  final VoidCallback? onNavigateToAnalysis;
 
   const CategoryChart({
     Key? key,
@@ -30,6 +31,7 @@ class CategoryChart extends StatefulWidget {
     this.monedaPrincipal = 'USD',
     this.tasaCambio = 1.0,
     this.showBudgetBars = true,
+    this.onNavigateToAnalysis,
   }) : super(key: key);
 
   @override
@@ -82,16 +84,20 @@ class _CategoryChartState extends State<CategoryChart> {
       });
     }
 
-    // Obtener lista consolidada y ordenada de categorías para presupuestos
+    // Obtener lista consolidada y ordenada de TODAS las categorías estándar
     final Set<String> allCategoryKeys = {
+      ...AppConstants.categorias,
       ...widget.categoryTotals.keys,
-      ...widget.categoryBudgets.keys.where((k) => (widget.categoryBudgets[k] ?? 0) > 0),
+      ...widget.categoryBudgets.keys,
     };
     final List<String> sortedCategories = allCategoryKeys.toList()
       ..sort((a, b) {
         final spentA = _getSpent(a);
         final spentB = _getSpent(b);
-        return spentB.compareTo(spentA);
+        if (spentB != spentA) {
+          return spentB.compareTo(spentA);
+        }
+        return a.compareTo(b);
       });
 
     return Container(
@@ -104,9 +110,9 @@ class _CategoryChartState extends State<CategoryChart> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Distribución y Presupuestos',
-            style: TextStyle(
+          Text(
+            widget.showBudgetBars ? 'Distribución por Categorías' : 'Distribución',
+            style: const TextStyle(
               color: AppColors.textPrimary,
               fontSize: 15,
               fontWeight: FontWeight.bold,
@@ -178,45 +184,23 @@ class _CategoryChartState extends State<CategoryChart> {
               ),
             ),
           ],
-          const SizedBox(height: 12),
-          TextButton.icon(
-            key: const Key('add_category_budget_button'),
-            icon: const Icon(Icons.add_circle_outline, size: 16, color: AppColors.primaryDark),
-            label: const Text(
-              'Asignar presupuesto mensual',
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            onPressed: () => _showBudgetDialog(context),
-          ),
-          if (widget.showBudgetBars && widget.presupuestoGeneral > 0) ...[
-            const SizedBox(height: 16),
-            const Divider(color: AppColors.border, height: 1),
+          if (!widget.showBudgetBars) ...[
             const SizedBox(height: 12),
-            const Row(
-              children: [
-                Icon(
-                  Icons.account_balance_wallet_outlined,
-                  size: 14,
-                  color: AppColors.textSecondary,
+            TextButton.icon(
+              key: const Key('btn_ver_analisis_completo'),
+              icon: const Icon(Icons.analytics_outlined, size: 16, color: AppColors.primaryDark),
+              label: const Text(
+                'Ver análisis completo',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
                 ),
-                SizedBox(width: 6),
-                Text(
-                  'Control de Presupuesto Mensual General',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
+              ),
+              onPressed: widget.onNavigateToAnalysis,
             ),
-            const SizedBox(height: 8),
-            _buildGeneralBudgetItem(context),
           ],
+
           if (widget.showBudgetBars && sortedCategories.isNotEmpty) ...[
             const SizedBox(height: 16),
             const Divider(color: AppColors.border, height: 1),
