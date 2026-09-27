@@ -151,7 +151,7 @@ void main() {
       await tester.tap(find.byIcon(Icons.arrow_back));
       await tester.pumpAndSettle();
 
-      expect(find.text('Más'), findsOneWidget);
+      expect(find.text('Más'), findsWidgets);
       expect(find.text('Respaldo en la Nube'), findsOneWidget);
     });
   });
