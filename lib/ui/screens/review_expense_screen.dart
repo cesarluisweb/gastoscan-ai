@@ -127,8 +127,11 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
     for (int i = 0; i < _items.length; i++) {
       final desc = _items[i].descripcion;
-      if (desc.trim().length > 3) { // Ignorar muy cortos
-        final previo = await gastoProvider.buscarPrecioAnterior(desc);
+      if (desc.trim().length > 2 && !DatabaseHelper.isTaxItem(desc)) {
+        final previo = await gastoProvider.buscarPrecioAnterior(
+          desc,
+          excludeGastoId: widget.existingGasto?.id,
+        );
         if (previo != null && mounted) {
           setState(() {
             _priceComparisons[i] = previo;
@@ -744,34 +747,48 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                         Widget? priceWarning;
                         if (_priceComparisons.containsKey(idx)) {
                           final prevData = _priceComparisons[idx]!;
-                          final prevUsd = prevData['precio_usd'] as double;
-                          final prevFecha = prevData['fecha'] as String;
-                          final prevComercio = prevData['comercio'] as String;
+                          final prevUsd = (prevData['precio_usd'] as num?)?.toDouble() ?? 0.0;
+                          final prevFecha = prevData['fecha'] as String? ?? '';
+                          final prevComercio = prevData['comercio'] as String? ?? '';
                           
-                          double currentUsd = item.precioUnitarioDisplay;
-                          if (_selectedMoneda == 'VES') {
-                            final tasa = double.tryParse(_tasaCambioCtrl.text.replaceAll(',', '.')) ?? 1.0;
-                            if (tasa > 0) currentUsd = currentUsd / tasa;
+                          final cant = item.cantidad > 0 ? item.cantidad : 1.0;
+                          double unitPrice = item.precioUnitarioDisplay;
+                          if (item.totalDisplay > 0) {
+                            unitPrice = item.totalDisplay / cant;
                           }
 
-                          if (currentUsd > (prevUsd * 1.05)) { // 5% de tolerancia
-                            final diff = ((currentUsd / prevUsd) - 1) * 100;
-                            priceWarning = Padding(
-                              padding: const EdgeInsets.only(top: 4, left: 4),
-                              child: Text(
-                                '🔺 Está ${diff.toStringAsFixed(0)}% más caro que en $prevComercio',
-                                style: const TextStyle(color: AppColors.error, fontSize: 11, fontWeight: FontWeight.w600),
-                              ),
-                            );
-                          } else if (currentUsd < (prevUsd * 0.95)) {
-                            final diff = (1 - (currentUsd / prevUsd)) * 100;
-                            priceWarning = Padding(
-                              padding: const EdgeInsets.only(top: 4, left: 4),
-                              child: Text(
-                                '🟢 Te salió un ${diff.toStringAsFixed(0)}% más económico que en $prevComercio',
-                                style: const TextStyle(color: AppColors.textPrimary, fontSize: 11, fontWeight: FontWeight.w600),
-                              ),
-                            );
+                          double currentUsd = unitPrice;
+                          final tasa = double.tryParse(_tasaCambioCtrl.text.replaceAll(',', '.')) ?? 1.0;
+                          if (_selectedMoneda == 'VES') {
+                            if (tasa > 0) currentUsd = unitPrice / tasa;
+                          } else {
+                            double sumItems = _items.fold(0.0, (prev, it) => prev + it.totalDisplay);
+                            final totalOrig = double.tryParse(_totalOriginalCtrl.text.replaceAll(',', '.')) ?? 0.0;
+                            if (totalOrig > 0 && sumItems > totalOrig * 5 && tasa > 0) {
+                              currentUsd = unitPrice / tasa;
+                            }
+                          }
+
+                          if (prevUsd > 0 && currentUsd > 0) {
+                            if (currentUsd > (prevUsd * 1.05)) { // 5% de tolerancia
+                              final diff = ((currentUsd / prevUsd) - 1) * 100;
+                              priceWarning = Padding(
+                                padding: const EdgeInsets.only(top: 4, left: 4),
+                                child: Text(
+                                  '🔺 Está ${diff.toStringAsFixed(0)}% más caro por unidad que en $prevComercio',
+                                  style: const TextStyle(color: AppColors.error, fontSize: 11, fontWeight: FontWeight.w600),
+                                ),
+                              );
+                            } else if (currentUsd < (prevUsd * 0.95)) {
+                              final diff = (1 - (currentUsd / prevUsd)) * 100;
+                              priceWarning = Padding(
+                                padding: const EdgeInsets.only(top: 4, left: 4),
+                                child: Text(
+                                  '🟢 Te salió un ${diff.toStringAsFixed(0)}% más económico por unidad que en $prevComercio',
+                                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 11, fontWeight: FontWeight.w600),
+                                ),
+                              );
+                            }
                           }
                         }
 

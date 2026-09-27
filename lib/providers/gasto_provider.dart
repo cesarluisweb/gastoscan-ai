@@ -144,8 +144,8 @@ class GastoProvider with ChangeNotifier {
     return await _repository.obtenerGastos();
   }
 
-  Future<Map<String, dynamic>?> buscarPrecioAnterior(String descripcion) async {
-    return await _repository.buscarPrecioAnterior(descripcion);
+  Future<Map<String, dynamic>?> buscarPrecioAnterior(String descripcion, {int? excludeGastoId}) async {
+    return await _repository.buscarPrecioAnterior(descripcion, excludeGastoId: excludeGastoId);
   }
 
   Future<void> setPresupuestoGeneral(double monto) async {

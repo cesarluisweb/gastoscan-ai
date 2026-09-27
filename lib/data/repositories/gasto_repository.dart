@@ -66,8 +66,8 @@ class GastoRepository {
     return _dbHelper.getCategoryTotals(year, month);
   }
 
-  Future<Map<String, dynamic>?> buscarPrecioAnterior(String descripcion) {
-    return _dbHelper.findPreviousPrice(descripcion);
+  Future<Map<String, dynamic>?> buscarPrecioAnterior(String descripcion, {int? excludeGastoId}) {
+    return _dbHelper.findPreviousPrice(descripcion, excludeGastoId: excludeGastoId);
   }
 
   Future<Map<String, double>> obtenerPresupuestosCategorias() {

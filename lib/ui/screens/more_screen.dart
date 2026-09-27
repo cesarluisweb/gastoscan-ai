@@ -23,9 +23,11 @@ class MoreScreen extends StatefulWidget {
 
 class MoreScreenState extends State<MoreScreen> {
   MoreSubView _currentSubView = MoreSubView.hub;
+  bool _openedFromHome = false;
 
-  void openChat() {
+  void openChat({bool fromHome = false}) {
     setState(() {
+      _openedFromHome = fromHome;
       _currentSubView = MoreSubView.chat;
     });
   }
@@ -38,6 +40,7 @@ class MoreScreenState extends State<MoreScreen> {
 
   void returnToHub() {
     setState(() {
+      _openedFromHome = false;
       _currentSubView = MoreSubView.hub;
     });
   }
@@ -131,19 +134,26 @@ class MoreScreenState extends State<MoreScreen> {
     }
 
     if (_currentSubView == MoreSubView.chat) {
+      void handleBack() {
+        final wasFromHome = _openedFromHome;
+        setState(() {
+          _currentSubView = MoreSubView.hub;
+          _openedFromHome = false;
+        });
+        if (wasFromHome) {
+          widget.onNavigateToHome?.call();
+        }
+      }
+
       return PopScope(
         canPop: false,
         onPopInvokedWithResult: (didPop, result) {
           if (didPop) return;
-          setState(() => _currentSubView = MoreSubView.hub);
-          widget.onNavigateToHome?.call();
+          handleBack();
         },
         child: ChatScreen(
           showBackButton: true,
-          onBack: () {
-            setState(() => _currentSubView = MoreSubView.hub);
-            widget.onNavigateToHome?.call();
-          },
+          onBack: handleBack,
         ),
       );
     }
@@ -196,9 +206,7 @@ class MoreScreenState extends State<MoreScreen> {
                       style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                   trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
                   onTap: () {
-                    setState(() {
-                      _currentSubView = MoreSubView.chat;
-                    });
+                    openChat(fromHome: false);
                   },
                 ),
               ],

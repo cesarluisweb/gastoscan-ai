@@ -456,42 +456,89 @@ class DatabaseHelper {
     return categoryMap;
   }
 
-  /// Busca la última vez que se compró un producto similar para comparar precio.
-  /// Siempre devuelve el precio equivalente en USD para evitar falsos aumentos por inflación.
-  Future<Map<String, dynamic>?> findPreviousPrice(String descripcion) async {
+  static String normalizeProductText(String text) {
+    return text
+        .toLowerCase()
+        .replaceAll('á', 'a')
+        .replaceAll('é', 'e')
+        .replaceAll('í', 'i')
+        .replaceAll('ó', 'o')
+        .replaceAll('ú', 'u')
+        .replaceAll('ü', 'u')
+        .replaceAll(RegExp(r'[^\w\s]'), '')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+  }
+
+  static bool isTaxItem(String descripcion) {
+    final clean = normalizeProductText(descripcion);
+    if (clean.isEmpty) return false;
+    final taxKeywords = ['iva', 'iva 16', 'iva 8', 'iva g', 'iva r', 'impuesto', 'tax'];
+    return taxKeywords.any((kw) => clean == kw || clean.startsWith('$kw ') || clean.contains('iva 16') || clean.contains('iva 8'));
+  }
+
+  /// Busca la última vez que se compró exactamente el mismo producto para comparar precio por unidad.
+  /// Siempre devuelve el precio equivalente por unidad en USD para evitar comparaciones engañosas por cantidades o inflación.
+  Future<Map<String, dynamic>?> findPreviousPrice(String descripcion, {int? excludeGastoId}) async {
+    final cleanDesc = normalizeProductText(descripcion);
+    if (cleanDesc.length <= 2) return null;
+    if (isTaxItem(cleanDesc)) return null;
+
     final db = await instance.database;
-    
-    // Búsqueda simple, podríamos mejorar la precisión después
-    final searchTerm = '%${descripcion.trim()}%';
-    
+
     final result = await db.rawQuery('''
-      SELECT i.precio_unitario, g.fecha, g.moneda, g.total_original, g.total_usd, g.comercio
+      SELECT i.precio_unitario, i.cantidad, i.total, i.descripcion,
+             g.id as gasto_id, g.fecha, g.moneda, g.total_original, g.total_usd, g.comercio, g.tasa_cambio
       FROM items_gasto i
       JOIN gastos g ON i.gasto_id = g.id
-      WHERE i.descripcion LIKE ?
+      ${excludeGastoId != null ? 'WHERE g.id != $excludeGastoId' : ''}
       ORDER BY g.fecha DESC, g.id DESC
-      LIMIT 1
-    ''', [searchTerm]);
+      LIMIT 250
+    ''');
 
-    if (result.isNotEmpty) {
-      final row = result.first;
-      final moneda = row['moneda'] as String;
-      double precioUnitario = (row['precio_unitario'] as num?)?.toDouble() ?? 0.0;
-      
-      double precioUsd = precioUnitario;
-      if (moneda != 'USD') {
-        final totalOrig = (row['total_original'] as num?)?.toDouble() ?? 0.0;
-        final totalUsd = (row['total_usd'] as num?)?.toDouble() ?? 0.0;
-        if (totalUsd > 0 && totalOrig > 0) {
-          final tasa = totalOrig / totalUsd;
-          precioUsd = precioUnitario / tasa;
+    for (final row in result) {
+      final prevDesc = row['descripcion'] as String? ?? '';
+      if (isTaxItem(prevDesc)) continue;
+
+      final cleanPrevDesc = normalizeProductText(prevDesc);
+      // Debe ser exactamente el mismo producto normalizado
+      if (cleanPrevDesc != cleanDesc) continue;
+
+      final moneda = row['moneda'] as String? ?? 'USD';
+      final tasaRow = (row['tasa_cambio'] as num?)?.toDouble() ?? 1.0;
+      final totalOrig = (row['total_original'] as num?)?.toDouble() ?? 0.0;
+      final totalUsd = (row['total_usd'] as num?)?.toDouble() ?? 0.0;
+      final cant = (row['cantidad'] as num?)?.toDouble() ?? 1.0;
+      final totalItem = (row['total'] as num?)?.toDouble() ?? 0.0;
+      final precioUnitItem = (row['precio_unitario'] as num?)?.toDouble() ?? 0.0;
+
+      // Precio por unidad real en la moneda del gasto (en decimales)
+      double unitPriceInCurrency;
+      if (totalItem > 0 && cant > 0) {
+        unitPriceInCurrency = (totalItem / 100.0) / cant;
+      } else {
+        unitPriceInCurrency = precioUnitItem / 100.0;
+      }
+
+      double tasa = tasaRow > 0 ? tasaRow : 1.0;
+      if (tasa == 1.0 && totalOrig > 0 && totalUsd > 0 && (totalOrig / totalUsd) > 2.0) {
+        tasa = totalOrig / totalUsd;
+      }
+
+      double prevUsd = unitPriceInCurrency;
+      if (moneda == 'VES') {
+        prevUsd = unitPriceInCurrency / tasa;
+      } else {
+        if (totalUsd > 0 && unitPriceInCurrency > (totalUsd / 100.0) * 2.0 && tasa > 1.0) {
+          prevUsd = unitPriceInCurrency / tasa;
         }
       }
 
       return {
-        'precio_usd': precioUsd / 100.0, // UI maneja double
-        'fecha': row['fecha'] as String,
-        'comercio': row['comercio'] as String,
+        'precio_usd': prevUsd,
+        'fecha': row['fecha'] as String? ?? '',
+        'comercio': row['comercio'] as String? ?? 'Otro comercio',
+        'cantidad': cant,
       };
     }
     return null;

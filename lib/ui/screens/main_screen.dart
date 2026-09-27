@@ -59,12 +59,10 @@ class _MainScreenState extends State<MainScreen> {
       onNavigateToGastos: () => _onTabTapped(1),
       onNavigateToAnalysis: () => _onTabTapped(2),
       onNavigateToChat: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const ChatScreen(showBackButton: true),
-          ),
-        );
+        _onTabTapped(3);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _moreScreenKey.currentState?.openChat(fromHome: true);
+        });
       },
       onAddExpense: () => _showAddMenu(context),
     ),
@@ -77,6 +75,9 @@ class _MainScreenState extends State<MainScreen> {
   ];
 
   void _onTabTapped(int index) {
+    if (index != 3 && _currentIndex == 3) {
+      _moreScreenKey.currentState?.returnToHub();
+    }
     setState(() {
       _currentIndex = index;
     });
