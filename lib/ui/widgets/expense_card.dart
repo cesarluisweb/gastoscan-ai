@@ -199,15 +199,28 @@ class _ExpenseCardState extends State<ExpenseCard> {
                   ),
                   const SizedBox(height: 8),
                   ...widget.gasto.items.map((it) {
-                    double itemUsd = it.totalDisplay;
-                    if (widget.gasto.moneda != 'USD' && widget.gasto.totalOriginalDisplay > 0) {
-                      itemUsd = it.totalDisplay * (widget.gasto.totalUsdDisplay / widget.gasto.totalOriginalDisplay);
+                    double itemOriginal = it.totalDisplay;
+                    double itemUsd;
+                    double itemVes;
+                    
+                    double sumItems = widget.gasto.items.fold(0.0, (prev, i) => prev + i.totalDisplay);
+                    double tasa = widget.gasto.tasaCambio > 0 ? widget.gasto.tasaCambio : 1.0;
+
+                    if (widget.gasto.moneda == 'VES') {
+                      itemVes = itemOriginal;
+                      itemUsd = itemOriginal / tasa;
+                    } else {
+                      // Si la factura está en USD pero los ítems suman mucho más, es porque están en VES
+                      if (widget.gasto.totalOriginalDisplay > 0 && sumItems > widget.gasto.totalOriginalDisplay * 5) {
+                        itemVes = itemOriginal;
+                        itemUsd = itemOriginal / tasa;
+                      } else {
+                        itemUsd = itemOriginal;
+                        itemVes = itemOriginal * tasa;
+                      }
                     }
-                    final double itemDisplay = widget.monedaPrincipal == 'VES'
-                        ? (widget.gasto.moneda == 'VES'
-                            ? it.totalDisplay
-                            : itemUsd * (widget.gasto.tasaCambio > 0 ? widget.gasto.tasaCambio : 1.0))
-                        : itemUsd;
+
+                    final double itemDisplay = widget.monedaPrincipal == 'VES' ? itemVes : itemUsd;
                     final String itemText = widget.monedaPrincipal == 'VES'
                         ? CurrencyFormatter.formatVes(itemDisplay)
                         : CurrencyFormatter.formatUsd(itemDisplay);
