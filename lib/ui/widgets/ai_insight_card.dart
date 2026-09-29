@@ -36,24 +36,26 @@ class AiInsightCard extends StatelessWidget {
     if (presupuestoGeneral > 0) {
       final porcentaje = totalGastadoMes / presupuestoGeneral;
       final pctRedondeado = (porcentaje * 100).round();
+      final diasTexto = diasRestantes == 1 ? 'falta 1 día' : 'faltan $diasRestantes días';
 
       if (porcentaje >= 1.0) {
         final excesoUsd = totalGastadoMes - presupuestoGeneral;
         final formattedExceso = monedaPrincipal == 'VES'
             ? CurrencyFormatter.formatVes(excesoUsd * (tasaCambio > 0 ? tasaCambio : 1.0))
             : CurrencyFormatter.formatUsd(excesoUsd);
-        return 'Has superado tu presupuesto general por $formattedExceso. Revisa tus gastos para identificar dónde puedes reducir consumos.';
+        return 'Has superado tu presupuesto general por $formattedExceso. Conviene moderar consumos no esenciales.';
       }
 
       if (porcentaje >= 0.85) {
-        return 'Atención: llevas gastado el $pctRedondeado% de tu presupuesto y faltan $diasRestantes días para fin de mes. Conviene moderar los gastos no esenciales.';
+        return 'Atención: llevas gastado el $pctRedondeado% de tu presupuesto y $diasTexto. Modera tus gastos.';
       }
 
       if (porcentaje < 0.50 && now.day >= 15) {
+        final diasCapTexto = diasRestantes == 1 ? 'Falta 1 día' : 'Faltan $diasRestantes días';
         if (diasRestantes <= 5) {
-          return '¡Cierre de mes excelente! Faltan $diasRestantes días y solo has consumido el $pctRedondeado% de tu presupuesto. ¡Así se rinde más!';
+          return '¡Excelente cierre de mes! $diasCapTexto y solo has consumido el $pctRedondeado% de tu presupuesto. Tienes margen para ahorrar.';
         }
-        return '¡Excelente administración! A más de mitad de mes solo has consumido el $pctRedondeado% de tu presupuesto estimado. ¡Así se rinde más!';
+        return '¡Excelente administración! A más de mitad de mes solo has consumido el $pctRedondeado% de tu presupuesto. ¡Así se rinde más!';
       }
     }
 
@@ -69,12 +71,12 @@ class AiInsightCard extends StatelessWidget {
 
       if (topCat != null && topMonto > 0) {
         final pctTop = ((topMonto / totalGastadoMes) * 100).round();
-        return 'Tu mayor concentración de gasto este mes está en $topCat ($pctTop% del total). Mantén un seguimiento constante de esta categoría.';
+        return 'Tu mayor concentración de gasto este mes está en $topCat ($pctTop% del total). Mantén su seguimiento.';
       }
     }
 
     if (presupuestoGeneral <= 0) {
-      return 'Consejo: Asigna un presupuesto mensual en la pestaña de Análisis para monitorear tu límite de gasto en tiempo real.';
+      return 'Consejo: Asigna un presupuesto mensual en la pestaña de Análisis para monitorear tu límite en tiempo real.';
     }
 
     return 'Tus finanzas van al día. Registra cada compra puntualmente para mantener tus estadísticas actualizadas.';
@@ -86,15 +88,15 @@ class AiInsightCard extends StatelessWidget {
 
     return Container(
       key: const Key('ai_insight_card'),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: const Color(0xFFFFFDF5), // Fondo cálido sutil de IA
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: const Color(0xFFFEF08A)), // Borde amarillo sutil
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 8,
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 6,
             offset: const Offset(0, 2),
           ),
         ],
@@ -102,31 +104,26 @@ class AiInsightCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Cabecera: Icono Destello + "Asistente IA" y botón "Consultar ->"
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryLight,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(
-                  Icons.auto_awesome,
-                  size: 18,
-                  color: AppColors.textPrimary,
-                ),
+              const Icon(
+                Icons.auto_awesome,
+                size: 16,
+                color: Color(0xFFCA8A04), // Amarillo oscuro para icono
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 6),
               const Text(
                 'Asistente IA',
                 style: TextStyle(
                   color: AppColors.textPrimary,
-                  fontSize: 15,
+                  fontSize: 14,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const Spacer(),
               InkWell(
+                key: const Key('ai_insight_card_consultar_btn'),
                 onTap: onChatTap ??
                     () {
                       Navigator.push(
@@ -136,41 +133,66 @@ class AiInsightCard extends StatelessWidget {
                         ),
                       );
                     },
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(14),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.cardLighter,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.border),
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(14),
                   ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Preguntar',
+                        'Consultar',
                         style: TextStyle(
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.bold,
-                          fontSize: 12,
+                          fontSize: 11,
                         ),
                       ),
-                      SizedBox(width: 4),
-                      Icon(Icons.arrow_forward_ios, size: 10, color: AppColors.textPrimary),
+                      SizedBox(width: 3),
+                      Icon(Icons.arrow_forward, size: 11, color: AppColors.textPrimary),
                     ],
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            mensaje,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 13,
-              height: 1.4,
-            ),
+          const SizedBox(height: 10),
+          // Cuerpo Horizontal: Avatar Asistente + Mensaje
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF9C3), // Amarillo fondo avatar
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFFFDE047), width: 1),
+                ),
+                child: const Center(
+                  child: Icon(
+                    Icons.smart_toy_outlined,
+                    size: 20,
+                    color: Color(0xFF854D0E),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  mensaje,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 13,
+                    height: 1.35,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

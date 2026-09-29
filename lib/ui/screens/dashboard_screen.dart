@@ -59,11 +59,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Rinde Más'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            Text(
+              'Rinde Más',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
+            ),
+          ],
+        ),
         actions: [
           IconButton(
             key: const Key('dashboard_ai_chat_button'),
-            icon: const Icon(Icons.auto_awesome),
+            icon: const Icon(Icons.question_answer_outlined),
             tooltip: 'Asistente IA',
             onPressed: () {
               if (widget.onNavigateToChat != null) {
@@ -93,65 +104,79 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             if (scanQueue.isProcessing || scanQueue.pendingItems.isNotEmpty)
               _buildProcessingBanner(context, scanQueue),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                InkWell(
-                  key: const Key('month_selector_title'),
-                  onTap: () => _mostrarPickerMes(context, gastoProvider),
-                  borderRadius: BorderRadius.circular(8),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '$mesNombre $anio',
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+            // Selector de mes estilo píldora como en Lovable
+            Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.chevron_left, color: AppColors.textSecondary, size: 20),
+                    visualDensity: VisualDensity.compact,
+                    onPressed: () {
+                      int nuevoMes = gastoProvider.selectedMonth - 1;
+                      int nuevoAnio = gastoProvider.selectedYear;
+                      if (nuevoMes < 1) {
+                        nuevoMes = 12;
+                        nuevoAnio--;
+                      }
+                      gastoProvider.cambiarMes(nuevoAnio, nuevoMes);
+                    },
+                  ),
+                  InkWell(
+                    key: const Key('month_selector_title'),
+                    onTap: () => _mostrarPickerMes(context, gastoProvider),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.calendar_today_outlined,
+                            size: 14,
+                            color: AppColors.textSecondary,
                           ),
-                        ),
-                        const SizedBox(width: 4),
-                        const Icon(
-                          Icons.arrow_drop_down,
-                          color: AppColors.textPrimary,
-                          size: 24,
-                        ),
-                      ],
+                          const SizedBox(width: 6),
+                          Text(
+                            '$mesNombre $anio',
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(
+                            Icons.keyboard_arrow_down,
+                            color: AppColors.textSecondary,
+                            size: 18,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.chevron_left, color: AppColors.textSecondary),
-                      onPressed: () {
-                        int nuevoMes = gastoProvider.selectedMonth - 1;
-                        int nuevoAnio = gastoProvider.selectedYear;
-                        if (nuevoMes < 1) {
-                          nuevoMes = 12;
-                          nuevoAnio--;
-                        }
-                        gastoProvider.cambiarMes(nuevoAnio, nuevoMes);
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
-                      onPressed: () {
-                        int nuevoMes = gastoProvider.selectedMonth + 1;
-                        int nuevoAnio = gastoProvider.selectedYear;
-                        if (nuevoMes > 12) {
-                          nuevoMes = 1;
-                          nuevoAnio++;
-                        }
-                        gastoProvider.cambiarMes(nuevoAnio, nuevoMes);
-                      },
-                    ),
-                  ],
-                ),
-              ],
+                  IconButton(
+                    icon: const Icon(Icons.chevron_right, color: AppColors.textSecondary, size: 20),
+                    visualDensity: VisualDensity.compact,
+                    onPressed: () {
+                      int nuevoMes = gastoProvider.selectedMonth + 1;
+                      int nuevoAnio = gastoProvider.selectedYear;
+                      if (nuevoMes > 12) {
+                        nuevoMes = 1;
+                        nuevoAnio++;
+                      }
+                      gastoProvider.cambiarMes(nuevoAnio, nuevoMes);
+                    },
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 8),
             SummaryCard(

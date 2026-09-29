@@ -25,14 +25,15 @@ class AppColors {
   static const Color border = Color(0xFFE5E7EB);
   static const Color divider = Color(0xFFF3F4F6);
 
-  // Paleta de Categoría Gráficos
+  // Paleta de Categoría Gráficos (Paleta armónica independiente de semáforos)
   static const Map<String, Color> categoryColors = {
-    'Alimentación': Color(0xFF10B981), // Verde
-    'Salud': Color(0xFFEF4444),        // Rojo
-    'Educación': Color(0xFF3B82F6),    // Azul
-    'Hogar': Color(0xFFF59E0B),        // Ámbar
-    'Servicios': Color(0xFF8B5CF6),    // Púrpura
-    'Transporte': Color(0xFF06B6D4),  // Cyan
-    'Otros': Color(0xFF64748B),        // Gris
+    'Alimentación': Color(0xFF0D9488), // Teal elegante
+    'Educación': Color(0xFF4F46E5),    // Índigo moderno
+    'Salud': Color(0xFFE11D48),        // Frambuesa / Rose cálido
+    'Hogar': Color(0xFFD97706),        // Ámbar tostado
+    'Higiene': Color(0xFF06B6D4),      // Cyan fresco
+    'Servicios': Color(0xFF7C3AED),    // Violeta balanceado
+    'Transporte': Color(0xFF2563EB),   // Azul cobalto
+    'Otros': Color(0xFF64748B),        // Gris pizarra
   };
 }

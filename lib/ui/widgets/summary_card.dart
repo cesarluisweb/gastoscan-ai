@@ -50,31 +50,24 @@ class SummaryCard extends StatelessWidget {
         (now.month == mes && now.year == anio);
     final totalDaysInMonth = DateTime(now.year, now.month + 1, 0).day;
     final daysRemaining = (totalDaysInMonth - now.day).clamp(0, 31);
+    final daysForCalculation = daysRemaining > 0 ? daysRemaining : 1;
 
-    String remainingMessage = '';
-    if (hasBudget) {
-      if (isOverBudget) {
-        final overAmount = CurrencyFormatter.formatPreferido(
-          totalUsd - presupuestoGeneral,
-          null,
-          tasaCambio,
-          monedaPrincipal,
-        );
-        remainingMessage = 'Has superado tu presupuesto por $overAmount';
-      } else {
-        final remAmount = CurrencyFormatter.formatPreferido(
-          presupuestoGeneral - totalUsd,
-          null,
-          tasaCambio,
-          monedaPrincipal,
-        );
-        if (isCurrentMonth) {
-          remainingMessage = 'Te quedan $remAmount y faltan $daysRemaining días';
-        } else {
-          remainingMessage = 'Te sobraron $remAmount en este período';
-        }
-      }
-    }
+    // Métricas para la fila inferior compacta
+    final remUsd = (presupuestoGeneral - totalUsd).clamp(0.0, double.infinity);
+    final ritmoDiarioUsd = remUsd / daysForCalculation;
+    final diasTexto = daysRemaining == 1 ? 'Falta 1 día' : 'Faltan $daysRemaining días';
+    final remFormatted = CurrencyFormatter.formatPreferido(
+      remUsd,
+      null,
+      tasaCambio,
+      monedaPrincipal,
+    );
+    final ritmoFormatted = CurrencyFormatter.formatPreferido(
+      ritmoDiarioUsd,
+      null,
+      tasaCambio,
+      monedaPrincipal,
+    );
 
     return Container(
       width: double.infinity,
@@ -85,20 +78,21 @@ class SummaryCard extends StatelessWidget {
         border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(0.04),
             blurRadius: 10,
-            offset: const Offset(0, 4),
+            offset: const Offset(0, 3),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Fila superior: "Total gastado" y "Presupuesto: $X"
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Este mes has gastado',
+                'Total gastado',
                 style: TextStyle(
                   color: AppColors.textSecondary,
                   fontSize: 14,
@@ -132,18 +126,11 @@ class SummaryCard extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.all(3),
-                            decoration: const BoxDecoration(
-                              color: AppColors.primary,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.edit,
-                              size: 10,
-                              color: AppColors.textPrimary,
-                            ),
+                          const SizedBox(width: 5),
+                          const Icon(
+                            Icons.edit_outlined,
+                            size: 13,
+                            color: AppColors.textSecondary,
                           ),
                         ],
                       ),
@@ -169,78 +156,112 @@ class SummaryCard extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
+          // Monto Principal
           Text(
             textoPrincipal,
             style: const TextStyle(
               color: AppColors.textPrimary,
-              fontSize: 32,
+              fontSize: 34,
               fontWeight: FontWeight.bold,
               letterSpacing: -1,
             ),
           ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              const Icon(Icons.currency_exchange, size: 16, color: AppColors.textSecondary),
-              const SizedBox(width: 6),
-              Text(
-                textoSecundario,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 13,
-                ),
-              ),
-            ],
+          const SizedBox(height: 4),
+          // Monto Secundario (Bs.) limpio sin chip de tasa
+          Text(
+            textoSecundario,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
           ),
           if (hasBudget) ...[
             const SizedBox(height: 16),
-            const Divider(color: AppColors.border, height: 1),
-            const SizedBox(height: 12),
+            // Barra de progreso con porcentaje a la derecha
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: LinearProgressIndicator(
+                      value: percentUsed.clamp(0.0, 1.0),
+                      minHeight: 8,
+                      backgroundColor: AppColors.cardLighter,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        isOverBudget
+                            ? AppColors.error
+                            : (percentUsed >= 0.80 ? AppColors.warning : const Color(0xFF10B981)),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
                 Text(
-                  '${(percentUsed * 100).toStringAsFixed(0)}% del presupuesto usado',
+                  '${(percentUsed * 100).toStringAsFixed(0)}%',
                   style: TextStyle(
                     color: isOverBudget ? AppColors.error : AppColors.textPrimary,
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Text(
-                  isOverBudget ? 'Excedido' : 'Disponible',
-                  style: TextStyle(
-                    color: isOverBudget ? AppColors.error : const Color(0xFF10B981),
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
               ],
             ),
-            const SizedBox(height: 8),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: LinearProgressIndicator(
-                value: percentUsed.clamp(0.0, 1.0),
-                minHeight: 8,
-                backgroundColor: AppColors.cardLighter,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  isOverBudget
-                      ? AppColors.error
-                      : (percentUsed >= 0.80 ? AppColors.warning : const Color(0xFF10B981)),
+            const SizedBox(height: 12),
+            // Fila de resumen de ritmo diario y saldo disponible
+            if (isOverBudget)
+              Text(
+                'Has superado tu presupuesto por ${CurrencyFormatter.formatPreferido(totalUsd - presupuestoGeneral, null, tasaCambio, monedaPrincipal)}',
+                style: const TextStyle(
+                  color: AppColors.error,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              )
+            else if (isCurrentMonth)
+              Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 6,
+                runSpacing: 4,
+                children: [
+                  Text(
+                    'Te quedan $remFormatted',
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const Text('•', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                  Text(
+                    diasTexto,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const Text('•', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                  Text(
+                    'Ritmo diario: $ritmoFormatted',
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              )
+            else
+              Text(
+                'Te sobraron $remFormatted en este período',
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              remainingMessage,
-              style: TextStyle(
-                color: isOverBudget ? AppColors.error : AppColors.textSecondary,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
           ],
         ],
       ),
