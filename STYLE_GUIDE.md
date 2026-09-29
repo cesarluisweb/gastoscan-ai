@@ -10,7 +10,7 @@ La identidad de **Rinde Más** se basa estrictamente en tres tonos principales:
 
 | Rol | Color | Código Hex | Uso |
 |---|---|---|---|
-| **Acento de Marca** | Amarillo | `#FACC15` (`primaryDark`) / `#FDE047` (`primary`) | Botón flotante central (+), iconos de acción, barras de progreso y fondos de acento. |
+| **Acento de Marca** | Amarillo | `#FEF08A` (`primary`) / `#FACC15` (`primaryDark`) | Botón flotante central (+), iconos de acción, barras de progreso y fondos de acento. |
 | **Superficie y Fondo** | Blanco / Gris Neutro | `#FFFFFF` (`surface`) / `#F9FAFB` (`background`) | Fondo de pantalla, tarjetas modales y contenedores. |
 | **Texto y Estructura** | Negro / Gris Carbón | `#111827` (`textPrimary`) / `#0F172A` (`secondary`) | Títulos, montos principales, botones oscuros y textos legibles. |
 
