@@ -139,6 +139,8 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         }
       }
     }
+  }
+
   IconData _getCategoryIcon(String categoria) {
     switch (categoria) {
       case 'Alimentación':
