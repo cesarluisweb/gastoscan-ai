@@ -110,25 +110,41 @@ class SummaryCard extends StatelessWidget {
                   child: InkWell(
                     key: const Key('summary_card_edit_budget_btn'),
                     onTap: () => BudgetBottomSheet.show(context),
-                    borderRadius: BorderRadius.circular(6),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.cardLighter,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: AppColors.border),
+                      ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Flexible(
                             child: Text(
-                              'Presupuesto mensual: ${CurrencyFormatter.formatPreferido(presupuestoGeneral, null, tasaCambio, monedaPrincipal)}',
+                              'Presupuesto: ${CurrencyFormatter.formatPreferido(presupuestoGeneral, null, tasaCambio, monedaPrincipal)}',
                               style: const TextStyle(
-                                color: AppColors.textSecondary,
+                                color: AppColors.textPrimary,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          const SizedBox(width: 4),
-                          const Icon(Icons.edit, size: 14, color: AppColors.primaryDark),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.all(3),
+                            decoration: const BoxDecoration(
+                              color: AppColors.primary,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.edit,
+                              size: 10,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -195,7 +211,7 @@ class SummaryCard extends StatelessWidget {
                 Text(
                   isOverBudget ? 'Excedido' : 'Disponible',
                   style: TextStyle(
-                    color: isOverBudget ? AppColors.error : Colors.green,
+                    color: isOverBudget ? AppColors.error : const Color(0xFF10B981),
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                   ),
@@ -212,7 +228,7 @@ class SummaryCard extends StatelessWidget {
                 valueColor: AlwaysStoppedAnimation<Color>(
                   isOverBudget
                       ? AppColors.error
-                      : (percentUsed >= 0.85 ? AppColors.warning : AppColors.primaryDark),
+                      : (percentUsed >= 0.80 ? AppColors.warning : const Color(0xFF10B981)),
                 ),
               ),
             ),

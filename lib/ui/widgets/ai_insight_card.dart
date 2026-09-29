@@ -50,6 +50,9 @@ class AiInsightCard extends StatelessWidget {
       }
 
       if (porcentaje < 0.50 && now.day >= 15) {
+        if (diasRestantes <= 5) {
+          return '¡Cierre de mes excelente! Faltan $diasRestantes días y solo has consumido el $pctRedondeado% de tu presupuesto. ¡Así se rinde más!';
+        }
         return '¡Excelente administración! A más de mitad de mes solo has consumido el $pctRedondeado% de tu presupuesto estimado. ¡Así se rinde más!';
       }
     }
@@ -133,22 +136,27 @@ class AiInsightCard extends StatelessWidget {
                         ),
                       );
                     },
-                borderRadius: BorderRadius.circular(8),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  child: Row(
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: AppColors.cardLighter,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         'Preguntar',
                         style: TextStyle(
-                          color: AppColors.secondary,
+                          color: AppColors.textPrimary,
                           fontWeight: FontWeight.bold,
-                          fontSize: 13,
+                          fontSize: 12,
                         ),
                       ),
                       SizedBox(width: 4),
-                      Icon(Icons.arrow_forward_ios, size: 12, color: AppColors.secondary),
+                      Icon(Icons.arrow_forward_ios, size: 10, color: AppColors.textPrimary),
                     ],
                   ),
                 ),

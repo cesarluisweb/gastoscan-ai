@@ -143,6 +143,8 @@ class _CategoryChartState extends State<CategoryChart> {
                       children: widget.categoryTotals.entries.map((entry) {
                         final color = AppColors.categoryColors[entry.key] ??
                             AppColors.textSecondary;
+                        final total = widget.totalGastadoMes > 0 ? widget.totalGastadoMes : 1.0;
+                        final pct = ((entry.value / total) * 100).round();
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 2),
                           child: Row(
@@ -158,7 +160,7 @@ class _CategoryChartState extends State<CategoryChart> {
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
-                                  entry.key,
+                                  '${entry.key} ($pct%)',
                                   style: const TextStyle(
                                     color: AppColors.textSecondary,
                                     fontSize: 12,
