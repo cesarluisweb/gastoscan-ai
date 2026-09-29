@@ -10,6 +10,7 @@ import 'package:gastoscan_ai/providers/gasto_provider.dart';
 import 'package:gastoscan_ai/providers/scan_queue_provider.dart';
 import 'package:gastoscan_ai/providers/settings_provider.dart';
 import 'package:gastoscan_ai/ui/screens/analysis_screen.dart';
+import 'package:gastoscan_ai/ui/widgets/summary_card.dart';
 
 class FakeDatabaseHelper extends DatabaseHelper {
   FakeDatabaseHelper() : super.test();
@@ -318,6 +319,54 @@ void main() {
       expect(find.byKey(const Key('general_budget_card')), findsOneWidget);
       expect(find.byKey(const Key('excess_alert_general')), findsOneWidget);
       expect(find.textContaining('Presupuesto superado por ${CurrencyFormatter.formatUsd(10.0)}'), findsOneWidget);
+    });
+
+    testWidgets('AnalysisScreen month selector opens picker dialog and changes month', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      final monthSelector = find.byKey(const Key('analysis_month_selector_title'));
+      expect(monthSelector, findsOneWidget);
+
+      await tester.tap(monthSelector);
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('analysis_month_pick_1')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('analysis_month_pick_1')));
+      await tester.pumpAndSettle();
+
+      expect(gastoProvider.selectedMonth, 1);
+    });
+
+    testWidgets('SummaryCard shows Presupuesto mensual and edit button opens budget bottom sheet', (tester) async {
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<GastoProvider>.value(value: gastoProvider),
+            ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+          ],
+          child: const MaterialApp(
+            home: Scaffold(
+              body: SummaryCard(
+                totalUsd: 50.0,
+                totalVes: 0.0,
+                periodo: 'Septiembre 2026',
+                presupuestoGeneral: 200.0,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Presupuesto mensual: \$ 200.00'), findsOneWidget);
+      expect(find.byIcon(Icons.edit), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('summary_card_edit_budget_btn')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('input_presupuesto_general')), findsOneWidget);
     });
   });
 }
