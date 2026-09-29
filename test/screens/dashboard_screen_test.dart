@@ -96,7 +96,7 @@ void main() {
       expect(find.byKey(const Key('processing_queue_banner')), findsNothing);
     });
 
-    testWidgets('displays ready queue banner when items are ready for review', (tester) async {
+    testWidgets('displays ready queue item card when items are ready for review', (tester) async {
       scanQueueProvider.setReadyItems([
         {
           'id': 1,
@@ -108,8 +108,8 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pump();
 
-      expect(find.byKey(const Key('ready_queue_banner')), findsOneWidget);
-      expect(find.textContaining('Tienes 1 factura(s) en cola listas para revisar.'), findsOneWidget);
+      expect(find.byKey(const Key('pending_1')), findsOneWidget);
+      expect(find.textContaining('Central Madeirense'), findsOneWidget);
     });
   });
 }
