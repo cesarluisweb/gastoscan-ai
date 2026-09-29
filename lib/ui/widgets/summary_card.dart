@@ -128,7 +128,7 @@ class SummaryCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 5),
                           const Icon(
-                            Icons.edit_outlined,
+                            Icons.edit,
                             size: 13,
                             color: AppColors.textSecondary,
                           ),
