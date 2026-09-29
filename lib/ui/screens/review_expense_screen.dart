@@ -139,6 +139,25 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         }
       }
     }
+  IconData _getCategoryIcon(String categoria) {
+    switch (categoria) {
+      case 'Alimentación':
+        return Icons.shopping_cart_outlined;
+      case 'Salud':
+        return Icons.medical_services_outlined;
+      case 'Higiene':
+        return Icons.cleaning_services_outlined;
+      case 'Educación':
+        return Icons.school_outlined;
+      case 'Hogar':
+        return Icons.home_outlined;
+      case 'Servicios':
+        return Icons.receipt_long_outlined;
+      case 'Transporte':
+        return Icons.directions_car_outlined;
+      default:
+        return Icons.category_outlined;
+    }
   }
 
   @override
@@ -595,7 +614,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         title: Text(
           isQueueItem && readyCount > 1
               ? 'Revisar Factura ($readyCount en cola)'
-              : 'Revisar y Confirmar',
+              : (widget.queueItemId != null || widget.imageFile != null
+                  ? 'Revisar Factura'
+                  : 'Registrar gasto'),
         ),
         actions: [
           if (widget.queueItemId != null)
@@ -695,7 +716,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     onTap: _selectDate,
                     child: InputDecorator(
                       decoration: const InputDecoration(
-                        labelText: 'Fecha de Emisión',
+                        labelText: 'Fecha de gasto',
                         prefixIcon: Icon(Icons.calendar_today_outlined, color: AppColors.textSecondary),
                       ),
                       child: Text(
@@ -895,7 +916,27 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                   ),
                                   dropdownColor: AppColors.surface,
                                   items: AppConstants.categorias.map((cat) {
-                                    return DropdownMenuItem(value: cat, child: Text(cat, overflow: TextOverflow.ellipsis));
+                                    final catColor = AppColors.categoryColors[cat] ?? AppColors.textSecondary;
+                                    final catIcon = _getCategoryIcon(cat);
+                                    return DropdownMenuItem(
+                                      value: cat,
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Container(
+                                            width: 24,
+                                            height: 24,
+                                            decoration: BoxDecoration(
+                                              color: catColor.withOpacity(0.15),
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: Icon(catIcon, size: 14, color: catColor),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(cat, overflow: TextOverflow.ellipsis),
+                                        ],
+                                      ),
+                                    );
                                   }).toList(),
                                   onChanged: (val) {
                                     if (val != null) {
@@ -935,42 +976,77 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                   const SizedBox(height: 16),
                   const Text('Moneda', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                   const SizedBox(height: 6),
-                  SizedBox(
+                  Container(
                     width: double.infinity,
-                    child: SegmentedButton<String>(
-                      segments: AppConstants.monedas.map((m) {
-                        return ButtonSegment<String>(
-                          value: m,
-                          label: Text(m, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        );
-                      }).toList(),
-                      selected: {_selectedMoneda},
-                      onSelectionChanged: (newSelection) {
-                        setState(() {
-                          _selectedMoneda = newSelection.first;
-                          _recalcularTotalUsd();
-                        });
-                      },
-                      showSelectedIcon: false,
-                      style: ButtonStyle(
-                        visualDensity: VisualDensity.compact,
-                        backgroundColor: MaterialStateProperty.resolveWith<Color>(
-                          (Set<MaterialState> states) {
-                            if (states.contains(MaterialState.selected)) {
-                              return AppColors.secondary;
-                            }
-                            return AppColors.surface;
-                          },
+                    decoration: BoxDecoration(
+                      color: AppColors.cardLighter,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    padding: const EdgeInsets.all(2),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            onTap: () {
+                              setState(() {
+                                _selectedMoneda = 'USD';
+                                _recalcularTotalUsd();
+                              });
+                            },
+                            borderRadius: BorderRadius.circular(8),
+                            child: Container(
+                              alignment: Alignment.center,
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              decoration: BoxDecoration(
+                                color: _selectedMoneda == 'USD' ? AppColors.surface : Colors.transparent,
+                                borderRadius: BorderRadius.circular(8),
+                                boxShadow: _selectedMoneda == 'USD'
+                                    ? [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 4)]
+                                    : null,
+                              ),
+                              child: Text(
+                                'USD',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: _selectedMoneda == 'USD' ? FontWeight.bold : FontWeight.normal,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
-                        foregroundColor: MaterialStateProperty.resolveWith<Color>(
-                          (Set<MaterialState> states) {
-                            if (states.contains(MaterialState.selected)) {
-                              return Colors.white;
-                            }
-                            return AppColors.textPrimary;
-                          },
+                        Expanded(
+                          child: InkWell(
+                            onTap: () {
+                              setState(() {
+                                _selectedMoneda = 'VES';
+                                _recalcularTotalUsd();
+                              });
+                            },
+                            borderRadius: BorderRadius.circular(8),
+                            child: Container(
+                              alignment: Alignment.center,
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              decoration: BoxDecoration(
+                                color: _selectedMoneda == 'VES' ? AppColors.surface : Colors.transparent,
+                                borderRadius: BorderRadius.circular(8),
+                                boxShadow: _selectedMoneda == 'VES'
+                                    ? [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 4)]
+                                    : null,
+                              ),
+                              child: Text(
+                                'VES',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: _selectedMoneda == 'VES' ? FontWeight.bold : FontWeight.normal,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 16),

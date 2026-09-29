@@ -41,6 +41,64 @@ class _CustomCenterDockedFabLocation extends FloatingActionButtonLocation {
   }
 }
 
+class _FadeIndexedStack extends StatefulWidget {
+  final int index;
+  final List<Widget> children;
+  final Duration duration;
+
+  const _FadeIndexedStack({
+    Key? key,
+    required this.index,
+    required this.children,
+    this.duration = const Duration(milliseconds: 150),
+  }) : super(key: key);
+
+  @override
+  State<_FadeIndexedStack> createState() => _FadeIndexedStackState();
+}
+
+class _FadeIndexedStackState extends State<_FadeIndexedStack> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+  int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.index;
+    _controller = AnimationController(vsync: this, duration: widget.duration);
+    _animation = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
+    _controller.forward();
+  }
+
+  @override
+  void didUpdateWidget(_FadeIndexedStack oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.index != _currentIndex) {
+      _currentIndex = widget.index;
+      _controller.reset();
+      _controller.forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _animation,
+      child: IndexedStack(
+        index: _currentIndex,
+        children: widget.children,
+      ),
+    );
+  }
+}
+
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
   final GlobalKey<MoreScreenState> _moreScreenKey = GlobalKey<MoreScreenState>();
@@ -97,7 +155,7 @@ class _MainScreenState extends State<MainScreen> {
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Text(
-                  '¿Qué deseas agregar?',
+                  'Selecciona una opción',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -105,7 +163,7 @@ class _MainScreenState extends State<MainScreen> {
                   ),
                 ),
               ),
-                              ListTile(
+              ListTile(
                 leading: CircleAvatar(
                   backgroundColor: AppColors.primary,
                   child: const Icon(Icons.edit_note, color: AppColors.textPrimary),
@@ -149,12 +207,31 @@ class _MainScreenState extends State<MainScreen> {
                 ),
                 title: const Text('Escanear factura (IA)', style: TextStyle(fontWeight: FontWeight.bold)),
                 subtitle: const Text('La IA extrae los datos de la foto'),
-                onTap: () {
+                onTap: () async {
                   Navigator.pop(ctx);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const ScanScreen(initialSource: ImageSource.camera)),
-                  );
+                  try {
+                    final picker = ImagePicker();
+                    final picked = await picker.pickImage(source: ImageSource.camera, imageQuality: 90);
+                    if (picked != null && context.mounted) {
+                      final scanQueue = Provider.of<ScanQueueProvider>(context, listen: false);
+                      await scanQueue.enqueue(picked.path);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Factura añadida a la cola en segundo plano.', style: TextStyle(color: Colors.black)),
+                            backgroundColor: AppColors.primary,
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error al capturar imagen: $e')),
+                      );
+                    }
+                  }
                 },
               ),
               const Divider(),
@@ -165,12 +242,33 @@ class _MainScreenState extends State<MainScreen> {
                 ),
                 title: const Text('Subir comprobante (IA)', style: TextStyle(fontWeight: FontWeight.bold)),
                 subtitle: const Text('Sube una foto o captura de tu recibo'),
-                onTap: () {
+                onTap: () async {
                   Navigator.pop(ctx);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const ScanScreen(initialSource: ImageSource.gallery)),
-                  );
+                  try {
+                    final picker = ImagePicker();
+                    final pickedFiles = await picker.pickMultiImage(imageQuality: 90);
+                    if (pickedFiles.isNotEmpty && context.mounted) {
+                      final scanQueue = Provider.of<ScanQueueProvider>(context, listen: false);
+                      final paths = pickedFiles.map((f) => f.path).toList();
+                      await scanQueue.enqueueMultiple(paths);
+                      if (context.mounted) {
+                        final countText = paths.length == 1 ? '1 comprobante añadido' : '${paths.length} comprobantes añadidos';
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('$countText a la cola en segundo plano.', style: const TextStyle(color: Colors.black)),
+                            backgroundColor: AppColors.primary,
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error al seleccionar imágenes: $e')),
+                      );
+                    }
+                  }
                 },
               ),
               const Divider(),
@@ -194,6 +292,125 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
+  Widget _buildGlobalScanBanner(BuildContext context, ScanQueueProvider scanQueue) {
+    if (scanQueue.readyItems.isNotEmpty) {
+      final count = scanQueue.readyItems.length;
+      final isProcessingMore = scanQueue.isProcessing || scanQueue.pendingCount > 0;
+      final String label;
+      if (isProcessingMore) {
+        label = count == 1
+            ? '1 factura lista para revisar (${scanQueue.pendingCount} en cola)'
+            : '$count facturas listas para revisar (${scanQueue.pendingCount} en cola)';
+      } else {
+        label = count == 1
+            ? '1 factura lista para revisar. Toca aquí.'
+            : '$count facturas listas para revisar. Toca aquí.';
+      }
+
+      return Positioned(
+        top: MediaQuery.of(context).padding.top + 8,
+        left: 16,
+        right: 16,
+        child: Material(
+          elevation: 4,
+          borderRadius: BorderRadius.circular(12),
+          color: AppColors.primary,
+          child: InkWell(
+            onTap: () {
+              if (scanQueue.readyItems.isNotEmpty) {
+                final item = scanQueue.readyItems.first;
+                final data = jsonDecode(item['extracted_data']);
+                final result = GeminiExtractionResult.fromJson(data);
+                final file = File(item['image_path']);
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ReviewExpenseScreen(
+                      imageFile: file.existsSync() ? file : null,
+                      extractedData: result,
+                      queueItemId: item['id'],
+                    ),
+                  ),
+                ).then((_) {
+                  scanQueue.loadReadyItems();
+                });
+              }
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  const Icon(Icons.receipt_long, color: AppColors.textPrimary),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                  const Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.textPrimary),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    } else if (scanQueue.isProcessing || scanQueue.pendingItems.isNotEmpty) {
+      final count = scanQueue.pendingCount > 0 ? scanQueue.pendingCount : 1;
+      final label = count == 1
+          ? 'Procesando factura en segundo plano...'
+          : 'Procesando $count facturas en segundo plano...';
+
+      return Positioned(
+        top: MediaQuery.of(context).padding.top + 8,
+        left: 16,
+        right: 16,
+        child: Material(
+          elevation: 3,
+          borderRadius: BorderRadius.circular(12),
+          color: AppColors.card,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Row(
+              children: [
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryDark),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+    return const SizedBox.shrink();
+  }
+
   @override
   Widget build(BuildContext context) {
     final scanQueue = Provider.of<ScanQueueProvider>(context);
@@ -201,65 +418,11 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          IndexedStack(
+          _FadeIndexedStack(
             index: _currentIndex,
             children: _pages,
           ),
-          if (_currentIndex != 0 && scanQueue.readyItems.isNotEmpty)
-            Positioned(
-              top: MediaQuery.of(context).padding.top + 8,
-              left: 16,
-              right: 16,
-              child: Material(
-                elevation: 4,
-                borderRadius: BorderRadius.circular(12),
-                color: AppColors.primary,
-                child: InkWell(
-                  onTap: () {
-                    if (scanQueue.readyItems.isNotEmpty) {
-                      final item = scanQueue.readyItems.first;
-                      final data = jsonDecode(item['extracted_data']);
-                      final result = GeminiExtractionResult.fromJson(data);
-                      final file = File(item['image_path']);
-
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ReviewExpenseScreen(
-                            imageFile: file.existsSync() ? file : null,
-                            extractedData: result,
-                            queueItemId: item['id'],
-                          ),
-                        ),
-                      ).then((_) {
-                        scanQueue.loadReadyItems();
-                      });
-                    }
-                  },
-                  borderRadius: BorderRadius.circular(12),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.receipt_long, color: AppColors.textPrimary),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            '${scanQueue.readyItems.length} factura(s) lista(s) para revisar. Toca aquí.',
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ),
-                        const Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.textPrimary),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
+          _buildGlobalScanBanner(context, scanQueue),
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -294,8 +457,8 @@ class _MainScreenState extends State<MainScreen> {
             ),
             const SizedBox(width: 48), // Espacio para el FAB
             _buildTabItem(
-              icon: Icons.bar_chart_outlined,
-              activeIcon: Icons.bar_chart,
+              icon: Icons.analytics_outlined,
+              activeIcon: Icons.analytics,
               label: 'Análisis',
               index: 2,
             ),

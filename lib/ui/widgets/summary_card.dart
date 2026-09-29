@@ -172,7 +172,7 @@ class SummaryCard extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 2),
           // Monto Principal
           Text(
             textoPrincipal,
@@ -183,7 +183,7 @@ class SummaryCard extends StatelessWidget {
               letterSpacing: -1,
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 1),
           // Monto Secundario (Bs.) limpio sin chip de tasa
           Text(
             textoSecundario,

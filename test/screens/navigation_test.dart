@@ -102,7 +102,7 @@ void main() {
       await tester.tap(find.byType(FloatingActionButton));
       await tester.pumpAndSettle();
 
-      expect(find.text('¿Qué deseas agregar?'), findsOneWidget);
+      expect(find.text('Selecciona una opción'), findsOneWidget);
       expect(find.text('Registrar gasto'), findsOneWidget);
       expect(find.text('Escanear factura (IA)'), findsOneWidget);
       expect(find.text('Subir comprobante (IA)'), findsOneWidget);
