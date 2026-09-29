@@ -40,12 +40,12 @@ Este documento centraliza las ideas y mejoras pendientes, ordenadas estratégica
 ## Fase 7: Arquitectura de Producción y Confiabilidad (En Progreso 🔄)
 *Transformar el excelente MVP actual en un producto de grado financiero ("Bank-grade").*
 - **Motor de Sincronización Real (Sync Engine):** Abandonar `synced = 0/1`. Implementar UUIDs locales, marcas de tiempo (`created_at`, `updated_at`, `deleted_at` para borrado lógico/tombstones) y control de versiones para resolver conflictos entre dispositivos.
-- **Precisión Financiera Determinística:** Cambiar almacenamiento de dinero de coma flotante (`double`) a números enteros (centavos/minor units). Separar estrictamente el "Monto Original" del "Monto Convertido" auditando la fuente y fecha de la tasa de cambio. **Regla de oro: La IA interpreta, el código calcula.**
+- ~~**Precisión Financiera Determinística:** (Completada ✅)~~ Cambiar almacenamiento de dinero de coma flotante (`double`) a números enteros (centavos/minor units). Separar estrictamente el "Monto Original" del "Monto Convertido" auditando la fuente y fecha de la tasa de cambio. **Regla de oro: La IA interpreta, el código calcula.**
 - **Seguridad y Separación de Capas:** Blindar las Cloud Functions con Firebase App Check. Separar el mastodóntico `GastoProvider` en `Repository`, `SyncService` y gestores de estado más limpios (arquitectura por features).
 - **Evaluación de Firebase AI Logic (`firebase_vertexai`):** Evaluar migración de llamadas REST directas al SDK de Firebase Vertex AI en Flutter (`firebase_vertexai`), integrando Firebase App Check (protección de cuotas) y Remote Config (actualización dinámica de prompts y modelos sin publicar APK).
 - **Procesamiento Background Nativo:** Migrar la cola local en Dart a un Background Worker real del sistema operativo (Firebase Cloud Tasks / WorkManager) para asegurar subidas e IA incluso con la app cerrada.
 - **Extracción Asistida por Confianza (Confidence Scores):** Gemini debe devolver qué tan seguro está de un dato extraído. La UI alertará "⚠️ Revisar" si la confianza es baja. Implementar un "Diccionario Personal" local para que la app aprenda de las correcciones del usuario sin reentrenar IA.
-- **UX en Lote y Privacidad:** Pantalla de "3 facturas listas para revisar" en vez de forzar revisión individual inmediata. Incorporar eliminación total de cuenta/datos y políticas claras sobre fotos locales vs nube.
+- ~~**UX en Lote y Privacidad:** (Completada ✅)~~ Pantalla de "3 facturas listas para revisar" en vez de forzar revisión individual inmediata. Incorporar eliminación total de cuenta/datos y políticas claras sobre fotos locales vs nube.
 - ~~**Testing y CI Estricto:** Eliminar la regeneración de la carpeta `android` (`flutter create .`) del pipeline CI/CD en favor de versionamiento estricto. Requisito de Unit Tests y Sync Tests antes de nuevas integraciones.~~
 
 ## Fase 8: Ecosistema Web y Red Colaborativa (Visión a Largo Plazo)
