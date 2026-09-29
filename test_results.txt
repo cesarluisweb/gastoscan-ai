@@ -1,96 +1,661 @@
 
-::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests initial state has empty categories and budgets
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests setPresupuestoCategoria creates category with budget if not exists
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests setPresupuestoCategoria is case-insensitive
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests getAllPresupuestosCategorias returns all configured category budgets
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests insertCategoria and updateCategoria work correctly
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests deleteCategoria removes the category
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests renders 4 navigation destinations and center FAB
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests displays yellow processing banner when queue has pending items
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests displays single item text properly in processing banner
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests hides processing banner when queue is empty and not processing
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests displays ready queue item card when items are ready for review
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests switching tabs changes current active screen
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping center FAB opens bottom sheet with 4 add options
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping AI chat button on Inicio navigates to Chat keeping bottom navigation and back returns to Inicio
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping Asistente IA in Mas and pressing back returns to Mas hub
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests renders all hub sections in main view
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping shopping list navigates internally and back button returns to hub
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping chat navigates internally and back button returns to hub
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests calling openChat navigates directly to chat view
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) R3 Acceptance Criteria: Asignar $50 a Alimentación, y registrar un gasto de $60 en Alimentación hace que se dibuje un indicador visual de exceso (color rojo) en la UI de esa categoría
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Category within budget does NOT render the red excess alert
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Initial empty state displays analysis empty state and allows adding budget
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Editing budget to amount greater than expense clears red excess alert
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart: ScanScreen Multi-Image Selection Tests multi-image selection enqueues all images and pops back to Dashboard
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart: ScanScreen Multi-Image Selection Tests empty selection from gallery does not enqueue or pop
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Validation: categories exceeding general budget shows alert and blocks save
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) General budget exceeded shows general excess alert in AnalysisScreen
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) AnalysisScreen month selector opens picker dialog and changes month
-::endgroup::
-::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) SummaryCard shows Presupuesto mensual and edit button opens budget bottom sheet (failed)
-══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
-The following TestFailure was thrown running a test:
-Expected: exactly one matching candidate
-  Actual: _IconWidgetFinder:<Found 0 widgets with icon "IconData(U+0E21A)": []>
-   Which: means none were found but one was expected
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart (failed)
+Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart":
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: lib/data/datasources/local/database_helper.dart:957:7: Error: Expected a class member, but got 'if'.
+      if (prevCats.isNotEmpty) {
+      ^^
+lib/data/datasources/local/database_helper.dart:957:10: Error: Expected an identifier, but got '('.
+Try inserting an identifier before '('.
+      if (prevCats.isNotEmpty) {
+         ^
+lib/data/datasources/local/database_helper.dart:957:30: Error: Expected an identifier, but got ')'.
+Try inserting an identifier before ')'.
+      if (prevCats.isNotEmpty) {
+                             ^
+lib/data/datasources/local/database_helper.dart:960:7: Error: Expected a class member, but got 'return'.
+      return true;
+      ^^^^^^
+lib/data/datasources/local/database_helper.dart:960:14: Error: Expected a class member, but got 'true'.
+      return true;
+             ^^^^
+lib/data/datasources/local/database_helper.dart:960:18: Error: Expected a class member, but got ';'.
+      return true;
+                 ^
+lib/data/datasources/local/database_helper.dart:962:5: Error: Variables must be declared using the keywords 'const', 'final', 'var' or a type name.
+Try adding the name of the type of the variable or the keyword 'var'.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:5: Error: 'return' can't be used as an identifier because it's a keyword.
+Try renaming this to be an identifier that isn't a keyword.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:5: Error: Expected ';' after this.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:12: Error: Variables must be declared using the keywords 'const', 'final', 'var' or a type name.
+Try adding the name of the type of the variable or the keyword 'var'.
+    return false;
+           ^^^^^
+lib/data/datasources/local/database_helper.dart:962:12: Error: 'false' can't be used as an identifier because it's a keyword.
+Try renaming this to be an identifier that isn't a keyword.
+    return false;
+           ^^^^^
+lib/data/datasources/local/database_helper.dart:963:3: Error: Expected a declaration, but got '}'.
+  }
+  ^
+lib/data/datasources/local/database_helper.dart:975:1: Error: Expected a declaration, but got '}'.
+}
+^
+lib/data/datasources/local/database_helper.dart:957:11: Error: 'prevCats.isNotEmpty' can't be used as a type because 'prevCats' doesn't refer to an import prefix.
+      if (prevCats.isNotEmpty) {
+          ^^^^^^^^^^^^^^^^^^^
+lib/data/datasources/local/database_helper.dart:925:16: Error: A non-null value must be returned since the return type 'bool' doesn't allow null.
+  Future<bool> copiarPresupuestosMesAnteriorSiVacio(int anio, int mes) async {
+               ^
+lib/data/datasources/local/database_helper.dart:967:22: Error: Undefined name 'instance'.
+    final db = await instance.database;
+                     ^^^^^^^^
+lib/data/datasources/local/database_helper.dart:972:22: Error: Undefined name 'instance'.
+    final db = await instance.database;
+                     ^^^^^^^^
+.
 
-When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart:364:7)
-<asynchronous suspension>
-#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
-<asynchronous suspension>
-#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
-<asynchronous suspension>
-<asynchronous suspension>
-(elided one frame from package:stack_trace)
+::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart (failed after test completion)
+Error: The Dart compiler exited unexpectedly.
+package:flutter_tools/src/base/common.dart 34:3  throwToolExit
+package:flutter_tools/src/compile.dart 1024:11   DefaultResidentCompiler._compile.<fn>
+dart:async/zone_root.dart 48:47                  _rootRunUnary
+dart:async/zone.dart 816:35                      _CustomZone.runUnary
+dart:async/future_impl.dart 948:45               Future._propagateToListeners.handleValueCallback
+dart:async/future_impl.dart 977:13               Future._propagateToListeners
+dart:async/future_impl.dart 862:9                Future._propagateToListeners
+dart:async/future_impl.dart 720:5                Future._completeWithValue
+dart:async/future_impl.dart 804:7                Future._asyncCompleteWithValue.<fn>
+dart:async/zone_root.dart 35:13                  _rootRun
+dart:async/zone.dart 810:35                      _CustomZone.run
+dart:async/zone.dart 702:7                       _CustomZone.runGuarded
+dart:async/zone.dart 743:23                      _CustomZone.bindCallbackGuarded.<fn>
+dart:async/schedule_microtask.dart 40:35         _microtaskLoop
+dart:async/schedule_microtask.dart 49:5          _startMicrotaskLoop
+dart:isolate-patch/isolate_patch.dart 127:13     _runPendingImmediateCallback
+dart:isolate-patch/isolate_patch.dart 193:5      _RawReceivePort._handleMessage
+::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart (failed)
+Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart":
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: lib/data/datasources/local/database_helper.dart:957:7: Error: Expected a class member, but got 'if'.
+      if (prevCats.isNotEmpty) {
+      ^^
+lib/data/datasources/local/database_helper.dart:957:10: Error: Expected an identifier, but got '('.
+Try inserting an identifier before '('.
+      if (prevCats.isNotEmpty) {
+         ^
+lib/data/datasources/local/database_helper.dart:957:30: Error: Expected an identifier, but got ')'.
+Try inserting an identifier before ')'.
+      if (prevCats.isNotEmpty) {
+                             ^
+lib/data/datasources/local/database_helper.dart:960:7: Error: Expected a class member, but got 'return'.
+      return true;
+      ^^^^^^
+lib/data/datasources/local/database_helper.dart:960:14: Error: Expected a class member, but got 'true'.
+      return true;
+             ^^^^
+lib/data/datasources/local/database_helper.dart:960:18: Error: Expected a class member, but got ';'.
+      return true;
+                 ^
+lib/data/datasources/local/database_helper.dart:962:5: Error: Variables must be declared using the keywords 'const', 'final', 'var' or a type name.
+Try adding the name of the type of the variable or the keyword 'var'.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:5: Error: 'return' can't be used as an identifier because it's a keyword.
+Try renaming this to be an identifier that isn't a keyword.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:5: Error: Expected ';' after this.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:12: Error: Variables must be declared using the keywords 'const', 'final', 'var' or a type name.
+Try adding the name of the type of the variable or the keyword 'var'.
+    return false;
+           ^^^^^
+lib/data/datasources/local/database_helper.dart:962:12: Error: 'false' can't be used as an identifier because it's a keyword.
+Try renaming this to be an identifier that isn't a keyword.
+    return false;
+           ^^^^^
+lib/data/datasources/local/database_helper.dart:963:3: Error: Expected a declaration, but got '}'.
+  }
+  ^
+lib/data/datasources/local/database_helper.dart:975:1: Error: Expected a declaration, but got '}'.
+}
+^
+lib/data/datasources/local/database_helper.dart:957:11: Error: 'prevCats.isNotEmpty' can't be used as a type because 'prevCats' doesn't refer to an import prefix.
+      if (prevCats.isNotEmpty) {
+          ^^^^^^^^^^^^^^^^^^^
+lib/data/datasources/local/database_helper.dart:925:16: Error: A non-null value must be returned since the return type 'bool' doesn't allow null.
+  Future<bool> copiarPresupuestosMesAnteriorSiVacio(int anio, int mes) async {
+               ^
+lib/data/datasources/local/database_helper.dart:967:22: Error: Undefined name 'instance'.
+    final db = await instance.database;
+                     ^^^^^^^^
+lib/data/datasources/local/database_helper.dart:972:22: Error: Undefined name 'instance'.
+    final db = await instance.database;
+                     ^^^^^^^^
+.
 
-This was caught by the test expectation on the following line:
-  file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart line 364
-The test description was:
-  SummaryCard shows Presupuesto mensual and edit button opens budget bottom sheet
-════════════════════════════════════════════════════════════════════════════════════════════════════
-Test failed. See exception logs above.
-The test description was: SummaryCard shows Presupuesto mensual and edit button opens budget bottom sheet
+::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart (failed after test completion)
+Error: The Dart compiler exited unexpectedly.
+package:flutter_tools/src/base/common.dart 34:3  throwToolExit
+package:flutter_tools/src/compile.dart 1024:11   DefaultResidentCompiler._compile.<fn>
+dart:async/zone_root.dart 48:47                  _rootRunUnary
+dart:async/zone.dart 816:35                      _CustomZone.runUnary
+dart:async/future_impl.dart 948:45               Future._propagateToListeners.handleValueCallback
+dart:async/future_impl.dart 977:13               Future._propagateToListeners
+dart:async/future_impl.dart 862:9                Future._propagateToListeners
+dart:async/future_impl.dart 720:5                Future._completeWithValue
+dart:async/future_impl.dart 804:7                Future._asyncCompleteWithValue.<fn>
+dart:async/zone_root.dart 35:13                  _rootRun
+dart:async/zone.dart 810:35                      _CustomZone.run
+dart:async/zone.dart 702:7                       _CustomZone.runGuarded
+dart:async/zone.dart 743:23                      _CustomZone.bindCallbackGuarded.<fn>
+dart:async/schedule_microtask.dart 40:35         _microtaskLoop
+dart:async/schedule_microtask.dart 49:5          _startMicrotaskLoop
+dart:isolate-patch/isolate_patch.dart 127:13     _runPendingImmediateCallback
+dart:isolate-patch/isolate_patch.dart 193:5      _RawReceivePort._handleMessage
+::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart (failed)
+Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart":
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: lib/data/datasources/local/database_helper.dart:957:7: Error: Expected a class member, but got 'if'.
+      if (prevCats.isNotEmpty) {
+      ^^
+lib/data/datasources/local/database_helper.dart:957:10: Error: Expected an identifier, but got '('.
+Try inserting an identifier before '('.
+      if (prevCats.isNotEmpty) {
+         ^
+lib/data/datasources/local/database_helper.dart:957:30: Error: Expected an identifier, but got ')'.
+Try inserting an identifier before ')'.
+      if (prevCats.isNotEmpty) {
+                             ^
+lib/data/datasources/local/database_helper.dart:960:7: Error: Expected a class member, but got 'return'.
+      return true;
+      ^^^^^^
+lib/data/datasources/local/database_helper.dart:960:14: Error: Expected a class member, but got 'true'.
+      return true;
+             ^^^^
+lib/data/datasources/local/database_helper.dart:960:18: Error: Expected a class member, but got ';'.
+      return true;
+                 ^
+lib/data/datasources/local/database_helper.dart:962:5: Error: Variables must be declared using the keywords 'const', 'final', 'var' or a type name.
+Try adding the name of the type of the variable or the keyword 'var'.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:5: Error: 'return' can't be used as an identifier because it's a keyword.
+Try renaming this to be an identifier that isn't a keyword.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:5: Error: Expected ';' after this.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:12: Error: Variables must be declared using the keywords 'const', 'final', 'var' or a type name.
+Try adding the name of the type of the variable or the keyword 'var'.
+    return false;
+           ^^^^^
+lib/data/datasources/local/database_helper.dart:962:12: Error: 'false' can't be used as an identifier because it's a keyword.
+Try renaming this to be an identifier that isn't a keyword.
+    return false;
+           ^^^^^
+lib/data/datasources/local/database_helper.dart:963:3: Error: Expected a declaration, but got '}'.
+  }
+  ^
+lib/data/datasources/local/database_helper.dart:975:1: Error: Expected a declaration, but got '}'.
+}
+^
+lib/data/datasources/local/database_helper.dart:957:11: Error: 'prevCats.isNotEmpty' can't be used as a type because 'prevCats' doesn't refer to an import prefix.
+      if (prevCats.isNotEmpty) {
+          ^^^^^^^^^^^^^^^^^^^
+lib/data/datasources/local/database_helper.dart:925:16: Error: A non-null value must be returned since the return type 'bool' doesn't allow null.
+  Future<bool> copiarPresupuestosMesAnteriorSiVacio(int anio, int mes) async {
+               ^
+lib/data/datasources/local/database_helper.dart:967:22: Error: Undefined name 'instance'.
+    final db = await instance.database;
+                     ^^^^^^^^
+lib/data/datasources/local/database_helper.dart:972:22: Error: Undefined name 'instance'.
+    final db = await instance.database;
+                     ^^^^^^^^
+.
 
 ::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart (failed after test completion)
+Error: The Dart compiler exited unexpectedly.
+package:flutter_tools/src/base/common.dart 34:3  throwToolExit
+package:flutter_tools/src/compile.dart 1024:11   DefaultResidentCompiler._compile.<fn>
+dart:async/zone_root.dart 48:47                  _rootRunUnary
+dart:async/zone.dart 816:35                      _CustomZone.runUnary
+dart:async/future_impl.dart 948:45               Future._propagateToListeners.handleValueCallback
+dart:async/future_impl.dart 977:13               Future._propagateToListeners
+dart:async/future_impl.dart 862:9                Future._propagateToListeners
+dart:async/future_impl.dart 720:5                Future._completeWithValue
+dart:async/future_impl.dart 804:7                Future._asyncCompleteWithValue.<fn>
+dart:async/zone_root.dart 35:13                  _rootRun
+dart:async/zone.dart 810:35                      _CustomZone.run
+dart:async/zone.dart 702:7                       _CustomZone.runGuarded
+dart:async/zone.dart 743:23                      _CustomZone.bindCallbackGuarded.<fn>
+dart:async/schedule_microtask.dart 40:35         _microtaskLoop
+dart:async/schedule_microtask.dart 49:5          _startMicrotaskLoop
+dart:isolate-patch/isolate_patch.dart 127:13     _runPendingImmediateCallback
+dart:isolate-patch/isolate_patch.dart 193:5      _RawReceivePort._handleMessage
+::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart (failed)
+Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart":
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: lib/data/datasources/local/database_helper.dart:957:7: Error: Expected a class member, but got 'if'.
+      if (prevCats.isNotEmpty) {
+      ^^
+lib/data/datasources/local/database_helper.dart:957:10: Error: Expected an identifier, but got '('.
+Try inserting an identifier before '('.
+      if (prevCats.isNotEmpty) {
+         ^
+lib/data/datasources/local/database_helper.dart:957:30: Error: Expected an identifier, but got ')'.
+Try inserting an identifier before ')'.
+      if (prevCats.isNotEmpty) {
+                             ^
+lib/data/datasources/local/database_helper.dart:960:7: Error: Expected a class member, but got 'return'.
+      return true;
+      ^^^^^^
+lib/data/datasources/local/database_helper.dart:960:14: Error: Expected a class member, but got 'true'.
+      return true;
+             ^^^^
+lib/data/datasources/local/database_helper.dart:960:18: Error: Expected a class member, but got ';'.
+      return true;
+                 ^
+lib/data/datasources/local/database_helper.dart:962:5: Error: Variables must be declared using the keywords 'const', 'final', 'var' or a type name.
+Try adding the name of the type of the variable or the keyword 'var'.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:5: Error: 'return' can't be used as an identifier because it's a keyword.
+Try renaming this to be an identifier that isn't a keyword.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:5: Error: Expected ';' after this.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:12: Error: Variables must be declared using the keywords 'const', 'final', 'var' or a type name.
+Try adding the name of the type of the variable or the keyword 'var'.
+    return false;
+           ^^^^^
+lib/data/datasources/local/database_helper.dart:962:12: Error: 'false' can't be used as an identifier because it's a keyword.
+Try renaming this to be an identifier that isn't a keyword.
+    return false;
+           ^^^^^
+lib/data/datasources/local/database_helper.dart:963:3: Error: Expected a declaration, but got '}'.
+  }
+  ^
+lib/data/datasources/local/database_helper.dart:975:1: Error: Expected a declaration, but got '}'.
+}
+^
+lib/data/datasources/local/database_helper.dart:957:11: Error: 'prevCats.isNotEmpty' can't be used as a type because 'prevCats' doesn't refer to an import prefix.
+      if (prevCats.isNotEmpty) {
+          ^^^^^^^^^^^^^^^^^^^
+lib/data/datasources/local/database_helper.dart:925:16: Error: A non-null value must be returned since the return type 'bool' doesn't allow null.
+  Future<bool> copiarPresupuestosMesAnteriorSiVacio(int anio, int mes) async {
+               ^
+lib/data/datasources/local/database_helper.dart:967:22: Error: Undefined name 'instance'.
+    final db = await instance.database;
+                     ^^^^^^^^
+lib/data/datasources/local/database_helper.dart:972:22: Error: Undefined name 'instance'.
+    final db = await instance.database;
+                     ^^^^^^^^
+.
+
+::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart (failed after test completion)
+Error: The Dart compiler exited unexpectedly.
+package:flutter_tools/src/base/common.dart 34:3  throwToolExit
+package:flutter_tools/src/compile.dart 1024:11   DefaultResidentCompiler._compile.<fn>
+dart:async/zone_root.dart 48:47                  _rootRunUnary
+dart:async/zone.dart 816:35                      _CustomZone.runUnary
+dart:async/future_impl.dart 948:45               Future._propagateToListeners.handleValueCallback
+dart:async/future_impl.dart 977:13               Future._propagateToListeners
+dart:async/future_impl.dart 862:9                Future._propagateToListeners
+dart:async/future_impl.dart 720:5                Future._completeWithValue
+dart:async/future_impl.dart 804:7                Future._asyncCompleteWithValue.<fn>
+dart:async/zone_root.dart 35:13                  _rootRun
+dart:async/zone.dart 810:35                      _CustomZone.run
+dart:async/zone.dart 702:7                       _CustomZone.runGuarded
+dart:async/zone.dart 743:23                      _CustomZone.bindCallbackGuarded.<fn>
+dart:async/schedule_microtask.dart 40:35         _microtaskLoop
+dart:async/schedule_microtask.dart 49:5          _startMicrotaskLoop
+dart:isolate-patch/isolate_patch.dart 127:13     _runPendingImmediateCallback
+dart:isolate-patch/isolate_patch.dart 193:5      _RawReceivePort._handleMessage
+::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart (failed)
+Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart":
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: lib/data/datasources/local/database_helper.dart:957:7: Error: Expected a class member, but got 'if'.
+      if (prevCats.isNotEmpty) {
+      ^^
+lib/data/datasources/local/database_helper.dart:957:10: Error: Expected an identifier, but got '('.
+Try inserting an identifier before '('.
+      if (prevCats.isNotEmpty) {
+         ^
+lib/data/datasources/local/database_helper.dart:957:30: Error: Expected an identifier, but got ')'.
+Try inserting an identifier before ')'.
+      if (prevCats.isNotEmpty) {
+                             ^
+lib/data/datasources/local/database_helper.dart:960:7: Error: Expected a class member, but got 'return'.
+      return true;
+      ^^^^^^
+lib/data/datasources/local/database_helper.dart:960:14: Error: Expected a class member, but got 'true'.
+      return true;
+             ^^^^
+lib/data/datasources/local/database_helper.dart:960:18: Error: Expected a class member, but got ';'.
+      return true;
+                 ^
+lib/data/datasources/local/database_helper.dart:962:5: Error: Variables must be declared using the keywords 'const', 'final', 'var' or a type name.
+Try adding the name of the type of the variable or the keyword 'var'.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:5: Error: 'return' can't be used as an identifier because it's a keyword.
+Try renaming this to be an identifier that isn't a keyword.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:5: Error: Expected ';' after this.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:12: Error: Variables must be declared using the keywords 'const', 'final', 'var' or a type name.
+Try adding the name of the type of the variable or the keyword 'var'.
+    return false;
+           ^^^^^
+lib/data/datasources/local/database_helper.dart:962:12: Error: 'false' can't be used as an identifier because it's a keyword.
+Try renaming this to be an identifier that isn't a keyword.
+    return false;
+           ^^^^^
+lib/data/datasources/local/database_helper.dart:963:3: Error: Expected a declaration, but got '}'.
+  }
+  ^
+lib/data/datasources/local/database_helper.dart:975:1: Error: Expected a declaration, but got '}'.
+}
+^
+lib/data/datasources/local/database_helper.dart:957:11: Error: 'prevCats.isNotEmpty' can't be used as a type because 'prevCats' doesn't refer to an import prefix.
+      if (prevCats.isNotEmpty) {
+          ^^^^^^^^^^^^^^^^^^^
+lib/data/datasources/local/database_helper.dart:925:16: Error: A non-null value must be returned since the return type 'bool' doesn't allow null.
+  Future<bool> copiarPresupuestosMesAnteriorSiVacio(int anio, int mes) async {
+               ^
+lib/data/datasources/local/database_helper.dart:967:22: Error: Undefined name 'instance'.
+    final db = await instance.database;
+                     ^^^^^^^^
+lib/data/datasources/local/database_helper.dart:972:22: Error: Undefined name 'instance'.
+    final db = await instance.database;
+                     ^^^^^^^^
+.
+
+::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart (failed after test completion)
+Error: The Dart compiler exited unexpectedly.
+package:flutter_tools/src/base/common.dart 34:3  throwToolExit
+package:flutter_tools/src/compile.dart 1024:11   DefaultResidentCompiler._compile.<fn>
+dart:async/zone_root.dart 48:47                  _rootRunUnary
+dart:async/zone.dart 816:35                      _CustomZone.runUnary
+dart:async/future_impl.dart 948:45               Future._propagateToListeners.handleValueCallback
+dart:async/future_impl.dart 977:13               Future._propagateToListeners
+dart:async/future_impl.dart 862:9                Future._propagateToListeners
+dart:async/future_impl.dart 720:5                Future._completeWithValue
+dart:async/future_impl.dart 804:7                Future._asyncCompleteWithValue.<fn>
+dart:async/zone_root.dart 35:13                  _rootRun
+dart:async/zone.dart 810:35                      _CustomZone.run
+dart:async/zone.dart 702:7                       _CustomZone.runGuarded
+dart:async/zone.dart 743:23                      _CustomZone.bindCallbackGuarded.<fn>
+dart:async/schedule_microtask.dart 40:35         _microtaskLoop
+dart:async/schedule_microtask.dart 49:5          _startMicrotaskLoop
+dart:isolate-patch/isolate_patch.dart 127:13     _runPendingImmediateCallback
+dart:isolate-patch/isolate_patch.dart 193:5      _RawReceivePort._handleMessage
+::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart (failed)
+Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart":
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart: lib/data/datasources/local/database_helper.dart:957:7: Error: Expected a class member, but got 'if'.
+      if (prevCats.isNotEmpty) {
+      ^^
+lib/data/datasources/local/database_helper.dart:957:10: Error: Expected an identifier, but got '('.
+Try inserting an identifier before '('.
+      if (prevCats.isNotEmpty) {
+         ^
+lib/data/datasources/local/database_helper.dart:957:30: Error: Expected an identifier, but got ')'.
+Try inserting an identifier before ')'.
+      if (prevCats.isNotEmpty) {
+                             ^
+lib/data/datasources/local/database_helper.dart:960:7: Error: Expected a class member, but got 'return'.
+      return true;
+      ^^^^^^
+lib/data/datasources/local/database_helper.dart:960:14: Error: Expected a class member, but got 'true'.
+      return true;
+             ^^^^
+lib/data/datasources/local/database_helper.dart:960:18: Error: Expected a class member, but got ';'.
+      return true;
+                 ^
+lib/data/datasources/local/database_helper.dart:962:5: Error: Variables must be declared using the keywords 'const', 'final', 'var' or a type name.
+Try adding the name of the type of the variable or the keyword 'var'.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:5: Error: 'return' can't be used as an identifier because it's a keyword.
+Try renaming this to be an identifier that isn't a keyword.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:5: Error: Expected ';' after this.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:12: Error: Variables must be declared using the keywords 'const', 'final', 'var' or a type name.
+Try adding the name of the type of the variable or the keyword 'var'.
+    return false;
+           ^^^^^
+lib/data/datasources/local/database_helper.dart:962:12: Error: 'false' can't be used as an identifier because it's a keyword.
+Try renaming this to be an identifier that isn't a keyword.
+    return false;
+           ^^^^^
+lib/data/datasources/local/database_helper.dart:963:3: Error: Expected a declaration, but got '}'.
+  }
+  ^
+lib/data/datasources/local/database_helper.dart:975:1: Error: Expected a declaration, but got '}'.
+}
+^
+lib/data/datasources/local/database_helper.dart:957:11: Error: 'prevCats.isNotEmpty' can't be used as a type because 'prevCats' doesn't refer to an import prefix.
+      if (prevCats.isNotEmpty) {
+          ^^^^^^^^^^^^^^^^^^^
+lib/data/datasources/local/database_helper.dart:925:16: Error: A non-null value must be returned since the return type 'bool' doesn't allow null.
+  Future<bool> copiarPresupuestosMesAnteriorSiVacio(int anio, int mes) async {
+               ^
+lib/data/datasources/local/database_helper.dart:967:22: Error: Undefined name 'instance'.
+    final db = await instance.database;
+                     ^^^^^^^^
+lib/data/datasources/local/database_helper.dart:972:22: Error: Undefined name 'instance'.
+    final db = await instance.database;
+                     ^^^^^^^^
+.
+
+::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart (failed after test completion)
+Error: The Dart compiler exited unexpectedly.
+package:flutter_tools/src/base/common.dart 34:3  throwToolExit
+package:flutter_tools/src/compile.dart 1024:11   DefaultResidentCompiler._compile.<fn>
+dart:async/zone_root.dart 48:47                  _rootRunUnary
+dart:async/zone.dart 816:35                      _CustomZone.runUnary
+dart:async/future_impl.dart 948:45               Future._propagateToListeners.handleValueCallback
+dart:async/future_impl.dart 977:13               Future._propagateToListeners
+dart:async/future_impl.dart 862:9                Future._propagateToListeners
+dart:async/future_impl.dart 720:5                Future._completeWithValue
+dart:async/future_impl.dart 804:7                Future._asyncCompleteWithValue.<fn>
+dart:async/zone_root.dart 35:13                  _rootRun
+dart:async/zone.dart 810:35                      _CustomZone.run
+dart:async/zone.dart 702:7                       _CustomZone.runGuarded
+dart:async/zone.dart 743:23                      _CustomZone.bindCallbackGuarded.<fn>
+dart:async/schedule_microtask.dart 40:35         _microtaskLoop
+dart:async/schedule_microtask.dart 49:5          _startMicrotaskLoop
+dart:isolate-patch/isolate_patch.dart 127:13     _runPendingImmediateCallback
+dart:isolate-patch/isolate_patch.dart 193:5      _RawReceivePort._handleMessage
+::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart (failed)
+Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart":
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: lib/data/datasources/local/database_helper.dart:957:7: Error: Expected a class member, but got 'if'.
+      if (prevCats.isNotEmpty) {
+      ^^
+lib/data/datasources/local/database_helper.dart:957:10: Error: Expected an identifier, but got '('.
+Try inserting an identifier before '('.
+      if (prevCats.isNotEmpty) {
+         ^
+lib/data/datasources/local/database_helper.dart:957:30: Error: Expected an identifier, but got ')'.
+Try inserting an identifier before ')'.
+      if (prevCats.isNotEmpty) {
+                             ^
+lib/data/datasources/local/database_helper.dart:960:7: Error: Expected a class member, but got 'return'.
+      return true;
+      ^^^^^^
+lib/data/datasources/local/database_helper.dart:960:14: Error: Expected a class member, but got 'true'.
+      return true;
+             ^^^^
+lib/data/datasources/local/database_helper.dart:960:18: Error: Expected a class member, but got ';'.
+      return true;
+                 ^
+lib/data/datasources/local/database_helper.dart:962:5: Error: Variables must be declared using the keywords 'const', 'final', 'var' or a type name.
+Try adding the name of the type of the variable or the keyword 'var'.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:5: Error: 'return' can't be used as an identifier because it's a keyword.
+Try renaming this to be an identifier that isn't a keyword.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:5: Error: Expected ';' after this.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:12: Error: Variables must be declared using the keywords 'const', 'final', 'var' or a type name.
+Try adding the name of the type of the variable or the keyword 'var'.
+    return false;
+           ^^^^^
+lib/data/datasources/local/database_helper.dart:962:12: Error: 'false' can't be used as an identifier because it's a keyword.
+Try renaming this to be an identifier that isn't a keyword.
+    return false;
+           ^^^^^
+lib/data/datasources/local/database_helper.dart:963:3: Error: Expected a declaration, but got '}'.
+  }
+  ^
+lib/data/datasources/local/database_helper.dart:975:1: Error: Expected a declaration, but got '}'.
+}
+^
+lib/data/datasources/local/database_helper.dart:957:11: Error: 'prevCats.isNotEmpty' can't be used as a type because 'prevCats' doesn't refer to an import prefix.
+      if (prevCats.isNotEmpty) {
+          ^^^^^^^^^^^^^^^^^^^
+lib/data/datasources/local/database_helper.dart:925:16: Error: A non-null value must be returned since the return type 'bool' doesn't allow null.
+  Future<bool> copiarPresupuestosMesAnteriorSiVacio(int anio, int mes) async {
+               ^
+lib/data/datasources/local/database_helper.dart:967:22: Error: Undefined name 'instance'.
+    final db = await instance.database;
+                     ^^^^^^^^
+lib/data/datasources/local/database_helper.dart:972:22: Error: Undefined name 'instance'.
+    final db = await instance.database;
+                     ^^^^^^^^
+.
+
+::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart (failed after test completion)
+Error: The Dart compiler exited unexpectedly.
+package:flutter_tools/src/base/common.dart 34:3  throwToolExit
+package:flutter_tools/src/compile.dart 1024:11   DefaultResidentCompiler._compile.<fn>
+dart:async/zone_root.dart 48:47                  _rootRunUnary
+dart:async/zone.dart 816:35                      _CustomZone.runUnary
+dart:async/future_impl.dart 948:45               Future._propagateToListeners.handleValueCallback
+dart:async/future_impl.dart 977:13               Future._propagateToListeners
+dart:async/future_impl.dart 862:9                Future._propagateToListeners
+dart:async/future_impl.dart 720:5                Future._completeWithValue
+dart:async/future_impl.dart 804:7                Future._asyncCompleteWithValue.<fn>
+dart:async/zone_root.dart 35:13                  _rootRun
+dart:async/zone.dart 810:35                      _CustomZone.run
+dart:async/zone.dart 702:7                       _CustomZone.runGuarded
+dart:async/zone.dart 743:23                      _CustomZone.bindCallbackGuarded.<fn>
+dart:async/schedule_microtask.dart 40:35         _microtaskLoop
+dart:async/schedule_microtask.dart 49:5          _startMicrotaskLoop
+dart:isolate-patch/isolate_patch.dart 127:13     _runPendingImmediateCallback
+dart:isolate-patch/isolate_patch.dart 193:5      _RawReceivePort._handleMessage
+::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart (failed)
+Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart":
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: lib/data/datasources/local/database_helper.dart:957:7: Error: Expected a class member, but got 'if'.
+      if (prevCats.isNotEmpty) {
+      ^^
+lib/data/datasources/local/database_helper.dart:957:10: Error: Expected an identifier, but got '('.
+Try inserting an identifier before '('.
+      if (prevCats.isNotEmpty) {
+         ^
+lib/data/datasources/local/database_helper.dart:957:30: Error: Expected an identifier, but got ')'.
+Try inserting an identifier before ')'.
+      if (prevCats.isNotEmpty) {
+                             ^
+lib/data/datasources/local/database_helper.dart:960:7: Error: Expected a class member, but got 'return'.
+      return true;
+      ^^^^^^
+lib/data/datasources/local/database_helper.dart:960:14: Error: Expected a class member, but got 'true'.
+      return true;
+             ^^^^
+lib/data/datasources/local/database_helper.dart:960:18: Error: Expected a class member, but got ';'.
+      return true;
+                 ^
+lib/data/datasources/local/database_helper.dart:962:5: Error: Variables must be declared using the keywords 'const', 'final', 'var' or a type name.
+Try adding the name of the type of the variable or the keyword 'var'.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:5: Error: 'return' can't be used as an identifier because it's a keyword.
+Try renaming this to be an identifier that isn't a keyword.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:5: Error: Expected ';' after this.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:12: Error: Variables must be declared using the keywords 'const', 'final', 'var' or a type name.
+Try adding the name of the type of the variable or the keyword 'var'.
+    return false;
+           ^^^^^
+lib/data/datasources/local/database_helper.dart:962:12: Error: 'false' can't be used as an identifier because it's a keyword.
+Try renaming this to be an identifier that isn't a keyword.
+    return false;
+           ^^^^^
+lib/data/datasources/local/database_helper.dart:963:3: Error: Expected a declaration, but got '}'.
+  }
+  ^
+lib/data/datasources/local/database_helper.dart:975:1: Error: Expected a declaration, but got '}'.
+}
+^
+lib/data/datasources/local/database_helper.dart:957:11: Error: 'prevCats.isNotEmpty' can't be used as a type because 'prevCats' doesn't refer to an import prefix.
+      if (prevCats.isNotEmpty) {
+          ^^^^^^^^^^^^^^^^^^^
+lib/data/datasources/local/database_helper.dart:925:16: Error: A non-null value must be returned since the return type 'bool' doesn't allow null.
+  Future<bool> copiarPresupuestosMesAnteriorSiVacio(int anio, int mes) async {
+               ^
+lib/data/datasources/local/database_helper.dart:967:22: Error: Undefined name 'instance'.
+    final db = await instance.database;
+                     ^^^^^^^^
+lib/data/datasources/local/database_helper.dart:972:22: Error: Undefined name 'instance'.
+    final db = await instance.database;
+                     ^^^^^^^^
+.
+
+::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart (failed after test completion)
+Error: The Dart compiler exited unexpectedly.
+package:flutter_tools/src/base/common.dart 34:3  throwToolExit
+package:flutter_tools/src/compile.dart 1024:11   DefaultResidentCompiler._compile.<fn>
+dart:async/zone_root.dart 48:47                  _rootRunUnary
+dart:async/zone.dart 816:35                      _CustomZone.runUnary
+dart:async/future_impl.dart 948:45               Future._propagateToListeners.handleValueCallback
+dart:async/future_impl.dart 977:13               Future._propagateToListeners
+dart:async/future_impl.dart 862:9                Future._propagateToListeners
+dart:async/future_impl.dart 720:5                Future._completeWithValue
+dart:async/future_impl.dart 804:7                Future._asyncCompleteWithValue.<fn>
+dart:async/zone_root.dart 35:13                  _rootRun
+dart:async/zone.dart 810:35                      _CustomZone.run
+dart:async/zone.dart 702:7                       _CustomZone.runGuarded
+dart:async/zone.dart 743:23                      _CustomZone.bindCallbackGuarded.<fn>
+dart:async/schedule_microtask.dart 40:35         _microtaskLoop
+dart:async/schedule_microtask.dart 49:5          _startMicrotaskLoop
+dart:isolate-patch/isolate_patch.dart 127:13     _runPendingImmediateCallback
+dart:isolate-patch/isolate_patch.dart 193:5      _RawReceivePort._handleMessage
+::endgroup::
 ::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests Default singleton instance is available and accessible
-::endgroup::
-::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests 3-day scheduling function defaults to Duration(days: 3)
-NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@819310200' has not been initialized.
-::endgroup::
-::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests Custom duration is respected when specified
-NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@819310200' has not been initialized.
-::endgroup::
-::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests cancelInactivityReminder cancels and clears scheduled state
-NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@819310200' has not been initialized.
-NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-::endgroup::
-::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests Rescheduling logic cancels previous notification and schedules new one
-::endgroup::
-::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests recordActivityAndReschedule updates activity time and reschedules for 3 days
-NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@819310200' has not been initialized.
-::endgroup::
-::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests Channel configuration and constants are correctly defined
-::endgroup::
-::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — Integration with GastoProvider agregarGasto triggers recordActivityAndReschedule on NotificationService
-Error en sincronización bidireccional: [core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()
-::endgroup::
-::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — Integration with GastoProvider actualizarGasto triggers recordActivityAndReschedule on NotificationService
-Error en sincronización bidireccional: [core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()
-::endgroup::
-::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — AndroidManifest Permissions & Configuration Verification android/app/src/main/AndroidManifest.xml contains all required permissions and receivers
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — AndroidManifest Permissions & Configuration Verification AndroidManifest.xml contains permissions and receivers
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — AndroidManifest Permissions & Configuration Verification pubspec.yaml declares flutter_local_notifications and timezone
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests instantiates with required nombre and default presupuestoMensual 0.0
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests instantiates with custom id and presupuestoMensual
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests toMap produces correct key-value map with id
@@ -101,101 +666,314 @@ Error en sincronización bidireccional: [core/no-app] No Firebase App '[DEFAULT]
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests copyWith updates specified fields correctly
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests equality and hashCode work as expected
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests CategoryModel typedef works interchangeably
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) tapping search icon reveals search text field with hint
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) entering search query immediately filters out non-matching expenses
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) expenses matching by commerce are included
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) expenses matching by product name are included
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests initial state has empty category budgets and totals
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests setPresupuestoGeneral updates general budget
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests guardarTodoElPresupuesto updates general and category budgets and filters zero budgets
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests setPresupuestoCategoria updates budget for given category
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests getPresupuestoCategoria is case-insensitive
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests isCategoryOverBudget returns true when spent > budget and budget > 0
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests isCategoryOverBudget returns false when spent <= budget
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests isCategoryOverBudget returns false when budget is 0 or unassigned
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) clearing search query via close button restores all expenses
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) clearing search text restores all expenses while keeping search open
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) displays friendly empty state message when search yields 0 matches
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) case-insensitive and diacritic-insensitive search works
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests initial state has empty pending and ready items
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests enqueue inserts single image and updates pendingCount
 ::endgroup::
-NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
-The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
-Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
-In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
-If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
-NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
-The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
-Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
-In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
-If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
-::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests enqueueMultiple enqueues all images and updates pendingItems
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart (failed)
+Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart":
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: lib/data/datasources/local/database_helper.dart:957:7: Error: Expected a class member, but got 'if'.
+      if (prevCats.isNotEmpty) {
+      ^^
+lib/data/datasources/local/database_helper.dart:957:10: Error: Expected an identifier, but got '('.
+Try inserting an identifier before '('.
+      if (prevCats.isNotEmpty) {
+         ^
+lib/data/datasources/local/database_helper.dart:957:30: Error: Expected an identifier, but got ')'.
+Try inserting an identifier before ')'.
+      if (prevCats.isNotEmpty) {
+                             ^
+lib/data/datasources/local/database_helper.dart:960:7: Error: Expected a class member, but got 'return'.
+      return true;
+      ^^^^^^
+lib/data/datasources/local/database_helper.dart:960:14: Error: Expected a class member, but got 'true'.
+      return true;
+             ^^^^
+lib/data/datasources/local/database_helper.dart:960:18: Error: Expected a class member, but got ';'.
+      return true;
+                 ^
+lib/data/datasources/local/database_helper.dart:962:5: Error: Variables must be declared using the keywords 'const', 'final', 'var' or a type name.
+Try adding the name of the type of the variable or the keyword 'var'.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:5: Error: 'return' can't be used as an identifier because it's a keyword.
+Try renaming this to be an identifier that isn't a keyword.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:5: Error: Expected ';' after this.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:12: Error: Variables must be declared using the keywords 'const', 'final', 'var' or a type name.
+Try adding the name of the type of the variable or the keyword 'var'.
+    return false;
+           ^^^^^
+lib/data/datasources/local/database_helper.dart:962:12: Error: 'false' can't be used as an identifier because it's a keyword.
+Try renaming this to be an identifier that isn't a keyword.
+    return false;
+           ^^^^^
+lib/data/datasources/local/database_helper.dart:963:3: Error: Expected a declaration, but got '}'.
+  }
+  ^
+lib/data/datasources/local/database_helper.dart:975:1: Error: Expected a declaration, but got '}'.
+}
+^
+lib/data/datasources/local/database_helper.dart:957:11: Error: 'prevCats.isNotEmpty' can't be used as a type because 'prevCats' doesn't refer to an import prefix.
+      if (prevCats.isNotEmpty) {
+          ^^^^^^^^^^^^^^^^^^^
+lib/data/datasources/local/database_helper.dart:925:16: Error: A non-null value must be returned since the return type 'bool' doesn't allow null.
+  Future<bool> copiarPresupuestosMesAnteriorSiVacio(int anio, int mes) async {
+               ^
+lib/data/datasources/local/database_helper.dart:967:22: Error: Undefined name 'instance'.
+    final db = await instance.database;
+                     ^^^^^^^^
+lib/data/datasources/local/database_helper.dart:972:22: Error: Undefined name 'instance'.
+    final db = await instance.database;
+                     ^^^^^^^^
+.
+
 ::endgroup::
-NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
-The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
-Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
-In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
-If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
-NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
-The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
-Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
-In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
-If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
-NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
-The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
-Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
-In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
-If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
-NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
-The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
-Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
-In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
-If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
-::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests addPendingItem delegates to enqueue and preserves backwards compatibility
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart (failed after test completion)
+Error: The Dart compiler exited unexpectedly.
+package:flutter_tools/src/base/common.dart 34:3  throwToolExit
+package:flutter_tools/src/compile.dart 1024:11   DefaultResidentCompiler._compile.<fn>
+dart:async/zone_root.dart 48:47                  _rootRunUnary
+dart:async/zone.dart 816:35                      _CustomZone.runUnary
+dart:async/future_impl.dart 948:45               Future._propagateToListeners.handleValueCallback
+dart:async/future_impl.dart 977:13               Future._propagateToListeners
+dart:async/future_impl.dart 862:9                Future._propagateToListeners
+dart:async/future_impl.dart 720:5                Future._completeWithValue
+dart:async/future_impl.dart 804:7                Future._asyncCompleteWithValue.<fn>
+dart:async/zone_root.dart 35:13                  _rootRun
+dart:async/zone.dart 810:35                      _CustomZone.run
+dart:async/zone.dart 702:7                       _CustomZone.runGuarded
+dart:async/zone.dart 743:23                      _CustomZone.bindCallbackGuarded.<fn>
+dart:async/schedule_microtask.dart 40:35         _microtaskLoop
+dart:async/schedule_microtask.dart 49:5          _startMicrotaskLoop
+dart:isolate-patch/isolate_patch.dart 127:13     _runPendingImmediateCallback
+dart:isolate-patch/isolate_patch.dart 193:5      _RawReceivePort._handleMessage
 ::endgroup::
-NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
-The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
-Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
-In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
-If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
-NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
-The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
-Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
-In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
-If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
-::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests removeItem removes item from database and refreshes queue
-NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
-The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
-Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
-In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
-If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
-NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
-The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
-Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
-In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
-If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart (failed)
+Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart":
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: lib/data/datasources/local/database_helper.dart:957:7: Error: Expected a class member, but got 'if'.
+      if (prevCats.isNotEmpty) {
+      ^^
+lib/data/datasources/local/database_helper.dart:957:10: Error: Expected an identifier, but got '('.
+Try inserting an identifier before '('.
+      if (prevCats.isNotEmpty) {
+         ^
+lib/data/datasources/local/database_helper.dart:957:30: Error: Expected an identifier, but got ')'.
+Try inserting an identifier before ')'.
+      if (prevCats.isNotEmpty) {
+                             ^
+lib/data/datasources/local/database_helper.dart:960:7: Error: Expected a class member, but got 'return'.
+      return true;
+      ^^^^^^
+lib/data/datasources/local/database_helper.dart:960:14: Error: Expected a class member, but got 'true'.
+      return true;
+             ^^^^
+lib/data/datasources/local/database_helper.dart:960:18: Error: Expected a class member, but got ';'.
+      return true;
+                 ^
+lib/data/datasources/local/database_helper.dart:962:5: Error: Variables must be declared using the keywords 'const', 'final', 'var' or a type name.
+Try adding the name of the type of the variable or the keyword 'var'.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:5: Error: 'return' can't be used as an identifier because it's a keyword.
+Try renaming this to be an identifier that isn't a keyword.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:5: Error: Expected ';' after this.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:12: Error: Variables must be declared using the keywords 'const', 'final', 'var' or a type name.
+Try adding the name of the type of the variable or the keyword 'var'.
+    return false;
+           ^^^^^
+lib/data/datasources/local/database_helper.dart:962:12: Error: 'false' can't be used as an identifier because it's a keyword.
+Try renaming this to be an identifier that isn't a keyword.
+    return false;
+           ^^^^^
+lib/data/datasources/local/database_helper.dart:963:3: Error: Expected a declaration, but got '}'.
+  }
+  ^
+lib/data/datasources/local/database_helper.dart:975:1: Error: Expected a declaration, but got '}'.
+}
+^
+lib/data/datasources/local/database_helper.dart:957:11: Error: 'prevCats.isNotEmpty' can't be used as a type because 'prevCats' doesn't refer to an import prefix.
+      if (prevCats.isNotEmpty) {
+          ^^^^^^^^^^^^^^^^^^^
+lib/data/datasources/local/database_helper.dart:925:16: Error: A non-null value must be returned since the return type 'bool' doesn't allow null.
+  Future<bool> copiarPresupuestosMesAnteriorSiVacio(int anio, int mes) async {
+               ^
+lib/data/datasources/local/database_helper.dart:967:22: Error: Undefined name 'instance'.
+    final db = await instance.database;
+                     ^^^^^^^^
+lib/data/datasources/local/database_helper.dart:972:22: Error: Undefined name 'instance'.
+    final db = await instance.database;
+                     ^^^^^^^^
+.
+
 ::endgroup::
-::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests manual state mutation helpers update state and notify listeners
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: GeminiExtractionResult.listFromJson Tests parses single legacy JSON correctly
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: GeminiExtractionResult.listFromJson Tests parses multiple facturas JSON array correctly
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests formatPreferido returns VES when preferred is VES
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests formatPreferido calculates VES using tasaCambio when totalVes is zero/null
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests formatPreferido returns USD when preferred is USD
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests formatSecundario returns opposite currency
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests convertFromUsd converts properly
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: SummaryCard Currency Preference Tests renders USD on top when monedaPrincipal is USD
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: SummaryCard Currency Preference Tests renders VES on top when monedaPrincipal is VES
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays welcome prompt when expenses are empty
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: ExpenseCard Currency Preference Tests displays USD as primary when monedaPrincipal is USD
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: ExpenseCard Currency Preference Tests displays VES as primary when monedaPrincipal is VES
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays over budget warning when spent exceeds budget
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays budget alert when spent is 85 percent or more
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests suggests defining budget when no general budget exists
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CategoryChart Currency Preference Tests renders category totals and budgets in VES when monedaPrincipal is VES
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart (failed after test completion)
+Error: The Dart compiler exited unexpectedly.
+package:flutter_tools/src/base/common.dart 34:3  throwToolExit
+package:flutter_tools/src/compile.dart 1024:11   DefaultResidentCompiler._compile.<fn>
+dart:async/zone_root.dart 48:47                  _rootRunUnary
+dart:async/zone.dart 816:35                      _CustomZone.runUnary
+dart:async/future_impl.dart 948:45               Future._propagateToListeners.handleValueCallback
+dart:async/future_impl.dart 977:13               Future._propagateToListeners
+dart:async/future_impl.dart 862:9                Future._propagateToListeners
+dart:async/future_impl.dart 720:5                Future._completeWithValue
+dart:async/future_impl.dart 804:7                Future._asyncCompleteWithValue.<fn>
+dart:async/zone_root.dart 35:13                  _rootRun
+dart:async/zone.dart 810:35                      _CustomZone.run
+dart:async/zone.dart 702:7                       _CustomZone.runGuarded
+dart:async/zone.dart 743:23                      _CustomZone.bindCallbackGuarded.<fn>
+dart:async/schedule_microtask.dart 40:35         _microtaskLoop
+dart:async/schedule_microtask.dart 49:5          _startMicrotaskLoop
+dart:isolate-patch/isolate_patch.dart 127:13     _runPendingImmediateCallback
+dart:isolate-patch/isolate_patch.dart 193:5      _RawReceivePort._handleMessage
+::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart (failed)
+Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart":
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: lib/data/datasources/local/database_helper.dart:957:7: Error: Expected a class member, but got 'if'.
+      if (prevCats.isNotEmpty) {
+      ^^
+lib/data/datasources/local/database_helper.dart:957:10: Error: Expected an identifier, but got '('.
+Try inserting an identifier before '('.
+      if (prevCats.isNotEmpty) {
+         ^
+lib/data/datasources/local/database_helper.dart:957:30: Error: Expected an identifier, but got ')'.
+Try inserting an identifier before ')'.
+      if (prevCats.isNotEmpty) {
+                             ^
+lib/data/datasources/local/database_helper.dart:960:7: Error: Expected a class member, but got 'return'.
+      return true;
+      ^^^^^^
+lib/data/datasources/local/database_helper.dart:960:14: Error: Expected a class member, but got 'true'.
+      return true;
+             ^^^^
+lib/data/datasources/local/database_helper.dart:960:18: Error: Expected a class member, but got ';'.
+      return true;
+                 ^
+lib/data/datasources/local/database_helper.dart:962:5: Error: Variables must be declared using the keywords 'const', 'final', 'var' or a type name.
+Try adding the name of the type of the variable or the keyword 'var'.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:5: Error: 'return' can't be used as an identifier because it's a keyword.
+Try renaming this to be an identifier that isn't a keyword.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:5: Error: Expected ';' after this.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:12: Error: Variables must be declared using the keywords 'const', 'final', 'var' or a type name.
+Try adding the name of the type of the variable or the keyword 'var'.
+    return false;
+           ^^^^^
+lib/data/datasources/local/database_helper.dart:962:12: Error: 'false' can't be used as an identifier because it's a keyword.
+Try renaming this to be an identifier that isn't a keyword.
+    return false;
+           ^^^^^
+lib/data/datasources/local/database_helper.dart:963:3: Error: Expected a declaration, but got '}'.
+  }
+  ^
+lib/data/datasources/local/database_helper.dart:975:1: Error: Expected a declaration, but got '}'.
+}
+^
+lib/data/datasources/local/database_helper.dart:957:11: Error: 'prevCats.isNotEmpty' can't be used as a type because 'prevCats' doesn't refer to an import prefix.
+      if (prevCats.isNotEmpty) {
+          ^^^^^^^^^^^^^^^^^^^
+lib/data/datasources/local/database_helper.dart:925:16: Error: A non-null value must be returned since the return type 'bool' doesn't allow null.
+  Future<bool> copiarPresupuestosMesAnteriorSiVacio(int anio, int mes) async {
+               ^
+lib/data/datasources/local/database_helper.dart:967:22: Error: Undefined name 'instance'.
+    final db = await instance.database;
+                     ^^^^^^^^
+lib/data/datasources/local/database_helper.dart:972:22: Error: Undefined name 'instance'.
+    final db = await instance.database;
+                     ^^^^^^^^
+.
+
+::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart (failed after test completion)
+Error: The Dart compiler exited unexpectedly.
+package:flutter_tools/src/base/common.dart 34:3  throwToolExit
+package:flutter_tools/src/compile.dart 1024:11   DefaultResidentCompiler._compile.<fn>
+dart:async/zone_root.dart 48:47                  _rootRunUnary
+dart:async/zone.dart 816:35                      _CustomZone.runUnary
+dart:async/future_impl.dart 948:45               Future._propagateToListeners.handleValueCallback
+dart:async/future_impl.dart 977:13               Future._propagateToListeners
+dart:async/future_impl.dart 862:9                Future._propagateToListeners
+dart:async/future_impl.dart 720:5                Future._completeWithValue
+dart:async/future_impl.dart 804:7                Future._asyncCompleteWithValue.<fn>
+dart:async/zone_root.dart 35:13                  _rootRun
+dart:async/zone.dart 810:35                      _CustomZone.run
+dart:async/zone.dart 702:7                       _CustomZone.runGuarded
+dart:async/zone.dart 743:23                      _CustomZone.bindCallbackGuarded.<fn>
+dart:async/schedule_microtask.dart 40:35         _microtaskLoop
+dart:async/schedule_microtask.dart 49:5          _startMicrotaskLoop
+dart:isolate-patch/isolate_patch.dart 127:13     _runPendingImmediateCallback
+dart:isolate-patch/isolate_patch.dart 193:5      _RawReceivePort._handleMessage
+::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart (failed)
+Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart":
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: lib/data/datasources/local/database_helper.dart:957:7: Error: Expected a class member, but got 'if'.
+      if (prevCats.isNotEmpty) {
+      ^^
+lib/data/datasources/local/database_helper.dart:957:10: Error: Expected an identifier, but got '('.
+Try inserting an identifier before '('.
+      if (prevCats.isNotEmpty) {
+         ^
+lib/data/datasources/local/database_helper.dart:957:30: Error: Expected an identifier, but got ')'.
+Try inserting an identifier before ')'.
+      if (prevCats.isNotEmpty) {
+                             ^
+lib/data/datasources/local/database_helper.dart:960:7: Error: Expected a class member, but got 'return'.
+      return true;
+      ^^^^^^
+lib/data/datasources/local/database_helper.dart:960:14: Error: Expected a class member, but got 'true'.
+      return true;
+             ^^^^
+lib/data/datasources/local/database_helper.dart:960:18: Error: Expected a class member, but got ';'.
+      return true;
+                 ^
+lib/data/datasources/local/database_helper.dart:962:5: Error: Variables must be declared using the keywords 'const', 'final', 'var' or a type name.
+Try adding the name of the type of the variable or the keyword 'var'.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:5: Error: 'return' can't be used as an identifier because it's a keyword.
+Try renaming this to be an identifier that isn't a keyword.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:5: Error: Expected ';' after this.
+    return false;
+    ^^^^^^
+lib/data/datasources/local/database_helper.dart:962:12: Error: Variables must be declared using the keywords 'const', 'final', 'var' or a type name.
+Try adding the name of the type of the variable or the keyword 'var'.
+    return false;
+           ^^^^^
+lib/data/datasources/local/database_helper.dart:962:12: Error: 'false' can't be used as an identifier because it's a keyword.
+Try renaming this to be an identifier that isn't a keyword.
+    return false;
+           ^^^^^
+lib/data/datasources/local/database_helper.dart:963:3: Error: Expected a declaration, but got '}'.
+  }
+  ^
+lib/data/datasources/local/database_helper.dart:975:1: Error: Expected a declaration, but got '}'.
+}
+^
+lib/data/datasources/local/database_helper.dart:957:11: Error: 'prevCats.isNotEmpty' can't be used as a type because 'prevCats' doesn't refer to an import prefix.
+      if (prevCats.isNotEmpty) {
+          ^^^^^^^^^^^^^^^^^^^
+lib/data/datasources/local/database_helper.dart:925:16: Error: A non-null value must be returned since the return type 'bool' doesn't allow null.
+  Future<bool> copiarPresupuestosMesAnteriorSiVacio(int anio, int mes) async {
+               ^
+lib/data/datasources/local/database_helper.dart:967:22: Error: Undefined name 'instance'.
+    final db = await instance.database;
+                     ^^^^^^^^
+lib/data/datasources/local/database_helper.dart:972:22: Error: Undefined name 'instance'.
+    final db = await instance.database;
+                     ^^^^^^^^
+.
+
 ::endgroup::
 
-::error::88 tests passed, 1 failed.
+::error::10 tests passed, 12 failed.
