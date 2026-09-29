@@ -261,6 +261,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   totalUsd: 0,
                   tasaCambio: result.tasaCambioDetectada ?? 1.0,
                   categoria: 'Pendiente',
+                  creadoEn: DateTime.now().toIso8601String(),
                   items: result.items ?? [],
                 );
 
@@ -331,7 +332,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     }
                   },
                 );
-              }).toList();
+              }));
 
               if (gastoProvider.gastos.length > 5 && widget.onNavigateToGastos != null) {
                 cards.add(

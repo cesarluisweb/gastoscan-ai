@@ -103,6 +103,7 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
         totalUsd: 0,
         tasaCambio: result.tasaCambioDetectada ?? 1.0,
         categoria: 'Pendiente',
+        creadoEn: DateTime.now().toIso8601String(),
         items: result.items ?? [],
       );
 
