@@ -14,22 +14,31 @@
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests switching tabs changes current active screen
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping center FAB opens bottom sheet with 4 add options
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping AI chat button on Inicio navigates to Chat keeping bottom navigation and back returns to Inicio
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping Asistente IA in Mas and pressing back returns to Mas hub
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests renders all hub sections in main view
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping shopping list navigates internally and back button returns to hub
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping chat navigates internally and back button returns to hub
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests calling openChat navigates directly to chat view
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) R3 Acceptance Criteria: Asignar $50 a Alimentación, y registrar un gasto de $60 en Alimentación hace que se dibuje un indicador visual de exceso (color rojo) en la UI de esa categoría
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Category within budget does NOT render the red excess alert
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Initial empty state displays analysis empty state and allows adding budget
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart: ScanScreen Multi-Image Selection Tests multi-image selection enqueues all images and pops back to Dashboard
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart: ScanScreen Multi-Image Selection Tests empty selection from gallery does not enqueue or pop
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Editing budget to amount greater than expense clears red excess alert
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Validation: categories exceeding general budget shows alert and blocks save
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) General budget exceeded shows general excess alert in AnalysisScreen
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) AnalysisScreen month selector opens picker dialog and changes month
 ::endgroup::
-::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping Asistente IA in Mas and pressing back returns to Mas hub (failed)
+::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) SummaryCard shows Presupuesto mensual and edit button opens budget bottom sheet (failed)
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following TestFailure was thrown running a test:
 Expected: exactly one matching candidate
-  Actual: _TextWidgetFinder:<Found 2 widgets with text "Más": [
-            Text("Más", dependencies: [DefaultSelectionStyle, DefaultTextStyle, MediaQuery]),
-            Text("Más", inherit: true, color: Color(alpha: 1.0000, red: 0.0667, green: 0.0941, blue:
-0.1529, colorSpace: ColorSpace.sRGB), size: 11.0, weight: 700, dependencies: [DefaultSelectionStyle,
-DefaultTextStyle, MediaQuery]),
-          ]>
-   Which: is too many
+  Actual: _TextContainingWidgetFinder:<Found 0 widgets with text containing Presupuesto mensual: $
+200.00: []>
+   Which: means none were found but one was expected
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart:154:7)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart:363:7)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -39,27 +48,15 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart line 154
+  file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart line 363
 The test description was:
-  tapping Asistente IA in Mas and pressing back returns to Mas hub
+  SummaryCard shows Presupuesto mensual and edit button opens budget bottom sheet
 ════════════════════════════════════════════════════════════════════════════════════════════════════
 Test failed. See exception logs above.
-The test description was: tapping Asistente IA in Mas and pressing back returns to Mas hub
+The test description was: SummaryCard shows Presupuesto mensual and edit button opens budget bottom sheet
 
 ::endgroup::
 ::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping shopping list navigates internally and back button returns to hub
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping chat navigates internally and back button returns to hub
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests calling openChat navigates directly to chat view
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) R3 Acceptance Criteria: Asignar $50 a Alimentación, y registrar un gasto de $60 en Alimentación hace que se dibuje un indicador visual de exceso (color rojo) en la UI de esa categoría
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Category within budget does NOT render the red excess alert
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart: ScanScreen Multi-Image Selection Tests multi-image selection enqueues all images and pops back to Dashboard
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart: ScanScreen Multi-Image Selection Tests empty selection from gallery does not enqueue or pop
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Initial empty state displays analysis empty state and allows adding budget
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Editing budget to amount greater than expense clears red excess alert
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Validation: categories exceeding general budget shows alert and blocks save
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) General budget exceeded shows general excess alert in AnalysisScreen
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) tapping search icon reveals search text field with hint
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests Default singleton instance is available and accessible
 ::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests 3-day scheduling function defaults to Duration(days: 3)
@@ -95,9 +92,8 @@ Error en sincronización bidireccional: [core/no-app] No Firebase App '[DEFAULT]
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — AndroidManifest Permissions & Configuration Verification android/app/src/main/AndroidManifest.xml contains all required permissions and receivers
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — AndroidManifest Permissions & Configuration Verification AndroidManifest.xml contains permissions and receivers
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — AndroidManifest Permissions & Configuration Verification pubspec.yaml declares flutter_local_notifications and timezone
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) tapping search icon reveals search text field with hint
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) entering search query immediately filters out non-matching expenses
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) expenses matching by commerce are included
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) expenses matching by product name are included
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests instantiates with required nombre and default presupuestoMensual 0.0
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests instantiates with custom id and presupuestoMensual
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests toMap produces correct key-value map with id
@@ -108,10 +104,9 @@ Error en sincronización bidireccional: [core/no-app] No Firebase App '[DEFAULT]
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests copyWith updates specified fields correctly
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests equality and hashCode work as expected
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests CategoryModel typedef works interchangeably
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) expenses matching by commerce are included
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) expenses matching by product name are included
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) clearing search query via close button restores all expenses
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) clearing search text restores all expenses while keeping search open
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) displays friendly empty state message when search yields 0 matches
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) case-insensitive and diacritic-insensitive search works
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests initial state has empty category budgets and totals
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests setPresupuestoGeneral updates general budget
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests guardarTodoElPresupuesto updates general and category budgets and filters zero budgets
@@ -120,6 +115,9 @@ Error en sincronización bidireccional: [core/no-app] No Firebase App '[DEFAULT]
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests isCategoryOverBudget returns true when spent > budget and budget > 0
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests isCategoryOverBudget returns false when spent <= budget
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests isCategoryOverBudget returns false when budget is 0 or unassigned
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) clearing search text restores all expenses while keeping search open
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) displays friendly empty state message when search yields 0 matches
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) case-insensitive and diacritic-insensitive search works
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests initial state has empty pending and ready items
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests enqueue inserts single image and updates pendingCount
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests enqueueMultiple enqueues all images and updates pendingItems
@@ -138,10 +136,10 @@ Error en sincronización bidireccional: [core/no-app] No Firebase App '[DEFAULT]
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: ExpenseCard Currency Preference Tests displays USD as primary when monedaPrincipal is USD
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: ExpenseCard Currency Preference Tests displays VES as primary when monedaPrincipal is VES
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays welcome prompt when expenses are empty
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CategoryChart Currency Preference Tests renders category totals and budgets in VES when monedaPrincipal is VES
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays over budget warning when spent exceeds budget
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays budget alert when spent is 85 percent or more
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests suggests defining budget when no general budget exists
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CategoryChart Currency Preference Tests renders category totals and budgets in VES when monedaPrincipal is VES
 ::endgroup::
 
-::error::86 tests passed, 1 failed.
+::error::88 tests passed, 1 failed.
