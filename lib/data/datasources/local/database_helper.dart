@@ -953,12 +953,6 @@ class DatabaseHelper {
       }
       return true;
     }
-      }
-      if (prevCats.isNotEmpty) {
-        await setPresupuestosCategorias(anio, mes, prevCats);
-      }
-      return true;
-    }
     return false;
   }
 
