@@ -110,7 +110,7 @@ class AiInsightCard extends StatelessWidget {
               const Icon(
                 Icons.auto_awesome,
                 size: 16,
-                color: Color(0xFFCA8A04), // Amarillo oscuro para icono
+                color: AppColors.primaryDark,
               ),
               const SizedBox(width: 6),
               const Text(
@@ -176,7 +176,7 @@ class AiInsightCard extends StatelessWidget {
                   child: Icon(
                     Icons.smart_toy_outlined,
                     size: 20,
-                    color: Color(0xFF854D0E),
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ),

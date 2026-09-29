@@ -139,8 +139,11 @@ class AnalysisScreen extends StatelessWidget {
     GastoProvider gastoProvider,
     SettingsProvider settings,
   ) {
+    final isBudgetVes = gastoProvider.monedaPresupuesto == 'VES';
     final double budget = gastoProvider.presupuestoGeneral;
-    final double spent = gastoProvider.totalMesUsd;
+    final double spent = isBudgetVes
+        ? (gastoProvider.totalMesVes > 0 ? gastoProvider.totalMesVes : gastoProvider.totalMesUsd * settings.tasaCambioVesUsd)
+        : gastoProvider.totalMesUsd;
     final bool hasBudget = budget > 0;
     final bool isExceeded = hasBudget && spent > budget;
     final double percent = hasBudget ? (spent / budget).clamp(0.0, 1.0) : 0.0;
@@ -196,69 +199,82 @@ class AnalysisScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           if (hasBudget) ...[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  '${CurrencyFormatter.formatPreferido(spent, null, settings.tasaCambioVesUsd, settings.monedaPrincipal)} / ${CurrencyFormatter.formatPreferido(budget, null, settings.tasaCambioVesUsd, settings.monedaPrincipal)}',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: isExceeded ? AppColors.error : AppColors.textPrimary,
-                  ),
-                ),
-                Text(
-                  '$pctUsed% usado',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: isExceeded ? AppColors.error : AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: LinearProgressIndicator(
-                value: percent,
-                minHeight: 10,
-                backgroundColor: AppColors.cardLighter,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  isExceeded
-                      ? AppColors.error
-                      : (percent >= 0.85 ? AppColors.warning : AppColors.primaryDark),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            if (isExceeded)
-              Row(
-                key: const Key('excess_alert_general'),
-                children: [
-                  const Icon(Icons.warning_amber_rounded, size: 14, color: AppColors.error),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Presupuesto superado por ${CurrencyFormatter.formatPreferido(spent - budget, null, settings.tasaCambioVesUsd, settings.monedaPrincipal)}',
-                    style: const TextStyle(
-                      color: AppColors.error,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
+            Builder(
+              builder: (context) {
+                String fmtAmount(double val) => isBudgetVes
+                    ? CurrencyFormatter.formatVes(val)
+                    : CurrencyFormatter.formatPreferido(val, null, settings.tasaCambioVesUsd, settings.monedaPrincipal);
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          '${fmtAmount(spent)} / ${fmtAmount(budget)}',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: isExceeded ? AppColors.error : AppColors.textPrimary,
+                          ),
+                        ),
+                        Text(
+                          '$pctUsed% usado',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: isExceeded ? AppColors.error : AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
-              )
-            else
-              Text(
-                isCurrentMonth
-                    ? 'Te quedan ${CurrencyFormatter.formatPreferido(budget - spent, null, settings.tasaCambioVesUsd, settings.monedaPrincipal)} y faltan $daysRemaining días'
-                    : 'Te sobraron ${CurrencyFormatter.formatPreferido(budget - spent, null, settings.tasaCambioVesUsd, settings.monedaPrincipal)} en este período',
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 12,
-                ),
-              ),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: LinearProgressIndicator(
+                        value: percent,
+                        minHeight: 10,
+                        backgroundColor: AppColors.cardLighter,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          isExceeded
+                              ? AppColors.error
+                              : (percent >= 0.85 ? AppColors.warning : AppColors.primaryDark),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    if (isExceeded)
+                      Row(
+                        key: const Key('excess_alert_general'),
+                        children: [
+                          const Icon(Icons.warning_amber_rounded, size: 14, color: AppColors.error),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Presupuesto superado por ${fmtAmount(spent - budget)}',
+                            style: const TextStyle(
+                              color: AppColors.error,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      )
+                    else
+                      Text(
+                        isCurrentMonth
+                            ? 'Te quedan ${fmtAmount(budget - spent)} y faltan $daysRemaining días'
+                            : 'Te sobraron ${fmtAmount(budget - spent)} en este período',
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
           ] else ...[
             const Text(
               'Aún no has configurado un presupuesto general para este mes.',

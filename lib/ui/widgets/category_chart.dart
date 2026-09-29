@@ -34,6 +34,27 @@ class CategoryChart extends StatefulWidget {
     this.onNavigateToAnalysis,
   }) : super(key: key);
 
+  static IconData getCategoryIcon(String cat) {
+    switch (cat) {
+      case 'Alimentación':
+        return Icons.restaurant;
+      case 'Educación':
+        return Icons.school_outlined;
+      case 'Salud':
+        return Icons.favorite_border;
+      case 'Hogar':
+        return Icons.home_outlined;
+      case 'Higiene':
+        return Icons.clean_hands_outlined;
+      case 'Servicios':
+        return Icons.bolt;
+      case 'Transporte':
+        return Icons.directions_car_outlined;
+      default:
+        return Icons.more_horiz;
+    }
+  }
+
   @override
   State<CategoryChart> createState() => _CategoryChartState();
 }
@@ -100,26 +121,7 @@ class _CategoryChartState extends State<CategoryChart> {
         return a.compareTo(b);
       });
 
-    final IconData Function(String) getCategoryIcon = (String cat) {
-      switch (cat) {
-        case 'Alimentación':
-          return Icons.restaurant;
-        case 'Educación':
-          return Icons.school_outlined;
-        case 'Salud':
-          return Icons.favorite_border;
-        case 'Hogar':
-          return Icons.home_outlined;
-        case 'Higiene':
-          return Icons.clean_hands_outlined;
-        case 'Servicios':
-          return Icons.bolt;
-        case 'Transporte':
-          return Icons.directions_car_outlined;
-        default:
-          return Icons.more_horiz;
-      }
-    };
+    final IconData Function(String) getCategoryIcon = CategoryChart.getCategoryIcon;
 
     // Filtrar y ordenar categorías con consumo
     final entriesWithSpend = widget.categoryTotals.entries
@@ -127,13 +129,23 @@ class _CategoryChartState extends State<CategoryChart> {
         .toList()
       ..sort((a, b) => b.value.compareTo(a.value));
 
-    // Si estamos en la vista de Dashboard (!showBudgetBars), mostrar top 5 y agrupar el resto
+    // Si estamos en la vista de Dashboard (!showBudgetBars), mostrar top 5 y consolidar 'Otros'
     final List<MapEntry<String, double>> displayedEntries = [];
     if (!widget.showBudgetBars && entriesWithSpend.length > 5) {
-      displayedEntries.addAll(entriesWithSpend.take(4));
-      final double otrosMonto = entriesWithSpend.skip(4).fold(0.0, (sum, e) => sum + e.value);
-      if (otrosMonto > 0) {
-        displayedEntries.add(MapEntry('Otros', otrosMonto));
+      final nonOtherEntries = entriesWithSpend.where((e) => e.key != 'Otros').toList();
+      final otherOriginal = entriesWithSpend.firstWhere(
+        (e) => e.key == 'Otros',
+        orElse: () => const MapEntry('Otros', 0.0),
+      );
+
+      final top4NonOther = nonOtherEntries.take(4).toList();
+      displayedEntries.addAll(top4NonOther);
+
+      final remainderSum = nonOtherEntries.skip(4).fold(0.0, (sum, e) => sum + e.value);
+      final totalOtros = otherOriginal.value + remainderSum;
+
+      if (totalOtros > 0) {
+        displayedEntries.add(MapEntry('Otros', totalOtros));
       }
     } else {
       displayedEntries.addAll(entriesWithSpend);
@@ -173,22 +185,27 @@ class _CategoryChartState extends State<CategoryChart> {
                 InkWell(
                   key: const Key('btn_ver_analisis_completo'),
                   onTap: widget.onNavigateToAnalysis,
-                  borderRadius: BorderRadius.circular(8),
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                    child: Row(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.cardLighter,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           'Ver detalle',
                           style: TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
+                            color: AppColors.textPrimary,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        SizedBox(width: 2),
-                        Icon(Icons.arrow_forward_ios, size: 10, color: AppColors.textSecondary),
+                        SizedBox(width: 4),
+                        Icon(Icons.arrow_forward, size: 11, color: AppColors.textPrimary),
                       ],
                     ),
                   ),
@@ -515,11 +532,16 @@ class _CategoryChartState extends State<CategoryChart> {
                 Row(
                   children: [
                     Container(
-                      width: 10,
-                      height: 10,
+                      width: 24,
+                      height: 24,
                       decoration: BoxDecoration(
-                        color: categoryColor,
+                        color: categoryColor.withOpacity(0.12),
                         shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        CategoryChart.getCategoryIcon(cat),
+                        size: 13,
+                        color: categoryColor,
                       ),
                     ),
                     const SizedBox(width: 8),

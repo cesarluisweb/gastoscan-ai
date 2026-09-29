@@ -40,13 +40,13 @@ class MockGastoProvider extends GastoProvider {
   Map<String, double> get presupuestosPorCategoria => _testPresupuestos;
 
   @override
-  Future<void> setPresupuestoGeneral(double monto) async {
+  Future<void> setPresupuestoGeneral(double monto, {String moneda = 'USD'}) async {
     _testPresupuestoGeneral = monto;
     notifyListeners();
   }
 
   @override
-  Future<void> setPresupuestoCategoria(String categoria, double presupuesto) async {
+  Future<void> setPresupuestoCategoria(String categoria, double presupuesto, {String moneda = 'USD'}) async {
     if (presupuesto <= 0) {
       _testPresupuestos.remove(categoria);
     } else {
@@ -56,7 +56,7 @@ class MockGastoProvider extends GastoProvider {
   }
 
   @override
-  Future<void> guardarTodoElPresupuesto(double general, Map<String, double> categorias) async {
+  Future<void> guardarTodoElPresupuesto(double general, Map<String, double> categorias, {String moneda = 'USD'}) async {
     _testPresupuestoGeneral = general;
     _testPresupuestos.clear();
     categorias.forEach((k, v) {

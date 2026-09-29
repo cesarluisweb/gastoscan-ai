@@ -10,6 +10,7 @@ class SummaryCard extends StatelessWidget {
   final String monedaPrincipal;
   final double tasaCambio;
   final double presupuestoGeneral;
+  final String monedaPresupuesto;
   final int? mes;
   final int? anio;
 
@@ -21,6 +22,7 @@ class SummaryCard extends StatelessWidget {
     this.monedaPrincipal = 'USD',
     this.tasaCambio = 1.0,
     this.presupuestoGeneral = 0.0,
+    this.monedaPresupuesto = 'USD',
     this.mes,
     this.anio,
   }) : super(key: key);
@@ -42,8 +44,12 @@ class SummaryCard extends StatelessWidget {
     );
 
     final hasBudget = presupuestoGeneral > 0;
-    final percentUsed = hasBudget ? (totalUsd / presupuestoGeneral) : 0.0;
-    final isOverBudget = hasBudget && (totalUsd > presupuestoGeneral);
+    final isBudgetVes = monedaPresupuesto == 'VES';
+    final effectiveSpent = isBudgetVes
+        ? (totalVes > 0 ? totalVes : totalUsd * tasaCambio)
+        : totalUsd;
+    final percentUsed = hasBudget ? (effectiveSpent / presupuestoGeneral) : 0.0;
+    final isOverBudget = hasBudget && (effectiveSpent > presupuestoGeneral);
 
     final now = DateTime.now();
     final isCurrentMonth = (mes == null || anio == null) ||
@@ -53,21 +59,31 @@ class SummaryCard extends StatelessWidget {
     final daysForCalculation = daysRemaining > 0 ? daysRemaining : 1;
 
     // Métricas para la fila inferior compacta
-    final remUsd = (presupuestoGeneral - totalUsd).clamp(0.0, double.infinity);
-    final ritmoDiarioUsd = remUsd / daysForCalculation;
+    final rem = (presupuestoGeneral - effectiveSpent).clamp(0.0, double.infinity);
+    final ritmoDiario = rem / daysForCalculation;
     final diasTexto = daysRemaining == 1 ? 'Falta 1 día' : 'Faltan $daysRemaining días';
-    final remFormatted = CurrencyFormatter.formatPreferido(
-      remUsd,
-      null,
-      tasaCambio,
-      monedaPrincipal,
-    );
-    final ritmoFormatted = CurrencyFormatter.formatPreferido(
-      ritmoDiarioUsd,
-      null,
-      tasaCambio,
-      monedaPrincipal,
-    );
+    final remFormatted = isBudgetVes
+        ? CurrencyFormatter.formatVes(rem)
+        : CurrencyFormatter.formatPreferido(
+            rem,
+            null,
+            tasaCambio,
+            monedaPrincipal,
+          );
+    final ritmoFormatted = isBudgetVes
+        ? CurrencyFormatter.formatVes(ritmoDiario)
+        : CurrencyFormatter.formatPreferido(
+            ritmoDiario,
+            null,
+            tasaCambio,
+            monedaPrincipal,
+          );
+    final budgetFormatted = isBudgetVes
+        ? CurrencyFormatter.formatVes(presupuestoGeneral)
+        : CurrencyFormatter.formatPreferido(presupuestoGeneral, null, tasaCambio, monedaPrincipal);
+    final excessFormatted = isBudgetVes
+        ? CurrencyFormatter.formatVes(effectiveSpent - presupuestoGeneral)
+        : CurrencyFormatter.formatPreferido(totalUsd - presupuestoGeneral, null, tasaCambio, monedaPrincipal);
 
     return Container(
       width: double.infinity,
@@ -117,7 +133,7 @@ class SummaryCard extends StatelessWidget {
                         children: [
                           Flexible(
                             child: Text(
-                              'Presupuesto: ${CurrencyFormatter.formatPreferido(presupuestoGeneral, null, tasaCambio, monedaPrincipal)}',
+                              'Presupuesto: $budgetFormatted',
                               style: const TextStyle(
                                 color: AppColors.textPrimary,
                                 fontSize: 12,
@@ -128,7 +144,7 @@ class SummaryCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 5),
                           const Icon(
-                            Icons.edit,
+                            Icons.edit_outlined,
                             size: 13,
                             color: AppColors.textSecondary,
                           ),
@@ -156,7 +172,7 @@ class SummaryCard extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 6),
           // Monto Principal
           Text(
             textoPrincipal,
@@ -167,7 +183,7 @@ class SummaryCard extends StatelessWidget {
               letterSpacing: -1,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           // Monto Secundario (Bs.) limpio sin chip de tasa
           Text(
             textoSecundario,
@@ -178,7 +194,7 @@ class SummaryCard extends StatelessWidget {
             ),
           ),
           if (hasBudget) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
             // Barra de progreso con porcentaje a la derecha
             Row(
               children: [
@@ -208,11 +224,11 @@ class SummaryCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             // Fila de resumen de ritmo diario y saldo disponible
             if (isOverBudget)
               Text(
-                'Has superado tu presupuesto por ${CurrencyFormatter.formatPreferido(totalUsd - presupuestoGeneral, null, tasaCambio, monedaPrincipal)}',
+                'Has superado tu presupuesto por $excessFormatted',
                 style: const TextStyle(
                   color: AppColors.error,
                   fontSize: 12,

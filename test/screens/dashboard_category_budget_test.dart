@@ -69,19 +69,19 @@ class FakeGastoProvider extends GastoProvider {
   }
 
   @override
-  Future<void> setPresupuestoCategoria(String categoria, double monto) async {
+  Future<void> setPresupuestoCategoria(String categoria, double monto, {String moneda = 'USD'}) async {
     _customPresupuestosPorCategoria[categoria] = monto;
     notifyListeners();
   }
 
   @override
-  Future<void> setPresupuestoGeneral(double monto) async {
+  Future<void> setPresupuestoGeneral(double monto, {String moneda = 'USD'}) async {
     _customPresupuestoGeneral = monto;
     notifyListeners();
   }
 
   @override
-  Future<void> guardarTodoElPresupuesto(double general, Map<String, double> categorias) async {
+  Future<void> guardarTodoElPresupuesto(double general, Map<String, double> categorias, {String moneda = 'USD'}) async {
     _customPresupuestoGeneral = general;
     _customPresupuestosPorCategoria = Map.from(categorias);
     notifyListeners();
@@ -361,7 +361,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.textContaining('Presupuesto: ${CurrencyFormatter.formatUsd(200.0)}'), findsOneWidget);
-      expect(find.byIcon(Icons.edit), findsOneWidget);
+      expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
 
       await tester.tap(find.byKey(const Key('summary_card_edit_budget_btn')));
       await tester.pumpAndSettle();

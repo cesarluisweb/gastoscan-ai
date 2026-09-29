@@ -24,7 +24,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 10,
+      version: 11,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
       onConfigure: _onConfigure,
@@ -151,6 +151,18 @@ class DatabaseHelper {
         // Ignorar si falla migración inicial
       }
     }
+    if (oldVersion < 11) {
+      try {
+        await db.execute("ALTER TABLE presupuestos_mensuales ADD COLUMN moneda TEXT DEFAULT 'USD'");
+      } catch (e) {
+        // Ignorar si ya existe
+      }
+      try {
+        await db.execute("ALTER TABLE presupuestos_categorias_mensuales ADD COLUMN moneda TEXT DEFAULT 'USD'");
+      } catch (e) {
+        // Ignorar si ya existe
+      }
+    }
   }
 
   Future<void> _onConfigure(Database db) async {
@@ -236,6 +248,7 @@ class DatabaseHelper {
         anio INTEGER NOT NULL,
         mes INTEGER NOT NULL,
         presupuesto_general REAL NOT NULL DEFAULT 0.0,
+        moneda TEXT DEFAULT 'USD',
         UNIQUE(anio, mes)
       )
     ''');
@@ -248,6 +261,7 @@ class DatabaseHelper {
         mes INTEGER NOT NULL,
         categoria TEXT NOT NULL,
         presupuesto REAL NOT NULL DEFAULT 0.0,
+        moneda TEXT DEFAULT 'USD',
         UNIQUE(anio, mes, categoria)
       )
     ''');
@@ -806,8 +820,23 @@ class DatabaseHelper {
     return 0.0;
   }
 
+  /// Obtiene la moneda del presupuesto general para un mes y año específico
+  Future<String> getPresupuestoGeneralMoneda(int anio, int mes) async {
+    final db = await instance.database;
+    final result = await db.query(
+      'presupuestos_mensuales',
+      where: 'anio = ? AND mes = ?',
+      whereArgs: [anio, mes],
+      limit: 1,
+    );
+    if (result.isNotEmpty) {
+      return (result.first['moneda'] as String?) ?? 'USD';
+    }
+    return 'USD';
+  }
+
   /// Define o actualiza el presupuesto general para un mes y año específico
-  Future<void> setPresupuestoGeneral(int anio, int mes, double monto) async {
+  Future<void> setPresupuestoGeneral(int anio, int mes, double monto, {String moneda = 'USD'}) async {
     final db = await instance.database;
     await db.insert(
       'presupuestos_mensuales',
@@ -815,6 +844,7 @@ class DatabaseHelper {
         'anio': anio,
         'mes': mes,
         'presupuesto_general': monto >= 0 ? monto : 0.0,
+        'moneda': moneda,
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
@@ -840,7 +870,7 @@ class DatabaseHelper {
   }
 
   /// Define o elimina el presupuesto de una categoría para un mes específico
-  Future<void> setPresupuestoCategoriaMensual(int anio, int mes, String categoriaNombre, double presupuesto) async {
+  Future<void> setPresupuestoCategoriaMensual(int anio, int mes, String categoriaNombre, double presupuesto, {String moneda = 'USD'}) async {
     final db = await instance.database;
     final trimmed = categoriaNombre.trim();
     if (presupuesto <= 0) {
@@ -857,6 +887,7 @@ class DatabaseHelper {
           'mes': mes,
           'categoria': trimmed,
           'presupuesto': presupuesto,
+          'moneda': moneda,
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
@@ -864,7 +895,7 @@ class DatabaseHelper {
   }
 
   /// Guarda todos los presupuestos de categoría de un mes reemplazando los existentes
-  Future<void> setPresupuestosCategorias(int anio, int mes, Map<String, double> presupuestos) async {
+  Future<void> setPresupuestosCategorias(int anio, int mes, Map<String, double> presupuestos, {String moneda = 'USD'}) async {
     final db = await instance.database;
     await db.transaction((txn) async {
       await txn.delete(
@@ -881,6 +912,7 @@ class DatabaseHelper {
               'mes': mes,
               'categoria': entry.key.trim(),
               'presupuesto': entry.value,
+              'moneda': moneda,
             },
             conflictAlgorithm: ConflictAlgorithm.replace,
           );
@@ -909,11 +941,18 @@ class DatabaseHelper {
     final int prevAnio = mes == 1 ? anio - 1 : anio;
 
     final prevGeneral = await getPresupuestoGeneral(prevAnio, prevMes);
+    final prevMoneda = await getPresupuestoGeneralMoneda(prevAnio, prevMes);
     final prevCats = await getPresupuestosCategorias(prevAnio, prevMes);
 
     if (prevGeneral > 0 || prevCats.isNotEmpty) {
       if (prevGeneral > 0) {
-        await setPresupuestoGeneral(anio, mes, prevGeneral);
+        await setPresupuestoGeneral(anio, mes, prevGeneral, moneda: prevMoneda);
+      }
+      if (prevCats.isNotEmpty) {
+        await setPresupuestosCategorias(anio, mes, prevCats, moneda: prevMoneda);
+      }
+      return true;
+    }
       }
       if (prevCats.isNotEmpty) {
         await setPresupuestosCategorias(anio, mes, prevCats);

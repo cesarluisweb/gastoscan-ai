@@ -74,7 +74,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
         actions: [
           IconButton(
             key: const Key('dashboard_ai_chat_button'),
-            icon: const Icon(Icons.question_answer_outlined),
+            icon: SizedBox(
+              width: 24,
+              height: 24,
+              child: Stack(
+                alignment: Alignment.center,
+                children: const [
+                  Icon(Icons.chat_bubble_outline, size: 22, color: AppColors.textPrimary),
+                  Padding(
+                    padding: EdgeInsets.only(bottom: 2),
+                    child: Text(
+                      '?',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             tooltip: 'Asistente IA',
             onPressed: () {
               if (widget.onNavigateToChat != null) {
@@ -104,20 +124,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             if (scanQueue.isProcessing || scanQueue.pendingItems.isNotEmpty)
               _buildProcessingBanner(context, scanQueue),
-            // Selector de mes estilo píldora como en Lovable
-            Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.border),
-              ),
+            // Selector de mes con botón píldora central y flechas laterales sueltas
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.chevron_left, color: AppColors.textSecondary, size: 20),
+                    icon: const Icon(Icons.chevron_left, color: AppColors.textSecondary, size: 22),
                     visualDensity: VisualDensity.compact,
                     onPressed: () {
                       int nuevoMes = gastoProvider.selectedMonth - 1;
@@ -132,15 +146,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   InkWell(
                     key: const Key('month_selector_title'),
                     onTap: () => _mostrarPickerMes(context, gastoProvider),
-                    borderRadius: BorderRadius.circular(8),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppColors.cardLighter,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: AppColors.border),
+                      ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const Icon(
                             Icons.calendar_today_outlined,
-                            size: 14,
+                            size: 13,
                             color: AppColors.textSecondary,
                           ),
                           const SizedBox(width: 6),
@@ -148,7 +167,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             '$mesNombre $anio',
                             style: const TextStyle(
                               color: AppColors.textPrimary,
-                              fontSize: 14,
+                              fontSize: 13,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -156,14 +175,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           const Icon(
                             Icons.keyboard_arrow_down,
                             color: AppColors.textSecondary,
-                            size: 18,
+                            size: 16,
                           ),
                         ],
                       ),
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.chevron_right, color: AppColors.textSecondary, size: 20),
+                    icon: const Icon(Icons.chevron_right, color: AppColors.textSecondary, size: 22),
                     visualDensity: VisualDensity.compact,
                     onPressed: () {
                       int nuevoMes = gastoProvider.selectedMonth + 1;
@@ -186,6 +205,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               monedaPrincipal: settings.monedaPrincipal,
               tasaCambio: settings.tasaCambioVesUsd,
               presupuestoGeneral: gastoProvider.presupuestoGeneral,
+              monedaPresupuesto: gastoProvider.monedaPresupuesto,
               mes: gastoProvider.selectedMonth,
               anio: gastoProvider.selectedYear,
             ),
@@ -234,22 +254,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   if (gastoProvider.gastos.length > 5 && widget.onNavigateToGastos != null)
                     InkWell(
                       onTap: widget.onNavigateToGastos,
-                      borderRadius: BorderRadius.circular(8),
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        child: Row(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.cardLighter,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
                               'Ver todos',
                               style: TextStyle(
-                                color: AppColors.secondary,
+                                color: AppColors.textPrimary,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 13,
+                                fontSize: 11,
                               ),
                             ),
                             SizedBox(width: 4),
-                            Icon(Icons.arrow_forward_ios, size: 12, color: AppColors.secondary),
+                            Icon(Icons.arrow_forward, size: 11, color: AppColors.textPrimary),
                           ],
                         ),
                       ),

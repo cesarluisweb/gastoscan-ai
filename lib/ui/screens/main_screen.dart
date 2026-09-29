@@ -264,7 +264,7 @@ class _MainScreenState extends State<MainScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddMenu(context),
-        backgroundColor: AppColors.primaryDark,
+        backgroundColor: AppColors.primary,
         elevation: 3,
         shape: const CircleBorder(),
         child: const Icon(Icons.add, color: AppColors.textPrimary, size: 32),

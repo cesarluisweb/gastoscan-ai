@@ -8,7 +8,7 @@ class AppColors {
   static const Color cardLighter = Color(0xFFF3F4F6); // Gris claro
 
   // Colores de Acento (Rinde Más - Amarillo Asistente IA)
-  static const Color primary = Color(0xFFFEF08A);     // Amarillo del Asistente IA
+  static const Color primary = Color(0xFFFBF18F);     // Amarillo del Asistente IA
   static const Color primaryLight = Color(0xFFFEF08A); // Tailwind Yellow 200
   static const Color primaryDark = Color(0xFFFACC15); // Amarillo oscuro reservado para bordes/iconos en fondo blanco
   static const Color secondary = Color(0xFF0F172A);   // Azul oscuro casi negro

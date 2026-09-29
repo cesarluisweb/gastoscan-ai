@@ -82,20 +82,24 @@ class GastoRepository {
     return _dbHelper.getPresupuestoGeneral(anio, mes);
   }
 
-  Future<void> guardarPresupuestoGeneralMes(int anio, int mes, double monto) {
-    return _dbHelper.setPresupuestoGeneral(anio, mes, monto);
+  Future<String> obtenerMonedaPresupuestoGeneralMes(int anio, int mes) {
+    return _dbHelper.getPresupuestoGeneralMoneda(anio, mes);
+  }
+
+  Future<void> guardarPresupuestoGeneralMes(int anio, int mes, double monto, {String moneda = 'USD'}) {
+    return _dbHelper.setPresupuestoGeneral(anio, mes, monto, moneda: moneda);
   }
 
   Future<Map<String, double>> obtenerPresupuestosCategoriasMes(int anio, int mes) {
     return _dbHelper.getPresupuestosCategorias(anio, mes);
   }
 
-  Future<void> guardarPresupuestoCategoriaMes(int anio, int mes, String categoria, double presupuesto) {
-    return _dbHelper.setPresupuestoCategoriaMensual(anio, mes, categoria, presupuesto);
+  Future<void> guardarPresupuestoCategoriaMes(int anio, int mes, String categoria, double presupuesto, {String moneda = 'USD'}) {
+    return _dbHelper.setPresupuestoCategoriaMensual(anio, mes, categoria, presupuesto, moneda: moneda);
   }
 
-  Future<void> guardarPresupuestosCategoriasMes(int anio, int mes, Map<String, double> presupuestos) {
-    return _dbHelper.setPresupuestosCategorias(anio, mes, presupuestos);
+  Future<void> guardarPresupuestosCategoriasMes(int anio, int mes, Map<String, double> presupuestos, {String moneda = 'USD'}) {
+    return _dbHelper.setPresupuestosCategorias(anio, mes, presupuestos, moneda: moneda);
   }
 
   Future<bool> copiarPresupuestosMesAnteriorSiVacio(int anio, int mes) {

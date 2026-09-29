@@ -5,6 +5,8 @@ import '../../core/constants/app_constants.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../providers/gasto_provider.dart';
+import '../../providers/settings_provider.dart';
+import 'category_chart.dart';
 
 class BudgetBottomSheet extends StatefulWidget {
   const BudgetBottomSheet({Key? key}) : super(key: key);
@@ -25,21 +27,31 @@ class BudgetBottomSheet extends StatefulWidget {
 class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
   late TextEditingController _generalBudgetCtrl;
   final Map<String, TextEditingController> _categoryControllers = {};
+  String _selectedMoneda = 'USD';
 
   @override
   void initState() {
     super.initState();
     final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
+    _selectedMoneda = gastoProvider.monedaPresupuesto;
     final currentGeneral = gastoProvider.presupuestoGeneral;
     _generalBudgetCtrl = TextEditingController(
-      text: currentGeneral > 0 ? currentGeneral.toStringAsFixed(0) : '',
+      text: currentGeneral > 0
+          ? (currentGeneral % 1 == 0
+              ? currentGeneral.toInt().toString()
+              : currentGeneral.toStringAsFixed(2))
+          : '',
     );
     _generalBudgetCtrl.addListener(_onFieldChanged);
 
     for (final cat in AppConstants.categorias) {
       final currentBudget = gastoProvider.getPresupuestoCategoria(cat);
       final ctrl = TextEditingController(
-        text: currentBudget > 0 ? currentBudget.toStringAsFixed(0) : '',
+        text: currentBudget > 0
+            ? (currentBudget % 1 == 0
+                ? currentBudget.toInt().toString()
+                : currentBudget.toStringAsFixed(2))
+            : '',
       );
       ctrl.addListener(_onFieldChanged);
       _categoryControllers[cat] = ctrl;
@@ -48,6 +60,35 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
 
   void _onFieldChanged() {
     if (mounted) setState(() {});
+  }
+
+  void _cambiarMoneda(String nuevaMoneda, double tasaCambio) {
+    if (nuevaMoneda == _selectedMoneda) return;
+    final tasa = tasaCambio > 0 ? tasaCambio : 1.0;
+
+    // Convertir presupuesto general
+    final genVal = double.tryParse(_generalBudgetCtrl.text.replaceAll(',', '.')) ?? 0.0;
+    if (genVal > 0) {
+      final double nuevoGen = nuevaMoneda == 'VES' ? genVal * tasa : genVal / tasa;
+      _generalBudgetCtrl.text = nuevoGen >= 100
+          ? nuevoGen.round().toString()
+          : nuevoGen.toStringAsFixed(2);
+    }
+
+    // Convertir categorías
+    for (final ctrl in _categoryControllers.values) {
+      final val = double.tryParse(ctrl.text.replaceAll(',', '.')) ?? 0.0;
+      if (val > 0) {
+        final double nuevoVal = nuevaMoneda == 'VES' ? val * tasa : val / tasa;
+        ctrl.text = nuevoVal >= 100
+            ? nuevoVal.round().toString()
+            : nuevoVal.toStringAsFixed(2);
+      }
+    }
+
+    setState(() {
+      _selectedMoneda = nuevaMoneda;
+    });
   }
 
   @override
@@ -102,7 +143,11 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
       }
     }
 
-    await gastoProvider.guardarTodoElPresupuesto(_montoGeneral, categoriasMap);
+    await gastoProvider.guardarTodoElPresupuesto(
+      _montoGeneral,
+      categoriasMap,
+      moneda: _selectedMoneda,
+    );
 
     if (mounted) {
       Navigator.pop(context);
@@ -122,6 +167,7 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final gastoProvider = Provider.of<GastoProvider>(context);
+    final settings = Provider.of<SettingsProvider>(context);
     final mesNombre = DateFormatter.obtenerNombreMes(gastoProvider.selectedMonth);
     final anio = gastoProvider.selectedYear;
 
@@ -129,6 +175,9 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
     final suma = _sumaCategorias;
     final disponible = gen - suma;
     final bool exceeded = _isExceeded;
+    final prefix = _selectedMoneda == 'VES' ? 'Bs. ' : '\$ ';
+
+    String fmt(double monto) => CurrencyFormatter.formatAmount(monto, _selectedMoneda);
 
     return Padding(
       padding: EdgeInsets.only(
@@ -158,7 +207,7 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                     Text(
                       'Presupuestos ($mesNombre $anio)',
                       style: const TextStyle(
-                        fontSize: 17,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: AppColors.textPrimary,
                       ),
@@ -172,7 +221,82 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
               ],
             ),
             const Divider(color: AppColors.border),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
+
+            // Selector de Moneda (USD / VES)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Moneda del presupuesto:',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.cardLighter,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  padding: const EdgeInsets.all(2),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      InkWell(
+                        key: const Key('budget_currency_usd_btn'),
+                        onTap: () => _cambiarMoneda('USD', settings.tasaCambioVesUsd),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: _selectedMoneda == 'USD' ? AppColors.surface : Colors.transparent,
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: _selectedMoneda == 'USD'
+                                ? [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 4)]
+                                : null,
+                          ),
+                          child: Text(
+                            'USD',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: _selectedMoneda == 'USD' ? FontWeight.bold : FontWeight.normal,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ),
+                      ),
+                      InkWell(
+                        key: const Key('budget_currency_ves_btn'),
+                        onTap: () => _cambiarMoneda('VES', settings.tasaCambioVesUsd),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: _selectedMoneda == 'VES' ? AppColors.surface : Colors.transparent,
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: _selectedMoneda == 'VES'
+                                ? [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 4)]
+                                : null,
+                          ),
+                          child: Text(
+                            'VES',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: _selectedMoneda == 'VES' ? FontWeight.bold : FontWeight.normal,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
 
             Expanded(
               child: ListView(
@@ -188,9 +312,9 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Presupuesto General Mensual (USD)',
-                          style: TextStyle(
+                        Text(
+                          'Presupuesto General Mensual ($_selectedMoneda)',
+                          style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                             color: AppColors.textPrimary,
@@ -202,7 +326,7 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                           controller: _generalBudgetCtrl,
                           keyboardType: const TextInputType.numberWithOptions(decimal: true),
                           decoration: InputDecoration(
-                            prefixText: '\$ ',
+                            prefixText: prefix,
                             hintText: '0.00',
                             filled: true,
                             fillColor: AppColors.cardLighter,
@@ -226,13 +350,13 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Asignado: ${CurrencyFormatter.formatUsd(suma)}',
+                                'Asignado: ${fmt(suma)}',
                                 style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
                               ),
                               Text(
                                 exceeded
-                                    ? 'Exceso: ${CurrencyFormatter.formatUsd(suma - gen)}'
-                                    : 'Disponible: ${CurrencyFormatter.formatUsd(disponible)}',
+                                    ? 'Exceso: ${fmt(suma - gen)}'
+                                    : 'Disponible: ${fmt(disponible)}',
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
@@ -258,7 +382,7 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                                 const SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
-                                    'La suma de categorías (${CurrencyFormatter.formatUsd(suma)}) supera el presupuesto general (${CurrencyFormatter.formatUsd(gen)}). Ajusta los montos.',
+                                    'La suma de categorías (${fmt(suma)}) supera el presupuesto general (${fmt(gen)}). Ajusta los montos.',
                                     style: const TextStyle(color: AppColors.error, fontSize: 11, fontWeight: FontWeight.bold),
                                   ),
                                 ),
@@ -282,9 +406,9 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Define un límite para cada categoría. Las que dejes vacías o en \$0 no se mostrarán.',
-                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                  Text(
+                    'Define un límite para cada categoría. Las que dejes vacías o en 0 no se mostrarán.',
+                    style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
                   ),
                   const SizedBox(height: 10),
 
@@ -303,11 +427,16 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                       child: Row(
                         children: [
                           Container(
-                            width: 12,
-                            height: 12,
+                            width: 26,
+                            height: 26,
                             decoration: BoxDecoration(
-                              color: color,
+                              color: color.withOpacity(0.12),
                               shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              CategoryChart.getCategoryIcon(cat),
+                              size: 14,
+                              color: color,
                             ),
                           ),
                           const SizedBox(width: 10),
@@ -322,13 +451,13 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                             ),
                           ),
                           SizedBox(
-                            width: 100,
+                            width: 110,
                             child: TextField(
                               key: Key('input_presupuesto_categoria_$cat'),
                               controller: ctrl,
                               keyboardType: const TextInputType.numberWithOptions(decimal: true),
                               decoration: InputDecoration(
-                                prefixText: '\$ ',
+                                prefixText: prefix,
                                 hintText: '0',
                                 filled: true,
                                 fillColor: AppColors.cardLighter,
