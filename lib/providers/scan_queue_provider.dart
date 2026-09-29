@@ -4,6 +4,7 @@ import '../data/datasources/local/database_helper.dart';
 import '../data/datasources/remote/gemini_service.dart';
 import '../data/models/gemini_extraction_result.dart';
 import '../services/image_service.dart';
+import '../services/notification_service.dart';
 import 'dart:io';
 
 class ScanQueueProvider with ChangeNotifier {
@@ -44,6 +45,15 @@ class ScanQueueProvider with ChangeNotifier {
   Future<void> loadReadyItems() async {
     _readyItems = await _dbHelper.getReadyScanQueueItems();
     notifyListeners();
+    
+    if (_readyItems.isNotEmpty) {
+      NotificationService.instance.schedulePendingReviewReminder(
+        count: _readyItems.length,
+        duration: const Duration(hours: 2),
+      );
+    } else {
+      NotificationService.instance.cancelPendingReviewReminder();
+    }
   }
 
   Future<void> loadPendingItems() async {
@@ -153,6 +163,7 @@ class ScanQueueProvider with ChangeNotifier {
           await _dbHelper.deleteScanQueueItem(id);
         }
         await loadPendingItems();
+        await loadReadyItems();
       }
       await loadReadyItems();
     } finally {

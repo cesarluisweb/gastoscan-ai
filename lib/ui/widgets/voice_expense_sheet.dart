@@ -60,7 +60,7 @@ class _VoiceExpenseSheetState extends State<VoiceExpenseSheet> {
               setState(() {
                 _isListening = false;
                 if (_transcribedText.isNotEmpty) {
-                  _statusMessage = 'Dictado listo. Toca "Procesar Gasto"';
+                  _statusMessage = 'Pausado. Puedes continuar o procesar.';
                 } else {
                   _statusMessage = 'Toca el micrófono para hablar';
                 }
@@ -100,9 +100,14 @@ class _VoiceExpenseSheetState extends State<VoiceExpenseSheet> {
   Future<void> _startListening() async {
     if (!_speechAvailable) return;
 
+    String previousText = _transcribedText;
+    if (previousText.isNotEmpty && !previousText.endsWith(' ')) {
+      previousText += ' ';
+    }
+
     setState(() {
       _isListening = true;
-      _statusMessage = 'Escuchando... habla ahora';
+      _statusMessage = 'Escuchando... toca el micrófono para pausar';
     });
 
     await _speech.listen(
@@ -110,12 +115,12 @@ class _VoiceExpenseSheetState extends State<VoiceExpenseSheet> {
       onResult: (val) {
         if (mounted) {
           setState(() {
-            _transcribedText = val.recognizedWords;
+            _transcribedText = previousText + val.recognizedWords;
           });
         }
       },
-      listenFor: const Duration(seconds: 30),
-      pauseFor: const Duration(seconds: 4),
+      listenFor: const Duration(seconds: 60),
+      pauseFor: const Duration(seconds: 10),
     );
   }
 
@@ -125,7 +130,7 @@ class _VoiceExpenseSheetState extends State<VoiceExpenseSheet> {
       setState(() {
         _isListening = false;
         if (_transcribedText.isNotEmpty) {
-          _statusMessage = 'Dictado completado';
+          _statusMessage = 'Pausado. Puedes continuar o procesar.';
         } else {
           _statusMessage = 'Toca el micrófono para hablar';
         }

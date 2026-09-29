@@ -214,4 +214,60 @@ class NotificationService {
     _lastActivityTime = DateTime.now();
     await scheduleInactivityReminder(duration: const Duration(days: 3));
   }
+
+  /// Cancela cualquier recordatorio de facturas pendientes de revisión.
+  Future<void> cancelPendingReviewReminder() async {
+    try {
+      await _notificationsPlugin.cancel(1002);
+    } catch (e) {
+      debugPrint('NotificationService: Excepción al cancelar recordatorio de pendientes: $e');
+    }
+  }
+
+  /// Programa un recordatorio para revisar facturas pendientes.
+  Future<void> schedulePendingReviewReminder({
+    Duration duration = const Duration(hours: 2),
+    int count = 1,
+  }) async {
+    await cancelPendingReviewReminder();
+
+    final scheduledDate = DateTime.now().add(duration);
+
+    try {
+      final scheduledTzDate = tz.TZDateTime.from(scheduledDate, tz.local);
+
+      const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+        'pending_reviews',
+        'Facturas Pendientes',
+        channelDescription: 'Recordatorios para revisar facturas procesadas',
+        importance: Importance.high,
+        priority: Priority.high,
+        icon: '@mipmap/ic_launcher',
+      );
+
+      const DarwinNotificationDetails darwinDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      );
+
+      const NotificationDetails notificationDetails = NotificationDetails(
+        android: androidDetails,
+        iOS: darwinDetails,
+      );
+
+      await _notificationsPlugin.zonedSchedule(
+        1002,
+        '¡Tienes facturas listas!',
+        'Tienes $count factura(s) esperando revisión para sumarse a este mes.',
+        scheduledTzDate,
+        notificationDetails,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+      );
+    } catch (e) {
+      debugPrint('NotificationService: Excepción al programar recordatorio de pendientes: $e');
+    }
+  }
 }

@@ -13,6 +13,7 @@ import '../../services/notification_service.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/category_chart.dart';
 import '../widgets/expense_card.dart';
+import '../widgets/pending_expense_card.dart';
 import '../widgets/budget_bottom_sheet.dart';
 import '../widgets/ai_insight_card.dart';
 import 'scan_screen.dart';
@@ -92,8 +93,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             if (scanQueue.isProcessing || scanQueue.pendingItems.isNotEmpty)
               _buildProcessingBanner(context, scanQueue),
-            if (scanQueue.readyItems.isNotEmpty)
-              _buildQueueBanner(context, scanQueue),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -240,12 +239,57 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: CircularProgressIndicator(color: AppColors.primary),
                 ),
               )
-            else if (gastoProvider.gastos.isEmpty)
+            else if (gastoProvider.gastos.isEmpty && scanQueue.readyItems.isEmpty)
               _buildEmptyState()
             else ...() {
+              final List<Widget> cards = [];
+
+              for (final item in scanQueue.readyItems) {
+                Map<String, dynamic> data = {};
+                if (item['extracted_data'] != null) {
+                  data = Map<String, dynamic>.from(jsonDecode(item['extracted_data']));
+                }
+                final result = GeminiExtractionResult.fromJson(data);
+                final file = File(item['image_path']);
+                
+                final dummyGasto = GastoModel(
+                  uuid: 'pending_${item['id']}',
+                  fecha: result.fecha ?? DateTime.now().toIso8601String().substring(0, 10),
+                  comercio: result.comercio ?? 'Comercio Desconocido',
+                  moneda: result.moneda ?? 'VES',
+                  totalOriginal: ((result.totalOriginal ?? 0) * 100).round(),
+                  totalUsd: 0,
+                  tasaCambio: result.tasaCambioDetectada ?? 1.0,
+                  categoria: 'Pendiente',
+                  items: result.items ?? [],
+                );
+
+                cards.add(
+                  PendingExpenseCard(
+                    key: ValueKey('pending_${item['id']}'),
+                    gasto: dummyGasto,
+                    monedaPrincipal: settings.monedaPrincipal,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ReviewExpenseScreen(
+                            imageFile: file.existsSync() ? file : null,
+                            extractedData: result,
+                            queueItemId: item['id'],
+                          ),
+                        ),
+                      ).then((_) {
+                        scanQueue.loadReadyItems();
+                      });
+                    },
+                  ),
+                );
+              }
+
               final displayedGastos = gastoProvider.gastos.take(5).toList();
 
-              final cards = displayedGastos.map<Widget>((gasto) {
+              cards.addAll(displayedGastos.map<Widget>((gasto) {
                 return ExpenseCard(
                   key: ValueKey(gasto.id ?? gasto.comercio),
                   gasto: gasto,
@@ -471,59 +515,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
-  Widget _buildQueueBanner(BuildContext context, ScanQueueProvider scanQueue) {
-    return GestureDetector(
-      key: const Key('ready_queue_banner'),
-      onTap: () {
-        // Al tocar, abrir el primero listo
-        final item = scanQueue.readyItems.first;
-        final data = jsonDecode(item['extracted_data']);
-        final result = GeminiExtractionResult.fromJson(data);
-        final file = File(item['image_path']);
-
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ReviewExpenseScreen(
-              imageFile: file.existsSync() ? file : null,
-              extractedData: result,
-              queueItemId: item['id'], // Pasamos el ID para borrarlo luego
-            ),
-          ),
-        ).then((_) {
-          // Actualizar lista si canceló o guardó
-          scanQueue.loadReadyItems();
-        });
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.primaryLight,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.primary),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.notifications_active, color: AppColors.primaryDark),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Tienes ${scanQueue.readyItems.length} factura(s) en cola listas para revisar.',
-                style: const TextStyle(
-                  color: AppColors.secondary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            const Icon(Icons.chevron_right, color: AppColors.primaryDark),
-          ],
-        ),
-      ),
-    );
-  }
-
 
   void _mostrarPickerMes(BuildContext context, GastoProvider gastoProvider) {
     int tempAnio = gastoProvider.selectedYear;

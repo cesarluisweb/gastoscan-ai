@@ -1,11 +1,16 @@
+import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../providers/gasto_provider.dart';
 import '../../providers/settings_provider.dart';
+import '../../providers/scan_queue_provider.dart';
 import '../../data/models/gasto_model.dart';
+import '../../data/models/gemini_extraction_result.dart';
 import '../widgets/expense_card.dart';
+import '../widgets/pending_expense_card.dart';
 import 'review_expense_screen.dart';
 
 class ExpenseHistoryScreen extends StatefulWidget {
@@ -69,6 +74,8 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
     final mesNombre = DateFormatter.getMonthName(gastoProvider.selectedMonth);
     final anio = gastoProvider.selectedYear;
 
+    final scanQueue = Provider.of<ScanQueueProvider>(context);
+
     // Filtrar gastos por búsqueda
     final query = _normalizeText(_searchQuery.trim());
     final filteredGastos = gastoProvider.gastos.where((gasto) {
@@ -77,9 +84,40 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
       final matchItems = gasto.items.any((item) => _normalizeText(item.descripcion).contains(query));
       return matchComercio || matchItems;
     }).toList();
+    
+    // Crear borradores pendientes si no hay búsqueda activa (o si deciden buscar en pendientes)
+    final List<GastoModel> pendingGastos = [];
+    for (final item in scanQueue.readyItems) {
+      Map<String, dynamic> data = {};
+      if (item['extracted_data'] != null) {
+        data = Map<String, dynamic>.from(jsonDecode(item['extracted_data']));
+      }
+      final result = GeminiExtractionResult.fromJson(data);
+      
+      final dummyGasto = GastoModel(
+        uuid: 'pending_${item['id']}',
+        fecha: result.fecha ?? DateTime.now().toIso8601String().substring(0, 10),
+        comercio: result.comercio ?? 'Comercio Desconocido',
+        moneda: result.moneda ?? 'VES',
+        totalOriginal: ((result.totalOriginal ?? 0) * 100).round(),
+        totalUsd: 0,
+        tasaCambio: result.tasaCambioDetectada ?? 1.0,
+        categoria: 'Pendiente',
+        items: result.items ?? [],
+      );
+
+      if (query.isEmpty) {
+         pendingGastos.add(dummyGasto);
+      } else {
+         final matchComercio = _normalizeText(dummyGasto.comercio).contains(query);
+         final matchItems = dummyGasto.items.any((it) => _normalizeText(it.descripcion).contains(query));
+         if (matchComercio || matchItems) pendingGastos.add(dummyGasto);
+      }
+    }
 
     // Ordenar descendente y agrupar por fecha
-    final sortedGastos = List<GastoModel>.from(filteredGastos)
+    final allGastos = [...pendingGastos, ...filteredGastos];
+    final sortedGastos = List<GastoModel>.from(allGastos)
       ..sort((a, b) => b.fecha.compareTo(a.fecha));
 
     final Map<String, List<GastoModel>> groupedGastos = {};
@@ -202,50 +240,88 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
                               ),
                             ),
                             for (final gasto in entry.value)
-                              ExpenseCard(
-                                key: ValueKey('history_${gasto.id ?? gasto.comercio}_${gasto.uuid}'),
-                                gasto: gasto,
-                                monedaPrincipal: settings.monedaPrincipal,
-                                onEdit: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => ReviewExpenseScreen(
-                                        existingGasto: gasto,
-                                      ),
-                                    ),
+                              if (gasto.categoria == 'Pendiente' && gasto.uuid.startsWith('pending_'))
+                                (() {
+                                  final queueItemId = int.parse(gasto.uuid.split('_')[1]);
+                                  final item = scanQueue.readyItems.firstWhere(
+                                    (e) => e['id'] == queueItemId,
+                                    orElse: () => <String, dynamic>{},
                                   );
-                                },
-                                onDelete: () async {
-                                  final confirm = await showDialog<bool>(
-                                    context: context,
-                                    builder: (ctx) => AlertDialog(
-                                      backgroundColor: AppColors.card,
-                                      title: const Text('Eliminar Factura',
-                                          style: TextStyle(color: AppColors.textPrimary)),
-                                      content: Text(
-                                        '¿Deseas eliminar el gasto de "${gasto.comercio}"?',
-                                        style: const TextStyle(color: AppColors.textSecondary),
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () => Navigator.pop(ctx, false),
-                                          child: const Text('Cancelar',
-                                              style: TextStyle(color: AppColors.textSecondary)),
-                                        ),
-                                        TextButton(
-                                          onPressed: () => Navigator.pop(ctx, true),
-                                          child: const Text('Eliminar',
-                                              style: TextStyle(color: AppColors.error)),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                  if (confirm == true && gasto.id != null) {
-                                    gastoProvider.eliminarGasto(gasto.id!);
+                                  
+                                  if (item.isEmpty) return const SizedBox.shrink();
+
+                                  Map<String, dynamic> data = {};
+                                  if (item['extracted_data'] != null) {
+                                    data = Map<String, dynamic>.from(jsonDecode(item['extracted_data']));
                                   }
-                                },
-                              ),
+                                  final result = GeminiExtractionResult.fromJson(data);
+                                  final file = File(item['image_path']);
+                                  
+                                  return PendingExpenseCard(
+                                    key: ValueKey('history_${gasto.uuid}'),
+                                    gasto: gasto,
+                                    monedaPrincipal: settings.monedaPrincipal,
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => ReviewExpenseScreen(
+                                            imageFile: file.existsSync() ? file : null,
+                                            extractedData: result,
+                                            queueItemId: queueItemId,
+                                          ),
+                                        ),
+                                      ).then((_) {
+                                        scanQueue.loadReadyItems();
+                                      });
+                                    },
+                                  );
+                                })()
+                              else
+                                ExpenseCard(
+                                  key: ValueKey('history_${gasto.id ?? gasto.comercio}_${gasto.uuid}'),
+                                  gasto: gasto,
+                                  monedaPrincipal: settings.monedaPrincipal,
+                                  onEdit: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => ReviewExpenseScreen(
+                                          existingGasto: gasto,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  onDelete: () async {
+                                    final confirm = await showDialog<bool>(
+                                      context: context,
+                                      builder: (ctx) => AlertDialog(
+                                        backgroundColor: AppColors.card,
+                                        title: const Text('Eliminar Factura',
+                                            style: TextStyle(color: AppColors.textPrimary)),
+                                        content: Text(
+                                          '¿Deseas eliminar el gasto de "${gasto.comercio}"?',
+                                          style: const TextStyle(color: AppColors.textSecondary),
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(ctx, false),
+                                            child: const Text('Cancelar',
+                                                style: TextStyle(color: AppColors.textSecondary)),
+                                          ),
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(ctx, true),
+                                            child: const Text('Eliminar',
+                                                style: TextStyle(color: AppColors.error)),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                    if (confirm == true && gasto.id != null) {
+                                      gastoProvider.eliminarGasto(gasto.id!);
+                                    }
+                                  },
+                                ),
                           ],
                         ],
                       ),
