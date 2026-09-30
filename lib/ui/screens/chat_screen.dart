@@ -11,10 +11,48 @@ import '../../data/datasources/local/database_helper.dart';
 import '../../data/models/shopping_item_model.dart';
 import '../../core/utils/uuid_generator.dart';
 
+class ChatSuggestion {
+  final String label;
+  final IconData icon;
+  const ChatSuggestion({required this.label, required this.icon});
+}
+
+const List<ChatSuggestion> kDefaultChatSuggestions = [
+  ChatSuggestion(
+    label: '¿Cuánto he gastado este mes?',
+    icon: Icons.account_balance_wallet_outlined,
+  ),
+  ChatSuggestion(
+    label: '¿En qué categoría he gastado más?',
+    icon: Icons.pie_chart_outline,
+  ),
+  ChatSuggestion(
+    label: '¿Qué tengo en mi lista de compras?',
+    icon: Icons.checklist_rounded,
+  ),
+  ChatSuggestion(
+    label: '¿Cómo voy con mi presupuesto?',
+    icon: Icons.savings_outlined,
+  ),
+  ChatSuggestion(
+    label: 'Dame un resumen de mis gastos',
+    icon: Icons.analytics_outlined,
+  ),
+];
+
 class ChatScreen extends StatefulWidget {
   final bool showBackButton;
   final VoidCallback? onBack;
-  const ChatScreen({Key? key, this.showBackButton = false, this.onBack}) : super(key: key);
+  final GeminiService? geminiService;
+  final DatabaseHelper? dbHelper;
+
+  const ChatScreen({
+    Key? key,
+    this.showBackButton = false,
+    this.onBack,
+    this.geminiService,
+    this.dbHelper,
+  }) : super(key: key);
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -23,7 +61,9 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final List<Map<String, String>> _messages = [];
   final TextEditingController _textCtrl = TextEditingController();
-  final GeminiService _geminiService = GeminiService();
+  final ScrollController _scrollController = ScrollController();
+  late final GeminiService _geminiService;
+  late final DatabaseHelper _dbHelper;
   final stt.SpeechToText _speech = stt.SpeechToText();
   bool _isLoading = false;
   bool _isListening = false;
@@ -32,6 +72,8 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    _geminiService = widget.geminiService ?? GeminiService();
+    _dbHelper = widget.dbHelper ?? DatabaseHelper.instance;
     _messages.add({
       'role': 'assistant',
       'text': 'Puedo ayudarte con lo que necesites dentro de Rinde Más: responder preguntas sobre tus gastos del mes o registrar compras directamente. ¿Qué deseas consultar?',
@@ -45,6 +87,7 @@ class _ChatScreenState extends State<ChatScreen> {
       _speech.stop();
     } catch (_) {}
     _textCtrl.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -117,23 +160,41 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  Future<void> _sendMessage() async {
-    final text = _textCtrl.text.trim();
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  Future<void> _sendMessage([String? textOverride]) async {
+    final text = (textOverride ?? _textCtrl.text).trim();
     if (text.isEmpty) return;
 
     setState(() {
       _messages.add({'role': 'user', 'text': text});
-      _textCtrl.clear();
+      if (textOverride == null) {
+        _textCtrl.clear();
+      }
       _isLoading = true;
     });
+    _scrollToBottom();
 
     try {
       final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
-      final shoppingItems = await DatabaseHelper.instance.getAllShoppingItems();
+      final shoppingItems = await _dbHelper.getAllShoppingItems();
       final contextData = {
         'gastos_mes': gastoProvider.gastos.map((g) => g.toMap()).toList(),
         'total_usd': gastoProvider.totalMesUsd,
         'total_ves': gastoProvider.totalMesVes,
+        'presupuesto_general': gastoProvider.presupuestoGeneral,
+        'moneda_presupuesto': gastoProvider.monedaPresupuesto,
+        'presupuestos_categoria': gastoProvider.presupuestosPorCategoria,
         'lista_compras': shoppingItems.map((e) => {
           'id': e.id,
           'nombre': e.name,
@@ -202,7 +263,7 @@ class _ChatScreenState extends State<ChatScreen> {
           for (final n in nombres) {
             final nombreStr = n.toString().trim();
             if (nombreStr.isNotEmpty) {
-              await DatabaseHelper.instance.insertShoppingItem(
+              await _dbHelper.insertShoppingItem(
                 ShoppingItemModel(
                   name: nombreStr,
                   createdAt: DateTime.now().toIso8601String(),
@@ -229,7 +290,7 @@ class _ChatScreenState extends State<ChatScreen> {
           final args = call['args'] as Map;
           final String nombreActual = (args['nombre_actual'] ?? args['nombre'] ?? '').toString().trim().toLowerCase();
           final String nuevoNombre = (args['nuevo_nombre'] ?? '').toString().trim();
-          final allItems = await DatabaseHelper.instance.getAllShoppingItems();
+          final allItems = await _dbHelper.getAllShoppingItems();
           ShoppingItemModel? match;
           for (final item in allItems) {
             final iname = item.name.toLowerCase();
@@ -241,7 +302,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
           setState(() {
             if (match != null && match.id != null && nuevoNombre.isNotEmpty) {
-              DatabaseHelper.instance.updateShoppingItemName(match.id!, nuevoNombre);
+              _dbHelper.updateShoppingItemName(match.id!, nuevoNombre);
               _messages.add({
                 'role': 'assistant',
                 'text': 'Cambié "${match.name}" por "$nuevoNombre" en tu lista de compras.',
@@ -256,7 +317,7 @@ class _ChatScreenState extends State<ChatScreen> {
         } else if (callName == 'eliminar_items_lista_compras') {
           final args = call['args'] as Map;
           final List nombres = args['nombres'] ?? (args['nombre'] != null ? [args['nombre']] : []);
-          final allItems = await DatabaseHelper.instance.getAllShoppingItems();
+          final allItems = await _dbHelper.getAllShoppingItems();
           final List<String> eliminados = [];
           for (final n in nombres) {
             final target = n.toString().trim().toLowerCase();
@@ -264,7 +325,7 @@ class _ChatScreenState extends State<ChatScreen> {
               final iname = item.name.toLowerCase();
               if (iname == target || iname.contains(target) || target.contains(iname)) {
                 if (item.id != null && !eliminados.contains(item.name)) {
-                  await DatabaseHelper.instance.deleteShoppingItem(item.id!);
+                  await _dbHelper.deleteShoppingItem(item.id!);
                   eliminados.add(item.name);
                   break;
                 }
@@ -288,7 +349,7 @@ class _ChatScreenState extends State<ChatScreen> {
           final args = call['args'] as Map;
           final List nombres = args['nombres'] ?? (args['nombre'] != null ? [args['nombre']] : []);
           final bool comprado = args['comprado'] ?? true;
-          final allItems = await DatabaseHelper.instance.getAllShoppingItems();
+          final allItems = await _dbHelper.getAllShoppingItems();
           final List<String> modificados = [];
           for (final n in nombres) {
             final target = n.toString().trim().toLowerCase();
@@ -296,7 +357,7 @@ class _ChatScreenState extends State<ChatScreen> {
               final iname = item.name.toLowerCase();
               if (iname == target || iname.contains(target) || target.contains(iname)) {
                 if (item.id != null && !modificados.contains(item.name)) {
-                  await DatabaseHelper.instance.updateShoppingItemStatus(item.id!, comprado);
+                  await _dbHelper.updateShoppingItemStatus(item.id!, comprado);
                   modificados.add(item.name);
                   break;
                 }
@@ -332,6 +393,7 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() {
         _isLoading = false;
       });
+      _scrollToBottom();
     }
   }
 
@@ -387,6 +449,7 @@ class _ChatScreenState extends State<ChatScreen> {
         children: [
           Expanded(
             child: ListView.builder(
+              controller: _scrollController,
               padding: const EdgeInsets.all(16),
               itemCount: _messages.length,
               itemBuilder: (context, index) {
@@ -419,6 +482,43 @@ class _ChatScreenState extends State<ChatScreen> {
               padding: EdgeInsets.all(8.0),
               child: CircularProgressIndicator(),
             ),
+          Container(
+            height: 40,
+            margin: const EdgeInsets.only(bottom: 8),
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: kDefaultChatSuggestions.length,
+              separatorBuilder: (context, index) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                final suggestion = kDefaultChatSuggestions[index];
+                return ActionChip(
+                  key: Key('chat_suggestion_chip_$index'),
+                  avatar: Icon(
+                    suggestion.icon,
+                    size: 16,
+                    color: _isLoading ? AppColors.textMuted : AppColors.secondary,
+                  ),
+                  label: Text(
+                    suggestion.label,
+                    style: TextStyle(
+                      color: _isLoading ? AppColors.textMuted : AppColors.textPrimary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  backgroundColor: AppColors.surface,
+                  side: BorderSide(
+                    color: _isLoading ? AppColors.divider : AppColors.border,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  onPressed: _isLoading ? null : () => _sendMessage(suggestion.label),
+                );
+              },
+            ),
+          ),
           Container(
             padding: const EdgeInsets.only(left: 8, right: 8, top: 8, bottom: 40),
             color: AppColors.surface,
