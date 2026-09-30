@@ -68,4 +68,13 @@ La compilación en GitHub Actions (`build_apk.yml`) ejecuta `flutter create`, lo
   > *"¿Deseas agregarlo a tu lista de compras o registrarlo como un gasto realizado?"*
 - **Herramientas de Lista de Compras:** Cuando el usuario indique explícitamente agregar, modificar, eliminar o tachar de la lista de compras, el asistente invocará las funciones correspondientes (`agregar_items_lista_compras`, `modificar_item_lista_compras`, `eliminar_items_lista_compras`, `marcar_items_lista_compras`) y confirmará la acción con naturalidad y brevedad en español.
 
+## 13. Landing Page y Presencia Web (Astro + Firebase Hosting)
+- **Despliegue Independiente (No Automatizado por Git):** Hacer `git push` NO actualiza la landing page (`rindemas.cesarluis.com`). Toda modificación en `landing/` requiere compilación estática y despliegue explícito a Firebase Hosting.
+- **Flujo de Compilación y Despliegue Obligatorio:**
+  1. Compilar Astro con telemetría desactivada: en la carpeta `landing/`, ejecutar `$env:ASTRO_TELEMETRY_DISABLED="1"; .\node_modules\.bin\astro.cmd build`.
+  2. Desplegar a Firebase Hosting: desde la raíz del proyecto, ejecutar `firebase.cmd deploy --only hosting --non-interactive`. El parámetro `--non-interactive` es **estrictamente obligatorio** en Windows para evitar bloqueos indefinidos del proceso en PowerShell.
+  3. Verificación en vivo: Comprobar el despliegue con `curl.exe -s https://rindemas.cesarluis.com` antes de confirmar al usuario.
+- **Mockups de la Aplicación:** Todo mockup o representación gráfica de la aplicación en la web DEBE tener chasis y proporción de smartphone (teléfono móvil vertical ~20:9 con bordes redondeados y altavoz), quedando prohibido el formato tablet o de escritorio.
+- **Paleta de Colores Web:** Usar estrictamente la paleta oficial de Rinde Más: amarillo (`#FACC15` / `#EAB308`) para acentos y botones, fondos limpios (`#F8FAFC` / `#FFFFFF`) y textos oscuros legibles (`#0F172A` / `#334155`). Prohibido el uso de colores naranjas.
+
 
