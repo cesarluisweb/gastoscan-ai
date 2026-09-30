@@ -293,78 +293,142 @@ import '../styles/global.css';
         </div>
     </div>
 
-    <!-- Modal: Registrar Gasto Rápido -->
-    <div id="modal-expense" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 max-h-[90vh] flex flex-col">
-            <div class="flex justify-between items-center pb-4 border-b border-slate-100">
-                <h3 class="font-bold text-lg text-slate-900">Registrar Factura o Gasto</h3>
-                <button id="btn-close-expense-modal" class="text-slate-400 hover:text-slate-700 text-xl font-bold">✕</button>
+    <!-- Modal: Registrar Gasto (Mismos campos que la app móvil) -->
+    <div id="modal-expense" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4">
+        <div class="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-slate-200 max-h-[92vh] flex flex-col overflow-hidden">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-white">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">🧾</span>
+                    <h3 class="font-bold text-lg text-slate-900">Registrar gasto</h3>
+                </div>
+                <button id="btn-close-expense-modal" class="text-slate-400 hover:text-slate-700 text-xl font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors">✕</button>
             </div>
 
-            <div class="py-4 space-y-3">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Comercio o Lugar</label>
-                    <input 
-                        id="modal-exp-comercio" 
-                        type="text" 
-                        placeholder="Ej. Farmatodo, Panadería..." 
-                        class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 text-slate-900 focus:ring-2 focus:ring-[#FACC15] focus:outline-none"
-                    />
+            <!-- Modal Body (Scrollable) -->
+            <div class="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4">
+                
+                <!-- Sección 1: Información General -->
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
+                    <h4 class="text-sm font-bold text-slate-900">Información General</h4>
+
+                    <!-- Comercio o Beneficiario -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Comercio o Beneficiario</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-sm">🏪</span>
+                            <input 
+                                id="modal-exp-comercio" 
+                                type="text" 
+                                placeholder="Comercio o Beneficiario" 
+                                class="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-[#FACC15] focus:outline-none"
+                            />
+                        </div>
+                    </div>
+
+                    <!-- Fecha de gasto -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Fecha de gasto</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-sm">📅</span>
+                            <input 
+                                id="modal-exp-fecha" 
+                                type="date" 
+                                class="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-[#FACC15] focus:outline-none"
+                            />
+                        </div>
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <!-- Sección 2: Desglose de Ítems -->
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h4 class="text-sm font-bold text-slate-900">Desglose de Ítems</h4>
+                        <span id="items-count-badge" class="text-xs text-slate-400 font-medium">0 ítems</span>
+                    </div>
+
+                    <!-- Lista Dinámica de Ítems -->
+                    <div id="modal-exp-items-list" class="space-y-3">
+                        <!-- Inyectado por JS -->
+                    </div>
+
+                    <!-- Botón único ancho completo al final -->
+                    <button 
+                        type="button" 
+                        id="btn-add-item" 
+                        class="w-full py-2.5 px-4 rounded-xl border border-dashed border-slate-300 hover:border-slate-400 bg-white hover:bg-slate-100 font-semibold text-xs sm:text-sm text-slate-700 flex items-center justify-center gap-1.5 transition-all shadow-sm"
+                    >
+                        <span class="text-base text-[#EAB308] font-bold">+</span>
+                        <span>Agregar otro ítem</span>
+                    </button>
+                </div>
+
+                <!-- Sección 3: Monto Total -->
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
+                    <h4 class="text-sm font-bold text-slate-900">Monto Total</h4>
+
+                    <!-- Selector de Moneda -->
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Monto</label>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">Moneda</label>
+                        <div class="flex p-1 bg-slate-200/80 rounded-xl max-w-xs">
+                            <button 
+                                type="button" 
+                                id="btn-currency-usd" 
+                                class="flex-1 py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-slate-900 shadow-sm"
+                            >
+                                USD
+                            </button>
+                            <button 
+                                type="button" 
+                                id="btn-currency-ves" 
+                                class="flex-1 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 transition-all"
+                            >
+                                VES
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Campo de Tasa de Cambio (visible si es VES) -->
+                    <div id="container-tasa-cambio" class="hidden">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Tasa de cambio (BCV)</label>
                         <input 
-                            id="modal-exp-monto" 
+                            id="modal-exp-tasa" 
+                            type="number" 
+                            step="0.01" 
+                            min="0.01" 
+                            placeholder="Ej. 36.50" 
+                            class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-[#FACC15] focus:outline-none"
+                        />
+                        <span id="tasa-fuente-label" class="text-[10px] text-slate-400 mt-0.5 block">Tasa oficial BCV</span>
+                    </div>
+
+                    <!-- Input Monto Total -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label id="label-monto-total" class="text-xs font-semibold text-slate-600">Monto Total (USD)</label>
+                            <span id="label-monto-usd-equiv" class="text-xs text-slate-500 font-medium hidden">≈ $0.00 USD</span>
+                        </div>
+                        <input 
+                            id="modal-exp-total" 
                             type="number" 
                             step="0.01" 
                             min="0" 
                             placeholder="0.00" 
-                            class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 font-bold text-slate-900 focus:ring-2 focus:ring-[#FACC15] focus:outline-none"
+                            class="w-full px-3 py-2.5 text-base font-extrabold text-slate-900 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#FACC15] focus:outline-none"
                         />
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Moneda</label>
-                        <select id="modal-exp-moneda" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 bg-slate-50 font-medium text-slate-800">
-                            <option value="USD">USD ($)</option>
-                            <option value="VES">VES (Bs.)</option>
-                        </select>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Categoría</label>
-                        <select id="modal-exp-categoria" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 bg-slate-50 text-slate-800">
-                            <option value="Alimentos">Alimentos</option>
-                            <option value="Transporte">Transporte</option>
-                            <option value="Servicios">Servicios</option>
-                            <option value="Salud">Salud</option>
-                            <option value="Entretenimiento">Entretenimiento</option>
-                            <option value="Hogar">Hogar</option>
-                            <option value="Educación">Educación</option>
-                            <option value="Ropa">Ropa</option>
-                            <option value="Otros">Otros</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Fecha</label>
-                        <input 
-                            id="modal-exp-fecha" 
-                            type="date" 
-                            class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 text-slate-800"
-                        />
-                    </div>
-                </div>
             </div>
 
-            <div class="pt-4 border-t border-slate-100 flex justify-end gap-2">
-                <button id="btn-cancel-expense-modal" class="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-all">
-                    Cancelar
-                </button>
-                <button id="btn-save-expense-modal" class="px-5 py-2 text-sm font-bold text-slate-900 bg-[#FACC15] hover:bg-[#EAB308] rounded-xl shadow-sm transition-all">
-                    Guardar Factura
+            <!-- Footer: Guardar Gasto -->
+            <div class="p-4 sm:p-5 border-t border-slate-100 bg-white">
+                <button 
+                    type="button" 
+                    id="btn-save-expense-modal" 
+                    class="w-full py-3.5 bg-[#FACC15] hover:bg-[#EAB308] text-slate-900 font-bold rounded-2xl shadow-sm text-base transition-all flex items-center justify-center gap-2"
+                >
+                    <span>Guardar Gasto</span>
                 </button>
             </div>
         </div>
@@ -495,13 +559,19 @@ import '../styles/global.css';
         const modalExpense = document.getElementById('modal-expense');
         const btnOpenExpenseModal = document.getElementById('btn-open-expense-modal');
         const btnCloseExpenseModal = document.getElementById('btn-close-expense-modal');
-        const btnCancelExpenseModal = document.getElementById('btn-cancel-expense-modal');
         const btnSaveExpenseModal = document.getElementById('btn-save-expense-modal');
         const modalExpComercio = document.getElementById('modal-exp-comercio');
-        const modalExpMonto = document.getElementById('modal-exp-monto');
-        const modalExpMoneda = document.getElementById('modal-exp-moneda');
-        const modalExpCategoria = document.getElementById('modal-exp-categoria');
         const modalExpFecha = document.getElementById('modal-exp-fecha');
+        const modalExpItemsList = document.getElementById('modal-exp-items-list');
+        const btnAddItem = document.getElementById('btn-add-item');
+        const itemsCountBadge = document.getElementById('items-count-badge');
+        const btnCurrencyUsd = document.getElementById('btn-currency-usd');
+        const btnCurrencyVes = document.getElementById('btn-currency-ves');
+        const containerTasaCambio = document.getElementById('container-tasa-cambio');
+        const modalExpTasa = document.getElementById('modal-exp-tasa');
+        const labelMontoTotal = document.getElementById('label-monto-total');
+        const labelMontoUsdEquiv = document.getElementById('label-monto-usd-equiv');
+        const modalExpTotal = document.getElementById('modal-exp-total');
 
         // Helpers de Formato
         const formatMoney = (amount, currency = 'USD') => {
@@ -986,17 +1056,237 @@ import '../styles/global.css';
             }
         });
 
-        // Modal Nuevo Gasto
+        // Modal Registrar Gasto con Ítems (Mismo flujo que la app móvil)
+        let modalExpenseItems = [];
+        let expMoneda = 'USD';
+        let bcvRate = 36.5;
+
+        const fetchBcvRate = async () => {
+            try {
+                const res = await fetch('https://ve.dolarapi.com/v1/dolares/oficial');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.promedio > 0) {
+                        bcvRate = Number(data.promedio);
+                        if (modalExpTasa && !modalExpTasa.value) {
+                            modalExpTasa.value = bcvRate.toFixed(2);
+                        }
+                    }
+                }
+            } catch (_) {}
+        };
+        fetchBcvRate();
+
+        const renderExpenseItems = () => {
+            if (!modalExpItemsList) return;
+            modalExpItemsList.innerHTML = '';
+
+            if (itemsCountBadge) {
+                itemsCountBadge.textContent = `${modalExpenseItems.length} ítem${modalExpenseItems.length === 1 ? '' : 's'}`;
+            }
+
+            if (modalExpenseItems.length === 0) {
+                modalExpItemsList.innerHTML = `
+                    <div class="text-center py-4 text-slate-400 text-xs bg-white rounded-xl border border-slate-200">
+                        No hay ítems detallados. Puedes ingresar el monto total directamente o desglosarlos con el botón de abajo.
+                    </div>
+                `;
+                return;
+            }
+
+            modalExpenseItems.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = "bg-white border border-slate-200 rounded-xl p-3 space-y-2.5 shadow-sm";
+                card.innerHTML = `
+                    <!-- Fila 1: Descripción + Botón Eliminar -->
+                    <div class="flex items-center gap-2">
+                        <input 
+                            type="text" 
+                            placeholder="Descripción del Producto" 
+                            value="${item.descripcion || ''}" 
+                            class="item-input-desc flex-1 px-3 py-1.5 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#FACC15] text-slate-900"
+                        />
+                        <button 
+                            type="button" 
+                            class="btn-remove-item text-slate-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-slate-50 transition-colors text-xs" 
+                            title="Eliminar producto"
+                        >
+                            🗑️
+                        </button>
+                    </div>
+
+                    <!-- Fila 2: Cantidad, Precio, Total -->
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Cant.</label>
+                            <input 
+                                type="number" 
+                                step="1" 
+                                min="0.01" 
+                                value="${item.cantidad || 1}" 
+                                class="item-input-cant w-full px-2.5 py-1 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#FACC15] text-slate-900"
+                            />
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Precio</label>
+                            <input 
+                                type="number" 
+                                step="0.01" 
+                                min="0" 
+                                placeholder="0.00" 
+                                value="${item.precio !== '' ? item.precio : ''}" 
+                                class="item-input-precio w-full px-2.5 py-1 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#FACC15] text-slate-900"
+                            />
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Total</label>
+                            <input 
+                                type="number" 
+                                step="0.01" 
+                                min="0" 
+                                placeholder="0.00" 
+                                value="${item.total !== '' ? item.total : ''}" 
+                                class="item-input-total w-full px-2.5 py-1 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#FACC15] text-slate-900 font-semibold"
+                            />
+                        </div>
+                    </div>
+
+                    <!-- Fila 3: Categoría -->
+                    <div>
+                        <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Categoría</label>
+                        <select class="item-input-cat w-full px-2.5 py-1 text-xs rounded-lg border border-slate-200 bg-slate-50 text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#FACC15]">
+                            ${CATEGORIAS_DEF.map(c => `
+                                <option value="${c}" ${c === (item.categoria || 'Alimentos') ? 'selected' : ''}>
+                                    ${CATEGORIA_ICONS[c] || '🏷️'} ${c}
+                                </option>
+                            `).join('')}
+                        </select>
+                    </div>
+                `;
+
+                // Listeners del ítem
+                const inputDesc = card.querySelector('.item-input-desc');
+                const inputCant = card.querySelector('.item-input-cant');
+                const inputPrecio = card.querySelector('.item-input-precio');
+                const inputTotal = card.querySelector('.item-input-total');
+                const inputCat = card.querySelector('.item-input-cat');
+                const btnRemove = card.querySelector('.btn-remove-item');
+
+                inputDesc.addEventListener('input', (e) => {
+                    item.descripcion = e.target.value;
+                });
+
+                inputCat.addEventListener('change', (e) => {
+                    item.categoria = e.target.value;
+                });
+
+                const recalcItem = () => {
+                    const cant = Number(inputCant.value) || 1;
+                    const precio = Number(inputPrecio.value) || 0;
+                    item.cantidad = cant;
+                    item.precio = inputPrecio.value;
+                    if (precio > 0) {
+                        const tot = (cant * precio).toFixed(2);
+                        item.total = tot;
+                        inputTotal.value = tot;
+                    }
+                    recalculateGrandTotal();
+                };
+
+                inputCant.addEventListener('input', recalcItem);
+                inputPrecio.addEventListener('input', recalcItem);
+
+                inputTotal.addEventListener('input', (e) => {
+                    item.total = e.target.value;
+                    recalculateGrandTotal();
+                });
+
+                btnRemove.addEventListener('click', () => {
+                    modalExpenseItems.splice(index, 1);
+                    renderExpenseItems();
+                    recalculateGrandTotal();
+                });
+
+                modalExpItemsList.appendChild(card);
+            });
+        };
+
+        const recalculateGrandTotal = () => {
+            if (modalExpenseItems.length > 0) {
+                const sum = modalExpenseItems.reduce((acc, it) => acc + (Number(it.total) || 0), 0);
+                if (sum > 0) {
+                    modalExpTotal.value = sum.toFixed(2);
+                }
+            }
+            updateCurrencyDisplay();
+        };
+
+        const updateCurrencyDisplay = () => {
+            const tasa = Number(modalExpTasa.value) || bcvRate || 1;
+            const total = Number(modalExpTotal.value) || 0;
+
+            if (expMoneda === 'VES') {
+                btnCurrencyVes.className = "flex-1 py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-slate-900 shadow-sm";
+                btnCurrencyUsd.className = "flex-1 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 transition-all";
+                containerTasaCambio.classList.remove('hidden');
+                labelMontoTotal.textContent = "Monto Total (Bs.)";
+                labelMontoUsdEquiv.classList.remove('hidden');
+                const equivUsd = tasa > 0 ? (total / tasa).toFixed(2) : '0.00';
+                labelMontoUsdEquiv.textContent = `≈ $${equivUsd} USD`;
+            } else {
+                btnCurrencyUsd.className = "flex-1 py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-slate-900 shadow-sm";
+                btnCurrencyVes.className = "flex-1 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 transition-all";
+                containerTasaCambio.classList.add('hidden');
+                labelMontoTotal.textContent = "Monto Total (USD)";
+                labelMontoUsdEquiv.classList.add('hidden');
+            }
+        };
+
+        btnCurrencyUsd?.addEventListener('click', () => {
+            expMoneda = 'USD';
+            updateCurrencyDisplay();
+        });
+
+        btnCurrencyVes?.addEventListener('click', () => {
+            expMoneda = 'VES';
+            if (!modalExpTasa.value && bcvRate > 0) {
+                modalExpTasa.value = bcvRate.toFixed(2);
+            }
+            updateCurrencyDisplay();
+        });
+
+        modalExpTasa?.addEventListener('input', updateCurrencyDisplay);
+        modalExpTotal?.addEventListener('input', updateCurrencyDisplay);
+
+        btnAddItem?.addEventListener('click', () => {
+            modalExpenseItems.push({
+                descripcion: '',
+                cantidad: 1,
+                precio: '',
+                total: '',
+                categoria: 'Alimentos'
+            });
+            renderExpenseItems();
+        });
+
         const openExpenseModal = () => {
             modalExpComercio.value = '';
-            modalExpMonto.value = '';
-            modalExpMoneda.value = 'USD';
-            modalExpCategoria.value = 'Alimentos';
+            modalExpTotal.value = '';
+            expMoneda = 'USD';
+            modalExpTasa.value = bcvRate.toFixed(2);
             
             const d = new Date();
             const monthStr = String(selectedMonth).padStart(2, '0');
             const dayStr = String(d.getDate()).padStart(2, '0');
             modalExpFecha.value = `${selectedYear}-${monthStr}-${dayStr}`;
+
+            // Iniciar con 1 ítem por defecto
+            modalExpenseItems = [
+                { descripcion: '', cantidad: 1, precio: '', total: '', categoria: 'Alimentos' }
+            ];
+
+            renderExpenseItems();
+            updateCurrencyDisplay();
 
             modalExpense.classList.remove('hidden');
             modalExpense.classList.add('flex');
@@ -1009,42 +1299,72 @@ import '../styles/global.css';
 
         btnOpenExpenseModal?.addEventListener('click', openExpenseModal);
         btnCloseExpenseModal?.addEventListener('click', closeExpenseModal);
-        btnCancelExpenseModal?.addEventListener('click', closeExpenseModal);
 
         btnSaveExpenseModal?.addEventListener('click', async () => {
             if (!currentUser) return;
 
             const comercio = (modalExpComercio.value || '').trim();
-            const monto = Number(modalExpMonto.value || 0);
-            const moneda = modalExpMoneda.value;
-            const categoria = modalExpCategoria.value;
             const fecha = modalExpFecha.value;
+            const monto = Number(modalExpTotal.value || 0);
 
-            if (!comercio || monto <= 0 || !fecha) {
-                alert("Por favor completa el comercio, el monto y la fecha.");
+            if (!comercio) {
+                alert("Por favor indica el comercio o beneficiario.");
+                return;
+            }
+            if (!fecha) {
+                alert("Por favor selecciona la fecha del gasto.");
+                return;
+            }
+            if (monto <= 0) {
+                alert("Por favor indica el monto total del gasto.");
                 return;
             }
 
+            const tasa = expMoneda === 'VES' ? (Number(modalExpTasa.value) || bcvRate || 1) : 1.0;
+            const totalOriginalCents = Math.round(monto * 100);
+            const totalUsdCents = expMoneda === 'USD' 
+                ? totalOriginalCents 
+                : Math.round((monto / tasa) * 100);
+
+            // Preparar ítems para guardar
+            const validItems = modalExpenseItems
+                .filter(it => (it.descripcion || '').trim() || (Number(it.total) || 0) > 0)
+                .map(it => {
+                    const cant = Number(it.cantidad) || 1;
+                    const totNum = Number(it.total) || 0;
+                    const prNum = Number(it.precio) || (cant > 0 ? totNum / cant : totNum);
+                    return {
+                        descripcion: (it.descripcion || '').trim() || 'Producto',
+                        cantidad: cant,
+                        precio_unitario: Math.round(prNum * 100),
+                        total: Math.round(totNum * 100),
+                        categoria: it.categoria || 'Otros'
+                    };
+                });
+
+            // Categoría principal del gasto
+            let primaryCat = 'Otros';
+            if (validItems.length > 0) {
+                primaryCat = validItems[0].categoria || 'Otros';
+            }
+
             const uuid = crypto.randomUUID ? crypto.randomUUID() : `web_${Date.now()}`;
-            const cents = Math.round(monto * 100);
-
-            // Si es USD, el total USD es igual. Si es VES, calcular aprox
-            const totalUsdCents = moneda === 'USD' ? cents : Math.round(cents / 36.5); // Tasa referencial si no hay BCV exacta
-
             const docRef = doc(db, 'users', currentUser.uid, 'gastos', uuid);
 
             try {
-                btnSaveExpenseModal.textContent = "Guardando...";
+                btnSaveExpenseModal.disabled = true;
+                btnSaveExpenseModal.innerHTML = `<span>Guardando...</span>`;
+
                 await setDoc(docRef, {
                     uuid: uuid,
                     comercio: comercio,
                     fecha: fecha,
-                    moneda: moneda,
-                    total_original: cents,
+                    moneda: expMoneda,
+                    total_original: totalOriginalCents,
                     total_usd: totalUsdCents,
-                    tasa_cambio: 1.0,
-                    categoria: categoria,
-                    items: [],
+                    tasa_cambio: tasa,
+                    categoria: primaryCat,
+                    items: validItems,
                     creado_en: new Date().toISOString(),
                     actualizado_en: new Date().toISOString(),
                     synced: 1
@@ -1056,7 +1376,8 @@ import '../styles/global.css';
                 console.error("Error al registrar factura:", err);
                 alert("No se pudo registrar la factura.");
             } finally {
-                btnSaveExpenseModal.textContent = "Guardar Factura";
+                btnSaveExpenseModal.disabled = false;
+                btnSaveExpenseModal.innerHTML = `<span>Guardar Gasto</span>`;
             }
         });
 
