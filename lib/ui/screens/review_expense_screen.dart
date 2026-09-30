@@ -951,7 +951,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                   OutlinedButton.icon(
                     key: const Key('review_expense_add_item_btn'),
                     onPressed: _addItem,
-                    icon: const Icon(Icons.add, size: 18, color: AppColors.textPrimary),
+                    icon: const Icon(Icons.add, size: 18, color: AppColors.primaryDark),
                     label: Text(
                       _items.isEmpty ? 'Agregar ítem' : 'Agregar otro ítem',
                       style: const TextStyle(
