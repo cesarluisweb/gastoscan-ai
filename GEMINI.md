@@ -57,3 +57,8 @@ La compilación en GitHub Actions (`build_apk.yml`) ejecuta `flutter create`, lo
 ## 10. Consistencia de Marca Global
 - **Identidad de Marca Unificada:** El nombre oficial y definitivo de la aplicación es **Rinde Más** (`AppConstants.appName`). Queda estrictamente prohibido utilizar nombres anteriores (como *GastoScan AI* o *GastosCan AI*) en pantallas, reportes exportados (Markdown, CSV), notificaciones, modales o cualquier texto expuesto al usuario.
 
+## 11. Filosofía de Producto y Simplicidad Operativa
+- **Cero Fricción Contable (Sin Múltiples Cuentas):** Queda prohibido obligar al usuario a microgestionar de qué banco o cuenta proviene el dinero (Banesco, Zinli, etc.). El valor central de la app es un presupuesto mensual global claro y ver cuánto dinero le queda.
+- **Divisas Estrictas (VES y USD):** La aplicación opera exclusivamente con Bolívares (VES) y Dólares (USD) a tasa oficial BCV. No agregar monedas redundantes como USDT.
+- **Modelo de Monetización No Bloqueante:** La experiencia base de registro y control presupuestario debe ser siempre accesible. La monetización se basará en publicidad discreta combinada con la opción de pago para eliminar anuncios ("Remove Ads"). Nunca bloquear el registro de transacciones.
+
