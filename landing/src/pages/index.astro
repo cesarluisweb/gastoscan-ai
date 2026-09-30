@@ -107,6 +107,139 @@ import '../styles/global.css';
         </div>
     </section>
 
+    <!-- Web Dashboard Section -->
+    <section id="panel-web" class="py-20 bg-[#F8FAFC] border-t border-slate-200 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid lg:grid-cols-12 gap-12 items-center">
+                <!-- Text info (5 cols) -->
+                <div class="lg:col-span-5 text-left">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#FACC15]/20 text-slate-900 border border-[#FACC15]/40 mb-4">
+                        <span>✨</span> Nueva versión web
+                    </span>
+                    <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
+                        Administra tus finanzas desde tu computadora o iPhone
+                    </h2>
+                    <p class="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
+                        No necesitas tener el teléfono en la mano para revisar tus números. Accede a tu presupuesto y facturas en pantalla grande con tu misma cuenta de Google.
+                    </p>
+
+                    <div class="mt-6 space-y-4">
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-white shadow-sm border border-slate-200 flex items-center justify-center flex-shrink-0 text-base">
+                                📊
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-sm text-slate-900">Desglose de presupuestos</h3>
+                                <p class="text-xs sm:text-sm text-slate-600">Revisa cuánto has consumido por categoría con barras de progreso y alertas de exceso.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-white shadow-sm border border-slate-200 flex items-center justify-center flex-shrink-0 text-base">
+                                ⌨️
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-sm text-slate-900">Registro rápido con teclado</h3>
+                                <p class="text-xs sm:text-sm text-slate-600">Agrega compras y detalla productos directamente desde tu teclado en segundos.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-white shadow-sm border border-slate-200 flex items-center justify-center flex-shrink-0 text-base">
+                                🔄
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-sm text-slate-900">Sincronización instantánea</h3>
+                                <p class="text-xs sm:text-sm text-slate-600">Tus datos en la web y en la app se mantienen siempre actualizados en tu Google personal.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 flex flex-wrap gap-3">
+                        <a href="/panel" class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#FACC15] hover:bg-[#EAB308] text-sm font-bold text-slate-900 shadow-sm hover:shadow-md transition-all">
+                            <span>Ir al Panel Web</span>
+                            <span class="text-base">→</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Browser Mockup (7 cols) -->
+                <div class="lg:col-span-7">
+                    <div class="relative mx-auto rounded-2xl bg-white border border-slate-200 shadow-xl overflow-hidden">
+                        <!-- Browser Window Bar -->
+                        <div class="flex items-center justify-between px-4 py-3 bg-slate-100 border-b border-slate-200">
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-3 h-3 rounded-full bg-slate-300"></span>
+                                <span class="w-3 h-3 rounded-full bg-slate-300"></span>
+                                <span class="w-3 h-3 rounded-full bg-slate-300"></span>
+                            </div>
+                            <div class="flex items-center gap-1.5 px-3 py-1 rounded-md bg-white border border-slate-200 text-[11px] font-mono text-slate-500 max-w-xs w-full justify-center truncate">
+                                <span>🔒</span> rindemas.cesarluis.com/panel
+                            </div>
+                            <div class="w-10"></div>
+                        </div>
+
+                        <!-- Browser Mock Content (Visual Dashboard) -->
+                        <div class="p-5 sm:p-6 bg-slate-50/60 space-y-4">
+                            <!-- Header Mock -->
+                            <div class="flex justify-between items-center bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-bold text-slate-900">Septiembre 2026</span>
+                                    <span class="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">Mes actual</span>
+                                </div>
+                                <div class="flex gap-2">
+                                    <span class="px-2.5 py-1 rounded-lg bg-slate-100 text-[11px] font-semibold text-slate-700">✏️ Presupuesto</span>
+                                    <span class="px-2.5 py-1 rounded-lg bg-[#FACC15] text-[11px] font-bold text-slate-900 shadow-xs">+ Registrar</span>
+                                </div>
+                            </div>
+
+                            <!-- 3 Mini Cards -->
+                            <div class="grid grid-cols-3 gap-3">
+                                <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs">
+                                    <span class="text-[10px] font-medium text-slate-500 block">Presupuesto</span>
+                                    <span class="text-sm sm:text-base font-extrabold text-slate-900 block mt-0.5">$250.00</span>
+                                </div>
+                                <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs">
+                                    <span class="text-[10px] font-medium text-slate-500 block">Total Gastado</span>
+                                    <span class="text-sm sm:text-base font-extrabold text-slate-900 block mt-0.5">$142.50</span>
+                                </div>
+                                <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs">
+                                    <span class="text-[10px] font-medium text-slate-500 block">Restante</span>
+                                    <span class="text-sm sm:text-base font-extrabold text-emerald-600 block mt-0.5">+$107.50</span>
+                                </div>
+                            </div>
+
+                            <!-- Mini Category List Preview -->
+                            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-2.5">
+                                <span class="text-xs font-bold text-slate-900 block">Presupuesto por Categoría</span>
+                                
+                                <div class="space-y-1.5">
+                                    <div class="flex justify-between text-[11px]">
+                                        <span class="font-medium text-slate-800">🛒 Alimentos</span>
+                                        <span class="font-bold text-slate-900">$85.00 / $120.00</span>
+                                    </div>
+                                    <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                        <div class="bg-[#FACC15] h-1.5 rounded-full" style="width: 70%"></div>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-1.5">
+                                    <div class="flex justify-between text-[11px]">
+                                        <span class="font-medium text-slate-800">🚗 Transporte</span>
+                                        <span class="font-bold text-slate-900">$20.00 / $40.00</span>
+                                    </div>
+                                    <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                        <div class="bg-[#FACC15] h-1.5 rounded-full" style="width: 50%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Download CTA -->
     <section id="descargar" class="py-24 bg-slate-900 text-center relative overflow-hidden">
         <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
