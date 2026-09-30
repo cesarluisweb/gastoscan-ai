@@ -35,3 +35,7 @@
   * *Segundos 1-3 (Gancho):* Mostrar un ticket de supermercado largo y arrugado. *"¿Alguien más odia anotar en qué se le fue la plata?"*
   * *Segundos 4-8 (La Magia):* Grabar la pantalla de la app tomando la foto y extrayendo los productos (Harina, Queso) con sus precios automáticamente.
   * *Segundos 9-15 (Llamado a la acción):* *"Hice esta app para venezolanos con tasa BCV automática. Busca 'Rinde Más' en la Play Store"*.
+
+## Skill de Agente Asociada
+* Para la ejecución táctica paso a paso de este plan y el manejo de Google Play Console, consultar la skill [`.agents/skills/growth-first-100-users/SKILL.md`](.agents/skills/growth-first-100-users/SKILL.md).
+
