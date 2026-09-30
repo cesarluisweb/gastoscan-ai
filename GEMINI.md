@@ -55,8 +55,9 @@ La compilación en GitHub Actions (`build_apk.yml`) ejecuta `flutter create`, lo
 - **Copia Automática de Mes Previo:** Si un mes no tiene presupuestos registrados al consultarse, el sistema debe copiar automáticamente la configuración del mes inmediatamente anterior.
 - **Validación de Asignación:** La suma total de los presupuestos asignados a categorías NO debe superar el presupuesto general mensual. Toda UI de presupuestos debe validar esta condición en tiempo real y bloquear el guardado si se excede.
 
-## 10. Consistencia de Marca Global
+## 10. Consistencia de Marca Global y Terminología
 - **Identidad de Marca Unificada:** El nombre oficial y definitivo de la aplicación es **Rinde Más** (`AppConstants.appName`). Queda estrictamente prohibido utilizar nombres anteriores (como *GastoScan AI* o *GastosCan AI*) en pantallas, reportes exportados (Markdown, CSV), notificaciones, modales o cualquier texto expuesto al usuario.
+- **Terminología Estricta ("Facturas" vs "Tickets"):** Queda estrictamente prohibido referirse a los comprobantes de compra como "tickets". Debe utilizarse siempre el término **"facturas"** (o "comprobantes" en contextos genéricos de escaneo) en toda redacción, mensajes a usuarios o comunidades, documentación y textos de la interfaz.
 
 ## 11. Filosofía de Producto y Simplicidad Operativa
 - **Cero Fricción Contable (Sin Múltiples Cuentas):** Queda prohibido obligar al usuario a microgestionar de qué banco o cuenta proviene el dinero (Banesco, Zinli, etc.). El valor central de la app es un presupuesto mensual global claro y ver cuánto dinero le queda.
