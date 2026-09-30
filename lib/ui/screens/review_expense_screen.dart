@@ -50,6 +50,18 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     if (value == 0) return '';
     return value.truncateToDouble() == value ? value.toInt().toString() : value.toString();
   }
+
+  String _normalizeText(String text) {
+    return text
+        .toLowerCase()
+        .replaceAll('á', 'a')
+        .replaceAll('é', 'e')
+        .replaceAll('í', 'i')
+        .replaceAll('ó', 'o')
+        .replaceAll('ú', 'u')
+        .replaceAll('ü', 'u')
+        .trim();
+  }
   late List<ItemGastoModel> _items;
   String _fuenteTasa = 'Tasa oficial BCV automática';
   bool _isSaving = false;
@@ -334,10 +346,30 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     );
 
     bool success;
+    final matchedIds = List<int>.from(widget.extractedData?.matchedShoppingItemIds ?? []);
+
     if (widget.existingGasto != null) {
       success = await gastoProvider.actualizarGasto(nuevoGasto, _items);
     } else {
-      final matchedIds = widget.extractedData?.matchedShoppingItemIds ?? [];
+      try {
+        final pendingShopping = await DatabaseHelper.instance.getPendingShoppingItems();
+        for (final item in _items) {
+          final descNorm = _normalizeText(item.descripcion);
+          if (descNorm.length >= 2) {
+            for (final shopItem in pendingShopping) {
+              final shopNorm = _normalizeText(shopItem.name);
+              if (shopNorm.isNotEmpty && (descNorm == shopNorm || descNorm.contains(shopNorm) || shopNorm.contains(descNorm))) {
+                if (shopItem.id != null && !matchedIds.contains(shopItem.id!)) {
+                  matchedIds.add(shopItem.id!);
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('Error cotejando lista de compras: $e');
+      }
+
       success = await gastoProvider.agregarGasto(nuevoGasto, _items, shoppingItemIds: matchedIds);
     }
 
@@ -528,7 +560,6 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
           }
         }
       } else {
-        final matchedIds = widget.extractedData?.matchedShoppingItemIds ?? [];
         if (matchedIds.isNotEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

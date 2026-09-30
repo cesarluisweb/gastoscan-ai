@@ -9,6 +9,7 @@ class ExpenseCard extends StatefulWidget {
   final VoidCallback onDelete;
   final VoidCallback onEdit;
   final String monedaPrincipal;
+  final bool initiallyExpanded;
 
   const ExpenseCard({
     Key? key,
@@ -16,6 +17,7 @@ class ExpenseCard extends StatefulWidget {
     required this.onDelete,
     required this.onEdit,
     this.monedaPrincipal = 'USD',
+    this.initiallyExpanded = false,
   }) : super(key: key);
 
   @override
@@ -23,7 +25,21 @@ class ExpenseCard extends StatefulWidget {
 }
 
 class _ExpenseCardState extends State<ExpenseCard> {
-  bool _expanded = false;
+  late bool _expanded;
+
+  @override
+  void initState() {
+    super.initState();
+    _expanded = widget.initiallyExpanded;
+  }
+
+  @override
+  void didUpdateWidget(ExpenseCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initiallyExpanded != oldWidget.initiallyExpanded) {
+      _expanded = widget.initiallyExpanded;
+    }
+  }
 
   IconData _getCategoryIcon(String categoria) {
     switch (categoria) {

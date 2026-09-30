@@ -218,7 +218,7 @@ class _MainScreenState extends State<MainScreen> {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Factura añadida a la cola en segundo plano.', style: TextStyle(color: Colors.black)),
+                            content: Text('Analizando imagen con IA en segundo plano...', style: TextStyle(color: Colors.black)),
                             backgroundColor: AppColors.primary,
                             duration: Duration(seconds: 2),
                           ),
@@ -252,10 +252,10 @@ class _MainScreenState extends State<MainScreen> {
                       final paths = pickedFiles.map((f) => f.path).toList();
                       await scanQueue.enqueueMultiple(paths);
                       if (context.mounted) {
-                        final countText = paths.length == 1 ? '1 comprobante añadido' : '${paths.length} comprobantes añadidos';
+                        final countText = paths.length == 1 ? 'Analizando imagen con IA en segundo plano...' : 'Analizando ${paths.length} imágenes con IA en segundo plano...';
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('$countText a la cola en segundo plano.', style: const TextStyle(color: Colors.black)),
+                            content: Text(countText, style: const TextStyle(color: Colors.black)),
                             backgroundColor: AppColors.primary,
                             duration: const Duration(seconds: 2),
                           ),
@@ -364,8 +364,8 @@ class _MainScreenState extends State<MainScreen> {
     } else if (scanQueue.isProcessing || scanQueue.pendingItems.isNotEmpty) {
       final count = scanQueue.pendingCount > 0 ? scanQueue.pendingCount : 1;
       final label = count == 1
-          ? 'Procesando factura en segundo plano...'
-          : 'Procesando $count facturas en segundo plano...';
+          ? 'Analizando imagen con IA...'
+          : 'Analizando $count imágenes con IA...';
 
       return Positioned(
         top: MediaQuery.of(context).padding.top + 8,

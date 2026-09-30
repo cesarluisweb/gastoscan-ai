@@ -283,6 +283,7 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
                                   key: ValueKey('history_${gasto.id ?? gasto.comercio}_${gasto.uuid}'),
                                   gasto: gasto,
                                   monedaPrincipal: settings.monedaPrincipal,
+                                  initiallyExpanded: query.isNotEmpty && gasto.items.any((item) => _normalizeText(item.descripcion).contains(query)),
                                   onEdit: () {
                                     Navigator.push(
                                       context,

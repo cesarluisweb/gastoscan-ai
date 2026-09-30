@@ -81,6 +81,18 @@ class _ChatScreenState extends State<ChatScreen> {
     _initSpeech();
   }
 
+  String _normalizeText(String text) {
+    return text
+        .toLowerCase()
+        .replaceAll('á', 'a')
+        .replaceAll('é', 'e')
+        .replaceAll('í', 'i')
+        .replaceAll('ó', 'o')
+        .replaceAll('ú', 'u')
+        .replaceAll('ü', 'u')
+        .trim();
+  }
+
   @override
   void dispose() {
     try {
@@ -130,21 +142,25 @@ class _ChatScreenState extends State<ChatScreen> {
       if (mounted) setState(() => _isListening = false);
     } else {
       if (_speechAvailable) {
+        String previousText = _textCtrl.text;
+        if (previousText.isNotEmpty && !previousText.endsWith(' ')) {
+          previousText += ' ';
+        }
         if (mounted) setState(() => _isListening = true);
         await _speech.listen(
           localeId: _spanishLocaleId,
           onResult: (val) {
             if (mounted) {
               setState(() {
-                _textCtrl.text = val.recognizedWords;
+                _textCtrl.text = previousText + val.recognizedWords;
                 _textCtrl.selection = TextSelection.fromPosition(
                   TextPosition(offset: _textCtrl.text.length),
                 );
               });
             }
           },
-          listenFor: const Duration(seconds: 30),
-          pauseFor: const Duration(seconds: 3),
+          listenFor: const Duration(seconds: 60),
+          pauseFor: const Duration(seconds: 10),
         );
       } else {
         if (mounted) {
@@ -213,18 +229,31 @@ class _ChatScreenState extends State<ChatScreen> {
 
         if (callName == 'registrar_gasto') {
           final args = call['args'] as Map;
-          
-          // Construir el gasto
-          final settings = Provider.of<SettingsProvider>(context, listen: false);
-          final double totalUsd = (args['total_usd'] as num).toDouble();
+          final double totalUsd = (args['total_usd'] as num?)?.toDouble() ?? 0.0;
+
+          // Red de seguridad de desambiguación en cliente
+          final userText = text.toLowerCase();
+          final bool hasExplicitNumber = RegExp(r'\d+').hasMatch(userText);
+          final bool hasExpenseKeyword = userText.contains('gast') || userText.contains('compr') || userText.contains('pagu') || userText.contains('cost');
+
+          if (totalUsd <= 0 || (!hasExplicitNumber && !hasExpenseKeyword)) {
+            setState(() {
+              _messages.add({
+                'role': 'assistant',
+                'text': '¿Deseas agregarlo a tu lista de compras o registrarlo como un gasto realizado?',
+              });
+            });
+            return;
+          }
+
           final String comercio = args['comercio'] ?? 'General';
           final String fecha = args['fecha'] ?? DateTime.now().toIso8601String().substring(0, 10);
           final String categoria = args['categoria'] ?? 'Otros';
           
           final List itemsList = args['items'] ?? [];
           final List<ItemGastoModel> itemsGasto = itemsList.map((item) {
-            final double precioUnit = (item['precio_unitario'] as num).toDouble();
-            final double cant = (item['cantidad'] as num).toDouble();
+            final double precioUnit = (item['precio_unitario'] as num?)?.toDouble() ?? totalUsd;
+            final double cant = (item['cantidad'] as num?)?.toDouble() ?? 1.0;
             return ItemGastoModel(
               descripcion: item['descripcion'] ?? 'Artículo',
               cantidad: cant,
@@ -237,20 +266,45 @@ class _ChatScreenState extends State<ChatScreen> {
             uuid: UuidGenerator.generate(),
             fecha: fecha,
             comercio: comercio,
-            moneda: 'USD', // Por simplicidad de la IA
+            moneda: 'USD',
             totalOriginal: (totalUsd * 100).round(),
             totalUsd: (totalUsd * 100).round(),
             categoria: categoria,
             creadoEn: DateTime.now().toIso8601String(),
           );
 
-          final success = await gastoProvider.agregarGasto(nuevoGasto, itemsGasto);
+          // Auto-detectar coincidencias con la lista de compras pendiente
+          final List<int> matchedShoppingIds = [];
+          try {
+            final pendingShopping = await _dbHelper.getPendingShoppingItems();
+            for (final item in itemsGasto) {
+              final descNorm = _normalizeText(item.descripcion);
+              if (descNorm.length >= 2) {
+                for (final shopItem in pendingShopping) {
+                  final shopNorm = _normalizeText(shopItem.name);
+                  if (shopNorm.isNotEmpty && (descNorm == shopNorm || descNorm.contains(shopNorm) || shopNorm.contains(descNorm))) {
+                    if (shopItem.id != null && !matchedShoppingIds.contains(shopItem.id!)) {
+                      matchedShoppingIds.add(shopItem.id!);
+                    }
+                  }
+                }
+              }
+            }
+          } catch (e) {
+            debugPrint('Error al cotejar compras en chat: $e');
+          }
+
+          final success = await gastoProvider.agregarGasto(nuevoGasto, itemsGasto, shoppingItemIds: matchedShoppingIds);
 
           setState(() {
             if (success) {
+              String msg = '¡Listo! He registrado tu compra en "$comercio" por \$${totalUsd.toStringAsFixed(2)}.';
+              if (matchedShoppingIds.isNotEmpty) {
+                msg += ' Se tacharon ${matchedShoppingIds.length} producto(s) de tu lista de compras.';
+              }
               _messages.add({
                 'role': 'assistant',
-                'text': '¡Listo! He registrado tu compra en "$comercio" por \$${totalUsd.toStringAsFixed(2)}.'
+                'text': msg,
               });
             } else {
               _messages.add({'role': 'assistant', 'text': 'Hubo un error al intentar guardar el gasto.'});
