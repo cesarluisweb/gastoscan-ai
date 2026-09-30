@@ -58,3 +58,15 @@ Este documento centraliza las ideas y mejoras pendientes, ordenadas estratégica
 - **Comparativa por Unidad de Medida:** Comparar precios de forma inteligente (ej. Arroz $2.00/kg vs $1.60/kg) en lugar del precio total bruto.
 - **Buscador de Ofertas Locales:** Ver en qué comercio cercano se escaneó más barato un producto específico en las últimas 48 horas.
 - **Historial de Tasas BCV:** Gráfico interactivo para ver la evolución de la tasa de cambio a lo largo del tiempo.
+
+## Fase 9: Modelo de Monetización y Suscripción Premium (Rinde Más Pro)
+*Monetización combinada (Freemium + suscripción o pago único) sin bloquear el registro básico de gastos.*
+- **Categorías Personalizadas Ilimitadas:** Posibilidad de crear, editar y archivar categorías propias con selección de icono y color representativo (el plan gratuito mantiene las 10 categorías base).
+- **Experiencia Cero Publicidad (Zero Ads):** Supresión total de anuncios promocionales en toda la interfaz.
+- **Exportación Contable Avanzada:**
+  - Generación de reportes mensuales en PDF con diseño limpio, gráficos de distribución y balance listos para imprimir o compartir.
+  - Exportación en formato Excel/CSV detallado con el desglose ítem por ítem para contabilidad personal o pequeños negocios.
+- **Cuotas de IA y OCR Extendidas:**
+  - Procesamiento ilimitado de comprobantes mediante OCR con Gemini (el plan base conservará un cupo mensual suficiente para uso personal regular).
+  - Consultas profundas al Analista Financiero IA con comparativas de meses previos y proyecciones de gasto.
+- **Alertas Proactivas de Inflación y Desvío:** Notificaciones inteligentes cuando un producto frecuente incremente su precio por encima del promedio o cuando el ritmo de gasto proyecte superar el presupuesto antes de fin de mes.
