@@ -72,6 +72,7 @@ void main() {
       expect(find.text('Almacenamiento y Fotos', skipOffstage: false), findsOneWidget);
       expect(find.text('Exportar a Excel (.csv)', skipOffstage: false), findsOneWidget);
       expect(find.text('Exportar como Texto (.md)', skipOffstage: false), findsOneWidget);
+      expect(find.text('Versión de la App', skipOffstage: false), findsOneWidget);
     });
 
     testWidgets('tapping shopping list navigates internally and back button returns to hub', (tester) async {

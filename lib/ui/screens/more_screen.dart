@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/gasto_provider.dart';
 import '../../services/export_service.dart';
+import '../../services/update_service.dart';
+import '../widgets/update_dialog.dart';
 import 'shopping_list_screen.dart';
 import 'chat_screen.dart';
 
@@ -24,6 +27,61 @@ class MoreScreen extends StatefulWidget {
 class MoreScreenState extends State<MoreScreen> {
   MoreSubView _currentSubView = MoreSubView.hub;
   bool _openedFromHome = false;
+  bool _isCheckingUpdate = false;
+  String _currentAppVersion = '1.0.1';
+
+  @override
+  void initState() {
+    super.initState();
+    _cargarVersionActual();
+  }
+
+  Future<void> _cargarVersionActual() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      if (mounted) {
+        setState(() {
+          _currentAppVersion = '${info.version} (Build ${info.buildNumber})';
+        });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _comprobarActualizacionManual() async {
+    if (_isCheckingUpdate) return;
+    setState(() => _isCheckingUpdate = true);
+
+    try {
+      final updateService = UpdateService();
+      final updateInfo = await updateService.checkForUpdate(force: true);
+
+      if (!mounted) return;
+      setState(() => _isCheckingUpdate = false);
+
+      if (updateInfo != null && updateInfo.hasUpdate) {
+        UpdateDialog.show(context, updateInfo);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Tienes la versión más reciente instalada.',
+              style: TextStyle(color: Colors.black),
+            ),
+            backgroundColor: AppColors.primary,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isCheckingUpdate = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No se pudo verificar actualizaciones en este momento.'),
+        ),
+      );
+    }
+  }
 
   void openChat({bool fromHome = false}) {
     setState(() {
@@ -381,6 +439,59 @@ class MoreScreenState extends State<MoreScreen> {
                       style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                   trailing: const Icon(Icons.share_outlined, size: 20, color: AppColors.textSecondary),
                   onTap: () => _exportarMarkdown(context),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Sección de Versión y Actualizaciones
+          Material(
+            color: AppColors.card,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: const BorderSide(color: AppColors.border),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.info_outline_rounded, color: AppColors.primaryDark),
+                  title: const Text(
+                    'Versión de la App',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                  ),
+                  subtitle: Text(
+                    'Rinde Más v$_currentAppVersion',
+                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                  ),
+                  trailing: _isCheckingUpdate
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.textPrimary),
+                        )
+                      : TextButton.icon(
+                          onPressed: _comprobarActualizacionManual,
+                          icon: const Icon(Icons.refresh, size: 16, color: AppColors.textPrimary),
+                          label: const Text(
+                            'Buscar',
+                            style: TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                          style: TextButton.styleFrom(
+                            backgroundColor: AppColors.primaryLight,
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
                 ),
               ],
             ),

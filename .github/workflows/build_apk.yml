@@ -107,9 +107,24 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Copiar APK a Landing y Compilar Sitio
+      - name: Copiar APK y Generar version.json para Landing
         run: |
           cp build/app/outputs/flutter-apk/app-release.apk landing/public/app-release.apk
+          
+          # Extraer version y build number de pubspec.yaml
+          APP_VERSION=$(grep "^version:" pubspec.yaml | sed -e 's/version:[[:space:]]*//' | cut -d '+' -f 1 | tr -d '[:space:]')
+          APP_BUILD=$(grep "^version:" pubspec.yaml | sed -e 's/version:[[:space:]]*//' | cut -d '+' -f 2 | tr -d '[:space:]')
+          
+          cat <<EOF > landing/public/version.json
+          {
+            "version": "$APP_VERSION",
+            "buildNumber": $APP_BUILD,
+            "releaseNotes": "Actualización automática de Rinde Más con optimizaciones y nuevas mejoras.",
+            "apkUrl": "https://rindemas.cesarluis.com/app-release.apk"
+          }
+          EOF
+          
+          cat landing/public/version.json
           cd landing
           npm install
           npm run build

@@ -10,6 +10,7 @@ import '../../data/datasources/remote/gemini_service.dart';
 import '../../data/datasources/local/database_helper.dart';
 import '../../data/models/shopping_item_model.dart';
 import '../../core/utils/uuid_generator.dart';
+import 'review_expense_screen.dart';
 
 class ChatSuggestion {
   final String label;
@@ -302,9 +303,18 @@ class _ChatScreenState extends State<ChatScreen> {
               if (matchedShoppingIds.isNotEmpty) {
                 msg += ' Se tacharon ${matchedShoppingIds.length} producto(s) de tu lista de compras.';
               }
+              GastoModel gastoGuardado = nuevoGasto;
+              try {
+                gastoGuardado = gastoProvider.gastos.firstWhere(
+                  (g) => g.uuid == nuevoGasto.uuid,
+                  orElse: () => nuevoGasto,
+                );
+              } catch (_) {}
+
               _messages.add({
                 'role': 'assistant',
                 'text': msg,
+                'gasto': gastoGuardado,
               });
             } else {
               _messages.add({'role': 'assistant', 'text': 'Hubo un error al intentar guardar el gasto.'});
@@ -522,9 +532,47 @@ class _ChatScreenState extends State<ChatScreen> {
                       borderRadius: BorderRadius.circular(16),
                       border: isUser ? null : Border.all(color: AppColors.border),
                     ),
-                    child: _buildFormattedMessage(
-                      msg['text'] ?? '',
-                      AppColors.textPrimary,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildFormattedMessage(
+                          msg['text'] ?? '',
+                          AppColors.textPrimary,
+                        ),
+                        if (msg['gasto'] != null && msg['gasto'] is GastoModel) ...[
+                          const SizedBox(height: 8),
+                          OutlinedButton.icon(
+                            key: const Key('chat_edit_expense_button'),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ReviewExpenseScreen(
+                                    existingGasto: msg['gasto'] as GastoModel,
+                                  ),
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.edit_note, size: 18, color: AppColors.textPrimary),
+                            label: const Text(
+                              'Ver / Editar gasto',
+                              style: TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              side: const BorderSide(color: AppColors.border),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
                 );

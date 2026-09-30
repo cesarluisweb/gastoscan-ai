@@ -5,14 +5,24 @@ import '../../data/datasources/remote/gemini_service.dart';
 import '../screens/review_expense_screen.dart';
 
 class VoiceExpenseSheet extends StatefulWidget {
-  const VoiceExpenseSheet({Key? key}) : super(key: key);
+  final GeminiService? geminiService;
+  final stt.SpeechToText? speechToText;
 
-  static Future<void> show(BuildContext context) {
+  const VoiceExpenseSheet({
+    Key? key,
+    this.geminiService,
+    this.speechToText,
+  }) : super(key: key);
+
+  static Future<void> show(BuildContext context, {GeminiService? geminiService, stt.SpeechToText? speechToText}) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => const VoiceExpenseSheet(),
+      builder: (_) => VoiceExpenseSheet(
+        geminiService: geminiService,
+        speechToText: speechToText,
+      ),
     );
   }
 
@@ -21,25 +31,30 @@ class VoiceExpenseSheet extends StatefulWidget {
 }
 
 class _VoiceExpenseSheetState extends State<VoiceExpenseSheet> {
-  final stt.SpeechToText _speech = stt.SpeechToText();
-  final GeminiService _geminiService = GeminiService();
+  late final stt.SpeechToText _speech;
+  late final GeminiService _geminiService;
+  final TextEditingController _textCtrl = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
 
   bool _isListening = false;
   bool _speechAvailable = false;
   bool _isProcessing = false;
-  String _transcribedText = '';
   String? _spanishLocaleId;
   String _statusMessage = 'Preparando micrófono...';
 
   @override
   void initState() {
     super.initState();
+    _speech = widget.speechToText ?? stt.SpeechToText();
+    _geminiService = widget.geminiService ?? GeminiService();
     _initAndStartListening();
   }
 
   @override
   void dispose() {
     _speech.stop();
+    _textCtrl.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -50,7 +65,7 @@ class _VoiceExpenseSheetState extends State<VoiceExpenseSheet> {
           if (mounted) {
             setState(() {
               _isListening = false;
-              _statusMessage = 'Toca el micrófono para hablar';
+              _statusMessage = 'Toca el micrófono para hablar o escribe abajo';
             });
           }
         },
@@ -59,10 +74,10 @@ class _VoiceExpenseSheetState extends State<VoiceExpenseSheet> {
             if (status == 'done' || status == 'notListening') {
               setState(() {
                 _isListening = false;
-                if (_transcribedText.isNotEmpty) {
-                  _statusMessage = 'Pausado. Puedes continuar o procesar.';
+                if (_textCtrl.text.trim().isNotEmpty) {
+                  _statusMessage = 'Pausado. Puedes editar el texto o procesar.';
                 } else {
-                  _statusMessage = 'Toca el micrófono para hablar';
+                  _statusMessage = 'Toca el micrófono para hablar o escribe';
                 }
               });
             }
@@ -100,8 +115,10 @@ class _VoiceExpenseSheetState extends State<VoiceExpenseSheet> {
   Future<void> _startListening() async {
     if (!_speechAvailable) return;
 
-    String previousText = _transcribedText;
-    if (previousText.isNotEmpty && !previousText.endsWith(' ')) {
+    _focusNode.unfocus();
+
+    String previousText = _textCtrl.text.trim();
+    if (previousText.isNotEmpty) {
       previousText += ' ';
     }
 
@@ -115,7 +132,10 @@ class _VoiceExpenseSheetState extends State<VoiceExpenseSheet> {
       onResult: (val) {
         if (mounted) {
           setState(() {
-            _transcribedText = previousText + val.recognizedWords;
+            _textCtrl.text = previousText + val.recognizedWords;
+            _textCtrl.selection = TextSelection.fromPosition(
+              TextPosition(offset: _textCtrl.text.length),
+            );
           });
         }
       },
@@ -129,19 +149,21 @@ class _VoiceExpenseSheetState extends State<VoiceExpenseSheet> {
     if (mounted) {
       setState(() {
         _isListening = false;
-        if (_transcribedText.isNotEmpty) {
-          _statusMessage = 'Pausado. Puedes continuar o procesar.';
+        if (_textCtrl.text.trim().isNotEmpty) {
+          _statusMessage = 'Pausado. Puedes editar el texto o procesar.';
         } else {
-          _statusMessage = 'Toca el micrófono para hablar';
+          _statusMessage = 'Toca el micrófono para hablar o escribe';
         }
       });
     }
   }
 
   Future<void> _processExpense() async {
-    if (_transcribedText.trim().isEmpty) return;
+    final text = _textCtrl.text.trim();
+    if (text.isEmpty) return;
 
     await _speech.stop();
+    _focusNode.unfocus();
     setState(() {
       _isListening = false;
       _isProcessing = true;
@@ -149,7 +171,7 @@ class _VoiceExpenseSheetState extends State<VoiceExpenseSheet> {
     });
 
     try {
-      final extractionResult = await _geminiService.parseVoiceExpense(_transcribedText.trim());
+      final extractionResult = await _geminiService.parseVoiceExpense(text);
 
       if (mounted) {
         Navigator.pop(context);
@@ -174,151 +196,200 @@ class _VoiceExpenseSheetState extends State<VoiceExpenseSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: AppColors.border,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Dictar Gasto',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            _statusMessage,
-            style: TextStyle(
-              fontSize: 14,
-              color: _isListening ? AppColors.error : AppColors.textSecondary,
-              fontWeight: _isListening ? FontWeight.bold : FontWeight.normal,
-            ),
-          ),
-          const SizedBox(height: 24),
-          GestureDetector(
-            onTap: _isProcessing
-                ? null
-                : () {
+    final hasText = _textCtrl.text.trim().isNotEmpty;
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: bottomInset),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Dictar Gasto',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _statusMessage,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: _isListening ? AppColors.error : AppColors.textSecondary,
+                  fontWeight: _isListening ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+              const SizedBox(height: 20),
+              GestureDetector(
+                onTap: _isProcessing
+                    ? null
+                    : () {
+                        if (_isListening) {
+                          _stopListening();
+                        } else {
+                          _startListening();
+                        }
+                      },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _isListening ? AppColors.error : AppColors.primary,
+                    boxShadow: [
+                      BoxShadow(
+                        color: (_isListening ? AppColors.error : AppColors.primary)
+                            .withOpacity(0.35),
+                        blurRadius: _isListening ? 24 : 12,
+                        spreadRadius: _isListening ? 6 : 2,
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    _isListening ? Icons.mic : Icons.mic_none,
+                    size: 38,
+                    color: _isListening ? Colors.white : AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: AppColors.cardLighter,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: _focusNode.hasFocus ? AppColors.primaryDark : AppColors.border,
+                    width: _focusNode.hasFocus ? 1.5 : 1.0,
+                  ),
+                ),
+                child: TextField(
+                  key: const Key('voice_expense_input_field'),
+                  controller: _textCtrl,
+                  focusNode: _focusNode,
+                  minLines: 2,
+                  maxLines: 4,
+                  textInputAction: TextInputAction.done,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.normal,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'Ej: "Compré víveres por 30 dólares en el automercado"',
+                    hintStyle: const TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textMuted,
+                      fontStyle: FontStyle.italic,
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.all(16),
+                    suffixIcon: hasText
+                        ? IconButton(
+                            key: const Key('voice_expense_clear_button'),
+                            icon: const Icon(Icons.clear, size: 20, color: AppColors.textSecondary),
+                            tooltip: 'Borrar texto',
+                            onPressed: () {
+                              setState(() {
+                                _textCtrl.clear();
+                              });
+                            },
+                          )
+                        : null,
+                  ),
+                  onChanged: (_) {
+                    setState(() {});
+                  },
+                  onTap: () {
                     if (_isListening) {
                       _stopListening();
-                    } else {
-                      _startListening();
                     }
                   },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              width: 88,
-              height: 88,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: _isListening ? AppColors.error : AppColors.primary,
-                boxShadow: [
-                  BoxShadow(
-                    color: (_isListening ? AppColors.error : AppColors.primary)
-                        .withOpacity(0.35),
-                    blurRadius: _isListening ? 24 : 12,
-                    spreadRadius: _isListening ? 6 : 2,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(Icons.edit_note, size: 16, color: AppColors.textSecondary),
+                  SizedBox(width: 4),
+                  Text(
+                    'Puedes editar el texto antes de procesarlo',
+                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                   ),
                 ],
               ),
-              child: Icon(
-                _isListening ? Icons.mic : Icons.mic_none,
-                size: 42,
-                color: _isListening ? Colors.white : AppColors.textPrimary,
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            constraints: const BoxConstraints(minHeight: 70, maxHeight: 120),
-            decoration: BoxDecoration(
-              color: AppColors.cardLighter,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: SingleChildScrollView(
-              child: Text(
-                _transcribedText.isNotEmpty
-                    ? _transcribedText
-                    : 'Ej: "Compré víveres por 30 dólares en el automercado"',
-                style: TextStyle(
-                  fontSize: 15,
-                  color: _transcribedText.isNotEmpty
-                      ? AppColors.textPrimary
-                      : AppColors.textMuted,
-                  fontStyle: _transcribedText.isNotEmpty
-                      ? FontStyle.normal
-                      : FontStyle.italic,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          if (_isProcessing)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.all(8.0),
-                child: CircularProgressIndicator(),
-              ),
-            )
-          else
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      side: const BorderSide(color: AppColors.border),
-                    ),
-                    child: const Text(
-                      'Cancelar',
-                      style: TextStyle(color: AppColors.textSecondary),
-                    ),
+              const SizedBox(height: 20),
+              if (_isProcessing)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: CircularProgressIndicator(),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  flex: 2,
-                  child: ElevatedButton.icon(
-                    onPressed: _transcribedText.trim().isNotEmpty ? _processExpense : null,
-                    icon: const Icon(Icons.auto_awesome, size: 18),
-                    label: const Text('Procesar Gasto'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: AppColors.textPrimary,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                )
+              else
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          side: const BorderSide(color: AppColors.border),
+                        ),
+                        child: const Text(
+                          'Cancelar',
+                          style: TextStyle(color: AppColors.textSecondary),
+                        ),
                       ),
                     ),
-                  ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: ElevatedButton.icon(
+                        key: const Key('voice_expense_process_button'),
+                        onPressed: hasText ? _processExpense : null,
+                        icon: const Icon(Icons.auto_awesome, size: 18),
+                        label: const Text('Procesar Gasto'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: AppColors.textPrimary,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }

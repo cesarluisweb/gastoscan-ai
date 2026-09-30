@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:gastoscan_ai/data/datasources/local/database_helper.dart';
 import 'package:gastoscan_ai/data/datasources/remote/gemini_service.dart';
 import 'package:gastoscan_ai/data/models/shopping_item_model.dart';
+import 'package:gastoscan_ai/data/models/gasto_model.dart';
+import 'package:gastoscan_ai/data/models/item_gasto_model.dart';
 import 'package:gastoscan_ai/providers/gasto_provider.dart';
 import 'package:gastoscan_ai/providers/settings_provider.dart';
 import 'package:gastoscan_ai/ui/screens/chat_screen.dart';
@@ -17,8 +19,18 @@ class FakeDatabaseHelper extends DatabaseHelper {
 }
 
 class FakeGastoProvider extends GastoProvider {
+  final List<GastoModel> _mockGastos = [];
+  @override
+  List<GastoModel> get gastos => _mockGastos;
+
   @override
   Future<void> cargarDatos() async {}
+
+  @override
+  Future<bool> agregarGasto(GastoModel gasto, List<ItemGastoModel> items, {List<int>? shoppingItemIds}) async {
+    _mockGastos.add(gasto);
+    return true;
+  }
 }
 
 class FakeSettingsProvider extends SettingsProvider {
@@ -29,6 +41,7 @@ class FakeSettingsProvider extends SettingsProvider {
 class FakeGeminiService extends GeminiService {
   int callCount = 0;
   String? lastUserMessage;
+  Map<String, dynamic>? customResponse;
 
   @override
   Future<Map<String, dynamic>> chatWithAnalyst({
@@ -38,6 +51,9 @@ class FakeGeminiService extends GeminiService {
     callCount++;
     if (messages.isNotEmpty) {
       lastUserMessage = messages.last['text'];
+    }
+    if (customResponse != null) {
+      return customResponse!;
     }
     return {
       'text': 'Respuesta simulada para: $lastUserMessage',
@@ -129,6 +145,42 @@ void main() {
       expect(fakeGeminiService.callCount, 1);
       expect(fakeGeminiService.lastUserMessage, '¿Qué tengo en mi lista de compras?');
       expect(find.text('Respuesta simulada para: ¿Qué tengo en mi lista de compras?', skipOffstage: false), findsOneWidget);
+    });
+
+    testWidgets('renders edit expense button when assistant registers an expense', (tester) async {
+      fakeGeminiService.customResponse = {
+        'functionCall': {
+          'name': 'registrar_gasto',
+          'args': {
+            'comercio': 'Supermercado',
+            'total_usd': 20.0,
+            'fecha': '2026-09-30',
+            'categoria': 'Alimentacion',
+            'items': [
+              {
+                'descripcion': 'Arroz',
+                'cantidad': 2.0,
+                'precio_unitario': 10.0,
+              }
+            ],
+          },
+        },
+      };
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      final inputFinder = find.byType(TextField);
+      await tester.enterText(inputFinder, 'Gaste 20 dolares en Supermercado');
+      await tester.pumpAndSettle();
+
+      final sendButtonFinder = find.byIcon(Icons.send);
+      await tester.tap(sendButtonFinder);
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('chat_edit_expense_button'), skipOffstage: false), findsOneWidget);
+      expect(find.text('Ver / Editar gasto', skipOffstage: false), findsOneWidget);
     });
   });
 }

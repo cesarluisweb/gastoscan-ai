@@ -22,6 +22,8 @@ import 'review_expense_screen.dart';
 import 'chat_screen.dart';
 import '../../data/models/gasto_model.dart';
 import '../../data/models/gemini_extraction_result.dart';
+import '../../services/update_service.dart';
+import '../widgets/update_dialog.dart';
 
 class DashboardScreen extends StatefulWidget {
   final VoidCallback? onNavigateToGastos;
@@ -47,6 +49,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.initState();
     // Registrar actividad del usuario y reprogramar recordatorio de inactividad a 3 días
     NotificationService.instance.recordActivityAndReschedule();
+
+    // Verificación silenciosa de actualización con throttling
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _verificarActualizacionSilenciosa();
+    });
+  }
+
+  Future<void> _verificarActualizacionSilenciosa() async {
+    try {
+      final updateService = UpdateService();
+      final updateInfo = await updateService.checkForUpdate(force: false);
+      if (mounted && updateInfo != null && updateInfo.hasUpdate) {
+        UpdateDialog.show(context, updateInfo);
+      }
+    } catch (_) {}
   }
 
   @override
