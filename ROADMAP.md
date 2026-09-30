@@ -30,6 +30,8 @@ Este documento centraliza las ideas y mejoras pendientes, ordenadas estratégica
 - ~~**Landing Page (rindemas.cesarluis.com):** (Completada ✅)~~ Creada en Astro + Tailwind y desplegada en Firebase Hosting con mockup de smartphone, propuesta de valor y guía de instalación directa de APK.
 - **Plan de Crecimiento Inicial (100 Usuarios):** (Documentado ✅) Playbook táctico definido en `marketing_plan.md` y `.agents/skills/growth-first-100-users/SKILL.md`.
 - **Subida de APK / Google Play Console:** (En preparación 🔄) Pago de cuenta de desarrollador ($25), configuración de Keystore y reclutamiento de 20 testers por 14 días.
+- **Correo de bienvenida automatizado:** Disparar un correo de bienvenida y primeros pasos cuando el usuario vincule su cuenta de Google (mediante Cloud Functions / trigger de autenticación o Firestore).
+- **Canal directo de soporte y contacto en "Más":** Agregar sección inferior en la pantalla *Más* con botón de "Escribir a soporte" para contactar directamente por correo electrónico o WhatsApp.
 
 ## Fase 6: Pulido, Navegación y UX Avanzada (Completada ✅)
 *Funciones complementarias para usuarios recurrentes.*
