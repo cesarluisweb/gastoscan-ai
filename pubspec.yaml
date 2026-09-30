@@ -47,7 +47,7 @@ dependencies:
   timezone: ^0.9.4
 
   # Actualizaciones y Enlaces
-  package_info_plus: ^8.0.0
+  package_info_plus: ^10.2.1
   url_launcher: ^6.3.0
 
 dev_dependencies:
