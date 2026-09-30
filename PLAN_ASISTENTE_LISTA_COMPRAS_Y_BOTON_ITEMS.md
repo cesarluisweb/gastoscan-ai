@@ -1,35 +1,35 @@
 # Plan de Implementación: Botón Inferior de Ítems y Gestión de Lista de Compras con Asistente IA
 
 ## 1. Contexto y Objetivos
-1. **Flujo de Carga Manual de Gastos (`ReviewExpenseScreen`)**:
-   - Al registrar múltiples ítems manualmente, el usuario hace scroll hacia abajo para completar cada fila.
-   - Para agregar el siguiente ítem, se ve obligado a subir hasta el encabezado para pulsar el botón "+ Agregar" y luego volver a bajar.
-   - Solución: Incorporar un botón secundario al final de la lista de ítems (`+ Agregar otro ítem`), manteniendo el botón superior para accesos rápidos.
 
-2. **Gestión de Lista de Compras con el Asistente IA (`ChatScreen` y Firebase Functions)**:
-   - Permitir al asistente IA interactuar con la tabla `shopping_items` de SQLite.
-   - Capacidades requeridas:
-     - **Agregar productos**: "Anota leche, pan y huevos en la lista de compras".
-     - **Modificar productos**: "Cambia la leche por leche deslactosada".
-     - **Eliminar productos**: "Quita los huevos de la lista de compras".
-     - **Marcar estado**: "Marca el pan como comprado" o "desmarca el café".
-     - **Consultar productos**: "Dime qué tengo en la lista de compras".
+1. **Flujo de Carga Manual de Gastos (`ReviewExpenseScreen`)**:
+   - Simplificar la interfaz dejando un **único botón al final** de la lista de ítems (`+ Agregar ítem`).
+   - Se elimina el botón superior del encabezado para evitar duplicidad. Al estar siempre al final, el usuario puede continuar agregando productos sucesivamente conforme desciende en la pantalla.
+
+2. **Gestión de Lista de Compras y Desambiguación en el Asistente IA (`ChatScreen` y Firebase Functions)**:
+   - Permitir al asistente IA gestionar la tabla `shopping_items` (agregar, modificar, eliminar, marcar estado y consultar).
+   - **Regla de Desambiguación de Intención**:
+     - Si el usuario especifica explícitamente "en la lista de compras", "tengo que comprar", "para comprar" -> Ejecuta la acción en la lista de compras.
+     - Si el usuario especifica "gasté", "compré", "pagué" o incluye montos/precios -> Ejecuta el registro de gasto.
+     - **Si la orden es ambigua** (ej. "anota una harina pan", "agrega café"): La IA **no asume**, sino que pregunta directamente:
+       > *"¿Deseas agregarlo a tu lista de compras o registrarlo como un gasto realizado?"*
+     - En el siguiente mensaje, ejecuta la acción según la respuesta del usuario.
 
 ---
 
 ## 2. Cambios Propuestos por Componente
 
-### 2.1 Botón de Agregar Ítems al Final (`lib/ui/screens/review_expense_screen.dart`)
+### 2.1 Botón de Agregar Ítem al Final (`lib/ui/screens/review_expense_screen.dart`)
 - En el contenedor "Desglose de Ítems":
-  - Conservar el botón superior `TextButton.icon(onPressed: _addItem, ...)` en la fila del encabezado.
-  - Al final de la lista generada por `_items.asMap().entries.map(...)`, añadir un botón de ancho completo tipo `OutlinedButton.icon`:
-    - Texto: `"Agregar otro ítem"`.
+  - **Encabezado**: Dejar solo el título `"Desglose de Ítems"` (sin botón superior).
+  - **Al final del listado**: Colocar un único botón estilizado de ancho completo (`OutlinedButton.icon`):
+    - Texto: `"Agregar ítem"` (o `"Agregar otro ítem"` si ya hay ítems).
     - Icono: `Icons.add`.
     - Estilo: Borde sutil `AppColors.border`, fondo `AppColors.cardLighter` y texto oscuro `AppColors.textPrimary`.
-    - Acción: Llama a `_addItem()` e inserta de inmediato un nuevo ítem bajo la vista del usuario.
+    - Acción: Llama a `_addItem()`.
 
 ### 2.2 Base de Datos Local (`lib/data/datasources/local/database_helper.dart`)
-- Incorporar método de actualización de nombre en `shopping_items`:
+- Añadir soporte para renombrar productos en `shopping_items`:
   ```dart
   Future<void> updateShoppingItemName(int id, String newName) async {
     final db = await instance.database;
@@ -43,29 +43,31 @@
   ```
 
 ### 2.3 Cloud Function del Asistente (`firebase_functions/index.js`)
-- En la función `chatWithAnalyst`:
-  - Declarar nuevas herramientas en `tools.functionDeclarations`:
-    1. `agregar_items_lista_compras`: Parámetro `nombres` (array de strings).
-    2. `modificar_item_lista_compras`: Parámetros `nombre_actual` y `nuevo_nombre` (strings).
-    3. `eliminar_items_lista_compras`: Parámetro `nombres` (array de strings).
-    4. `marcar_items_lista_compras`: Parámetro `nombres` (array de strings) y `comprado` (booleano).
-  - Actualizar el `systemPrompt` para inyectar la lista de compras actual contenida en `contextData.lista_compras`, instruyendo al modelo a invocar estas funciones ante órdenes de gestión y responder directamente ante preguntas de consulta sobre la lista.
+- En `chatWithAnalyst`:
+  - Declarar las 4 herramientas de lista de compras en `tools`:
+    1. `agregar_items_lista_compras(nombres: string[])`
+    2. `modificar_item_lista_compras(nombre_actual: string, nuevo_nombre: string)`
+    3. `eliminar_items_lista_compras(nombres: string[])`
+    4. `marcar_items_lista_compras(nombres: string[], comprado: boolean)`
+  - Instruir en `systemPrompt`:
+    - Pasar la lista actual de compras en `contextData.lista_compras`.
+    - **Regla estricta de desambiguación**: Si la petición es ambigua (ej. "anota X" sin indicar si es compra futura o gasto ya hecho con precio), NO invocar herramientas; preguntar primero al usuario: *"¿Deseas agregarlo a tu lista de compras o registrarlo como un gasto realizado?"*.
 
 ### 2.4 Pantalla de Chat del Asistente (`lib/ui/screens/chat_screen.dart`)
-- **Paso de Contexto**: Al invocar `_geminiService.chatWithAnalyst`, consultar `DatabaseHelper.instance.getAllShoppingItems()` e inyectar `lista_compras` en `contextData`.
-- **Manejo de Respuestas de Función (`functionCall`)**:
-  - `agregar_items_lista_compras`: Inserta cada ítem vía `DatabaseHelper.instance.insertShoppingItem` y responde confirmando los nombres agregados.
-  - `modificar_item_lista_compras`: Busca coincidencias en la lista y actualiza vía `updateShoppingItemName`.
-  - `eliminar_items_lista_compras`: Busca y elimina los productos vía `deleteShoppingItem`.
-  - `marcar_items_lista_compras`: Actualiza el estado (`is_purchased`) vía `updateShoppingItemStatus`.
+- Pasar la lista de compras actual en `contextData` al consultar `chatWithAnalyst`.
+- Manejar las llamadas de función:
+  - `agregar_items_lista_compras`: Inserta los elementos en SQLite con `DatabaseHelper.instance.insertShoppingItem` y confirma en español directo.
+  - `modificar_item_lista_compras`: Localiza el ítem por nombre y actualiza con `updateShoppingItemName`.
+  - `eliminar_items_lista_compras`: Elimina el ítem con `deleteShoppingItem`.
+  - `marcar_items_lista_compras`: Actualiza estado con `updateShoppingItemStatus`.
 
 ---
 
 ## 3. Plan de Verificación
 
 1. **Pruebas Automatizadas**:
-   - Escribir prueba de widget para verificar que el botón `Agregar otro ítem` en `ReviewExpenseScreen` aparece al final y añade ítems correctamente.
-   - Escribir prueba unitaria en `database_helper` para `updateShoppingItemName`.
-   - Validar que no haya regresiones en los 74 tests existentes.
+   - Verificar con tests de widgets que `ReviewExpenseScreen` tiene un único botón de agregar al final de la lista de ítems.
+   - Probar operaciones CRUD de lista de compras en `database_helper_test.dart`.
+   - Ejecutar la suite completa de tests (`flutter test`).
 2. **Validación en GitHub Actions CI**:
-   - Monitorear el workflow en GitHub Actions para asegurar compilación exitosa y ejecución de pruebas sin fallos.
+   - Confirmar estado de compilación y pruebas en verde vía API de GitHub.
