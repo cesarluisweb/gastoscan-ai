@@ -42,3 +42,4 @@ firebase_functions/package-lock.json
 update_function.js
 .env*
 *.env
+.firebase/
