@@ -92,5 +92,14 @@ La compilación en GitHub Actions (`build_apk.yml`) ejecuta `flutter create`, lo
   2. **Enfatizar la ausencia de riesgo bancario:** Aclarar siempre que la app **nunca** solicita claves bancarias, números de tarjeta, acceso a SMS ni credenciales financieras, y que no vende ni comparte datos con terceros.
   3. **Privacidad estricta por reglas:** Los datos en Firestore están blindados por reglas de seguridad donde cada usuario solo puede leer y escribir sus propios documentos (`request.auth.uid == userId`).
 
+## 16. Comunicación con Comunidades y Usuarios (Voz de César)
+Al redactar sugerencias de respuestas para foros (Reddit), redes, mensajes directos o soporte de la app:
+- **Validación Empática Inmediata:** Desarmar cualquier escepticismo o crítica validando la postura del usuario con naturalidad (ej. *"Es totalmente comprensible"*, *"Jajaja, gracias por la honestidad"*). Nunca ponerse a la defensiva ni contradecir.
+- **Cero Tono Corporativo:** Prohibidas las frases de community manager o vendedor ("¡Estimado usuario!", "¡Excelente aporte!", signos de admiración excesivos). Hablar de igual a igual como desarrollador independiente.
+- **Llamado a la Acción Directo y Puntuación Casual:** Invitar a probar con preguntas de una sola línea sin rodeos y puntuación digital relajada, omitiendo el signo de apertura `¿` (ej. *"Genial, te gustaría probarla?"*, *"Si la pruebas, me dejas tu opinión sincera"*).
+- **Claridad Técnica Serena:** Explicar el funcionamiento de forma transparente, directa y sin rodeos (ej. sin bancos, sin contraseñas, respaldo privado en su Google).
+- **Cierre Constructivo:** Conectar el feedback con la mejora del producto (ej. *"me ayuda a seguir dándole prioridad a la privacidad"*).
+
+
 
 
