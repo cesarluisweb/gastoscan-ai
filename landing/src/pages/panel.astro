@@ -1,0 +1,1065 @@
+---
+import '../styles/global.css';
+---
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-[#F8FAFC]">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Web | Rinde Más</title>
+    <meta name="description" content="Consulta y administra tus presupuestos y facturas de Rinde Más desde cualquier navegador.">
+    <link rel="icon" type="image/jpeg" href="/logo.jpg" />
+</head>
+<body class="min-h-full flex flex-col text-slate-800 font-sans antialiased selection:bg-[#FACC15] selection:text-slate-900">
+    
+    <!-- Top Navbar -->
+    <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Brand -->
+                <div class="flex items-center gap-3">
+                    <a href="/" class="flex items-center gap-3 group">
+                        <img src="/logo.jpg" alt="Logo Rinde Más" class="w-9 h-9 rounded-xl shadow-sm transition-transform group-hover:scale-105" />
+                        <span class="font-bold text-xl tracking-tight text-slate-900">Rinde Más</span>
+                    </a>
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">Panel Web</span>
+                </div>
+
+                <!-- Right Nav / Auth Profile -->
+                <div class="flex items-center gap-3">
+                    <a href="/" class="text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors hidden sm:inline-block">
+                        Web principal
+                    </a>
+
+                    <!-- Logged Out Button (Top) -->
+                    <button id="btn-login-top" class="hidden items-center gap-2 px-4 py-2 text-xs sm:text-sm font-bold text-slate-900 bg-[#FACC15] hover:bg-[#EAB308] rounded-full shadow-sm transition-all">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24">
+                            <path fill="currentColor" d="M21.35 11.1h-9.17v2.98h5.27c-.23 1.21-.92 2.24-1.95 2.93v2.43h3.16c1.85-1.7 2.92-4.21 2.92-7.24 0-.48-.04-.95-.1-1.39z"/>
+                            <path fill="currentColor" d="M12.18 21c2.65 0 4.88-.88 6.51-2.39l-3.16-2.43c-.88.59-2.01.94-3.35.94-2.58 0-4.76-1.74-5.54-4.08H3.36v2.51C5 18.8 8.35 21 12.18 21z"/>
+                            <path fill="currentColor" d="M6.64 13.04c-.2-.59-.31-1.22-.31-1.87s.11-1.28.31-1.87V6.79H3.36C2.69 8.12 2.31 9.62 2.31 11.17s.38 3.05 1.05 4.38l3.28-2.51z"/>
+                            <path fill="currentColor" d="M12.18 5.25c1.44 0 2.74.5 3.76 1.47l2.82-2.82C17.05 2.33 14.83 1.5 12.18 1.5 8.35 1.5 5 3.7 3.36 6.79l3.28 2.51c.78-2.34 2.96-4.05 5.54-4.05z"/>
+                        </svg>
+                        Iniciar Sesión
+                    </button>
+
+                    <!-- Logged In Profile Menu -->
+                    <div id="user-profile-menu" class="hidden items-center gap-3">
+                        <img id="user-avatar" src="" alt="Avatar" class="w-8 h-8 rounded-full border border-slate-300 object-cover" />
+                        <span id="user-name" class="text-xs sm:text-sm font-semibold text-slate-800 max-w-[120px] truncate hidden md:inline-block"></span>
+                        <button id="btn-logout" class="text-xs sm:text-sm font-medium text-slate-500 hover:text-red-600 transition-colors px-2 py-1 rounded">
+                            Salir
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- Estado 1: Cargando Sesión -->
+        <div id="view-loading" class="flex flex-col items-center justify-center py-24 text-center">
+            <div class="w-10 h-10 border-4 border-slate-200 border-t-[#FACC15] rounded-full animate-spin"></div>
+            <p class="mt-4 text-sm font-medium text-slate-500">Conectando con Rinde Más...</p>
+        </div>
+
+        <!-- Estado 2: No Autenticado (Hero) -->
+        <div id="view-logged-out" class="hidden max-w-2xl mx-auto py-12 sm:py-20 text-center">
+            <div class="w-16 h-16 bg-white border border-slate-200 shadow-md rounded-2xl flex items-center justify-center text-3xl mx-auto mb-6">
+                📊
+            </div>
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+                Tus finanzas en pantalla grande
+            </h1>
+            <p class="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
+                Accede a tu presupuesto mensual, desglose de facturas y control de gastos en bolívares y dólares directamente desde tu PC, Mac o iPhone.
+            </p>
+
+            <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+                <button id="btn-login-hero" class="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-3.5 text-base font-bold text-slate-900 bg-[#FACC15] hover:bg-[#EAB308] rounded-full shadow-md hover:shadow-lg transition-all">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M21.35 11.1h-9.17v2.98h5.27c-.23 1.21-.92 2.24-1.95 2.93v2.43h3.16c1.85-1.7 2.92-4.21 2.92-7.24 0-.48-.04-.95-.1-1.39z"/>
+                        <path fill="currentColor" d="M12.18 21c2.65 0 4.88-.88 6.51-2.39l-3.16-2.43c-.88.59-2.01.94-3.35.94-2.58 0-4.76-1.74-5.54-4.08H3.36v2.51C5 18.8 8.35 21 12.18 21z"/>
+                        <path fill="currentColor" d="M6.64 13.04c-.2-.59-.31-1.22-.31-1.87s.11-1.28.31-1.87V6.79H3.36C2.69 8.12 2.31 9.62 2.31 11.17s.38 3.05 1.05 4.38l3.28-2.51z"/>
+                        <path fill="currentColor" d="M12.18 5.25c1.44 0 2.74.5 3.76 1.47l2.82-2.82C17.05 2.33 14.83 1.5 12.18 1.5 8.35 1.5 5 3.7 3.36 6.79l3.28 2.51c.78-2.34 2.96-4.05 5.54-4.05z"/>
+                    </svg>
+                    Iniciar sesión con Google
+                </button>
+            </div>
+
+            <p class="mt-6 text-xs text-slate-400">
+                Usa el mismo correo Google que tienes vinculado en la app móvil Rinde Más para sincronizar tus datos.
+            </p>
+        </div>
+
+        <!-- Estado 3: Dashboard Autenticado -->
+        <div id="view-dashboard" class="hidden space-y-6">
+
+            <!-- Toolbar Superior: Selector de Mes y Acciones -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm">
+                <!-- Selector de Mes -->
+                <div class="flex items-center gap-2">
+                    <button id="btn-prev-month" title="Mes anterior" class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors">
+                        ←
+                    </button>
+                    <div class="text-left px-2">
+                        <span id="current-month-display" class="font-bold text-lg sm:text-xl text-slate-900 capitalize block leading-tight"></span>
+                        <span class="text-xs text-slate-400">Presupuesto y gastos</span>
+                    </div>
+                    <button id="btn-next-month" title="Mes siguiente" class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors">
+                        →
+                    </button>
+                    <button id="btn-today-month" class="text-xs font-semibold text-slate-500 hover:text-slate-800 ml-2 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-all">
+                        Hoy
+                    </button>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="flex items-center gap-2.5 w-full sm:w-auto">
+                    <button id="btn-open-budget-modal" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all">
+                        <span>✏️</span>
+                        <span>Presupuesto</span>
+                    </button>
+                    <button id="btn-open-expense-modal" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 text-xs sm:text-sm font-bold text-slate-900 bg-[#FACC15] hover:bg-[#EAB308] rounded-xl shadow-sm transition-all">
+                        <span>+</span>
+                        <span>Registrar gasto</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tarjetas de Métricas Clave (4 Cards) -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Tarjeta 1: Presupuesto General -->
+                <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <div class="flex items-center justify-between text-slate-500 text-xs sm:text-sm font-medium">
+                        <span>Presupuesto</span>
+                        <span id="card-currency-badge" class="px-1.5 py-0.5 rounded bg-slate-100 text-[10px] font-bold text-slate-600">USD</span>
+                    </div>
+                    <div class="mt-3">
+                        <span id="card-budget-amount" class="text-xl sm:text-2xl font-extrabold text-slate-900">$0.00</span>
+                    </div>
+                    <span id="card-budget-status" class="text-[11px] text-slate-400 mt-1">Límite mensual</span>
+                </div>
+
+                <!-- Tarjeta 2: Total Gastado -->
+                <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <div class="flex items-center justify-between text-slate-500 text-xs sm:text-sm font-medium">
+                        <span>Total Gastado</span>
+                        <span class="text-slate-400 text-xs">📉</span>
+                    </div>
+                    <div class="mt-3">
+                        <span id="card-spent-usd" class="text-xl sm:text-2xl font-extrabold text-slate-900">$0.00</span>
+                    </div>
+                    <span id="card-spent-ves" class="text-[11px] text-slate-500 mt-1 truncate">0,00 Bs.</span>
+                </div>
+
+                <!-- Tarjeta 3: Restante o Exceso -->
+                <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <div class="flex items-center justify-between text-slate-500 text-xs sm:text-sm font-medium">
+                        <span>Dinero Restante</span>
+                        <span id="card-remaining-icon" class="text-xs">💰</span>
+                    </div>
+                    <div class="mt-3">
+                        <span id="card-remaining-amount" class="text-xl sm:text-2xl font-extrabold text-slate-900">$0.00</span>
+                    </div>
+                    <span id="card-remaining-badge" class="text-[11px] font-semibold mt-1 text-slate-500">Sin límite</span>
+                </div>
+
+                <!-- Tarjeta 4: Facturas Registradas -->
+                <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <div class="flex items-center justify-between text-slate-500 text-xs sm:text-sm font-medium">
+                        <span>Facturas</span>
+                        <span class="text-xs">🧾</span>
+                    </div>
+                    <div class="mt-3">
+                        <span id="card-bills-count" class="text-xl sm:text-2xl font-extrabold text-slate-900">0</span>
+                    </div>
+                    <span id="card-bills-average" class="text-[11px] text-slate-400 mt-1">Promedio: $0.00</span>
+                </div>
+            </div>
+
+            <!-- Barra de Progreso General -->
+            <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm">
+                <div class="flex justify-between items-center text-xs sm:text-sm mb-2 font-medium">
+                    <span class="text-slate-700">Consumo del presupuesto</span>
+                    <span id="progress-percent-label" class="font-bold text-slate-900">0%</span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                    <div id="progress-bar-fill" class="bg-[#FACC15] h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Grid Principal: Presupuesto por Categoría + Facturas -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                <!-- Columna Izquierda: Presupuestos por Categoría (5 cols) -->
+                <div class="lg:col-span-5 space-y-4">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="font-bold text-base text-slate-900">Categorías</h2>
+                            <button id="btn-edit-categories" class="text-xs font-semibold text-slate-600 hover:text-slate-900">
+                                Ajustar
+                            </button>
+                        </div>
+                        <div id="categories-list" class="space-y-3.5">
+                            <!-- Inyectado dinámicamente con JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Columna Derecha: Facturas y Comprobantes (7 cols) -->
+                <div class="lg:col-span-7 space-y-4">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                            <div>
+                                <h2 class="font-bold text-base text-slate-900">Facturas del mes</h2>
+                                <p class="text-xs text-slate-400">Desglose de compras y productos</p>
+                            </div>
+                            <!-- Buscador Rápido -->
+                            <div class="w-full sm:w-auto">
+                                <input 
+                                    id="search-bills" 
+                                    type="text" 
+                                    placeholder="Buscar comercio..." 
+                                    class="w-full sm:w-48 px-3 py-1.5 text-xs rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#FACC15] text-slate-800"
+                                />
+                            </div>
+                        </div>
+
+                        <!-- Lista de Facturas -->
+                        <div id="bills-list" class="space-y-3">
+                            <!-- Inyectado dinámicamente -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Modal: Editar Presupuesto -->
+    <div id="modal-budget" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center pb-4 border-b border-slate-100">
+                <h3 class="font-bold text-lg text-slate-900">Configurar Presupuesto</h3>
+                <button id="btn-close-budget-modal" class="text-slate-400 hover:text-slate-700 text-xl font-bold">✕</button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto py-4 space-y-4 pr-1">
+                <!-- Moneda -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Moneda del presupuesto</label>
+                    <select id="modal-budget-currency" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 bg-slate-50 font-medium text-slate-800">
+                        <option value="USD">Dólares (USD $)</option>
+                        <option value="VES">Bolívares (VES Bs.)</option>
+                    </select>
+                </div>
+
+                <!-- Presupuesto General -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Presupuesto General del Mes</label>
+                    <input 
+                        id="modal-budget-general" 
+                        type="number" 
+                        step="0.01" 
+                        min="0" 
+                        placeholder="Ej. 250.00" 
+                        class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 font-bold text-slate-900 focus:ring-2 focus:ring-[#FACC15] focus:outline-none"
+                    />
+                </div>
+
+                <!-- Desglose por Categoría -->
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-xs font-semibold text-slate-700">Asignar por Categoría</label>
+                        <span id="modal-budget-sum-indicator" class="text-xs text-slate-500 font-medium">Suma: $0.00</span>
+                    </div>
+                    <div id="modal-budget-categories-inputs" class="space-y-2">
+                        <!-- Generado por JS -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 flex justify-end gap-2">
+                <button id="btn-cancel-budget-modal" class="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-all">
+                    Cancelar
+                </button>
+                <button id="btn-save-budget-modal" class="px-5 py-2 text-sm font-bold text-slate-900 bg-[#FACC15] hover:bg-[#EAB308] rounded-xl shadow-sm transition-all">
+                    Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Registrar Gasto Rápido -->
+    <div id="modal-expense" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center pb-4 border-b border-slate-100">
+                <h3 class="font-bold text-lg text-slate-900">Registrar Factura o Gasto</h3>
+                <button id="btn-close-expense-modal" class="text-slate-400 hover:text-slate-700 text-xl font-bold">✕</button>
+            </div>
+
+            <div class="py-4 space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Comercio o Lugar</label>
+                    <input 
+                        id="modal-exp-comercio" 
+                        type="text" 
+                        placeholder="Ej. Farmatodo, Panadería..." 
+                        class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 text-slate-900 focus:ring-2 focus:ring-[#FACC15] focus:outline-none"
+                    />
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Monto</label>
+                        <input 
+                            id="modal-exp-monto" 
+                            type="number" 
+                            step="0.01" 
+                            min="0" 
+                            placeholder="0.00" 
+                            class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 font-bold text-slate-900 focus:ring-2 focus:ring-[#FACC15] focus:outline-none"
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Moneda</label>
+                        <select id="modal-exp-moneda" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 bg-slate-50 font-medium text-slate-800">
+                            <option value="USD">USD ($)</option>
+                            <option value="VES">VES (Bs.)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Categoría</label>
+                        <select id="modal-exp-categoria" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 bg-slate-50 text-slate-800">
+                            <option value="Alimentos">Alimentos</option>
+                            <option value="Transporte">Transporte</option>
+                            <option value="Servicios">Servicios</option>
+                            <option value="Salud">Salud</option>
+                            <option value="Entretenimiento">Entretenimiento</option>
+                            <option value="Hogar">Hogar</option>
+                            <option value="Educación">Educación</option>
+                            <option value="Ropa">Ropa</option>
+                            <option value="Otros">Otros</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Fecha</label>
+                        <input 
+                            id="modal-exp-fecha" 
+                            type="date" 
+                            class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 text-slate-800"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 flex justify-end gap-2">
+                <button id="btn-cancel-expense-modal" class="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-all">
+                    Cancelar
+                </button>
+                <button id="btn-save-expense-modal" class="px-5 py-2 text-sm font-bold text-slate-900 bg-[#FACC15] hover:bg-[#EAB308] rounded-xl shadow-sm transition-all">
+                    Guardar Factura
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Client Script: Firebase + Dashboard Logic -->
+    <script>
+        import { initializeApp } from 'firebase/app';
+        import { 
+            getAuth, 
+            signInWithPopup, 
+            GoogleAuthProvider, 
+            onAuthStateChanged, 
+            signOut 
+        } from 'firebase/auth';
+        import { 
+            getFirestore, 
+            collection, 
+            doc, 
+            getDoc, 
+            getDocs, 
+            setDoc, 
+            updateDoc, 
+            enableIndexedDbPersistence 
+        } from 'firebase/firestore';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA5HMxpemkmCC-uKwMIyP9TP3Cxf8MDq8o",
+            authDomain: "gastoscan-ai.firebaseapp.com",
+            projectId: "gastoscan-ai",
+            storageBucket: "gastoscan-ai.firebasestorage.app",
+            messagingSenderId: "758679432067",
+            appId: "1:758679432067:web:panel"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Habilitar persistencia offline para que cargue instantáneamente
+        enableIndexedDbPersistence(db).catch(() => {
+            // Ignorar si el navegador no soporta IndexedDB multi-tab
+        });
+
+        const provider = new GoogleAuthProvider();
+
+        const CATEGORIAS_DEF = [
+            'Alimentos',
+            'Transporte',
+            'Servicios',
+            'Salud',
+            'Entretenimiento',
+            'Hogar',
+            'Educación',
+            'Ropa',
+            'Otros'
+        ];
+
+        const CATEGORIA_ICONS = {
+            'Alimentos': '🛒',
+            'Transporte': '🚗',
+            'Servicios': '💡',
+            'Salud': '💊',
+            'Entretenimiento': '🎬',
+            'Hogar': '🏠',
+            'Educación': '📚',
+            'Ropa': '👕',
+            'Otros': '📦'
+        };
+
+        const MONTH_NAMES = [
+            'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+            'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+        ];
+
+        // Estado de la Aplicación
+        let currentUser = null;
+        const now = new Date();
+        let selectedYear = now.getFullYear();
+        let selectedMonth = now.getMonth() + 1; // 1 - 12
+        let currentGastos = [];
+        let currentPresupuesto = { general: 0, moneda: 'USD', categorias: {} };
+
+        // Elementos DOM
+        const viewLoading = document.getElementById('view-loading');
+        const viewLoggedOut = document.getElementById('view-logged-out');
+        const viewDashboard = document.getElementById('view-dashboard');
+
+        const btnLoginTop = document.getElementById('btn-login-top');
+        const btnLoginHero = document.getElementById('btn-login-hero');
+        const btnLogout = document.getElementById('btn-logout');
+        const userProfileMenu = document.getElementById('user-profile-menu');
+        const userAvatar = document.getElementById('user-avatar');
+        const userName = document.getElementById('user-name');
+
+        const currentMonthDisplay = document.getElementById('current-month-display');
+        const btnPrevMonth = document.getElementById('btn-prev-month');
+        const btnNextMonth = document.getElementById('btn-next-month');
+        const btnTodayMonth = document.getElementById('btn-today-month');
+
+        const cardBudgetAmount = document.getElementById('card-budget-amount');
+        const cardCurrencyBadge = document.getElementById('card-currency-badge');
+        const cardSpentUsd = document.getElementById('card-spent-usd');
+        const cardSpentVes = document.getElementById('card-spent-ves');
+        const cardRemainingAmount = document.getElementById('card-remaining-amount');
+        const cardRemainingBadge = document.getElementById('card-remaining-badge');
+        const cardBillsCount = document.getElementById('card-bills-count');
+        const cardBillsAverage = document.getElementById('card-bills-average');
+
+        const progressBarFill = document.getElementById('progress-bar-fill');
+        const progressPercentLabel = document.getElementById('progress-percent-label');
+        const categoriesList = document.getElementById('categories-list');
+        const billsList = document.getElementById('bills-list');
+        const searchBills = document.getElementById('search-bills');
+
+        // Modales
+        const modalBudget = document.getElementById('modal-budget');
+        const btnOpenBudgetModal = document.getElementById('btn-open-budget-modal');
+        const btnEditCategories = document.getElementById('btn-edit-categories');
+        const btnCloseBudgetModal = document.getElementById('btn-close-budget-modal');
+        const btnCancelBudgetModal = document.getElementById('btn-cancel-budget-modal');
+        const btnSaveBudgetModal = document.getElementById('btn-save-budget-modal');
+        const modalBudgetCurrency = document.getElementById('modal-budget-currency');
+        const modalBudgetGeneral = document.getElementById('modal-budget-general');
+        const modalBudgetCategoriesInputs = document.getElementById('modal-budget-categories-inputs');
+        const modalBudgetSumIndicator = document.getElementById('modal-budget-sum-indicator');
+
+        const modalExpense = document.getElementById('modal-expense');
+        const btnOpenExpenseModal = document.getElementById('btn-open-expense-modal');
+        const btnCloseExpenseModal = document.getElementById('btn-close-expense-modal');
+        const btnCancelExpenseModal = document.getElementById('btn-cancel-expense-modal');
+        const btnSaveExpenseModal = document.getElementById('btn-save-expense-modal');
+        const modalExpComercio = document.getElementById('modal-exp-comercio');
+        const modalExpMonto = document.getElementById('modal-exp-monto');
+        const modalExpMoneda = document.getElementById('modal-exp-moneda');
+        const modalExpCategoria = document.getElementById('modal-exp-categoria');
+        const modalExpFecha = document.getElementById('modal-exp-fecha');
+
+        // Helpers de Formato
+        const formatMoney = (amount, currency = 'USD') => {
+            const sym = currency === 'VES' ? 'Bs. ' : '$';
+            return `${sym}${Number(amount || 0).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        };
+
+        const getDocId = (year, month) => `${year}_${String(month).padStart(2, '0')}`;
+
+        // Autenticación
+        const handleLogin = async () => {
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (err) {
+                console.error("Error al iniciar sesión:", err);
+                alert("No se pudo iniciar sesión con Google. Revisa la consola o configuración de dominios.");
+            }
+        };
+
+        btnLoginTop?.addEventListener('click', handleLogin);
+        btnLoginHero?.addEventListener('click', handleLogin);
+        btnLogout?.addEventListener('click', async () => {
+            await signOut(auth);
+        });
+
+        onAuthStateChanged(auth, async (user) => {
+            viewLoading.classList.add('hidden');
+            if (user) {
+                currentUser = user;
+                btnLoginTop.classList.add('hidden');
+                viewLoggedOut.classList.add('hidden');
+                
+                userProfileMenu.classList.remove('hidden');
+                userProfileMenu.classList.add('flex');
+                userAvatar.src = user.photoURL || '/logo.jpg';
+                userName.textContent = user.displayName || user.email;
+
+                viewDashboard.classList.remove('hidden');
+                await loadDashboardData();
+            } else {
+                currentUser = null;
+                btnLoginTop.classList.remove('hidden');
+                btnLoginTop.classList.add('inline-flex');
+                userProfileMenu.classList.add('hidden');
+                viewDashboard.classList.add('hidden');
+                viewLoggedOut.classList.remove('hidden');
+            }
+        });
+
+        // Selector de Mes
+        const updateMonthDisplay = () => {
+            currentMonthDisplay.textContent = `${MONTH_NAMES[selectedMonth - 1]} ${selectedYear}`;
+        };
+
+        btnPrevMonth?.addEventListener('click', async () => {
+            if (selectedMonth === 1) {
+                selectedMonth = 12;
+                selectedYear -= 1;
+            } else {
+                selectedMonth -= 1;
+            }
+            updateMonthDisplay();
+            await loadDashboardData();
+        });
+
+        btnNextMonth?.addEventListener('click', async () => {
+            if (selectedMonth === 12) {
+                selectedMonth = 1;
+                selectedYear += 1;
+            } else {
+                selectedMonth += 1;
+            }
+            updateMonthDisplay();
+            await loadDashboardData();
+        });
+
+        btnTodayMonth?.addEventListener('click', async () => {
+            const today = new Date();
+            selectedYear = today.getFullYear();
+            selectedMonth = today.getMonth() + 1;
+            updateMonthDisplay();
+            await loadDashboardData();
+        });
+
+        // Carga de Datos desde Firestore
+        const loadDashboardData = async () => {
+            if (!currentUser) return;
+            updateMonthDisplay();
+
+            const monthPrefix = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}`;
+            const docId = getDocId(selectedYear, selectedMonth);
+
+            try {
+                // 1. Cargar Presupuesto del Mes
+                const budgetRef = doc(db, 'users', currentUser.uid, 'presupuestos', docId);
+                const budgetSnap = await getDoc(budgetRef);
+                if (budgetSnap.exists()) {
+                    const data = budgetSnap.data();
+                    currentPresupuesto = {
+                        general: Number(data.presupuesto_general || 0),
+                        moneda: data.moneda || 'USD',
+                        categorias: data.categorias || {}
+                    };
+                } else {
+                    currentPresupuesto = { general: 0, moneda: 'USD', categorias: {} };
+                }
+
+                // 2. Cargar Gastos
+                const gastosRef = collection(db, 'users', currentUser.uid, 'gastos');
+                const gastosSnap = await getDocs(gastosRef);
+
+                currentGastos = [];
+                gastosSnap.forEach(d => {
+                    const g = d.data();
+                    if (!g.eliminado_en && g.fecha && g.fecha.startsWith(monthPrefix)) {
+                        currentGastos.push({
+                            id: d.id,
+                            ...g
+                        });
+                    }
+                });
+
+                // Ordenar más recientes primero
+                currentGastos.sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
+
+                renderMetrics();
+                renderCategories();
+                renderBills();
+            } catch (err) {
+                console.error("Error al cargar datos de Firestore:", err);
+            }
+        };
+
+        // Renderizado de Métricas Clave
+        const renderMetrics = () => {
+            let totalSpentCentsUsd = 0;
+            let totalSpentCentsVes = 0;
+
+            currentGastos.forEach(g => {
+                totalSpentCentsUsd += Number(g.total_usd || 0);
+                if (g.moneda === 'VES') {
+                    totalSpentCentsVes += Number(g.total_original || 0);
+                }
+            });
+
+            const totalSpentUsd = totalSpentCentsUsd / 100.0;
+            const totalSpentVes = totalSpentCentsVes / 100.0;
+
+            // Tarjeta Presupuesto
+            cardBudgetAmount.textContent = formatMoney(currentPresupuesto.general, currentPresupuesto.moneda);
+            cardCurrencyBadge.textContent = currentPresupuesto.moneda;
+
+            // Tarjeta Gastado
+            cardSpentUsd.textContent = formatMoney(totalSpentUsd, 'USD');
+            cardSpentVes.textContent = totalSpentVes > 0 ? `${formatMoney(totalSpentVes, 'VES')} en bolívares` : 'Sin compras en Bs.';
+
+            // Tarjeta Restante
+            if (currentPresupuesto.general > 0) {
+                const diff = currentPresupuesto.general - totalSpentUsd;
+                if (diff >= 0) {
+                    cardRemainingAmount.textContent = `+${formatMoney(diff, currentPresupuesto.moneda)}`;
+                    cardRemainingAmount.className = "text-xl sm:text-2xl font-extrabold text-emerald-600";
+                    cardRemainingBadge.textContent = "Disponible";
+                    cardRemainingBadge.className = "text-[11px] font-semibold mt-1 text-emerald-600";
+                } else {
+                    cardRemainingAmount.textContent = `-${formatMoney(Math.abs(diff), currentPresupuesto.moneda)}`;
+                    cardRemainingAmount.className = "text-xl sm:text-2xl font-extrabold text-rose-600";
+                    cardRemainingBadge.textContent = "Excedido";
+                    cardRemainingBadge.className = "text-[11px] font-semibold mt-1 text-rose-600";
+                }
+            } else {
+                cardRemainingAmount.textContent = "Sin límite";
+                cardRemainingAmount.className = "text-xl sm:text-2xl font-extrabold text-slate-400";
+                cardRemainingBadge.textContent = "Define un presupuesto";
+                cardRemainingBadge.className = "text-[11px] font-semibold mt-1 text-slate-400";
+            }
+
+            // Facturas
+            cardBillsCount.textContent = currentGastos.length.toString();
+            const avg = currentGastos.length > 0 ? (totalSpentUsd / currentGastos.length) : 0;
+            cardBillsAverage.textContent = `Promedio: ${formatMoney(avg, 'USD')}`;
+
+            // Barra de Progreso
+            if (currentPresupuesto.general > 0) {
+                const percent = Math.round((totalSpentUsd / currentPresupuesto.general) * 100);
+                progressPercentLabel.textContent = `${percent}% consumido`;
+                progressBarFill.style.width = `${Math.min(percent, 100)}%`;
+                
+                if (percent > 100) {
+                    progressBarFill.className = "bg-rose-500 h-3 rounded-full transition-all duration-500";
+                } else if (percent > 85) {
+                    progressBarFill.className = "bg-amber-500 h-3 rounded-full transition-all duration-500";
+                } else {
+                    progressBarFill.className = "bg-[#FACC15] h-3 rounded-full transition-all duration-500";
+                }
+            } else {
+                progressPercentLabel.textContent = "0% (Sin presupuesto fijado)";
+                progressBarFill.style.width = "0%";
+            }
+        };
+
+        // Renderizado de Categorías
+        const renderCategories = () => {
+            categoriesList.innerHTML = '';
+
+            // Calcular gasto por categoría
+            const catSpent = {};
+            CATEGORIAS_DEF.forEach(c => catSpent[c] = 0);
+
+            currentGastos.forEach(g => {
+                const cat = g.categoria || 'Otros';
+                const spent = Number(g.total_usd || 0) / 100.0;
+                catSpent[cat] = (catSpent[cat] || 0) + spent;
+            });
+
+            // Combinar con presupuestos
+            const allCats = new Set([...CATEGORIAS_DEF, ...Object.keys(currentPresupuesto.categorias || {})]);
+
+            allCats.forEach(cat => {
+                const spent = catSpent[cat] || 0;
+                const budget = Number(currentPresupuesto.categorias[cat] || 0);
+
+                if (spent === 0 && budget === 0) return; // ocultar vacías no presupuestadas
+
+                const percent = budget > 0 ? Math.round((spent / budget) * 100) : 0;
+                const isOver = budget > 0 && spent > budget;
+                const icon = CATEGORIA_ICONS[cat] || '🏷️';
+
+                const row = document.createElement('div');
+                row.className = "p-3 rounded-xl bg-slate-50 border border-slate-100 flex flex-col gap-2";
+                row.innerHTML = `
+                    <div class="flex justify-between items-center text-xs">
+                        <div class="flex items-center gap-2 font-bold text-slate-800">
+                            <span>${icon}</span>
+                            <span>${cat}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="font-bold text-slate-900">${formatMoney(spent, 'USD')}</span>
+                            ${budget > 0 ? `<span class="text-slate-400"> / ${formatMoney(budget, currentPresupuesto.moneda)}</span>` : ''}
+                        </div>
+                    </div>
+                    ${budget > 0 ? `
+                        <div class="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                            <div class="${isOver ? 'bg-rose-500' : 'bg-[#FACC15]'} h-1.5 rounded-full" style="width: ${Math.min(percent, 100)}%"></div>
+                        </div>
+                        <div class="flex justify-between items-center text-[10px]">
+                            <span class="${isOver ? 'text-rose-600 font-bold' : 'text-slate-500'}">${percent}% consumido</span>
+                            <span class="${isOver ? 'text-rose-600 font-semibold' : 'text-slate-400'}">
+                                ${isOver ? 'Excedido' : `Restan ${formatMoney(budget - spent, currentPresupuesto.moneda)}`}
+                            </span>
+                        </div>
+                    ` : ''}
+                `;
+                categoriesList.appendChild(row);
+            });
+
+            if (categoriesList.children.length === 0) {
+                categoriesList.innerHTML = `
+                    <div class="text-center py-6 text-slate-400 text-xs">
+                        No hay gastos ni presupuestos asignados por categoría para este mes.
+                    </div>
+                `;
+            }
+        };
+
+        // Renderizado de Facturas
+        const renderBills = (searchTerm = '') => {
+            billsList.innerHTML = '';
+
+            const term = (searchTerm || '').trim().toLowerCase();
+            const filtered = currentGastos.filter(g => {
+                if (!term) return true;
+                return (g.comercio || '').toLowerCase().includes(term) || (g.categoria || '').toLowerCase().includes(term);
+            });
+
+            if (filtered.length === 0) {
+                billsList.innerHTML = `
+                    <div class="text-center py-12 text-slate-400 text-sm">
+                        No se encontraron facturas registradas en este período.
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach(gasto => {
+                const totalUsd = (Number(gasto.total_usd || 0) / 100.0);
+                const totalOrig = (Number(gasto.total_original || 0) / 100.0);
+                const isVes = gasto.moneda === 'VES';
+                const items = gasto.items || [];
+                const icon = CATEGORIA_ICONS[gasto.categoria] || '🧾';
+
+                const card = document.createElement('div');
+                card.className = "p-4 rounded-xl border border-slate-200 hover:border-slate-300 bg-white transition-all";
+                card.innerHTML = `
+                    <div class="flex justify-between items-start gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-lg flex-shrink-0">
+                                ${icon}
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-sm text-slate-900 leading-snug">${gasto.comercio || 'Comercio'}</h4>
+                                <div class="flex items-center gap-2 mt-0.5 text-xs text-slate-400">
+                                    <span>${gasto.fecha || ''}</span>
+                                    <span>•</span>
+                                    <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium text-[10px]">${gasto.categoria || 'Otros'}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right flex-shrink-0">
+                            <span class="font-bold text-base text-slate-900 block">${formatMoney(totalUsd, 'USD')}</span>
+                            ${isVes ? `<span class="text-xs text-slate-400 block">${formatMoney(totalOrig, 'VES')}</span>` : ''}
+                        </div>
+                    </div>
+
+                    ${items.length > 0 ? `
+                        <div class="mt-3 pt-3 border-t border-slate-100">
+                            <details class="text-xs group">
+                                <summary class="cursor-pointer font-semibold text-slate-600 hover:text-slate-900 flex items-center justify-between">
+                                    <span>Ver ${items.length} producto${items.length > 1 ? 's' : ''}</span>
+                                    <span class="text-[10px] text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+                                </summary>
+                                <div class="mt-2 space-y-1.5 pl-2 border-l-2 border-slate-100 text-slate-600">
+                                    ${items.map(it => {
+                                        const unitPrice = (Number(it.precio_unitario || 0) / 100.0);
+                                        const itTotal = (Number(it.total || 0) / 100.0);
+                                        return `
+                                            <div class="flex justify-between items-center py-0.5">
+                                                <span>${it.cantidad || 1}x ${it.descripcion || 'Producto'}</span>
+                                                <span class="font-mono text-slate-800">${formatMoney(itTotal, gasto.moneda || 'USD')}</span>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            </details>
+                        </div>
+                    ` : ''}
+
+                    <div class="mt-3 pt-2 border-t border-slate-100 flex justify-end">
+                        <button class="btn-delete-expense text-[11px] font-semibold text-slate-400 hover:text-rose-600 transition-colors" data-id="${gasto.id}">
+                            Eliminar factura
+                        </button>
+                    </div>
+                `;
+
+                // Listener para eliminar
+                card.querySelector('.btn-delete-expense')?.addEventListener('click', async (e) => {
+                    const id = (e.currentTarget).getAttribute('data-id');
+                    if (confirm("¿Deseas descartar esta factura? Se eliminará de tu cuenta y se sincronizará con tu teléfono.")) {
+                        try {
+                            const docRef = doc(db, 'users', currentUser.uid, 'gastos', id);
+                            await updateDoc(docRef, {
+                                eliminado_en: new Date().toISOString()
+                            });
+                            await loadDashboardData();
+                        } catch (err) {
+                            console.error("Error al eliminar gasto:", err);
+                            alert("No se pudo eliminar la factura.");
+                        }
+                    }
+                });
+
+                billsList.appendChild(card);
+            });
+        };
+
+        searchBills?.addEventListener('input', (e) => {
+            renderBills(e.target.value);
+        });
+
+        // ==========================================
+        // Lógica de Modales
+        // ==========================================
+
+        // Modal Presupuesto
+        const openBudgetModal = () => {
+            modalBudgetCurrency.value = currentPresupuesto.moneda || 'USD';
+            modalBudgetGeneral.value = currentPresupuesto.general > 0 ? currentPresupuesto.general.toString() : '';
+
+            modalBudgetCategoriesInputs.innerHTML = '';
+            CATEGORIAS_DEF.forEach(cat => {
+                const existingVal = currentPresupuesto.categorias[cat] || '';
+                const row = document.createElement('div');
+                row.className = "flex items-center justify-between gap-3";
+                row.innerHTML = `
+                    <span class="text-xs text-slate-700 font-medium flex items-center gap-1.5 w-32 truncate">
+                        <span>${CATEGORIA_ICONS[cat] || '🏷️'}</span>
+                        <span>${cat}</span>
+                    </span>
+                    <input 
+                        type="number" 
+                        step="0.01" 
+                        min="0" 
+                        data-cat="${cat}" 
+                        value="${existingVal}" 
+                        placeholder="0.00" 
+                        class="input-cat-budget flex-1 px-2.5 py-1.5 text-xs rounded-xl border border-slate-200 text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#FACC15]"
+                    />
+                `;
+                modalBudgetCategoriesInputs.appendChild(row);
+            });
+
+            updateBudgetSumIndicator();
+            modalBudget.classList.remove('hidden');
+            modalBudget.classList.add('flex');
+        };
+
+        const closeBudgetModal = () => {
+            modalBudget.classList.add('hidden');
+            modalBudget.classList.remove('flex');
+        };
+
+        const updateBudgetSumIndicator = () => {
+            let sum = 0;
+            const inputs = document.querySelectorAll('.input-cat-budget');
+            inputs.forEach(inp => {
+                sum += Number((inp).value || 0);
+            });
+            const gen = Number(modalBudgetGeneral.value || 0);
+            const curr = modalBudgetCurrency.value;
+            modalBudgetSumIndicator.textContent = `Suma: ${formatMoney(sum, curr)}`;
+
+            if (gen > 0 && sum > gen) {
+                modalBudgetSumIndicator.className = "text-xs font-bold text-rose-600";
+                modalBudgetSumIndicator.textContent = `Suma: ${formatMoney(sum, curr)} (Supera el general)`;
+            } else {
+                modalBudgetSumIndicator.className = "text-xs text-slate-500 font-medium";
+            }
+        };
+
+        btnOpenBudgetModal?.addEventListener('click', openBudgetModal);
+        btnEditCategories?.addEventListener('click', openBudgetModal);
+        btnCloseBudgetModal?.addEventListener('click', closeBudgetModal);
+        btnCancelBudgetModal?.addEventListener('click', closeBudgetModal);
+
+        modalBudgetGeneral?.addEventListener('input', updateBudgetSumIndicator);
+        modalBudgetCategoriesInputs?.addEventListener('input', updateBudgetSumIndicator);
+
+        btnSaveBudgetModal?.addEventListener('click', async () => {
+            if (!currentUser) return;
+
+            const general = Number(modalBudgetGeneral.value || 0);
+            const moneda = modalBudgetCurrency.value;
+            const cats = {};
+
+            let sum = 0;
+            const inputs = document.querySelectorAll('.input-cat-budget');
+            inputs.forEach(inp => {
+                const c = (inp).getAttribute('data-cat');
+                const val = Number((inp).value || 0);
+                if (val > 0 && c) {
+                    cats[c] = val;
+                    sum += val;
+                }
+            });
+
+            if (general > 0 && sum > general) {
+                alert("La suma de las categorías no puede superar el presupuesto general.");
+                return;
+            }
+
+            const docId = getDocId(selectedYear, selectedMonth);
+            const budgetRef = doc(db, 'users', currentUser.uid, 'presupuestos', docId);
+
+            try {
+                btnSaveBudgetModal.textContent = "Guardando...";
+                await setDoc(budgetRef, {
+                    anio: selectedYear,
+                    mes: selectedMonth,
+                    presupuesto_general: general,
+                    moneda: moneda,
+                    categorias: cats,
+                    actualizado_en: new Date().toISOString()
+                }, { merge: true });
+
+                closeBudgetModal();
+                await loadDashboardData();
+            } catch (err) {
+                console.error("Error al guardar presupuesto:", err);
+                alert("No se pudo guardar el presupuesto.");
+            } finally {
+                btnSaveBudgetModal.textContent = "Guardar";
+            }
+        });
+
+        // Modal Nuevo Gasto
+        const openExpenseModal = () => {
+            modalExpComercio.value = '';
+            modalExpMonto.value = '';
+            modalExpMoneda.value = 'USD';
+            modalExpCategoria.value = 'Alimentos';
+            
+            const d = new Date();
+            const monthStr = String(selectedMonth).padStart(2, '0');
+            const dayStr = String(d.getDate()).padStart(2, '0');
+            modalExpFecha.value = `${selectedYear}-${monthStr}-${dayStr}`;
+
+            modalExpense.classList.remove('hidden');
+            modalExpense.classList.add('flex');
+        };
+
+        const closeExpenseModal = () => {
+            modalExpense.classList.add('hidden');
+            modalExpense.classList.remove('flex');
+        };
+
+        btnOpenExpenseModal?.addEventListener('click', openExpenseModal);
+        btnCloseExpenseModal?.addEventListener('click', closeExpenseModal);
+        btnCancelExpenseModal?.addEventListener('click', closeExpenseModal);
+
+        btnSaveExpenseModal?.addEventListener('click', async () => {
+            if (!currentUser) return;
+
+            const comercio = (modalExpComercio.value || '').trim();
+            const monto = Number(modalExpMonto.value || 0);
+            const moneda = modalExpMoneda.value;
+            const categoria = modalExpCategoria.value;
+            const fecha = modalExpFecha.value;
+
+            if (!comercio || monto <= 0 || !fecha) {
+                alert("Por favor completa el comercio, el monto y la fecha.");
+                return;
+            }
+
+            const uuid = crypto.randomUUID ? crypto.randomUUID() : `web_${Date.now()}`;
+            const cents = Math.round(monto * 100);
+
+            // Si es USD, el total USD es igual. Si es VES, calcular aprox
+            const totalUsdCents = moneda === 'USD' ? cents : Math.round(cents / 36.5); // Tasa referencial si no hay BCV exacta
+
+            const docRef = doc(db, 'users', currentUser.uid, 'gastos', uuid);
+
+            try {
+                btnSaveExpenseModal.textContent = "Guardando...";
+                await setDoc(docRef, {
+                    uuid: uuid,
+                    comercio: comercio,
+                    fecha: fecha,
+                    moneda: moneda,
+                    total_original: cents,
+                    total_usd: totalUsdCents,
+                    tasa_cambio: 1.0,
+                    categoria: categoria,
+                    items: [],
+                    creado_en: new Date().toISOString(),
+                    actualizado_en: new Date().toISOString(),
+                    synced: 1
+                });
+
+                closeExpenseModal();
+                await loadDashboardData();
+            } catch (err) {
+                console.error("Error al registrar factura:", err);
+                alert("No se pudo registrar la factura.");
+            } finally {
+                btnSaveExpenseModal.textContent = "Guardar Factura";
+            }
+        });
+
+    </script>
+</body>
+</html>

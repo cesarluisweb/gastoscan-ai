@@ -24,7 +24,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 11,
+      version: 12,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
       onConfigure: _onConfigure,
@@ -163,6 +163,13 @@ class DatabaseHelper {
         // Ignorar si ya existe
       }
     }
+    if (oldVersion < 12) {
+      try {
+        await db.execute("ALTER TABLE presupuestos_mensuales ADD COLUMN actualizado_en TEXT");
+      } catch (e) {
+        // Ignorar si ya existe
+      }
+    }
   }
 
   Future<void> _onConfigure(Database db) async {
@@ -249,6 +256,7 @@ class DatabaseHelper {
         mes INTEGER NOT NULL,
         presupuesto_general REAL NOT NULL DEFAULT 0.0,
         moneda TEXT DEFAULT 'USD',
+        actualizado_en TEXT,
         UNIQUE(anio, mes)
       )
     ''');
@@ -855,6 +863,7 @@ class DatabaseHelper {
         'mes': mes,
         'presupuesto_general': monto >= 0 ? monto : 0.0,
         'moneda': moneda,
+        'actualizado_en': DateTime.now().toIso8601String(),
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
@@ -883,6 +892,7 @@ class DatabaseHelper {
   Future<void> setPresupuestoCategoriaMensual(int anio, int mes, String categoriaNombre, double presupuesto, {String moneda = 'USD'}) async {
     final db = await instance.database;
     final trimmed = categoriaNombre.trim();
+    final nowIso = DateTime.now().toIso8601String();
     if (presupuesto <= 0) {
       await db.delete(
         'presupuestos_categorias_mensuales',
@@ -902,11 +912,36 @@ class DatabaseHelper {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     }
+    final existing = await db.query(
+      'presupuestos_mensuales',
+      where: 'anio = ? AND mes = ?',
+      whereArgs: [anio, mes],
+    );
+    if (existing.isNotEmpty) {
+      await db.update(
+        'presupuestos_mensuales',
+        {'actualizado_en': nowIso},
+        where: 'anio = ? AND mes = ?',
+        whereArgs: [anio, mes],
+      );
+    } else {
+      await db.insert(
+        'presupuestos_mensuales',
+        {
+          'anio': anio,
+          'mes': mes,
+          'presupuesto_general': 0.0,
+          'moneda': moneda,
+          'actualizado_en': nowIso,
+        },
+      );
+    }
   }
 
   /// Guarda todos los presupuestos de categoría de un mes reemplazando los existentes
   Future<void> setPresupuestosCategorias(int anio, int mes, Map<String, double> presupuestos, {String moneda = 'USD'}) async {
     final db = await instance.database;
+    final nowIso = DateTime.now().toIso8601String();
     await db.transaction((txn) async {
       await txn.delete(
         'presupuestos_categorias_mensuales',
@@ -914,6 +949,133 @@ class DatabaseHelper {
         whereArgs: [anio, mes],
       );
       for (final entry in presupuestos.entries) {
+        if (entry.value > 0) {
+          await txn.insert(
+            'presupuestos_categorias_mensuales',
+            {
+              'anio': anio,
+              'mes': mes,
+              'categoria': entry.key.trim(),
+              'presupuesto': entry.value,
+              'moneda': moneda,
+            },
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
+      }
+      final existing = await txn.query(
+        'presupuestos_mensuales',
+        where: 'anio = ? AND mes = ?',
+        whereArgs: [anio, mes],
+      );
+      if (existing.isNotEmpty) {
+        await txn.update(
+          'presupuestos_mensuales',
+          {'actualizado_en': nowIso},
+          where: 'anio = ? AND mes = ?',
+          whereArgs: [anio, mes],
+        );
+      } else {
+        await txn.insert(
+          'presupuestos_mensuales',
+          {
+            'anio': anio,
+            'mes': mes,
+            'presupuesto_general': 0.0,
+            'moneda': moneda,
+            'actualizado_en': nowIso,
+          },
+        );
+      }
+    });
+  }
+
+  /// Obtiene todos los presupuestos mensuales con su presupuesto general y desglose por categorías
+  Future<List<Map<String, dynamic>>> getAllPresupuestosMensualesCompletos() async {
+    final db = await instance.database;
+    final generalRows = await db.query('presupuestos_mensuales');
+    final catRows = await db.query('presupuestos_categorias_mensuales');
+
+    final Set<String> claves = {};
+    for (final row in generalRows) {
+      claves.add('${row['anio']}_${row['mes']}');
+    }
+    for (final row in catRows) {
+      claves.add('${row['anio']}_${row['mes']}');
+    }
+
+    final List<Map<String, dynamic>> resultado = [];
+    for (final clave in claves) {
+      final partes = clave.split('_');
+      final anio = int.parse(partes[0]);
+      final mes = int.parse(partes[1]);
+
+      Map<String, dynamic>? genRow;
+      for (final r in generalRows) {
+        if (r['anio'] == anio && r['mes'] == mes) {
+          genRow = r;
+          break;
+        }
+      }
+
+      final Map<String, double> cats = {};
+      for (final r in catRows) {
+        if (r['anio'] == anio && r['mes'] == mes) {
+          final catName = r['categoria'] as String;
+          final budget = (r['presupuesto'] as num?)?.toDouble() ?? 0.0;
+          if (budget > 0) {
+            cats[catName] = budget;
+          }
+        }
+      }
+
+      final general = (genRow?['presupuesto_general'] as num?)?.toDouble() ?? 0.0;
+      final moneda = (genRow?['moneda'] as String?) ?? 'USD';
+      final actualizadoEn = genRow?['actualizado_en'] as String?;
+
+      resultado.add({
+        'anio': anio,
+        'mes': mes,
+        'presupuesto_general': general,
+        'moneda': moneda,
+        'categorias': cats,
+        'actualizado_en': actualizadoEn,
+      });
+    }
+    return resultado;
+  }
+
+  /// Guarda un presupuesto mensual completo con sus categorías (usado en sincronización)
+  Future<void> guardarPresupuestoMensualCompleto({
+    required int anio,
+    required int mes,
+    required double general,
+    required String moneda,
+    required Map<String, double> categorias,
+    String? actualizadoEn,
+  }) async {
+    final db = await instance.database;
+    final timestamp = actualizadoEn ?? DateTime.now().toIso8601String();
+    await db.transaction((txn) async {
+      await txn.insert(
+        'presupuestos_mensuales',
+        {
+          'anio': anio,
+          'mes': mes,
+          'presupuesto_general': general >= 0 ? general : 0.0,
+          'moneda': moneda,
+          'actualizado_en': timestamp,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+
+      await txn.delete(
+        'presupuestos_categorias_mensuales',
+        where: 'anio = ? AND mes = ?',
+        whereArgs: [anio, mes],
+      );
+
+      for (final entry in categorias.entries) {
         if (entry.value > 0) {
           await txn.insert(
             'presupuestos_categorias_mensuales',

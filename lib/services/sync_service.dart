@@ -19,6 +19,8 @@ class SyncService {
 
       await syncToFirestore(user);
       await syncFromFirestore(user);
+      await syncPresupuestosToFirestore(user);
+      await syncPresupuestosFromFirestore(user);
     } catch (e) {
       debugPrint("Error en sincronización bidireccional: $e");
     }
@@ -95,6 +97,112 @@ class SyncService {
           } else {
             await _repository.actualizarGasto(gastoRemoto.copyWith(id: localGasto.id, synced: 1), items);
           }
+        }
+      }
+    }
+  }
+
+  Future<void> syncPresupuestosToFirestore(User user) async {
+    final presupuestos = await _repository.obtenerTodosLosPresupuestosMensuales();
+    for (var pres in presupuestos) {
+      final anio = pres['anio'] as int;
+      final mes = pres['mes'] as int;
+      final general = (pres['presupuesto_general'] as num?)?.toDouble() ?? 0.0;
+      final moneda = (pres['moneda'] as String?) ?? 'USD';
+      final categorias = (pres['categorias'] as Map<String, dynamic>?) ?? {};
+      final actualizadoEn = pres['actualizado_en'] as String? ?? DateTime.now().toIso8601String();
+
+      if (general <= 0 && categorias.isEmpty) continue;
+
+      final docId = '${anio}_${mes.toString().padLeft(2, '0')}';
+      final docRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('presupuestos')
+          .doc(docId);
+
+      final snapshot = await docRef.get();
+      if (snapshot.exists) {
+        final remoteData = snapshot.data();
+        if (remoteData != null && remoteData['actualizado_en'] != null) {
+          final remoteTime = DateTime.tryParse(remoteData['actualizado_en'].toString()) ?? DateTime.fromMillisecondsSinceEpoch(0);
+          final localTime = DateTime.tryParse(actualizadoEn) ?? DateTime.fromMillisecondsSinceEpoch(0);
+          if (remoteTime.isAfter(localTime)) {
+            continue;
+          }
+        }
+      }
+
+      await docRef.set({
+        'anio': anio,
+        'mes': mes,
+        'presupuesto_general': general,
+        'moneda': moneda,
+        'categorias': categorias,
+        'actualizado_en': actualizadoEn,
+      }, SetOptions(merge: true));
+    }
+  }
+
+  Future<void> syncPresupuestosFromFirestore(User user) async {
+    final snapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('presupuestos')
+        .get();
+
+    if (snapshot.docs.isEmpty) return;
+
+    final localPresupuestos = await _repository.obtenerTodosLosPresupuestosMensuales();
+    final Map<String, Map<String, dynamic>> localMap = {};
+    for (var p in localPresupuestos) {
+      final anio = p['anio'] as int;
+      final mes = p['mes'] as int;
+      localMap['${anio}_${mes.toString().padLeft(2, '0')}'] = p;
+    }
+
+    for (var doc in snapshot.docs) {
+      final data = doc.data();
+      final anio = (data['anio'] as num?)?.toInt() ?? 0;
+      final mes = (data['mes'] as num?)?.toInt() ?? 0;
+      if (anio == 0 || mes == 0) continue;
+
+      final docId = '${anio}_${mes.toString().padLeft(2, '0')}';
+      final remoteGeneral = (data['presupuesto_general'] as num?)?.toDouble() ?? 0.0;
+      final remoteMoneda = (data['moneda'] as String?) ?? 'USD';
+      final remoteCatsRaw = data['categorias'] as Map<String, dynamic>? ?? {};
+      final Map<String, double> remoteCats = {};
+      remoteCatsRaw.forEach((k, v) {
+        if (v is num && v.toDouble() > 0) {
+          remoteCats[k] = v.toDouble();
+        }
+      });
+      final remoteActualizadoEn = data['actualizado_en'] as String? ?? DateTime.now().toIso8601String();
+
+      final localP = localMap[docId];
+      if (localP == null) {
+        await _repository.guardarPresupuestoMensualCompleto(
+          anio: anio,
+          mes: mes,
+          general: remoteGeneral,
+          moneda: remoteMoneda,
+          categorias: remoteCats,
+          actualizadoEn: remoteActualizadoEn,
+        );
+      } else {
+        final localActualizadoEn = localP['actualizado_en'] as String?;
+        final localTime = DateTime.tryParse(localActualizadoEn ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final remoteTime = DateTime.tryParse(remoteActualizadoEn) ?? DateTime.fromMillisecondsSinceEpoch(0);
+
+        if (remoteTime.isAfter(localTime)) {
+          await _repository.guardarPresupuestoMensualCompleto(
+            anio: anio,
+            mes: mes,
+            general: remoteGeneral,
+            moneda: remoteMoneda,
+            categorias: remoteCats,
+            actualizadoEn: remoteActualizadoEn,
+          );
         }
       }
     }

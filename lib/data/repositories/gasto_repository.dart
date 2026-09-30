@@ -117,4 +117,26 @@ class GastoRepository {
   Future<double> obtenerPresupuestoPorCategoria(String categoria) {
     return _dbHelper.getPresupuestoPorCategoria(categoria);
   }
+
+  Future<List<Map<String, dynamic>>> obtenerTodosLosPresupuestosMensuales() {
+    return _dbHelper.getAllPresupuestosMensualesCompletos();
+  }
+
+  Future<void> guardarPresupuestoMensualCompleto({
+    required int anio,
+    required int mes,
+    required double general,
+    required String moneda,
+    required Map<String, double> categorias,
+    String? actualizadoEn,
+  }) {
+    return _dbHelper.guardarPresupuestoMensualCompleto(
+      anio: anio,
+      mes: mes,
+      general: general,
+      moneda: moneda,
+      categorias: categorias,
+      actualizadoEn: actualizadoEn,
+    );
+  }
 }

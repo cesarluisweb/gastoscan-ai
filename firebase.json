@@ -18,6 +18,7 @@
   },
   "hosting": {
     "public": "landing/dist",
+    "cleanUrls": true,
     "ignore": [
       "firebase.json",
       "**/.*",

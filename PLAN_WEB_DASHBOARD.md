@@ -30,28 +30,24 @@ Revisando el código de la aplicación, confirmamos lo siguiente:
 
 ## 3. Alcance y Cronograma (1 a 2 Días)
 
-### Día 1: Consulta y Visualización (El Gran Plus para iPhone y PC)
+### Día 1 & Día 2: Implementación Completa (✅ Implementado y Desplegado)
 1. **Sincronización de Presupuestos (Móvil):**
-   - Extender `SyncService` en Flutter para subir y descargar la configuración mensual de presupuestos en `users/{uid}/presupuestos/{anio_mes}`.
+   - [x] Extendido `SyncService` en Flutter para subir y descargar la configuración mensual de presupuestos en `users/{uid}/presupuestos/{anio_mes}`.
+   - [x] Soporte para `actualizado_en` y sincronización bidireccional inmediata al cambiar presupuestos.
 2. **Reglas de Seguridad en Firestore:**
-   - Actualizar `firestore.rules` para permitir lectura/escritura autenticada en `users/{userId}/presupuestos/{doc}`.
+   - [x] Actualizado `firestore.rules` permitiendo lectura/escritura autenticada en `users/{userId}/presupuestos/{document=**}`.
 3. **Autenticación Web en Astro (`/panel`):**
-   - Botón *"Iniciar sesión con Google"* usando el SDK oficial de Firebase Web (`signInWithPopup`).
-   - El usuario accede con el mismo correo Google que tiene en su app móvil.
-4. **Dashboard de Resumen:**
-   - Selector de mes y año.
-   - Tarjetas de resumen: Presupuesto del mes, total gastado en Bs. y en USD a tasa oficial, dinero restante o exceso.
-   - Barras de progreso de gasto por categoría (Alimentos, Transporte, etc.).
-   - Lista detallada de facturas del mes con fecha, comercio y desglose desplegable de productos.
-
-### Día 2: Edición y Acciones Clave
-1. **Gestión de Presupuestos desde la Web:**
-   - Modal o formulario para definir el presupuesto general y por categorías desde el navegador.
-   - Al guardarse en Firestore, la app móvil lo descarga automáticamente en su siguiente sincronización.
-2. **Eliminación de Gastos:**
-   - Botón para descartar un gasto erróneo desde la web (se borra en Firestore y se replica en el teléfono).
-3. **Registro Rápido de Gastos con Teclado:**
-   - Formulario sencillo optimizado para PC: comercio, monto, moneda (Bs./USD), categoría y fecha.
+   - [x] Botón *"Iniciar sesión con Google"* usando el SDK oficial de Firebase Web (`signInWithPopup`).
+   - [x] Persistencia offline con IndexedDB para carga instantánea.
+4. **Dashboard de Resumen y Métricas:**
+   - [x] Selector de mes y año con controles de navegación rápida.
+   - [x] Tarjetas de métricas: Presupuesto general, total gastado en USD y Bs, dinero disponible/exceso y conteo de facturas.
+   - [x] Barras de progreso por categoría y barra general de consumo.
+   - [x] Lista de facturas con desglose de ítems, productos y precios.
+5. **Edición y Acciones Clave:**
+   - [x] Modal de edición de presupuesto general y por categoría con validación en tiempo real.
+   - [x] Modal de registro rápido de facturas/gastos optimizado para teclado de escritorio.
+   - [x] Eliminación de facturas erróneas con borrado lógico sincronizable.
 
 ---
 

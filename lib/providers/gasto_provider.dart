@@ -157,6 +157,7 @@ class GastoProvider with ChangeNotifier {
       _presupuestoGeneral = monto >= 0 ? monto : 0.0;
       _monedaPresupuesto = moneda;
       notifyListeners();
+      _syncService.syncBidirectional();
     } catch (e) {
       _errorMessage = 'Error al guardar presupuesto general: ${e.toString()}';
       notifyListeners();
@@ -173,6 +174,7 @@ class GastoProvider with ChangeNotifier {
         _presupuestosPorCategoria[categoria] = presupuesto;
       }
       notifyListeners();
+      _syncService.syncBidirectional();
     } catch (e) {
       _errorMessage = 'Error al guardar presupuesto: ${e.toString()}';
       notifyListeners();
@@ -187,6 +189,7 @@ class GastoProvider with ChangeNotifier {
       _monedaPresupuesto = moneda;
       _presupuestosPorCategoria = Map.from(categorias)..removeWhere((key, value) => value <= 0);
       notifyListeners();
+      _syncService.syncBidirectional();
     } catch (e) {
       _errorMessage = 'Error al guardar presupuestos: ${e.toString()}';
       notifyListeners();
