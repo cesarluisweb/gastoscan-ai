@@ -7,6 +7,8 @@ import '../../providers/settings_provider.dart';
 import '../../data/models/gasto_model.dart';
 import '../../data/models/item_gasto_model.dart';
 import '../../data/datasources/remote/gemini_service.dart';
+import '../../data/datasources/local/database_helper.dart';
+import '../../data/models/shopping_item_model.dart';
 import '../../core/utils/uuid_generator.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -127,10 +129,16 @@ class _ChatScreenState extends State<ChatScreen> {
 
     try {
       final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
+      final shoppingItems = await DatabaseHelper.instance.getAllShoppingItems();
       final contextData = {
         'gastos_mes': gastoProvider.gastos.map((g) => g.toMap()).toList(),
         'total_usd': gastoProvider.totalMesUsd,
         'total_ves': gastoProvider.totalMesVes,
+        'lista_compras': shoppingItems.map((e) => {
+          'id': e.id,
+          'nombre': e.name,
+          'comprado': e.isPurchased == 1,
+        }).toList(),
       };
 
       final responseMap = await _geminiService.chatWithAnalyst(
@@ -140,7 +148,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
       if (responseMap.containsKey('functionCall')) {
         final call = responseMap['functionCall'] as Map;
-        if (call['name'] == 'registrar_gasto') {
+        final callName = call['name'];
+
+        if (callName == 'registrar_gasto') {
           final args = call['args'] as Map;
           
           // Construir el gasto
@@ -183,6 +193,128 @@ class _ChatScreenState extends State<ChatScreen> {
               });
             } else {
               _messages.add({'role': 'assistant', 'text': 'Hubo un error al intentar guardar el gasto.'});
+            }
+          });
+        } else if (callName == 'agregar_items_lista_compras') {
+          final args = call['args'] as Map;
+          final List nombres = args['nombres'] ?? (args['nombre'] != null ? [args['nombre']] : []);
+          final List<String> agregados = [];
+          for (final n in nombres) {
+            final nombreStr = n.toString().trim();
+            if (nombreStr.isNotEmpty) {
+              await DatabaseHelper.instance.insertShoppingItem(
+                ShoppingItemModel(
+                  name: nombreStr,
+                  createdAt: DateTime.now().toIso8601String(),
+                ),
+              );
+              agregados.add(nombreStr);
+            }
+          }
+          setState(() {
+            if (agregados.isNotEmpty) {
+              final plural = agregados.length == 1 ? 'producto' : 'productos';
+              _messages.add({
+                'role': 'assistant',
+                'text': 'Anoté $plural en tu lista de compras: ${agregados.join(", ")}.',
+              });
+            } else {
+              _messages.add({
+                'role': 'assistant',
+                'text': 'No se especificaron productos para agregar a la lista.',
+              });
+            }
+          });
+        } else if (callName == 'modificar_item_lista_compras') {
+          final args = call['args'] as Map;
+          final String nombreActual = (args['nombre_actual'] ?? args['nombre'] ?? '').toString().trim().toLowerCase();
+          final String nuevoNombre = (args['nuevo_nombre'] ?? '').toString().trim();
+          final allItems = await DatabaseHelper.instance.getAllShoppingItems();
+          ShoppingItemModel? match;
+          for (final item in allItems) {
+            final iname = item.name.toLowerCase();
+            if (iname == nombreActual || iname.contains(nombreActual) || nombreActual.contains(iname)) {
+              match = item;
+              break;
+            }
+          }
+
+          setState(() {
+            if (match != null && match.id != null && nuevoNombre.isNotEmpty) {
+              DatabaseHelper.instance.updateShoppingItemName(match.id!, nuevoNombre);
+              _messages.add({
+                'role': 'assistant',
+                'text': 'Cambié "${match.name}" por "$nuevoNombre" en tu lista de compras.',
+              });
+            } else {
+              _messages.add({
+                'role': 'assistant',
+                'text': 'No encontré ningún producto que coincida con "$nombreActual" en tu lista de compras.',
+              });
+            }
+          });
+        } else if (callName == 'eliminar_items_lista_compras') {
+          final args = call['args'] as Map;
+          final List nombres = args['nombres'] ?? (args['nombre'] != null ? [args['nombre']] : []);
+          final allItems = await DatabaseHelper.instance.getAllShoppingItems();
+          final List<String> eliminados = [];
+          for (final n in nombres) {
+            final target = n.toString().trim().toLowerCase();
+            for (final item in allItems) {
+              final iname = item.name.toLowerCase();
+              if (iname == target || iname.contains(target) || target.contains(iname)) {
+                if (item.id != null && !eliminados.contains(item.name)) {
+                  await DatabaseHelper.instance.deleteShoppingItem(item.id!);
+                  eliminados.add(item.name);
+                  break;
+                }
+              }
+            }
+          }
+          setState(() {
+            if (eliminados.isNotEmpty) {
+              _messages.add({
+                'role': 'assistant',
+                'text': 'Eliminé de tu lista de compras: ${eliminados.join(", ")}.',
+              });
+            } else {
+              _messages.add({
+                'role': 'assistant',
+                'text': 'No encontré los productos solicitados en tu lista de compras.',
+              });
+            }
+          });
+        } else if (callName == 'marcar_items_lista_compras') {
+          final args = call['args'] as Map;
+          final List nombres = args['nombres'] ?? (args['nombre'] != null ? [args['nombre']] : []);
+          final bool comprado = args['comprado'] ?? true;
+          final allItems = await DatabaseHelper.instance.getAllShoppingItems();
+          final List<String> modificados = [];
+          for (final n in nombres) {
+            final target = n.toString().trim().toLowerCase();
+            for (final item in allItems) {
+              final iname = item.name.toLowerCase();
+              if (iname == target || iname.contains(target) || target.contains(iname)) {
+                if (item.id != null && !modificados.contains(item.name)) {
+                  await DatabaseHelper.instance.updateShoppingItemStatus(item.id!, comprado);
+                  modificados.add(item.name);
+                  break;
+                }
+              }
+            }
+          }
+          setState(() {
+            final estado = comprado ? 'comprado(s)' : 'pendiente(s)';
+            if (modificados.isNotEmpty) {
+              _messages.add({
+                'role': 'assistant',
+                'text': 'Marqué como $estado: ${modificados.join(", ")}.',
+              });
+            } else {
+              _messages.add({
+                'role': 'assistant',
+                'text': 'No encontré los productos solicitados en tu lista de compras.',
+              });
             }
           });
         }

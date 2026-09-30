@@ -742,19 +742,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Desglose de Ítems',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                      ),
-                      TextButton.icon(
-                        onPressed: _addItem,
-                        icon: const Icon(Icons.add, size: 16, color: AppColors.primaryDark),
-                        label: const Text('Agregar', style: TextStyle(color: AppColors.textPrimary)),
-                      ),
-                    ],
+                  const Text(
+                    'Desglose de Ítems',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                   ),
                   const SizedBox(height: 8),
                   if (_items.isEmpty)
@@ -957,6 +947,26 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                           ),
                         );
                       }).toList(),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    key: const Key('review_expense_add_item_btn'),
+                    onPressed: _addItem,
+                    icon: const Icon(Icons.add, size: 18, color: AppColors.textPrimary),
+                    label: Text(
+                      _items.isEmpty ? 'Agregar ítem' : 'Agregar otro ítem',
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(44),
+                      side: const BorderSide(color: AppColors.border, width: 1.5),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      backgroundColor: AppColors.cardLighter,
+                    ),
+                  ),
                 ],
               ),
             ),

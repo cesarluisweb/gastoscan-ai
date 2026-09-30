@@ -597,6 +597,16 @@ class DatabaseHelper {
     );
   }
 
+  Future<void> updateShoppingItemName(int id, String newName) async {
+    final db = await instance.database;
+    await db.update(
+      'shopping_items',
+      {'name': newName},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
   Future<void> deleteShoppingItem(int id) async {
     final db = await instance.database;
     await db.delete('shopping_items', where: 'id = ?', whereArgs: [id]);

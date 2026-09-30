@@ -168,13 +168,26 @@ exports.chatWithAnalyst = functions
     const key = geminiApiKey.value();
     let modelIndex = 0;
 
-    const systemPrompt = `Eres un asistente financiero experto y amigable para un usuario en Venezuela.
-Tu objetivo es analizar los gastos mensuales del usuario y responder sus dudas con base en los datos proporcionados.
-Da respuestas cortas, directas y prácticas. Si el usuario gasta mucho en algo, házselo saber.
-Si no hay suficientes datos para responder una pregunta específica, recomiéndale seguir escaneando facturas.
-Evita usar saludos largos o excesos de formalidad, ve directo al punto.
-Regla crítica para registrar gastos por voz: Si el usuario te dicta registrar un gasto con precios en múltiples monedas mezcladas (ej. un ítem en dólares y otro en bolívares), CONVIERTE mentalmente todos los precios a una sola moneda unificada (la que predomine o USD) usando una tasa de cambio lógica antes de enviarlos a la función registrar_gasto. La app no soporta múltiples monedas en el mismo ticket.
-Aquí están los gastos del usuario de este mes en formato JSON:
+    const systemPrompt = `Eres un asistente financiero y de compras experto y amigable para un usuario en Venezuela dentro de la app Rinde Más.
+Tu objetivo es analizar los gastos mensuales del usuario, responder sus dudas con base en los datos proporcionados y gestionar su lista de compras.
+Da respuestas cortas, directas y prácticas en español venezolano natural.
+Evita usar saludos largos o excesos de formalidad, ve directo al grano.
+
+REGLA DE DESAMBIGUACIÓN (CRÍTICA):
+- Si el usuario dice claramente que ya gastó, compró o pagó algo (o menciona montos/precios o un comercio), regístralo como gasto con la función "registrar_gasto".
+- Si el usuario dice claramente que lo anote en la "lista de compras", "tengo que comprar", "para comprar" o similar, usa las funciones de lista de compras ("agregar_items_lista_compras", etc.).
+- Si la orden es AMBIGUA y no queda claro si es un gasto realizado o un recordatorio para comprar (ejemplo: "anota una harina pan", "agrega café", "pon 2 leches"): NO ASUMAS NI EJECUTES NINGUNA FUNCIÓN. Responde preguntando al usuario textualmente: "¿Deseas agregarlo a tu lista de compras o registrarlo como un gasto realizado?".
+
+REGLAS PARA LISTA DE COMPRAS:
+- Si el usuario pide agregar uno o varios productos a la lista de compras, invoca "agregar_items_lista_compras".
+- Si pide cambiar o renombrar un producto existente, invoca "modificar_item_lista_compras".
+- Si pide eliminar o quitar productos de la lista, invoca "eliminar_items_lista_compras".
+- Si pide marcar productos como comprados o pendientes, invoca "marcar_items_lista_compras".
+- Si pregunta qué tiene en su lista de compras, responde directamente listando los productos de su lista actual.
+
+Regla para registrar gastos por voz: Si el usuario te dicta registrar un gasto con precios en múltiples monedas mezcladas (ej. un ítem en dólares y otro en bolívares), CONVIERTE mentalmente todos los precios a una sola moneda unificada (la que predomine o USD) usando una tasa de cambio lógica antes de enviarlos a la función registrar_gasto. La app no soporta múltiples monedas en el mismo ticket.
+
+Aquí están los datos del usuario en formato JSON (gastos del mes y lista de compras actual):
 ${JSON.stringify(contextData)}
 `;
 
@@ -219,6 +232,67 @@ ${JSON.stringify(contextData)}
                   }
                 },
                 required: ["comercio", "fecha", "total_usd", "categoria", "items"]
+              }
+            },
+            {
+              name: "agregar_items_lista_compras",
+              description: "Agrega uno o varios productos a la lista de compras del usuario.",
+              parameters: {
+                type: "object",
+                properties: {
+                  nombres: {
+                    type: "array",
+                    description: "Lista de nombres de los productos a agregar a la lista de compras.",
+                    items: { type: "string" }
+                  }
+                },
+                required: ["nombres"]
+              }
+            },
+            {
+              name: "modificar_item_lista_compras",
+              description: "Modifica o renombra un producto en la lista de compras del usuario.",
+              parameters: {
+                type: "object",
+                properties: {
+                  nombre_actual: { type: "string", description: "Nombre del producto actual a modificar." },
+                  nuevo_nombre: { type: "string", description: "Nuevo nombre para el producto." }
+                },
+                required: ["nombre_actual", "nuevo_nombre"]
+              }
+            },
+            {
+              name: "eliminar_items_lista_compras",
+              description: "Elimina uno o varios productos de la lista de compras del usuario.",
+              parameters: {
+                type: "object",
+                properties: {
+                  nombres: {
+                    type: "array",
+                    description: "Lista de nombres de los productos a eliminar.",
+                    items: { type: "string" }
+                  }
+                },
+                required: ["nombres"]
+              }
+            },
+            {
+              name: "marcar_items_lista_compras",
+              description: "Marca productos de la lista de compras como comprados o pendientes.",
+              parameters: {
+                type: "object",
+                properties: {
+                  nombres: {
+                    type: "array",
+                    description: "Lista de nombres de los productos a marcar.",
+                    items: { type: "string" }
+                  },
+                  comprado: {
+                    type: "boolean",
+                    description: "true si fue comprado, false si está pendiente."
+                  }
+                },
+                required: ["nombres", "comprado"]
               }
             }
           ]
