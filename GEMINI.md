@@ -66,7 +66,9 @@ La compilación en GitHub Actions (`build_apk.yml`) ejecuta `flutter create`, lo
 ## 12. Asistente IA: Reglas de Intención y Gestión de Compras
 - **Desambiguación Obligatoria (Gasto vs. Lista de Compras):** Si el usuario pide registrar o anotar productos sin monto y sin especificar claramente la intención (ej. *"anota una harina pan"*), el asistente NUNCA debe adivinar ni registrar a ciegas. Debe preguntar de forma directa:
   > *"¿Deseas agregarlo a tu lista de compras o registrarlo como un gasto realizado?"*
+- **Doble Capa de Protección:** La desambiguación no depende solo del prompt. En `chat_screen.dart`, cualquier ejecución de `registrar_gasto` con monto cero o sin números explícitos en el mensaje del usuario debe ser interceptada localmente para formular la pregunta obligatoria antes de guardar.
 - **Herramientas de Lista de Compras:** Cuando el usuario indique explícitamente agregar, modificar, eliminar o tachar de la lista de compras, el asistente invocará las funciones correspondientes (`agregar_items_lista_compras`, `modificar_item_lista_compras`, `eliminar_items_lista_compras`, `marcar_items_lista_compras`) y confirmará la acción con naturalidad y brevedad en español.
+- **Cotejo Universal con Lista de Compras:** Todo gasto guardado en la aplicación (formulario manual, dictado por voz, asistente chat o escáner OCR) DEBE cotejar los nombres de sus productos contra los pendientes en `getPendingShoppingItems()`, normalizando acentos y mayúsculas, y marcar automáticamente como comprados los ítems coincidentes.
 
 ## 13. Landing Page y Presencia Web (Astro + Firebase Hosting)
 - **Despliegue Automatizado por CI/CD:** El pipeline de GitHub Actions (`build_apk.yml`) compila el APK firmado y lo despliega automáticamente junto con la landing page en Firebase Hosting (`rindemas.cesarluis.com/app-release.apk`) en cada actualización a `main`.
@@ -76,5 +78,10 @@ La compilación en GitHub Actions (`build_apk.yml`) ejecuta `flutter create`, lo
   3. Verificación en vivo: Comprobar el despliegue con `curl.exe -sI https://rindemas.cesarluis.com/app-release.apk` antes de confirmar al usuario.
 - **Mockups de la Aplicación:** Todo mockup o representación gráfica de la aplicación en la web DEBE tener chasis y proporción de smartphone (teléfono móvil vertical ~20:9 con bordes redondeados y altavoz), quedando prohibido el formato tablet o de escritorio.
 - **Paleta de Colores Web:** Usar estrictamente la paleta oficial de Rinde Más: amarillo (`#FACC15` / `#EAB308`) para acentos y botones, fondos limpios (`#F8FAFC` / `#FFFFFF`) y textos oscuros legibles (`#0F172A` / `#334155`). Prohibido el uso de colores naranjas.
+
+## 14. Entrada por Voz, Escaneo y Cloud Functions
+- **Estándar Unificado de Reconocimiento de Voz:** Toda pantalla o componente con entrada de voz (formulario, modal flotante o chat) debe utilizar una tolerancia de pausas de 10 segundos (`pauseFor: Duration(seconds: 10)`) y 60 segundos de escucha (`listenFor: Duration(seconds: 60)`). Al pausar y reanudar la grabación, el texto nuevo DEBE concatenarse al final del texto existente sin sobreescribirlo.
+- **Avisos Neutros en Procesamiento de Imágenes:** Al enviar fotos a la cola de escaneo, los SnackBars y banners deben referirse a "imágenes" o "comprobantes" (ej. *"Analizando imagen con IA..."*), nunca asumir que una fotografía contiene estrictamente una sola factura.
+- **Despliegue de Cloud Functions en Windows:** Al ejecutar `firebase deploy --only functions --non-interactive`, debe asignarse previamente `$env:FUNCTIONS_DISCOVERY_TIMEOUT_TOLERANCE_MS="60000"` para evitar fallos por timeout en el análisis estático local.
 
 
