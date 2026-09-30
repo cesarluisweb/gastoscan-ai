@@ -1,53 +1,52 @@
-# Project: Control de Gastos VE — Fase 6 ("Rinde Más")
+# Project: Control de Gastos VE ("Rinde Más")
 
-## Architecture
-- **Framework:** Flutter (Dart), Android & iOS target.
-- **State Management:** Provider pattern (e.g. `ScanQueueProvider`, `ExpenseProvider`, `CategoryProvider`).
-- **Persistence:** Local SQLite database via `sqflite` (database_helper / migrations) + sync mechanism.
-- **Notifications:** Local push notifications (via `flutter_local_notifications`).
-- **UI:** Material Design 3 responsive screens (`DashboardScreen`, Scanner screen/dialog, Category management).
+## Arquitectura General
+- **Framework:** Flutter (Dart) con soporte para Android (compilación en GitHub Actions).
+- **Gestión de Estado:** Patrón Provider reactivo dividido por dominios (`GastoProvider`, `BudgetProvider`, `ScanQueueProvider`, `ShoppingListProvider`, `AuthProvider`, `SettingsProvider`).
+- **Persistencia Local:** SQLite (`sqflite`) para funcionamiento offline prioritario con esquemas relacionales e integridad transaccional.
+- **Backend & Cloud:** Firebase Authentication (anónimo y Google Sign-In), Cloud Firestore (sincronización y backup), Cloud Functions (orquestación segura de Gemini con Function Calling).
+- **Inteligencia Artificial:** Google Gemini API multimodal para extracción OCR de facturas y razonamiento financiero conversacional.
+- **Presencia Web:** Landing page en Astro + Tailwind CSS alojada en Firebase Hosting (`rindemas.cesarluis.com`).
 
-## Feature Inventory
-| # | Feature | Description | Milestone | Source |
-|---|---------|-------------|-----------|--------|
-| 1 | R1: Subida Múltiple de Facturas | Multi-image selection from gallery, enqueue to ScanQueueProvider, return silently to Dashboard, yellow banner | M1 | ORIGINAL_REQUEST.md § R1 |
-| 2 | R2: Buscador de Gastos | Search icon in DashboardScreen AppBar toggling a search field, real-time filtering by commerce or product | M2 | ORIGINAL_REQUEST.md § R2 |
-| 3 | R3: Presupuestos por Categoría | User-defined monthly spending limit per category, red progress indicator/alert in Dashboard when exceeded | M3 | ORIGINAL_REQUEST.md § R3 |
-| 4 | R4: Recordatorios de Inactividad | Local push notification scheduled after 3 days without app opening or expense logging; Android permissions | M4 | ORIGINAL_REQUEST.md § R4 |
-| 5 | M5: E2E Verification & Audit | Comprehensive test coverage, programmatic acceptance criteria verification, and forensic audit | M5 | ORIGINAL_REQUEST.md § Acceptance Criteria |
+---
 
-## Milestones
-| # | Name | Scope | Dependencies | Status |
-|---|------|-------|-------------|--------|
-| 1 | M1: Subida Múltiple de Facturas | Image picker multi-image support, enqueue all selected images to ScanQueueProvider, navigate back to Dashboard, verify yellow processing banner | None | DONE |
-| 2 | M2: Buscador de Gastos | DashboardScreen AppBar search icon, filter controller, real-time expense list filtering by commerce/product | None | DONE |
-| 3 | M3: Presupuestos por Categoría | SQLite budget storage / category budget field, budget edit UI, monthly expense calculation, red progress/alert UI in Dashboard | None | DONE |
-| 4 | M4: Recordatorios de Inactividad | flutter_local_notifications integration, Android permissions in AndroidManifest.xml, 3-day inactivity scheduling service, activity tracking | None | DONE |
-| 5 | M5: E2E Verification & Auditing | Programmatic test suite across all 4 requirements, run flutter tests, Reviewer verification, Challenger stress-test, and Forensic Auditor verification | M1, M2, M3, M4 | DONE |
+## Módulos y Funcionalidades Principales
 
-## Interface Contracts
-### Scanner ↔ ScanQueueProvider
-- `ScanQueueProvider.enqueueMultiple(List<String> imagePaths)` or `enqueue(String imagePath)` for each image.
-- Navigation: `Navigator.of(context).pop()` returning immediately to Dashboard.
-- Dashboard: Reads `scanQueueProvider.isProcessing` or queue count to display yellow banner.
+| Módulo | Descripción | Estado |
+|---|---|---|
+| **Digitalización OCR** | Escaneo desde cámara o galería de facturas y comprobantes digitales (Pago Móvil, transferencias). Cola en segundo plano individual o múltiple con barra flotante global de progreso. | ✅ Activo |
+| **Bimoneda & Tasa BCV** | Consulta en vivo de la tasa oficial del BCV. Conversión y visualización simultánea en USD y Bolívares sin descalces contables. | ✅ Activo |
+| **Presupuestos Mensuales** | Presupuesto general y por categorías con aislamiento mensual por año/mes, semáforo visual de consumo (verde, ámbar, rojo) y copia automática de meses previos. | ✅ Activo |
+| **Asistente Financiero IA** | Chat integrado con acceso a balances y gastos. Soporta *Function Calling* para modificar la lista de compras, registrar transacciones y responder con 5 preguntas predeterminadas rápidas. | ✅ Activo |
+| **Lista de Compras** | Checklist interactivo con sincronización local y capacidad de ser gestionado manualmente o mediante comandos de voz/texto con la IA. | ✅ Activo |
+| **Historial y Búsqueda** | Listado cronológico agrupado por fechas ("Hoy", "Ayer", etc.) con buscador en tiempo real por comercio o nombre de producto. | ✅ Activo |
+| **Sincronización y Respaldo** | Vinculación opcional con cuenta de Google y respaldo en Cloud Firestore sin perder la operatividad local. | ✅ Activo |
+| **Exportación** | Exportador de reportes mensuales en formatos CSV y Markdown para análisis externo. | ✅ Activo |
 
-### DashboardScreen ↔ Expense Filtering
-- Filter query `String searchQuery`.
-- When `searchQuery.isNotEmpty`, filter expenses where `expense.commerce.toLowerCase().contains(query)` OR `expense.items.any((item) => item.name.toLowerCase().contains(query))`.
+---
 
-### Category ↔ Budget Storage
-- Category budget schema: `budget` or `monthly_limit` REAL column in SQLite categories table (or dedicated budgets table).
-- Aggregation: Sum of expenses for the current month and category.
-- UI Indicator: Progress bar or visual warning drawn in red if `currentMonthSpent > budget`.
+## Navegación de la Aplicación
 
-### NotificationService ↔ App Lifecycle
-- Scheduling: Trigger 3 days after latest of `app_opened` or `expense_logged`.
-- Cancel/Reschedule: Whenever app opens or new expense is saved, reschedule notification for now + 3 days.
+La navegación principal (`MainScreen`) se basa en un patrón ergonómico de 4 pestañas y un botón de acción principal central:
 
-## Code Layout
-- `lib/screens/`: UI Screens (`DashboardScreen`, etc.)
-- `lib/providers/`: State management (`ScanQueueProvider`, `ExpenseProvider`, etc.)
-- `lib/models/`: Domain models (`Expense`, `Category`, etc.)
-- `lib/services/`: Services (`NotificationService`, `DatabaseHelper`, etc.)
-- `android/app/src/main/AndroidManifest.xml`: Android configuration & permissions
-- `test/`: Unit, widget, and integration tests
+1. **Inicio (`HomeScreen`):** Hero card de gasto mensual, saldo del presupuesto, botón de consulta con IA, pie chart resumido y últimos 5 gastos.
+2. **Gastos (`ExpensesScreen`):** Historial completo agrupado cronológicamente con buscador en vivo por comercio/producto.
+3. **[+] (Botón Flotante Central):** Menú rápido para escanear con cámara, subir desde galería (lote), dictar por voz o registrar manualmente.
+4. **Análisis (`AnalysisScreen`):** Control detallado de presupuestos por categoría, gráfico interactivo de distribución y límites de gasto.
+5. **Más (`MoreScreen`):** Acceso a Lista de Compras, Asistente IA, configuración de tasa BCV, respaldo con Google, exportación y preferencias.
+
+---
+
+## Estructura de Directorios
+
+- `lib/core/`: Constantes de diseño (`AppColors`), constantes del sistema (`AppConstants`), tema y formateadores.
+- `lib/data/datasources/`: SQLite local (`DatabaseHelper`), servicios remotos (BCV, Firebase, Gemini).
+- `lib/data/models/`: Modelos de dominio (`GastoModel`, `ItemGastoModel`, `BudgetModel`, `ShoppingItemModel`).
+- `lib/data/repositories/`: Capa de abstracción de datos para gastos y presupuestos.
+- `lib/providers/`: Gestores de estado reactivo (`Provider`).
+- `lib/services/`: Exportación, notificaciones locales y compresión de imágenes.
+- `lib/ui/screens/`: Pantallas de la aplicación.
+- `lib/ui/widgets/`: Componentes reutilizables (tarjetas, gráficos, banners).
+- `landing/`: Proyecto web estático en Astro.
+- `.github/workflows/`: Pipeline de CI/CD para compilación de APK y suite de pruebas.
+- `test/`: Pruebas unitarias, de widgets y fakes de arquitectura.

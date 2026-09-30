@@ -25,17 +25,20 @@ Este documento centraliza las ideas y mejoras pendientes, ordenadas estratégica
 - **Ingreso de gastos conversacional (Function Calling):** Gemini puede interpretar un texto o audio y ejecutar comandos en la base de datos para guardar gastos manualmente.
 - **Cola Offline de Escaneo:** Si no hay internet, la factura se guarda en cola y se procesa sola cuando vuelve la conexión, notificando al usuario.
 
-## Fase 5: Marketing y Lanzamiento (Pausada ⏸️)
-*El paso para empezar a captar usuarios reales.*
-- **Subida de APK/Play Store:** Configurar las llaves criptográficas (Keystore) de Android permanentemente en GitHub Actions.
-- **Landing Page (rindemas.app):** Crear una página web sencilla orientada a la propuesta de valor y captación.
+## Fase 5: Marketing y Lanzamiento (En Progreso 🔄)
+*El paso para empezar a captar usuarios reales en Venezuela.*
+- ~~**Landing Page (rindemas.cesarluis.com):** (Completada ✅)~~ Creada en Astro + Tailwind y desplegada en Firebase Hosting con mockup de smartphone, propuesta de valor y guía de instalación directa de APK.
+- **Plan de Crecimiento Inicial (100 Usuarios):** (Documentado ✅) Playbook táctico definido en `marketing_plan.md` y `.agents/skills/growth-first-100-users/SKILL.md`.
+- **Subida de APK / Google Play Console:** (En preparación 🔄) Pago de cuenta de desarrollador ($25), configuración de Keystore y reclutamiento de 20 testers por 14 días.
 
-## Fase 6: Pulido y Control Avanzado (Completada ✅)
+## Fase 6: Pulido, Navegación y UX Avanzada (Completada ✅)
 *Funciones complementarias para usuarios recurrentes.*
 - **Subida múltiple de facturas (Batch Upload):** Seleccionar varias fotos a la vez y procesarlas en cola.
-- **Búsqueda de gastos:** Filtrar por comercio, categoría o fecha.
-- **Presupuestos por categoría:** Límite máximo en áreas específicas.
-- **Recordatorios locales:** Notificaciones push si no se registran gastos.
+- **Búsqueda de gastos:** Filtrar en tiempo real por comercio o producto.
+- **Presupuestos bimonetarios y por categoría:** Límites mensuales en USD o VES con aislamiento por mes y alerta semáforo.
+- **Recordatorios locales:** Notificaciones push programadas por inactividad.
+- **Navegación fluida de 4 destinos:** Transiciones sutiles (Inicio, Gastos, Análisis, Más) y barra flotante global de escaneo.
+- **Asistente IA con Gestión de Compras y Frases:** Chat con Function Calling para modificar lista de compras, desambiguación obligatoria y 5 botones de consultas frecuentes.
 
 ## Fase 7: Arquitectura de Producción y Confiabilidad (En Progreso 🔄)
 *Transformar el excelente MVP actual en un producto de grado financiero ("Bank-grade").*

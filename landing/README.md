@@ -1,43 +1,49 @@
-# Astro Starter Kit: Minimal
+# Landing Page — Rinde Más 🌐
 
-```sh
-npm create astro@latest -- --template minimal
+Sitio web oficial de presentación y captación de usuarios para la aplicación móvil **Rinde Más**.
+
+- **URL de Producción:** [https://rindemas.cesarluis.com](https://rindemas.cesarluis.com)
+- **Stack:** [Astro](https://astro.build/) + Tailwind CSS
+- **Hosting:** Firebase Hosting (proyecto `gastoscan-ai`)
+
+---
+
+## 🛠️ Desarrollo Local
+
+Desde la carpeta `landing/`:
+
+```powershell
+npm install
+npm run dev
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+El servidor local estará disponible en `http://localhost:4321`.
 
-## 🚀 Project Structure
+---
 
-Inside of your Astro project, you'll see the following folders and files:
+## 🚀 Compilación y Despliegue en Producción
 
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
+> **Importante:** Hacer `git push` **NO** actualiza la landing page. Cualquier cambio en esta carpeta requiere compilación estática y despliegue manual a Firebase Hosting.
+
+### 1. Compilar Astro (en la carpeta `landing/`):
+```powershell
+$env:ASTRO_TELEMETRY_DISABLED="1"; .\node_modules\.bin\astro.cmd build
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+### 2. Desplegar en Firebase Hosting (desde la raíz del proyecto):
+```powershell
+firebase.cmd deploy --only hosting --non-interactive
+```
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+### 3. Verificar en vivo:
+```powershell
+curl.exe -s https://rindemas.cesarluis.com
+```
 
-Any static assets, like images, can be placed in the `public/` directory.
+---
 
-## 🧞 Commands
+## 🎨 Lineamientos de Diseño y Copy
 
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+- **Paleta oficial:** Amarillo acento (`#FACC15` / `#EAB308`), fondo limpio (`#F8FAFC` / `#FFFFFF`), textos oscuros legibles (`#0F172A` / `#334155`). Prohibido el uso de tonos naranjas.
+- **Mockup de la App:** Formato exclusivo de smartphone vertical (~20:9 con bordes redondeados y altavoz).
+- **Mensaje central:** Simplicidad radical, presupuesto en Bs y $, escaneo automático con IA sin tutoriales ni configuraciones engorrosas, 100% gratuita.
