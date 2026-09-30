@@ -449,7 +449,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Tu compra quedó registrada. Vincula tu cuenta de Google para no perderla si cambias de teléfono.',
+                        'Tu compra quedó guardada en tu teléfono.\n\nSolo usamos tu cuenta de Google para respaldar tus facturas en tu propio espacio privado. Sin bancos ni contraseñas.',
                         style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
                       ),
                       if (isLinking) ...[

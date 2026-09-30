@@ -47,10 +47,13 @@ import '../styles/global.css';
             <p class="mx-auto mt-6 max-w-2xl text-lg sm:text-xl tracking-tight text-slate-700 leading-relaxed">
                 Haz rendir más tu dinero sin esfuerzo. Nuestra IA organiza tus finanzas personales en Venezuela por ti.
             </p>
-            <div class="mt-8 flex justify-center">
+            <div class="mt-8 flex flex-col items-center justify-center gap-3">
                 <a href="#descargar" class="rounded-full bg-[#FACC15] hover:bg-[#EAB308] px-8 py-4 text-base font-bold text-slate-900 shadow-sm hover:shadow-md transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FACC15]">
                     Descargar gratis
                 </a>
+                <p class="text-xs text-slate-500 font-medium flex items-center gap-1.5">
+                    <span>🔒</span> 100% sin conexión bancaria · Respaldo privado en tu Google
+                </p>
             </div>
 
             <!-- Smartphone Mockup con Screenshot Real de Rinde Más -->
@@ -107,8 +110,58 @@ import '../styles/global.css';
         </div>
     </section>
 
+    <!-- Trust & Privacy Section -->
+    <section id="privacidad" class="py-20 bg-[#F8FAFC] border-t border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-14">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-200/80 text-slate-800 border border-slate-300 mb-3">
+                    🛡️ Tu tranquilidad primero
+                </span>
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">Tus finanzas son tuyas: sin bancos ni contraseñas</h2>
+                <p class="mt-3 text-base sm:text-lg text-slate-600">
+                    Diseñada para darte orden financiero real sin pedirte datos sensibles ni comprometer tu seguridad.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Pillar 1 -->
+                <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-2xl mb-6 shadow-xs">
+                        🏦
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-900 mb-2">Cero accesos bancarios</h3>
+                    <p class="text-sm text-slate-600 leading-relaxed">
+                        Nunca te pediremos contraseñas de bancos, números de tarjeta ni accesos financieros. Registras tus compras con tu voz o escaneando facturas.
+                    </p>
+                </div>
+
+                <!-- Pillar 2 -->
+                <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-2xl mb-6 shadow-xs">
+                        🔒
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-900 mb-2">Tus datos en tu cuenta de Google</h3>
+                    <p class="text-sm text-slate-600 leading-relaxed">
+                        La app funciona directamente en tu teléfono y respalda tus datos de forma cifrada en tu cuenta privada de Google. Nadie más tiene acceso.
+                    </p>
+                </div>
+
+                <!-- Pillar 3 -->
+                <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-2xl mb-6 shadow-xs">
+                        🤝
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-900 mb-2">Sin venta de datos</h3>
+                    <p class="text-sm text-slate-600 leading-relaxed">
+                        Tus registros no se venden ni se comparten con empresas ni anunciantes. Nos sostenemos con publicidad no invasiva y opción de pago único para eliminar anuncios.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Web Dashboard Section -->
-    <section id="panel-web" class="py-20 bg-[#F8FAFC] border-t border-slate-200 overflow-hidden">
+    <section id="panel-web" class="py-20 bg-white border-t border-slate-200 overflow-hidden">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid lg:grid-cols-12 gap-12 items-center">
                 <!-- Text info (5 cols) -->

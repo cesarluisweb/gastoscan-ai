@@ -506,7 +506,7 @@ class MoreScreenState extends State<MoreScreen> {
             )
           else
             const Text(
-              'Inicia sesión con Google para respaldar tus compras y sincronizar entre dispositivos.',
+              'Solo usamos tu cuenta de Google para respaldar tus facturas en tu propio espacio privado. Sin accesos bancarios ni contraseñas.',
               style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
             ),
           const SizedBox(height: 16),

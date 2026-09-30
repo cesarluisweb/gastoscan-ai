@@ -161,7 +161,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       )
                     else
                       const Text(
-                        'Inicia sesión con Google para no perder tus datos si cambias de teléfono. Tus gastos actuales se guardarán.',
+                        'Solo usamos tu cuenta de Google para respaldar tus facturas en tu propio espacio privado. Sin accesos bancarios ni contraseñas.',
                         style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
                       ),
                     const SizedBox(height: 16),

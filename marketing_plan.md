@@ -12,15 +12,19 @@
 * **Pruebas Cerradas:** Reclutar a 20 testers (incluyendo a los 5 iniciales) para que prueben la app por 14 días (requisito obligatorio de Google para cuentas nuevas).
 * **Automatización:** Conectar GitHub Actions para subir las nuevas versiones a la Play Store automáticamente.
 
-## Fase 3: App Store Optimization (ASO) para Venezuela
-*Optimización para aparecer en las búsquedas de la tienda.*
-* **Título sugerido:** `Rinde Más: Gastos Venezuela` o `Rinde Más - Control de Gastos`
-* **Descripción Corta:** `Escanea facturas con IA, lleva tu presupuesto en Bs y $ y controla tu dinero.`
-* **Palabras Clave (Keywords):** Control de gastos, presupuesto en bolívares y dólares, finanzas personales Venezuela, escanear facturas, tasa BCV, ahorrar dinero.
+## Fase 3: App Store Optimization (ASO) y Posicionamiento de Confianza
+*Optimización para aparecer en las búsquedas de la tienda y derribar el miedo bancario.*
+* **Ficha Completa:** Consultar el documento listo para producción [`FICHA_GOOGLE_PLAY.md`](FICHA_GOOGLE_PLAY.md).
+* **Título oficial:** `Rinde Más: Control de Gastos`
+* **Descripción Corta:** `Control de gastos en Bs y $ a tasa BCV. Sin bancos y con respaldo en tu Google.`
+* **Pilar de Confianza en la Tienda:** Destacar en los primeros párrafos: *"Sin bancos, sin contraseñas, respaldo privado en tu Google"*.
+* **Palabras Clave (Keywords):** Control de gastos venezuela, presupuesto en bolívares y dólares, finanzas personales venezuela, escanear facturas, tasa bcv gastos, administrador de dinero sin bancos.
 * **Capturas de Pantalla (Efecto Wow):** 
-    1. Foto de una factura arrugada: *"No teclees más. La IA lee tus facturas"*.
-    2. Dashboard con presupuesto en rojo: *"Presupuestos que te avisan antes de quedarte en cero"*.
-    3. Convertidor de monedas: *"Maneja Bolívares y Dólares sin enredarte"*.
+    1. Privacidad y confianza: *"Tus finanzas son tuyas: 100% sin conexión bancaria"*.
+    2. Foto de factura arrugada: *"No teclees más. La IA lee tus facturas"*.
+    3. Multimoneda con tasa oficial: *"Maneja Bolívares y Dólares con tasa oficial BCV"*.
+    4. Dashboard con presupuesto: *"Presupuestos que te avisan antes de quedarte en cero"*.
+    5. Asistente IA: *"Pregúntale a la IA en qué se te fue el sueldo"*.
 
 ## Fase 4: Estrategia de Beta Testers (Escalando a 50 usuarios)
 * **El "Pitch" para reclutar:** *"Estoy construyendo una app para que la inflación y el desastre de los bolívares/dólares no nos coma el sueldo. Necesito personas que quieran destrozarla y encontrar errores antes del lanzamiento oficial"*.
