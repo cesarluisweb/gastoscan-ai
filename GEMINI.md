@@ -15,10 +15,11 @@ La compilación en GitHub Actions (`build_apk.yml`) ejecuta `flutter create`, lo
 - **Inyección por Bash:** Toda configuración nativa requerida DEBE inyectarse programáticamente usando scripts automatizados (ej. `sed`) directamente dentro del archivo `.github/workflows/build_apk.yml` en el paso posterior a la regeneración de la plataforma.
 - **Auth Bypass:** Para evitar el Error 10 de Google Sign-In por la ausencia del archivo `google-services.json` generado nativamente, debes pasar explícitamente el `serverClientId` (Web Client ID) como parámetro en el constructor de `GoogleSignIn()` en Dart.
 
-## 4. Guía de Diseño UI (Colores)
+## 4. Guía de Diseño UI (Colores y Formularios)
 - **Prohibido textos amarillos:** NUNCA apliques los colores de acento amarillos (`AppColors.primary` o `AppColors.primaryDark`) a textos regulares, descripciones o etiquetas. Todos los textos deben usar `AppColors.textPrimary` (negro/oscuro) para garantizar su legibilidad.
 - El color amarillo (`AppColors.primaryDark` preferiblemente) queda reservado de forma estricta y exclusiva para **iconos**, contenedores de fondo y símbolos gráficos de acción.
 - **Banners y SnackBars:** Todo `SnackBar` o elemento flotante con fondo amarillo (`AppColors.primary` o `AppColors.primaryDark`) DEBE llevar su texto explícitamente en color negro (`style: TextStyle(color: Colors.black)`) para garantizar su legibilidad.
+- **Botón Único en Listas Dinámicas:** En formularios con listas dinámicas desplazables de ítems (como el desglose de productos de un gasto), no duplicar botones de agregar arriba y abajo. Usar un único botón de ancho completo al final de la lista para respetar el flujo natural de scroll y carga secuencial. Iconos de acción en dicho botón deben usar `AppColors.primaryDark`.
 
 ## 5. Verificación de CI y Promesas al Usuario
 - **NUNCA** le digas al usuario que la aplicación "ya está lista para descargar" inmediatamente después de hacer un git push.
@@ -61,4 +62,10 @@ La compilación en GitHub Actions (`build_apk.yml`) ejecuta `flutter create`, lo
 - **Cero Fricción Contable (Sin Múltiples Cuentas):** Queda prohibido obligar al usuario a microgestionar de qué banco o cuenta proviene el dinero (Banesco, Zinli, etc.). El valor central de la app es un presupuesto mensual global claro y ver cuánto dinero le queda.
 - **Divisas Estrictas (VES y USD):** La aplicación opera exclusivamente con Bolívares (VES) y Dólares (USD) a tasa oficial BCV. No agregar monedas redundantes como USDT.
 - **Modelo de Monetización No Bloqueante:** La experiencia base de registro y control presupuestario debe ser siempre accesible. La monetización se basará en publicidad discreta combinada con la opción de pago para eliminar anuncios ("Remove Ads"). Nunca bloquear el registro de transacciones.
+
+## 12. Asistente IA: Reglas de Intención y Gestión de Compras
+- **Desambiguación Obligatoria (Gasto vs. Lista de Compras):** Si el usuario pide registrar o anotar productos sin monto y sin especificar claramente la intención (ej. *"anota una harina pan"*), el asistente NUNCA debe adivinar ni registrar a ciegas. Debe preguntar de forma directa:
+  > *"¿Deseas agregarlo a tu lista de compras o registrarlo como un gasto realizado?"*
+- **Herramientas de Lista de Compras:** Cuando el usuario indique explícitamente agregar, modificar, eliminar o tachar de la lista de compras, el asistente invocará las funciones correspondientes (`agregar_items_lista_compras`, `modificar_item_lista_compras`, `eliminar_items_lista_compras`, `marcar_items_lista_compras`) y confirmará la acción con naturalidad y brevedad en español.
+
 
