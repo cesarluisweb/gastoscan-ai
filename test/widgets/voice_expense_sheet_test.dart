@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:gastoscan_ai/data/datasources/local/database_helper.dart';
 import 'package:gastoscan_ai/data/datasources/remote/gemini_service.dart';
 import 'package:gastoscan_ai/data/models/gemini_extraction_result.dart';
 import 'package:gastoscan_ai/providers/gasto_provider.dart';
+import 'package:gastoscan_ai/providers/scan_queue_provider.dart';
 import 'package:gastoscan_ai/providers/settings_provider.dart';
 import 'package:gastoscan_ai/ui/widgets/voice_expense_sheet.dart';
 
@@ -27,6 +29,10 @@ class FakeGeminiVoiceService extends GeminiService {
   }
 }
 
+class FakeDatabaseHelper extends DatabaseHelper {
+  FakeDatabaseHelper() : super.test();
+}
+
 class FakeGastoProvider extends GastoProvider {
   @override
   Future<void> cargarDatos() async {}
@@ -40,6 +46,8 @@ class FakeSettingsProvider extends SettingsProvider {
 void main() {
   group('VoiceExpenseSheet Editable Tests', () {
     late FakeGeminiVoiceService fakeGeminiService;
+    late FakeDatabaseHelper fakeDb;
+    late ScanQueueProvider scanQueueProvider;
     late FakeGastoProvider fakeGastoProvider;
     late FakeSettingsProvider fakeSettingsProvider;
 
@@ -49,6 +57,8 @@ void main() {
       binding.window.devicePixelRatioTestValue = 1.0;
 
       fakeGeminiService = FakeGeminiVoiceService();
+      fakeDb = FakeDatabaseHelper();
+      scanQueueProvider = ScanQueueProvider(dbHelper: fakeDb, autoProcess: false);
       fakeGastoProvider = FakeGastoProvider();
       fakeSettingsProvider = FakeSettingsProvider();
     });
@@ -62,6 +72,7 @@ void main() {
     Widget createWidgetUnderTest() {
       return MultiProvider(
         providers: [
+          ChangeNotifierProvider<ScanQueueProvider>.value(value: scanQueueProvider),
           ChangeNotifierProvider<GastoProvider>.value(value: fakeGastoProvider),
           ChangeNotifierProvider<SettingsProvider>.value(value: fakeSettingsProvider),
         ],

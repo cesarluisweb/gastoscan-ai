@@ -60,7 +60,7 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  final List<Map<String, String>> _messages = [];
+  final List<Map<String, dynamic>> _messages = [];
   final TextEditingController _textCtrl = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   late final GeminiService _geminiService;
@@ -219,8 +219,13 @@ class _ChatScreenState extends State<ChatScreen> {
         }).toList(),
       };
 
+      final chatMessages = _messages.map((m) => {
+        'role': m['role']?.toString() ?? 'user',
+        'text': m['text']?.toString() ?? '',
+      }).toList();
+
       final responseMap = await _geminiService.chatWithAnalyst(
-        messages: _messages,
+        messages: chatMessages,
         contextData: contextData,
       );
 
