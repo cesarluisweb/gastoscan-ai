@@ -53,10 +53,19 @@ void main() {
     late FakeGeminiService fakeGeminiService;
 
     setUp(() {
+      final TestWidgetsFlutterBinding binding = TestWidgetsFlutterBinding.ensureInitialized();
+      binding.window.physicalSizeTestValue = const Size(2500, 4000);
+      binding.window.devicePixelRatioTestValue = 1.0;
       fakeDb = FakeDatabaseHelper();
       fakeGastoProvider = FakeGastoProvider();
       fakeSettingsProvider = FakeSettingsProvider();
       fakeGeminiService = FakeGeminiService();
+    });
+
+    tearDown(() {
+      final TestWidgetsFlutterBinding binding = TestWidgetsFlutterBinding.ensureInitialized();
+      binding.window.clearPhysicalSizeTestValue();
+      binding.window.clearDevicePixelRatioTestValue();
     });
 
     Widget createWidgetUnderTest() {
@@ -79,21 +88,21 @@ void main() {
       await tester.pumpAndSettle();
 
       for (int i = 0; i < 5; i++) {
-        expect(find.byKey(Key('chat_suggestion_chip_$i')), findsOneWidget);
+        expect(find.byKey(Key('chat_suggestion_chip_$i'), skipOffstage: false), findsOneWidget);
       }
 
-      expect(find.text('¿Cuánto he gastado este mes?'), findsOneWidget);
-      expect(find.text('¿En qué categoría he gastado más?'), findsOneWidget);
-      expect(find.text('¿Qué tengo en mi lista de compras?'), findsOneWidget);
-      expect(find.text('¿Cómo voy con mi presupuesto?'), findsOneWidget);
-      expect(find.text('Dame un resumen de mis gastos'), findsOneWidget);
+      expect(find.text('¿Cuánto he gastado este mes?', skipOffstage: false), findsOneWidget);
+      expect(find.text('¿En qué categoría he gastado más?', skipOffstage: false), findsOneWidget);
+      expect(find.text('¿Qué tengo en mi lista de compras?', skipOffstage: false), findsOneWidget);
+      expect(find.text('¿Cómo voy con mi presupuesto?', skipOffstage: false), findsOneWidget);
+      expect(find.text('Dame un resumen de mis gastos', skipOffstage: false), findsOneWidget);
     });
 
     testWidgets('tapping a suggestion chip sends it immediately as a user message', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      final firstSuggestionFinder = find.byKey(const Key('chat_suggestion_chip_0'));
+      final firstSuggestionFinder = find.byKey(const Key('chat_suggestion_chip_0'), skipOffstage: false);
       expect(firstSuggestionFinder, findsOneWidget);
 
       await tester.tap(firstSuggestionFinder);
@@ -103,14 +112,14 @@ void main() {
       expect(fakeGeminiService.callCount, 1);
       expect(fakeGeminiService.lastUserMessage, '¿Cuánto he gastado este mes?');
 
-      expect(find.text('Respuesta simulada para: ¿Cuánto he gastado este mes?'), findsOneWidget);
+      expect(find.text('Respuesta simulada para: ¿Cuánto he gastado este mes?', skipOffstage: false), findsOneWidget);
     });
 
     testWidgets('tapping shopping list suggestion chip sends request directly', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      final shoppingSuggestionFinder = find.byKey(const Key('chat_suggestion_chip_2'));
+      final shoppingSuggestionFinder = find.byKey(const Key('chat_suggestion_chip_2'), skipOffstage: false);
       expect(shoppingSuggestionFinder, findsOneWidget);
 
       await tester.tap(shoppingSuggestionFinder);
@@ -119,7 +128,7 @@ void main() {
 
       expect(fakeGeminiService.callCount, 1);
       expect(fakeGeminiService.lastUserMessage, '¿Qué tengo en mi lista de compras?');
-      expect(find.text('Respuesta simulada para: ¿Qué tengo en mi lista de compras?'), findsOneWidget);
+      expect(find.text('Respuesta simulada para: ¿Qué tengo en mi lista de compras?', skipOffstage: false), findsOneWidget);
     });
   });
 }
