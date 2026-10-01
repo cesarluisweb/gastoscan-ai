@@ -138,8 +138,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         .trim();
   }
 
-  String? _spanishLocaleId;
-
   Future<void> _initSpeech() async {
     try {
       _speechAvailable = await _speech.initialize(
