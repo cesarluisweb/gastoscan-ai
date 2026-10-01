@@ -44,7 +44,7 @@ Expected: <3>
   Actual: <0>
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart:128:7)
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart:134:7)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -54,7 +54,7 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart line 128
+  file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart line 134
 The test description was:
   multi-image selection enqueues all images and pops back to Dashboard
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -88,14 +88,14 @@ You must call `databaseFactory = databaseFactoryFfi;` before using global openDa
 ::endgroup::
 ::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/local_ocr_service_test.dart (failed)
 Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/services/local_ocr_service_test.dart":
-Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/services/local_ocr_service_test.dart: test/services/local_ocr_service_test.dart:23:22: Error: Required named parameter 'symbols' must be provided.
-          TextElement(text: 'AUTOMERCADOS', boundingBox: const Rect.fromLTWH(0, 0, 100, 20), cornerPoints: [], recognizedLanguages: ['es']),
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/services/local_ocr_service_test.dart: test/services/local_ocr_service_test.dart:23:22: Error: Required named parameter 'confidence' must be provided.
+          TextElement(text: 'AUTOMERCADOS', boundingBox: const Rect.fromLTWH(0, 0, 100, 20), cornerPoints: [], recognizedLanguages: ['es'], symbols: []),
                      ^
 ../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:206:3: Context: Found this candidate, but the arguments don't match.
   TextElement({
   ^^^^^^^^^^^
-test/services/local_ocr_service_test.dart:24:22: Error: Required named parameter 'symbols' must be provided.
-          TextElement(text: 'PLAZA', boundingBox: const Rect.fromLTWH(110, 0, 80, 20), cornerPoints: [], recognizedLanguages: ['es']),
+test/services/local_ocr_service_test.dart:24:22: Error: Required named parameter 'confidence' must be provided.
+          TextElement(text: 'PLAZA', boundingBox: const Rect.fromLTWH(110, 0, 80, 20), cornerPoints: [], recognizedLanguages: ['es'], symbols: []),
                      ^
 ../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:206:3: Context: Found this candidate, but the arguments don't match.
   TextElement({
@@ -106,14 +106,14 @@ test/services/local_ocr_service_test.dart:20:29: Error: Required named parameter
 ../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:143:3: Context: Found this candidate, but the arguments don't match.
   TextLine({
   ^^^^^^^^
-test/services/local_ocr_service_test.dart:34:22: Error: Required named parameter 'symbols' must be provided.
-          TextElement(text: 'RIF', boundingBox: const Rect.fromLTWH(0, 25, 40, 20), cornerPoints: [], recognizedLanguages: ['es']),
+test/services/local_ocr_service_test.dart:34:22: Error: Required named parameter 'confidence' must be provided.
+          TextElement(text: 'RIF', boundingBox: const Rect.fromLTWH(0, 25, 40, 20), cornerPoints: [], recognizedLanguages: ['es'], symbols: []),
                      ^
 ../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:206:3: Context: Found this candidate, but the arguments don't match.
   TextElement({
   ^^^^^^^^^^^
-test/services/local_ocr_service_test.dart:35:22: Error: Required named parameter 'symbols' must be provided.
-          TextElement(text: 'J-30123456-7', boundingBox: const Rect.fromLTWH(45, 25, 100, 20), cornerPoints: [], recognizedLanguages: ['es']),
+test/services/local_ocr_service_test.dart:35:22: Error: Required named parameter 'confidence' must be provided.
+          TextElement(text: 'J-30123456-7', boundingBox: const Rect.fromLTWH(45, 25, 100, 20), cornerPoints: [], recognizedLanguages: ['es'], symbols: []),
                      ^
 ../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:206:3: Context: Found this candidate, but the arguments don't match.
   TextElement({
@@ -124,14 +124,14 @@ test/services/local_ocr_service_test.dart:31:29: Error: Required named parameter
 ../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:143:3: Context: Found this candidate, but the arguments don't match.
   TextLine({
   ^^^^^^^^
-test/services/local_ocr_service_test.dart:45:22: Error: Required named parameter 'symbols' must be provided.
-          TextElement(text: 'FECHA:', boundingBox: const Rect.fromLTWH(0, 50, 60, 20), cornerPoints: [], recognizedLanguages: ['es']),
+test/services/local_ocr_service_test.dart:45:22: Error: Required named parameter 'confidence' must be provided.
+          TextElement(text: 'FECHA:', boundingBox: const Rect.fromLTWH(0, 50, 60, 20), cornerPoints: [], recognizedLanguages: ['es'], symbols: []),
                      ^
 ../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:206:3: Context: Found this candidate, but the arguments don't match.
   TextElement({
   ^^^^^^^^^^^
-test/services/local_ocr_service_test.dart:46:22: Error: Required named parameter 'symbols' must be provided.
-          TextElement(text: '25/09/2026', boundingBox: const Rect.fromLTWH(65, 50, 80, 20), cornerPoints: [], recognizedLanguages: ['es']),
+test/services/local_ocr_service_test.dart:46:22: Error: Required named parameter 'confidence' must be provided.
+          TextElement(text: '25/09/2026', boundingBox: const Rect.fromLTWH(65, 50, 80, 20), cornerPoints: [], recognizedLanguages: ['es'], symbols: []),
                      ^
 ../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:206:3: Context: Found this candidate, but the arguments don't match.
   TextElement({
@@ -142,26 +142,26 @@ test/services/local_ocr_service_test.dart:42:29: Error: Required named parameter
 ../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:143:3: Context: Found this candidate, but the arguments don't match.
   TextLine({
   ^^^^^^^^
-test/services/local_ocr_service_test.dart:56:22: Error: Required named parameter 'symbols' must be provided.
-          TextElement(text: 'HARINA', boundingBox: const Rect.fromLTWH(0, 75, 60, 20), cornerPoints: [], recognizedLanguages: ['es']),
+test/services/local_ocr_service_test.dart:56:22: Error: Required named parameter 'confidence' must be provided.
+          TextElement(text: 'HARINA', boundingBox: const Rect.fromLTWH(0, 75, 60, 20), cornerPoints: [], recognizedLanguages: ['es'], symbols: []),
                      ^
 ../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:206:3: Context: Found this candidate, but the arguments don't match.
   TextElement({
   ^^^^^^^^^^^
-test/services/local_ocr_service_test.dart:57:22: Error: Required named parameter 'symbols' must be provided.
-          TextElement(text: 'PAN', boundingBox: const Rect.fromLTWH(65, 75, 40, 20), cornerPoints: [], recognizedLanguages: ['es']),
+test/services/local_ocr_service_test.dart:57:22: Error: Required named parameter 'confidence' must be provided.
+          TextElement(text: 'PAN', boundingBox: const Rect.fromLTWH(65, 75, 40, 20), cornerPoints: [], recognizedLanguages: ['es'], symbols: []),
                      ^
 ../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:206:3: Context: Found this candidate, but the arguments don't match.
   TextElement({
   ^^^^^^^^^^^
-test/services/local_ocr_service_test.dart:58:22: Error: Required named parameter 'symbols' must be provided.
-          TextElement(text: '45.00', boundingBox: const Rect.fromLTWH(110, 75, 50, 20), cornerPoints: [], recognizedLanguages: ['es']),
+test/services/local_ocr_service_test.dart:58:22: Error: Required named parameter 'confidence' must be provided.
+          TextElement(text: '45.00', boundingBox: const Rect.fromLTWH(110, 75, 50, 20), cornerPoints: [], recognizedLanguages: ['es'], symbols: []),
                      ^
 ../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:206:3: Context: Found this candidate, but the arguments don't match.
   TextElement({
   ^^^^^^^^^^^
-test/services/local_ocr_service_test.dart:59:22: Error: Required named parameter 'symbols' must be provided.
-          TextElement(text: 'BS', boundingBox: const Rect.fromLTWH(165, 75, 30, 20), cornerPoints: [], recognizedLanguages: ['es']),
+test/services/local_ocr_service_test.dart:59:22: Error: Required named parameter 'confidence' must be provided.
+          TextElement(text: 'BS', boundingBox: const Rect.fromLTWH(165, 75, 30, 20), cornerPoints: [], recognizedLanguages: ['es'], symbols: []),
                      ^
 ../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:206:3: Context: Found this candidate, but the arguments don't match.
   TextElement({
@@ -172,20 +172,20 @@ test/services/local_ocr_service_test.dart:53:29: Error: Required named parameter
 ../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:143:3: Context: Found this candidate, but the arguments don't match.
   TextLine({
   ^^^^^^^^
-test/services/local_ocr_service_test.dart:69:22: Error: Required named parameter 'symbols' must be provided.
-          TextElement(text: 'TOTAL', boundingBox: const Rect.fromLTWH(0, 100, 50, 20), cornerPoints: [], recognizedLanguages: ['es']),
+test/services/local_ocr_service_test.dart:69:22: Error: Required named parameter 'confidence' must be provided.
+          TextElement(text: 'TOTAL', boundingBox: const Rect.fromLTWH(0, 100, 50, 20), cornerPoints: [], recognizedLanguages: ['es'], symbols: []),
                      ^
 ../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:206:3: Context: Found this candidate, but the arguments don't match.
   TextElement({
   ^^^^^^^^^^^
-test/services/local_ocr_service_test.dart:70:22: Error: Required named parameter 'symbols' must be provided.
-          TextElement(text: '45.00', boundingBox: const Rect.fromLTWH(60, 100, 50, 20), cornerPoints: [], recognizedLanguages: ['es']),
+test/services/local_ocr_service_test.dart:70:22: Error: Required named parameter 'confidence' must be provided.
+          TextElement(text: '45.00', boundingBox: const Rect.fromLTWH(60, 100, 50, 20), cornerPoints: [], recognizedLanguages: ['es'], symbols: []),
                      ^
 ../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:206:3: Context: Found this candidate, but the arguments don't match.
   TextElement({
   ^^^^^^^^^^^
-test/services/local_ocr_service_test.dart:71:22: Error: Required named parameter 'symbols' must be provided.
-          TextElement(text: 'BS', boundingBox: const Rect.fromLTWH(115, 100, 30, 20), cornerPoints: [], recognizedLanguages: ['es']),
+test/services/local_ocr_service_test.dart:71:22: Error: Required named parameter 'confidence' must be provided.
+          TextElement(text: 'BS', boundingBox: const Rect.fromLTWH(115, 100, 30, 20), cornerPoints: [], recognizedLanguages: ['es'], symbols: []),
                      ^
 ../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:206:3: Context: Found this candidate, but the arguments don't match.
   TextElement({
@@ -303,59 +303,10 @@ Error al verificar actualización: Exception: Connection failed
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests isCategoryOverBudget returns false when budget is 0 or unassigned
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests initial state has empty pending and ready items
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests enqueue inserts single image and updates pendingCount
-::endgroup::
-NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
-The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
-Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
-In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
-If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
-NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
-The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
-Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
-In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
-If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
-::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests enqueueMultiple enqueues all images and updates pendingItems
-::endgroup::
-NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
-The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
-Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
-In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
-If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
-NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
-The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
-Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
-In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
-If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
-NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
-The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
-Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
-In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
-If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
-NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
-The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
-Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
-In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
-If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
-::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests addPendingItem delegates to enqueue and preserves backwards compatibility
 ::endgroup::
-NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
-The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
-Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
-In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
-If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
-NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
-The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
-Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
-In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
-If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests removeItem removes item from database and refreshes queue
-NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
-The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
-Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
-In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
-If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
 NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
 The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
 Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
