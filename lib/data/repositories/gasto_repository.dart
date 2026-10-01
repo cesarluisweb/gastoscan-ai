@@ -82,12 +82,16 @@ class GastoRepository {
     return _dbHelper.getPresupuestoGeneral(anio, mes);
   }
 
+  Future<double> obtenerMetaAhorroMes(int anio, int mes) {
+    return _dbHelper.getMetaAhorro(anio, mes);
+  }
+
   Future<String> obtenerMonedaPresupuestoGeneralMes(int anio, int mes) {
     return _dbHelper.getPresupuestoGeneralMoneda(anio, mes);
   }
 
-  Future<void> guardarPresupuestoGeneralMes(int anio, int mes, double monto, {String moneda = 'USD'}) {
-    return _dbHelper.setPresupuestoGeneral(anio, mes, monto, moneda: moneda);
+  Future<void> guardarPresupuestoGeneralMes(int anio, int mes, double monto, {String moneda = 'USD', double metaAhorro = 0.0}) {
+    return _dbHelper.setPresupuestoGeneral(anio, mes, monto, moneda: moneda, metaAhorro: metaAhorro);
   }
 
   Future<Map<String, double>> obtenerPresupuestosCategoriasMes(int anio, int mes) {
@@ -128,6 +132,7 @@ class GastoRepository {
     required double general,
     required String moneda,
     required Map<String, double> categorias,
+    double metaAhorro = 0.0,
     String? actualizadoEn,
   }) {
     return _dbHelper.guardarPresupuestoMensualCompleto(
@@ -136,6 +141,7 @@ class GastoRepository {
       general: general,
       moneda: moneda,
       categorias: categorias,
+      metaAhorro: metaAhorro,
       actualizadoEn: actualizadoEn,
     );
   }

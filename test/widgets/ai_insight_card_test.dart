@@ -134,5 +134,36 @@ void main() {
       expect(find.textContaining('Nuevo mes'), findsOneWidget);
       expect(find.textContaining('aplicar lo aprendido'), findsOneWidget);
     });
+
+    testWidgets('displays compromised savings goal alert when spent exceeds spending limit', (tester) async {
+      final gasto = GastoModel(
+        id: 1,
+        uuid: 'uuid-1',
+        fecha: '2026-09-15',
+        comercio: 'Mercado',
+        moneda: 'USD',
+        totalOriginal: 45000,
+        totalUsd: 45000,
+        categoria: 'Alimentación',
+        creadoEn: '2026-09-15T10:00:00',
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AiInsightCard(
+              gastos: [gasto],
+              presupuestoGeneral: 500.0,
+              metaAhorro: 100.0,
+              totalesPorCategoria: const {'Alimentación': 450.0},
+              totalGastadoMes: 450.0,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Tu meta de ahorro de \$100.00 está siendo comprometida'), findsOneWidget);
+    });
   });
 }

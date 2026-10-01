@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../core/utils/currency_formatter.dart';
+import '../../domain/finance/savings_health_models.dart';
+import '../../domain/finance/savings_health_calculator.dart';
 import '../../providers/gasto_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../widgets/category_chart.dart';
@@ -141,13 +143,20 @@ class AnalysisScreen extends StatelessWidget {
   ) {
     final isBudgetVes = gastoProvider.monedaPresupuesto == 'VES';
     final double budget = gastoProvider.presupuestoGeneral;
+    final double metaAhorro = gastoProvider.metaAhorro;
+    final bool hasSavingsGoal = metaAhorro > 0;
+    final double limiteParaGastar = hasSavingsGoal
+        ? (budget - metaAhorro).clamp(0.0, double.infinity)
+        : budget;
+
     final double spent = isBudgetVes
         ? (gastoProvider.totalMesVes > 0 ? gastoProvider.totalMesVes : gastoProvider.totalMesUsd * settings.tasaCambioVesUsd)
         : gastoProvider.totalMesUsd;
     final bool hasBudget = budget > 0;
-    final bool isExceeded = hasBudget && spent > budget;
-    final double percent = hasBudget ? (spent / budget).clamp(0.0, 1.0) : 0.0;
-    final int pctUsed = hasBudget ? ((spent / budget) * 100).round() : 0;
+    final double targetBudget = hasSavingsGoal ? limiteParaGastar : budget;
+    final bool isExceeded = hasBudget && (targetBudget > 0 ? spent > targetBudget : spent > 0);
+    final double percent = (hasBudget && targetBudget > 0) ? (spent / targetBudget).clamp(0.0, 1.0) : 0.0;
+    final int pctUsed = (hasBudget && targetBudget > 0) ? ((spent / targetBudget) * 100).round() : 0;
 
     final now = DateTime.now();
     final isCurrentMonth = (now.month == gastoProvider.selectedMonth &&
@@ -158,6 +167,8 @@ class AnalysisScreen extends StatelessWidget {
       0,
     ).day;
     final daysRemaining = (totalDays - now.day).clamp(0, 31);
+
+    final snapshot = hasSavingsGoal ? gastoProvider.savingsSnapshot : null;
 
     return Container(
       key: const Key('general_budget_card'),
@@ -176,13 +187,19 @@ class AnalysisScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Row(
+              Row(
                 children: [
-                  Icon(Icons.account_balance_wallet, size: 20, color: AppColors.primaryDark),
-                  SizedBox(width: 8),
+                  Icon(
+                    hasSavingsGoal ? Icons.savings_outlined : Icons.account_balance_wallet,
+                    size: 20,
+                    color: AppColors.primaryDark,
+                  ),
+                  const SizedBox(width: 8),
                   Text(
-                    'Control de Presupuesto Mensual General',
-                    style: TextStyle(
+                    hasSavingsGoal
+                        ? 'Límite para Gastar y Ahorro'
+                        : 'Control de Presupuesto Mensual General',
+                    style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
                       color: AppColors.textPrimary,
@@ -213,7 +230,7 @@ class AnalysisScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          '${fmtAmount(spent)} / ${fmtAmount(budget)}',
+                          '${fmtAmount(spent)} / ${fmtAmount(targetBudget)}',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -252,7 +269,9 @@ class AnalysisScreen extends StatelessWidget {
                           const Icon(Icons.warning_amber_rounded, size: 14, color: AppColors.error),
                           const SizedBox(width: 4),
                           Text(
-                            'Presupuesto superado por ${fmtAmount(spent - budget)}',
+                            hasSavingsGoal
+                                ? 'Límite de gasto superado por ${fmtAmount(spent - targetBudget)}'
+                                : 'Presupuesto superado por ${fmtAmount(spent - targetBudget)}',
                             style: const TextStyle(
                               color: AppColors.error,
                               fontSize: 12,
@@ -264,13 +283,53 @@ class AnalysisScreen extends StatelessWidget {
                     else
                       Text(
                         isCurrentMonth
-                            ? 'Te quedan ${fmtAmount(budget - spent)} y faltan $daysRemaining días'
-                            : 'Te sobraron ${fmtAmount(budget - spent)} en este período',
+                            ? (hasSavingsGoal
+                                ? 'Te quedan ${fmtAmount(targetBudget - spent)} para gastar y faltan $daysRemaining días'
+                                : 'Te quedan ${fmtAmount(targetBudget - spent)} y faltan $daysRemaining días')
+                            : 'Te sobraron ${fmtAmount(targetBudget - spent)} en este período',
                         style: const TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 12,
                         ),
                       ),
+                    if (hasSavingsGoal && snapshot != null) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppColors.cardLighter,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text('Presupuesto Total:', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                                Text(fmtAmount(budget), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text('Meta de Ahorro / Inversión:', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                                Text(fmtAmount(metaAhorro), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text('Gasto Proyectado Fin de Mes:', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                                Text(fmtAmount(snapshot.gastoProyectadoFinDeMes), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ],
                 );
               },

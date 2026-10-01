@@ -26,6 +26,7 @@ class BudgetBottomSheet extends StatefulWidget {
 
 class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
   late TextEditingController _generalBudgetCtrl;
+  late TextEditingController _savingsGoalCtrl;
   final Map<String, TextEditingController> _categoryControllers = {};
   String _selectedMoneda = 'USD';
 
@@ -43,6 +44,16 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
           : '',
     );
     _generalBudgetCtrl.addListener(_onFieldChanged);
+
+    final currentMeta = gastoProvider.metaAhorro;
+    _savingsGoalCtrl = TextEditingController(
+      text: currentMeta > 0
+          ? (currentMeta % 1 == 0
+              ? currentMeta.toInt().toString()
+              : currentMeta.toStringAsFixed(2))
+          : '',
+    );
+    _savingsGoalCtrl.addListener(_onFieldChanged);
 
     for (final cat in AppConstants.categorias) {
       final currentBudget = gastoProvider.getPresupuestoCategoria(cat);
@@ -75,6 +86,15 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
           : nuevoGen.toStringAsFixed(2);
     }
 
+    // Convertir meta de ahorro
+    final metaVal = double.tryParse(_savingsGoalCtrl.text.replaceAll(',', '.')) ?? 0.0;
+    if (metaVal > 0) {
+      final double nuevoMeta = nuevaMoneda == 'VES' ? metaVal * tasa : metaVal / tasa;
+      _savingsGoalCtrl.text = nuevoMeta >= 100
+          ? nuevoMeta.round().toString()
+          : nuevoMeta.toStringAsFixed(2);
+    }
+
     // Convertir categorías
     for (final ctrl in _categoryControllers.values) {
       final val = double.tryParse(ctrl.text.replaceAll(',', '.')) ?? 0.0;
@@ -95,6 +115,8 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
   void dispose() {
     _generalBudgetCtrl.removeListener(_onFieldChanged);
     _generalBudgetCtrl.dispose();
+    _savingsGoalCtrl.removeListener(_onFieldChanged);
+    _savingsGoalCtrl.dispose();
     for (final ctrl in _categoryControllers.values) {
       ctrl.removeListener(_onFieldChanged);
       ctrl.dispose();
@@ -106,6 +128,17 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
     return double.tryParse(_generalBudgetCtrl.text.replaceAll(',', '.')) ?? 0.0;
   }
 
+  double get _montoMetaAhorro {
+    return double.tryParse(_savingsGoalCtrl.text.replaceAll(',', '.')) ?? 0.0;
+  }
+
+  double get _limiteParaGastar {
+    final gen = _montoGeneral;
+    final meta = _montoMetaAhorro;
+    if (meta <= 0) return gen;
+    return (gen - meta).clamp(0.0, double.infinity);
+  }
+
   double get _sumaCategorias {
     double total = 0.0;
     for (final ctrl in _categoryControllers.values) {
@@ -115,17 +148,40 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
     return total;
   }
 
-  bool get _isExceeded {
+  bool get _isMetaExceeded {
     final gen = _montoGeneral;
-    return gen > 0 && _sumaCategorias > gen;
+    final meta = _montoMetaAhorro;
+    return gen > 0 && meta > gen;
   }
 
+  bool get _isCategoriesExceeded {
+    final gen = _montoGeneral;
+    if (gen <= 0) return false;
+    final limite = _limiteParaGastar;
+    return _sumaCategorias > limite;
+  }
+
+  bool get _isExceeded => _isMetaExceeded || _isCategoriesExceeded;
+
   Future<void> _guardar() async {
-    if (_isExceeded) {
+    if (_isMetaExceeded) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'La suma de las categorías supera el presupuesto general.',
+            'La meta de ahorro no puede superar el presupuesto general.',
+            style: TextStyle(color: Colors.black),
+          ),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    if (_isCategoriesExceeded) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'La suma de las categorías supera el límite para gastar.',
             style: TextStyle(color: Colors.black),
           ),
           backgroundColor: AppColors.error,
@@ -147,6 +203,7 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
       _montoGeneral,
       categoriasMap,
       moneda: _selectedMoneda,
+      metaAhorro: _montoMetaAhorro,
     );
 
     if (mounted) {
@@ -172,8 +229,12 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
     final anio = gastoProvider.selectedYear;
 
     final gen = _montoGeneral;
+    final meta = _montoMetaAhorro;
+    final limite = _limiteParaGastar;
     final suma = _sumaCategorias;
-    final disponible = gen - suma;
+    final disponible = limite - suma;
+    final bool metaExceeded = _isMetaExceeded;
+    final bool categoriesExceeded = _isCategoriesExceeded;
     final bool exceeded = _isExceeded;
     final prefix = _selectedMoneda == 'VES' ? 'Bs. ' : '\$ ';
 
@@ -301,7 +362,7 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
             Expanded(
               child: ListView(
                 children: [
-                  // Sección 1: Presupuesto General
+                  // Sección 1: Presupuesto General y Meta de Ahorro
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
@@ -334,14 +395,67 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                           ),
                         ),
+                        const SizedBox(height: 14),
+                        Row(
+                          children: [
+                            const Icon(Icons.savings_outlined, size: 16, color: AppColors.primaryDark),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Meta de Ahorro / Inversión ($_selectedMoneda) (Opcional)',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          key: const Key('input_meta_ahorro'),
+                          controller: _savingsGoalCtrl,
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          decoration: InputDecoration(
+                            prefixText: prefix,
+                            hintText: '0.00',
+                            filled: true,
+                            fillColor: AppColors.cardLighter,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                        ),
+                        if (meta > 0 && gen > 0 && !metaExceeded) ...[
+                          const SizedBox(height: 10),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: AppColors.cardLighter,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: AppColors.border),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Límite para gastar:',
+                                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                                ),
+                                Text(
+                                  fmt(limite),
+                                  style: const TextStyle(fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                         if (gen > 0) ...[
                           const SizedBox(height: 10),
                           ClipRRect(
                             borderRadius: BorderRadius.circular(4),
                             child: LinearProgressIndicator(
-                              value: (suma / gen).clamp(0.0, 1.0),
+                              value: (limite > 0 ? (suma / limite) : 1.0).clamp(0.0, 1.0),
                               backgroundColor: AppColors.border,
-                              color: exceeded ? AppColors.error : AppColors.primaryDark,
+                              color: categoriesExceeded ? AppColors.error : AppColors.primaryDark,
                               minHeight: 6,
                             ),
                           ),
@@ -350,23 +464,46 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Asignado: ${fmt(suma)}',
+                                meta > 0 ? 'Asignado a categorías: ${fmt(suma)}' : 'Asignado: ${fmt(suma)}',
                                 style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
                               ),
                               Text(
-                                exceeded
-                                    ? 'Exceso: ${fmt(suma - gen)}'
+                                categoriesExceeded
+                                    ? 'Exceso: ${fmt(suma - limite)}'
                                     : 'Disponible: ${fmt(disponible)}',
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
-                                  color: exceeded ? AppColors.error : AppColors.textPrimary,
+                                  color: categoriesExceeded ? AppColors.error : AppColors.textPrimary,
                                 ),
                               ),
                             ],
                           ),
                         ],
-                        if (exceeded) ...[
+                        if (metaExceeded) ...[
+                          const SizedBox(height: 10),
+                          Container(
+                            key: const Key('alert_meta_ahorro_excedida'),
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.error.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: AppColors.error),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.warning_amber_rounded, size: 16, color: AppColors.error),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    'La meta de ahorro (${fmt(meta)}) no puede superar el presupuesto general (${fmt(gen)}).',
+                                    style: const TextStyle(color: AppColors.error, fontSize: 11, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ] else if (categoriesExceeded) ...[
                           const SizedBox(height: 10),
                           Container(
                             key: const Key('alert_presupuesto_excedido'),
@@ -382,7 +519,9 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                                 const SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
-                                    'La suma de categorías (${fmt(suma)}) supera el presupuesto general (${fmt(gen)}). Ajusta los montos.',
+                                    meta > 0
+                                        ? 'La suma de categorías (${fmt(suma)}) supera el límite para gastar (${fmt(limite)}). Ajusta los montos.'
+                                        : 'La suma de categorías (${fmt(suma)}) supera el presupuesto general (${fmt(gen)}). Ajusta los montos.',
                                     style: const TextStyle(color: AppColors.error, fontSize: 11, fontWeight: FontWeight.bold),
                                   ),
                                 ),

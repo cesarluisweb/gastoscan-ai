@@ -81,7 +81,12 @@ class FakeGastoProvider extends GastoProvider {
   }
 
   @override
-  Future<void> guardarTodoElPresupuesto(double general, Map<String, double> categorias, {String moneda = 'USD'}) async {
+  Future<void> guardarTodoElPresupuesto(
+    double general,
+    Map<String, double> categorias, {
+    String moneda = 'USD',
+    double metaAhorro = 0.0,
+  }) async {
     _customPresupuestoGeneral = general;
     _customPresupuestosPorCategoria = Map.from(categorias);
     notifyListeners();

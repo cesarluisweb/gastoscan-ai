@@ -3,14 +3,18 @@ import '../../core/constants/app_colors.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../data/models/gasto_model.dart';
+import '../../domain/finance/savings_health_models.dart';
+import '../../domain/finance/savings_health_calculator.dart';
 import '../screens/chat_screen.dart';
 
 class AiInsightCard extends StatelessWidget {
   final List<GastoModel> gastos;
   final double presupuestoGeneral;
+  final double metaAhorro;
   final Map<String, double> totalesPorCategoria;
   final double totalGastadoMes;
   final String monedaPrincipal;
+  final String monedaPresupuesto;
   final double tasaCambio;
   final VoidCallback? onChatTap;
 
@@ -18,9 +22,11 @@ class AiInsightCard extends StatelessWidget {
     Key? key,
     required this.gastos,
     required this.presupuestoGeneral,
+    this.metaAhorro = 0.0,
     required this.totalesPorCategoria,
     required this.totalGastadoMes,
     this.monedaPrincipal = 'USD',
+    this.monedaPresupuesto = 'USD',
     this.tasaCambio = 1.0,
     this.onChatTap,
   }) : super(key: key);
@@ -36,6 +42,42 @@ class AiInsightCard extends StatelessWidget {
         return '¡Nuevo mes! Tu presupuesto de $mesActualNombre ya está listo. Hoy es un buen día para determinarte a aplicar lo aprendido el mes pasado.';
       }
       return 'Registra tu primera compra con el botón + para activar estadísticas y recomendaciones automáticas.';
+    }
+
+    final hasSavingsGoal = metaAhorro > 0;
+    if (hasSavingsGoal && presupuestoGeneral > 0) {
+      final savingsSnapshot = SavingsHealthCalculator.calculate(
+        presupuestoGeneral: presupuestoGeneral,
+        metaAhorro: metaAhorro,
+        gastoAcumulado: totalGastadoMes,
+        diaActual: now.day,
+        diasTotalesMes: diasEnMes,
+        moneda: monedaPresupuesto,
+      );
+
+      final formattedMeta = monedaPrincipal == 'VES'
+          ? CurrencyFormatter.formatVes(metaAhorro * (tasaCambio > 0 ? tasaCambio : 1.0))
+          : CurrencyFormatter.formatUsd(metaAhorro);
+
+      if (savingsSnapshot.status == SavingsGoalStatus.comprometida) {
+        final exceso = savingsSnapshot.gastoAcumulado - savingsSnapshot.limiteParaGastar;
+        final formattedExceso = monedaPrincipal == 'VES'
+            ? CurrencyFormatter.formatVes(exceso * (tasaCambio > 0 ? tasaCambio : 1.0))
+            : CurrencyFormatter.formatUsd(exceso);
+        return 'Has superado tu límite de gasto por $formattedExceso. Tu meta de ahorro de $formattedMeta está siendo comprometida.';
+      }
+
+      if (savingsSnapshot.status == SavingsGoalStatus.enRiesgo) {
+        final proy = savingsSnapshot.gastoProyectadoFinDeMes;
+        final formattedProy = monedaPrincipal == 'VES'
+            ? CurrencyFormatter.formatVes(proy * (tasaCambio > 0 ? tasaCambio : 1.0))
+            : CurrencyFormatter.formatUsd(proy);
+        return 'Atención: a tu ritmo actual proyectas gastar $formattedProy. Modera tus consumos para proteger tu meta de ahorro de $formattedMeta.';
+      }
+
+      if (savingsSnapshot.status == SavingsGoalStatus.protegida && now.day >= 15) {
+        return '¡Excelente administración! Tu ritmo de gasto mantiene tu meta de ahorro de $formattedMeta protegida.';
+      }
     }
 
     if (presupuestoGeneral > 0) {

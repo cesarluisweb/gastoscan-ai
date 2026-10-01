@@ -2,6 +2,8 @@ import 'budget_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/currency_formatter.dart';
+import '../../domain/finance/savings_health_models.dart';
+import '../../domain/finance/savings_health_calculator.dart';
 
 class SummaryCard extends StatelessWidget {
   final double totalUsd;
@@ -10,6 +12,7 @@ class SummaryCard extends StatelessWidget {
   final String monedaPrincipal;
   final double tasaCambio;
   final double presupuestoGeneral;
+  final double metaAhorro;
   final String monedaPresupuesto;
   final int? mes;
   final int? anio;
@@ -22,6 +25,7 @@ class SummaryCard extends StatelessWidget {
     this.monedaPrincipal = 'USD',
     this.tasaCambio = 1.0,
     this.presupuestoGeneral = 0.0,
+    this.metaAhorro = 0.0,
     this.monedaPresupuesto = 'USD',
     this.mes,
     this.anio,
@@ -44,12 +48,19 @@ class SummaryCard extends StatelessWidget {
     );
 
     final hasBudget = presupuestoGeneral > 0;
+    final hasSavingsGoal = metaAhorro > 0;
     final isBudgetVes = monedaPresupuesto == 'VES';
     final effectiveSpent = isBudgetVes
         ? (totalVes > 0 ? totalVes : totalUsd * tasaCambio)
         : totalUsd;
-    final percentUsed = hasBudget ? (effectiveSpent / presupuestoGeneral) : 0.0;
-    final isOverBudget = hasBudget && (effectiveSpent > presupuestoGeneral);
+
+    final limiteParaGastar = hasSavingsGoal
+        ? (presupuestoGeneral - metaAhorro).clamp(0.0, double.infinity)
+        : presupuestoGeneral;
+
+    final targetBudget = hasSavingsGoal ? limiteParaGastar : presupuestoGeneral;
+    final percentUsed = (hasBudget && targetBudget > 0) ? (effectiveSpent / targetBudget) : 0.0;
+    final isOverBudget = hasBudget && (effectiveSpent > targetBudget);
 
     final now = DateTime.now();
     final isCurrentMonth = (mes == null || anio == null) ||
@@ -59,7 +70,7 @@ class SummaryCard extends StatelessWidget {
     final daysForCalculation = daysRemaining > 0 ? daysRemaining : 1;
 
     // Métricas para la fila inferior compacta
-    final rem = (presupuestoGeneral - effectiveSpent).clamp(0.0, double.infinity);
+    final rem = (targetBudget - effectiveSpent).clamp(0.0, double.infinity);
     final ritmoDiario = rem / daysForCalculation;
     final diasTexto = daysRemaining == 1 ? 'Falta 1 día' : 'Faltan $daysRemaining días';
     final remFormatted = isBudgetVes
@@ -81,9 +92,23 @@ class SummaryCard extends StatelessWidget {
     final budgetFormatted = isBudgetVes
         ? CurrencyFormatter.formatVes(presupuestoGeneral)
         : CurrencyFormatter.formatPreferido(presupuestoGeneral, null, tasaCambio, monedaPrincipal);
+    final limiteFormatted = isBudgetVes
+        ? CurrencyFormatter.formatVes(limiteParaGastar)
+        : CurrencyFormatter.formatPreferido(limiteParaGastar, null, tasaCambio, monedaPrincipal);
     final excessFormatted = isBudgetVes
-        ? CurrencyFormatter.formatVes(effectiveSpent - presupuestoGeneral)
-        : CurrencyFormatter.formatPreferido(totalUsd - presupuestoGeneral, null, tasaCambio, monedaPrincipal);
+        ? CurrencyFormatter.formatVes(effectiveSpent - targetBudget)
+        : CurrencyFormatter.formatPreferido(effectiveSpent - targetBudget, null, tasaCambio, monedaPrincipal);
+
+    final snapshot = hasSavingsGoal
+        ? SavingsHealthCalculator.calculate(
+            presupuestoGeneral: presupuestoGeneral,
+            metaAhorro: metaAhorro,
+            gastoAcumulado: effectiveSpent,
+            diaActual: isCurrentMonth ? now.day : totalDaysInMonth,
+            diasTotalesMes: totalDaysInMonth,
+            moneda: monedaPresupuesto,
+          )
+        : null;
 
     return Container(
       width: double.infinity,
@@ -133,7 +158,9 @@ class SummaryCard extends StatelessWidget {
                         children: [
                           Flexible(
                             child: Text(
-                              'Presupuesto: $budgetFormatted',
+                              hasSavingsGoal
+                                  ? 'Límite: $limiteFormatted'
+                                  : 'Presupuesto: $budgetFormatted',
                               style: const TextStyle(
                                 color: AppColors.textPrimary,
                                 fontSize: 12,
@@ -193,6 +220,64 @@ class SummaryCard extends StatelessWidget {
               fontWeight: FontWeight.w500,
             ),
           ),
+          if (hasSavingsGoal && snapshot != null) ...[
+            const SizedBox(height: 8),
+            Builder(
+              builder: (context) {
+                Color badgeColor;
+                Color badgeTextColor;
+                String statusText;
+                switch (snapshot.status) {
+                  case SavingsGoalStatus.protegida:
+                    badgeColor = const Color(0xFFE8F5E9);
+                    badgeTextColor = const Color(0xFF2E7D32);
+                    statusText = 'Protegida';
+                    break;
+                  case SavingsGoalStatus.enRiesgo:
+                    badgeColor = const Color(0xFFFFF8E1);
+                    badgeTextColor = const Color(0xFFB45309);
+                    statusText = 'En riesgo';
+                    break;
+                  case SavingsGoalStatus.comprometida:
+                    badgeColor = const Color(0xFFFFEBEE);
+                    badgeTextColor = const Color(0xFFC62828);
+                    statusText = 'Comprometida';
+                    break;
+                  case SavingsGoalStatus.sinMeta:
+                    return const SizedBox.shrink();
+                }
+
+                final metaFormatted = isBudgetVes
+                    ? CurrencyFormatter.formatVes(metaAhorro)
+                    : CurrencyFormatter.formatPreferido(metaAhorro, null, tasaCambio, monedaPrincipal);
+
+                return Container(
+                  key: const Key('summary_card_savings_badge'),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: badgeColor,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: badgeTextColor.withOpacity(0.25)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.savings_outlined, size: 14, color: AppColors.primaryDark),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Meta ahorro: $metaFormatted ($statusText)',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: badgeTextColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ],
           if (hasBudget) ...[
             const SizedBox(height: 10),
             // Barra de progreso con porcentaje a la derecha
@@ -228,7 +313,9 @@ class SummaryCard extends StatelessWidget {
             // Fila de resumen de ritmo diario y saldo disponible
             if (isOverBudget)
               Text(
-                'Has superado tu presupuesto por $excessFormatted',
+                hasSavingsGoal
+                    ? 'Has superado tu límite para gastar por $excessFormatted'
+                    : 'Has superado tu presupuesto por $excessFormatted',
                 style: const TextStyle(
                   color: AppColors.error,
                   fontSize: 12,
@@ -242,7 +329,9 @@ class SummaryCard extends StatelessWidget {
                 runSpacing: 4,
                 children: [
                   Text(
-                    'Te quedan $remFormatted',
+                    hasSavingsGoal
+                        ? 'Te quedan $remFormatted para gastar'
+                        : 'Te quedan $remFormatted',
                     style: const TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 12,

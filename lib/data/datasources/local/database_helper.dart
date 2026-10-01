@@ -24,7 +24,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 12,
+      version: 13,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
       onConfigure: _onConfigure,
@@ -170,6 +170,13 @@ class DatabaseHelper {
         // Ignorar si ya existe
       }
     }
+    if (oldVersion < 13) {
+      try {
+        await db.execute("ALTER TABLE presupuestos_mensuales ADD COLUMN meta_ahorro REAL NOT NULL DEFAULT 0.0");
+      } catch (e) {
+        // Ignorar si ya existe
+      }
+    }
   }
 
   Future<void> _onConfigure(Database db) async {
@@ -255,6 +262,7 @@ class DatabaseHelper {
         anio INTEGER NOT NULL,
         mes INTEGER NOT NULL,
         presupuesto_general REAL NOT NULL DEFAULT 0.0,
+        meta_ahorro REAL NOT NULL DEFAULT 0.0,
         moneda TEXT DEFAULT 'USD',
         actualizado_en TEXT,
         UNIQUE(anio, mes)
@@ -838,6 +846,21 @@ class DatabaseHelper {
     return 0.0;
   }
 
+  /// Obtiene la meta de ahorro para un mes y año específico
+  Future<double> getMetaAhorro(int anio, int mes) async {
+    final db = await instance.database;
+    final result = await db.query(
+      'presupuestos_mensuales',
+      where: 'anio = ? AND mes = ?',
+      whereArgs: [anio, mes],
+      limit: 1,
+    );
+    if (result.isNotEmpty) {
+      return (result.first['meta_ahorro'] as num?)?.toDouble() ?? 0.0;
+    }
+    return 0.0;
+  }
+
   /// Obtiene la moneda del presupuesto general para un mes y año específico
   Future<String> getPresupuestoGeneralMoneda(int anio, int mes) async {
     final db = await instance.database;
@@ -854,7 +877,13 @@ class DatabaseHelper {
   }
 
   /// Define o actualiza el presupuesto general para un mes y año específico
-  Future<void> setPresupuestoGeneral(int anio, int mes, double monto, {String moneda = 'USD'}) async {
+  Future<void> setPresupuestoGeneral(
+    int anio,
+    int mes,
+    double monto, {
+    String moneda = 'USD',
+    double metaAhorro = 0.0,
+  }) async {
     final db = await instance.database;
     await db.insert(
       'presupuestos_mensuales',
@@ -862,6 +891,7 @@ class DatabaseHelper {
         'anio': anio,
         'mes': mes,
         'presupuesto_general': monto >= 0 ? monto : 0.0,
+        'meta_ahorro': metaAhorro >= 0 ? metaAhorro : 0.0,
         'moneda': moneda,
         'actualizado_en': DateTime.now().toIso8601String(),
       },
@@ -1030,6 +1060,7 @@ class DatabaseHelper {
       }
 
       final general = (genRow?['presupuesto_general'] as num?)?.toDouble() ?? 0.0;
+      final metaAhorro = (genRow?['meta_ahorro'] as num?)?.toDouble() ?? 0.0;
       final moneda = (genRow?['moneda'] as String?) ?? 'USD';
       final actualizadoEn = genRow?['actualizado_en'] as String?;
 
@@ -1037,6 +1068,7 @@ class DatabaseHelper {
         'anio': anio,
         'mes': mes,
         'presupuesto_general': general,
+        'meta_ahorro': metaAhorro,
         'moneda': moneda,
         'categorias': cats,
         'actualizado_en': actualizadoEn,
@@ -1052,6 +1084,7 @@ class DatabaseHelper {
     required double general,
     required String moneda,
     required Map<String, double> categorias,
+    double metaAhorro = 0.0,
     String? actualizadoEn,
   }) async {
     final db = await instance.database;
@@ -1063,6 +1096,7 @@ class DatabaseHelper {
           'anio': anio,
           'mes': mes,
           'presupuesto_general': general >= 0 ? general : 0.0,
+          'meta_ahorro': metaAhorro >= 0 ? metaAhorro : 0.0,
           'moneda': moneda,
           'actualizado_en': timestamp,
         },
@@ -1113,12 +1147,13 @@ class DatabaseHelper {
     final int prevAnio = mes == 1 ? anio - 1 : anio;
 
     final prevGeneral = await getPresupuestoGeneral(prevAnio, prevMes);
+    final prevMetaAhorro = await getMetaAhorro(prevAnio, prevMes);
     final prevMoneda = await getPresupuestoGeneralMoneda(prevAnio, prevMes);
     final prevCats = await getPresupuestosCategorias(prevAnio, prevMes);
 
-    if (prevGeneral > 0 || prevCats.isNotEmpty) {
-      if (prevGeneral > 0) {
-        await setPresupuestoGeneral(anio, mes, prevGeneral, moneda: prevMoneda);
+    if (prevGeneral > 0 || prevMetaAhorro > 0 || prevCats.isNotEmpty) {
+      if (prevGeneral > 0 || prevMetaAhorro > 0) {
+        await setPresupuestoGeneral(anio, mes, prevGeneral, moneda: prevMoneda, metaAhorro: prevMetaAhorro);
       }
       if (prevCats.isNotEmpty) {
         await setPresupuestosCategorias(anio, mes, prevCats, moneda: prevMoneda);

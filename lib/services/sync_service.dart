@@ -137,6 +137,7 @@ class SyncService {
         'anio': anio,
         'mes': mes,
         'presupuesto_general': general,
+        'meta_ahorro': (p['meta_ahorro'] as num?)?.toDouble() ?? 0.0,
         'moneda': moneda,
         'categorias': categorias,
         'actualizado_en': actualizadoEn,
@@ -169,6 +170,7 @@ class SyncService {
 
       final docId = '${anio}_${mes.toString().padLeft(2, '0')}';
       final remoteGeneral = (data['presupuesto_general'] as num?)?.toDouble() ?? 0.0;
+      final remoteMetaAhorro = (data['meta_ahorro'] as num?)?.toDouble() ?? 0.0;
       final remoteMoneda = (data['moneda'] as String?) ?? 'USD';
       final remoteCatsRaw = data['categorias'] as Map<String, dynamic>? ?? {};
       final Map<String, double> remoteCats = {};
@@ -187,6 +189,7 @@ class SyncService {
           general: remoteGeneral,
           moneda: remoteMoneda,
           categorias: remoteCats,
+          metaAhorro: remoteMetaAhorro,
           actualizadoEn: remoteActualizadoEn,
         );
       } else {
@@ -201,6 +204,7 @@ class SyncService {
             general: remoteGeneral,
             moneda: remoteMoneda,
             categorias: remoteCats,
+            metaAhorro: remoteMetaAhorro,
             actualizadoEn: remoteActualizadoEn,
           );
         }

@@ -249,11 +249,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     try {
       final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
       final shoppingItems = await _dbHelper.getAllShoppingItems();
+      final savingsSnapshot = gastoProvider.savingsSnapshot;
       final contextData = {
         'gastos_mes': gastoProvider.gastos.map((g) => g.toMap()).toList(),
         'total_usd': gastoProvider.totalMesUsd,
         'total_ves': gastoProvider.totalMesVes,
         'presupuesto_general': gastoProvider.presupuestoGeneral,
+        'meta_ahorro': gastoProvider.metaAhorro,
+        'limite_para_gastar': savingsSnapshot.limiteParaGastar,
+        'gasto_proyectado_fin_mes': savingsSnapshot.gastoProyectadoFinDeMes,
+        'estado_meta_ahorro': savingsSnapshot.status.name,
         'moneda_presupuesto': gastoProvider.monedaPresupuesto,
         'presupuestos_categoria': gastoProvider.presupuestosPorCategoria,
         'lista_compras': shoppingItems.map((e) => {

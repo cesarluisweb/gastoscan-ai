@@ -3,6 +3,8 @@ import '../data/models/gasto_model.dart';
 import '../data/models/item_gasto_model.dart';
 import '../data/repositories/gasto_repository.dart';
 import '../data/datasources/local/database_helper.dart';
+import '../domain/finance/savings_health_models.dart';
+import '../domain/finance/savings_health_calculator.dart';
 import '../services/notification_service.dart';
 import '../services/sync_service.dart';
 
@@ -20,6 +22,7 @@ class GastoProvider with ChangeNotifier {
   double _totalMesUsd = 0.0;
   double _totalMesVes = 0.0;
   double _presupuestoGeneral = 0.0;
+  double _metaAhorro = 0.0;
   String _monedaPresupuesto = 'USD';
   Map<String, double> _totalesPorCategoria = {};
   Map<String, double> _presupuestosPorCategoria = {};
@@ -32,9 +35,48 @@ class GastoProvider with ChangeNotifier {
   double get totalMesUsd => _totalMesUsd;
   double get totalMesVes => _totalMesVes;
   double get presupuestoGeneral => _presupuestoGeneral;
+  double get metaAhorro => _metaAhorro;
   String get monedaPresupuesto => _monedaPresupuesto;
   Map<String, double> get totalesPorCategoria => _totalesPorCategoria;
   Map<String, double> get presupuestosPorCategoria => _presupuestosPorCategoria;
+
+  SavingsHealthSnapshot get savingsSnapshot {
+    double gastoAcumulado = 0.0;
+    if (_monedaPresupuesto == 'VES') {
+      for (final g in _gastos) {
+        if (g.moneda == 'VES') {
+          gastoAcumulado += g.totalOriginalDisplay;
+        } else {
+          final tasa = g.tasaCambio > 0 ? g.tasaCambio : 1.0;
+          gastoAcumulado += (g.totalUsdDisplay * tasa);
+        }
+      }
+      if (gastoAcumulado == 0.0 && _totalMesVes > 0) {
+        gastoAcumulado = _totalMesVes;
+      }
+    } else {
+      for (final g in _gastos) {
+        gastoAcumulado += g.totalUsdDisplay;
+      }
+      if (gastoAcumulado == 0.0 && _totalMesUsd > 0) {
+        gastoAcumulado = _totalMesUsd;
+      }
+    }
+
+    final now = DateTime.now();
+    final isCurrentMonth = (now.year == _selectedYear && now.month == _selectedMonth);
+    final totalDias = DateTime(_selectedYear, _selectedMonth + 1, 0).day;
+    final diaActual = isCurrentMonth ? now.day : totalDias;
+
+    return SavingsHealthCalculator.calculate(
+      presupuestoGeneral: _presupuestoGeneral,
+      metaAhorro: _metaAhorro,
+      gastoAcumulado: gastoAcumulado,
+      diaActual: diaActual,
+      diasTotalesMes: totalDias,
+      moneda: _monedaPresupuesto,
+    );
+  }
 
   GastoProvider({GastoRepository? repository, SyncService? syncService, bool autoLoad = true})
       : _repository = repository ?? GastoRepository(),
@@ -62,6 +104,7 @@ class GastoProvider with ChangeNotifier {
       await _repository.copiarPresupuestosMesAnteriorSiVacio(_selectedYear, _selectedMonth);
 
       _presupuestoGeneral = await _repository.obtenerPresupuestoGeneralMes(_selectedYear, _selectedMonth);
+      _metaAhorro = await _repository.obtenerMetaAhorroMes(_selectedYear, _selectedMonth);
       _monedaPresupuesto = await _repository.obtenerMonedaPresupuestoGeneralMes(_selectedYear, _selectedMonth);
       _presupuestosPorCategoria = await _repository.obtenerPresupuestosCategoriasMes(_selectedYear, _selectedMonth);
     } catch (e) {
@@ -181,17 +224,47 @@ class GastoProvider with ChangeNotifier {
     }
   }
 
-  Future<void> guardarTodoElPresupuesto(double general, Map<String, double> categorias, {String moneda = 'USD'}) async {
+  Future<void> guardarTodoElPresupuesto(
+    double general,
+    Map<String, double> categorias, {
+    String moneda = 'USD',
+    double metaAhorro = 0.0,
+  }) async {
     try {
-      await _repository.guardarPresupuestoGeneralMes(_selectedYear, _selectedMonth, general, moneda: moneda);
+      await _repository.guardarPresupuestoGeneralMes(
+        _selectedYear,
+        _selectedMonth,
+        general,
+        moneda: moneda,
+        metaAhorro: metaAhorro,
+      );
       await _repository.guardarPresupuestosCategoriasMes(_selectedYear, _selectedMonth, categorias, moneda: moneda);
       _presupuestoGeneral = general >= 0 ? general : 0.0;
+      _metaAhorro = metaAhorro >= 0 ? metaAhorro : 0.0;
       _monedaPresupuesto = moneda;
       _presupuestosPorCategoria = Map.from(categorias)..removeWhere((key, value) => value <= 0);
       notifyListeners();
       _syncService.syncBidirectional();
     } catch (e) {
       _errorMessage = 'Error al guardar presupuestos: ${e.toString()}';
+      notifyListeners();
+    }
+  }
+
+  Future<void> setMetaAhorro(double meta) async {
+    try {
+      await _repository.guardarPresupuestoGeneralMes(
+        _selectedYear,
+        _selectedMonth,
+        _presupuestoGeneral,
+        moneda: _monedaPresupuesto,
+        metaAhorro: meta,
+      );
+      _metaAhorro = meta >= 0 ? meta : 0.0;
+      notifyListeners();
+      _syncService.syncBidirectional();
+    } catch (e) {
+      _errorMessage = 'Error al guardar meta de ahorro: ${e.toString()}';
       notifyListeners();
     }
   }

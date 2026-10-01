@@ -56,7 +56,12 @@ class MockGastoProvider extends GastoProvider {
   }
 
   @override
-  Future<void> guardarTodoElPresupuesto(double general, Map<String, double> categorias, {String moneda = 'USD'}) async {
+  Future<void> guardarTodoElPresupuesto(
+    double general,
+    Map<String, double> categorias, {
+    String moneda = 'USD',
+    double metaAhorro = 0.0,
+  }) async {
     _testPresupuestoGeneral = general;
     _testPresupuestos.clear();
     categorias.forEach((k, v) {
