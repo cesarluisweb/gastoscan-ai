@@ -20,20 +20,6 @@ class FakeSpeechToText extends Fake implements stt.SpeechToText {
   bool get isListening => isListeningValue;
 
   @override
-  Future<bool> initialize({
-    dynamic onError,
-    dynamic onStatus,
-    dynamic debugLogging,
-    Duration? finalTimeout,
-    dynamic options,
-  }) async {
-    return true;
-  }
-
-  @override
-  Future<List<stt.LocaleName>> locales() async => [stt.LocaleName('es_ES', 'Spanish')];
-
-  @override
   Future<void> stop() async {
     stopCallCount++;
     isListeningValue = false;
@@ -46,21 +32,19 @@ class FakeSpeechToText extends Fake implements stt.SpeechToText {
   }
 
   @override
-  Future<bool> listen({
-    dynamic onResult,
-    Duration? listenFor,
-    Duration? pauseFor,
-    String? localeId,
-    dynamic onSoundLevelChange,
-    dynamic cancelOnError,
-    dynamic partialResults,
-    dynamic onDevice,
-    dynamic listenMode,
-    dynamic sampleRate,
-  }) async {
-    listenCallCount++;
-    isListeningValue = true;
-    return true;
+  dynamic noSuchMethod(Invocation invocation) {
+    if (invocation.memberName == #initialize) {
+      return Future.value(true);
+    }
+    if (invocation.memberName == #locales) {
+      return Future.value(<stt.LocaleName>[stt.LocaleName('es_ES', 'Spanish')]);
+    }
+    if (invocation.memberName == #listen) {
+      listenCallCount++;
+      isListeningValue = true;
+      return Future.value(true);
+    }
+    return super.noSuchMethod(invocation);
   }
 }
 
