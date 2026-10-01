@@ -400,12 +400,14 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                           children: [
                             const Icon(Icons.savings_outlined, size: 16, color: AppColors.primaryDark),
                             const SizedBox(width: 6),
-                            Text(
-                              'Meta de Ahorro / Inversión ($_selectedMoneda) (Opcional)',
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
+                            Expanded(
+                              child: Text(
+                                'Meta de Ahorro / Inversión ($_selectedMoneda) (Opcional)',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textPrimary,
+                                ),
                               ),
                             ),
                           ],
