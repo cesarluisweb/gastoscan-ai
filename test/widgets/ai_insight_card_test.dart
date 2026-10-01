@@ -114,5 +114,25 @@ void main() {
 
       expect(find.textContaining('Asigna un presupuesto mensual en la pestaña de Análisis'), findsOneWidget);
     });
+
+    testWidgets('displays new month motivational insight when in first days with budget', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: AiInsightCard(
+              gastos: [],
+              presupuestoGeneral: 150.0,
+              totalesPorCategoria: {},
+              totalGastadoMes: 0.0,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('ai_insight_card')), findsOneWidget);
+      expect(find.textContaining('Nuevo mes'), findsOneWidget);
+      expect(find.textContaining('aplicar lo aprendido'), findsOneWidget);
+    });
   });
 }

@@ -10,6 +10,7 @@ import '../../data/datasources/remote/gemini_service.dart';
 import '../../data/datasources/local/database_helper.dart';
 import '../../data/models/shopping_item_model.dart';
 import '../../core/utils/uuid_generator.dart';
+import '../../core/utils/date_formatter.dart';
 import 'review_expense_screen.dart';
 
 class ChatSuggestion {
@@ -82,9 +83,17 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _dbHelper = widget.dbHelper ?? DatabaseHelper.instance;
     _speech = widget.speechToText ?? stt.SpeechToText();
     _focusNode.addListener(_onFocusChange);
+    final now = DateTime.now();
+    final mesNombre = DateFormatter.getMonthName(now.month);
+    final String initialGreeting;
+    if (now.day <= 5) {
+      initialGreeting = '¡Nuevo mes! Hoy es un buen día para determinarte a aplicar lo aprendido el mes pasado. Tu presupuesto de $mesNombre ya está listo. ¿Qué deseas consultar o registrar hoy?';
+    } else {
+      initialGreeting = 'Puedo ayudarte con lo que necesites dentro de Rinde Más: responder preguntas sobre tus gastos del mes o registrar compras directamente. ¿Qué deseas consultar?';
+    }
     _messages.add({
       'role': 'assistant',
-      'text': 'Puedo ayudarte con lo que necesites dentro de Rinde Más: responder preguntas sobre tus gastos del mes o registrar compras directamente. ¿Qué deseas consultar?',
+      'text': initialGreeting,
     });
     _initSpeech();
   }

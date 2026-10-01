@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/currency_formatter.dart';
+import '../../core/utils/date_formatter.dart';
 import '../../data/models/gasto_model.dart';
 import '../screens/chat_screen.dart';
 
@@ -28,8 +29,12 @@ class AiInsightCard extends StatelessWidget {
     final now = DateTime.now();
     final diasEnMes = DateTime(now.year, now.month + 1, 0).day;
     final diasRestantes = (diasEnMes - now.day).clamp(1, diasEnMes);
+    final mesActualNombre = DateFormatter.getMonthName(now.month);
 
     if (gastos.isEmpty) {
+      if (now.day <= 5 && presupuestoGeneral > 0) {
+        return '¡Nuevo mes! Tu presupuesto de $mesActualNombre ya está listo. Hoy es un buen día para determinarte a aplicar lo aprendido el mes pasado.';
+      }
       return 'Registra tu primera compra con el botón + para activar estadísticas y recomendaciones automáticas.';
     }
 
