@@ -6,41 +6,19 @@
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests getAllPresupuestosCategorias returns all configured category budgets
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests insertCategoria and updateCategoria work correctly
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests deleteCategoria removes the category
-::endgroup::
-::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart (failed)
-Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart":
-Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: lib/ui/screens/chat_screen.dart:141:11: Error: '_spanishLocaleId' is already declared in this scope.
-  String? _spanishLocaleId;
-          ^^^^^^^^^^^^^^^^
-lib/ui/screens/chat_screen.dart:75:11: Context: Previous declaration of '_spanishLocaleId'.
-  String? _spanishLocaleId;
-          ^^^^^^^^^^^^^^^^
-.
-
-::endgroup::
-::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart (failed)
-Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart":
-Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: lib/ui/screens/chat_screen.dart:141:11: Error: '_spanishLocaleId' is already declared in this scope.
-  String? _spanishLocaleId;
-          ^^^^^^^^^^^^^^^^
-lib/ui/screens/chat_screen.dart:75:11: Context: Previous declaration of '_spanishLocaleId'.
-  String? _spanishLocaleId;
-          ^^^^^^^^^^^^^^^^
-.
-
-::endgroup::
-::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart (failed)
-Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart":
-Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: lib/ui/screens/chat_screen.dart:141:11: Error: '_spanishLocaleId' is already declared in this scope.
-  String? _spanishLocaleId;
-          ^^^^^^^^^^^^^^^^
-lib/ui/screens/chat_screen.dart:75:11: Context: Previous declaration of '_spanishLocaleId'.
-  String? _spanishLocaleId;
-          ^^^^^^^^^^^^^^^^
-.
-
-::endgroup::
-::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests renders 4 navigation destinations and center FAB
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests switching tabs changes current active screen
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping center FAB opens bottom sheet with 4 add options
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping AI chat button on Inicio navigates to Chat keeping bottom navigation and back returns to Inicio
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping Asistente IA in Mas and pressing back returns to Mas hub
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests displays yellow processing banner when queue has pending items
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests displays single item text properly in processing banner
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests hides processing banner when queue is empty and not processing
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests displays ready queue item card when items are ready for review
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests renders all hub sections in main view
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping shopping list navigates internally and back button returns to hub
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping chat navigates internally and back button returns to hub
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests calling openChat navigates directly to chat view
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) R3 Acceptance Criteria: Asignar $50 a Alimentación, y registrar un gasto de $60 en Alimentación hace que se dibuje un indicador visual de exceso (color rojo) en la UI de esa categoría
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Category within budget does NOT render the red excess alert
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Initial empty state displays analysis empty state and allows adding budget
@@ -62,13 +40,7 @@ lib/ui/screens/chat_screen.dart:75:11: Context: Previous declaration of '_spanis
 ::endgroup::
 ::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart (failed)
 Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart":
-Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: lib/ui/screens/chat_screen.dart:141:11: Error: '_spanishLocaleId' is already declared in this scope.
-  String? _spanishLocaleId;
-          ^^^^^^^^^^^^^^^^
-lib/ui/screens/chat_screen.dart:75:11: Context: Previous declaration of '_spanishLocaleId'.
-  String? _spanishLocaleId;
-          ^^^^^^^^^^^^^^^^
-test/screens/chat_screen_test.dart:54:5: Error: Type 'stt.SpeechSoundLevelHandler' not found.
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: test/screens/chat_screen_test.dart:54:5: Error: Type 'stt.SpeechSoundLevelHandler' not found.
     stt.SpeechSoundLevelHandler? onSoundLevelChange,
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 test/screens/chat_screen_test.dart:49:16: Error: The method 'FakeSpeechToText.listen' has fewer named arguments than those of overridden method 'SpeechToText.listen'.
@@ -94,15 +66,15 @@ test/screens/chat_screen_test.dart:54:9: Error: 'SpeechSoundLevelHandler' isn't 
 ::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests 3-day scheduling function defaults to Duration(days: 3)
 NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@344310200' has not been initialized.
+NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@834310200' has not been initialized.
 ::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests Custom duration is respected when specified
 NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@344310200' has not been initialized.
+NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@834310200' has not been initialized.
 ::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests cancelInactivityReminder cancels and clears scheduled state
 NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@344310200' has not been initialized.
+NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@834310200' has not been initialized.
 NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::endgroup::
 ::group::✅ Passing tests
@@ -110,7 +82,7 @@ NotificationService: Excepción al cancelar recordatorio: MissingPluginException
 ::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests recordActivityAndReschedule updates activity time and reschedules for 3 days
 NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@344310200' has not been initialized.
+NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@834310200' has not been initialized.
 ::endgroup::
 ::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests Channel configuration and constants are correctly defined
@@ -180,19 +152,19 @@ The "instance" getter on the ServicesBinding binding mixin is only available onc
 Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
 In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
 If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
+NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
+The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
+Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
+In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
+If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
+NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
+The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
+Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
+In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
+If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
 ::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests addPendingItem delegates to enqueue and preserves backwards compatibility
 ::endgroup::
-NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
-The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
-Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
-In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
-If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
-NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
-The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
-Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
-In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
-If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
 NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
 The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
 Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
@@ -233,17 +205,10 @@ If ServicesBinding is a custom binding mixin, there must also be a custom bindin
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: ExpenseCard Currency Preference Tests displays USD as primary when monedaPrincipal is USD
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: ExpenseCard Currency Preference Tests displays VES as primary when monedaPrincipal is VES
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CategoryChart Currency Preference Tests renders category totals and budgets in VES when monedaPrincipal is VES
-::endgroup::
-::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart (failed)
-Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart":
-Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: lib/ui/screens/chat_screen.dart:141:11: Error: '_spanishLocaleId' is already declared in this scope.
-  String? _spanishLocaleId;
-          ^^^^^^^^^^^^^^^^
-lib/ui/screens/chat_screen.dart:75:11: Context: Previous declaration of '_spanishLocaleId'.
-  String? _spanishLocaleId;
-          ^^^^^^^^^^^^^^^^
-.
-
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays welcome prompt when expenses are empty
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays over budget warning when spent exceeds budget
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays budget alert when spent is 85 percent or more
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests suggests defining budget when no general budget exists
 ::endgroup::
 
-::error::83 tests passed, 5 failed.
+::error::100 tests passed, 1 failed.
