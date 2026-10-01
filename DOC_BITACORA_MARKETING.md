@@ -114,6 +114,9 @@ Este documento registra la estrategia real ejecutada en comunidades, los textos 
 ### D. Ante los Usuarios de Excel:
 > *"El que es experto en Excel le va buenísimo. Te confieso que no sabía que Excel tenía esa opción. De todas maneras, seguro alguien encontrará más práctico descargar una app que se enfoque en hacer precisamente esto."*
 
+### E. Ante la crítica "O sea un AI wrapper":
+> *"La IA (Gemini Flash) es solo el motor para extraer la foto de la factura en 2 segundos sin teclear a mano. Alrededor hay todo el desarrollo local: base de datos en SQLite, lógica de presupuestos aislados por mes en bolívares y dólares a tasa BCV, lista de compras con cotejo automático, cola de sincronización offline/online y panel web. La IA resuelve la extracción del comprobante, el resto es la arquitectura de la app para que la persona organice sus finanzas cotidianas en el país."*
+
 ---
 
 ## 6. Grandes Aprendizajes para Futuros Lanzamientos
@@ -127,3 +130,4 @@ Este documento registra la estrategia real ejecutada en comunidades, los textos 
 7. **No forzar ni insistir con el login:** Mantener una experiencia 100% funcional sin cuenta obligatoria genera mucha mayor adopción y confianza en usuarios primerizos.
 8. **Cumplimiento de Better Ads en Intersticiales:** Para evitar baneos en AdMob o rechazos en Google Play, los anuncios de pantalla completa solo deben desplegarse en pausas naturales de flujo (tras guardar un gasto), nunca por sorpresa al iniciar o escanear.
 9. **Reencuadre de Usuario de Negocios a Personal:** Cuando un usuario pida funciones contables de empresa (libros auxiliares, costos de producción), la respuesta debe validar la idea pero dejar claro el foco único de Rinde Más: finanzas personales cotidianas sin fricción.
+10. **Suscripción como blindaje para costos de IA:** Aunque los usuarios prefieran pagos únicos de por vida ("no me metas suscripción"), una app con consumo de tokens por escaneo requiere un modelo recurrente para funciones avanzadas Pro, manteniendo el registro manual y por voz siempre gratuito.
