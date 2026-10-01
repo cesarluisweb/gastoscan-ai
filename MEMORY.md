@@ -19,5 +19,5 @@
 - Prohibido `>` en PowerShell; usar siempre tubería `... | Out-File -Encoding utf8`.
 
 ## Próximo Paso Inmediato
-- Monitorear CI tras push y verificar compilación/tests limpios.
+- Avanzar con la fase 5: Preparativos de Google Play Console (20 testers) o Tasa y Moneda Paralela (Fase 6.1).
 
