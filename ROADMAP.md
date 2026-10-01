@@ -43,12 +43,12 @@ Este documento centraliza las ideas y mejoras pendientes, ordenadas estratégica
 - **Navegación fluida de 4 destinos:** Transiciones sutiles (Inicio, Gastos, Análisis, Más) y barra flotante global de escaneo.
 - **Asistente IA con Gestión de Compras y Frases:** Chat con Function Calling para modificar lista de compras, desambiguación obligatoria y 5 botones de consultas frecuentes.
 
-## Fase 6.1: Mejoras Derivadas de Feedback de Comunidad (Pendientes 📋)
+## Fase 6.1: Mejoras Derivadas de Feedback de Comunidad (En Progreso 🔄)
 *Optimizaciones directas sugeridas por los primeros evaluadores y desarrolladores:*
-- **Estado de Facturas Pendientes en UI:** Ocultar el monto o mostrar "Calculando..." / "Por revisar" en vez de "$ 0.00" mientras la factura está en cola o en proceso de escaneo.
-- **Detección de IVA y Alícuotas Fiscales en OCR:** Incorporar en el prompt de extracción de Cloud Functions la detección de marcadores fiscales venezolanos (`(E)` Exento, `(G)` Gravado, alícuota 16%) para desglosar el impuesto con precisión legal por ítem.
+- ~~**Estado de Facturas Pendientes en UI:** (Completada ✅)~~ Ocultar el monto o mostrar badge "Por revisar" en vez de "$ 0.00" mientras la factura está en cola o en proceso de escaneo.
+- ~~**Detección de IVA y Alícuotas Fiscales en OCR:** (Completada ✅)~~ Incorporar en el prompt de extracción de Cloud Functions la detección de marcadores fiscales venezolanos (`(E)` Exento, `(G)` Gravado, alícuota 16%) para desglosar el impuesto con precisión legal por ítem.
 - **Tasa y Moneda Personalizada / Paralela:** Permitir ingresar una tasa de cambio manual o consultar USDT (Binance P2P) para usuarios que operan fuera de la tasa oficial del Banco Central.
-- **Monitoreo de Consumo de Tokens:** Capturar la metadata de tokens consumidos devuelta por Gemini en Cloud Functions y registrar métricas de costo por escaneo.
+- ~~**Monitoreo de Consumo de Tokens:** (Completada ✅)~~ Capturar la metadata de tokens consumidos devuelta por Gemini en Cloud Functions y registrar métricas de costo por escaneo.
 
 ## Fase 7: Arquitectura de Producción y Confiabilidad (En Progreso 🔄)
 *Transformar el excelente MVP actual en un producto de grado financiero ("Bank-grade").*

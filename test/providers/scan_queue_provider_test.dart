@@ -222,5 +222,37 @@ void main() {
       expect(results[1].comercio, equals('Panadería'));
       expect(results[1].moneda, equals('VES'));
     });
+
+    test('parses fiscal markers (E) and (G) into item descriptions', () {
+      final json = {
+        'comercio': 'Automercado Plaza',
+        'fecha': '2026-09-25',
+        'moneda': 'VES',
+        'total_original': 250.00,
+        'impuesto_iva': 32.00,
+        'items': [
+          {
+            'descripcion': 'Harina de Maiz',
+            'cantidad': 2,
+            'precio_unitario': 50.00,
+            'total': 100.00,
+            'alicuota_fiscal': 'E'
+          },
+          {
+            'descripcion': 'Detergente Liquido',
+            'cantidad': 1,
+            'precio_unitario': 100.00,
+            'total': 100.00,
+            'alicuota_fiscal': 'G'
+          }
+        ]
+      };
+
+      final results = GeminiExtractionResult.listFromJson(json);
+      expect(results.length, equals(1));
+      final items = results.first.items;
+      expect(items.any((it) => it.descripcion.contains('Harina de Maiz (E)')), isTrue);
+      expect(items.any((it) => it.descripcion.contains('Detergente Liquido (G)')), isTrue);
+    });
   });
 }

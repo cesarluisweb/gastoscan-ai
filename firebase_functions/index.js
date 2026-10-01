@@ -35,6 +35,7 @@ Reglas estrictas para los productos de cada factura:
 2. Decimales: Extrae con exactitud los montos numéricos. Usa SIEMPRE el PUNTO (.) como separador de decimales. Si el precio en la factura usa una coma como decimal (ej. 12,50), DEBES reemplazarla por un punto (12.50), NO la elimines.
 3. Moneda Unificada: Todos los precios extraídos (ítems y total_original) DEBEN estar estrictamente en la misma moneda. Si los ítems están detallados en Bolívares (VES), extrae el total_original en Bolívares (ignorando el total Ref en USD) y coloca "moneda": "VES".
 4. "categoria": Asigna a cada ítem individual una de las categorías válidas ("Alimentación", "Salud", "Higiene", "Educación", "Hogar", "Servicios", "Transporte", "Otros") según el tipo de producto.
+5. "impuesto_iva" y marcadores fiscales: En facturas fiscales venezolanas, los ítems suelen marcarse al final como (E) Exento o (G) Gravado al 16% (o alícuotas reducidas). En cada ítem, extrae "alicuota_fiscal": "E" para exento, o "G" para gravado. En el campo general "impuesto_iva", extrae el monto total del IVA liquidado (suele decir "Total IVA", "IVA 16%", "Impuesto"). Si toda la factura es exenta o no tiene IVA desglosado, coloca 0.00.
 
 Devuelve EXCLUSIVAMENTE un objeto JSON válido con la siguiente estructura, sin texto adicional ni bloques markdown:
 {
@@ -52,7 +53,8 @@ Devuelve EXCLUSIVAMENTE un objeto JSON válido con la siguiente estructura, sin 
           "cantidad": 1.0,
           "precio_unitario": 0.00,
           "total": 0.00,
-          "categoria": "Alimentación" | "Salud" | "Higiene" | "Educación" | "Hogar" | "Servicios" | "Transporte" | "Otros"
+          "categoria": "Alimentación" | "Salud" | "Higiene" | "Educación" | "Hogar" | "Servicios" | "Transporte" | "Otros",
+          "alicuota_fiscal": "E" | "G" | null
         }
       ]
     }
@@ -138,6 +140,14 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
       if (candidates.length === 0) {
         throw new functions.https.HttpsError("internal", "Respuesta vacía de Gemini.");
       }
+
+      // Registro de métricas de consumo de tokens y costo por escaneo
+      const usageMetadata = parsedData.usageMetadata || {};
+      const promptTokens = usageMetadata.promptTokenCount || 0;
+      const candidatesTokens = usageMetadata.candidatesTokenCount || 0;
+      const totalTokens = usageMetadata.totalTokenCount || 0;
+      const estimatedCostUsd = ((promptTokens * 0.10) + (candidatesTokens * 0.40)) / 1000000;
+      console.log(`[TokenMetrics] analyzeReceipt | Modelo: ${fallbackModels[modelIndex]} | Tokens: ${totalTokens} (Prompt: ${promptTokens}, Salida: ${candidatesTokens}) | Costo est: $${estimatedCostUsd.toFixed(6)} USD`);
 
       let rawText = candidates[0]?.content?.parts?.[0]?.text || "";
       
@@ -343,6 +353,14 @@ ${JSON.stringify(contextData)}
       if (candidates.length === 0) {
         throw new functions.https.HttpsError("internal", "Respuesta vacía de Gemini.");
       }
+
+      // Registro de métricas de consumo de tokens y costo
+      const usageMetadata = responseData.usageMetadata || {};
+      const promptTokens = usageMetadata.promptTokenCount || 0;
+      const candidatesTokens = usageMetadata.candidatesTokenCount || 0;
+      const totalTokens = usageMetadata.totalTokenCount || 0;
+      const estimatedCostUsd = ((promptTokens * 0.10) + (candidatesTokens * 0.40)) / 1000000;
+      console.log(`[TokenMetrics] chatWithAnalyst | Modelo: ${fallbackModels[modelIndex]} | Tokens: ${totalTokens} (Prompt: ${promptTokens}, Salida: ${candidatesTokens}) | Costo est: $${estimatedCostUsd.toFixed(6)} USD`);
 
       const part = candidates[0]?.content?.parts?.[0];
       

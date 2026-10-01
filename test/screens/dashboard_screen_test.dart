@@ -111,5 +111,21 @@ void main() {
       expect(find.byKey(const Key('pending_1')), findsOneWidget);
       expect(find.textContaining('Central Madeirense'), findsOneWidget);
     });
+
+    testWidgets('displays "Por revisar" badge when pending item has zero total', (tester) async {
+      scanQueueProvider.setReadyItems([
+        {
+          'id': 2,
+          'image_path': '/img/factura2.jpg',
+          'extracted_data': '{"comercio": "Panaderia El Trigo", "fecha": "2026-09-15", "moneda": "USD", "totalOriginal": 0.0, "items": []}',
+        },
+      ]);
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pump();
+
+      expect(find.byKey(const Key('pending_2')), findsOneWidget);
+      expect(find.text('Por revisar'), findsWidgets);
+    });
   });
 }

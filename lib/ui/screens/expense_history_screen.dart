@@ -94,17 +94,25 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
       }
       final result = GeminiExtractionResult.fromJson(data);
       
+      final double totalOrig = result.totalOriginal;
+      final double tasa = (result.tasaCambioDetectada != null && result.tasaCambioDetectada! > 0)
+          ? result.tasaCambioDetectada!
+          : 1.0;
+      final double totalUsd = (result.moneda == 'USD')
+          ? totalOrig
+          : (tasa > 0 ? totalOrig / tasa : 0.0);
+
       final dummyGasto = GastoModel(
         uuid: 'pending_${item['id']}',
         fecha: result.fecha ?? DateTime.now().toIso8601String().substring(0, 10),
         comercio: result.comercio ?? 'Comercio Desconocido',
         moneda: result.moneda ?? 'VES',
-        totalOriginal: ((result.totalOriginal ?? 0) * 100).round(),
-        totalUsd: 0,
-        tasaCambio: result.tasaCambioDetectada ?? 1.0,
+        totalOriginal: (totalOrig * 100).round(),
+        totalUsd: (totalUsd * 100).round(),
+        tasaCambio: tasa,
         categoria: 'Pendiente',
         creadoEn: DateTime.now().toIso8601String(),
-        items: result.items ?? [],
+        items: result.items,
       );
 
       if (query.isEmpty) {

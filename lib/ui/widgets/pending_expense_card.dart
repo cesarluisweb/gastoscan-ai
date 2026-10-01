@@ -94,24 +94,57 @@ class PendingExpenseCard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(
-                    monedaPrincipal == 'VES'
-                        ? CurrencyFormatter.formatVes(
-                            gasto.moneda == 'VES'
-                                ? gasto.totalOriginalDisplay
-                                : gasto.totalUsdDisplay *
-                                    (gasto.tasaCambio > 0 ? gasto.tasaCambio : 1.0),
-                          )
-                        : CurrencyFormatter.formatUsd(
-                            gasto.moneda == 'USD' 
-                                ? gasto.totalOriginalDisplay 
-                                : gasto.totalUsdDisplay
+                  Builder(
+                    builder: (context) {
+                      final double amount;
+                      if (monedaPrincipal == 'VES') {
+                        amount = gasto.moneda == 'VES'
+                            ? gasto.totalOriginalDisplay
+                            : (gasto.totalUsdDisplay > 0
+                                ? gasto.totalUsdDisplay *
+                                    (gasto.tasaCambio > 0 ? gasto.tasaCambio : 1.0)
+                                : gasto.totalOriginalDisplay *
+                                    (gasto.tasaCambio > 0 ? gasto.tasaCambio : 1.0));
+                      } else {
+                        amount = gasto.moneda == 'USD'
+                            ? gasto.totalOriginalDisplay
+                            : (gasto.totalUsdDisplay > 0
+                                ? gasto.totalUsdDisplay
+                                : (gasto.tasaCambio > 0
+                                    ? gasto.totalOriginalDisplay / gasto.tasaCambio
+                                    : 0.0));
+                      }
+
+                      if (amount <= 0) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.warning.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: AppColors.warning.withOpacity(0.4)),
                           ),
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
+                          child: const Text(
+                            'Por revisar',
+                            style: TextStyle(
+                              color: AppColors.warning,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        );
+                      }
+
+                      return Text(
+                        monedaPrincipal == 'VES'
+                            ? CurrencyFormatter.formatVes(amount)
+                            : CurrencyFormatter.formatUsd(amount),
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),

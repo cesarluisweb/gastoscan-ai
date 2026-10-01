@@ -106,7 +106,13 @@ class GeminiExtractionResult {
       for (final rawItem in (json['items'] as List)) {
         if (rawItem is Map) {
           final itemMap = Map<String, dynamic>.from(rawItem);
-          final desc = itemMap['descripcion']?.toString() ?? 'Producto/Servicio';
+          String desc = itemMap['descripcion']?.toString() ?? 'Producto/Servicio';
+          final alicuota = itemMap['alicuota_fiscal']?.toString().trim().toUpperCase();
+          if (alicuota == 'E' && !desc.toUpperCase().contains('(E)')) {
+            desc = '$desc (E)';
+          } else if (alicuota == 'G' && !desc.toUpperCase().contains('(G)')) {
+            desc = '$desc (G)';
+          }
           
           double cant = _parseAmount(itemMap['cantidad'], isPrice: false);
           if (cant <= 0.0) cant = 1.0;
