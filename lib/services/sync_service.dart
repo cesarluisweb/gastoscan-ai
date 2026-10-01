@@ -137,7 +137,7 @@ class SyncService {
         'anio': anio,
         'mes': mes,
         'presupuesto_general': general,
-        'meta_ahorro': (p['meta_ahorro'] as num?)?.toDouble() ?? 0.0,
+        'meta_ahorro': (pres['meta_ahorro'] as num?)?.toDouble() ?? 0.0,
         'moneda': moneda,
         'categorias': categorias,
         'actualizado_en': actualizadoEn,
