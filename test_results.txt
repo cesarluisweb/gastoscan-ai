@@ -9,28 +9,34 @@
 ::endgroup::
 ::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart (failed)
 Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart":
-Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: lib/ui/screens/chat_screen.dart:317:26: Error: A value of type 'GastoModel' can't be assigned to a variable of type 'String'.
- - 'GastoModel' is from 'package:gastoscan_ai/data/models/gasto_model.dart' ('lib/data/models/gasto_model.dart').
-                'gasto': gastoGuardado,
-                         ^
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: lib/ui/screens/chat_screen.dart:141:11: Error: '_spanishLocaleId' is already declared in this scope.
+  String? _spanishLocaleId;
+          ^^^^^^^^^^^^^^^^
+lib/ui/screens/chat_screen.dart:75:11: Context: Previous declaration of '_spanishLocaleId'.
+  String? _spanishLocaleId;
+          ^^^^^^^^^^^^^^^^
 .
 
 ::endgroup::
 ::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart (failed)
 Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart":
-Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: lib/ui/screens/chat_screen.dart:317:26: Error: A value of type 'GastoModel' can't be assigned to a variable of type 'String'.
- - 'GastoModel' is from 'package:gastoscan_ai/data/models/gasto_model.dart' ('lib/data/models/gasto_model.dart').
-                'gasto': gastoGuardado,
-                         ^
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: lib/ui/screens/chat_screen.dart:141:11: Error: '_spanishLocaleId' is already declared in this scope.
+  String? _spanishLocaleId;
+          ^^^^^^^^^^^^^^^^
+lib/ui/screens/chat_screen.dart:75:11: Context: Previous declaration of '_spanishLocaleId'.
+  String? _spanishLocaleId;
+          ^^^^^^^^^^^^^^^^
 .
 
 ::endgroup::
 ::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart (failed)
 Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart":
-Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: lib/ui/screens/chat_screen.dart:317:26: Error: A value of type 'GastoModel' can't be assigned to a variable of type 'String'.
- - 'GastoModel' is from 'package:gastoscan_ai/data/models/gasto_model.dart' ('lib/data/models/gasto_model.dart').
-                'gasto': gastoGuardado,
-                         ^
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: lib/ui/screens/chat_screen.dart:141:11: Error: '_spanishLocaleId' is already declared in this scope.
+  String? _spanishLocaleId;
+          ^^^^^^^^^^^^^^^^
+lib/ui/screens/chat_screen.dart:75:11: Context: Previous declaration of '_spanishLocaleId'.
+  String? _spanishLocaleId;
+          ^^^^^^^^^^^^^^^^
 .
 
 ::endgroup::
@@ -56,10 +62,30 @@ Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test
 ::endgroup::
 ::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart (failed)
 Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart":
-Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: lib/ui/screens/chat_screen.dart:317:26: Error: A value of type 'GastoModel' can't be assigned to a variable of type 'String'.
- - 'GastoModel' is from 'package:gastoscan_ai/data/models/gasto_model.dart' ('lib/data/models/gasto_model.dart').
-                'gasto': gastoGuardado,
-                         ^
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: lib/ui/screens/chat_screen.dart:141:11: Error: '_spanishLocaleId' is already declared in this scope.
+  String? _spanishLocaleId;
+          ^^^^^^^^^^^^^^^^
+lib/ui/screens/chat_screen.dart:75:11: Context: Previous declaration of '_spanishLocaleId'.
+  String? _spanishLocaleId;
+          ^^^^^^^^^^^^^^^^
+test/screens/chat_screen_test.dart:54:5: Error: Type 'stt.SpeechSoundLevelHandler' not found.
+    stt.SpeechSoundLevelHandler? onSoundLevelChange,
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+test/screens/chat_screen_test.dart:49:16: Error: The method 'FakeSpeechToText.listen' has fewer named arguments than those of overridden method 'SpeechToText.listen'.
+  Future<bool> listen({
+               ^
+../../../.pub-cache/hosted/pub.dev/speech_to_text-7.5.0/lib/speech_to_text.dart:444:10: Context: This is the overridden method ('listen').
+  Future listen(
+         ^
+test/screens/chat_screen_test.dart:49:16: Error: The method 'FakeSpeechToText.listen' doesn't have the named parameter 'listenOptions' of overridden method 'SpeechToText.listen'.
+  Future<bool> listen({
+               ^
+../../../.pub-cache/hosted/pub.dev/speech_to_text-7.5.0/lib/speech_to_text.dart:444:10: Context: This is the overridden method ('listen').
+  Future listen(
+         ^
+test/screens/chat_screen_test.dart:54:9: Error: 'SpeechSoundLevelHandler' isn't a type.
+    stt.SpeechSoundLevelHandler? onSoundLevelChange,
+        ^^^^^^^^^^^^^^^^^^^^^^^
 .
 
 ::endgroup::
@@ -154,19 +180,19 @@ The "instance" getter on the ServicesBinding binding mixin is only available onc
 Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
 In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
 If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
-NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
-The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
-Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
-In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
-If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
-NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
-The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
-Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
-In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
-If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
 ::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests addPendingItem delegates to enqueue and preserves backwards compatibility
 ::endgroup::
+NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
+The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
+Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
+In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
+If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
+NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
+The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
+Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
+In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
+If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
 NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
 The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
 Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
@@ -196,159 +222,7 @@ If ServicesBinding is a custom binding mixin, there must also be a custom bindin
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: VoiceExpenseSheet Editable Tests renders title, input field, mic button and cancel button
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: VoiceExpenseSheet Editable Tests allows editing text in TextField and enables process button
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: VoiceExpenseSheet Editable Tests clear button removes text and disables process button
-::endgroup::
-::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: VoiceExpenseSheet Editable Tests submitting edited text calls parseVoiceExpense with updated content (failed)
-══╡ EXCEPTION CAUGHT BY WIDGETS LIBRARY ╞═══════════════════════════════════════════════════════════
-The following ProviderNotFoundException was thrown building ReviewExpenseScreen(dirty, state:
-_ReviewExpenseScreenState#96d9f):
-Error: Could not find the correct Provider<ScanQueueProvider> above this ReviewExpenseScreen Widget
-
-This happens because you used a `BuildContext` that does not include the provider
-of your choice. There are a few common scenarios:
-
-- You added a new provider in your `main.dart` and performed a hot-reload.
-  To fix, perform a hot-restart.
-
-- The provider you are trying to read is in a different route.
-
-  Providers are "scoped". So if you insert of provider inside a route, then
-  other routes will not be able to access that provider.
-
-- You used a `BuildContext` that is an ancestor of the provider you are trying to read.
-
-  Make sure that ReviewExpenseScreen is under your MultiProvider/Provider<ScanQueueProvider>.
-  This usually happens when you are creating a provider and trying to read it immediately.
-
-  For example, instead of:
-
-  ```
-  Widget build(BuildContext context) {
-    return Provider<Example>(
-      create: (_) => Example(),
-      // Will throw a ProviderNotFoundError, because `context` is associated
-      // to the widget that is the parent of `Provider<Example>`
-      child: Text(context.watch<Example>().toString()),
-    );
-  }
-  ```
-
-  consider using `builder` like so:
-
-  ```
-  Widget build(BuildContext context) {
-    return Provider<Example>(
-      create: (_) => Example(),
-      // we use `builder` to obtain a new `BuildContext` that has access to the provider
-      builder: (context, child) {
-        // No longer throws
-        return Text(context.watch<Example>().toString());
-      }
-    );
-  }
-  ```
-
-If none of these solutions work, consider asking for help on StackOverflow:
-https://stackoverflow.com/questions/tagged/flutter
-
-The relevant error-causing widget was:
-  ReviewExpenseScreen
-  ReviewExpenseScreen:file:///home/runner/work/gastoscan-ai/gastoscan-ai/lib/ui/widgets/voice_expense_sheet.dart:181:35
-
-When the exception was thrown, this was the stack:
-#0      Provider._inheritedElementOf (package:provider/src/provider.dart:377:7)
-#1      Provider.of (package:provider/src/provider.dart:327:30)
-#2      _ReviewExpenseScreenState.build (package:gastoscan_ai/ui/screens/review_expense_screen.dart:595:36)
-#3      StatefulElement.build (package:flutter/src/widgets/framework.dart:5944:27)
-#4      ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5830:15)
-#5      StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
-#6      Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
-#7      ComponentElement._firstBuild (package:flutter/src/widgets/framework.dart:5812:5)
-#8      StatefulElement._firstBuild (package:flutter/src/widgets/framework.dart:5986:11)
-#9      ComponentElement.mount (package:flutter/src/widgets/framework.dart:5806:5)
-...     Normal element mounting (260 frames)
-#269    Element.inflateWidget (package:flutter/src/widgets/framework.dart:4600:20)
-#270    MultiChildRenderObjectElement.inflateWidget (package:flutter/src/widgets/framework.dart:7277:36)
-#271    Element.updateChild (package:flutter/src/widgets/framework.dart:4072:18)
-#272    Element.updateChildren (package:flutter/src/widgets/framework.dart:4268:32)
-#273    MultiChildRenderObjectElement.update (package:flutter/src/widgets/framework.dart:7308:17)
-#274    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
-#275    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
-#276    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
-#277    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
-#278    StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
-#279    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
-#280    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
-#281    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
-#282    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
-#283    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
-#284    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
-#285    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
-#286    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
-#287    _InheritedNotifierElement.update (package:flutter/src/widgets/inherited_notifier.dart:108:11)
-#288    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
-#289    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
-#290    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
-#291    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
-#292    StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
-#293    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
-#294    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
-#295    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
-#296    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
-#297    _InheritedNotifierElement.update (package:flutter/src/widgets/inherited_notifier.dart:108:11)
-#298    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
-#299    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
-#300    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
-#301    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
-#302    StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
-#303    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
-#304    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
-#305    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
-#306    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
-#307    StatefulElement.update (package:flutter/src/widgets/framework.dart:6020:5)
-#308    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
-#309    SingleChildRenderObjectElement.update (package:flutter/src/widgets/framework.dart:7135:14)
-#310    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
-#311    SingleChildRenderObjectElement.update (package:flutter/src/widgets/framework.dart:7135:14)
-#312    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
-#313    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
-#314    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
-#315    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
-#316    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
-#317    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
-#318    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
-#319    ProxyElement.update (package:flutter/src/widgets/framework.dart:6162:5)
-#320    Element.updateChild (package:flutter/src/widgets/framework.dart:4050:15)
-#321    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5854:16)
-#322    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5995:11)
-#323    Element.rebuild (package:flutter/src/widgets/framework.dart:5542:7)
-#324    BuildScope._tryRebuild (package:flutter/src/widgets/framework.dart:2763:15)
-#325    BuildScope._flushDirtyElements (package:flutter/src/widgets/framework.dart:2820:11)
-#326    BuildOwner.buildScope (package:flutter/src/widgets/framework.dart:3124:18)
-#327    AutomatedTestWidgetsFlutterBinding.drawFrame (package:flutter_test/src/binding.dart:2432:19)
-#328    RendererBinding._handlePersistentFrameCallback (package:flutter/src/rendering/binding.dart:558:5)
-#329    SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1430:15)
-#330    SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1345:9)
-#331    AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:2261:9)
-#334    TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
-#335    AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:2250:27)
-#336    WidgetTester.pump.<anonymous closure> (package:flutter_test/src/widget_tester.dart:652:53)
-#339    TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
-#340    WidgetTester.pump (package:flutter_test/src/widget_tester.dart:652:27)
-#341    main.<anonymous closure>.<anonymous closure> (file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart:141:20)
-<asynchronous suspension>
-#342    testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
-<asynchronous suspension>
-#343    TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
-<asynchronous suspension>
-<asynchronous suspension>
-(elided 5 frames from dart:async and package:stack_trace)
-
-════════════════════════════════════════════════════════════════════════════════════════════════════
-Test failed. See exception logs above.
-The test description was: submitting edited text calls parseVoiceExpense with updated content
-
-::endgroup::
-::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: VoiceExpenseSheet Editable Tests submitting edited text calls parseVoiceExpense with updated content
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests formatPreferido returns VES when preferred is VES
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests formatPreferido calculates VES using tasaCambio when totalVes is zero/null
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests formatPreferido returns USD when preferred is USD
@@ -362,12 +236,14 @@ The test description was: submitting edited text calls parseVoiceExpense with up
 ::endgroup::
 ::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart (failed)
 Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart":
-Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: lib/ui/screens/chat_screen.dart:317:26: Error: A value of type 'GastoModel' can't be assigned to a variable of type 'String'.
- - 'GastoModel' is from 'package:gastoscan_ai/data/models/gasto_model.dart' ('lib/data/models/gasto_model.dart').
-                'gasto': gastoGuardado,
-                         ^
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: lib/ui/screens/chat_screen.dart:141:11: Error: '_spanishLocaleId' is already declared in this scope.
+  String? _spanishLocaleId;
+          ^^^^^^^^^^^^^^^^
+lib/ui/screens/chat_screen.dart:75:11: Context: Previous declaration of '_spanishLocaleId'.
+  String? _spanishLocaleId;
+          ^^^^^^^^^^^^^^^^
 .
 
 ::endgroup::
 
-::error::82 tests passed, 6 failed.
+::error::83 tests passed, 5 failed.
