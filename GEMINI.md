@@ -42,6 +42,7 @@ La compilación en GitHub Actions (`build_apk.yml`) ejecuta `flutter create`, lo
 
 ## 7. Gestión de Documentación del Proyecto
 - **Archivos de Planificación:** Siempre que se genere, actualice o discuta un documento estratégico para el proyecto (como ROADMAP.md, PROJECT.md, planes de arquitectura, o guías de estilo), DEBE guardarse directamente en la raíz del repositorio.
+- **Actualización Obligatoria del Roadmap:** Cada vez que se complete una tarea, funcionalidad, corrección o hito planificado, se DEBE actualizar inmediatamente `ROADMAP.md` marcando el ítem como completado (`(Completada ✅)`) o tachándolo, manteniendo el estado de avance siempre al día.
 - **Bitácora de Marketing Obligatoria:** Cada vez que se ejecute una nueva acción, post, experimento, campaña o se recopilen aprendizajes de marketing y comunidad, se DEBE registrar y actualizar inmediatamente en `DOC_BITACORA_MARKETING.md` para acumular conocimiento reutilizable para este y futuros proyectos.
 - **Artefactos Prohibidos:** Está estrictamente prohibido dejar estos documentos clave confinados únicamente a los artefactos internos del agente (carpeta .gemini/antigravity/brain/...).
 - **Sincronización:** Tras cualquier actualización a estos documentos, se debe hacer un git commit y git push de inmediato para asegurar que el resto del equipo (humanos y otros agentes) tenga acceso a la fuente de verdad actualizada.
