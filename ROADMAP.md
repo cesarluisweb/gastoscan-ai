@@ -32,6 +32,7 @@ Este documento centraliza las ideas y mejoras pendientes, ordenadas estratégica
 - **Subida de APK / Google Play Console:** (En preparación 🔄) Pago de cuenta de desarrollador ($25), configuración de Keystore y reclutamiento de 20 testers por 14 días.
 - **Correo de bienvenida automatizado:** Disparar un correo de bienvenida y primeros pasos cuando el usuario vincule su cuenta de Google (mediante Cloud Functions / trigger de autenticación o Firestore).
 - ~~**Canal directo de soporte y contacto en "Más":** (Completada ✅)~~ Tarjeta con acción "Escribir a soporte" para abrir chat directo por WhatsApp al número de soporte oficial.
+  - *Nota futura:* Evaluar la transición del canal de soporte a una dirección de correo electrónico dedicada en lugar de WhatsApp a medida que crezca el volumen de usuarios o para mayor formalidad.
 
 ## Fase 6: Pulido, Navegación y UX Avanzada (Completada ✅)
 *Funciones complementarias para usuarios recurrentes.*
