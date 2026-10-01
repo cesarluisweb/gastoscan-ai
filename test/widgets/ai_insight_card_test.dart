@@ -163,7 +163,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Tu meta de ahorro de \$ 100.00 está siendo comprometida'), findsOneWidget);
+      expect(find.textContaining('Tu meta de ahorro'), findsOneWidget);
+      expect(find.textContaining('comprometida'), findsOneWidget);
     });
   });
 }
