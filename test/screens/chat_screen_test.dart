@@ -8,7 +8,61 @@ import 'package:gastoscan_ai/data/models/gasto_model.dart';
 import 'package:gastoscan_ai/data/models/item_gasto_model.dart';
 import 'package:gastoscan_ai/providers/gasto_provider.dart';
 import 'package:gastoscan_ai/providers/settings_provider.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:gastoscan_ai/ui/screens/chat_screen.dart';
+
+class FakeSpeechToText extends Fake implements stt.SpeechToText {
+  bool isListeningValue = false;
+  int stopCallCount = 0;
+  int listenCallCount = 0;
+
+  @override
+  bool get isListening => isListeningValue;
+
+  @override
+  Future<bool> initialize({
+    stt.SpeechErrorListener? onError,
+    stt.SpeechStatusListener? onStatus,
+    dynamic debugLogging,
+    Duration? finalTimeout,
+    List<stt.SpeechConfigOption>? options,
+  }) async {
+    return true;
+  }
+
+  @override
+  Future<List<stt.LocaleName>> locales() async => [stt.LocaleName('es_ES', 'Spanish')];
+
+  @override
+  Future<void> stop() async {
+    stopCallCount++;
+    isListeningValue = false;
+  }
+
+  @override
+  Future<void> cancel() async {
+    stopCallCount++;
+    isListeningValue = false;
+  }
+
+  @override
+  Future<bool> listen({
+    stt.SpeechResultListener? onResult,
+    Duration? listenFor,
+    Duration? pauseFor,
+    String? localeId,
+    stt.SpeechSoundLevelHandler? onSoundLevelChange,
+    dynamic cancelOnError,
+    dynamic partialResults,
+    dynamic onDevice,
+    stt.ListenMode? listenMode,
+    dynamic sampleRate,
+  }) async {
+    listenCallCount++;
+    isListeningValue = true;
+    return true;
+  }
+}
 
 class FakeDatabaseHelper extends DatabaseHelper {
   final List<ShoppingItemModel> items = [];
@@ -67,6 +121,7 @@ void main() {
     late FakeGastoProvider fakeGastoProvider;
     late FakeSettingsProvider fakeSettingsProvider;
     late FakeGeminiService fakeGeminiService;
+    late FakeSpeechToText fakeSpeech;
 
     setUp(() {
       final TestWidgetsFlutterBinding binding = TestWidgetsFlutterBinding.ensureInitialized();
@@ -76,6 +131,7 @@ void main() {
       fakeGastoProvider = FakeGastoProvider();
       fakeSettingsProvider = FakeSettingsProvider();
       fakeGeminiService = FakeGeminiService();
+      fakeSpeech = FakeSpeechToText();
     });
 
     tearDown(() {
@@ -94,6 +150,7 @@ void main() {
           home: ChatScreen(
             geminiService: fakeGeminiService,
             dbHelper: fakeDb,
+            speechToText: fakeSpeech,
           ),
         ),
       );
@@ -181,6 +238,50 @@ void main() {
 
       expect(find.byKey(const Key('chat_edit_expense_button'), skipOffstage: false), findsOneWidget);
       expect(find.text('Ver / Editar gasto', skipOffstage: false), findsOneWidget);
+    });
+
+    testWidgets('tapping textfield while listening stops microphone', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      final micButtonFinder = find.byTooltip('Hablar por micrófono');
+      expect(micButtonFinder, findsOneWidget);
+
+      await tester.tap(micButtonFinder);
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.mic), findsOneWidget);
+      expect(fakeSpeech.listenCallCount, 1);
+
+      final inputFinder = find.byType(TextField);
+      await tester.tap(inputFinder);
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.mic_none), findsOneWidget);
+      expect(fakeSpeech.stopCallCount, greaterThanOrEqualTo(1));
+    });
+
+    testWidgets('sending message while listening stops microphone', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      final micButtonFinder = find.byTooltip('Hablar por micrófono');
+      await tester.tap(micButtonFinder);
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.mic), findsOneWidget);
+
+      final inputFinder = find.byType(TextField);
+      await tester.enterText(inputFinder, 'Mensaje nuevo');
+      await tester.pumpAndSettle();
+
+      final sendButtonFinder = find.byIcon(Icons.send);
+      await tester.tap(sendButtonFinder);
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.mic_none), findsOneWidget);
+      expect(fakeSpeech.stopCallCount, greaterThanOrEqualTo(1));
     });
   });
 }

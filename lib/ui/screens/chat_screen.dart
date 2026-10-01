@@ -46,6 +46,7 @@ class ChatScreen extends StatefulWidget {
   final VoidCallback? onBack;
   final GeminiService? geminiService;
   final DatabaseHelper? dbHelper;
+  final stt.SpeechToText? speechToText;
 
   const ChatScreen({
     Key? key,
@@ -53,33 +54,76 @@ class ChatScreen extends StatefulWidget {
     this.onBack,
     this.geminiService,
     this.dbHelper,
+    this.speechToText,
   }) : super(key: key);
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
+class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   final List<Map<String, dynamic>> _messages = [];
   final TextEditingController _textCtrl = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
   final ScrollController _scrollController = ScrollController();
   late final GeminiService _geminiService;
   late final DatabaseHelper _dbHelper;
-  final stt.SpeechToText _speech = stt.SpeechToText();
+  late final stt.SpeechToText _speech;
   bool _isLoading = false;
   bool _isListening = false;
   bool _speechAvailable = false;
+  String? _spanishLocaleId;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _geminiService = widget.geminiService ?? GeminiService();
     _dbHelper = widget.dbHelper ?? DatabaseHelper.instance;
+    _speech = widget.speechToText ?? stt.SpeechToText();
+    _focusNode.addListener(_onFocusChange);
     _messages.add({
       'role': 'assistant',
       'text': 'Puedo ayudarte con lo que necesites dentro de Rinde Más: responder preguntas sobre tus gastos del mes o registrar compras directamente. ¿Qué deseas consultar?',
     });
     _initSpeech();
+  }
+
+  void _onFocusChange() {
+    if (_focusNode.hasFocus && _isListening) {
+      _stopListening();
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      _stopListening();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _focusNode.removeListener(_onFocusChange);
+    _focusNode.dispose();
+    try {
+      _speech.stop();
+    } catch (_) {}
+    _textCtrl.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _stopListening() async {
+    if (_isListening) {
+      try {
+        await _speech.stop();
+      } catch (_) {}
+      if (mounted) {
+        setState(() => _isListening = false);
+      }
+    }
   }
 
   String _normalizeText(String text) {
@@ -92,16 +136,6 @@ class _ChatScreenState extends State<ChatScreen> {
         .replaceAll('ú', 'u')
         .replaceAll('ü', 'u')
         .trim();
-  }
-
-  @override
-  void dispose() {
-    try {
-      _speech.stop();
-    } catch (_) {}
-    _textCtrl.dispose();
-    _scrollController.dispose();
-    super.dispose();
   }
 
   String? _spanishLocaleId;
@@ -139,10 +173,10 @@ class _ChatScreenState extends State<ChatScreen> {
     }
 
     if (_isListening) {
-      await _speech.stop();
-      if (mounted) setState(() => _isListening = false);
+      await _stopListening();
     } else {
       if (_speechAvailable) {
+        _focusNode.unfocus();
         String previousText = _textCtrl.text;
         if (previousText.isNotEmpty && !previousText.endsWith(' ')) {
           previousText += ' ';
@@ -190,6 +224,9 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _sendMessage([String? textOverride]) async {
+    if (_isListening) {
+      await _stopListening();
+    }
     final text = (textOverride ?? _textCtrl.text).trim();
     if (text.isEmpty) return;
 
@@ -510,78 +547,101 @@ class _ChatScreenState extends State<ChatScreen> {
         leading: (widget.showBackButton && widget.onBack != null)
             ? IconButton(
                 icon: const Icon(Icons.arrow_back),
-                onPressed: widget.onBack,
+                onPressed: () {
+                  _stopListening();
+                  widget.onBack!();
+                },
               )
             : null,
       ),
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(16),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final msg = _messages[index];
-                final isUser = msg['role'] == 'user';
-                return Align(
-                  alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width * 0.85,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isUser ? AppColors.primary : AppColors.card,
-                      borderRadius: BorderRadius.circular(16),
-                      border: isUser ? null : Border.all(color: AppColors.border),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildFormattedMessage(
-                          msg['text'] ?? '',
-                          AppColors.textPrimary,
+            child: NotificationListener<ScrollNotification>(
+              onNotification: (notification) {
+                if (notification is ScrollStartNotification || notification is ScrollUpdateNotification) {
+                  if (_isListening) {
+                    _stopListening();
+                  }
+                }
+                return false;
+              },
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  _focusNode.unfocus();
+                  if (_isListening) {
+                    _stopListening();
+                  }
+                },
+                child: ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _messages.length,
+                  itemBuilder: (context, index) {
+                    final msg = _messages[index];
+                    final isUser = msg['role'] == 'user';
+                    return Align(
+                      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        constraints: BoxConstraints(
+                          maxWidth: MediaQuery.of(context).size.width * 0.85,
                         ),
-                        if (msg['gasto'] != null && msg['gasto'] is GastoModel) ...[
-                          const SizedBox(height: 8),
-                          OutlinedButton.icon(
-                            key: const Key('chat_edit_expense_button'),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ReviewExpenseScreen(
-                                    existingGasto: msg['gasto'] as GastoModel,
+                        decoration: BoxDecoration(
+                          color: isUser ? AppColors.primary : AppColors.card,
+                          borderRadius: BorderRadius.circular(16),
+                          border: isUser ? null : Border.all(color: AppColors.border),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildFormattedMessage(
+                              msg['text'] ?? '',
+                              AppColors.textPrimary,
+                            ),
+                            if (msg['gasto'] != null && msg['gasto'] is GastoModel) ...[
+                              const SizedBox(height: 8),
+                              OutlinedButton.icon(
+                                key: const Key('chat_edit_expense_button'),
+                                onPressed: () {
+                                  _stopListening();
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ReviewExpenseScreen(
+                                        existingGasto: msg['gasto'] as GastoModel,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                icon: const Icon(Icons.edit_note, size: 18, color: AppColors.textPrimary),
+                                label: const Text(
+                                  'Ver / Editar gasto',
+                                  style: TextStyle(
+                                    color: AppColors.textPrimary,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                              );
-                            },
-                            icon: const Icon(Icons.edit_note, size: 18, color: AppColors.textPrimary),
-                            label: const Text(
-                              'Ver / Editar gasto',
-                              style: TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
+                                style: OutlinedButton.styleFrom(
+                                  backgroundColor: Colors.white,
+                                  side: const BorderSide(color: AppColors.border),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
                               ),
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              side: const BorderSide(color: AppColors.border),
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                );
-              },
+                            ],
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
             ),
           ),
           if (_isLoading)
@@ -634,6 +694,17 @@ class _ChatScreenState extends State<ChatScreen> {
                 Expanded(
                   child: TextField(
                     controller: _textCtrl,
+                    focusNode: _focusNode,
+                    onTap: () {
+                      if (_isListening) {
+                        _stopListening();
+                      }
+                    },
+                    onChanged: (_) {
+                      if (_isListening) {
+                        _stopListening();
+                      }
+                    },
                     decoration: InputDecoration(
                       hintText: _isListening ? 'Escuchando... habla ahora' : 'Pregunta o pídeme algo...',
                       border: InputBorder.none,
