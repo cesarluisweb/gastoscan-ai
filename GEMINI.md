@@ -1,5 +1,32 @@
 # Reglas Técnicas del Proyecto (Control de Gastos VE)
 
+## 0. Autonomía Ejecutiva y Protocolo de Memoria
+
+### Semáforo de Límites
+- 🟢 **Siempre (Incondicional):**
+  - Monitorear el CI en GitHub Actions vía API (`curl`) tras cada `git push` hasta confirmar `success` antes de notificar al usuario.
+  - Mantener textos de interfaz y respuestas en español neutro/venezolano.
+  - Respetar la paleta oficial (textos oscuros legibles, amarillo reservado para iconos y acentos).
+  - Consultar `MEMORY.md` al iniciar una tarea y actualizarlo al finalizarla.
+  - Guardar scripts y modificaciones en PowerShell con codificación UTF-8 explícita.
+- ⚠️ **Pregunta antes (Consultar a César):**
+  - Añadir o actualizar dependencias en `pubspec.yaml` o `package.json`.
+  - Modificar esquemas de datos (tablas SQLite, entidades Firestore) o flujos de sincronización.
+  - Cambiar la arquitectura de navegación principal o flujos de autenticación.
+  - Eliminar archivos existentes de código o documentación.
+- 🚫 **Nunca (Prohibiciones estrictas):**
+  - Modificar archivos en `android/` de forma manual o local (CI los regenera).
+  - Usar el operador `>` en PowerShell (provoca corrupción a UTF-16 LE).
+  - Cantar victoria o decir que la app "está lista" tras un commit sin verificar CI.
+  - Introducir conceptos de conciliación bancaria o cuentas múltiples (anti-filosofía Rinde Más).
+  - Prometer planes de IA ilimitada de por vida.
+
+### Protocolo de Memoria Dinámica
+1. **Al iniciar:** Leer `MEMORY.md` para situarse en el estado inmediato del trabajo.
+2. **Al finalizar:** Actualizar `MEMORY.md` con el estado final, decisiones tomadas y errores a evitar.
+3. **Brevedad:** Mantener `MEMORY.md` en máximo ~50 líneas, depurando lo que ya no aporte.
+4. **Graduación:** Si un patrón o lección se vuelve permanente, moverlo a `GEMINI.md` y eliminarlo de `MEMORY.md`.
+
 ## 1. Entorno de Desarrollo y Ejecución
 **IMPORTANTE:** El repositorio oficial de este proyecto ha sido migrado permanentemente a `C:\Development\Control de gastos VE` para evitar conflictos con Google Drive.
 - Los agentes tienen luz verde para ejecutar comandos nativos (como builds, instalación de dependencias, scripts de modificación masiva) directamente en este directorio.
