@@ -40,10 +40,7 @@
 ::endgroup::
 ::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart (failed)
 Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart":
-Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: test/screens/chat_screen_test.dart:54:5: Error: Type 'stt.SpeechSoundLevelHandler' not found.
-    stt.SpeechSoundLevelHandler? onSoundLevelChange,
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-test/screens/chat_screen_test.dart:49:16: Error: The method 'FakeSpeechToText.listen' has fewer named arguments than those of overridden method 'SpeechToText.listen'.
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: test/screens/chat_screen_test.dart:49:16: Error: The method 'FakeSpeechToText.listen' has fewer named arguments than those of overridden method 'SpeechToText.listen'.
   Future<bool> listen({
                ^
 ../../../.pub-cache/hosted/pub.dev/speech_to_text-7.5.0/lib/speech_to_text.dart:444:10: Context: This is the overridden method ('listen').
@@ -55,9 +52,6 @@ test/screens/chat_screen_test.dart:49:16: Error: The method 'FakeSpeechToText.li
 ../../../.pub-cache/hosted/pub.dev/speech_to_text-7.5.0/lib/speech_to_text.dart:444:10: Context: This is the overridden method ('listen').
   Future listen(
          ^
-test/screens/chat_screen_test.dart:54:9: Error: 'SpeechSoundLevelHandler' isn't a type.
-    stt.SpeechSoundLevelHandler? onSoundLevelChange,
-        ^^^^^^^^^^^^^^^^^^^^^^^
 .
 
 ::endgroup::
