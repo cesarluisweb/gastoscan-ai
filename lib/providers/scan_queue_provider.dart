@@ -86,7 +86,9 @@ class ScanQueueProvider with ChangeNotifier {
 
     await _dbHelper.insertScanQueueItem(imagePath, ocrText: initialOcr);
     await loadPendingItems();
-    processPendingItems();
+    if (autoProcess) {
+      processPendingItems();
+    }
   }
 
   Future<void> enqueueMultiple(List<String> imagePaths) async {
@@ -104,7 +106,9 @@ class ScanQueueProvider with ChangeNotifier {
       await _dbHelper.insertScanQueueItem(path, ocrText: initialOcr);
     }
     await loadPendingItems();
-    processPendingItems();
+    if (autoProcess) {
+      processPendingItems();
+    }
   }
 
   Future<void> addPendingItem(String imagePath) async {
@@ -263,7 +267,9 @@ class ScanQueueProvider with ChangeNotifier {
             break;
           }
         } else {
-          await _dbHelper.deleteScanQueueItem(id);
+          try {
+            await _dbHelper.deleteScanQueueItem(id);
+          } catch (_) {}
         }
         await loadPendingItems();
         await loadReadyItems();

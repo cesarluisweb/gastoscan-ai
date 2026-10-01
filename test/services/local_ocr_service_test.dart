@@ -20,8 +20,8 @@ void main() {
       final line1 = TextLine(
         text: 'AUTOMERCADOS PLAZA C.A.',
         elements: [
-          TextElement(text: 'AUTOMERCADOS', boundingBox: const Rect.fromLTWH(0, 0, 100, 20), cornerPoints: [], recognizedLanguages: ['es']),
-          TextElement(text: 'PLAZA', boundingBox: const Rect.fromLTWH(110, 0, 80, 20), cornerPoints: [], recognizedLanguages: ['es']),
+          TextElement(text: 'AUTOMERCADOS', boundingBox: const Rect.fromLTWH(0, 0, 100, 20), cornerPoints: [], recognizedLanguages: ['es'], symbols: []),
+          TextElement(text: 'PLAZA', boundingBox: const Rect.fromLTWH(110, 0, 80, 20), cornerPoints: [], recognizedLanguages: ['es'], symbols: []),
         ],
         boundingBox: const Rect.fromLTWH(0, 0, 200, 20),
         cornerPoints: [],
@@ -31,8 +31,8 @@ void main() {
       final line2 = TextLine(
         text: 'RIF J-30123456-7',
         elements: [
-          TextElement(text: 'RIF', boundingBox: const Rect.fromLTWH(0, 25, 40, 20), cornerPoints: [], recognizedLanguages: ['es']),
-          TextElement(text: 'J-30123456-7', boundingBox: const Rect.fromLTWH(45, 25, 100, 20), cornerPoints: [], recognizedLanguages: ['es']),
+          TextElement(text: 'RIF', boundingBox: const Rect.fromLTWH(0, 25, 40, 20), cornerPoints: [], recognizedLanguages: ['es'], symbols: []),
+          TextElement(text: 'J-30123456-7', boundingBox: const Rect.fromLTWH(45, 25, 100, 20), cornerPoints: [], recognizedLanguages: ['es'], symbols: []),
         ],
         boundingBox: const Rect.fromLTWH(0, 25, 150, 20),
         cornerPoints: [],
@@ -42,8 +42,8 @@ void main() {
       final line3 = TextLine(
         text: 'FECHA: 25/09/2026',
         elements: [
-          TextElement(text: 'FECHA:', boundingBox: const Rect.fromLTWH(0, 50, 60, 20), cornerPoints: [], recognizedLanguages: ['es']),
-          TextElement(text: '25/09/2026', boundingBox: const Rect.fromLTWH(65, 50, 80, 20), cornerPoints: [], recognizedLanguages: ['es']),
+          TextElement(text: 'FECHA:', boundingBox: const Rect.fromLTWH(0, 50, 60, 20), cornerPoints: [], recognizedLanguages: ['es'], symbols: []),
+          TextElement(text: '25/09/2026', boundingBox: const Rect.fromLTWH(65, 50, 80, 20), cornerPoints: [], recognizedLanguages: ['es'], symbols: []),
         ],
         boundingBox: const Rect.fromLTWH(0, 50, 150, 20),
         cornerPoints: [],
@@ -53,10 +53,10 @@ void main() {
       final line4 = TextLine(
         text: 'HARINA PAN 1.00 45.00 BS',
         elements: [
-          TextElement(text: 'HARINA', boundingBox: const Rect.fromLTWH(0, 75, 60, 20), cornerPoints: [], recognizedLanguages: ['es']),
-          TextElement(text: 'PAN', boundingBox: const Rect.fromLTWH(65, 75, 40, 20), cornerPoints: [], recognizedLanguages: ['es']),
-          TextElement(text: '45.00', boundingBox: const Rect.fromLTWH(110, 75, 50, 20), cornerPoints: [], recognizedLanguages: ['es']),
-          TextElement(text: 'BS', boundingBox: const Rect.fromLTWH(165, 75, 30, 20), cornerPoints: [], recognizedLanguages: ['es']),
+          TextElement(text: 'HARINA', boundingBox: const Rect.fromLTWH(0, 75, 60, 20), cornerPoints: [], recognizedLanguages: ['es'], symbols: []),
+          TextElement(text: 'PAN', boundingBox: const Rect.fromLTWH(65, 75, 40, 20), cornerPoints: [], recognizedLanguages: ['es'], symbols: []),
+          TextElement(text: '45.00', boundingBox: const Rect.fromLTWH(110, 75, 50, 20), cornerPoints: [], recognizedLanguages: ['es'], symbols: []),
+          TextElement(text: 'BS', boundingBox: const Rect.fromLTWH(165, 75, 30, 20), cornerPoints: [], recognizedLanguages: ['es'], symbols: []),
         ],
         boundingBox: const Rect.fromLTWH(0, 75, 200, 20),
         cornerPoints: [],
@@ -66,9 +66,9 @@ void main() {
       final line5 = TextLine(
         text: 'TOTAL A PAGAR: 45.00 BS',
         elements: [
-          TextElement(text: 'TOTAL', boundingBox: const Rect.fromLTWH(0, 100, 50, 20), cornerPoints: [], recognizedLanguages: ['es']),
-          TextElement(text: '45.00', boundingBox: const Rect.fromLTWH(60, 100, 50, 20), cornerPoints: [], recognizedLanguages: ['es']),
-          TextElement(text: 'BS', boundingBox: const Rect.fromLTWH(115, 100, 30, 20), cornerPoints: [], recognizedLanguages: ['es']),
+          TextElement(text: 'TOTAL', boundingBox: const Rect.fromLTWH(0, 100, 50, 20), cornerPoints: [], recognizedLanguages: ['es'], symbols: []),
+          TextElement(text: '45.00', boundingBox: const Rect.fromLTWH(60, 100, 50, 20), cornerPoints: [], recognizedLanguages: ['es'], symbols: []),
+          TextElement(text: 'BS', boundingBox: const Rect.fromLTWH(115, 100, 30, 20), cornerPoints: [], recognizedLanguages: ['es'], symbols: []),
         ],
         boundingBox: const Rect.fromLTWH(0, 100, 150, 20),
         cornerPoints: [],

@@ -29,6 +29,12 @@ class FakeDatabaseHelper extends DatabaseHelper {
   Future<List<Map<String, dynamic>>> getReadyScanQueueItems() async {
     return [];
   }
+
+  @override
+  Future<int> deleteScanQueueItem(int id) async {
+    items.removeWhere((it) => it['id'] == id);
+    return 1;
+  }
 }
 
 class FakeSettingsProvider extends SettingsProvider {
