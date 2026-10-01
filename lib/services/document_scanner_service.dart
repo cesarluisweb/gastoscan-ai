@@ -18,7 +18,7 @@ class DocumentScannerService {
   DocumentScanner _getScanner() {
     return _scanner ??= DocumentScanner(
       options: DocumentScannerOptions(
-        documentFormat: DocumentFormat.jpeg,
+        documentFormats: {DocumentFormat.jpeg},
         mode: ScannerMode.full,
         pageLimit: 1,
         isGalleryImport: false,
