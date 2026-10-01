@@ -61,6 +61,7 @@ La compilación en GitHub Actions (`build_apk.yml`) ejecuta `flutter create`, lo
 
 ## 11. Filosofía de Producto y Simplicidad Operativa
 - **Cero Fricción Contable (Sin Múltiples Cuentas):** Queda prohibido obligar al usuario a microgestionar de qué banco o cuenta proviene el dinero (Banesco, Zinli, etc.). El valor central de la app es un presupuesto mensual global claro y ver cuánto dinero le queda.
+- **Diferenciador Clave frente a Competidores (vs. Rial y Apps Contables):** Aplicaciones como Rial agotan al usuario exigiendo contabilidad estricta (registrar ingresos, saldos por banco, transferencias entre cuentas y cambio en efectivo). Rinde Más se enfoca **exclusivamente en el presupuesto de salidas y control de gastos**. Cero fricción de cuadre bancario: el usuario solo define su límite del mes y registra lo que gasta (foto o voz). Este es el principal argumento de diferenciación ante comparativas.
 - **Divisas Estrictas (VES y USD):** La aplicación opera exclusivamente con Bolívares (VES) y Dólares (USD) a tasa oficial BCV. No agregar monedas redundantes como USDT.
 - **Modelo de Monetización No Bloqueante:** La experiencia base de registro y control presupuestario debe ser siempre accesible. La monetización se basará en publicidad discreta combinada con la opción de pago para eliminar anuncios ("Remove Ads"). Nunca bloquear el registro de transacciones.
 
@@ -87,6 +88,9 @@ La compilación en GitHub Actions (`build_apk.yml`) ejecuta `flutter create`, lo
 
 ## 15. Privacidad, Almacenamiento Híbrido y Comunicación Externa
 - **Arquitectura de Datos Real:** Rinde Más es una aplicación *Local-First* con sincronización en la nube (Cloud Firestore). Los datos se guardan localmente en SQLite y se respaldan de forma privada y cifrada en Firebase bajo el identificador único (`uid`) de la cuenta Google del usuario.
+- **Modo Máxima Privacidad (Uso Anónimo 100% Local):** Si el usuario elige no vincular su cuenta de Google, `SyncService` no envía absolutamente ningún dato a Firestore (`user.isAnonymous`). El 100% de la información permanece confinado exclusivamente en la memoria local (SQLite) del teléfono.
+- **Argumento Comercial de Privacidad (Web y Soporte):** Destacar explícitamente en la landing page y en respuestas comunitarias:
+  > *"Si prefieres máxima privacidad, puedes usar la app sin iniciar sesión con Google y el 100% de tus datos se quedan únicamente en la memoria local de tu teléfono sin subir a ningún servidor."*
 - **Regla de Comunicación de Privacidad:** En respuestas públicas, soporte o debates en comunidades:
   1. **NUNCA afirmar que es "exclusivamente local":** Debe explicarse con precisión que el almacenamiento es local-first con respaldo en la nube en su cuenta privada de Google.
   2. **Enfatizar la ausencia de riesgo bancario:** Aclarar siempre que la app **nunca** solicita claves bancarias, números de tarjeta, acceso a SMS ni credenciales financieras, y que no vende ni comparte datos con terceros.
