@@ -72,7 +72,12 @@ jobs:
         run: flutter pub run flutter_launcher_icons
 
       - name: Compilar APK Release
-        run: flutter build apk --release --no-tree-shake-icons --dart-define=GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}"
+        run: |
+          APP_VERSION=$(grep "^version:" pubspec.yaml | sed -e 's/version:[[:space:]]*//' | cut -d '+' -f 1 | tr -d '[:space:]')
+          BASE_BUILD=$(grep "^version:" pubspec.yaml | sed -e 's/version:[[:space:]]*//' | cut -d '+' -f 2 | tr -d '[:space:]')
+          BUILD_NUM=$(( BASE_BUILD + ${{ github.run_number }} ))
+          echo "Compilando Rinde Más v$APP_VERSION (Build $BUILD_NUM)..."
+          flutter build apk --release --no-tree-shake-icons --build-name="$APP_VERSION" --build-number="$BUILD_NUM" --dart-define=GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}"
         
       - name: Firmar APK con Keystore de Produccion
         run: |
@@ -111,14 +116,15 @@ jobs:
         run: |
           cp build/app/outputs/flutter-apk/app-release.apk landing/public/app-release.apk
           
-          # Extraer version y build number de pubspec.yaml
+          # Extraer version y build number dinamico (BASE_BUILD + github.run_number)
           APP_VERSION=$(grep "^version:" pubspec.yaml | sed -e 's/version:[[:space:]]*//' | cut -d '+' -f 1 | tr -d '[:space:]')
-          APP_BUILD=$(grep "^version:" pubspec.yaml | sed -e 's/version:[[:space:]]*//' | cut -d '+' -f 2 | tr -d '[:space:]')
+          BASE_BUILD=$(grep "^version:" pubspec.yaml | sed -e 's/version:[[:space:]]*//' | cut -d '+' -f 2 | tr -d '[:space:]')
+          BUILD_NUM=$(( BASE_BUILD + ${{ github.run_number }} ))
           
           cat <<EOF > landing/public/version.json
           {
             "version": "$APP_VERSION",
-            "buildNumber": $APP_BUILD,
+            "buildNumber": $BUILD_NUM,
             "releaseNotes": "Actualización automática de Rinde Más con optimizaciones y nuevas mejoras.",
             "apkUrl": "https://rindemas.cesarluis.com/app-release.apk"
           }
