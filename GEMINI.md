@@ -84,7 +84,7 @@ La compilación en GitHub Actions (`build_apk.yml`) ejecuta `flutter create`, lo
 ## 14. Entrada por Voz, Escaneo y Cloud Functions
 - **Estándar Unificado de Reconocimiento de Voz:** Toda pantalla o componente con entrada de voz (formulario, modal flotante o chat) debe utilizar una tolerancia de pausas de 10 segundos (`pauseFor: Duration(seconds: 10)`) y 60 segundos de escucha (`listenFor: Duration(seconds: 60)`). Al pausar y reanudar la grabación, el texto nuevo DEBE concatenarse al final del texto existente sin sobreescribirlo.
 - **Avisos Neutros en Procesamiento de Imágenes:** Al enviar fotos a la cola de escaneo, los SnackBars y banners deben referirse a "imágenes" o "comprobantes" (ej. *"Analizando imagen con IA..."*), nunca asumir que una fotografía contiene estrictamente una sola factura.
-- **Despliegue de Cloud Functions en Windows:** Al ejecutar `firebase deploy --only functions --non-interactive`, debe asignarse previamente `$env:FUNCTIONS_DISCOVERY_TIMEOUT_TOLERANCE_MS="60000"` para evitar fallos por timeout en el análisis estático local.
+- **Despliegue de Cloud Functions en Windows:** Al ejecutar `firebase deploy --only functions --non-interactive`, debe asignarse previamente `$env:FUNCTIONS_DISCOVERY_TIMEOUT="60"` (en segundos) para evitar fallos por timeout en el análisis estático local.
 
 ## 15. Privacidad, Almacenamiento Híbrido y Comunicación Externa
 - **Arquitectura de Datos Real:** Rinde Más es una aplicación *Local-First* con sincronización en la nube (Cloud Firestore). Los datos se guardan localmente en SQLite y se respaldan de forma privada y cifrada en Firebase bajo el identificador único (`uid`) de la cuenta Google del usuario.
