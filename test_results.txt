@@ -1,0 +1,400 @@
+
+::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_savings_test.dart: DatabaseHelper Monthly Budget & Savings Goal Tests initial state has zero general budget and zero savings goal
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_savings_test.dart: DatabaseHelper Monthly Budget & Savings Goal Tests setPresupuestoGeneral stores both general budget and metaAhorro
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_savings_test.dart: DatabaseHelper Monthly Budget & Savings Goal Tests copiarPresupuestosMesAnteriorSiVacio copies both general budget and metaAhorro
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_savings_test.dart: DatabaseHelper Monthly Budget & Savings Goal Tests copiarPresupuestosMesAnteriorSiVacio does not overwrite existing records
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_fts_test.dart: FTS Search and Sync Tests searchGastosFts encuentra gastos por términos en el ocr_text
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_fts_test.dart: FTS Search and Sync Tests searchGastosFts encuentra gastos por comercio
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_fts_test.dart: FTS Search and Sync Tests searchGastosFts retorna lista vacía si no hay coincidencias o query está vacío
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_fts_test.dart: FTS Search and Sync Tests deleteGastoFts elimina del índice
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests initial state has empty categories and budgets
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests setPresupuestoCategoria creates category with budget if not exists
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests setPresupuestoCategoria is case-insensitive
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests getAllPresupuestosCategorias returns all configured category budgets
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests insertCategoria and updateCategoria work correctly
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests deleteCategoria removes the category
+::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart (failed)
+Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart":
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: lib/services/document_scanner_service.dart:21:9: Error: No named parameter with the name 'documentFormat'.
+        documentFormat: DocumentFormat.jpeg,
+        ^^^^^^^^^^^^^^
+../../../.pub-cache/hosted/pub.dev/google_mlkit_document_scanner-0.4.1/lib/src/document_scanner.dart:37:3: Context: Found this candidate, but the arguments don't match.
+  DocumentScannerOptions({
+  ^^^^^^^^^^^^^^^^^^^^^^
+.
+
+::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart (failed)
+Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart":
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: lib/services/document_scanner_service.dart:21:9: Error: No named parameter with the name 'documentFormat'.
+        documentFormat: DocumentFormat.jpeg,
+        ^^^^^^^^^^^^^^
+../../../.pub-cache/hosted/pub.dev/google_mlkit_document_scanner-0.4.1/lib/src/document_scanner.dart:37:3: Context: Found this candidate, but the arguments don't match.
+  DocumentScannerOptions({
+  ^^^^^^^^^^^^^^^^^^^^^^
+.
+
+::endgroup::
+::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests renders all hub sections in main view
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping shopping list navigates internally and back button returns to hub
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping chat navigates internally and back button returns to hub
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests calling openChat navigates directly to chat view
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) R3 Acceptance Criteria: Asignar $50 a Alimentación, y registrar un gasto de $60 en Alimentación hace que se dibuje un indicador visual de exceso (color rojo) en la UI de esa categoría
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Category within budget does NOT render the red excess alert
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Initial empty state displays analysis empty state and allows adding budget
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Editing budget to amount greater than expense clears red excess alert
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Validation: categories exceeding general budget shows alert and blocks save
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) General budget exceeded shows general excess alert in AnalysisScreen
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) AnalysisScreen month selector opens picker dialog and changes month
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) SummaryCard shows Presupuesto mensual and edit button opens budget bottom sheet
+::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart (failed)
+Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart":
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart: lib/services/document_scanner_service.dart:21:9: Error: No named parameter with the name 'documentFormat'.
+        documentFormat: DocumentFormat.jpeg,
+        ^^^^^^^^^^^^^^
+../../../.pub-cache/hosted/pub.dev/google_mlkit_document_scanner-0.4.1/lib/src/document_scanner.dart:37:3: Context: Found this candidate, but the arguments don't match.
+  DocumentScannerOptions({
+  ^^^^^^^^^^^^^^^^^^^^^^
+.
+
+::endgroup::
+::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) tapping search icon reveals search text field with hint
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) entering search query immediately filters out non-matching expenses
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) expenses matching by commerce are included
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) expenses matching by product name are included
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) clearing search query via close button restores all expenses
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) clearing search text restores all expenses while keeping search open
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) displays friendly empty state message when search yields 0 matches
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) case-insensitive and diacritic-insensitive search works
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests renders all 5 predefined chat suggestions in horizontal bar
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests tapping a suggestion chip sends it immediately as a user message
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests tapping shopping list suggestion chip sends request directly
+::endgroup::
+::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests renders edit expense button when assistant registers an expense
+Error al cotejar compras en chat: Bad state: databaseFactory not initialized
+databaseFactory is only initialized when using sqflite. When using `sqflite_common_ffi`
+You must call `databaseFactory = databaseFactoryFfi;` before using global openDatabase API
+
+::endgroup::
+::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests tapping textfield while listening stops microphone
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests sending message while listening stops microphone
+::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/local_ocr_service_test.dart (failed)
+Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/services/local_ocr_service_test.dart":
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/services/local_ocr_service_test.dart: test/services/local_ocr_service_test.dart:23:112: Error: No named parameter with the name 'recognizedLanguage'.
+          TextElement(text: 'AUTOMERCADOS', boundingBox: const Rect.fromLTWH(0, 0, 100, 20), cornerPoints: [], recognizedLanguage: 'es'),
+                                                                                                               ^^^^^^^^^^^^^^^^^^
+../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:206:3: Context: Found this candidate, but the arguments don't match.
+  TextElement({
+  ^^^^^^^^^^^
+test/services/local_ocr_service_test.dart:24:106: Error: No named parameter with the name 'recognizedLanguage'.
+          TextElement(text: 'PLAZA', boundingBox: const Rect.fromLTWH(110, 0, 80, 20), cornerPoints: [], recognizedLanguage: 'es'),
+                                                                                                         ^^^^^^^^^^^^^^^^^^
+../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:206:3: Context: Found this candidate, but the arguments don't match.
+  TextElement({
+  ^^^^^^^^^^^
+test/services/local_ocr_service_test.dart:20:29: Error: Required named parameter 'confidence' must be provided.
+      final line1 = TextLine(
+                            ^
+../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:143:3: Context: Found this candidate, but the arguments don't match.
+  TextLine({
+  ^^^^^^^^
+test/services/local_ocr_service_test.dart:34:103: Error: No named parameter with the name 'recognizedLanguage'.
+          TextElement(text: 'RIF', boundingBox: const Rect.fromLTWH(0, 25, 40, 20), cornerPoints: [], recognizedLanguage: 'es'),
+                                                                                                      ^^^^^^^^^^^^^^^^^^
+../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:206:3: Context: Found this candidate, but the arguments don't match.
+  TextElement({
+  ^^^^^^^^^^^
+test/services/local_ocr_service_test.dart:35:114: Error: No named parameter with the name 'recognizedLanguage'.
+          TextElement(text: 'J-30123456-7', boundingBox: const Rect.fromLTWH(45, 25, 100, 20), cornerPoints: [], recognizedLanguage: 'es'),
+                                                                                                                 ^^^^^^^^^^^^^^^^^^
+../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:206:3: Context: Found this candidate, but the arguments don't match.
+  TextElement({
+  ^^^^^^^^^^^
+test/services/local_ocr_service_test.dart:31:29: Error: Required named parameter 'confidence' must be provided.
+      final line2 = TextLine(
+                            ^
+../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:143:3: Context: Found this candidate, but the arguments don't match.
+  TextLine({
+  ^^^^^^^^
+test/services/local_ocr_service_test.dart:45:106: Error: No named parameter with the name 'recognizedLanguage'.
+          TextElement(text: 'FECHA:', boundingBox: const Rect.fromLTWH(0, 50, 60, 20), cornerPoints: [], recognizedLanguage: 'es'),
+                                                                                                         ^^^^^^^^^^^^^^^^^^
+../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:206:3: Context: Found this candidate, but the arguments don't match.
+  TextElement({
+  ^^^^^^^^^^^
+test/services/local_ocr_service_test.dart:46:111: Error: No named parameter with the name 'recognizedLanguage'.
+          TextElement(text: '25/09/2026', boundingBox: const Rect.fromLTWH(65, 50, 80, 20), cornerPoints: [], recognizedLanguage: 'es'),
+                                                                                                              ^^^^^^^^^^^^^^^^^^
+../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:206:3: Context: Found this candidate, but the arguments don't match.
+  TextElement({
+  ^^^^^^^^^^^
+test/services/local_ocr_service_test.dart:42:29: Error: Required named parameter 'confidence' must be provided.
+      final line3 = TextLine(
+                            ^
+../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:143:3: Context: Found this candidate, but the arguments don't match.
+  TextLine({
+  ^^^^^^^^
+test/services/local_ocr_service_test.dart:56:106: Error: No named parameter with the name 'recognizedLanguage'.
+          TextElement(text: 'HARINA', boundingBox: const Rect.fromLTWH(0, 75, 60, 20), cornerPoints: [], recognizedLanguage: 'es'),
+                                                                                                         ^^^^^^^^^^^^^^^^^^
+../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:206:3: Context: Found this candidate, but the arguments don't match.
+  TextElement({
+  ^^^^^^^^^^^
+test/services/local_ocr_service_test.dart:57:104: Error: No named parameter with the name 'recognizedLanguage'.
+          TextElement(text: 'PAN', boundingBox: const Rect.fromLTWH(65, 75, 40, 20), cornerPoints: [], recognizedLanguage: 'es'),
+                                                                                                       ^^^^^^^^^^^^^^^^^^
+../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:206:3: Context: Found this candidate, but the arguments don't match.
+  TextElement({
+  ^^^^^^^^^^^
+test/services/local_ocr_service_test.dart:58:107: Error: No named parameter with the name 'recognizedLanguage'.
+          TextElement(text: '45.00', boundingBox: const Rect.fromLTWH(110, 75, 50, 20), cornerPoints: [], recognizedLanguage: 'es'),
+                                                                                                          ^^^^^^^^^^^^^^^^^^
+../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:206:3: Context: Found this candidate, but the arguments don't match.
+  TextElement({
+  ^^^^^^^^^^^
+test/services/local_ocr_service_test.dart:59:104: Error: No named parameter with the name 'recognizedLanguage'.
+          TextElement(text: 'BS', boundingBox: const Rect.fromLTWH(165, 75, 30, 20), cornerPoints: [], recognizedLanguage: 'es'),
+                                                                                                       ^^^^^^^^^^^^^^^^^^
+../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:206:3: Context: Found this candidate, but the arguments don't match.
+  TextElement({
+  ^^^^^^^^^^^
+test/services/local_ocr_service_test.dart:53:29: Error: Required named parameter 'confidence' must be provided.
+      final line4 = TextLine(
+                            ^
+../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:143:3: Context: Found this candidate, but the arguments don't match.
+  TextLine({
+  ^^^^^^^^
+test/services/local_ocr_service_test.dart:69:106: Error: No named parameter with the name 'recognizedLanguage'.
+          TextElement(text: 'TOTAL', boundingBox: const Rect.fromLTWH(0, 100, 50, 20), cornerPoints: [], recognizedLanguage: 'es'),
+                                                                                                         ^^^^^^^^^^^^^^^^^^
+../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:206:3: Context: Found this candidate, but the arguments don't match.
+  TextElement({
+  ^^^^^^^^^^^
+test/services/local_ocr_service_test.dart:70:107: Error: No named parameter with the name 'recognizedLanguage'.
+          TextElement(text: '45.00', boundingBox: const Rect.fromLTWH(60, 100, 50, 20), cornerPoints: [], recognizedLanguage: 'es'),
+                                                                                                          ^^^^^^^^^^^^^^^^^^
+../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:206:3: Context: Found this candidate, but the arguments don't match.
+  TextElement({
+  ^^^^^^^^^^^
+test/services/local_ocr_service_test.dart:71:105: Error: No named parameter with the name 'recognizedLanguage'.
+          TextElement(text: 'BS', boundingBox: const Rect.fromLTWH(115, 100, 30, 20), cornerPoints: [], recognizedLanguage: 'es'),
+                                                                                                        ^^^^^^^^^^^^^^^^^^
+../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:206:3: Context: Found this candidate, but the arguments don't match.
+  TextElement({
+  ^^^^^^^^^^^
+test/services/local_ocr_service_test.dart:66:29: Error: Required named parameter 'confidence' must be provided.
+      final line5 = TextLine(
+                            ^
+../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:143:3: Context: Found this candidate, but the arguments don't match.
+  TextLine({
+  ^^^^^^^^
+test/services/local_ocr_service_test.dart:104:29: Error: Required named parameter 'confidence' must be provided.
+      final line1 = TextLine(
+                            ^
+../../../.pub-cache/hosted/pub.dev/google_mlkit_text_recognition-0.15.1/lib/src/text_recognizer.dart:143:3: Context: Found this candidate, but the arguments don't match.
+  TextLine({
+  ^^^^^^^^
+.
+
+::endgroup::
+::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests Default singleton instance is available and accessible
+::endgroup::
+::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests 3-day scheduling function defaults to Duration(days: 3)
+NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@748310200' has not been initialized.
+::endgroup::
+::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests Custom duration is respected when specified
+NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@748310200' has not been initialized.
+::endgroup::
+::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests cancelInactivityReminder cancels and clears scheduled state
+NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@748310200' has not been initialized.
+NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+::endgroup::
+::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests Rescheduling logic cancels previous notification and schedules new one
+::endgroup::
+::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests recordActivityAndReschedule updates activity time and reschedules for 3 days
+NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@748310200' has not been initialized.
+::endgroup::
+::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests Channel configuration and constants are correctly defined
+::endgroup::
+::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — Integration with GastoProvider agregarGasto triggers recordActivityAndReschedule on NotificationService
+Error en sincronización bidireccional: [core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()
+::endgroup::
+::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — Integration with GastoProvider actualizarGasto triggers recordActivityAndReschedule on NotificationService
+Error en sincronización bidireccional: [core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()
+::endgroup::
+::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — AndroidManifest Permissions & Configuration Verification android/app/src/main/AndroidManifest.xml contains all required permissions and receivers
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — AndroidManifest Permissions & Configuration Verification AndroidManifest.xml contains permissions and receivers
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — AndroidManifest Permissions & Configuration Verification pubspec.yaml declares flutter_local_notifications and timezone
+::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/semantic_validator_test.dart (failed)
+Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/services/semantic_validator_test.dart":
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/services/semantic_validator_test.dart: test/services/semantic_validator_test.dart:17:45: Error: Required named parameter 'impuestoIva' must be provided.
+      final factura = GeminiExtractionResult(
+                                            ^
+lib/data/models/gemini_extraction_result.dart:13:3: Context: Found this candidate, but the arguments don't match.
+  GeminiExtractionResult({
+  ^^^^^^^^^^^^^^^^^^^^^^
+test/services/semantic_validator_test.dart:31:45: Error: Required named parameter 'impuestoIva' must be provided.
+      final factura = GeminiExtractionResult(
+                                            ^
+lib/data/models/gemini_extraction_result.dart:13:3: Context: Found this candidate, but the arguments don't match.
+  GeminiExtractionResult({
+  ^^^^^^^^^^^^^^^^^^^^^^
+test/services/semantic_validator_test.dart:61:45: Error: Required named parameter 'impuestoIva' must be provided.
+      final factura = GeminiExtractionResult(
+                                            ^
+lib/data/models/gemini_extraction_result.dart:13:3: Context: Found this candidate, but the arguments don't match.
+  GeminiExtractionResult({
+  ^^^^^^^^^^^^^^^^^^^^^^
+test/services/semantic_validator_test.dart:83:45: Error: Required named parameter 'impuestoIva' must be provided.
+      final factura = GeminiExtractionResult(
+                                            ^
+lib/data/models/gemini_extraction_result.dart:13:3: Context: Found this candidate, but the arguments don't match.
+  GeminiExtractionResult({
+  ^^^^^^^^^^^^^^^^^^^^^^
+.
+
+::endgroup::
+::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/update_service_test.dart: UpdateService Tests detects available update when remote build number is greater
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/update_service_test.dart: UpdateService Tests reports no update when local build number is equal or higher
+::endgroup::
+::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/update_service_test.dart: UpdateService Tests handles network failure gracefully without throwing exceptions
+Error al verificar actualización: Exception: Connection failed
+::endgroup::
+::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/update_service_test.dart: UpdateService Tests respects throttle duration when force is false
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests instantiates with required nombre and default presupuestoMensual 0.0
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests instantiates with custom id and presupuestoMensual
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests toMap produces correct key-value map with id
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests toMap omits id when null
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests fromMap parses standard map correctly
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests fromMap parses integer budget as double
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests fromMap supports fallback aliases: name, budget, presupuesto, categoria
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests copyWith updates specified fields correctly
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests equality and hashCode work as expected
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests CategoryModel typedef works interchangeably
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/shopping_item_model_test.dart: ShoppingItemModel Tests instantiates with required name and default values
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/shopping_item_model_test.dart: ShoppingItemModel Tests toMap and fromMap work correctly
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/shopping_item_model_test.dart: ShoppingItemModel Tests copyWith updates fields appropriately
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests initial state has empty category budgets and totals
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests setPresupuestoGeneral updates general budget
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests guardarTodoElPresupuesto updates general and category budgets and filters zero budgets
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests setPresupuestoCategoria updates budget for given category
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests getPresupuestoCategoria is case-insensitive
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests isCategoryOverBudget returns true when spent > budget and budget > 0
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests isCategoryOverBudget returns false when spent <= budget
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests isCategoryOverBudget returns false when budget is 0 or unassigned
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests initial state has empty pending and ready items
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests enqueue inserts single image and updates pendingCount
+::endgroup::
+NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
+The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
+Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
+In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
+If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
+NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
+The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
+Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
+In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
+If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
+::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests enqueueMultiple enqueues all images and updates pendingItems
+::endgroup::
+NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
+The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
+Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
+In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
+If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
+NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
+The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
+Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
+In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
+If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
+NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
+The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
+Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
+In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
+If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
+NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
+The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
+Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
+In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
+If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
+::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests addPendingItem delegates to enqueue and preserves backwards compatibility
+::endgroup::
+NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
+The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
+Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
+In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
+If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
+NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
+The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
+Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
+In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
+If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
+::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests removeItem removes item from database and refreshes queue
+NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
+The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
+Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
+In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
+If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
+NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
+The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
+Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
+In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
+If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
+::endgroup::
+::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests manual state mutation helpers update state and notify listeners
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: GeminiExtractionResult.listFromJson Tests parses single legacy JSON correctly
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: GeminiExtractionResult.listFromJson Tests parses multiple facturas JSON array correctly
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: GeminiExtractionResult.listFromJson Tests parses fiscal markers (E) and (G) into item descriptions
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/domain/savings_health_calculator_test.dart: SavingsHealthCalculator Tests returns sinMeta when metaAhorro is zero or negative
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/domain/savings_health_calculator_test.dart: SavingsHealthCalculator Tests calculates correct limiteParaGastar when metaAhorro is positive
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/domain/savings_health_calculator_test.dart: SavingsHealthCalculator Tests grace period days 1 to 3 does not trigger enRiesgo even if projected is high
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/domain/savings_health_calculator_test.dart: SavingsHealthCalculator Tests grace period days 1 to 3 triggers comprometida if actual spent exceeds limit
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/domain/savings_health_calculator_test.dart: SavingsHealthCalculator Tests day 4 or later triggers enRiesgo if projected exceeds limit
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/domain/savings_health_calculator_test.dart: SavingsHealthCalculator Tests day 4 or later maintains protegida if projected is within limit
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/domain/savings_health_calculator_test.dart: SavingsHealthCalculator Tests triggers comprometida whenever actual spent exceeds limit
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/domain/savings_health_calculator_test.dart: SavingsHealthCalculator Tests handles clamp when meta exceeds general budget
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/domain/savings_health_calculator_test.dart: SavingsHealthCalculator Tests handles February with 28 days correctly
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: VoiceExpenseSheet Editable Tests renders title, input field, mic button and cancel button
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: VoiceExpenseSheet Editable Tests allows editing text in TextField and enables process button
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: VoiceExpenseSheet Editable Tests clear button removes text and disables process button
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: VoiceExpenseSheet Editable Tests submitting edited text calls parseVoiceExpense with updated content
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests formatPreferido returns VES when preferred is VES
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests formatPreferido calculates VES using tasaCambio when totalVes is zero/null
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests formatPreferido returns USD when preferred is USD
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests formatSecundario returns opposite currency
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests convertFromUsd converts properly
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: SummaryCard Currency Preference Tests renders USD on top when monedaPrincipal is USD
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: SummaryCard Currency Preference Tests renders VES on top when monedaPrincipal is VES
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: ExpenseCard Currency Preference Tests displays USD as primary when monedaPrincipal is USD
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: ExpenseCard Currency Preference Tests displays VES as primary when monedaPrincipal is VES
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CategoryChart Currency Preference Tests renders category totals and budgets in VES when monedaPrincipal is VES
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays welcome prompt when expenses are empty
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays over budget warning when spent exceeds budget
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays budget alert when spent is 85 percent or more
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests suggests defining budget when no general budget exists
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays new month motivational insight when in first days with budget
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays compromised savings goal alert when spent exceeds spending limit
+::endgroup::
+
+::error::115 tests passed, 5 failed.
