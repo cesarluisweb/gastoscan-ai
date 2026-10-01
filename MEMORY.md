@@ -3,15 +3,15 @@
 
 ## Estado Actual Inmediato
 - **Rama:** `main` (limpia, sincronizada con remoto).
-- **Fase activa:** Fase 5 (Marketing / Lanzamiento) y Fase 6.1 (Feedback de comunidad).
-- **Últimos hitos:** Implementada Meta Mensual de Ahorro / Inversión (SQLite v13, SavingsHealthCalculator determinista con período de gracia, límite para gastar, estados semafóricos y alertas IA).
+- **Fase activa:** Fase 7 (Arquitectura de Producción) y Fase 5 (Lanzamiento).
+- **Últimos hitos:** Sistema Híbrido de Document Scanner, OCR Local Bundled y Búsqueda FTS5 (SQLite v14, persistencia temprana en scan_queue, fallback adaptativo semántico y Gemini Texto).
 
 ## Decisiones Técnicas y de Negocio Recientes
-- **Meta de Ahorro:** Presupuesto General - Meta Ahorro = Límite para Gastar. Categorías validan contra el límite. Cero fricción contable (sin etiquetar gastos impulsivos).
-- **Dominio Puro:** `SavingsHealthCalculator` es Dart puro desacoplado de UI e IA. Días 1-3 período de gracia para no alertar compras iniciales.
+- **Percepción Local vs Interpretación Nube:** Document Scanner y ML Kit Text Recognition corren on-device. Gemini Texto procesa JSON a partir del OCR. Fallback automático a Gemini Visión ante baja calidad o discrepancia >15%.
+- **Persistencia Temprana:** Captura -> Recorte -> OCR -> SQLite (`scan_queue`) -> Red. Si se corta el internet, el texto ya está guardado.
+- **Invariante FTS5:** Búsqueda profunda en facturas es una optimización no crítica; si el motor del teléfono carece de FTS5, se degrada a `LIKE`.
+- **Meta de Ahorro:** Presupuesto General - Meta Ahorro = Límite para Gastar. Categorías validan contra el límite. Cero fricción contable.
 - **Monetización:** Anuncios intersticiales únicamente tras guardar factura (transición natural); nunca al abrir ni en captura de fotos.
-- **Asistente IA:** Desambiguación obligatoria si no hay monto ("¿Gasto o lista de compras?").
-- **Precisión contable:** Cálculos matemáticos en código Dart y centavos enteros, no en la IA.
 
 ## Errores y Fricciones a Evitar
 - No tocar `android/` localmente (CI regenera con `flutter create`).
@@ -19,5 +19,5 @@
 - Prohibido `>` en PowerShell; usar siempre tubería `... | Out-File -Encoding utf8`.
 
 ## Próximo Paso Inmediato
-- Avanzar con la fase 5: Preparativos de Google Play Console (20 testers) o Tasa y Moneda Paralela (Fase 6.1).
+- Monitorear pipeline CI de GitHub Actions tras push.
 

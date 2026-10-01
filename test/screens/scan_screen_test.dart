@@ -14,9 +14,9 @@ class FakeDatabaseHelper extends DatabaseHelper {
   FakeDatabaseHelper() : super.test();
 
   @override
-  Future<int> insertScanQueueItem(String imagePath) async {
+  Future<int> insertScanQueueItem(String imagePath, {String? ocrText}) async {
     final id = _id++;
-    items.add({'id': id, 'image_path': imagePath, 'status': 'pending'});
+    items.add({'id': id, 'image_path': imagePath, 'status': 'pending', 'ocr_text': ocrText});
     return id;
   }
 

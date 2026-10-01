@@ -8,6 +8,7 @@ import '../../data/datasources/local/database_helper.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/scan_queue_provider.dart';
 import '../../services/image_service.dart';
+import '../../services/document_scanner_service.dart';
 import 'review_expense_screen.dart';
 import 'settings_screen.dart';
 
@@ -16,12 +17,14 @@ class ScanScreen extends StatefulWidget {
   final ImageSource? initialSource;
   final GeminiService? geminiService;
   final DatabaseHelper? dbHelper;
+  final DocumentScannerService? documentScannerService;
   const ScanScreen({
     Key? key,
     this.imagePicker,
     this.initialSource,
     this.geminiService,
     this.dbHelper,
+    this.documentScannerService,
   }) : super(key: key);
 
   @override
@@ -32,6 +35,7 @@ class _ScanScreenState extends State<ScanScreen> {
   late final ImagePicker _picker;
   late final GeminiService _geminiService;
   late final DatabaseHelper _dbHelper;
+  late final DocumentScannerService _scannerService;
   File? _selectedImage;
   bool _isProcessing = false;
   String? _statusText;
@@ -42,6 +46,7 @@ class _ScanScreenState extends State<ScanScreen> {
     _picker = widget.imagePicker ?? ImagePicker();
     _geminiService = widget.geminiService ?? GeminiService();
     _dbHelper = widget.dbHelper ?? DatabaseHelper.instance;
+    _scannerService = widget.documentScannerService ?? DocumentScannerService();
     if (widget.initialSource != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _pickImage(widget.initialSource!);
@@ -67,15 +72,19 @@ class _ScanScreenState extends State<ScanScreen> {
           }
         }
       } else {
-        final pickedFile = await _picker.pickImage(
-          source: source,
-          imageQuality: 90,
-        );
-
-        if (pickedFile != null) {
-          setState(() {
-            _selectedImage = File(pickedFile.path);
-          });
+        // Cámara física: Document Scanner de ML Kit con corrección de perspectiva y fallback a cámara estándar
+        final scannedPaths = await _scannerService.scanDocuments();
+        if (scannedPaths.isNotEmpty) {
+          if (scannedPaths.length == 1) {
+            setState(() {
+              _selectedImage = File(scannedPaths.first);
+            });
+          } else {
+            final queueProvider = Provider.of<ScanQueueProvider>(context, listen: false);
+            await queueProvider.enqueueMultiple(scannedPaths);
+            if (!mounted) return;
+            Navigator.pop(context);
+          }
         }
       }
     } catch (e) {

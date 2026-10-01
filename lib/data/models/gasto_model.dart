@@ -19,6 +19,7 @@ class GastoModel {
   final List<ItemGastoModel> items;
   final String? firestoreId;
   final int synced;
+  final String? ocrText;
 
   GastoModel({
     this.id,
@@ -39,6 +40,7 @@ class GastoModel {
     this.items = const [],
     this.firestoreId,
     this.synced = 0,
+    this.ocrText,
   });
 
   Map<String, dynamic> toMap() {
@@ -60,6 +62,7 @@ class GastoModel {
       'eliminado_en': eliminadoEn,
       'firestore_id': firestoreId,
       'synced': synced,
+      'ocr_text': ocrText,
     };
   }
 
@@ -83,6 +86,7 @@ class GastoModel {
       items: items,
       firestoreId: map['firestore_id'] as String?,
       synced: map['synced'] as int? ?? 0,
+      ocrText: map['ocr_text'] as String?,
     );
   }
 
@@ -105,6 +109,7 @@ class GastoModel {
     List<ItemGastoModel>? items,
     String? firestoreId,
     int? synced,
+    String? ocrText,
   }) {
     return GastoModel(
       id: id ?? this.id,
@@ -125,6 +130,7 @@ class GastoModel {
       items: items ?? this.items,
       firestoreId: firestoreId ?? this.firestoreId,
       synced: synced ?? this.synced,
+      ocrText: ocrText ?? this.ocrText,
     );
   }
 

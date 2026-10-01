@@ -24,7 +24,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 13,
+      version: 14,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
       onConfigure: _onConfigure,
@@ -177,6 +177,32 @@ class DatabaseHelper {
         // Ignorar si ya existe
       }
     }
+    if (oldVersion < 14) {
+      try {
+        await db.execute("ALTER TABLE scan_queue ADD COLUMN ocr_text TEXT");
+      } catch (_) {}
+      try {
+        await db.execute("ALTER TABLE scan_queue ADD COLUMN attempt_count INTEGER DEFAULT 0");
+      } catch (_) {}
+      try {
+        await db.execute("ALTER TABLE scan_queue ADD COLUMN last_error TEXT");
+      } catch (_) {}
+      try {
+        await db.execute("ALTER TABLE gastos ADD COLUMN ocr_text TEXT");
+      } catch (_) {}
+      try {
+        await db.execute('''
+          CREATE VIRTUAL TABLE IF NOT EXISTS gastos_fts USING fts5(
+            gasto_id UNINDEXED,
+            comercio,
+            ocr_text,
+            tokenize = 'unicode61 remove_diacritics 2'
+          )
+        ''');
+      } catch (_) {
+        // Invariante: FTS5 es optimización de búsqueda, nunca bloquea la ejecución en dispositivos sin FTS5
+      }
+    }
   }
 
   Future<void> _onConfigure(Database db) async {
@@ -205,7 +231,8 @@ class DatabaseHelper {
         eliminado_en TEXT,
         items TEXT,
         firestore_id TEXT,
-        synced INTEGER DEFAULT 0
+        synced INTEGER DEFAULT 0,
+        ocr_text TEXT
       )
     ''');
 
@@ -242,6 +269,9 @@ class DatabaseHelper {
         image_path TEXT NOT NULL,
         status TEXT NOT NULL,
         extracted_data TEXT,
+        ocr_text TEXT,
+        attempt_count INTEGER DEFAULT 0,
+        last_error TEXT,
         created_at TEXT NOT NULL
       )
     ''');
@@ -285,20 +315,39 @@ class DatabaseHelper {
     // Índices para búsquedas y filtros rápidos por fecha y categoría
     await db.execute('CREATE INDEX idx_gastos_fecha ON gastos (fecha);');
     await db.execute('CREATE INDEX idx_gastos_categoria ON gastos (categoria);');
+
+    // Tabla virtual FTS5 independiente para búsqueda profunda
+    try {
+      await db.execute('''
+        CREATE VIRTUAL TABLE IF NOT EXISTS gastos_fts USING fts5(
+          gasto_id UNINDEXED,
+          comercio,
+          ocr_text,
+          tokenize = 'unicode61 remove_diacritics 2'
+        )
+      ''');
+    } catch (_) {
+      // Invariante: Fallback seguro si FTS5 no está disponible
+    }
   }
 
   /// Inserta un gasto con sus ítems asociados de forma atómica en una transacción
   Future<int> insertGasto(GastoModel gasto, List<ItemGastoModel> items) async {
     final db = await instance.database;
-    return await db.transaction((txn) async {
-      final gastoId = await txn.insert('gastos', gasto.toMap());
+    final gastoId = await db.transaction((txn) async {
+      final id = await txn.insert('gastos', gasto.toMap());
       for (final item in items) {
         final itemMap = item.toMap();
-        itemMap['gasto_id'] = gastoId;
+        itemMap['gasto_id'] = id;
         await txn.insert('items_gasto', itemMap);
       }
-      return gastoId;
+      return id;
     });
+
+    if (gasto.ocrText != null && gasto.ocrText!.trim().isNotEmpty) {
+      await syncGastoFts(gastoId, gasto.comercio, gasto.ocrText);
+    }
+    return gastoId;
   }
 
   /// Actualiza un gasto y reemplaza sus ítems en una transacción
@@ -320,12 +369,22 @@ class DatabaseHelper {
         await txn.insert('items_gasto', itemMap);
       }
     });
+
+    if (gasto.id != null) {
+      if (gasto.ocrText != null && gasto.ocrText!.trim().isNotEmpty) {
+        await syncGastoFts(gasto.id!, gasto.comercio, gasto.ocrText);
+      } else {
+        await deleteGastoFts(gasto.id!);
+      }
+    }
   }
 
   /// Elimina un gasto. Los ítems se eliminan automáticamente gracias a ON DELETE CASCADE
   Future<int> deleteGasto(int id) async {
     final db = await instance.database;
-    return await db.delete('gastos', where: 'id = ?', whereArgs: [id]);
+    final count = await db.delete('gastos', where: 'id = ?', whereArgs: [id]);
+    await deleteGastoFts(id);
+    return count;
   }
 
   /// Obtiene todos los gastos ordenados de más reciente a más antiguo (sin borrados lógicos)
@@ -642,13 +701,18 @@ class DatabaseHelper {
   // OPERACIONES PARA SCAN_QUEUE
   // ==========================================
 
-  Future<int> insertScanQueueItem(String imagePath) async {
+  Future<int> insertScanQueueItem(String imagePath, {String? ocrText}) async {
     final db = await instance.database;
-    return await db.insert('scan_queue', {
+    final data = <String, dynamic>{
       'image_path': imagePath,
       'status': 'pending',
+      'attempt_count': 0,
       'created_at': DateTime.now().toIso8601String(),
-    });
+    };
+    if (ocrText != null) {
+      data['ocr_text'] = ocrText;
+    }
+    return await db.insert('scan_queue', data);
   }
 
   Future<List<Map<String, dynamic>>> getPendingScanQueueItems() async {
@@ -678,11 +742,27 @@ class DatabaseHelper {
     );
   }
 
-  Future<int> updateScanQueueItem(int id, String status, {String? extractedData}) async {
+  Future<int> updateScanQueueItem(
+    int id,
+    String status, {
+    String? extractedData,
+    String? ocrText,
+    int? attemptCount,
+    String? lastError,
+  }) async {
     final db = await instance.database;
     final data = <String, dynamic>{'status': status};
     if (extractedData != null) {
       data['extracted_data'] = extractedData;
+    }
+    if (ocrText != null) {
+      data['ocr_text'] = ocrText;
+    }
+    if (attemptCount != null) {
+      data['attempt_count'] = attemptCount;
+    }
+    if (lastError != null) {
+      data['last_error'] = lastError;
     }
     return await db.update(
       'scan_queue',
@@ -701,14 +781,91 @@ class DatabaseHelper {
     );
   }
 
-  Future<int> insertReadyScanQueueItem(String imagePath, String extractedData) async {
+  Future<int> insertReadyScanQueueItem(String imagePath, String extractedData, {String? ocrText}) async {
     final db = await instance.database;
-    return await db.insert('scan_queue', {
+    final data = <String, dynamic>{
       'image_path': imagePath,
       'status': 'ready',
       'extracted_data': extractedData,
       'created_at': DateTime.now().toIso8601String(),
-    });
+    };
+    if (ocrText != null) {
+      data['ocr_text'] = ocrText;
+    }
+    return await db.insert('scan_queue', data);
+  }
+
+  // ==========================================
+  // OPERACIONES FTS5 PARA BÚSQUEDA PROFUNDA
+  // ==========================================
+
+  /// Sincroniza o indexa el texto OCR y comercio en la tabla virtual FTS5.
+  /// Invariante: Es una optimización de búsqueda, nunca bloquea la persistencia del gasto.
+  Future<void> syncGastoFts(int gastoId, String comercio, String? ocrText) async {
+    if (ocrText == null || ocrText.trim().isEmpty) return;
+    try {
+      final db = await instance.database;
+      await db.delete('gastos_fts', where: 'gasto_id = ?', whereArgs: [gastoId]);
+      await db.insert('gastos_fts', {
+        'gasto_id': gastoId,
+        'comercio': comercio,
+        'ocr_text': ocrText,
+      });
+    } catch (_) {
+      // Fallback silencioso si FTS5 no está disponible en este dispositivo
+    }
+  }
+
+  /// Elimina un registro del índice FTS5
+  Future<void> deleteGastoFts(int gastoId) async {
+    try {
+      final db = await instance.database;
+      await db.delete('gastos_fts', where: 'gasto_id = ?', whereArgs: [gastoId]);
+    } catch (_) {}
+  }
+
+  /// Busca IDs de gastos cuyos productos o texto de factura coincidan con [query].
+  /// Invariante: Si FTS5 no está disponible o falla, realiza fallback transparente mediante LIKE.
+  Future<List<int>> searchGastosFts(String query) async {
+    final cleanQuery = query.trim();
+    if (cleanQuery.isEmpty) return [];
+
+    final db = await instance.database;
+    try {
+      // 1. Intento primario con FTS5 (insensible a acentos y mayúsculas vía unicode61)
+      final formattedQuery = cleanQuery
+          .replaceAll('"', '""')
+          .split(RegExp(r'\s+'))
+          .where((t) => t.isNotEmpty)
+          .map((t) => '"$t"*')
+          .join(' ');
+
+      final results = await db.rawQuery(
+        'SELECT DISTINCT gasto_id FROM gastos_fts WHERE gastos_fts MATCH ?',
+        [formattedQuery],
+      );
+      final ids = results.map((row) => (row['gasto_id'] as num).toInt()).toList();
+      if (ids.isNotEmpty) return ids;
+    } catch (_) {
+      // Fallback a consulta tradicional si FTS5 no existe o arroja error
+    }
+
+    // 2. Fallback resiliente con LIKE
+    try {
+      final likeQuery = '%$cleanQuery%';
+      final results = await db.rawQuery('''
+        SELECT DISTINCT g.id FROM gastos g
+        LEFT JOIN items_gasto i ON g.id = i.gasto_id
+        WHERE g.eliminado_en IS NULL AND (
+          g.comercio LIKE ? OR 
+          g.ocr_text LIKE ? OR 
+          i.descripcion LIKE ?
+        )
+      ''', [likeQuery, likeQuery, likeQuery]);
+      return results.map((row) => (row['id'] as num).toInt()).toList();
+    } catch (_) {
+      return [];
+    }
   }
 
   Future<bool> isImagePathUsedByOtherQueueItems(int currentId, String imagePath) async {

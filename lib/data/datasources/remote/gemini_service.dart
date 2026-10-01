@@ -29,6 +29,7 @@ class GeminiService {
 
       final response = await callable.call({
         'imageBase64': base64Image,
+        'forceVision': true,
         'shoppingList': shoppingListContext,
       });
 
@@ -56,6 +57,58 @@ class GeminiService {
       }
     } catch (e) {
       throw Exception('Error interno: $e');
+    }
+  }
+
+  /// Analiza el texto estructurado extraído localmente por ML Kit Text Recognition
+  /// evitando el envío multimodal de imágenes en base64 y reduciendo drásticamente latencia y tokens.
+  Future<List<GeminiExtractionResult>> analyzeReceiptText({
+    required String ocrText,
+    List<ShoppingItemModel>? pendingShoppingItems,
+  }) async {
+    try {
+      if (FirebaseAuth.instance.currentUser == null) {
+        await FirebaseAuth.instance.signInAnonymously();
+      }
+
+      final callable = FirebaseFunctions.instance.httpsCallable(
+        'analyzeReceipt',
+        options: HttpsCallableOptions(timeout: const Duration(seconds: 45)),
+      );
+
+      final shoppingListContext = pendingShoppingItems != null && pendingShoppingItems.isNotEmpty
+          ? pendingShoppingItems.map((e) => {'id': e.id, 'name': e.name}).toList()
+          : [];
+
+      final response = await callable.call({
+        'ocrText': ocrText,
+        'shoppingList': shoppingListContext,
+      });
+
+      final data = response.data;
+      if (data == null) {
+        throw Exception('Respuesta vacía del servidor.');
+      }
+
+      final jsonResult = Map<String, dynamic>.from(data as Map);
+      return GeminiExtractionResult.listFromJson(jsonResult);
+    } on FirebaseFunctionsException catch (e) {
+      if (e.code == 'unauthenticated') {
+        throw Exception('No estás autenticado en Firebase.');
+      } else if (e.code == 'deadline-exceeded') {
+        throw Exception('Tiempo de espera agotado al analizar texto de la factura.');
+      } else if (e.code == 'resource-exhausted') {
+        throw Exception('Límite de solicitudes alcanzado. Espera unos segundos e intenta nuevamente.');
+      } else if (e.code == 'unavailable') {
+        throw Exception('Servicio no disponible temporalmente. Intenta nuevamente.');
+      } else {
+        final message = (e.message != null && e.message!.isNotEmpty)
+            ? e.message!
+            : 'Error al analizar el texto de la factura.';
+        throw Exception(message);
+      }
+    } catch (e) {
+      throw Exception('Error interno al analizar texto OCR: $e');
     }
   }
 

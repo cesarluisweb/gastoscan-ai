@@ -20,15 +20,19 @@ exports.analyzeReceipt = functions
     }
 
     const imageBase64 = data.imageBase64;
-    if (!imageBase64) {
-      throw new functions.https.HttpsError("invalid-argument", "Falta la imagen base64.");
+    const ocrText = data.ocrText;
+    const forceVision = data.forceVision === true;
+
+    if (!imageBase64 && !ocrText) {
+      throw new functions.https.HttpsError("invalid-argument", "Falta la imagen base64 o el texto OCR.");
     }
 
+    const isTextMode = Boolean(ocrText && ocrText.trim().length > 0 && !forceVision);
     const key = geminiApiKey.value();
     let modelIndex = 0;
 
     const systemPrompt = `
-Analiza la imagen con máxima precisión. Si la imagen contiene MÚLTIPLES facturas, recibos o comprobantes de pago distintos en la misma foto, identifica y extrae cada uno por separado en una lista de facturas. Si contiene solo una factura, devuelve una lista con ese único elemento.
+Analiza la ${isTextMode ? "información textual extraída de la factura" : "imagen"} con máxima precisión. Si contiene MÚLTIPLES facturas, recibos o comprobantes de pago distintos, identifica y extrae cada uno por separado en una lista de facturas. Si contiene solo una factura, devuelve una lista con ese único elemento.
 
 Reglas estrictas para los productos de cada factura:
 1. "descripcion": Transcribe el nombre legible, claro y completo del producto. Si el texto en la factura viene abreviado o cortado por la impresora térmica (por ejemplo "TOLLAS" -> "Toallas Húmedas", "ARRZ SUP" -> "Arroz Superior"), interpreta el contexto comercial y coloca un nombre descriptivo, limpio y bien escrito en español. No dejes caracteres truncados o incomprensibles.
@@ -63,14 +67,18 @@ Devuelve EXCLUSIVAMENTE un objeto JSON válido con la siguiente estructura, sin 
 Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago Móvil o transferencia bancaria, coloca en "comercio" el beneficiario y en "items" una sola línea con el concepto.
 `;
 
+    const userParts = isTextMode
+      ? [{ text: `${systemPrompt}\n\n=== TEXTO EXTRAÍDO DE LA FACTURA POR OCR LOCAL (CON JERARQUÍA ESPACIAL) ===\n${ocrText}` }]
+      : [
+          { inline_data: { mime_type: "image/jpeg", data: imageBase64 } },
+          { text: systemPrompt },
+        ];
+
     const payload = {
       contents: [
         {
           role: "user",
-          parts: [
-            { inline_data: { mime_type: "image/jpeg", data: imageBase64 } },
-            { text: systemPrompt },
-          ],
+          parts: userParts,
         },
       ],
       generationConfig: {
@@ -158,7 +166,9 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
         rawText = rawText.substring(firstBrace, lastBrace + 1);
       }
 
-      return JSON.parse(rawText);
+      const resultJson = JSON.parse(rawText);
+      resultJson.modo_procesamiento = isTextMode ? "texto" : "vision";
+      return resultJson;
     } catch (error) {
       console.error(error);
       if (error && error.code) throw error;

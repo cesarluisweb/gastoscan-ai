@@ -12,12 +12,13 @@ class FakeDatabaseHelper extends DatabaseHelper {
   FakeDatabaseHelper() : super.test();
 
   @override
-  Future<int> insertScanQueueItem(String imagePath) async {
+  Future<int> insertScanQueueItem(String imagePath, {String? ocrText}) async {
     final id = _nextId++;
     pendingDb.add({
       'id': id,
       'image_path': imagePath,
       'status': 'pending',
+      'ocr_text': ocrText,
       'created_at': DateTime.now().toIso8601String(),
     });
     return id;
@@ -34,12 +35,21 @@ class FakeDatabaseHelper extends DatabaseHelper {
   }
 
   @override
-  Future<int> updateScanQueueItem(int id, String status, {String? extractedData}) async {
+  Future<int> updateScanQueueItem(
+    int id,
+    String status, {
+    String? extractedData,
+    String? ocrText,
+    int? attemptCount,
+    String? lastError,
+  }) async {
     final index = pendingDb.indexWhere((it) => it['id'] == id);
     if (index != -1) {
       final item = Map<String, dynamic>.from(pendingDb.removeAt(index));
       item['status'] = status;
       if (extractedData != null) item['extracted_data'] = extractedData;
+      if (ocrText != null) item['ocr_text'] = ocrText;
+      if (lastError != null) item['last_error'] = lastError;
       if (status == 'ready') {
         readyDb.add(item);
       }
@@ -56,13 +66,14 @@ class FakeDatabaseHelper extends DatabaseHelper {
   }
 
   @override
-  Future<int> insertReadyScanQueueItem(String imagePath, String extractedData) async {
+  Future<int> insertReadyScanQueueItem(String imagePath, String extractedData, {String? ocrText}) async {
     final id = _nextId++;
     readyDb.add({
       'id': id,
       'image_path': imagePath,
       'status': 'ready',
       'extracted_data': extractedData,
+      'ocr_text': ocrText,
       'created_at': DateTime.now().toIso8601String(),
     });
     return id;
