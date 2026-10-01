@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/utils/date_formatter.dart';
@@ -173,6 +174,28 @@ class MoreScreenState extends State<MoreScreen> {
       filename: fileName,
       mimeType: 'text/markdown',
     );
+  }
+
+  Future<void> _contactarSoporteWhatsApp() async {
+    final uri = Uri.parse(AppConstants.soporteWhatsAppUrl);
+    try {
+      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No se pudo abrir WhatsApp. Escribe al: ${AppConstants.soporteWhatsAppNumero}'),
+          ),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No se pudo abrir WhatsApp. Escribe al: ${AppConstants.soporteWhatsAppNumero}'),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -439,6 +462,35 @@ class MoreScreenState extends State<MoreScreen> {
                       style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                   trailing: const Icon(Icons.share_outlined, size: 20, color: AppColors.textSecondary),
                   onTap: () => _exportarMarkdown(context),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Sección de Ayuda y Soporte
+          Material(
+            color: AppColors.card,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: const BorderSide(color: AppColors.border),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                ListTile(
+                  key: const Key('more_menu_support_whatsapp'),
+                  leading: const Icon(Icons.chat_outlined, color: AppColors.primaryDark),
+                  title: const Text(
+                    'Escribir a soporte',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                  ),
+                  subtitle: const Text(
+                    'Contáctanos directamente por WhatsApp',
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                  ),
+                  trailing: const Icon(Icons.open_in_new, size: 18, color: AppColors.textSecondary),
+                  onTap: _contactarSoporteWhatsApp,
                 ),
               ],
             ),

@@ -27,4 +27,8 @@ class AppConstants {
   static const double defaultTasaCambio = 40.0;
   static const String defaultMoneda = 'USD';
   static const String defaultApiKey = String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
+
+  // Soporte y Contacto
+  static const String soporteWhatsAppNumero = '+58 414-8431543';
+  static const String soporteWhatsAppUrl = 'https://wa.me/584148431543?text=Hola,%20tengo%20una%20consulta%20sobre%20Rinde%20M%C3%A1s';
 }
