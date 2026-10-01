@@ -21,11 +21,11 @@ class FakeSpeechToText extends Fake implements stt.SpeechToText {
 
   @override
   Future<bool> initialize({
-    stt.SpeechErrorListener? onError,
-    stt.SpeechStatusListener? onStatus,
+    dynamic onError,
+    dynamic onStatus,
     dynamic debugLogging,
     Duration? finalTimeout,
-    List<stt.SpeechConfigOption>? options,
+    dynamic options,
   }) async {
     return true;
   }
@@ -47,15 +47,15 @@ class FakeSpeechToText extends Fake implements stt.SpeechToText {
 
   @override
   Future<bool> listen({
-    stt.SpeechResultListener? onResult,
+    dynamic onResult,
     Duration? listenFor,
     Duration? pauseFor,
     String? localeId,
-    stt.SpeechSoundLevelHandler? onSoundLevelChange,
+    dynamic onSoundLevelChange,
     dynamic cancelOnError,
     dynamic partialResults,
     dynamic onDevice,
-    stt.ListenMode? listenMode,
+    dynamic listenMode,
     dynamic sampleRate,
   }) async {
     listenCallCount++;
