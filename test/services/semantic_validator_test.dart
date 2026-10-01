@@ -19,6 +19,7 @@ void main() {
         fecha: '2026-10-01',
         moneda: 'VES',
         totalOriginal: 0.0,
+        impuestoIva: 0.0,
         items: [],
       );
 
@@ -33,6 +34,7 @@ void main() {
         fecha: '2026-10-01',
         moneda: 'VES',
         totalOriginal: 100.0,
+        impuestoIva: 0.0,
         items: [
           ItemGastoModel(
             descripcion: 'Harina PAN',
@@ -63,6 +65,7 @@ void main() {
         fecha: '2026-10-01',
         moneda: 'USD',
         totalOriginal: 100.0,
+        impuestoIva: 0.0,
         items: [
           ItemGastoModel(
             descripcion: 'Café',
@@ -85,6 +88,7 @@ void main() {
         fecha: '2026-10-01',
         moneda: 'USD',
         totalOriginal: 100.0,
+        impuestoIva: 0.0,
         items: [
           ItemGastoModel(
             descripcion: 'Producto A',

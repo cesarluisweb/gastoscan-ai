@@ -249,6 +249,7 @@ class _ScanScreenState extends State<ScanScreen> {
       children: [
         Expanded(
           child: OutlinedButton.icon(
+            key: const Key('gallery_button'),
             onPressed: () => _pickImage(ImageSource.gallery),
             icon: const Icon(Icons.photo_library_outlined),
             label: const Text('Galería'),
@@ -257,6 +258,7 @@ class _ScanScreenState extends State<ScanScreen> {
         const SizedBox(width: 12),
         Expanded(
           child: ElevatedButton.icon(
+            key: const Key('camera_button'),
             onPressed: () => _pickImage(ImageSource.camera),
             icon: const Icon(Icons.camera_alt_outlined),
             label: const Text('Cámara'),

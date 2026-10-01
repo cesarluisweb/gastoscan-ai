@@ -127,7 +127,8 @@ void main() {
       expect(find.text('Galería'), findsOneWidget);
 
       // Tap gallery button to pick multiple images
-      await tester.tap(find.text('Galería'));
+      await tester.tap(find.byKey(const Key('gallery_button')));
+      await tester.pump();
       await tester.pumpAndSettle();
 
       // Verify that all 3 images were enqueued into ScanQueueProvider
@@ -179,7 +180,8 @@ void main() {
       await tester.pumpAndSettle();
 
       // Tap gallery with no selection
-      await tester.tap(find.text('Galería'));
+      await tester.tap(find.byKey(const Key('gallery_button')));
+      await tester.pump();
       await tester.pumpAndSettle();
 
       expect(scanQueueProvider.pendingCount, equals(0));
