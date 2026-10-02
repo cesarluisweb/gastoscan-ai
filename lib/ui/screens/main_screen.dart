@@ -309,6 +309,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    final scanQueue = Provider.of<ScanQueueProvider>(context);
+
     return Scaffold(
       body: Stack(
         children: [
