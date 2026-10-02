@@ -14,96 +14,189 @@
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests getAllPresupuestosCategorias returns all configured category budgets
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests insertCategoria and updateCategoria work correctly
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests deleteCategoria removes the category
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests renders 4 navigation destinations and center FAB
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests switching tabs changes current active screen
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping center FAB opens bottom sheet with 4 add options
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping AI chat button on Inicio navigates to Chat keeping bottom navigation and back returns to Inicio
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping Asistente IA in Mas and pressing back returns to Mas hub
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests displays yellow processing banner when queue has pending items
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests displays single item text properly in processing banner
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests hides processing banner when queue is empty and not processing
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests displays ready queue item card when items are ready for review
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests displays "Por revisar" badge when pending item has zero total
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests renders all hub sections in main view
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping shopping list navigates internally and back button returns to hub
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping chat navigates internally and back button returns to hub
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests calling openChat navigates directly to chat view
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) R3 Acceptance Criteria: Asignar $50 a Alimentación, y registrar un gasto de $60 en Alimentación hace que se dibuje un indicador visual de exceso (color rojo) en la UI de esa categoría
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Category within budget does NOT render the red excess alert
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Initial empty state displays analysis empty state and allows adding budget
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Editing budget to amount greater than expense clears red excess alert
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Validation: categories exceeding general budget shows alert and blocks save
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) General budget exceeded shows general excess alert in AnalysisScreen
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) AnalysisScreen month selector opens picker dialog and changes month
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) SummaryCard shows Presupuesto mensual and edit button opens budget bottom sheet
 ::endgroup::
-::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart: ScanScreen Multi-Image Selection Tests multi-image selection enqueues all images and pops back to Dashboard (failed)
-[ScanScreen] pickMultiImage returned 3 files
-[ScanScreen] Enqueueing multiple paths: [/tmp/receipt1.jpg, /tmp/receipt2.jpg, /tmp/receipt3.jpg]
-══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
-The following TestFailure was thrown running a test:
-Expected: <3>
-  Actual: <0>
-
-When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart:144:7)
-<asynchronous suspension>
-#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
-<asynchronous suspension>
-#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
-<asynchronous suspension>
-<asynchronous suspension>
-(elided one frame from package:stack_trace)
-
-This was caught by the test expectation on the following line:
-  file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart line 144
-The test description was:
-  multi-image selection enqueues all images and pops back to Dashboard
-════════════════════════════════════════════════════════════════════════════════════════════════════
-Test failed. See exception logs above.
-The test description was: multi-image selection enqueues all images and pops back to Dashboard
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart (failed)
+Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart":
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: lib/ui/screens/main_screen.dart:344:27: Error: The getter 'scanQueue' isn't defined for the type '_MainScreenState'.
+ - '_MainScreenState' is from 'package:gastoscan_ai/ui/screens/main_screen.dart' ('lib/ui/screens/main_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'scanQueue'.
+              badgeCount: scanQueue.readyItems.length,
+                          ^^^^^^^^^
+lib/services/connectivity_service.dart:43:43: Error: Method 'checkConnectivity' cannot be called on 'Connectivity?' because it is potentially null.
+ - 'Connectivity' is from 'package:connectivity_plus/connectivity_plus.dart' ('../../../.pub-cache/hosted/pub.dev/connectivity_plus-6.1.5/lib/connectivity_plus.dart').
+Try calling using ?. instead.
+      final results = await _connectivity.checkConnectivity();
+                                          ^^^^^^^^^^^^^^^^^
+lib/services/connectivity_service.dart:14:23: Context: '_connectivity' couldn't be promoted because field promotion is only available in Dart 3.2 and above.
+See http://dart.dev/go/non-promo-field-promotion-unavailable
+  final Connectivity? _connectivity;
+                      ^
+lib/services/connectivity_service.dart:61:28: Error: Property 'onConnectivityChanged' cannot be accessed on 'Connectivity?' because it is potentially null.
+ - 'Connectivity' is from 'package:connectivity_plus/connectivity_plus.dart' ('../../../.pub-cache/hosted/pub.dev/connectivity_plus-6.1.5/lib/connectivity_plus.dart').
+Try accessing using ?. instead.
+      return _connectivity.onConnectivityChanged
+                           ^^^^^^^^^^^^^^^^^^^^^
+lib/services/connectivity_service.dart:14:23: Context: '_connectivity' couldn't be promoted because field promotion is only available in Dart 3.2 and above.
+See http://dart.dev/go/non-promo-field-promotion-unavailable
+  final Connectivity? _connectivity;
+                      ^
+.
 
 ::endgroup::
-::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart: ScanScreen Multi-Image Selection Tests empty selection from gallery does not enqueue or pop
-[ScanScreen] pickMultiImage returned 0 files
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart (failed)
+Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart":
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: lib/services/connectivity_service.dart:43:43: Error: Method 'checkConnectivity' cannot be called on 'Connectivity?' because it is potentially null.
+ - 'Connectivity' is from 'package:connectivity_plus/connectivity_plus.dart' ('../../../.pub-cache/hosted/pub.dev/connectivity_plus-6.1.5/lib/connectivity_plus.dart').
+Try calling using ?. instead.
+      final results = await _connectivity.checkConnectivity();
+                                          ^^^^^^^^^^^^^^^^^
+lib/services/connectivity_service.dart:14:23: Context: '_connectivity' couldn't be promoted because field promotion is only available in Dart 3.2 and above.
+See http://dart.dev/go/non-promo-field-promotion-unavailable
+  final Connectivity? _connectivity;
+                      ^
+lib/services/connectivity_service.dart:61:28: Error: Property 'onConnectivityChanged' cannot be accessed on 'Connectivity?' because it is potentially null.
+ - 'Connectivity' is from 'package:connectivity_plus/connectivity_plus.dart' ('../../../.pub-cache/hosted/pub.dev/connectivity_plus-6.1.5/lib/connectivity_plus.dart').
+Try accessing using ?. instead.
+      return _connectivity.onConnectivityChanged
+                           ^^^^^^^^^^^^^^^^^^^^^
+lib/services/connectivity_service.dart:14:23: Context: '_connectivity' couldn't be promoted because field promotion is only available in Dart 3.2 and above.
+See http://dart.dev/go/non-promo-field-promotion-unavailable
+  final Connectivity? _connectivity;
+                      ^
+.
+
+::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart (failed)
+Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart":
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: lib/services/connectivity_service.dart:43:43: Error: Method 'checkConnectivity' cannot be called on 'Connectivity?' because it is potentially null.
+ - 'Connectivity' is from 'package:connectivity_plus/connectivity_plus.dart' ('../../../.pub-cache/hosted/pub.dev/connectivity_plus-6.1.5/lib/connectivity_plus.dart').
+Try calling using ?. instead.
+      final results = await _connectivity.checkConnectivity();
+                                          ^^^^^^^^^^^^^^^^^
+lib/services/connectivity_service.dart:14:23: Context: '_connectivity' couldn't be promoted because field promotion is only available in Dart 3.2 and above.
+See http://dart.dev/go/non-promo-field-promotion-unavailable
+  final Connectivity? _connectivity;
+                      ^
+lib/services/connectivity_service.dart:61:28: Error: Property 'onConnectivityChanged' cannot be accessed on 'Connectivity?' because it is potentially null.
+ - 'Connectivity' is from 'package:connectivity_plus/connectivity_plus.dart' ('../../../.pub-cache/hosted/pub.dev/connectivity_plus-6.1.5/lib/connectivity_plus.dart').
+Try accessing using ?. instead.
+      return _connectivity.onConnectivityChanged
+                           ^^^^^^^^^^^^^^^^^^^^^
+lib/services/connectivity_service.dart:14:23: Context: '_connectivity' couldn't be promoted because field promotion is only available in Dart 3.2 and above.
+See http://dart.dev/go/non-promo-field-promotion-unavailable
+  final Connectivity? _connectivity;
+                      ^
+.
+
+::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart (failed)
+Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart":
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: lib/services/connectivity_service.dart:43:43: Error: Method 'checkConnectivity' cannot be called on 'Connectivity?' because it is potentially null.
+ - 'Connectivity' is from 'package:connectivity_plus/connectivity_plus.dart' ('../../../.pub-cache/hosted/pub.dev/connectivity_plus-6.1.5/lib/connectivity_plus.dart').
+Try calling using ?. instead.
+      final results = await _connectivity.checkConnectivity();
+                                          ^^^^^^^^^^^^^^^^^
+lib/services/connectivity_service.dart:14:23: Context: '_connectivity' couldn't be promoted because field promotion is only available in Dart 3.2 and above.
+See http://dart.dev/go/non-promo-field-promotion-unavailable
+  final Connectivity? _connectivity;
+                      ^
+lib/services/connectivity_service.dart:61:28: Error: Property 'onConnectivityChanged' cannot be accessed on 'Connectivity?' because it is potentially null.
+ - 'Connectivity' is from 'package:connectivity_plus/connectivity_plus.dart' ('../../../.pub-cache/hosted/pub.dev/connectivity_plus-6.1.5/lib/connectivity_plus.dart').
+Try accessing using ?. instead.
+      return _connectivity.onConnectivityChanged
+                           ^^^^^^^^^^^^^^^^^^^^^
+lib/services/connectivity_service.dart:14:23: Context: '_connectivity' couldn't be promoted because field promotion is only available in Dart 3.2 and above.
+See http://dart.dev/go/non-promo-field-promotion-unavailable
+  final Connectivity? _connectivity;
+                      ^
+.
+
+::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart (failed)
+Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart":
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart: lib/services/connectivity_service.dart:43:43: Error: Method 'checkConnectivity' cannot be called on 'Connectivity?' because it is potentially null.
+ - 'Connectivity' is from 'package:connectivity_plus/connectivity_plus.dart' ('../../../.pub-cache/hosted/pub.dev/connectivity_plus-6.1.5/lib/connectivity_plus.dart').
+Try calling using ?. instead.
+      final results = await _connectivity.checkConnectivity();
+                                          ^^^^^^^^^^^^^^^^^
+lib/services/connectivity_service.dart:14:23: Context: '_connectivity' couldn't be promoted because field promotion is only available in Dart 3.2 and above.
+See http://dart.dev/go/non-promo-field-promotion-unavailable
+  final Connectivity? _connectivity;
+                      ^
+lib/services/connectivity_service.dart:61:28: Error: Property 'onConnectivityChanged' cannot be accessed on 'Connectivity?' because it is potentially null.
+ - 'Connectivity' is from 'package:connectivity_plus/connectivity_plus.dart' ('../../../.pub-cache/hosted/pub.dev/connectivity_plus-6.1.5/lib/connectivity_plus.dart').
+Try accessing using ?. instead.
+      return _connectivity.onConnectivityChanged
+                           ^^^^^^^^^^^^^^^^^^^^^
+lib/services/connectivity_service.dart:14:23: Context: '_connectivity' couldn't be promoted because field promotion is only available in Dart 3.2 and above.
+See http://dart.dev/go/non-promo-field-promotion-unavailable
+  final Connectivity? _connectivity;
+                      ^
+.
+
+::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart (failed)
+Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart":
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: lib/services/connectivity_service.dart:43:43: Error: Method 'checkConnectivity' cannot be called on 'Connectivity?' because it is potentially null.
+ - 'Connectivity' is from 'package:connectivity_plus/connectivity_plus.dart' ('../../../.pub-cache/hosted/pub.dev/connectivity_plus-6.1.5/lib/connectivity_plus.dart').
+Try calling using ?. instead.
+      final results = await _connectivity.checkConnectivity();
+                                          ^^^^^^^^^^^^^^^^^
+lib/services/connectivity_service.dart:14:23: Context: '_connectivity' couldn't be promoted because field promotion is only available in Dart 3.2 and above.
+See http://dart.dev/go/non-promo-field-promotion-unavailable
+  final Connectivity? _connectivity;
+                      ^
+lib/services/connectivity_service.dart:61:28: Error: Property 'onConnectivityChanged' cannot be accessed on 'Connectivity?' because it is potentially null.
+ - 'Connectivity' is from 'package:connectivity_plus/connectivity_plus.dart' ('../../../.pub-cache/hosted/pub.dev/connectivity_plus-6.1.5/lib/connectivity_plus.dart').
+Try accessing using ?. instead.
+      return _connectivity.onConnectivityChanged
+                           ^^^^^^^^^^^^^^^^^^^^^
+lib/services/connectivity_service.dart:14:23: Context: '_connectivity' couldn't be promoted because field promotion is only available in Dart 3.2 and above.
+See http://dart.dev/go/non-promo-field-promotion-unavailable
+  final Connectivity? _connectivity;
+                      ^
+.
+
+::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart (failed)
+Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart":
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: lib/services/connectivity_service.dart:43:43: Error: Method 'checkConnectivity' cannot be called on 'Connectivity?' because it is potentially null.
+ - 'Connectivity' is from 'package:connectivity_plus/connectivity_plus.dart' ('../../../.pub-cache/hosted/pub.dev/connectivity_plus-6.1.5/lib/connectivity_plus.dart').
+Try calling using ?. instead.
+      final results = await _connectivity.checkConnectivity();
+                                          ^^^^^^^^^^^^^^^^^
+lib/services/connectivity_service.dart:14:23: Context: '_connectivity' couldn't be promoted because field promotion is only available in Dart 3.2 and above.
+See http://dart.dev/go/non-promo-field-promotion-unavailable
+  final Connectivity? _connectivity;
+                      ^
+lib/services/connectivity_service.dart:61:28: Error: Property 'onConnectivityChanged' cannot be accessed on 'Connectivity?' because it is potentially null.
+ - 'Connectivity' is from 'package:connectivity_plus/connectivity_plus.dart' ('../../../.pub-cache/hosted/pub.dev/connectivity_plus-6.1.5/lib/connectivity_plus.dart').
+Try accessing using ?. instead.
+      return _connectivity.onConnectivityChanged
+                           ^^^^^^^^^^^^^^^^^^^^^
+lib/services/connectivity_service.dart:14:23: Context: '_connectivity' couldn't be promoted because field promotion is only available in Dart 3.2 and above.
+See http://dart.dev/go/non-promo-field-promotion-unavailable
+  final Connectivity? _connectivity;
+                      ^
+.
+
 ::endgroup::
 ::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) tapping search icon reveals search text field with hint
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) entering search query immediately filters out non-matching expenses
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) expenses matching by commerce are included
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) expenses matching by product name are included
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) clearing search query via close button restores all expenses
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) clearing search text restores all expenses while keeping search open
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) displays friendly empty state message when search yields 0 matches
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) case-insensitive and diacritic-insensitive search works
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests renders all 5 predefined chat suggestions in horizontal bar
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests tapping a suggestion chip sends it immediately as a user message
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests tapping shopping list suggestion chip sends request directly
-::endgroup::
-::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests renders edit expense button when assistant registers an expense
-Error al cotejar compras en chat: Bad state: databaseFactory not initialized
-databaseFactory is only initialized when using sqflite. When using `sqflite_common_ffi`
-You must call `databaseFactory = databaseFactoryFfi;` before using global openDatabase API
-
-::endgroup::
-::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests tapping textfield while listening stops microphone
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests sending message while listening stops microphone
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/local_ocr_service_test.dart: LocalOcrService Quality Scoring Tests factura completa con comercio, fecha, ítems y total supera umbral de score
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/local_ocr_service_test.dart: LocalOcrService Quality Scoring Tests texto borroso o escaso de 2 líneas no supera el umbral de score
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests Default singleton instance is available and accessible
 ::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests 3-day scheduling function defaults to Duration(days: 3)
 NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@842310200' has not been initialized.
+NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@136310200' has not been initialized.
 ::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests Custom duration is respected when specified
 NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@842310200' has not been initialized.
+NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@136310200' has not been initialized.
 ::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests cancelInactivityReminder cancels and clears scheduled state
 NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@842310200' has not been initialized.
+NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@136310200' has not been initialized.
 NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::endgroup::
 ::group::✅ Passing tests
@@ -111,7 +204,7 @@ NotificationService: Excepción al cancelar recordatorio: MissingPluginException
 ::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests recordActivityAndReschedule updates activity time and reschedules for 3 days
 NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@842310200' has not been initialized.
+NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@136310200' has not been initialized.
 ::endgroup::
 ::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests Channel configuration and constants are correctly defined
@@ -139,6 +232,31 @@ Error al verificar actualización: Exception: Connection failed
 ::endgroup::
 ::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/update_service_test.dart: UpdateService Tests respects throttle duration when force is false
+::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/connectivity_service_test.dart (failed)
+Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/services/connectivity_service_test.dart":
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/services/connectivity_service_test.dart: lib/services/connectivity_service.dart:43:43: Error: Method 'checkConnectivity' cannot be called on 'Connectivity?' because it is potentially null.
+ - 'Connectivity' is from 'package:connectivity_plus/connectivity_plus.dart' ('../../../.pub-cache/hosted/pub.dev/connectivity_plus-6.1.5/lib/connectivity_plus.dart').
+Try calling using ?. instead.
+      final results = await _connectivity.checkConnectivity();
+                                          ^^^^^^^^^^^^^^^^^
+lib/services/connectivity_service.dart:14:23: Context: '_connectivity' couldn't be promoted because field promotion is only available in Dart 3.2 and above.
+See http://dart.dev/go/non-promo-field-promotion-unavailable
+  final Connectivity? _connectivity;
+                      ^
+lib/services/connectivity_service.dart:61:28: Error: Property 'onConnectivityChanged' cannot be accessed on 'Connectivity?' because it is potentially null.
+ - 'Connectivity' is from 'package:connectivity_plus/connectivity_plus.dart' ('../../../.pub-cache/hosted/pub.dev/connectivity_plus-6.1.5/lib/connectivity_plus.dart').
+Try accessing using ?. instead.
+      return _connectivity.onConnectivityChanged
+                           ^^^^^^^^^^^^^^^^^^^^^
+lib/services/connectivity_service.dart:14:23: Context: '_connectivity' couldn't be promoted because field promotion is only available in Dart 3.2 and above.
+See http://dart.dev/go/non-promo-field-promotion-unavailable
+  final Connectivity? _connectivity;
+                      ^
+.
+
+::endgroup::
+::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests instantiates with required nombre and default presupuestoMensual 0.0
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests instantiates with custom id and presupuestoMensual
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests toMap produces correct key-value map with id
@@ -160,23 +278,37 @@ Error al verificar actualización: Exception: Connection failed
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests isCategoryOverBudget returns true when spent > budget and budget > 0
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests isCategoryOverBudget returns false when spent <= budget
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests isCategoryOverBudget returns false when budget is 0 or unassigned
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests initial state has empty pending and ready items
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests enqueue inserts single image and updates pendingCount
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests enqueueMultiple enqueues all images and updates pendingItems
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests addPendingItem delegates to enqueue and preserves backwards compatibility
 ::endgroup::
-::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests removeItem removes item from database and refreshes queue
-NotificationService: Excepción al cancelar recordatorio de pendientes: Binding has not yet been initialized.
-The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
-Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
-In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
-If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart (failed)
+Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart":
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: test/providers/scan_queue_provider_test.dart:274:19: Error: Undefined name 'fakeDb'.
+        dbHelper: fakeDb,
+                  ^^^^^^
+test/providers/scan_queue_provider_test.dart:294:19: Error: Undefined name 'fakeDb'.
+        dbHelper: fakeDb,
+                  ^^^^^^
+lib/services/connectivity_service.dart:43:43: Error: Method 'checkConnectivity' cannot be called on 'Connectivity?' because it is potentially null.
+ - 'Connectivity' is from 'package:connectivity_plus/connectivity_plus.dart' ('../../../.pub-cache/hosted/pub.dev/connectivity_plus-6.1.5/lib/connectivity_plus.dart').
+Try calling using ?. instead.
+      final results = await _connectivity.checkConnectivity();
+                                          ^^^^^^^^^^^^^^^^^
+lib/services/connectivity_service.dart:14:23: Context: '_connectivity' couldn't be promoted because field promotion is only available in Dart 3.2 and above.
+See http://dart.dev/go/non-promo-field-promotion-unavailable
+  final Connectivity? _connectivity;
+                      ^
+lib/services/connectivity_service.dart:61:28: Error: Property 'onConnectivityChanged' cannot be accessed on 'Connectivity?' because it is potentially null.
+ - 'Connectivity' is from 'package:connectivity_plus/connectivity_plus.dart' ('../../../.pub-cache/hosted/pub.dev/connectivity_plus-6.1.5/lib/connectivity_plus.dart').
+Try accessing using ?. instead.
+      return _connectivity.onConnectivityChanged
+                           ^^^^^^^^^^^^^^^^^^^^^
+lib/services/connectivity_service.dart:14:23: Context: '_connectivity' couldn't be promoted because field promotion is only available in Dart 3.2 and above.
+See http://dart.dev/go/non-promo-field-promotion-unavailable
+  final Connectivity? _connectivity;
+                      ^
+.
+
 ::endgroup::
 ::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests manual state mutation helpers update state and notify listeners
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: GeminiExtractionResult.listFromJson Tests parses single legacy JSON correctly
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: GeminiExtractionResult.listFromJson Tests parses multiple facturas JSON array correctly
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: GeminiExtractionResult.listFromJson Tests parses fiscal markers (E) and (G) into item descriptions
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/domain/savings_health_calculator_test.dart: SavingsHealthCalculator Tests returns sinMeta when metaAhorro is zero or negative
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/domain/savings_health_calculator_test.dart: SavingsHealthCalculator Tests calculates correct limiteParaGastar when metaAhorro is positive
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/domain/savings_health_calculator_test.dart: SavingsHealthCalculator Tests grace period days 1 to 3 does not trigger enRiesgo even if projected is high
@@ -186,10 +318,31 @@ If ServicesBinding is a custom binding mixin, there must also be a custom bindin
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/domain/savings_health_calculator_test.dart: SavingsHealthCalculator Tests triggers comprometida whenever actual spent exceeds limit
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/domain/savings_health_calculator_test.dart: SavingsHealthCalculator Tests handles clamp when meta exceeds general budget
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/domain/savings_health_calculator_test.dart: SavingsHealthCalculator Tests handles February with 28 days correctly
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: VoiceExpenseSheet Editable Tests renders title, input field, mic button and cancel button
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: VoiceExpenseSheet Editable Tests allows editing text in TextField and enables process button
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: VoiceExpenseSheet Editable Tests clear button removes text and disables process button
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: VoiceExpenseSheet Editable Tests submitting edited text calls parseVoiceExpense with updated content
+::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart (failed)
+Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart":
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: lib/services/connectivity_service.dart:43:43: Error: Method 'checkConnectivity' cannot be called on 'Connectivity?' because it is potentially null.
+ - 'Connectivity' is from 'package:connectivity_plus/connectivity_plus.dart' ('../../../.pub-cache/hosted/pub.dev/connectivity_plus-6.1.5/lib/connectivity_plus.dart').
+Try calling using ?. instead.
+      final results = await _connectivity.checkConnectivity();
+                                          ^^^^^^^^^^^^^^^^^
+lib/services/connectivity_service.dart:14:23: Context: '_connectivity' couldn't be promoted because field promotion is only available in Dart 3.2 and above.
+See http://dart.dev/go/non-promo-field-promotion-unavailable
+  final Connectivity? _connectivity;
+                      ^
+lib/services/connectivity_service.dart:61:28: Error: Property 'onConnectivityChanged' cannot be accessed on 'Connectivity?' because it is potentially null.
+ - 'Connectivity' is from 'package:connectivity_plus/connectivity_plus.dart' ('../../../.pub-cache/hosted/pub.dev/connectivity_plus-6.1.5/lib/connectivity_plus.dart').
+Try accessing using ?. instead.
+      return _connectivity.onConnectivityChanged
+                           ^^^^^^^^^^^^^^^^^^^^^
+lib/services/connectivity_service.dart:14:23: Context: '_connectivity' couldn't be promoted because field promotion is only available in Dart 3.2 and above.
+See http://dart.dev/go/non-promo-field-promotion-unavailable
+  final Connectivity? _connectivity;
+                      ^
+.
+
+::endgroup::
+::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests formatPreferido returns VES when preferred is VES
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests formatPreferido calculates VES using tasaCambio when totalVes is zero/null
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests formatPreferido returns USD when preferred is USD
@@ -200,12 +353,52 @@ If ServicesBinding is a custom binding mixin, there must also be a custom bindin
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: ExpenseCard Currency Preference Tests displays USD as primary when monedaPrincipal is USD
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: ExpenseCard Currency Preference Tests displays VES as primary when monedaPrincipal is VES
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CategoryChart Currency Preference Tests renders category totals and budgets in VES when monedaPrincipal is VES
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays welcome prompt when expenses are empty
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays over budget warning when spent exceeds budget
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays budget alert when spent is 85 percent or more
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests suggests defining budget when no general budget exists
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays new month motivational insight when in first days with budget
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays compromised savings goal alert when spent exceeds spending limit
+::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/global_scan_queue_banner_test.dart (failed)
+Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/global_scan_queue_banner_test.dart":
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/global_scan_queue_banner_test.dart: lib/services/connectivity_service.dart:43:43: Error: Method 'checkConnectivity' cannot be called on 'Connectivity?' because it is potentially null.
+ - 'Connectivity' is from 'package:connectivity_plus/connectivity_plus.dart' ('../../../.pub-cache/hosted/pub.dev/connectivity_plus-6.1.5/lib/connectivity_plus.dart').
+Try calling using ?. instead.
+      final results = await _connectivity.checkConnectivity();
+                                          ^^^^^^^^^^^^^^^^^
+lib/services/connectivity_service.dart:14:23: Context: '_connectivity' couldn't be promoted because field promotion is only available in Dart 3.2 and above.
+See http://dart.dev/go/non-promo-field-promotion-unavailable
+  final Connectivity? _connectivity;
+                      ^
+lib/services/connectivity_service.dart:61:28: Error: Property 'onConnectivityChanged' cannot be accessed on 'Connectivity?' because it is potentially null.
+ - 'Connectivity' is from 'package:connectivity_plus/connectivity_plus.dart' ('../../../.pub-cache/hosted/pub.dev/connectivity_plus-6.1.5/lib/connectivity_plus.dart').
+Try accessing using ?. instead.
+      return _connectivity.onConnectivityChanged
+                           ^^^^^^^^^^^^^^^^^^^^^
+lib/services/connectivity_service.dart:14:23: Context: '_connectivity' couldn't be promoted because field promotion is only available in Dart 3.2 and above.
+See http://dart.dev/go/non-promo-field-promotion-unavailable
+  final Connectivity? _connectivity;
+                      ^
+.
+
+::endgroup::
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart (failed)
+Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart":
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: lib/services/connectivity_service.dart:43:43: Error: Method 'checkConnectivity' cannot be called on 'Connectivity?' because it is potentially null.
+ - 'Connectivity' is from 'package:connectivity_plus/connectivity_plus.dart' ('../../../.pub-cache/hosted/pub.dev/connectivity_plus-6.1.5/lib/connectivity_plus.dart').
+Try calling using ?. instead.
+      final results = await _connectivity.checkConnectivity();
+                                          ^^^^^^^^^^^^^^^^^
+lib/services/connectivity_service.dart:14:23: Context: '_connectivity' couldn't be promoted because field promotion is only available in Dart 3.2 and above.
+See http://dart.dev/go/non-promo-field-promotion-unavailable
+  final Connectivity? _connectivity;
+                      ^
+lib/services/connectivity_service.dart:61:28: Error: Property 'onConnectivityChanged' cannot be accessed on 'Connectivity?' because it is potentially null.
+ - 'Connectivity' is from 'package:connectivity_plus/connectivity_plus.dart' ('../../../.pub-cache/hosted/pub.dev/connectivity_plus-6.1.5/lib/connectivity_plus.dart').
+Try accessing using ?. instead.
+      return _connectivity.onConnectivityChanged
+                           ^^^^^^^^^^^^^^^^^^^^^
+lib/services/connectivity_service.dart:14:23: Context: '_connectivity' couldn't be promoted because field promotion is only available in Dart 3.2 and above.
+See http://dart.dev/go/non-promo-field-promotion-unavailable
+  final Connectivity? _connectivity;
+                      ^
+.
+
 ::endgroup::
 
-::error::133 tests passed, 1 failed.
+::error::77 tests passed, 12 failed.
