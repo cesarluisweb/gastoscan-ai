@@ -7,7 +7,7 @@
 - **Últimos hitos:** Rediseño del banner de cola como componente en línea integrado (estilo Telegram/WhatsApp). En lugar de flotar sobre el contenido y tapar el selector de mes o el AppBar, se ubica bajo cada AppBar en un `Column` con `AnimatedSize`, empujando suavemente el contenido hacia abajo sin cubrir ningún control.
 
 ## Decisiones Técnicas y de Negocio Recientes
-- **Banner Integrado en Flujo (No Flotante):** Desacoplado de `Stack/Positioned` en `MainScreen`. Ahora es un widget en línea con `AnimatedSize` integrado en las 4 pantallas (Inicio, Gastos, Análisis, Más) que desplaza el selector de mes suavemente al aparecer y se contrae a 0 al terminar.
+- **Banner Integrado y Resiliente:** En línea con `AnimatedSize` bajo el AppBar en las 4 pantallas principales. `GlobalScanQueueBanner` blindado ante ausencia de `ScanQueueProvider` en tests aislados.
 - **Deep-linking Robusto:** `NotificationService` registra payload vía `getNotificationAppLaunchDetails()` y `onDidReceiveNotificationResponse`, permitiendo navegar a `ReviewExpenseScreen` aún con la app cerrada.
 - **Feedback de Captura:** `HapticFeedback.mediumImpact()` al encolar y eliminación del SnackBar redundante inferior para evitar competencia visual.
 
@@ -19,4 +19,5 @@
 - Prohibido caer en bucles de `view_file` sobre el mismo bloque; tras 2 lecturas, pasar directamente a editar o ejecutar.
 
 ## Próximo Paso Inmediato
-- Git commit, git push y verificación de CI (compilación y suite de pruebas) vía API de GitHub.
+- Verificación completa de Google Play Console: reclutamiento de 20-25 testers por 14 días y preparación de assets (512x512, 1024x500, 1080x1920).
+
