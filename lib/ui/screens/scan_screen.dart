@@ -58,6 +58,7 @@ class _ScanScreenState extends State<ScanScreen> {
     try {
       if (source == ImageSource.gallery) {
         final pickedFiles = await _picker.pickMultiImage(imageQuality: 90);
+        debugPrint('[ScanScreen] pickMultiImage returned ${pickedFiles.length} files');
         if (pickedFiles.isNotEmpty) {
           if (pickedFiles.length == 1) {
             setState(() {
@@ -66,7 +67,9 @@ class _ScanScreenState extends State<ScanScreen> {
           } else {
             final queueProvider = Provider.of<ScanQueueProvider>(context, listen: false);
             final paths = pickedFiles.map((file) => file.path).toList();
+            debugPrint('[ScanScreen] Enqueueing multiple paths: $paths');
             await queueProvider.enqueueMultiple(paths);
+            debugPrint('[ScanScreen] Finished enqueueMultiple. Provider pendingCount: ${queueProvider.pendingCount}');
             if (!mounted) return;
             Navigator.pop(context); // Volver al inicio de forma silenciosa e inmediata
           }
