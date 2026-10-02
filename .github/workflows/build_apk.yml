@@ -71,6 +71,33 @@ jobs:
       - name: Generar Iconos de App
         run: flutter pub run flutter_launcher_icons
 
+      - name: Configurar Reglas de ProGuard (R8) para ML Kit
+        run: |
+          mkdir -p android/app
+          cat << 'EOF' > android/app/proguard-rules.pro
+          -dontwarn com.google.mlkit.vision.text.chinese.**
+          -dontwarn com.google.mlkit.vision.text.devanagari.**
+          -dontwarn com.google.mlkit.vision.text.japanese.**
+          -dontwarn com.google.mlkit.vision.text.korean.**
+          -keep class com.google.mlkit.vision.text.latin.** { *; }
+          -keep class com.google_mlkit_text_recognition.** { *; }
+          EOF
+          
+          # Inyectar configuracion de proguard-rules.pro en android/app/build.gradle.kts
+          if ! grep -q "proguardFiles" android/app/build.gradle.kts; then
+            python3 -c '
+          with open("android/app/build.gradle.kts", "r") as f:
+              content = f.read()
+          target = "signingConfig = signingConfigs.getByName(\"debug\")"
+          replacement = target + "\n            proguardFiles(getDefaultProguardFile(\"proguard-android-optimize.txt\"), \"proguard-rules.pro\")"
+          new_content = content.replace(target, replacement)
+          with open("android/app/build.gradle.kts", "w") as f:
+              f.write(new_content)
+          '
+          fi
+          cat android/app/proguard-rules.pro
+          cat android/app/build.gradle.kts
+
       - name: Compilar APK Release
         run: |
           APP_VERSION=$(grep "^version:" pubspec.yaml | sed -e 's/version:[[:space:]]*//' | cut -d '+' -f 1 | tr -d '[:space:]')
