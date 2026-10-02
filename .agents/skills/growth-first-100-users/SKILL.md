@@ -25,36 +25,45 @@ Esta skill guía la ejecución táctica para publicar la aplicación en Google P
 ## 2. Etapa 1: Preparación Técnica para Google Play
 
 ### Requisitos Previos
-* **Cuenta de desarrollador:** Pago único de $25 USD en [Google Play Console](https://play.google.com/console).
+* **Cuenta de desarrollador:** Pago único de $25 USD en [Google Play Console](https://play.google.com/console) con tarjeta habilitada para compras internacionales en USD.
+* **Tipo de cuenta:** Cuenta Personal (rápida, pero muestra el nombre legal del desarrollador en la ficha) vs Cuenta de Empresa (requiere D-U-N-S, dominio web y verificación de varias semanas).
 * **Formato de entrega:** Google Play exige formato Android App Bundle (`.aab`), no `.apk`.
 * **Keystore firmado:** La llave privada de firma debe estar configurada en los Secrets de GitHub Actions para que el pipeline genere el `.aab` automáticamente.
-* **Política de Privacidad:** URL pública requerida obligatoriamente por Google Play (puede alojarse en la landing page del proyecto o GitHub Pages).
+* **Política de Privacidad:** URL pública requerida obligatoriamente por Google Play (alojada en `rindemas.cesarluis.com/privacidad`).
+* **Programa para Pequeñas Empresas (Comisión reducida):** Inscribirse en el *Google Play Small Business Program* para reducir la comisión de Google en suscripciones y compras integradas del 30% al 15% (hasta el primer millón de USD anual).
 
-### Checklist de Ficha Básica
-* **Nombre de la app:** `Rinde Más: Control de Gastos`
+### Checklist de Ficha Básica y Assets
+* **Nombre de la app:** `Rinde Más: Control de Gastos` (máx. 30 caracteres).
 * **Descripción breve (80 caracteres):** `Escanea facturas con IA, controla tu dinero en bolívares y dólares a tasa BCV.`
-* **Categoría:** Finanzas / Herramientas.
-* **Clasificación de contenido:** Cuestionario IARC dentro de la consola (marcar sin contenido sensible).
+* **Categoría y Formularios:** Finanzas / Herramientas. Completar cuestionario IARC de clasificación y declaración de app financiera (sin acceso bancario).
+* **Assets obligatorios:**
+  * Ícono: 512 x 512 px (PNG 32 bits).
+  * Imagen destacada (Feature Graphic / Portada): 1024 x 500 px (PNG/JPEG).
+  * Capturas de pantalla: Mínimo 2, sugerido 1080 x 1920 px.
 
 ---
 
 ## 3. Etapa 2: Estrategia para los 20 Testers (Closed Testing)
 
-Google Play exige para cuentas nuevas que al menos **20 evaluadores independientes** estén inscritos en una prueba cerrada durante **14 días consecutivos** antes de habilitar el botón de publicación a producción.
+Google Play exige para cuentas personales nuevas que al menos **20 evaluadores independientes** estén inscritos en una prueba cerrada durante **14 días consecutivos** antes de habilitar la solicitud de publicación a producción.
 
-### Mecánica de Reclutamiento
+### Mecánica de Reclutamiento y Margen de Seguridad
 1. **Crear un Grupo de Google:** En lugar de agregar correos uno a uno en Google Play Console, crea un grupo público en Google Groups (ej. `rindemas-testers@googlegroups.com`) y vincula ese grupo a la pista de prueba cerrada.
-2. **Seleccionar el núcleo inicial (primeros 10 testers):**
-   * Amigos directos, familiares, compañeros de trabajo.
-   * Pedirles explícitamente: "Descarga la app desde el enlace oficial y ábrela al menos 2 veces por semana para que Google marque actividad".
-3. **Completar los siguientes 10 testers (Comunidades afines):**
-   * Grupos de Telegram de programadores o beta testers en Latinoamérica.
-   * Subreddit `r/androidapps` o comunidades de intercambio de pruebas cerradas (testers swap).
+2. **Reclutar 22 a 25 testers (Margen de Seguridad):**
+   * Si un usuario se da de baja durante el período, Google puede reiniciar el conteo de los 14 días. Apuntar a 25 testers activos garantiza superar el umbral sin contratiempos.
+   * Amigos directos, familiares, compañeros de trabajo y comunidades afines (`r/vzla`, grupos de Telegram de testers).
+   * Pedirles explícitamente: *"Descarga la app desde el enlace oficial y ábrela al menos 2 veces por semana para que Google registre actividad continua"*.
 
 ### Mensaje Directo para Reclutar Testers (Sin rodeos)
 > *"Estoy preparando el lanzamiento de Rinde Más en Google Play, una app para escanear facturas y controlar presupuestos en bolívares y dólares con tasa BCV. Google me exige 20 personas probando la app durante 14 días para darme el permiso de publicación. Necesito tu apoyo instalando la app desde este enlace: [LINK]. Solo tienes que abrirla un par de veces durante estas dos semanas."*
 
+### Tiempos de Revisión y Regla de Lanzamiento
+* **Primera versión:** La revisión inicial de una app nueva en Google Play suele demorar entre 3 y 7 días hábiles.
+* **Actualizaciones posteriores:** Suelen aprobarse en cuestión de 1 a 2 horas.
+* **Regla de oro:** No anunciar fechas de lanzamiento públicas ni iniciar campañas en redes hasta contar con la aprobación definitiva en la consola.
+
 ---
+
 
 ## 4. Etapa 3: Optimización para Tienda (ASO para Venezuela)
 
@@ -119,4 +128,22 @@ Una vez aprobada la app en producción, se activan 3 canales de distribución di
 | **Activación (1er escaneo en día 1)** | > 60% de descargas | El usuario experimenta el valor de la app de inmediato |
 | **Usuarios activos (Día 7)** | > 30% de los 100 | La app realmente soluciona el problema de registro |
 | **Validación financiera inicial** | ~$50 USD en 30-60 días | Validación de disposición de pago (Pro / Ads) en el nicho |
+
+---
+
+## 8. Checklist Preventiva contra Rechazos en Tiendas (Google Play)
+
+* **Eliminación de Cuenta en la App:** Debe existir un botón funcional dentro de la app para eliminar la cuenta y los datos asociados (`Más > Respaldo y Sincronización > Eliminar cuenta`). No se permite exigir un correo a soporte.
+* **Cero Enlaces Rotos o Botones "Próximamente":** Los evaluadores rechazan apps que tengan botones inactivos que digan "próximamente" o links que devuelvan error 404.
+* **Notas de Acceso de Prueba (App Access):** Indicar claramente en la consola que la app funciona 100% en modo local sin registro obligatorio y proporcionar instrucciones para probar la sincronización opcional con Google.
+* **Declaración Financiera sin Solicitud Bancaria:** Aclarar en los formularios de la consola que la app no es una entidad financiera ni solicita credenciales bancarias.
+* **Cobro Exclusivo con Google Play Billing:** Para la venta de suscripciones digitales (Rinde Más Pro), utilizar estrictamente el sistema de facturación de Google Play.
+
+---
+
+## 9. Mantenimiento Anual y Ciclo de Vida
+
+* **Actualización Anual de Target SDK (`targetSdkVersion`):** Google exige actualizar anualmente el nivel de API de destino de Android. Si no se actualiza, la app deja de mostrarse a nuevos usuarios en versiones modernas del sistema operativo.
+* **Monitoreo de Políticas:** Revisar periódicamente las advertencias de la consola de Google Play para resolver requerimientos de privacidad o seguridad antes de que venzan los plazos.
+
 

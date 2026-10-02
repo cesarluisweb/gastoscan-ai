@@ -88,7 +88,15 @@ Respuestas directas para completar el cuestionario obligatorio de Google Play Co
 
 ---
 
-## 5. Textos para Gráficos y Capturas de Pantalla (Screenshots)
+## 5. Especificaciones de Assets Gráficos
+
+* **Ícono de la aplicación:** 512 x 512 px (formato PNG de 32 bits, hasta 1 MB).
+* **Gráfico de funciones / Imagen destacada (Portada):** 1024 x 500 px (PNG o JPEG, sin texto pequeño, ilustrativo).
+* **Capturas de pantalla del teléfono:** Mínimo 2, idealmente de 4 a 8 en resolución 1080 x 1920 px (o 1080 x 2400 px).
+
+---
+
+## 6. Textos para Gráficos y Capturas de Pantalla (Screenshots)
 
 1. **Captura 1 (Privacidad y Cero Bancos):**
    * *Titular:* **Tus finanzas son tuyas: 100% sin conexión bancaria**
@@ -105,3 +113,16 @@ Respuestas directas para completar el cuestionario obligatorio de Google Play Co
 5. **Captura 5 (Asistente IA):**
    * *Titular:* **Tu asistente financiero personal**
    * *Subtítulo:* Pregúntale en qué se te fue el sueldo y recibe respuestas claras.
+
+---
+
+## 7. Notas para los Revisores de Google Play (App Access / Demo Notes)
+
+```
+Instrucciones para el revisor:
+- La aplicación opera por defecto en modo local (SQLite) sin requerir registro ni inicio de sesión obligatorio.
+- Todas las funciones principales (escaneo de comprobantes, presupuestos, lista de compras y asistente) son accesibles de forma inmediata.
+- Para verificar la sincronización opcional con Google, puede utilizar cualquier cuenta de Google estándar en 'Más > Respaldo y Sincronización'.
+- La app no solicita credenciales bancarias, accesos SMS ni números de tarjeta.
+```
+

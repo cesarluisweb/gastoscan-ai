@@ -153,8 +153,16 @@ Este marco sintetiza la experiencia y aprendizajes reales del caso de estudio de
 * **Despliegue Dinámico desde Servidor (Firebase Remote Config):** Configurar cuotas mensuales de IA, textos de paywall, precios de suscripción y modelos de IA desde la nube sin depender de revisiones demoradas de Google Play para cada ajuste comercial.
 
 ### Pilar 3: Publicación y Relación con las Tiendas (Google Play)
-* **Planificación de Bloqueos de Aprobación:** El requisito obligatorio de 20 testers durante 14 días consecutivos en Closed Testing de Google Play no es un detalle menor; es un cuello de botella que debe gestionarse con un grupo coordinado (Google Groups) para no retrasar la salida comercial.
+* **Planificación de Bloqueos de Aprobación y Margen de Testers:** El requisito obligatorio de 20 testers durante 14 días consecutivos en Closed Testing de Google Play debe gestionarse con un margen de 22 a 25 personas (Google Groups). Si algún tester se da de baja, Google puede reiniciar el conteo.
+* **Tiempos de Revisión Inicial:** La primera versión de una app nueva suele tardar de 3 a 7 días hábiles en ser revisada por Google (las actualizaciones posteriores toman ~1-2 horas). Regla: no anunciar fechas públicas de lanzamiento antes de tener la aprobación definitiva.
 * **ASO Prioritario desde el Día 1:** Trabajar las palabras clave orgánicas locales (`control de gastos venezuela`, `tasa bcv`, `escanear facturas`, `presupuesto bolívares y dólares`) para captar usuarios sin coste por instalación (CPI).
+* **Prevención de Rechazos Comunes:**
+  - *Borrado de cuenta real:* La app debe permitir eliminar cuenta y datos directamente desde su interfaz (`Configuración > Eliminar cuenta`); un correo a soporte genera rechazo automático.
+  - *Cero botones "Próximamente" o links rotos:* Toda opción en la interfaz debe ser plenamente funcional.
+  - *Notas para revisores (App Access):* Explicar claramente que la app funciona 100% en modo local sin registro obligatorio.
+* **Programa de Pequeñas Empresas (Comisión 15%):** Inscribirse formalmente en el *Google Play Small Business Program* para reducir la retención de compras/suscripciones del 30% estándar al 15%.
+* **Mantenimiento Anual Obligatorio:** Planificar la actualización anual del `targetSdkVersion` para que Google no degrade la visibilidad de la app en nuevos dispositivos.
+
 
 ### Pilar 4: Marketing, Audiencia y Distribución
 * **Comunidad vs. Clientes Reales:** Una comunidad que aplaude el proyecto en redes (Reddit, Twitter/X) brinda tracción inicial, feedback técnico y reseñas de 5 estrellas, pero no equivale a usuarios de pago. La conversión económica viene de resolver un problema doloroso y recurrente al usuario que necesita estirar su presupuesto o desglosar facturas de compras grandes.
