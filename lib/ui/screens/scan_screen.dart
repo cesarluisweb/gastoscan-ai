@@ -87,7 +87,8 @@ class _ScanScreenState extends State<ScanScreen> {
           }
         }
       }
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint('Error en _pickImage: $e\n$stack');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error al capturar imagen: ${e.toString()}')),
       );

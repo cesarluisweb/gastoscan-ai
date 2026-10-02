@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image_picker/image_picker.dart';
@@ -5,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:gastoscan_ai/data/datasources/local/database_helper.dart';
 import 'package:gastoscan_ai/providers/scan_queue_provider.dart';
 import 'package:gastoscan_ai/providers/settings_provider.dart';
+import 'package:gastoscan_ai/services/local_ocr_service.dart';
 import 'package:gastoscan_ai/ui/screens/scan_screen.dart';
 
 class FakeDatabaseHelper extends DatabaseHelper {
@@ -70,6 +72,26 @@ class FakeImagePicker extends ImagePicker {
   }
 }
 
+class FakeLocalOcrService extends LocalOcrService {
+  @override
+  Future<LocalOcrResult> processImage(File imageFile) async {
+    return const LocalOcrResult(
+      rawText: '',
+      structuredText: '',
+      qualityScore: OcrQualityScore(
+        totalScore: 0,
+        hasAmounts: false,
+        hasTotalKeyword: false,
+        hasCurrency: false,
+        hasDate: false,
+        hasMerchantOrRif: false,
+        hasSufficientLines: false,
+        lineCount: 0,
+      ),
+    );
+  }
+}
+
 void main() {
   group('ScanScreen Multi-Image Selection Tests', () {
     late FakeDatabaseHelper fakeDb;
@@ -79,7 +101,11 @@ void main() {
 
     setUp(() {
       fakeDb = FakeDatabaseHelper();
-      scanQueueProvider = ScanQueueProvider(dbHelper: fakeDb, autoProcess: false);
+      scanQueueProvider = ScanQueueProvider(
+        dbHelper: fakeDb,
+        localOcrService: FakeLocalOcrService(),
+        autoProcess: false,
+      );
       fakeSettings = FakeSettingsProvider();
       fakePicker = FakeImagePicker();
     });
