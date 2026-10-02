@@ -12,6 +12,8 @@
 - **Aislamiento en Tests:** `ConnectivityService` detecta entorno de test automáticamente para evitar llamadas a canales nativos sin mocks.
 - **Invariante FTS5:** Búsqueda profunda en facturas es una optimización no crítica; si el motor del teléfono carece de FTS5, se degrada a `LIKE`.
 - **Monetización:** Anuncios intersticiales únicamente tras guardar factura (transición natural); nunca al abrir ni en captura de fotos.
+- **Framework de Creador Integrado:** Adoptadas directrices de 60 días (AristiDevs): impacto de negocio sobre complejidad técnica, datos como producto, corner cases locales, funnel de 7 etapas y monetización como producto independiente.
+
 
 ## Errores y Fricciones a Evitar
 - No tocar `android/` localmente (CI regenera con `flutter create`).

@@ -81,12 +81,12 @@ Una vez aprobada la app en producción, se activan 3 canales de distribución di
 
 ### Canal 1: Comunidades Específicas de Finanzas y Freelancers
 * **Dónde:** `r/vzla` (Reddit), foros de freelancers que cobran en divisas y gastan en bolívares, grupos de Telegram de finanzas personales.
-* **Enfoque del mensaje:** Compartir la app como una herramienta gratuita construida por necesidad propia para resolver el cálculo de tasas y el desorden de tickets físicos.
+* **Enfoque del mensaje:** Compartir la app como una herramienta gratuita construida por necesidad propia para resolver el cálculo de tasas y el desorden de facturas físicas.
 * **Objetivo:** 30 a 40 usuarios activos con alta retroalimentación.
 
 ### Canal 2: Video Demostrativo Corto (TikTok / Reels)
 * **Formato:** Video vertical de 15 segundos sin introducciones:
-  * *0 a 3s:* Toma directa de un ticket largo de supermercado. Texto en pantalla: *"¿Cuánto gastaste aquí en dólares?"*
+  * *0 a 3s:* Toma directa de una factura larga de supermercado. Texto en pantalla: *"¿Cuánto gastaste aquí en dólares?"*
   * *4 a 10s:* Enfocar la app tomando la foto y ver cómo se extrae cada producto con su precio convertido a BCV.
   * *11 a 15s:* *"Disponible gratis en Google Play como Rinde Más."*
 * **Objetivo:** 40 a 60 descargas directas impulsadas por la búsqueda del nombre en la tienda.
@@ -97,11 +97,26 @@ Una vez aprobada la app en producción, se activan 3 canales de distribución di
 
 ---
 
-## 6. Métricas Clave de Control
+## 6. Embudo de Conversión (Funnel) y Monetización
+
+```
+[1. Impresión] -> [2. Ficha Google Play] -> [3. Descarga] -> [4. Onboarding Local] -> [5. Activación: 1er Escaneo] -> [6. Retención] -> [7. Pago / Pro]
+```
+
+1. **Activación Temprana:** Guiar al usuario a escanear su primera factura en los primeros 60 segundos de uso.
+2. **Subvención Cruzada:** Usuarios gratuitos consumen cuota de 15-20 facturas/mes viendo anuncios en transiciones.
+3. **Conversión a Rinde Más Pro ($1.99/mes o $19.99/año):** Disparador contextual al agotar cuota mensual o al solicitar reporte contable en PDF/Excel.
+
+---
+
+## 7. Métricas Clave de Control
 
 | Métrica | Objetivo de Etapa | Qué indica |
 | :--- | :--- | :--- |
 | **Testers registrados** | 20 usuarios | Requisito cumplido de Google Play |
 | **Días de prueba continua** | 14 días | Habilitación de botón de producción |
 | **Tasa de conversión en tienda** | > 25% | La ficha y capturas explican bien el producto |
+| **Activación (1er escaneo en día 1)** | > 60% de descargas | El usuario experimenta el valor de la app de inmediato |
 | **Usuarios activos (Día 7)** | > 30% de los 100 | La app realmente soluciona el problema de registro |
+| **Validación financiera inicial** | ~$50 USD en 30-60 días | Validación de disposición de pago (Pro / Ads) en el nicho |
+

@@ -50,3 +50,14 @@ La navegación principal (`MainScreen`) se basa en un patrón ergonómico de 4 p
 - `landing/`: Proyecto web estático en Astro.
 - `.github/workflows/`: Pipeline de CI/CD para compilación de APK y suite de pruebas.
 - `test/`: Pruebas unitarias, de widgets y fakes de arquitectura.
+
+---
+
+## Directrices Estratégicas y Filosofía de Producto
+
+1. **Impacto de Negocio sobre Complejidad Técnica:** Cada funcionalidad implementada debe tener un retorno directo en retención o conversión. Descartar cualquier sobre-ingeniería que no resuelva un dolor validado por los usuarios (principio de simplicidad operativa).
+2. **Los Datos son el Producto:** El activo central del sistema es la precisión y calidad de la información extraída de los comprobantes (precios normalizados, productos, alícuotas de IVA y conversión cambiaria determinista).
+3. **Casos Borde (Edge Cases):** La ventaja competitiva real reside en resolver las anomalías complejas de las facturas locales (impresión térmica tenue, monedas cruzadas VES/USD, comercios sin formato estándar).
+4. **Despliegue Dinámico (Remote Config):** Arquitectura preparada para modificar cuotas, textos de paywall y parámetros de IA desde la nube sin depender de revisiones demoradas en tiendas de aplicaciones.
+5. **Infraestructura como Activo Permanente:** Los módulos centrales (autenticación anónima/Google, base de datos SQLite con migraciones, cola offline resiliente, orquestación de Gemini y sincronización en Firestore) se diseñan como piezas desacopladas y reutilizables para futuros productos del mismo ecosistema financiero.
+
