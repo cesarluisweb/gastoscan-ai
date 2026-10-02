@@ -556,9 +556,9 @@ class MoreScreenState extends State<MoreScreen> {
         ],
       ),
     ),
-          ),
-        ],
-      );
+  ],
+),
+);
   }
 
   Widget _buildAccountSection(BuildContext context) {

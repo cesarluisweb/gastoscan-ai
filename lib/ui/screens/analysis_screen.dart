@@ -408,9 +408,9 @@ class AnalysisScreen extends StatelessWidget {
         ],
       ),
     ),
-          ),
-        ],
-      );
+  ],
+),
+);
   }
 
   void _mostrarPickerMes(BuildContext context, GastoProvider gastoProvider) {

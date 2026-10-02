@@ -500,9 +500,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       ),
     ),
-          ),
-        ],
-      );
+  ),
+],
+),
+);
   }
 
   void _mostrarPickerMes(BuildContext context, GastoProvider gastoProvider) {
