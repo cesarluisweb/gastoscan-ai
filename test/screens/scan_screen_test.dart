@@ -126,9 +126,10 @@ void main() {
       expect(find.text('Digitaliza tus facturas'), findsOneWidget);
       expect(find.text('Galería'), findsOneWidget);
 
-      // Simular la selección múltiple directamente sobre el provider y el flujo
-      final paths = fakePicker.multiImagesToReturn.map((f) => f.path).toList();
-      await scanQueueProvider.enqueueMultiple(paths);
+      // Tap gallery button to trigger multi-selection
+      await tester.tap(find.byKey(const Key('gallery_button')));
+      await tester.pump();
+      await tester.pumpAndSettle();
 
       // Verify that all 3 images were enqueued into ScanQueueProvider
       expect(scanQueueProvider.pendingCount, equals(3));
@@ -137,6 +138,7 @@ void main() {
         '/tmp/receipt2.jpg',
         '/tmp/receipt3.jpg',
       ]);
+      expect(returnedToCaller, isTrue);
     });
 
     testWidgets('empty selection from gallery does not enqueue or pop', (tester) async {
