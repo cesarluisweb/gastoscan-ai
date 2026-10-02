@@ -138,7 +138,10 @@ class AnalysisScreen extends StatelessWidget {
           const SizedBox(height: 80),
         ],
       ),
-    );
+    ),
+  ],
+),
+);
   }
 
   Widget _buildGeneralBudgetCard(
@@ -407,10 +410,7 @@ class AnalysisScreen extends StatelessWidget {
           ),
         ],
       ),
-    ),
-  ],
-),
-);
+    );
   }
 
   void _mostrarPickerMes(BuildContext context, GastoProvider gastoProvider) {

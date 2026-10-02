@@ -444,7 +444,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
       ),
-    );
+    ),
+  ],
+),
+);
   }
 
   Widget _buildEmptyState() {
@@ -499,11 +502,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ],
       ),
-    ),
-  ),
-],
-),
-);
+    );
   }
 
   void _mostrarPickerMes(BuildContext context, GastoProvider gastoProvider) {
