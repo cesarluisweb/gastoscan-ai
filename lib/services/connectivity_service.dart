@@ -14,6 +14,7 @@ class ConnectivityService {
   final Connectivity? _connectivity;
   final StreamController<bool>? _testController;
   final bool? _testConnected;
+  bool? _currentConnectedState;
 
   ConnectivityService({
     Connectivity? connectivity,
@@ -23,7 +24,13 @@ class ConnectivityService {
             ? null
             : (connectivity ?? Connectivity()),
         _testController = testController,
-        _testConnected = testConnected;
+        _testConnected = testConnected {
+    if (testController != null) {
+      testController.stream.listen((connected) {
+        _currentConnectedState = connected;
+      });
+    }
+  }
 
   @visibleForTesting
   static void setMockInstance(ConnectivityService service) {
@@ -37,6 +44,7 @@ class ConnectivityService {
 
   /// Verifica si el dispositivo cuenta con alguna interfaz de red activa.
   Future<bool> isConnected() async {
+    if (_currentConnectedState != null) return _currentConnectedState!;
     if (_testConnected != null) return _testConnected!;
     final conn = _connectivity;
     if (conn == null) return true;

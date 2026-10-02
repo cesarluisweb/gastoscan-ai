@@ -95,6 +95,7 @@ class FakeDatabaseHelper extends DatabaseHelper {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   group('ScanQueueProvider Tests', () {
     late FakeDatabaseHelper fakeDb;
     late ScanQueueProvider provider;
@@ -223,7 +224,7 @@ void main() {
 
       // Simular reconexión de red
       streamController.add(true);
-      await Future.delayed(const Duration(milliseconds: 20));
+      await Future.delayed(const Duration(milliseconds: 50));
 
       expect(dynamicProvider.isWaitingForConnection, isFalse);
       await streamController.close();
