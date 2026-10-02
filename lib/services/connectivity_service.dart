@@ -38,9 +38,10 @@ class ConnectivityService {
   /// Verifica si el dispositivo cuenta con alguna interfaz de red activa.
   Future<bool> isConnected() async {
     if (_testConnected != null) return _testConnected!;
-    if (_connectivity == null) return true;
+    final conn = _connectivity;
+    if (conn == null) return true;
     try {
-      final results = await _connectivity.checkConnectivity();
+      final results = await conn.checkConnectivity();
       if (results.isEmpty) return true;
       return _hasActiveConnection(results);
     } catch (e) {
@@ -54,11 +55,12 @@ class ConnectivityService {
     if (_testController != null) {
       return _testController!.stream;
     }
-    if (_connectivity == null) {
+    final conn = _connectivity;
+    if (conn == null) {
       return const Stream.empty();
     }
     try {
-      return _connectivity.onConnectivityChanged
+      return conn.onConnectivityChanged
           .map(_hasActiveConnection)
           .handleError((error) {
             debugPrint('Aviso en stream de conectividad: $error');
