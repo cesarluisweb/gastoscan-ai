@@ -9,6 +9,7 @@
   - Respetar la paleta oficial (textos oscuros legibles, amarillo reservado para iconos y acentos).
   - Consultar `MEMORY.md` al iniciar una tarea y actualizarlo al finalizarla.
   - Guardar scripts y modificaciones en PowerShell con codificación UTF-8 explícita.
+  - Romper el análisis e iterar hacia la acción (editar/probar) en un máximo de 2 lecturas por bloque de código.
 - ⚠️ **Pregunta antes (Consultar a César):**
   - Añadir o actualizar dependencias en `pubspec.yaml` o `package.json`.
   - Modificar esquemas de datos (tablas SQLite, entidades Firestore) o flujos de sincronización.
@@ -20,6 +21,7 @@
   - Cantar victoria o decir que la app "está lista" tras un commit sin verificar CI.
   - Introducir conceptos de conciliación bancaria o cuentas múltiples (anti-filosofía Rinde Más).
   - Prometer planes de IA ilimitada de por vida.
+  - Ejecutar bucles de relectura redundante (`view_file` más de 2 veces sobre el mismo rango de archivo sin cambios intermedios). Tras identificar la causa, proceder inmediatamente a editar o consultar.
 
 ### Protocolo de Memoria Dinámica
 1. **Al iniciar:** Leer `MEMORY.md` para situarse en el estado inmediato del trabajo.

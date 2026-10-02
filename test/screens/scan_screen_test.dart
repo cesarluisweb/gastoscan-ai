@@ -129,6 +129,7 @@ void main() {
       // Tap gallery button to pick multiple images
       await tester.tap(find.byKey(const Key('gallery_button')));
       await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
       await tester.pumpAndSettle();
 
       // Verify that all 3 images were enqueued into ScanQueueProvider

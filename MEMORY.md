@@ -17,6 +17,7 @@
 - No tocar `android/` localmente (CI regenera con `flutter create`).
 - En CI, `curl` para logs devuelve 403; los fallos de test se leen en `test_results.txt` tras `git pull --rebase`.
 - Prohibido `>` en PowerShell; usar siempre tubería `... | Out-File -Encoding utf8`.
+- Prohibido caer en bucles de `view_file` sobre el mismo bloque; tras 2 lecturas, pasar directamente a editar o ejecutar.
 
 ## Próximo Paso Inmediato
 - Monitorear pipeline CI de GitHub Actions tras push.

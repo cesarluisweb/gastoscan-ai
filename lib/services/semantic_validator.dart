@@ -39,7 +39,7 @@ class SemanticValidator {
       if (factura.items.isNotEmpty) {
         double itemsSum = 0.0;
         for (final item in factura.items) {
-          itemsSum += item.total;
+          itemsSum += (item.total / 100.0);
         }
 
         // Si hay impuesto desglosado, sumarlo

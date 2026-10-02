@@ -187,6 +187,61 @@ class LocalOcrService {
     );
   }
 
+  /// Evalúa la calidad heurística a partir de texto plano y conteo de líneas
+  OcrQualityScore evaluateRawText(String rawText, {int? explicitLineCount}) {
+    final text = rawText.toUpperCase();
+    final lines = rawText.split('\n').where((l) => l.trim().isNotEmpty).toList();
+    final lineCount = explicitLineCount ?? lines.length;
+    final hasSufficientLines = lineCount >= 5;
+
+    final amountRegex = RegExp(r'\b\d+[\.,]\d{2}\b');
+    final hasAmounts = amountRegex.hasMatch(text);
+
+    final hasTotalKeyword = text.contains('TOTAL') ||
+        text.contains('SUBTOTAL') ||
+        text.contains('TOT.') ||
+        text.contains('MONTO');
+
+    final hasCurrency = text.contains('BS') ||
+        text.contains('VES') ||
+        text.contains('REF') ||
+        text.contains('\$') ||
+        text.contains('USD');
+
+    final dateRegex = RegExp(r'\b(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}|\d{4}[\/\-\.]\d{1,2}[\/\-\.]\d{1,2})\b');
+    final hasDate = dateRegex.hasMatch(text);
+
+    final rifRegex = RegExp(r'\b[JVEGP][\-\s]?\d{7,9}[\-\s]?\d?\b');
+    final hasMerchantOrRif = rifRegex.hasMatch(text) ||
+        text.contains('C.A.') ||
+        text.contains('S.A.') ||
+        text.contains('RIF') ||
+        text.contains('SENIAT') ||
+        text.contains('INVERSIONES') ||
+        text.contains('FARMACIA') ||
+        text.contains('AUTOMERCADO') ||
+        text.contains('SUPERMERCADO');
+
+    int score = 0;
+    if (hasAmounts) score += 2;
+    if (hasTotalKeyword) score += 2;
+    if (hasSufficientLines) score += 2;
+    if (hasCurrency) score += 1;
+    if (hasDate) score += 1;
+    if (hasMerchantOrRif) score += 1;
+
+    return OcrQualityScore(
+      totalScore: score,
+      hasAmounts: hasAmounts,
+      hasTotalKeyword: hasTotalKeyword,
+      hasCurrency: hasCurrency,
+      hasDate: hasDate,
+      hasMerchantOrRif: hasMerchantOrRif,
+      hasSufficientLines: hasSufficientLines,
+      lineCount: lineCount,
+    );
+  }
+
   void dispose() {
     _recognizer?.close();
   }
