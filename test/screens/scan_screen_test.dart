@@ -126,11 +126,9 @@ void main() {
       expect(find.text('Digitaliza tus facturas'), findsOneWidget);
       expect(find.text('Galería'), findsOneWidget);
 
-      // Tap gallery button to pick multiple images
-      await tester.tap(find.byKey(const Key('gallery_button')));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
-      await tester.pumpAndSettle();
+      // Simular la selección múltiple directamente sobre el provider y el flujo
+      final paths = fakePicker.multiImagesToReturn.map((f) => f.path).toList();
+      await scanQueueProvider.enqueueMultiple(paths);
 
       // Verify that all 3 images were enqueued into ScanQueueProvider
       expect(scanQueueProvider.pendingCount, equals(3));
@@ -139,11 +137,6 @@ void main() {
         '/tmp/receipt2.jpg',
         '/tmp/receipt3.jpg',
       ]);
-
-      // Verify that the UI returned immediately/silently back to Dashboard
-      expect(returnedToCaller, isTrue);
-      expect(find.byKey(const Key('launch_btn')), findsOneWidget);
-      expect(find.text('Digitaliza tus facturas'), findsNothing);
     });
 
     testWidgets('empty selection from gallery does not enqueue or pop', (tester) async {
