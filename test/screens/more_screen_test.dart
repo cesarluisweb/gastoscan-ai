@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:gastoscan_ai/data/datasources/local/database_helper.dart';
 import 'package:gastoscan_ai/providers/gasto_provider.dart';
+import 'package:gastoscan_ai/providers/scan_queue_provider.dart';
 import 'package:gastoscan_ai/providers/settings_provider.dart';
 import 'package:gastoscan_ai/ui/screens/more_screen.dart';
 
@@ -31,6 +32,8 @@ class FakeSettingsProvider extends SettingsProvider {
 
 void main() {
   group('MoreScreen Navigation & Hub Tests', () {
+    late FakeDatabaseHelper fakeDb;
+    late ScanQueueProvider scanQueueProvider;
     late FakeGastoProvider gastoProvider;
     late FakeSettingsProvider settingsProvider;
 
@@ -38,6 +41,8 @@ void main() {
       final TestWidgetsFlutterBinding binding = TestWidgetsFlutterBinding.ensureInitialized();
       binding.window.physicalSizeTestValue = const Size(1080, 4000);
       binding.window.devicePixelRatioTestValue = 1.0;
+      fakeDb = FakeDatabaseHelper();
+      scanQueueProvider = ScanQueueProvider(dbHelper: fakeDb);
       gastoProvider = FakeGastoProvider();
       settingsProvider = FakeSettingsProvider();
     });
@@ -53,6 +58,7 @@ void main() {
         providers: [
           ChangeNotifierProvider<GastoProvider>.value(value: gastoProvider),
           ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+          ChangeNotifierProvider<ScanQueueProvider>.value(value: scanQueueProvider),
         ],
         child: const MaterialApp(
           home: MoreScreen(),

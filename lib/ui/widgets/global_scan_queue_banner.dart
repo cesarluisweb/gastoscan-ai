@@ -14,7 +14,16 @@ class GlobalScanQueueBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scanQueue = Provider.of<ScanQueueProvider>(context);
+    ScanQueueProvider? scanQueue;
+    try {
+      scanQueue = Provider.of<ScanQueueProvider>(context);
+    } catch (_) {
+      scanQueue = null;
+    }
+
+    if (scanQueue == null) {
+      return const SizedBox.shrink();
+    }
 
     Widget content = const SizedBox.shrink();
 
