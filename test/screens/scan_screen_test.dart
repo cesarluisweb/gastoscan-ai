@@ -135,9 +135,11 @@ void main() {
       // Verify button exists and tap it
       final galleryFinder = find.byKey(const Key('gallery_button'));
       expect(galleryFinder, findsOneWidget);
-      await tester.tap(galleryFinder);
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
+
+      await tester.runAsync(() async {
+        await tester.tap(galleryFinder);
+        await Future.delayed(const Duration(milliseconds: 300));
+      });
       await tester.pumpAndSettle();
 
       // Verify that all 3 images were enqueued into ScanQueueProvider
