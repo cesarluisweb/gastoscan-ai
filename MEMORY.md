@@ -4,7 +4,7 @@
 ## Estado Actual Inmediato
 - **Rama:** `main` (limpia, sincronizada con remoto).
 - **Fase activa:** Fase 7 (Arquitectura de Producción) y Fase 5 (Lanzamiento).
-- **Últimos hitos:** Sistema Híbrido de Document Scanner, OCR Local Bundled y Búsqueda FTS5 (SQLite v14, persistencia temprana en scan_queue, fallback adaptativo semántico y Gemini Texto). Suite de pruebas estabilizada (134/134 tests pasando).
+- **Últimos hitos:** Sistema Híbrido de Document Scanner, OCR Local Bundled y Búsqueda FTS5 (SQLite v14, persistencia temprana en scan_queue, fallback adaptativo semántico y Gemini Texto). Suite de pruebas 100% verde (134/134). Build 280 (v1.0.2) compilado y desplegado con éxito en Firebase Hosting.
 
 ## Decisiones Técnicas y de Negocio Recientes
 - **Percepción Local vs Interpretación Nube:** Document Scanner y ML Kit Text Recognition corren on-device. Gemini Texto procesa JSON a partir del OCR. Fallback automático a Gemini Visión ante baja calidad o discrepancia >15%.
@@ -16,6 +16,7 @@
 ## Errores y Fricciones a Evitar
 - No tocar `android/` localmente (CI regenera con `flutter create`).
 - En CI, `curl` para logs devuelve 403; los fallos de test se leen en `test_results.txt` tras `git pull --rebase`.
+- En R8 ProGuard, añadir `-dontwarn` para alfabetos no usados (`chinese`, `devanagari`, `japanese`, `korean`) de `google_mlkit_text_recognition`.
 - En widget tests con E/S o DB asíncrona real, usar `tester.runAsync` para permitir que el loop de eventos complete tareas antes de aserciones.
 - En pruebas unitarias headless, inyectar fakes para servicios con plugins de plataforma (`LocalOcrService`) para evitar bloqueos del canal nativo.
 - Prohibido `>` en PowerShell; usar siempre tubería `... | Out-File -Encoding utf8`.
