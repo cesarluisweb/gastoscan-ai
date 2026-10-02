@@ -52,6 +52,9 @@ dependencies:
   package_info_plus: ^10.2.1
   url_launcher: ^6.3.0
 
+  # Conectividad de Red
+  connectivity_plus: ^6.1.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

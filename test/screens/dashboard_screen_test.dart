@@ -57,7 +57,7 @@ void main() {
       );
     }
 
-    testWidgets('displays yellow processing banner when queue has pending items', (tester) async {
+    testWidgets('does not show local processing banner in DashboardScreen (delegated to GlobalScanQueueBanner)', (tester) async {
       scanQueueProvider.setPendingItems([
         {'id': 1, 'image_path': '/img/factura1.jpg'},
         {'id': 2, 'image_path': '/img/factura2.jpg'},
@@ -67,32 +67,7 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pump();
 
-      // Verify yellow processing banner is visible
-      expect(find.byKey(const Key('processing_queue_banner')), findsOneWidget);
-      expect(find.textContaining('Procesando 2 facturas en cola...'), findsOneWidget);
-      expect(find.text('Extrayendo datos en segundo plano'), findsOneWidget);
-    });
-
-    testWidgets('displays single item text properly in processing banner', (tester) async {
-      scanQueueProvider.setPendingItems([
-        {'id': 1, 'image_path': '/img/factura1.jpg'},
-      ]);
-      scanQueueProvider.setProcessing(true);
-
-      await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pump();
-
-      expect(find.byKey(const Key('processing_queue_banner')), findsOneWidget);
-      expect(find.textContaining('Procesando 1 factura en cola...'), findsOneWidget);
-    });
-
-    testWidgets('hides processing banner when queue is empty and not processing', (tester) async {
-      scanQueueProvider.setPendingItems([]);
-      scanQueueProvider.setProcessing(false);
-
-      await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pump();
-
+      // Confirma que DashboardScreen no duplica el banner
       expect(find.byKey(const Key('processing_queue_banner')), findsNothing);
     });
 

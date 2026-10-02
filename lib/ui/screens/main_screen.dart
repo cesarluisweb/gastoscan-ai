@@ -17,6 +17,7 @@ import 'chat_screen.dart';
 import '../../data/models/item_gasto_model.dart';
 import '../../providers/settings_provider.dart';
 import '../widgets/voice_expense_sheet.dart';
+import '../widgets/global_scan_queue_banner.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({Key? key}) : super(key: key);
@@ -99,16 +100,30 @@ class _FadeIndexedStackState extends State<_FadeIndexedStack> with SingleTickerP
   }
 }
 
-class _MainScreenState extends State<MainScreen> {
+class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   int _currentIndex = 0;
   final GlobalKey<MoreScreenState> _moreScreenKey = GlobalKey<MoreScreenState>();
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<GastoProvider>(context, listen: false).sincronizarConFirestore();
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      Provider.of<ScanQueueProvider>(context, listen: false).resumeQueueWhenOnline();
+    }
   }
 
   // 4 pantallas principales
@@ -292,129 +307,8 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-  Widget _buildGlobalScanBanner(BuildContext context, ScanQueueProvider scanQueue) {
-    if (scanQueue.readyItems.isNotEmpty) {
-      final count = scanQueue.readyItems.length;
-      final isProcessingMore = scanQueue.isProcessing || scanQueue.pendingCount > 0;
-      final String label;
-      if (isProcessingMore) {
-        label = count == 1
-            ? '1 factura lista para revisar (${scanQueue.pendingCount} en cola)'
-            : '$count facturas listas para revisar (${scanQueue.pendingCount} en cola)';
-      } else {
-        label = count == 1
-            ? '1 factura lista para revisar. Toca aquí.'
-            : '$count facturas listas para revisar. Toca aquí.';
-      }
-
-      return Positioned(
-        top: MediaQuery.of(context).padding.top + 8,
-        left: 16,
-        right: 16,
-        child: Material(
-          elevation: 4,
-          borderRadius: BorderRadius.circular(12),
-          color: AppColors.primary,
-          child: InkWell(
-            onTap: () {
-              if (scanQueue.readyItems.isNotEmpty) {
-                final item = scanQueue.readyItems.first;
-                final data = jsonDecode(item['extracted_data']);
-                final result = GeminiExtractionResult.fromJson(data);
-                final file = File(item['image_path']);
-
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ReviewExpenseScreen(
-                      imageFile: file.existsSync() ? file : null,
-                      extractedData: result,
-                      queueItemId: item['id'],
-                    ),
-                  ),
-                ).then((_) {
-                  scanQueue.loadReadyItems();
-                });
-              }
-            },
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                children: [
-                  const Icon(Icons.receipt_long, color: AppColors.textPrimary),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      label,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                  const Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.textPrimary),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-    } else if (scanQueue.isProcessing || scanQueue.pendingItems.isNotEmpty) {
-      final count = scanQueue.pendingCount > 0 ? scanQueue.pendingCount : 1;
-      final label = count == 1
-          ? 'Analizando imagen con IA...'
-          : 'Analizando $count imágenes con IA...';
-
-      return Positioned(
-        top: MediaQuery.of(context).padding.top + 8,
-        left: 16,
-        right: 16,
-        child: Material(
-          elevation: 3,
-          borderRadius: BorderRadius.circular(12),
-          color: AppColors.card,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.border),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: Row(
-              children: [
-                const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryDark),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-    return const SizedBox.shrink();
-  }
-
   @override
   Widget build(BuildContext context) {
-    final scanQueue = Provider.of<ScanQueueProvider>(context);
-
     return Scaffold(
       body: Stack(
         children: [
@@ -422,7 +316,7 @@ class _MainScreenState extends State<MainScreen> {
             index: _currentIndex,
             children: _pages,
           ),
-          _buildGlobalScanBanner(context, scanQueue),
+          const GlobalScanQueueBanner(),
         ],
       ),
       floatingActionButton: FloatingActionButton(

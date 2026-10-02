@@ -22,8 +22,7 @@ Este documento centraliza las ideas y mejoras pendientes, ordenadas estratégica
 
 ## Fase 4: Asistente IA Proactivo y UX Avanzada (Completada ✅)
 *Darle superpoderes a la app.*
-- **Ingreso de gastos conversacional (Function Calling):** Gemini puede interpretar un texto o audio y ejecutar comandos en la base de datos para guardar gastos manualmente.
-- **Cola Offline de Escaneo:** Si no hay internet, la factura se guarda en cola y se procesa sola cuando vuelve la conexión, notificando al usuario.
+- ~~**Cola Offline de Escaneo y UX Unificada:** (Completada ✅)~~ Persistencia temprana local (SQLite), banner global reactivo único sin duplicidad visual, mensajes empáticos ("Guardada sin conexión" en lugar de errores falsos de servidor), auto-reanudación transparente mediante `connectivity_plus` y observador del ciclo de vida de la app (`AppLifecycleState.resumed`).
 
 ## Fase 5: Marketing y Lanzamiento (En Progreso 🔄)
 *El paso para empezar a captar usuarios reales en Venezuela.*

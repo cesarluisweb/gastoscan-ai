@@ -2,26 +2,23 @@
 > Regla de oro: Mantener en máximo ~50 líneas. Lo permanente se gradúa a GEMINI.md.
 
 ## Estado Actual Inmediato
-- **Rama:** `main` (limpia, sincronizada con remoto).
-- **Fase activa:** Fase 7 (Arquitectura de Producción) y Fase 5 (Lanzamiento).
-- **Últimos hitos:** Sistema Híbrido de Document Scanner, OCR Local Bundled y Búsqueda FTS5 (SQLite v14, persistencia temprana en scan_queue, fallback adaptativo semántico y Gemini Texto). Suite de pruebas 100% verde (134/134). Build 280 (v1.0.2) compilado y desplegado con éxito en Firebase Hosting.
+- **Rama:** `main`.
+- **Fase activa:** Fase 7 (Arquitectura de Producción), Fase 4 (UX Cola Offline) y Fase 5 (Lanzamiento).
+- **Últimos hitos:** Rediseño integral de la UX de la cola de escaneo offline. Banner único global (`GlobalScanQueueBanner`) en `MainScreen` con eliminación de duplicidad en `DashboardScreen`. Estados empáticos ("Guardada sin conexión") sin quemar reintentos en SQLite por desconexión. Auto-reanudación transparente mediante `connectivity_plus` y observador de ciclo de vida (`AppLifecycleState.resumed`).
 
 ## Decisiones Técnicas y de Negocio Recientes
-- **Percepción Local vs Interpretación Nube:** Document Scanner y ML Kit Text Recognition corren on-device. Gemini Texto procesa JSON a partir del OCR. Fallback automático a Gemini Visión ante baja calidad o discrepancia >15%.
-- **Persistencia Temprana:** Captura -> Recorte -> OCR -> SQLite (`scan_queue`) -> Red. Si se corta el internet, el texto ya está guardado.
+- **Banner Único Global:** Desacoplado en `MainScreen` flotante superior; eliminado del cuerpo de `DashboardScreen` para evitar contradicciones visuales.
+- **Diferenciación de Errores de Red:** Desconexiones (`SocketException`, `unavailable`) no incrementan `attemptCount` en la cola y activan estado `isWaitingForConnection` con mensaje tranquilizador.
+- **Aislamiento en Tests:** `ConnectivityService` detecta entorno de test automáticamente para evitar llamadas a canales nativos sin mocks.
 - **Invariante FTS5:** Búsqueda profunda en facturas es una optimización no crítica; si el motor del teléfono carece de FTS5, se degrada a `LIKE`.
-- **Meta de Ahorro:** Presupuesto General - Meta Ahorro = Límite para Gastar. Categorías validan contra el límite. Cero fricción contable.
 - **Monetización:** Anuncios intersticiales únicamente tras guardar factura (transición natural); nunca al abrir ni en captura de fotos.
 
 ## Errores y Fricciones a Evitar
 - No tocar `android/` localmente (CI regenera con `flutter create`).
 - En CI, `curl` para logs devuelve 403; los fallos de test se leen en `test_results.txt` tras `git pull --rebase`.
 - En R8 ProGuard, añadir `-dontwarn` para alfabetos no usados (`chinese`, `devanagari`, `japanese`, `korean`) de `google_mlkit_text_recognition`.
-- En widget tests con E/S o DB asíncrona real, usar `tester.runAsync` para permitir que el loop de eventos complete tareas antes de aserciones.
-- En pruebas unitarias headless, inyectar fakes para servicios con plugins de plataforma (`LocalOcrService`) para evitar bloqueos del canal nativo.
 - Prohibido `>` en PowerShell; usar siempre tubería `... | Out-File -Encoding utf8`.
 - Prohibido caer en bucles de `view_file` sobre el mismo bloque; tras 2 lecturas, pasar directamente a editar o ejecutar.
 
 ## Próximo Paso Inmediato
-- Preparación del lanzamiento en Google Play Console (20 testers por 14 días) y seguimiento de métricas iniciales.
-
+- Verificación de CI (compilación y suite de pruebas) tras push y validación en vivo del APK.
