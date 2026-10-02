@@ -14,263 +14,14 @@
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests getAllPresupuestosCategorias returns all configured category budgets
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests insertCategoria and updateCategoria work correctly
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests deleteCategoria removes the category
-::endgroup::
-::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart (failed)
-Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart":
-Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: lib/ui/screens/dashboard_screen.dart:133:19: Error: Can't find ']' to match '['.
-        children: [
-                  ^
-lib/ui/screens/dashboard_screen.dart:132:19: Error: Can't find ')' to match '('.
-      body: Column(
-                  ^
-lib/ui/screens/dashboard_screen.dart:78:20: Error: Can't find ')' to match '('.
-    return Scaffold(
-                   ^
-lib/ui/screens/analysis_screen.dart:43:19: Error: Can't find ']' to match '['.
-        children: [
-                  ^
-lib/ui/screens/analysis_screen.dart:42:19: Error: Can't find ')' to match '('.
-      body: Column(
-                  ^
-lib/ui/screens/analysis_screen.dart:28:20: Error: Can't find ')' to match '('.
-    return Scaffold(
-                   ^
-lib/ui/screens/dashboard_screen.dart:502:5: Error: Expected ';' after this.
-    ),
-    ^
-lib/ui/screens/dashboard_screen.dart:502:6: Error: Expected an identifier, but got ','.
-Try inserting an identifier before ','.
-    ),
-     ^
-lib/ui/screens/dashboard_screen.dart:502:6: Error: Unexpected token ';'.
-    ),
-     ^
-lib/ui/screens/dashboard_screen.dart:503:3: Error: Expected an identifier, but got ')'.
-Try inserting an identifier before ')'.
-  ),
-  ^
-lib/ui/screens/dashboard_screen.dart:502:6: Error: Expected ';' after this.
-    ),
-     ^
-lib/ui/screens/dashboard_screen.dart:503:3: Error: Unexpected token ';'.
-  ),
-  ^
-lib/ui/screens/dashboard_screen.dart:503:4: Error: Expected an identifier, but got ','.
-Try inserting an identifier before ','.
-  ),
-   ^
-lib/ui/screens/dashboard_screen.dart:503:3: Error: Expected ';' after this.
-  ),
-  ^
-lib/ui/screens/dashboard_screen.dart:503:4: Error: Unexpected token ';'.
-  ),
-   ^
-lib/ui/screens/dashboard_screen.dart:504:1: Error: Expected an identifier, but got ']'.
-Try inserting an identifier before ']'.
-],
-^
-lib/ui/screens/dashboard_screen.dart:503:4: Error: Expected ';' after this.
-  ),
-   ^
-lib/ui/screens/dashboard_screen.dart:504:1: Error: Unexpected token ';'.
-],
-^
-lib/ui/screens/dashboard_screen.dart:504:2: Error: Expected an identifier, but got ','.
-Try inserting an identifier before ','.
-],
- ^
-lib/ui/screens/dashboard_screen.dart:504:1: Error: Expected ';' after this.
-],
-^
-lib/ui/screens/dashboard_screen.dart:504:2: Error: Unexpected token ';'.
-],
- ^
-lib/ui/screens/dashboard_screen.dart:505:1: Error: Expected an identifier, but got ')'.
-Try inserting an identifier before ')'.
-),
-^
-lib/ui/screens/dashboard_screen.dart:504:2: Error: Expected ';' after this.
-],
- ^
-lib/ui/screens/dashboard_screen.dart:505:1: Error: Unexpected token ';'.
-),
-^
-lib/ui/screens/dashboard_screen.dart:505:2: Error: Expected an identifier, but got ','.
-Try inserting an identifier before ','.
-),
- ^
-lib/ui/screens/dashboard_screen.dart:505:1: Error: Expected ';' after this.
-),
-^
-lib/ui/screens/dashboard_screen.dart:505:2: Error: Unexpected token ';'.
-),
- ^
-lib/ui/screens/dashboard_screen.dart:506:1: Error: Expected an identifier, but got ')'.
-Try inserting an identifier before ')'.
-);
-^
-lib/ui/screens/dashboard_screen.dart:505:2: Error: Expected ';' after this.
-),
- ^
-lib/ui/screens/dashboard_screen.dart:506:1: Error: Unexpected token ';'.
-);
-^
-lib/ui/screens/analysis_screen.dart:410:5: Error: Expected ';' after this.
-    ),
-    ^
-lib/ui/screens/analysis_screen.dart:410:6: Error: Expected an identifier, but got ','.
-Try inserting an identifier before ','.
-    ),
-     ^
-lib/ui/screens/analysis_screen.dart:410:6: Error: Unexpected token ';'.
-    ),
-     ^
-lib/ui/screens/analysis_screen.dart:411:3: Error: Expected an identifier, but got ']'.
-Try inserting an identifier before ']'.
-  ],
-  ^
-lib/ui/screens/analysis_screen.dart:410:6: Error: Expected ';' after this.
-    ),
-     ^
-lib/ui/screens/analysis_screen.dart:411:3: Error: Unexpected token ';'.
-  ],
-  ^
-lib/ui/screens/analysis_screen.dart:411:4: Error: Expected an identifier, but got ','.
-Try inserting an identifier before ','.
-  ],
-   ^
-lib/ui/screens/analysis_screen.dart:411:3: Error: Expected ';' after this.
-  ],
-  ^
-lib/ui/screens/analysis_screen.dart:411:4: Error: Unexpected token ';'.
-  ],
-   ^
-lib/ui/screens/analysis_screen.dart:412:1: Error: Expected an identifier, but got ')'.
-Try inserting an identifier before ')'.
-),
-^
-lib/ui/screens/analysis_screen.dart:411:4: Error: Expected ';' after this.
-  ],
-   ^
-lib/ui/screens/analysis_screen.dart:412:1: Error: Unexpected token ';'.
-),
-^
-lib/ui/screens/analysis_screen.dart:412:2: Error: Expected an identifier, but got ','.
-Try inserting an identifier before ','.
-),
- ^
-lib/ui/screens/analysis_screen.dart:412:1: Error: Expected ';' after this.
-),
-^
-lib/ui/screens/analysis_screen.dart:412:2: Error: Unexpected token ';'.
-),
- ^
-lib/ui/screens/analysis_screen.dart:413:1: Error: Expected an identifier, but got ')'.
-Try inserting an identifier before ')'.
-);
-^
-lib/ui/screens/analysis_screen.dart:412:2: Error: Expected ';' after this.
-),
- ^
-lib/ui/screens/analysis_screen.dart:413:1: Error: Unexpected token ';'.
-);
-^
-.
-
-::endgroup::
-::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart (failed)
-Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart":
-Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: lib/ui/screens/dashboard_screen.dart:133:19: Error: Can't find ']' to match '['.
-        children: [
-                  ^
-lib/ui/screens/dashboard_screen.dart:132:19: Error: Can't find ')' to match '('.
-      body: Column(
-                  ^
-lib/ui/screens/dashboard_screen.dart:78:20: Error: Can't find ')' to match '('.
-    return Scaffold(
-                   ^
-lib/ui/screens/dashboard_screen.dart:502:5: Error: Expected ';' after this.
-    ),
-    ^
-lib/ui/screens/dashboard_screen.dart:502:6: Error: Expected an identifier, but got ','.
-Try inserting an identifier before ','.
-    ),
-     ^
-lib/ui/screens/dashboard_screen.dart:502:6: Error: Unexpected token ';'.
-    ),
-     ^
-lib/ui/screens/dashboard_screen.dart:503:3: Error: Expected an identifier, but got ')'.
-Try inserting an identifier before ')'.
-  ),
-  ^
-lib/ui/screens/dashboard_screen.dart:502:6: Error: Expected ';' after this.
-    ),
-     ^
-lib/ui/screens/dashboard_screen.dart:503:3: Error: Unexpected token ';'.
-  ),
-  ^
-lib/ui/screens/dashboard_screen.dart:503:4: Error: Expected an identifier, but got ','.
-Try inserting an identifier before ','.
-  ),
-   ^
-lib/ui/screens/dashboard_screen.dart:503:3: Error: Expected ';' after this.
-  ),
-  ^
-lib/ui/screens/dashboard_screen.dart:503:4: Error: Unexpected token ';'.
-  ),
-   ^
-lib/ui/screens/dashboard_screen.dart:504:1: Error: Expected an identifier, but got ']'.
-Try inserting an identifier before ']'.
-],
-^
-lib/ui/screens/dashboard_screen.dart:503:4: Error: Expected ';' after this.
-  ),
-   ^
-lib/ui/screens/dashboard_screen.dart:504:1: Error: Unexpected token ';'.
-],
-^
-lib/ui/screens/dashboard_screen.dart:504:2: Error: Expected an identifier, but got ','.
-Try inserting an identifier before ','.
-],
- ^
-lib/ui/screens/dashboard_screen.dart:504:1: Error: Expected ';' after this.
-],
-^
-lib/ui/screens/dashboard_screen.dart:504:2: Error: Unexpected token ';'.
-],
- ^
-lib/ui/screens/dashboard_screen.dart:505:1: Error: Expected an identifier, but got ')'.
-Try inserting an identifier before ')'.
-),
-^
-lib/ui/screens/dashboard_screen.dart:504:2: Error: Expected ';' after this.
-],
- ^
-lib/ui/screens/dashboard_screen.dart:505:1: Error: Unexpected token ';'.
-),
-^
-lib/ui/screens/dashboard_screen.dart:505:2: Error: Expected an identifier, but got ','.
-Try inserting an identifier before ','.
-),
- ^
-lib/ui/screens/dashboard_screen.dart:505:1: Error: Expected ';' after this.
-),
-^
-lib/ui/screens/dashboard_screen.dart:505:2: Error: Unexpected token ';'.
-),
- ^
-lib/ui/screens/dashboard_screen.dart:506:1: Error: Expected an identifier, but got ')'.
-Try inserting an identifier before ')'.
-);
-^
-lib/ui/screens/dashboard_screen.dart:505:2: Error: Expected ';' after this.
-),
- ^
-lib/ui/screens/dashboard_screen.dart:506:1: Error: Unexpected token ';'.
-);
-^
-.
-
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests renders 4 navigation destinations and center FAB
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests switching tabs changes current active screen
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping center FAB opens bottom sheet with 4 add options
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping AI chat button on Inicio navigates to Chat keeping bottom navigation and back returns to Inicio
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping Asistente IA in Mas and pressing back returns to Mas hub
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests does not show local processing banner in DashboardScreen (delegated to GlobalScanQueueBanner)
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests displays ready queue item card when items are ready for review
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests displays "Por revisar" badge when pending item has zero total
 ::endgroup::
 ::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests renders all hub sections in main view (failed)
 ══╡ EXCEPTION CAUGHT BY WIDGETS LIBRARY ╞═══════════════════════════════════════════════════════════
@@ -458,11 +209,11 @@ This is considered an error condition because it indicates that there is content
 seen. If the content is legitimately bigger than the available space, consider clipping it with a
 ClipRect widget before putting it in the flex, or using a scrollable container rather than a Flex,
 like a ListView.
-The specific RenderFlex in question is: RenderFlex#a3a95 relayoutBoundary=up1 OVERFLOWING:
+The specific RenderFlex in question is: RenderFlex#18ac6 relayoutBoundary=up1 OVERFLOWING:
   needs compositing
-  creator: Column ← KeyedSubtree-[GlobalKey#c67b2] ← _BodyBuilder ← MediaQuery ←
+  creator: Column ← KeyedSubtree-[GlobalKey#1f919] ← _BodyBuilder ← MediaQuery ←
     LayoutId-[<_ScaffoldSlot.body>] ← CustomMultiChildLayout ← _ActionsScope ← Actions ← Builder ←
-    DefaultTextStyle ← AnimatedDefaultTextStyle ← _InkFeatures-[GlobalKey#40953 ink renderer] ← ⋯
+    DefaultTextStyle ← AnimatedDefaultTextStyle ← _InkFeatures-[GlobalKey#7f5f2 ink renderer] ← ⋯
   parentData: offset=Offset(0.0, 56.0); id=_ScaffoldSlot.body (can use size)
   constraints: BoxConstraints(0.0<=w<=1080.0, 0.0<=h<=3944.0)
   size: Size(1080.0, 3944.0)
@@ -690,11 +441,11 @@ This is considered an error condition because it indicates that there is content
 seen. If the content is legitimately bigger than the available space, consider clipping it with a
 ClipRect widget before putting it in the flex, or using a scrollable container rather than a Flex,
 like a ListView.
-The specific RenderFlex in question is: RenderFlex#12e2a relayoutBoundary=up1 OVERFLOWING:
+The specific RenderFlex in question is: RenderFlex#08b43 relayoutBoundary=up1 OVERFLOWING:
   needs compositing
-  creator: Column ← KeyedSubtree-[GlobalKey#43d95] ← _BodyBuilder ← MediaQuery ←
+  creator: Column ← KeyedSubtree-[GlobalKey#d08cc] ← _BodyBuilder ← MediaQuery ←
     LayoutId-[<_ScaffoldSlot.body>] ← CustomMultiChildLayout ← _ActionsScope ← Actions ← Builder ←
-    DefaultTextStyle ← AnimatedDefaultTextStyle ← _InkFeatures-[GlobalKey#75920 ink renderer] ← ⋯
+    DefaultTextStyle ← AnimatedDefaultTextStyle ← _InkFeatures-[GlobalKey#4b900 ink renderer] ← ⋯
   parentData: offset=Offset(0.0, 56.0); id=_ScaffoldSlot.body (can use size)
   constraints: BoxConstraints(0.0<=w<=1080.0, 0.0<=h<=3944.0)
   size: Size(1080.0, 3944.0)
@@ -922,11 +673,11 @@ This is considered an error condition because it indicates that there is content
 seen. If the content is legitimately bigger than the available space, consider clipping it with a
 ClipRect widget before putting it in the flex, or using a scrollable container rather than a Flex,
 like a ListView.
-The specific RenderFlex in question is: RenderFlex#c5c1a relayoutBoundary=up1 OVERFLOWING:
+The specific RenderFlex in question is: RenderFlex#62bb7 relayoutBoundary=up1 OVERFLOWING:
   needs compositing
-  creator: Column ← KeyedSubtree-[GlobalKey#a181c] ← _BodyBuilder ← MediaQuery ←
+  creator: Column ← KeyedSubtree-[GlobalKey#1b377] ← _BodyBuilder ← MediaQuery ←
     LayoutId-[<_ScaffoldSlot.body>] ← CustomMultiChildLayout ← _ActionsScope ← Actions ← Builder ←
-    DefaultTextStyle ← AnimatedDefaultTextStyle ← _InkFeatures-[GlobalKey#d3582 ink renderer] ← ⋯
+    DefaultTextStyle ← AnimatedDefaultTextStyle ← _InkFeatures-[GlobalKey#82c2f ink renderer] ← ⋯
   parentData: offset=Offset(0.0, 56.0); id=_ScaffoldSlot.body (can use size)
   constraints: BoxConstraints(0.0<=w<=1080.0, 0.0<=h<=3944.0)
   size: Size(1080.0, 3944.0)
@@ -1154,11 +905,11 @@ This is considered an error condition because it indicates that there is content
 seen. If the content is legitimately bigger than the available space, consider clipping it with a
 ClipRect widget before putting it in the flex, or using a scrollable container rather than a Flex,
 like a ListView.
-The specific RenderFlex in question is: RenderFlex#9b673 relayoutBoundary=up1 OVERFLOWING:
+The specific RenderFlex in question is: RenderFlex#5a19d relayoutBoundary=up1 OVERFLOWING:
   needs compositing
-  creator: Column ← KeyedSubtree-[GlobalKey#9a0ca] ← _BodyBuilder ← MediaQuery ←
+  creator: Column ← KeyedSubtree-[GlobalKey#bf258] ← _BodyBuilder ← MediaQuery ←
     LayoutId-[<_ScaffoldSlot.body>] ← CustomMultiChildLayout ← _ActionsScope ← Actions ← Builder ←
-    DefaultTextStyle ← AnimatedDefaultTextStyle ← _InkFeatures-[GlobalKey#04546 ink renderer] ← ⋯
+    DefaultTextStyle ← AnimatedDefaultTextStyle ← _InkFeatures-[GlobalKey#af66c ink renderer] ← ⋯
   parentData: offset=Offset(0.0, 56.0); id=_ScaffoldSlot.body (can use size)
   constraints: BoxConstraints(0.0<=w<=1080.0, 0.0<=h<=3944.0)
   size: Size(1080.0, 3944.0)
@@ -1179,79 +930,15 @@ Test failed. See exception logs above.
 The test description was: calling openChat navigates directly to chat view
 
 ::endgroup::
-::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart (failed)
-Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart":
-Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: lib/ui/screens/analysis_screen.dart:43:19: Error: Can't find ']' to match '['.
-        children: [
-                  ^
-lib/ui/screens/analysis_screen.dart:42:19: Error: Can't find ')' to match '('.
-      body: Column(
-                  ^
-lib/ui/screens/analysis_screen.dart:28:20: Error: Can't find ')' to match '('.
-    return Scaffold(
-                   ^
-lib/ui/screens/analysis_screen.dart:410:5: Error: Expected ';' after this.
-    ),
-    ^
-lib/ui/screens/analysis_screen.dart:410:6: Error: Expected an identifier, but got ','.
-Try inserting an identifier before ','.
-    ),
-     ^
-lib/ui/screens/analysis_screen.dart:410:6: Error: Unexpected token ';'.
-    ),
-     ^
-lib/ui/screens/analysis_screen.dart:411:3: Error: Expected an identifier, but got ']'.
-Try inserting an identifier before ']'.
-  ],
-  ^
-lib/ui/screens/analysis_screen.dart:410:6: Error: Expected ';' after this.
-    ),
-     ^
-lib/ui/screens/analysis_screen.dart:411:3: Error: Unexpected token ';'.
-  ],
-  ^
-lib/ui/screens/analysis_screen.dart:411:4: Error: Expected an identifier, but got ','.
-Try inserting an identifier before ','.
-  ],
-   ^
-lib/ui/screens/analysis_screen.dart:411:3: Error: Expected ';' after this.
-  ],
-  ^
-lib/ui/screens/analysis_screen.dart:411:4: Error: Unexpected token ';'.
-  ],
-   ^
-lib/ui/screens/analysis_screen.dart:412:1: Error: Expected an identifier, but got ')'.
-Try inserting an identifier before ')'.
-),
-^
-lib/ui/screens/analysis_screen.dart:411:4: Error: Expected ';' after this.
-  ],
-   ^
-lib/ui/screens/analysis_screen.dart:412:1: Error: Unexpected token ';'.
-),
-^
-lib/ui/screens/analysis_screen.dart:412:2: Error: Expected an identifier, but got ','.
-Try inserting an identifier before ','.
-),
- ^
-lib/ui/screens/analysis_screen.dart:412:1: Error: Expected ';' after this.
-),
-^
-lib/ui/screens/analysis_screen.dart:412:2: Error: Unexpected token ';'.
-),
- ^
-lib/ui/screens/analysis_screen.dart:413:1: Error: Expected an identifier, but got ')'.
-Try inserting an identifier before ')'.
-);
-^
-lib/ui/screens/analysis_screen.dart:412:2: Error: Expected ';' after this.
-),
- ^
-lib/ui/screens/analysis_screen.dart:413:1: Error: Unexpected token ';'.
-);
-^
-.
-
+::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) R3 Acceptance Criteria: Asignar $50 a Alimentación, y registrar un gasto de $60 en Alimentación hace que se dibuje un indicador visual de exceso (color rojo) en la UI de esa categoría
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Category within budget does NOT render the red excess alert
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Initial empty state displays analysis empty state and allows adding budget
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Editing budget to amount greater than expense clears red excess alert
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Validation: categories exceeding general budget shows alert and blocks save
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) General budget exceeded shows general excess alert in AnalysisScreen
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) AnalysisScreen month selector opens picker dialog and changes month
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) SummaryCard shows Presupuesto mensual and edit button opens budget bottom sheet
 ::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart: ScanScreen Multi-Image Selection Tests multi-image selection enqueues all images and pops back to Dashboard
 [ScanScreen] pickMultiImage returned 3 files
@@ -1289,15 +976,15 @@ You must call `databaseFactory = databaseFactoryFfi;` before using global openDa
 ::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests 7-day scheduling function defaults to Duration(days: 7)
 NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@750310200' has not been initialized.
+NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@844310200' has not been initialized.
 ::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests Custom duration is respected when specified
 NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@750310200' has not been initialized.
+NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@844310200' has not been initialized.
 ::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests cancelInactivityReminder cancels and clears scheduled state
 NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@750310200' has not been initialized.
+NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@844310200' has not been initialized.
 NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::endgroup::
 ::group::✅ Passing tests
@@ -1305,7 +992,7 @@ NotificationService: Excepción al cancelar recordatorio: MissingPluginException
 ::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests recordActivityAndReschedule updates activity time and reschedules for 7 days
 NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@750310200' has not been initialized.
+NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@844310200' has not been initialized.
 ::endgroup::
 ::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests Channel configuration and constants are correctly defined
@@ -1370,8 +1057,8 @@ NotificationService: Excepción al cancelar recordatorio de pendientes: MissingP
 ::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests reconnection stream triggers processing of pending offline items
-Reconexión detectada: reanudando procesamiento de cola de escaneo.
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+Reconexión detectada: reanudando procesamiento de cola de escaneo.
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::endgroup::
@@ -1416,4 +1103,4 @@ NotificationService: Excepción al cancelar recordatorio de pendientes: MissingP
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays compromised savings goal alert when spent exceeds spending limit
 ::endgroup::
 
-::error::123 tests passed, 7 failed.
+::error::139 tests passed, 4 failed.
