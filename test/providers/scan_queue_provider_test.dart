@@ -189,6 +189,45 @@ void main() {
       expect(provider.readyItems.length, equals(1));
       expect(notifications, equals(3));
     });
+
+    test('offline enqueue marks queue as waiting for connection without crashing', () async {
+      final offlineConn = ConnectivityService(testConnected: false);
+      final offlineProvider = ScanQueueProvider(
+        dbHelper: fakeDb,
+        autoProcess: true,
+        connectivityService: offlineConn,
+      );
+
+      await offlineProvider.enqueue('/path/to/offline_receipt.jpg');
+
+      expect(offlineProvider.pendingCount, equals(1));
+      expect(offlineProvider.isWaitingForConnection, isTrue);
+      expect(offlineProvider.lastError, contains('Guardada sin conexión'));
+      expect(offlineProvider.isProcessing, isFalse);
+    });
+
+    test('reconnection stream triggers processing of pending offline items', () async {
+      final streamController = StreamController<bool>.broadcast();
+      final dynamicConn = ConnectivityService(
+        testConnected: false,
+        testController: streamController,
+      );
+      final dynamicProvider = ScanQueueProvider(
+        dbHelper: fakeDb,
+        autoProcess: true,
+        connectivityService: dynamicConn,
+      );
+
+      await dynamicProvider.enqueue('/path/to/offline_receipt2.jpg');
+      expect(dynamicProvider.isWaitingForConnection, isTrue);
+
+      // Simular reconexión de red
+      streamController.add(true);
+      await Future.delayed(const Duration(milliseconds: 20));
+
+      expect(dynamicProvider.isWaitingForConnection, isFalse);
+      await streamController.close();
+    });
   });
 
   group('GeminiExtractionResult.listFromJson Tests', () {
@@ -266,45 +305,6 @@ void main() {
       final items = results.first.items;
       expect(items.any((it) => it.descripcion.contains('Harina de Maiz (E)')), isTrue);
       expect(items.any((it) => it.descripcion.contains('Detergente Liquido (G)')), isTrue);
-    });
-
-    test('offline enqueue marks queue as waiting for connection without crashing', () async {
-      final offlineConn = ConnectivityService(testConnected: false);
-      final offlineProvider = ScanQueueProvider(
-        dbHelper: fakeDb,
-        autoProcess: true,
-        connectivityService: offlineConn,
-      );
-
-      await offlineProvider.enqueue('/path/to/offline_receipt.jpg');
-
-      expect(offlineProvider.pendingCount, equals(1));
-      expect(offlineProvider.isWaitingForConnection, isTrue);
-      expect(offlineProvider.lastError, contains('Guardada sin conexión'));
-      expect(offlineProvider.isProcessing, isFalse);
-    });
-
-    test('reconnection stream triggers processing of pending offline items', () async {
-      final streamController = StreamController<bool>.broadcast();
-      final dynamicConn = ConnectivityService(
-        testConnected: false,
-        testController: streamController,
-      );
-      final dynamicProvider = ScanQueueProvider(
-        dbHelper: fakeDb,
-        autoProcess: true,
-        connectivityService: dynamicConn,
-      );
-
-      await dynamicProvider.enqueue('/path/to/offline_receipt2.jpg');
-      expect(dynamicProvider.isWaitingForConnection, isTrue);
-
-      // Simular reconexión de red
-      streamController.add(true);
-      await Future.delayed(const Duration(milliseconds: 20));
-
-      expect(dynamicProvider.isWaitingForConnection, isFalse);
-      await streamController.close();
     });
   });
 }
