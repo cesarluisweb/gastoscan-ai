@@ -128,7 +128,9 @@ void main() {
 
       // Tap gallery button to trigger multi-selection
       await tester.tap(find.byKey(const Key('gallery_button')));
-      await tester.pump();
+      for (int i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
       await tester.pumpAndSettle();
 
       // Verify that all 3 images were enqueued into ScanQueueProvider
