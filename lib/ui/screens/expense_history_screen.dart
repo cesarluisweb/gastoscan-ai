@@ -11,6 +11,7 @@ import '../../data/models/gasto_model.dart';
 import '../../data/models/gemini_extraction_result.dart';
 import '../widgets/expense_card.dart';
 import '../widgets/pending_expense_card.dart';
+import '../widgets/global_scan_queue_banner.dart';
 import 'review_expense_screen.dart';
 
 class ExpenseHistoryScreen extends StatefulWidget {
@@ -175,6 +176,7 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
       ),
       body: Column(
         children: [
+          const GlobalScanQueueBanner(),
           // Selector de Mes
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

@@ -16,6 +16,7 @@ import '../widgets/expense_card.dart';
 import '../widgets/pending_expense_card.dart';
 import '../widgets/budget_bottom_sheet.dart';
 import '../widgets/ai_insight_card.dart';
+import '../widgets/global_scan_queue_banner.dart';
 import 'scan_screen.dart';
 import 'settings_screen.dart';
 import 'review_expense_screen.dart';
@@ -128,7 +129,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ],
       ),
-      body: RefreshIndicator(
+      body: Column(
+        children: [
+          const GlobalScanQueueBanner(),
+          Expanded(
+            child: RefreshIndicator(
         onRefresh: () async {
           await gastoProvider.sincronizarConFirestore();
           await scanQueue.loadReadyItems();
@@ -494,7 +499,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ],
       ),
-    );
+    ),
+          ),
+        ],
+      );
   }
 
   void _mostrarPickerMes(BuildContext context, GastoProvider gastoProvider) {

@@ -9,6 +9,7 @@ import '../../providers/gasto_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../widgets/category_chart.dart';
 import '../widgets/budget_bottom_sheet.dart';
+import '../widgets/global_scan_queue_banner.dart';
 
 class AnalysisScreen extends StatelessWidget {
   const AnalysisScreen({Key? key}) : super(key: key);
@@ -38,7 +39,11 @@ class AnalysisScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: ListView(
+      body: Column(
+        children: [
+          const GlobalScanQueueBanner(),
+          Expanded(
+            child: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
           // Selector de Mes
@@ -402,7 +407,10 @@ class AnalysisScreen extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ),
+          ),
+        ],
+      );
   }
 
   void _mostrarPickerMes(BuildContext context, GastoProvider gastoProvider) {

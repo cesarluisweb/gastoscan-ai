@@ -340,14 +340,9 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     final scanQueue = Provider.of<ScanQueueProvider>(context);
 
     return Scaffold(
-      body: Stack(
-        children: [
-          _FadeIndexedStack(
-            index: _currentIndex,
-            children: _pages,
-          ),
-          const GlobalScanQueueBanner(),
-        ],
+      body: _FadeIndexedStack(
+        index: _currentIndex,
+        children: _pages,
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddMenu(context),

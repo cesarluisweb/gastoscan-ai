@@ -15,7 +15,8 @@ class GlobalScanQueueBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scanQueue = Provider.of<ScanQueueProvider>(context);
-    final topOffset = MediaQuery.of(context).padding.top + kToolbarHeight + 8;
+
+    Widget content = const SizedBox.shrink();
 
     // 1. Facturas listas para revisar (máxima prioridad)
     if (scanQueue.readyItems.isNotEmpty) {
@@ -24,10 +25,8 @@ class GlobalScanQueueBanner extends StatelessWidget {
           ? 'Factura lista para revisar'
           : '$count facturas listas para revisar';
 
-      return Positioned(
-        top: topOffset,
-        left: 16,
-        right: 16,
+      content = Padding(
+        padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
         child: Material(
           key: const Key('global_scan_ready_banner'),
           elevation: 4,
@@ -81,17 +80,13 @@ class GlobalScanQueueBanner extends StatelessWidget {
           ),
         ),
       );
-    }
-
-    // 2. Procesamiento activo con IA
-    if (scanQueue.isProcessing) {
+    } else if (scanQueue.isProcessing) {
+      // 2. Procesamiento activo con IA
       final count = scanQueue.pendingCount > 0 ? scanQueue.pendingCount : 1;
       final itemText = count == 1 ? 'factura' : 'facturas';
 
-      return Positioned(
-        top: topOffset,
-        left: 16,
-        right: 16,
+      content = Padding(
+        padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
         child: Material(
           key: const Key('global_scan_processing_banner'),
           elevation: 3,
@@ -164,10 +159,8 @@ class GlobalScanQueueBanner extends StatelessWidget {
           ),
         ),
       );
-    }
-
-    // 3. Ítems pendientes cuando no hay proceso activo
-    if (scanQueue.pendingItems.isNotEmpty) {
+    } else if (scanQueue.pendingItems.isNotEmpty) {
+      // 3. Ítems pendientes cuando no hay proceso activo
       final count = scanQueue.pendingCount;
       final itemText = count == 1 ? 'factura' : 'facturas';
       final isOffline = scanQueue.isWaitingForConnection;
@@ -185,10 +178,8 @@ class GlobalScanQueueBanner extends StatelessWidget {
           ? AppColors.textSecondary
           : AppColors.warning;
 
-      return Positioned(
-        top: topOffset,
-        left: 16,
-        right: 16,
+      content = Padding(
+        padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
         child: Material(
           key: isOffline
               ? const Key('global_scan_offline_banner')
@@ -255,6 +246,10 @@ class GlobalScanQueueBanner extends StatelessWidget {
       );
     }
 
-    return const SizedBox.shrink();
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeInOut,
+      child: content,
+    );
   }
 }

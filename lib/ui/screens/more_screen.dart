@@ -12,6 +12,7 @@ import '../../providers/gasto_provider.dart';
 import '../../services/export_service.dart';
 import '../../services/update_service.dart';
 import '../widgets/update_dialog.dart';
+import '../widgets/global_scan_queue_banner.dart';
 import 'shopping_list_screen.dart';
 import 'chat_screen.dart';
 
@@ -246,7 +247,11 @@ class MoreScreenState extends State<MoreScreen> {
         title: const Text('Más'),
         automaticallyImplyLeading: false,
       ),
-      body: ListView(
+      body: Column(
+        children: [
+          const GlobalScanQueueBanner(),
+          Expanded(
+            child: ListView(
         padding: const EdgeInsets.only(left: 16, right: 16, top: 12, bottom: 80),
         children: [
           // Sección de Cuenta y Respaldo en la Nube
@@ -550,7 +555,10 @@ class MoreScreenState extends State<MoreScreen> {
           ),
         ],
       ),
-    );
+    ),
+          ),
+        ],
+      );
   }
 
   Widget _buildAccountSection(BuildContext context) {
