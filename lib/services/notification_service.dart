@@ -1,11 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import '../core/constants/app_constants.dart';
 
 /// Servicio centralizado de notificaciones locales de "Rinde Más".
-/// Administra los recordatorios automáticos de inactividad (R4) tras 3 días
-/// sin registrar gastos o abrir la app.
+/// Administra los recordatorios automáticos de inactividad (R4) tras 7 días
+/// sin registrar gastos o abrir la app, y alertas de facturas pendientes de revisión.
 class NotificationService {
   static NotificationService _instance = NotificationService._internal();
 
@@ -23,11 +25,11 @@ class NotificationService {
   static const String inactivityChannelId = 'inactivity_reminders';
   static const String inactivityChannelName = 'Recordatorios de Inactividad';
   static const String inactivityChannelDesc =
-      'Notificaciones automáticas si no registras gastos en 3 días';
+      'Notificaciones automáticas si no registras gastos en 7 días';
 
-  static const String defaultNotificationTitle = '¡Te extrañamos en Rinde Más!';
+  static const String defaultNotificationTitle = 'Presupuesto al día';
   static const String defaultNotificationBody =
-      'Han pasado 3 días desde tu último registro. ¡No olvides registrar tus facturas!';
+      'Han pasado 7 días sin registrar gastos. Revisa tus comprobantes para mantener tu presupuesto al día.';
 
   // Estado interno para observabilidad y pruebas
   bool _isInitialized = false;
@@ -44,6 +46,12 @@ class NotificationService {
 
   bool _isReminderScheduled = false;
   bool get isReminderScheduled => _isReminderScheduled;
+
+  // Manejo de Deep-linking y Cold Start
+  String? _initialPayload;
+  String? get initialPayload => _initialPayload;
+
+  final ValueNotifier<String?> selectedPayloadNotifier = ValueNotifier<String?>(null);
 
   NotificationService._internal({FlutterLocalNotificationsPlugin? plugin})
       : _notificationsPlugin = plugin ?? FlutterLocalNotificationsPlugin();
@@ -98,9 +106,22 @@ class NotificationService {
         initializationSettings,
         onDidReceiveNotificationResponse: (NotificationResponse response) {
           debugPrint('NotificationService: Notificación pulsada: ${response.payload}');
+          if (response.payload != null && response.payload!.isNotEmpty) {
+            selectedPayloadNotifier.value = response.payload;
+          }
         },
       );
       initialized = result ?? false;
+
+      // Soporte para Cold Start (arranque en frío con app cerrada)
+      final launchDetails = await _notificationsPlugin.getNotificationAppLaunchDetails();
+      if (launchDetails != null &&
+          launchDetails.didNotificationLaunchApp &&
+          launchDetails.notificationResponse?.payload != null) {
+        _initialPayload = launchDetails.notificationResponse!.payload;
+        selectedPayloadNotifier.value = _initialPayload;
+        debugPrint('NotificationService: Cold start desde notificación con payload: $_initialPayload');
+      }
 
       if (requestPermission) {
         await requestPermissions();
@@ -111,6 +132,22 @@ class NotificationService {
 
     _isInitialized = true;
     return initialized;
+  }
+
+  /// Limpia el payload consumido tras navegar.
+  void clearPayload() {
+    _initialPayload = null;
+    selectedPayloadNotifier.value = null;
+  }
+
+  /// Verifica si las notificaciones están habilitadas en las preferencias de usuario.
+  Future<bool> _sonRecordatoriosHabilitados() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool(AppConstants.prefRecordatoriosActivos) ?? true;
+    } catch (_) {
+      return true;
+    }
   }
 
   /// Solicita los permisos necesarios en Android (13+) e iOS.
@@ -152,22 +189,28 @@ class NotificationService {
   }
 
   /// Programa un recordatorio de inactividad a ejecutarse luego de [duration]
-  /// (por defecto 3 días). Cancela siempre cualquier notificación previa antes.
+  /// (por defecto 7 días). Cancela siempre cualquier notificación previa antes.
   Future<void> scheduleInactivityReminder({
-    Duration duration = const Duration(days: 3),
+    Duration duration = const Duration(days: 7),
     String title = defaultNotificationTitle,
     String body = defaultNotificationBody,
   }) async {
     // 1. Cancelar cualquier recordatorio previo
     await cancelInactivityReminder();
 
-    // 2. Calcular la fecha objetivo
+    // 2. Verificar preferencia de usuario
+    final habilitadas = await _sonRecordatoriosHabilitados();
+    if (!habilitadas) {
+      return;
+    }
+
+    // 3. Calcular la fecha objetivo
     final scheduledDate = DateTime.now().add(duration);
     _lastScheduledTime = scheduledDate;
     _lastScheduledDuration = duration;
     _isReminderScheduled = true;
 
-    // 3. Programar la notificación local
+    // 4. Programar la notificación local
     try {
       final scheduledTzDate = tz.TZDateTime.from(scheduledDate, tz.local);
 
@@ -199,6 +242,7 @@ class NotificationService {
         body,
         scheduledTzDate,
         notificationDetails,
+        payload: 'inactivity_reminder',
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
@@ -209,11 +253,15 @@ class NotificationService {
   }
 
   /// Registra la actividad del usuario (ej. abrir la app o guardar un gasto)
-  /// y reinicia la cuenta regresiva del recordatorio a 3 días.
+  /// y reinicia la cuenta regresiva del recordatorio a 7 días.
   Future<void> recordActivityAndReschedule() async {
     _lastActivityTime = DateTime.now();
-    await scheduleInactivityReminder(duration: const Duration(days: 3));
+    await scheduleInactivityReminder(duration: const Duration(days: 7));
   }
+
+  // Estado interno para control de recordatorio de pendientes
+  int? _scheduledPendingCount;
+  DateTime? _scheduledPendingTime;
 
   /// Cancela cualquier recordatorio de facturas pendientes de revisión.
   Future<void> cancelPendingReviewReminder() async {
@@ -222,16 +270,35 @@ class NotificationService {
     } catch (e) {
       debugPrint('NotificationService: Excepción al cancelar recordatorio de pendientes: $e');
     }
+    _scheduledPendingCount = null;
+    _scheduledPendingTime = null;
   }
 
   /// Programa un recordatorio para revisar facturas pendientes.
+  /// Si ya hay una alarma programada para la misma cantidad de facturas y no ha vencido,
+  /// mantiene la hora para evitar posponerla en bucle cada vez que la app consulta la cola.
   Future<void> schedulePendingReviewReminder({
     Duration duration = const Duration(hours: 2),
     int count = 1,
   }) async {
+    final habilitadas = await _sonRecordatoriosHabilitados();
+    if (!habilitadas) {
+      await cancelPendingReviewReminder();
+      return;
+    }
+
+    if (_scheduledPendingCount == count &&
+        _scheduledPendingTime != null &&
+        _scheduledPendingTime!.isAfter(DateTime.now())) {
+      // Ya programado para esta misma cantidad de facturas sin expirar; no reiniciar el reloj
+      return;
+    }
+
     await cancelPendingReviewReminder();
 
     final scheduledDate = DateTime.now().add(duration);
+    _scheduledPendingCount = count;
+    _scheduledPendingTime = scheduledDate;
 
     try {
       final scheduledTzDate = tz.TZDateTime.from(scheduledDate, tz.local);
@@ -256,12 +323,15 @@ class NotificationService {
         iOS: darwinDetails,
       );
 
+      final facturaTexto = count == 1 ? '1 factura esperando' : '$count facturas esperando';
+
       await _notificationsPlugin.zonedSchedule(
         1002,
-        '¡Tienes facturas listas!',
-        'Tienes $count factura(s) esperando revisión para sumarse a este mes.',
+        'Facturas listas para revisar',
+        'Tienes $facturaTexto revisión para sumarse a este mes.',
         scheduledTzDate,
         notificationDetails,
+        payload: 'pending_reviews',
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,

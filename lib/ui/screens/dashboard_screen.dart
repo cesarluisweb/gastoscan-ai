@@ -47,7 +47,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    // Registrar actividad del usuario y reprogramar recordatorio de inactividad a 3 días
+    // Registrar actividad del usuario y reprogramar recordatorio de inactividad a 7 días
     NotificationService.instance.recordActivityAndReschedule();
 
     // Verificación silenciosa de actualización con throttling

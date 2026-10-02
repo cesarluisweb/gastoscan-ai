@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
@@ -105,16 +106,9 @@ class _ScanScreenState extends State<ScanScreen> {
     
     // Add to background queue
     await queueProvider.enqueue(_selectedImage!.path);
+    HapticFeedback.mediumImpact();
     
     if (!mounted) return;
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Analizando imagen con IA en segundo plano...', style: TextStyle(color: Colors.black)),
-        backgroundColor: AppColors.primary,
-        duration: Duration(seconds: 2),
-      ),
-    );
     
     Navigator.pop(context); // Volver al inicio
   }

@@ -1,12 +1,14 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../providers/gasto_provider.dart';
 import '../../providers/scan_queue_provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../data/models/gemini_extraction_result.dart';
+import '../../services/notification_service.dart';
 import 'dashboard_screen.dart';
 import 'expense_history_screen.dart';
 import 'analysis_screen.dart';
@@ -108,13 +110,54 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    NotificationService.instance.selectedPayloadNotifier.addListener(_handleNotificationPayload);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<GastoProvider>(context, listen: false).sincronizarConFirestore();
+      final initial = NotificationService.instance.initialPayload;
+      if (initial != null) {
+        _handleNotificationPayload();
+      }
     });
+  }
+
+  void _handleNotificationPayload() {
+    final payload = NotificationService.instance.selectedPayloadNotifier.value ??
+        NotificationService.instance.initialPayload;
+    if (payload == null || !mounted) return;
+
+    NotificationService.instance.clearPayload();
+
+    if (payload == 'pending_reviews') {
+      final scanQueue = Provider.of<ScanQueueProvider>(context, listen: false);
+      if (scanQueue.readyItems.isNotEmpty) {
+        final item = scanQueue.readyItems.first;
+        try {
+          final data = jsonDecode(item['extracted_data']);
+          final result = GeminiExtractionResult.fromJson(data);
+          final file = File(item['image_path']);
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ReviewExpenseScreen(
+                imageFile: file.existsSync() ? file : null,
+                extractedData: result,
+                queueItemId: item['id'],
+              ),
+            ),
+          ).then((_) {
+            scanQueue.loadReadyItems();
+          });
+        } catch (e) {
+          debugPrint('Error al abrir factura desde notificación: $e');
+        }
+      }
+    }
   }
 
   @override
   void dispose() {
+    NotificationService.instance.selectedPayloadNotifier.removeListener(_handleNotificationPayload);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -230,18 +273,11 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                     if (picked != null && context.mounted) {
                       final scanQueue = Provider.of<ScanQueueProvider>(context, listen: false);
                       await scanQueue.enqueue(picked.path);
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Analizando imagen con IA en segundo plano...', style: TextStyle(color: Colors.black)),
-                            backgroundColor: AppColors.primary,
-                            duration: Duration(seconds: 2),
-                          ),
-                        );
-                      }
+                      HapticFeedback.mediumImpact();
                     }
                   } catch (e) {
                     if (context.mounted) {
+                      ScaffoldMessenger.of(context).clearSnackBars();
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Error al capturar imagen: $e')),
                       );
@@ -266,19 +302,11 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                       final scanQueue = Provider.of<ScanQueueProvider>(context, listen: false);
                       final paths = pickedFiles.map((f) => f.path).toList();
                       await scanQueue.enqueueMultiple(paths);
-                      if (context.mounted) {
-                        final countText = paths.length == 1 ? 'Analizando imagen con IA en segundo plano...' : 'Analizando ${paths.length} imágenes con IA en segundo plano...';
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(countText, style: const TextStyle(color: Colors.black)),
-                            backgroundColor: AppColors.primary,
-                            duration: const Duration(seconds: 2),
-                          ),
-                        );
-                      }
+                      HapticFeedback.mediumImpact();
                     }
                   } catch (e) {
                     if (context.mounted) {
+                      ScaffoldMessenger.of(context).clearSnackBars();
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Error al seleccionar imágenes: $e')),
                       );

@@ -27,7 +27,7 @@ class MockNotificationService extends NotificationService {
 
   @override
   Future<void> scheduleInactivityReminder({
-    Duration duration = const Duration(days: 3),
+    Duration duration = const Duration(days: 7),
     String title = NotificationService.defaultNotificationTitle,
     String body = NotificationService.defaultNotificationBody,
   }) async {
@@ -116,18 +116,18 @@ void main() {
       expect(NotificationService(), isNotNull);
     });
 
-    test('3-day scheduling function defaults to Duration(days: 3)', () async {
+    test('7-day scheduling function defaults to Duration(days: 7)', () async {
       final before = DateTime.now();
       await service.scheduleInactivityReminder();
       final after = DateTime.now();
 
       expect(service.isReminderScheduled, isTrue);
-      expect(service.lastScheduledDuration, equals(const Duration(days: 3)));
+      expect(service.lastScheduledDuration, equals(const Duration(days: 7)));
       expect(service.lastScheduledTime, isNotNull);
 
-      // El tiempo programado debe estar a 3 días a partir de ahora (+/- unos milisegundos de margen)
-      final expectedMin = before.add(const Duration(days: 3));
-      final expectedMax = after.add(const Duration(days: 3));
+      // El tiempo programado debe estar a 7 días a partir de ahora (+/- unos milisegundos de margen)
+      final expectedMin = before.add(const Duration(days: 7));
+      final expectedMax = after.add(const Duration(days: 7));
 
       expect(
         service.lastScheduledTime!.isAfter(expectedMin.subtract(const Duration(seconds: 1))),
@@ -148,7 +148,7 @@ void main() {
     });
 
     test('cancelInactivityReminder cancels and clears scheduled state', () async {
-      await service.scheduleInactivityReminder(duration: const Duration(days: 3));
+      await service.scheduleInactivityReminder(duration: const Duration(days: 7));
       expect(service.isReminderScheduled, isTrue);
       expect(service.lastScheduledTime, isNotNull);
 
@@ -163,14 +163,14 @@ void main() {
       NotificationService.instance = mock;
 
       // Primera programación
-      await mock.scheduleInactivityReminder(duration: const Duration(days: 3));
+      await mock.scheduleInactivityReminder(duration: const Duration(days: 7));
       expect(mock.scheduleCount, equals(1));
       expect(mock.cancelCount, equals(1)); // cancelInactivityReminder se llama dentro de scheduleInactivityReminder
       final firstScheduledTime = mock.lastScheduledTime;
 
       // Simular paso de tiempo y reprogramación
       await Future<void>.delayed(const Duration(milliseconds: 10));
-      await mock.scheduleInactivityReminder(duration: const Duration(days: 3));
+      await mock.scheduleInactivityReminder(duration: const Duration(days: 7));
 
       expect(mock.scheduleCount, equals(2));
       expect(mock.cancelCount, equals(2));
@@ -178,7 +178,7 @@ void main() {
       expect(mock.lastScheduledTime!.isAfter(firstScheduledTime!), isTrue);
     });
 
-    test('recordActivityAndReschedule updates activity time and reschedules for 3 days', () async {
+    test('recordActivityAndReschedule updates activity time and reschedules for 7 days', () async {
       final before = DateTime.now();
       await service.recordActivityAndReschedule();
       final after = DateTime.now();
@@ -194,7 +194,7 @@ void main() {
       );
 
       expect(service.isReminderScheduled, isTrue);
-      expect(service.lastScheduledDuration, equals(const Duration(days: 3)));
+      expect(service.lastScheduledDuration, equals(const Duration(days: 7)));
     });
 
     test('Channel configuration and constants are correctly defined', () {
@@ -203,15 +203,15 @@ void main() {
       expect(NotificationService.inactivityChannelName, equals('Recordatorios de Inactividad'));
       expect(
         NotificationService.inactivityChannelDesc,
-        equals('Notificaciones automáticas si no registras gastos en 3 días'),
+        equals('Notificaciones automáticas si no registras gastos en 7 días'),
       );
       expect(
         NotificationService.defaultNotificationTitle,
-        equals('¡Te extrañamos en Rinde Más!'),
+        equals('Presupuesto al día'),
       );
       expect(
         NotificationService.defaultNotificationBody,
-        equals('Han pasado 3 días desde tu último registro. ¡No olvides registrar tus facturas!'),
+        equals('Han pasado 7 días sin registrar gastos. Revisa tus comprobantes para mantener tu presupuesto al día.'),
       );
     });
   });
@@ -281,6 +281,16 @@ void main() {
 
       expect(success, isTrue);
       expect(mockNotifications.recordActivityCount, equals(1));
+    });
+
+    test('clearPayload resets initialPayload and selectedPayloadNotifier', () {
+      final realService = NotificationService.test();
+      realService.selectedPayloadNotifier.value = 'test_payload';
+      expect(realService.selectedPayloadNotifier.value, equals('test_payload'));
+
+      realService.clearPayload();
+      expect(realService.initialPayload, isNull);
+      expect(realService.selectedPayloadNotifier.value, isNull);
     });
   });
 

@@ -47,7 +47,7 @@ Este documento centraliza las ideas y mejoras pendientes, ordenadas estratégica
 - **Subida múltiple de facturas (Batch Upload):** Seleccionar varias fotos a la vez y procesarlas en cola.
 - **Búsqueda de gastos:** Filtrar en tiempo real por comercio o producto.
 - **Presupuestos bimonetarios y por categoría:** Límites mensuales en USD o VES con aislamiento por mes y alerta semáforo.
-- **Recordatorios locales:** Notificaciones push programadas por inactividad.
+- ~~**Recordatorios locales y auditoría de notificaciones:** (Completada ✅)~~ Notificaciones push sobrias a 7 días, soporte cold start/deep-link a facturas listas, feedback háptico sin solapamiento con AppBar y control en Ajustes.
 - **Navegación fluida de 4 destinos:** Transiciones sutiles (Inicio, Gastos, Análisis, Más) y barra flotante global de escaneo.
 - **Asistente IA con Gestión de Compras y Frases:** Chat con Function Calling para modificar lista de compras, desambiguación obligatoria y 5 botones de consultas frecuentes.
 

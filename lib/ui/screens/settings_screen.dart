@@ -6,6 +6,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/gasto_provider.dart';
+import '../../services/notification_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);
@@ -251,6 +252,62 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     value: settings.guardarFotos,
                     onChanged: (val) => settings.setGuardarFotos(val),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Sección de Notificaciones y Recordatorios
+          Material(
+            color: AppColors.card,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: const BorderSide(color: AppColors.border),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.notifications_outlined, color: AppColors.secondary, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'Recordatorios y Notificaciones',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    activeColor: AppColors.primaryDark,
+                    title: const Text(
+                      'Permitir recordatorios de gastos',
+                      style: TextStyle(color: AppColors.textPrimary, fontSize: 14),
+                    ),
+                    subtitle: const Text(
+                      'Avisa cuando tengas facturas listas para revisión o tras 7 días sin registrar gastos para mantener tu saldo al día.',
+                      style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+                    ),
+                    value: settings.recordatoriosActivos,
+                    onChanged: (val) async {
+                      await settings.setRecordatoriosActivos(val);
+                      if (!val) {
+                        await NotificationService.instance.cancelInactivityReminder();
+                        await NotificationService.instance.cancelPendingReviewReminder();
+                      } else {
+                        await NotificationService.instance.recordActivityAndReschedule();
+                      }
+                    },
                   ),
                 ],
               ),

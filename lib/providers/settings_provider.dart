@@ -15,6 +15,7 @@ class SettingsProvider with ChangeNotifier {
   bool _isSyncingRate = false;
   bool _isInitialized = false;
   double _presupuestoMensual = 0.0;
+  bool _recordatoriosActivos = true;
 
   String get apiKey => _apiKey;
   String get effectiveApiKey => _apiKey.trim().isNotEmpty ? _apiKey.trim() : AppConstants.defaultApiKey.trim();
@@ -25,6 +26,7 @@ class SettingsProvider with ChangeNotifier {
   bool get isSyncingRate => _isSyncingRate;
   bool get isInitialized => _isInitialized;
   double get presupuestoMensual => _presupuestoMensual;
+  bool get recordatoriosActivos => _recordatoriosActivos;
 
   SettingsProvider() {
     loadSettings();
@@ -52,6 +54,7 @@ class SettingsProvider with ChangeNotifier {
     _monedaPrincipal = prefs.getString(AppConstants.prefMonedaPrincipal) ?? AppConstants.defaultMoneda;
     _tipoTasa = prefs.getString('tipo_tasa') ?? 'oficial';
     _presupuestoMensual = prefs.getDouble('presupuesto_mensual') ?? 0.0;
+    _recordatoriosActivos = prefs.getBool(AppConstants.prefRecordatoriosActivos) ?? true;
     _isInitialized = true;
     notifyListeners();
 
@@ -106,6 +109,13 @@ class SettingsProvider with ChangeNotifier {
     _presupuestoMensual = monto;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('presupuesto_mensual', _presupuestoMensual);
+    notifyListeners();
+  }
+
+  Future<void> setRecordatoriosActivos(bool value) async {
+    _recordatoriosActivos = value;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(AppConstants.prefRecordatoriosActivos, _recordatoriosActivos);
     notifyListeners();
   }
 }

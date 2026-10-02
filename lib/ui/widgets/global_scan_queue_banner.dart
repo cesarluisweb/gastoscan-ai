@@ -15,6 +15,7 @@ class GlobalScanQueueBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scanQueue = Provider.of<ScanQueueProvider>(context);
+    final topOffset = MediaQuery.of(context).padding.top + kToolbarHeight + 8;
 
     // 1. Facturas listas para revisar (máxima prioridad)
     if (scanQueue.readyItems.isNotEmpty) {
@@ -24,7 +25,7 @@ class GlobalScanQueueBanner extends StatelessWidget {
           : '$count facturas listas para revisar';
 
       return Positioned(
-        top: MediaQuery.of(context).padding.top + 8,
+        top: topOffset,
         left: 16,
         right: 16,
         child: Material(
@@ -88,7 +89,7 @@ class GlobalScanQueueBanner extends StatelessWidget {
       final itemText = count == 1 ? 'factura' : 'facturas';
 
       return Positioned(
-        top: MediaQuery.of(context).padding.top + 8,
+        top: topOffset,
         left: 16,
         right: 16,
         child: Material(
@@ -104,13 +105,23 @@ class GlobalScanQueueBanner extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Row(
               children: [
-                const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryDark),
-                  ),
+                Stack(
+                  alignment: Alignment.center,
+                  children: const [
+                    SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.2,
+                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryDark),
+                      ),
+                    ),
+                    Icon(
+                      Icons.auto_awesome,
+                      size: 12,
+                      color: AppColors.primaryDark,
+                    ),
+                  ],
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -175,7 +186,7 @@ class GlobalScanQueueBanner extends StatelessWidget {
           : AppColors.warning;
 
       return Positioned(
-        top: MediaQuery.of(context).padding.top + 8,
+        top: topOffset,
         left: 16,
         right: 16,
         child: Material(

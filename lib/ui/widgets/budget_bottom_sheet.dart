@@ -165,11 +165,12 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
 
   Future<void> _guardar() async {
     if (_isMetaExceeded) {
+      ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
             'La meta de ahorro no puede superar el presupuesto general.',
-            style: TextStyle(color: Colors.black),
+            style: TextStyle(color: Colors.white),
           ),
           backgroundColor: AppColors.error,
         ),
@@ -178,11 +179,12 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
     }
 
     if (_isCategoriesExceeded) {
+      ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
             'La suma de las categorías supera el límite para gastar.',
-            style: TextStyle(color: Colors.black),
+            style: TextStyle(color: Colors.white),
           ),
           backgroundColor: AppColors.error,
         ),

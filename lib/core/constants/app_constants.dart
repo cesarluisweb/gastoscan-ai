@@ -21,6 +21,7 @@ class AppConstants {
   static const String prefGuardarFotos = 'guardar_fotos_local';
   static const String prefTasaCambio = 'tasa_cambio_ves_usd';
   static const String prefMonedaPrincipal = 'moneda_principal';
+  static const String prefRecordatoriosActivos = 'recordatorios_activos';
 
   // Valores por defecto
   static const bool defaultGuardarFotos = false;
