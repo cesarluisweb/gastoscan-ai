@@ -1,0 +1,9 @@
+name = "rindemas-gateway"
+main = "src/index.js"
+compatibility_date = "2024-09-23"
+
+[vars]
+FIREBASE_PROJECT_ID = "gastoscan-ai"
+
+# Los secretos como GEMINI_API_KEY se configuran con:
+# npx wrangler secret put GEMINI_API_KEY

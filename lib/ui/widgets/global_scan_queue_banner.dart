@@ -38,54 +38,112 @@ class GlobalScanQueueBanner extends StatelessWidget {
 
       content = Padding(
         padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
-        child: Material(
+        child: Container(
           key: const Key('global_scan_ready_banner'),
-          elevation: 4,
-          borderRadius: BorderRadius.circular(12),
-          color: AppColors.primaryLight,
-          child: InkWell(
-            onTap: () {
-              final item = scanQueue.readyItems.first;
-              final data = jsonDecode(item['extracted_data']);
-              final result = GeminiExtractionResult.fromJson(data);
-              final file = File(item['image_path']);
-
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ReviewExpenseScreen(
-                    imageFile: file.existsSync() ? file : null,
-                    extractedData: result,
-                    queueItemId: item['id'],
-                  ),
-                ),
-              ).then((_) {
-                scanQueue.loadReadyItems();
-              });
-            },
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.primary),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFFDF5), // Fondo cálido sutil Asistente IA
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFFEF08A)), // Borde amarillo sutil
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
               ),
-              child: Row(
-                children: [
-                  const Icon(Icons.receipt_long, color: AppColors.textPrimary),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      label,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                final item = scanQueue.readyItems.first;
+                final data = jsonDecode(item['extracted_data']);
+                final result = GeminiExtractionResult.fromJson(data);
+                final file = File(item['image_path']);
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ReviewExpenseScreen(
+                      imageFile: file.existsSync() ? file : null,
+                      extractedData: result,
+                      queueItemId: item['id'],
                     ),
                   ),
-                  const Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.textPrimary),
-                ],
+                ).then((_) {
+                  scanQueue.loadReadyItems();
+                });
+              },
+              borderRadius: BorderRadius.circular(16),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFEF9C3),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0xFFFDE047), width: 1),
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.receipt_long,
+                          size: 20,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            label,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          const Text(
+                            'Toca para validar y guardar',
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Revisar',
+                            style: TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 11,
+                            ),
+                          ),
+                          SizedBox(width: 3),
+                          Icon(Icons.arrow_forward, size: 11, color: AppColors.textPrimary),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -98,36 +156,52 @@ class GlobalScanQueueBanner extends StatelessWidget {
 
       content = Padding(
         padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
-        child: Material(
+        child: Container(
           key: const Key('global_scan_processing_banner'),
-          elevation: 3,
-          borderRadius: BorderRadius.circular(12),
-          color: AppColors.card,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.border),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFFDF5), // Fondo cálido sutil Asistente IA
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFFEF08A)), // Borde amarillo sutil
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             child: Row(
               children: [
-                Stack(
-                  alignment: Alignment.center,
-                  children: const [
-                    SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.2,
-                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryDark),
-                      ),
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF9C3),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0xFFFDE047), width: 1),
+                  ),
+                  child: const Center(
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.2,
+                            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryDark),
+                          ),
+                        ),
+                        Icon(
+                          Icons.auto_awesome,
+                          size: 11,
+                          color: AppColors.primaryDark,
+                        ),
+                      ],
                     ),
-                    Icon(
-                      Icons.auto_awesome,
-                      size: 12,
-                      color: AppColors.primaryDark,
-                    ),
-                  ],
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -148,7 +222,7 @@ class GlobalScanQueueBanner extends StatelessWidget {
                         'Extrayendo datos en segundo plano',
                         style: TextStyle(
                           color: AppColors.textSecondary,
-                          fontSize: 12,
+                          fontSize: 11,
                         ),
                       ),
                     ],
@@ -189,26 +263,53 @@ class GlobalScanQueueBanner extends StatelessWidget {
           ? AppColors.textSecondary
           : AppColors.warning;
 
+      final backgroundColor = isOffline
+          ? AppColors.card
+          : const Color(0xFFFFFBEB);
+      final borderColor = isOffline
+          ? AppColors.border
+          : const Color(0xFFFDE68A);
+      final iconContainerBg = isOffline
+          ? const Color(0xFFF3F4F6)
+          : const Color(0xFFFEF3C7);
+      final iconContainerBorder = isOffline
+          ? AppColors.border
+          : const Color(0xFFF59E0B).withOpacity(0.3);
+
       content = Padding(
         padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
-        child: Material(
+        child: Container(
           key: isOffline
               ? const Key('global_scan_offline_banner')
               : const Key('global_scan_error_banner'),
-          elevation: 3,
-          borderRadius: BorderRadius.circular(12),
-          color: AppColors.card,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: isOffline ? AppColors.border : AppColors.warning,
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: borderColor),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
               ),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             child: Row(
               children: [
-                Icon(icon, color: iconColor, size: 22),
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: iconContainerBg,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: iconContainerBorder, width: 1),
+                  ),
+                  child: Center(
+                    child: Icon(icon, color: iconColor, size: 20),
+                  ),
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -230,6 +331,8 @@ class GlobalScanQueueBanner extends StatelessWidget {
                           color: AppColors.textSecondary,
                           fontSize: 11,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),

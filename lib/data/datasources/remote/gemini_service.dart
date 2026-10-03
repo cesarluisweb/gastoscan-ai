@@ -1,62 +1,75 @@
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:http/http.dart' as http;
+import '../../../core/constants/app_constants.dart';
 import '../../models/gemini_extraction_result.dart';
 import '../../models/item_gasto_model.dart';
 import '../../models/shopping_item_model.dart';
 
 class GeminiService {
+  final String _baseUrl;
+  final http.Client _client;
+
+  GeminiService({
+    String? baseUrl,
+    http.Client? client,
+  })  : _baseUrl = (baseUrl ?? AppConstants.defaultGatewayUrl).replaceAll(RegExp(r'/+$'), ''),
+        _client = client ?? http.Client();
+
+  Future<String> _getAuthToken() async {
+    // Si Firebase no está inicializado (ej. en tests locales de widgets), retornar token dummy
+    if (Firebase.apps.isEmpty) {
+      return 'test_mock_token';
+    }
+
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        final cred = await FirebaseAuth.instance.signInAnonymously();
+        user = cred.user;
+      }
+      final token = await user?.getIdToken();
+      if (token == null || token.isEmpty) {
+        throw Exception('No se pudo obtener el token de autenticación.');
+      }
+      return token;
+    } catch (e) {
+      throw Exception('Fallo de autenticación: $e');
+    }
+  }
+
   Future<List<GeminiExtractionResult>> analyzeReceiptImage({
     required Uint8List imageBytes,
     required String apiKey,
     List<ShoppingItemModel>? pendingShoppingItems,
   }) async {
     try {
-      if (FirebaseAuth.instance.currentUser == null) {
-        await FirebaseAuth.instance.signInAnonymously();
-      }
-
+      final token = await _getAuthToken();
       final base64Image = base64Encode(imageBytes);
-      final callable = FirebaseFunctions.instance.httpsCallable(
-        'analyzeReceipt',
-        options: HttpsCallableOptions(timeout: const Duration(minutes: 3)),
-      );
-      
       final shoppingListContext = pendingShoppingItems != null && pendingShoppingItems.isNotEmpty
           ? pendingShoppingItems.map((e) => {'id': e.id, 'name': e.name}).toList()
           : [];
 
-      final response = await callable.call({
-        'imageBase64': base64Image,
-        'forceVision': true,
-        'shoppingList': shoppingListContext,
-      });
+      final uri = Uri.parse('$_baseUrl/analyze-receipt');
+      final response = await _client.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'imageBase64': base64Image,
+          'forceVision': true,
+          'shoppingList': shoppingListContext,
+        }),
+      ).timeout(const Duration(minutes: 3));
 
-      final data = response.data;
-      if (data == null) {
-        throw Exception('Respuesta vacía del servidor.');
-      }
-
-      final jsonResult = Map<String, dynamic>.from(data as Map);
-      return GeminiExtractionResult.listFromJson(jsonResult);
-    } on FirebaseFunctionsException catch (e) {
-      if (e.code == 'unauthenticated') {
-        throw Exception('No estás autenticado en Firebase.');
-      } else if (e.code == 'deadline-exceeded') {
-        throw Exception('Tiempo de espera agotado. El servidor tardó demasiado en procesar.');
-      } else if (e.code == 'resource-exhausted') {
-        throw Exception('Límite de solicitudes alcanzado. Espera unos segundos e intenta nuevamente.');
-      } else if (e.code == 'unavailable') {
-        throw Exception('Servicio no disponible temporalmente. Intenta nuevamente.');
-      } else {
-        final message = (e.message != null && e.message!.isNotEmpty)
-            ? e.message!
-            : 'Error al procesar la factura en el servidor. Intenta nuevamente.';
-        throw Exception(message);
-      }
+      return _handleExtractionResponse(response);
     } catch (e) {
-      throw Exception('Error interno: $e');
+      if (e is Exception) rethrow;
+      throw Exception('Error interno al analizar imagen: $e');
     }
   }
 
@@ -67,48 +80,52 @@ class GeminiService {
     List<ShoppingItemModel>? pendingShoppingItems,
   }) async {
     try {
-      if (FirebaseAuth.instance.currentUser == null) {
-        await FirebaseAuth.instance.signInAnonymously();
-      }
-
-      final callable = FirebaseFunctions.instance.httpsCallable(
-        'analyzeReceipt',
-        options: HttpsCallableOptions(timeout: const Duration(seconds: 45)),
-      );
-
+      final token = await _getAuthToken();
       final shoppingListContext = pendingShoppingItems != null && pendingShoppingItems.isNotEmpty
           ? pendingShoppingItems.map((e) => {'id': e.id, 'name': e.name}).toList()
           : [];
 
-      final response = await callable.call({
-        'ocrText': ocrText,
-        'shoppingList': shoppingListContext,
-      });
+      final uri = Uri.parse('$_baseUrl/analyze-receipt');
+      final response = await _client.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'ocrText': ocrText,
+          'shoppingList': shoppingListContext,
+        }),
+      ).timeout(const Duration(seconds: 45));
 
-      final data = response.data;
-      if (data == null) {
-        throw Exception('Respuesta vacía del servidor.');
-      }
-
-      final jsonResult = Map<String, dynamic>.from(data as Map);
-      return GeminiExtractionResult.listFromJson(jsonResult);
-    } on FirebaseFunctionsException catch (e) {
-      if (e.code == 'unauthenticated') {
-        throw Exception('No estás autenticado en Firebase.');
-      } else if (e.code == 'deadline-exceeded') {
-        throw Exception('Tiempo de espera agotado al analizar texto de la factura.');
-      } else if (e.code == 'resource-exhausted') {
-        throw Exception('Límite de solicitudes alcanzado. Espera unos segundos e intenta nuevamente.');
-      } else if (e.code == 'unavailable') {
-        throw Exception('Servicio no disponible temporalmente. Intenta nuevamente.');
-      } else {
-        final message = (e.message != null && e.message!.isNotEmpty)
-            ? e.message!
-            : 'Error al analizar el texto de la factura.';
-        throw Exception(message);
-      }
+      return _handleExtractionResponse(response);
     } catch (e) {
+      if (e is Exception) rethrow;
       throw Exception('Error interno al analizar texto OCR: $e');
+    }
+  }
+
+  List<GeminiExtractionResult> _handleExtractionResponse(http.Response response) {
+    if (response.statusCode == 200) {
+      final jsonResult = jsonDecode(response.body) as Map<String, dynamic>;
+      return GeminiExtractionResult.listFromJson(jsonResult);
+    } else if (response.statusCode == 401) {
+      throw Exception('No estás autenticado en Firebase o la sesión caducó.');
+    } else if (response.statusCode == 429) {
+      throw Exception('Límite de solicitudes alcanzado. Espera unos segundos e intenta nuevamente.');
+    } else if (response.statusCode == 504) {
+      throw Exception('Tiempo de espera agotado. El servidor tardó demasiado en procesar.');
+    } else if (response.statusCode == 502 || response.statusCode == 503) {
+      throw Exception('Servicio no disponible temporalmente. Intenta nuevamente.');
+    } else {
+      try {
+        final errorBody = jsonDecode(response.body);
+        final message = errorBody['error'] ?? errorBody['message'] ?? 'Error al procesar la factura (${response.statusCode})';
+        throw Exception(message);
+      } catch (e) {
+        if (e is Exception && !e.toString().contains('FormatException')) rethrow;
+        throw Exception('Error en el servidor (${response.statusCode}).');
+      }
     }
   }
 
@@ -117,35 +134,42 @@ class GeminiService {
     required Map<String, dynamic> contextData,
   }) async {
     try {
-      if (FirebaseAuth.instance.currentUser == null) {
-        await FirebaseAuth.instance.signInAnonymously();
-      }
+      final token = await _getAuthToken();
+      final uri = Uri.parse('$_baseUrl/chat-analyst');
 
-      final callable = FirebaseFunctions.instance.httpsCallable('chatWithAnalyst');
+      final response = await _client.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'messages': messages,
+          'contextData': contextData,
+        }),
+      ).timeout(const Duration(seconds: 45));
 
-      final response = await callable.call({
-        'messages': messages,
-        'contextData': contextData,
-      });
-
-      // La Cloud Function ahora puede devolver { text: "..." } o { functionCall: { ... } }
-      return Map<String, dynamic>.from(response.data as Map);
-    } on FirebaseFunctionsException catch (e) {
-      if (e.code == 'unauthenticated') {
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      } else if (response.statusCode == 401) {
         throw Exception('No estás autenticado en Firebase.');
-      } else if (e.code == 'deadline-exceeded') {
-        throw Exception('Tiempo de espera agotado al conectar con el chat.');
-      } else if (e.code == 'resource-exhausted') {
+      } else if (response.statusCode == 429) {
         throw Exception('Límite de solicitudes alcanzado. Espera unos segundos e intenta nuevamente.');
-      } else if (e.code == 'unavailable') {
+      } else if (response.statusCode == 504) {
+        throw Exception('Tiempo de espera agotado al conectar con el asistente.');
+      } else if (response.statusCode == 502 || response.statusCode == 503) {
         throw Exception('Servicio no disponible temporalmente. Intenta nuevamente.');
       } else {
-        final message = (e.message != null && e.message!.isNotEmpty)
-            ? e.message!
-            : 'Error al comunicarse con el asistente.';
-        throw Exception(message);
+        try {
+          final errorBody = jsonDecode(response.body);
+          final message = errorBody['error'] ?? errorBody['message'] ?? 'Error al comunicarse con el asistente.';
+          throw Exception(message);
+        } catch (_) {
+          throw Exception('Error al comunicarse con el asistente (${response.statusCode}).');
+        }
       }
     } catch (e) {
+      if (e is Exception) rethrow;
       throw Exception('Fallo al conectar con el chat: $e');
     }
   }
