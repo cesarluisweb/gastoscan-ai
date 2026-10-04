@@ -9,8 +9,13 @@
     "trailingSlash": false,
     "redirects": [
       {
+        "source": "/rindemas.apk",
+        "destination": "https://cesarluis.com/rindemas/rindemas.apk",
+        "type": 302
+      },
+      {
         "source": "/app-release.apk",
-        "destination": "https://cesarluis.com/app/app-release.apk",
+        "destination": "https://cesarluis.com/rindemas/rindemas.apk",
         "type": 302
       }
     ],

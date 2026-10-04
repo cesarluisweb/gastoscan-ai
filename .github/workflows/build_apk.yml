@@ -138,6 +138,7 @@ jobs:
       - name: Preparar y Subir APK a BanaHosting por FTP
         run: |
           mkdir -p ftp_deploy
+          cp build/app/outputs/flutter-apk/app-release.apk ftp_deploy/rindemas.apk
           cp build/app/outputs/flutter-apk/app-release.apk ftp_deploy/app-release.apk
 
       - name: Subir APK a BanaHosting
@@ -168,7 +169,7 @@ jobs:
             "version": "$APP_VERSION",
             "buildNumber": $BUILD_NUM,
             "releaseNotes": "Actualización automática de Rinde Más con optimizaciones y nuevas mejoras.",
-            "apkUrl": "https://rindemas.cesarluis.com/app-release.apk"
+            "apkUrl": "https://rindemas.cesarluis.com/rindemas.apk"
           }
           EOF
           
