@@ -30,7 +30,7 @@ class AppConstants {
   // Gateway Cloudflare Worker para Gemini
   static const String defaultGatewayUrl = String.fromEnvironment(
     'GATEWAY_BASE_URL',
-    defaultValue: 'https://rindemas-gateway.cesarluis.workers.dev',
+    defaultValue: 'https://rindemas-gateway.cesarluispuntocom.workers.dev',
   );
   static const String prefGatewayUrl = 'gateway_api_url';
 
