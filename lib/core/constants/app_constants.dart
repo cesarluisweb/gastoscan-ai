@@ -27,6 +27,8 @@ class AppConstants {
   static const bool defaultGuardarFotos = false;
   static const double defaultTasaCambio = 40.0;
   static const String defaultMoneda = 'USD';
+  static const String defaultApiKey = String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
+
   // Gateway Cloudflare Worker para Gemini
   static const String defaultGatewayUrl = String.fromEnvironment(
     'GATEWAY_BASE_URL',
