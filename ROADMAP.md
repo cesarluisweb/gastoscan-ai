@@ -72,6 +72,7 @@ Este documento centraliza las ideas y mejoras pendientes, ordenadas estratégica
 - **Procesamiento Background Nativo:** Migrar la cola local en Dart a un Background Worker real del sistema operativo (Firebase Cloud Tasks / WorkManager) para asegurar subidas e IA incluso con la app cerrada.
 - **Extracción Asistida por Confianza (Confidence Scores):** Gemini debe devolver qué tan seguro está de un dato extraído. La UI alertará "⚠️ Revisar" si la confianza es baja. Implementar un "Diccionario Personal" local para que la app aprenda de las correcciones del usuario sin reentrenar IA.
 - ~~**UX en Lote y Privacidad:** (Completada ✅)~~ Pantalla de "3 facturas listas para revisar" en vez de forzar revisión individual inmediata. Incorporar eliminación total de cuenta/datos y políticas claras sobre fotos locales vs nube.
+- ~~**Gateway Serverless en Cloudflare Workers y Distribución Automática de APK:** (Completada ✅)~~ Desacoplamiento del proxy de IA a Cloudflare Workers con validación nativa de Firebase JWT, Rate Limiting y secretos cifrados. Distribución automatizada de APK a BanaHosting vía FTP para descargas directas sin 404 ni restricciones de cuota Spark.
 - ~~**Testing y CI Estricto:** Eliminar la regeneración de la carpeta `android` (`flutter create .`) del pipeline CI/CD en favor de versionamiento estricto. Requisito de Unit Tests y Sync Tests antes de nuevas integraciones.~~
 
 ## Fase 8: Ecosistema Web y Red Colaborativa (Visión a Largo Plazo)
