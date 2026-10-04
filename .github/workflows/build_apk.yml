@@ -140,10 +140,8 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Copiar APK y Generar version.json para Landing
+      - name: Generar version.json y Compilar Landing
         run: |
-          cp build/app/outputs/flutter-apk/app-release.apk landing/public/app-release.apk
-          
           # Extraer version y build number dinamico (BASE_BUILD + github.run_number)
           APP_VERSION=$(grep "^version:" pubspec.yaml | sed -e 's/version:[[:space:]]*//' | cut -d '+' -f 1 | tr -d '[:space:]')
           BASE_BUILD=$(grep "^version:" pubspec.yaml | sed -e 's/version:[[:space:]]*//' | cut -d '+' -f 2 | tr -d '[:space:]')

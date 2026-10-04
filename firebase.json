@@ -7,6 +7,13 @@
     "public": "landing/dist",
     "cleanUrls": true,
     "trailingSlash": false,
+    "redirects": [
+      {
+        "source": "/app-release.apk",
+        "destination": "https://github.com/cesarluisweb/gastoscan-ai/releases/latest/download/app-release.apk",
+        "type": 302
+      }
+    ],
     "ignore": [
       "firebase.json",
       "**/.*",
