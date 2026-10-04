@@ -57,6 +57,7 @@ Este documento centraliza las ideas y mejoras pendientes, ordenadas estratégica
 - ~~**Detección de IVA y Alícuotas Fiscales en OCR:** (Completada ✅)~~ Incorporar en el prompt de extracción de Cloud Functions la detección de marcadores fiscales venezolanos (`(E)` Exento, `(G)` Gravado, alícuota 16%) para desglosar el impuesto con precisión legal por ítem.
 - ~~**Meta Mensual de Ahorro / Inversión y Proyección de Gastos:** (Completada ✅)~~ Configuración de meta mensual de ahorro/inversión en el presupuesto, cálculo de límite para gastar (`Presupuesto - Meta`), validación de categorías, motor de proyección determinista (`SavingsHealthCalculator`), estado semafórico (Protegida, En riesgo, Comprometida) y alertas inteligentes en Inicio y Chat.
 - **Tasa y Moneda Personalizada / Paralela:** Permitir ingresar una tasa de cambio manual o consultar USDT (Binance P2P) para usuarios que operan fuera de la tasa oficial del Banco Central.
+  - *Recurso útil para histórico de precios USDT:* [usdt.com.ve/historico](https://www.usdt.com.ve/historico) (referencia para consulta/histórico de tasas).
 - ~~**Monitoreo de Consumo de Tokens:** (Completada ✅)~~ Capturar la metadata de tokens consumidos devuelta por Gemini en Cloud Functions y registrar métricas de costo por escaneo.
 
 ## Fase 7: Arquitectura de Producción y Confiabilidad (En Progreso 🔄)
