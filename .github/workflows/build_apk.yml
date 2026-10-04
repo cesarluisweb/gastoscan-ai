@@ -135,6 +135,22 @@ jobs:
           makeLatest: true
           token: "${{ secrets.GITHUB_TOKEN }}"
 
+      - name: Preparar y Subir APK a BanaHosting por FTP
+        run: |
+          mkdir -p ftp_deploy
+          cp build/app/outputs/flutter-apk/app-release.apk ftp_deploy/app-release.apk
+
+      - name: Subir APK a BanaHosting
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        continue-on-error: true
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ftp_deploy/
+          server-dir: ./
+          dangerous-clean-slate: false
+
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:

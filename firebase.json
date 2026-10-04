@@ -10,7 +10,7 @@
     "redirects": [
       {
         "source": "/app-release.apk",
-        "destination": "https://github.com/cesarluisweb/gastoscan-ai/releases/latest/download/app-release.apk",
+        "destination": "https://cesarluis.com/app/app-release.apk",
         "type": 302
       }
     ],
