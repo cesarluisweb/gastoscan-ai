@@ -1,7 +1,7 @@
 name: gastoscan_ai
-description: "Rinde - Digitalización inteligente de facturas y control de gastos."
+description: "Rinde Más - Digitalización inteligente de facturas y control de gastos."
 publish_to: 'none'
-version: 1.0.2+3
+version: 1.0.3+3
 
 environment:
   sdk: '>=3.0.0 <4.0.0'

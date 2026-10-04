@@ -22,6 +22,8 @@
   - Introducir conceptos de conciliación bancaria o cuentas múltiples (anti-filosofía Rinde Más).
   - Prometer planes de IA ilimitada de por vida.
   - Ejecutar bucles de relectura redundante (`view_file` más de 2 veces sobre el mismo rango de archivo sin cambios intermedios). Tras identificar la causa, proceder inmediatamente a editar o consultar.
+  - Alojar archivos `.apk` directamente en `landing/public/` o `landing/dist/` (Firebase Hosting bloquea ejecutables en plan Spark con error HTTP 400).
+  - Usar dominios con proxy naranja de Cloudflare como `FTP_SERVER` en CI/CD (el proxy bloquea el puerto 21 de FTP).
 
 ### Protocolo de Memoria Dinámica
 1. **Al iniciar:** Leer `MEMORY.md` para situarse en el estado inmediato del trabajo.
@@ -107,19 +109,30 @@ La compilación en GitHub Actions (`build_apk.yml`) ejecuta `flutter create`, lo
 - **Herramientas de Lista de Compras:** Cuando el usuario indique explícitamente agregar, modificar, eliminar o tachar de la lista de compras, el asistente invocará las funciones correspondientes (`agregar_items_lista_compras`, `modificar_item_lista_compras`, `eliminar_items_lista_compras`, `marcar_items_lista_compras`) y confirmará la acción con naturalidad y brevedad en español.
 - **Cotejo Universal con Lista de Compras:** Todo gasto guardado en la aplicación (formulario manual, dictado por voz, asistente chat o escáner OCR) DEBE cotejar los nombres de sus productos contra los pendientes en `getPendingShoppingItems()`, normalizando acentos y mayúsculas, y marcar automáticamente como comprados los ítems coincidentes.
 
-## 13. Landing Page y Presencia Web (Astro + Firebase Hosting)
-- **Despliegue Automatizado por CI/CD:** El pipeline de GitHub Actions (`build_apk.yml`) compila el APK firmado y lo despliega automáticamente junto con la landing page en Firebase Hosting (`rindemas.cesarluis.com/app-release.apk`) en cada actualización a `main`.
+## 13. Landing Page, Distribución y Presencia Web (Astro + Firebase Hosting + BanaHosting)
+- **Despliegue Automatizado por CI/CD:** El pipeline de GitHub Actions (`build_apk.yml`) compila el APK firmado y lo despliega automáticamente junto con la landing page en Firebase Hosting en cada actualización a `main`.
+- **Prohibición de Ejecutables en Firebase Spark:** En el plan gratuito Spark, Firebase Hosting prohíbe estrictamente archivos ejecutables (`.apk`). Está prohibido copiar o compilar el APK dentro de `landing/public/` o `landing/dist/`.
+- **Redirección de Descarga (BanaHosting):** En `firebase.json`, las rutas `/rindemas.apk` y `/app-release.apk` deben configurarse como redirección 302 hacia el almacenamiento en BanaHosting (`https://cesarluis.com/rindemas/rindemas.apk`).
+- **Distribución Automática por FTP (BanaHosting):** 
+  1. El workflow de CI/CD debe subir `rindemas.apk` (y copia `app-release.apk`) vía FTP (`SamKirkland/FTP-Deploy-Action`).
+  2. El secreto `FTP_SERVER` DEBE configurarse con la dirección IP directa del servidor de BanaHosting (evitando dominios detrás del proxy naranja de Cloudflare que bloquean el puerto 21).
+  3. El directorio de destino debe coincidir con la raíz pública del dominio en cPanel (`/home/user/cesarluis.com/rindemas/`), verificando siempre el *Document Root* del dominio adicional en lugar de asumir ciegamente `public_html/`.
+- **Incompatibilidad de Releases Privados:** En repositorios privados de GitHub, los assets de GitHub Releases devuelven HTTP 404 para visitantes públicos. No utilizar enlaces de GitHub Releases para la descarga pública ni para `version.json`.
 - **Flujo de Compilación y Despliegue Manual (Local):**
   1. Si se requiere desplegar desde local, compilar Astro con telemetría desactivada: en `landing/`, ejecutar `$env:ASTRO_TELEMETRY_DISABLED="1"; .\node_modules\.bin\astro.cmd build`.
   2. Desplegar a Firebase Hosting: desde la raíz del proyecto, ejecutar `firebase.cmd deploy --only hosting --non-interactive`. El parámetro `--non-interactive` es **estrictamente obligatorio** en Windows para evitar bloqueos indefinidos del proceso en PowerShell.
-  3. Verificación en vivo: Comprobar el despliegue con `curl.exe -sI https://rindemas.cesarluis.com/app-release.apk` antes de confirmar al usuario.
+  3. Verificación en vivo: Comprobar el despliegue con `curl.exe -sI https://rindemas.cesarluis.com/rindemas.apk` antes de confirmar al usuario.
 - **Mockups de la Aplicación:** Todo mockup o representación gráfica de la aplicación en la web DEBE tener chasis y proporción de smartphone (teléfono móvil vertical ~20:9 con bordes redondeados y altavoz), quedando prohibido el formato tablet o de escritorio.
 - **Paleta de Colores Web:** Usar estrictamente la paleta oficial de Rinde Más: amarillo (`#FACC15` / `#EAB308`) para acentos y botones, fondos limpios (`#F8FAFC` / `#FFFFFF`) y textos oscuros legibles (`#0F172A` / `#334155`). Prohibido el uso de colores naranjas.
 
-## 14. Entrada por Voz, Escaneo y Cloud Functions
+## 14. Gateway Serverless de IA (Cloudflare Workers) y Entrada por Voz
+- **Arquitectura Serverless Desacoplada:** Para mantener Firebase en el plan Spark (100% gratuito sin tarjetas bancarias ni facturación en Google Cloud), el proxy de IA hacia Gemini opera exclusivamente en **Cloudflare Workers** (`rindemas-gateway`).
+- **Seguridad Obligatoria del Worker:**
+  1. **Validación de Token Firebase (JWT):** Todo endpoint (`/analyze-receipt`, `/chat-analyst`) debe validar la firma criptográfica del ID Token de Firebase Auth usando Web Crypto nativo (`crypto.subtle`) y las claves públicas JWKS de Google (`https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com`).
+  2. **Rate Limiting por Usuario:** Limitar las peticiones a un máximo de 30 por minuto por `uid` para prevenir saturación y abuso.
+  3. **Secretos Seguros:** La clave `GEMINI_API_KEY` reside exclusivamente en los secretos de Cloudflare (`wrangler secret put`), nunca en código cliente ni variables de repositorio.
 - **Estándar Unificado de Reconocimiento de Voz:** Toda pantalla o componente con entrada de voz (formulario, modal flotante o chat) debe utilizar una tolerancia de pausas de 10 segundos (`pauseFor: Duration(seconds: 10)`) y 60 segundos de escucha (`listenFor: Duration(seconds: 60)`). Al pausar y reanudar la grabación, el texto nuevo DEBE concatenarse al final del texto existente sin sobreescribirlo.
 - **Avisos Neutros en Procesamiento de Imágenes:** Al enviar fotos a la cola de escaneo, los SnackBars y banners deben referirse a "imágenes" o "comprobantes" (ej. *"Analizando imagen con IA..."*), nunca asumir que una fotografía contiene estrictamente una sola factura.
-- **Despliegue de Cloud Functions en Windows:** Al ejecutar `firebase deploy --only functions --non-interactive`, debe asignarse previamente `$env:FUNCTIONS_DISCOVERY_TIMEOUT="60"` (en segundos) para evitar fallos por timeout en el análisis estático local.
 
 ## 15. Privacidad, Almacenamiento Híbrido y Comunicación Externa
 - **Arquitectura de Datos Real:** Rinde Más es una aplicación *Local-First* con sincronización en la nube (Cloud Firestore). Los datos se guardan localmente en SQLite y se respaldan de forma privada y cifrada en Firebase bajo el identificador único (`uid`) de la cuenta Google del usuario.
