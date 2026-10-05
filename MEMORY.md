@@ -24,4 +24,4 @@
 - En cPanel multidominio, el Document Root es `/home/user/dominio.com/`, no siempre `public_html/`.
 
 ## Próximo Paso Inmediato
-- Monitorear CI hasta confirmar `success` para la implementación del selector multimoneda.
+- Esperar validación del usuario o continuar con tareas prioritarias del backlog (ROADMAP.md).
