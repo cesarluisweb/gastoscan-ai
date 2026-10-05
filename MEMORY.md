@@ -3,17 +3,17 @@
 
 ## Estado Actual Inmediato
 - **Rama:** `main`.
-- **Fase activa:** Fase 6.1 (Multimoneda y Consistencia de Tasas).
+- **Fase activa:** Fase 5 (Lanzamiento / Preparación Google Play) y Fase 6.1.
 - **Últimos hitos:** 
-  1. **Sistema Multimoneda y Selector de Tasas (Fase 1):** Soporte en toda la app para USD, VES, EUR y USDT. Tarjeta de 3 tasas con timestamp y recarga sutil en "Más", chips rápidos de tasa en Revisar Gasto, selector de 4 monedas con conversión matemática en vivo en Presupuestos.
-  2. **Consistencia Matemática en Bs. (Fase 0):** Corrección determinista de totales en Bolívares (`totalMesVes` y `categoryTotals` fijos por fecha de compra, sin fluctuación por tasa diaria, inclusión de compras sin ítems en categorías y reparación de tasas históricas).
-  3. Eliminación de pantalla huérfana `settings_screen.dart`.
-  4. Gateway en **Cloudflare Workers** activo y Firebase en Spark 100% gratuito.
+  1. **Actualizaciones Inteligentes (Semánticas + Críticas):** Soporte para detección por versión semántica (`isVersionHigher`), evitando falsos positivos de builds internos. Soporte para bandera `isMajor` / `is_major_release: true` con aviso directo al iniciar la app.
+  2. **Sistema Multimoneda y Selector de Tasas:** Soporte en toda la app para USD, VES, EUR y USDT. Tarjeta de 3 tasas en "Más", chips de tasa en Revisar Gasto, presupuestos dinámicos.
+  3. **Gateway Cloudflare Workers + BanaHosting:** Operación serverless 100% gratuita y distribución de APK por FTP.
 
 ## Decisiones Técnicas y de Negocio Recientes
-- **Multimoneda de Referencia:** Soporte para VES, USD, EUR y USDT. Formato determinista y conversión dinámica en presupuestos y formularios sin crear múltiples cuentas contables.
-- **Fuentes de Tasas:** DolarAPI Oficial (USD y EUR en vivo e históricos) y Binance P2P / Yadio (USDT en vivo e históricos).
-- **Exactitud en Bolívares:** Los gastos en VES conservan su `total_original` inmutable. Los gastos en USD usan `total_usd * tasa_cambio` de la fecha de registro. El Total Gastado y la Distribución de Gastos cuadran al centavo en Bs. y en USD.
+- **Estrategia de Actualizaciones:**
+  - Actualización Menor: Notificación silenciosa en "Más -> Buscar" cuando hay nueva versión.
+  - Actualización Mayor / Crítica (`isMajor: true`): Diálogo modal obligatorio al abrir la app.
+  - La app compara versiones semánticas (`remote > current`), ignorando incrementos de compilaciones de CI del mismo release.
 - **Gateway Cloudflare Worker:** Proxy seguro con validación JWT de Firebase Auth y rate limiting.
 - **Distribución de APK en BanaHosting:** El CI sube `rindemas.apk` directamente por FTP.
 
@@ -24,4 +24,4 @@
 - En cPanel multidominio, el Document Root es `/home/user/dominio.com/`, no siempre `public_html/`.
 
 ## Próximo Paso Inmediato
-- Esperar validación del usuario o continuar con tareas prioritarias del backlog (ROADMAP.md).
+- Confirmar pipeline en CI y proceder con el paquete de Google Play Console (AAB + 20 testers).

@@ -13,15 +13,16 @@ void main() {
       SharedPreferences.setMockInitialValues({});
     });
 
-    test('detects available update when remote build number is greater', () async {
+    test('detects available update when remote version is higher or remote build number is greater', () async {
       final mockClient = MockClient((request) async {
         if (request.url.toString() == UpdateService.versionCheckUrl) {
           return http.Response(
             jsonEncode({
-              'version': '1.0.2',
-              'buildNumber': 3,
+              'version': '1.0.4',
+              'buildNumber': 309,
+              'isMajor': true,
               'releaseNotes': 'Nuevas funciones de presupuesto.',
-              'apkUrl': 'https://rindemas.cesarluis.com/app-release.apk',
+              'apkUrl': 'https://rindemas.cesarluis.com/rindemas.apk',
             }),
             200,
           );
@@ -32,25 +33,28 @@ void main() {
       final updateService = UpdateService(client: mockClient);
       final result = await updateService.checkForUpdate(
         force: true,
-        currentBuildNumber: 2,
+        currentVersion: '1.0.3',
+        currentBuildNumber: 308,
       );
 
       expect(result, isNotNull);
       expect(result!.hasUpdate, isTrue);
-      expect(result.version, equals('1.0.2'));
-      expect(result.buildNumber, equals(3));
-      expect(result.apkUrl, equals('https://rindemas.cesarluis.com/app-release.apk'));
+      expect(result.isMajor, isTrue);
+      expect(result.version, equals('1.0.4'));
+      expect(result.buildNumber, equals(309));
+      expect(result.apkUrl, equals('https://rindemas.cesarluis.com/rindemas.apk'));
       expect(result.releaseNotes, contains('presupuesto'));
     });
 
-    test('reports no update when local build number is equal or higher', () async {
+    test('reports no update when local version and build number are equal or higher', () async {
       final mockClient = MockClient((request) async {
         return http.Response(
           jsonEncode({
-            'version': '1.0.1',
-            'buildNumber': 2,
+            'version': '1.0.3',
+            'buildNumber': 308,
+            'isMajor': false,
             'releaseNotes': 'Sin cambios.',
-            'apkUrl': 'https://rindemas.cesarluis.com/app-release.apk',
+            'apkUrl': 'https://rindemas.cesarluis.com/rindemas.apk',
           }),
           200,
         );
@@ -59,7 +63,8 @@ void main() {
       final updateService = UpdateService(client: mockClient);
       final result = await updateService.checkForUpdate(
         force: true,
-        currentBuildNumber: 2,
+        currentVersion: '1.0.3',
+        currentBuildNumber: 308,
       );
 
       expect(result, isNotNull);

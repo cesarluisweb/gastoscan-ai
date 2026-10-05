@@ -164,11 +164,18 @@ jobs:
           BASE_BUILD=$(grep "^version:" pubspec.yaml | sed -e 's/version:[[:space:]]*//' | cut -d '+' -f 2 | tr -d '[:space:]')
           BUILD_NUM=$(( BASE_BUILD + ${{ github.run_number }} ))
           
+          # Verificar si se marca como actualizacion mayor
+          IS_MAJOR=false
+          if grep -q "is_major_release: true" pubspec.yaml 2>/dev/null; then
+            IS_MAJOR=true
+          fi
+          
           cat <<EOF > landing/public/version.json
           {
             "version": "$APP_VERSION",
             "buildNumber": $BUILD_NUM,
-            "releaseNotes": "Actualización automática de Rinde Más con optimizaciones y nuevas mejoras.",
+            "isMajor": $IS_MAJOR,
+            "releaseNotes": "Actualización de Rinde Más con mejoras de rendimiento y nuevas funciones.",
             "apkUrl": "https://rindemas.cesarluis.com/rindemas.apk"
           }
           EOF
