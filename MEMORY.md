@@ -5,6 +5,7 @@
 - **Rama:** `main`.
 - **Fase activa:** Fase 5 (Lanzamiento / Preparación Google Play).
 - **Últimos hitos:** 
+  0. **Banners de cola apilados:** `GlobalScanQueueBanner` ya no usa if/else excluyente; "lista para revisar" y "procesando" se muestran uno debajo del otro.
   1. **Integración Web + Sección de Donaciones:** Opciones de "Visitar sitio web" (`rindemas.cesarluis.com`) y "Apoyar el proyecto ☕" agregadas a la pestaña **Más**. Nueva sección de donaciones (`#donar`) agregada a la landing page (PayPal, Binance Pay USDT ID `254881729`, Pago Móvil Banesco).
   2. **Actualizaciones Inteligentes (Semánticas + Críticas):** Soporte para detección por versión semántica (`isVersionHigher`) y bandera `isMajor` / `is_major_release: true` con aviso directo al iniciar la app.
   3. **Gateway Cloudflare Workers + BanaHosting:** Operación serverless 100% gratuita y distribución de APK por FTP.
