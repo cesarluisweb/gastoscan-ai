@@ -27,17 +27,19 @@ class GlobalScanQueueBanner extends StatelessWidget {
 
     final ScanQueueProvider scanQueue = nullableQueue;
 
-    Widget content = const SizedBox.shrink();
+    // Los estados se apilan verticalmente (uno debajo del otro) para que
+    // ninguno oculte a otro: p. ej. "lista para revisar" + "procesando".
+    final List<Widget> banners = [];
 
-    // 1. Facturas listas para revisar (máxima prioridad)
+    // 1. Facturas listas para revisar
     if (scanQueue.readyItems.isNotEmpty) {
       final count = scanQueue.readyItems.length;
       final label = count == 1
           ? 'Factura lista para revisar'
           : '$count facturas listas para revisar';
 
-      content = Padding(
-        padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
+      banners.add(Padding(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
         child: Container(
           key: const Key('global_scan_ready_banner'),
           decoration: BoxDecoration(
@@ -148,14 +150,16 @@ class GlobalScanQueueBanner extends StatelessWidget {
             ),
           ),
         ),
-      );
-    } else if (scanQueue.isProcessing) {
-      // 2. Procesamiento activo con IA
+      ));
+    }
+
+    if (scanQueue.isProcessing) {
+      // 2. Procesamiento activo con IA (se muestra debajo de "lista para revisar")
       final count = scanQueue.pendingCount > 0 ? scanQueue.pendingCount : 1;
       final itemText = count == 1 ? 'factura' : 'facturas';
 
-      content = Padding(
-        padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
+      banners.add(Padding(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
         child: Container(
           key: const Key('global_scan_processing_banner'),
           decoration: BoxDecoration(
@@ -243,9 +247,9 @@ class GlobalScanQueueBanner extends StatelessWidget {
             ),
           ),
         ),
-      );
+      ));
     } else if (scanQueue.pendingItems.isNotEmpty) {
-      // 3. Ítems pendientes cuando no hay proceso activo
+      // 3. Ítems pendientes cuando no hay proceso activo (sin conexión o error)
       final count = scanQueue.pendingCount;
       final itemText = count == 1 ? 'factura' : 'facturas';
       final isOffline = scanQueue.isWaitingForConnection;
@@ -276,8 +280,8 @@ class GlobalScanQueueBanner extends StatelessWidget {
           ? AppColors.border
           : const Color(0xFFF59E0B).withOpacity(0.3);
 
-      content = Padding(
-        padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
+      banners.add(Padding(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
         child: Container(
           key: isOffline
               ? const Key('global_scan_offline_banner')
@@ -357,13 +361,23 @@ class GlobalScanQueueBanner extends StatelessWidget {
             ),
           ),
         ),
-      );
+      ));
     }
 
     return AnimatedSize(
       duration: const Duration(milliseconds: 250),
       curve: Curves.easeInOut,
-      child: content,
+      alignment: Alignment.topCenter,
+      child: banners.isEmpty
+          ? const SizedBox.shrink()
+          : Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: banners,
+              ),
+            ),
     );
   }
 }

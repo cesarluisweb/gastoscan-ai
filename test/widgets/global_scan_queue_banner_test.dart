@@ -134,5 +134,33 @@ void main() {
       expect(find.byKey(const Key('global_scan_ready_banner')), findsOneWidget);
       expect(find.text('Factura lista para revisar'), findsOneWidget);
     });
+
+    testWidgets('stacks ready and processing banners when both states coexist', (tester) async {
+      scanQueueProvider.setReadyItems([
+        {
+          'id': 1,
+          'image_path': '/img/factura1.jpg',
+          'extracted_data': '{"comercio": "Central Madeirense", "fecha": "2026-09-15", "moneda": "USD", "totalOriginal": 25.5, "items": []}',
+        },
+      ]);
+      scanQueueProvider.setPendingItems([
+        {'id': 2, 'image_path': '/img/factura2.jpg'},
+      ]);
+      scanQueueProvider.setProcessing(true);
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pump();
+
+      final readyFinder = find.byKey(const Key('global_scan_ready_banner'));
+      final processingFinder = find.byKey(const Key('global_scan_processing_banner'));
+      expect(readyFinder, findsOneWidget);
+      expect(processingFinder, findsOneWidget);
+      expect(find.text('Procesando 1 factura con IA...'), findsOneWidget);
+
+      // El banner de procesamiento queda debajo del de "lista para revisar", sin superponerse
+      final readyRect = tester.getRect(readyFinder);
+      final processingRect = tester.getRect(processingFinder);
+      expect(processingRect.top, greaterThanOrEqualTo(readyRect.bottom));
+    });
   });
 }
