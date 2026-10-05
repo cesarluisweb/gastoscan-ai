@@ -85,7 +85,7 @@ class FakeDatabaseHelperForNotifications extends DatabaseHelper {
   }
 
   @override
-  Future<Map<String, double>> getCategoryTotals(int year, int month) async {
+  Future<Map<String, double>> getCategoryTotals(int year, int month, {String moneda = 'USD'}) async {
     return {};
   }
 

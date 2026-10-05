@@ -311,81 +311,191 @@ class MoreScreenState extends State<MoreScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Icon(Icons.currency_exchange, color: AppColors.primaryDark, size: 20),
-                    SizedBox(width: 8),
-                    Text(
-                      'Tasa de Cambio Automática',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
+                    const Row(
+                      children: [
+                        Icon(Icons.currency_exchange, color: AppColors.primaryDark, size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          'Tasas de Cambio',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: Text(
+                            () {
+                              final updateDate = settings.ultimaActualizacionTasas;
+                              final today = DateTime.now();
+                              if (updateDate != null &&
+                                  updateDate.year == today.year &&
+                                  updateDate.month == today.month &&
+                                  updateDate.day == today.day) {
+                                return '✓ Actualizada hoy';
+                              }
+                              return 'Tasas del día';
+                            }(),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        IconButton(
+                          key: const Key('refresh_rates_btn'),
+                          icon: settings.isSyncingRate
+                              ? const SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                                )
+                              : const Icon(Icons.refresh, size: 18, color: AppColors.textSecondary),
+                          tooltip: 'Actualizar tasas',
+                          onPressed: settings.isSyncingRate
+                              ? null
+                              : () async {
+                                  await settings.actualizarTasaAutomatica();
+                                },
+                        ),
+                      ],
                     ),
                   ],
                 ),
                 const SizedBox(height: 12),
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   decoration: BoxDecoration(
                     color: AppColors.surface,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: AppColors.border),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Column(
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      // Fila Dólar BCV
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            'Tasa Oficial BCV del Día:',
-                            style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                          const Row(
+                            children: [
+                              Icon(Icons.attach_money, size: 18, color: AppColors.primaryDark),
+                              SizedBox(width: 6),
+                              Text(
+                                'Dólar BCV',
+                                style: TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 4),
                           Text(
                             'Bs. ${settings.tasaCambioVesUsd.toStringAsFixed(2)} / USD',
                             style: const TextStyle(
                               color: AppColors.textPrimary,
-                              fontSize: 18,
+                              fontSize: 14,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                         ],
                       ),
-                      ElevatedButton.icon(
-                        onPressed: settings.isSyncingRate
-                            ? null
-                            : () async {
-                                await settings.actualizarTasaAutomatica();
-                              },
-                        icon: settings.isSyncingRate
-                            ? const SizedBox(
-                                width: 14,
-                                height: 14,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
-                              )
-                            : const Icon(Icons.sync, size: 16),
-                        label: const Text('Actualizar'),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                        ),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8),
+                        child: Divider(height: 1, color: AppColors.border),
+                      ),
+                      // Fila Euro BCV
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Row(
+                            children: [
+                              Icon(Icons.euro, size: 18, color: AppColors.primaryDark),
+                              SizedBox(width: 6),
+                              Text(
+                                'Euro BCV',
+                                style: TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Text(
+                            'Bs. ${settings.tasaCambioVesEur.toStringAsFixed(2)} / EUR',
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8),
+                        child: Divider(height: 1, color: AppColors.border),
+                      ),
+                      // Fila USDT Binance
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Row(
+                            children: [
+                              Icon(Icons.currency_bitcoin, size: 18, color: AppColors.primaryDark),
+                              SizedBox(width: 6),
+                              Text(
+                                'USDT Binance',
+                                style: TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Text(
+                            'Bs. ${settings.tasaCambioVesUsdt.toStringAsFixed(2)} / USDT',
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: settings.monedaPrincipal,
+                  value: AppConstants.monedas.contains(settings.monedaPrincipal) ? settings.monedaPrincipal : 'USD',
                   decoration: const InputDecoration(
                     labelText: 'Moneda Principal de Reportes',
                     prefixIcon: Icon(Icons.monetization_on_outlined, color: AppColors.textSecondary),
                   ),
                   dropdownColor: AppColors.surface,
-                  items: AppConstants.monedas.map((m) {
-                    return DropdownMenuItem(value: m, child: Text(m));
-                  }).toList(),
+                  items: const [
+                    DropdownMenuItem(value: 'USD', child: Text('Dólares (\$ USD)')),
+                    DropdownMenuItem(value: 'VES', child: Text('Bolívares (Bs. VES)')),
+                    DropdownMenuItem(value: 'EUR', child: Text('Euros (€ EUR)')),
+                    DropdownMenuItem(value: 'USDT', child: Text('USDT (Binance)')),
+                  ],
                   onChanged: (val) {
                     if (val != null) settings.setMonedaPrincipal(val);
                   },

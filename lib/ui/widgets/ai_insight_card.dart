@@ -55,23 +55,32 @@ class AiInsightCard extends StatelessWidget {
         moneda: monedaPresupuesto,
       );
 
-      final formattedMeta = monedaPrincipal == 'VES'
-          ? CurrencyFormatter.formatVes(metaAhorro * (tasaCambio > 0 ? tasaCambio : 1.0))
-          : CurrencyFormatter.formatUsd(metaAhorro);
+      final formattedMeta = CurrencyFormatter.formatPreferido(
+        metaAhorro,
+        null,
+        tasaCambio,
+        monedaPrincipal,
+      );
 
       if (savingsSnapshot.status == SavingsGoalStatus.comprometida) {
         final exceso = savingsSnapshot.gastoAcumulado - savingsSnapshot.limiteParaGastar;
-        final formattedExceso = monedaPrincipal == 'VES'
-            ? CurrencyFormatter.formatVes(exceso * (tasaCambio > 0 ? tasaCambio : 1.0))
-            : CurrencyFormatter.formatUsd(exceso);
+        final formattedExceso = CurrencyFormatter.formatPreferido(
+          exceso,
+          null,
+          tasaCambio,
+          monedaPrincipal,
+        );
         return 'Has superado tu límite de gasto por $formattedExceso. Tu meta de ahorro de $formattedMeta está siendo comprometida.';
       }
 
       if (savingsSnapshot.status == SavingsGoalStatus.enRiesgo) {
         final proy = savingsSnapshot.gastoProyectadoFinDeMes;
-        final formattedProy = monedaPrincipal == 'VES'
-            ? CurrencyFormatter.formatVes(proy * (tasaCambio > 0 ? tasaCambio : 1.0))
-            : CurrencyFormatter.formatUsd(proy);
+        final formattedProy = CurrencyFormatter.formatPreferido(
+          proy,
+          null,
+          tasaCambio,
+          monedaPrincipal,
+        );
         return 'Atención: a tu ritmo actual proyectas gastar $formattedProy. Modera tus consumos para proteger tu meta de ahorro de $formattedMeta.';
       }
 
@@ -87,9 +96,12 @@ class AiInsightCard extends StatelessWidget {
 
       if (porcentaje >= 1.0) {
         final excesoUsd = totalGastadoMes - presupuestoGeneral;
-        final formattedExceso = monedaPrincipal == 'VES'
-            ? CurrencyFormatter.formatVes(excesoUsd * (tasaCambio > 0 ? tasaCambio : 1.0))
-            : CurrencyFormatter.formatUsd(excesoUsd);
+        final formattedExceso = CurrencyFormatter.formatPreferido(
+          excesoUsd,
+          null,
+          tasaCambio,
+          monedaPrincipal,
+        );
         return 'Has superado tu presupuesto general por $formattedExceso. Conviene moderar consumos no esenciales.';
       }
 

@@ -63,10 +63,7 @@ class _CategoryChartState extends State<CategoryChart> {
   String? _expandedCategory;
 
   String _fmt(double amount) {
-    if (widget.monedaPrincipal == 'VES') {
-      return CurrencyFormatter.formatVes(amount);
-    }
-    return CurrencyFormatter.formatUsd(amount);
+    return CurrencyFormatter.formatAmount(amount, widget.monedaPrincipal);
   }
 
   @override

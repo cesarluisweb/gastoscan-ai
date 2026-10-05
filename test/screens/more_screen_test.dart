@@ -74,7 +74,10 @@ void main() {
       expect(find.text('Respaldo en la Nube'), findsOneWidget);
       expect(find.text('Lista de Compras'), findsOneWidget);
       expect(find.text('Asistente IA'), findsOneWidget);
-      expect(find.text('Tasa de Cambio Automática'), findsOneWidget);
+      expect(find.text('Tasas de Cambio'), findsOneWidget);
+      expect(find.text('Dólar BCV'), findsOneWidget);
+      expect(find.text('Euro BCV'), findsOneWidget);
+      expect(find.text('USDT Binance'), findsOneWidget);
       expect(find.text('Almacenamiento y Fotos', skipOffstage: false), findsOneWidget);
       expect(find.text('Exportar a Excel (.csv)', skipOffstage: false), findsOneWidget);
       expect(find.text('Exportar como Texto (.md)', skipOffstage: false), findsOneWidget);

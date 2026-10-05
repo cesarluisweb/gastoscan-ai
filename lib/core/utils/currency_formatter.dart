@@ -12,6 +12,8 @@ class CurrencyFormatter {
         return 'Bs. $formattedNumber';
       case 'EUR':
         return '€ $formattedNumber';
+      case 'USDT':
+        return '$formattedNumber USDT';
       default:
         return '$currency $formattedNumber';
     }
@@ -27,23 +29,47 @@ class CurrencyFormatter {
     return 'Bs. ${formatter.format(amount)}';
   }
 
-  /// Formatea en la moneda preferida del usuario ('USD' o 'VES').
+  static String formatEur(double amount) {
+    final formatter = NumberFormat('#,##0.00', 'es_VE');
+    return '€ ${formatter.format(amount)}';
+  }
+
+  static String formatUsdt(double amount) {
+    final formatter = NumberFormat('#,##0.00', 'es_VE');
+    return '${formatter.format(amount)} USDT';
+  }
+
+  /// Formatea en la moneda preferida del usuario ('USD', 'VES', 'EUR', 'USDT').
   static String formatPreferido(
     double totalUsd,
     double? totalVes,
     double tasaCambio,
-    String monedaPreferida,
-  ) {
-    if (monedaPreferida == 'VES') {
-      final ves = (totalVes != null && totalVes > 0)
-          ? totalVes
-          : totalUsd * tasaCambio;
-      return formatVes(ves);
+    String monedaPreferida, {
+    double tasaEur = 0.0,
+    double tasaUsdt = 0.0,
+  }) {
+    final double ves = (totalVes != null && totalVes > 0)
+        ? totalVes
+        : totalUsd * (tasaCambio > 0 ? tasaCambio : 1.0);
+
+    switch (monedaPreferida.toUpperCase()) {
+      case 'VES':
+        return formatVes(ves);
+      case 'EUR':
+        final double eurRate = tasaEur > 0
+            ? tasaEur
+            : (tasaCambio > 0 ? tasaCambio * 1.08 : 1.0);
+        return formatEur(eurRate > 0 ? ves / eurRate : totalUsd);
+      case 'USDT':
+        final double usdtRate = tasaUsdt > 0 ? tasaUsdt : (tasaCambio > 0 ? tasaCambio : 1.0);
+        return formatUsdt(usdtRate > 0 ? ves / usdtRate : totalUsd);
+      case 'USD':
+      default:
+        return formatUsd(totalUsd);
     }
-    return formatUsd(totalUsd);
   }
 
-  /// Formatea en la moneda secundaria (opuesta a la preferida).
+  /// Formatea en la moneda secundaria (Bolívares si es divisa, Dólares si es Bolívares).
   static String formatSecundario(
     double totalUsd,
     double? totalVes,
@@ -59,14 +85,26 @@ class CurrencyFormatter {
     return formatVes(ves);
   }
 
-  /// Convierte un monto en USD a la moneda preferida.
+  /// Convierte un monto en USD a la moneda seleccionada.
   static double convertFromUsd(
     double amountUsd,
     String monedaPreferida,
-    double tasaCambio,
-  ) {
+    double tasaCambio, {
+    double tasaEur = 0.0,
+    double tasaUsdt = 0.0,
+  }) {
     if (monedaPreferida == 'VES') {
-      return amountUsd * tasaCambio;
+      return amountUsd * (tasaCambio > 0 ? tasaCambio : 1.0);
+    }
+    if (monedaPreferida == 'EUR') {
+      final ves = amountUsd * (tasaCambio > 0 ? tasaCambio : 1.0);
+      final eurRate = tasaEur > 0 ? tasaEur : (tasaCambio > 0 ? tasaCambio * 1.08 : 1.0);
+      return eurRate > 0 ? ves / eurRate : amountUsd;
+    }
+    if (monedaPreferida == 'USDT') {
+      final ves = amountUsd * (tasaCambio > 0 ? tasaCambio : 1.0);
+      final usdtRate = tasaUsdt > 0 ? tasaUsdt : (tasaCambio > 0 ? tasaCambio : 1.0);
+      return usdtRate > 0 ? ves / usdtRate : amountUsd;
     }
     return amountUsd;
   }

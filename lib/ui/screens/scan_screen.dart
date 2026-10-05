@@ -11,7 +11,6 @@ import '../../providers/scan_queue_provider.dart';
 import '../../services/image_service.dart';
 import '../../services/document_scanner_service.dart';
 import 'review_expense_screen.dart';
-import 'settings_screen.dart';
 
 class ScanScreen extends StatefulWidget {
   final ImagePicker? imagePicker;

@@ -11,6 +11,8 @@ class SummaryCard extends StatelessWidget {
   final String periodo;
   final String monedaPrincipal;
   final double tasaCambio;
+  final double tasaEur;
+  final double tasaUsdt;
   final double presupuestoGeneral;
   final double metaAhorro;
   final String monedaPresupuesto;
@@ -24,6 +26,8 @@ class SummaryCard extends StatelessWidget {
     required this.periodo,
     this.monedaPrincipal = 'USD',
     this.tasaCambio = 1.0,
+    this.tasaEur = 0.0,
+    this.tasaUsdt = 0.0,
     this.presupuestoGeneral = 0.0,
     this.metaAhorro = 0.0,
     this.monedaPresupuesto = 'USD',
@@ -38,6 +42,8 @@ class SummaryCard extends StatelessWidget {
       totalVes > 0 ? totalVes : null,
       tasaCambio,
       monedaPrincipal,
+      tasaEur: tasaEur,
+      tasaUsdt: tasaUsdt,
     );
 
     final textoSecundario = CurrencyFormatter.formatSecundario(
@@ -80,6 +86,8 @@ class SummaryCard extends StatelessWidget {
             null,
             tasaCambio,
             monedaPrincipal,
+            tasaEur: tasaEur,
+            tasaUsdt: tasaUsdt,
           );
     final ritmoFormatted = isBudgetVes
         ? CurrencyFormatter.formatVes(ritmoDiario)
@@ -88,16 +96,18 @@ class SummaryCard extends StatelessWidget {
             null,
             tasaCambio,
             monedaPrincipal,
+            tasaEur: tasaEur,
+            tasaUsdt: tasaUsdt,
           );
     final budgetFormatted = isBudgetVes
         ? CurrencyFormatter.formatVes(presupuestoGeneral)
-        : CurrencyFormatter.formatPreferido(presupuestoGeneral, null, tasaCambio, monedaPrincipal);
+        : CurrencyFormatter.formatPreferido(presupuestoGeneral, null, tasaCambio, monedaPrincipal, tasaEur: tasaEur, tasaUsdt: tasaUsdt);
     final limiteFormatted = isBudgetVes
         ? CurrencyFormatter.formatVes(limiteParaGastar)
-        : CurrencyFormatter.formatPreferido(limiteParaGastar, null, tasaCambio, monedaPrincipal);
+        : CurrencyFormatter.formatPreferido(limiteParaGastar, null, tasaCambio, monedaPrincipal, tasaEur: tasaEur, tasaUsdt: tasaUsdt);
     final excessFormatted = isBudgetVes
         ? CurrencyFormatter.formatVes(effectiveSpent - targetBudget)
-        : CurrencyFormatter.formatPreferido(effectiveSpent - targetBudget, null, tasaCambio, monedaPrincipal);
+        : CurrencyFormatter.formatPreferido(effectiveSpent - targetBudget, null, tasaCambio, monedaPrincipal, tasaEur: tasaEur, tasaUsdt: tasaUsdt);
 
     final snapshot = hasSavingsGoal
         ? SavingsHealthCalculator.calculate(
@@ -249,7 +259,7 @@ class SummaryCard extends StatelessWidget {
 
                 final metaFormatted = isBudgetVes
                     ? CurrencyFormatter.formatVes(metaAhorro)
-                    : CurrencyFormatter.formatPreferido(metaAhorro, null, tasaCambio, monedaPrincipal);
+                    : CurrencyFormatter.formatPreferido(metaAhorro, null, tasaCambio, monedaPrincipal, tasaEur: tasaEur, tasaUsdt: tasaUsdt);
 
                 return Container(
                   key: const Key('summary_card_savings_badge'),

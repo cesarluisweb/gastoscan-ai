@@ -40,6 +40,21 @@ void main() {
     test('convertFromUsd converts properly', () {
       expect(CurrencyFormatter.convertFromUsd(10.0, 'VES', 50.0), 500.0);
       expect(CurrencyFormatter.convertFromUsd(10.0, 'USD', 50.0), 10.0);
+      expect(CurrencyFormatter.convertFromUsd(10.0, 'EUR', 40.0, tasaEur: 44.0), closeTo(9.09, 0.01));
+      expect(CurrencyFormatter.convertFromUsd(10.0, 'USDT', 40.0, tasaUsdt: 40.0), 10.0);
+    });
+
+    test('formatAmount and formatPreferido support EUR and USDT', () {
+      expect(CurrencyFormatter.formatAmount(25.5, 'EUR'), contains('€'));
+      expect(CurrencyFormatter.formatAmount(50.0, 'USDT'), contains('USDT'));
+      expect(CurrencyFormatter.formatEur(15.0), contains('€'));
+      expect(CurrencyFormatter.formatUsdt(100.0), contains('USDT'));
+
+      final eurFormatted = CurrencyFormatter.formatPreferido(10.0, 400.0, 40.0, 'EUR', tasaEur: 44.0);
+      expect(eurFormatted, contains('€'));
+
+      final usdtFormatted = CurrencyFormatter.formatPreferido(10.0, 400.0, 40.0, 'USDT', tasaUsdt: 40.0);
+      expect(usdtFormatted, contains('USDT'));
     });
   });
 

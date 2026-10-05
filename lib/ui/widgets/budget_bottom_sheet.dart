@@ -73,14 +73,50 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
     if (mounted) setState(() {});
   }
 
-  void _cambiarMoneda(String nuevaMoneda, double tasaCambio) {
+  void _cambiarMoneda(
+    String nuevaMoneda, {
+    required double tasaUsd,
+    required double tasaEur,
+    required double tasaUsdt,
+  }) {
     if (nuevaMoneda == _selectedMoneda) return;
-    final tasa = tasaCambio > 0 ? tasaCambio : 1.0;
+
+    double toVes(double val, String moneda) {
+      switch (moneda) {
+        case 'VES':
+          return val;
+        case 'EUR':
+          return val * (tasaEur > 0 ? tasaEur : (tasaUsd > 0 ? tasaUsd * 1.08 : 43.0));
+        case 'USDT':
+          return val * (tasaUsdt > 0 ? tasaUsdt : (tasaUsd > 0 ? tasaUsd : 40.0));
+        case 'USD':
+        default:
+          return val * (tasaUsd > 0 ? tasaUsd : 40.0);
+      }
+    }
+
+    double fromVes(double ves, String moneda) {
+      switch (moneda) {
+        case 'VES':
+          return ves;
+        case 'EUR':
+          final r = tasaEur > 0 ? tasaEur : (tasaUsd > 0 ? tasaUsd * 1.08 : 43.0);
+          return r > 0 ? ves / r : ves;
+        case 'USDT':
+          final r = tasaUsdt > 0 ? tasaUsdt : (tasaUsd > 0 ? tasaUsd : 40.0);
+          return r > 0 ? ves / r : ves;
+        case 'USD':
+        default:
+          final r = tasaUsd > 0 ? tasaUsd : 40.0;
+          return r > 0 ? ves / r : ves;
+      }
+    }
 
     // Convertir presupuesto general
     final genVal = double.tryParse(_generalBudgetCtrl.text.replaceAll(',', '.')) ?? 0.0;
     if (genVal > 0) {
-      final double nuevoGen = nuevaMoneda == 'VES' ? genVal * tasa : genVal / tasa;
+      final double ves = toVes(genVal, _selectedMoneda);
+      final double nuevoGen = fromVes(ves, nuevaMoneda);
       _generalBudgetCtrl.text = nuevoGen >= 100
           ? nuevoGen.round().toString()
           : nuevoGen.toStringAsFixed(2);
@@ -89,7 +125,8 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
     // Convertir meta de ahorro
     final metaVal = double.tryParse(_savingsGoalCtrl.text.replaceAll(',', '.')) ?? 0.0;
     if (metaVal > 0) {
-      final double nuevoMeta = nuevaMoneda == 'VES' ? metaVal * tasa : metaVal / tasa;
+      final double ves = toVes(metaVal, _selectedMoneda);
+      final double nuevoMeta = fromVes(ves, nuevaMoneda);
       _savingsGoalCtrl.text = nuevoMeta >= 100
           ? nuevoMeta.round().toString()
           : nuevoMeta.toStringAsFixed(2);
@@ -99,7 +136,8 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
     for (final ctrl in _categoryControllers.values) {
       final val = double.tryParse(ctrl.text.replaceAll(',', '.')) ?? 0.0;
       if (val > 0) {
-        final double nuevoVal = nuevaMoneda == 'VES' ? val * tasa : val / tasa;
+        final double ves = toVes(val, _selectedMoneda);
+        final double nuevoVal = fromVes(ves, nuevaMoneda);
         ctrl.text = nuevoVal >= 100
             ? nuevoVal.round().toString()
             : nuevoVal.toStringAsFixed(2);
@@ -237,8 +275,19 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
     final disponible = limite - suma;
     final bool metaExceeded = _isMetaExceeded;
     final bool categoriesExceeded = _isCategoriesExceeded;
-    final bool exceeded = _isExceeded;
-    final prefix = _selectedMoneda == 'VES' ? 'Bs. ' : '\$ ';
+    final prefix = () {
+      switch (_selectedMoneda) {
+        case 'VES':
+          return 'Bs. ';
+        case 'EUR':
+          return '€ ';
+        case 'USDT':
+          return 'USDT ';
+        case 'USD':
+        default:
+          return '\$ ';
+      }
+    }();
 
     String fmt(double monto) => CurrencyFormatter.formatAmount(monto, _selectedMoneda);
 
@@ -308,52 +357,35 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      InkWell(
-                        key: const Key('budget_currency_usd_btn'),
-                        onTap: () => _cambiarMoneda('USD', settings.tasaCambioVesUsd),
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                          decoration: BoxDecoration(
-                            color: _selectedMoneda == 'USD' ? AppColors.surface : Colors.transparent,
-                            borderRadius: BorderRadius.circular(8),
-                            boxShadow: _selectedMoneda == 'USD'
-                                ? [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 4)]
-                                : null,
+                      for (final m in ['USD', 'VES', 'EUR', 'USDT'])
+                        InkWell(
+                          key: Key('budget_currency_${m.toLowerCase()}_btn'),
+                          onTap: () => _cambiarMoneda(
+                            m,
+                            tasaUsd: settings.tasaCambioVesUsd,
+                            tasaEur: settings.tasaCambioVesEur,
+                            tasaUsdt: settings.tasaCambioVesUsdt,
                           ),
-                          child: Text(
-                            'USD',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: _selectedMoneda == 'USD' ? FontWeight.bold : FontWeight.normal,
-                              color: AppColors.textPrimary,
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: _selectedMoneda == m ? AppColors.surface : Colors.transparent,
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: _selectedMoneda == m
+                                  ? [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 4)]
+                                  : null,
+                            ),
+                            child: Text(
+                              m,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: _selectedMoneda == m ? FontWeight.bold : FontWeight.normal,
+                                color: AppColors.textPrimary,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      InkWell(
-                        key: const Key('budget_currency_ves_btn'),
-                        onTap: () => _cambiarMoneda('VES', settings.tasaCambioVesUsd),
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                          decoration: BoxDecoration(
-                            color: _selectedMoneda == 'VES' ? AppColors.surface : Colors.transparent,
-                            borderRadius: BorderRadius.circular(8),
-                            boxShadow: _selectedMoneda == 'VES'
-                                ? [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 4)]
-                                : null,
-                          ),
-                          child: Text(
-                            'VES',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: _selectedMoneda == 'VES' ? FontWeight.bold : FontWeight.normal,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                        ),
-                      ),
                     ],
                   ),
                 ),

@@ -185,12 +185,23 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
 
   void _recalcularTotalUsd() {
     final original = double.tryParse(_totalOriginalCtrl.text.replaceAll(',', '.')) ?? 0.0;
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+
     if (_selectedMoneda == 'USD') {
       _totalUsdCtrl.text = original.toStringAsFixed(2);
     } else if (_selectedMoneda == 'VES') {
       final tasa = double.tryParse(_tasaCambioCtrl.text.replaceAll(',', '.')) ?? 1.0;
       final enUsd = tasa > 0 ? (original / tasa) : original;
       _totalUsdCtrl.text = enUsd.toStringAsFixed(2);
+    } else if (_selectedMoneda == 'EUR') {
+      final tasaEur = settings.tasaCambioVesEur;
+      final tasaUsd = settings.tasaCambioVesUsd;
+      final eurToUsdRatio = (tasaUsd > 0 && tasaEur > 0) ? (tasaEur / tasaUsd) : 1.08;
+      final enUsd = original * eurToUsdRatio;
+      _totalUsdCtrl.text = enUsd.toStringAsFixed(2);
+    } else if (_selectedMoneda == 'USDT') {
+      // 1 USDT se valora a la par de USD para totalUsd
+      _totalUsdCtrl.text = original.toStringAsFixed(2);
     } else {
       _totalUsdCtrl.text = original.toStringAsFixed(2);
     }
@@ -1017,7 +1028,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                   ),
                   const SizedBox(height: 16),
-                  const Text('Moneda', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                  const Text('Moneda de pago', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                   const SizedBox(height: 6),
                   Container(
                     width: double.infinity,
@@ -1029,66 +1040,38 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     padding: const EdgeInsets.all(2),
                     child: Row(
                       children: [
-                        Expanded(
-                          child: InkWell(
-                            onTap: () {
-                              setState(() {
-                                _selectedMoneda = 'USD';
-                                _recalcularTotalUsd();
-                              });
-                            },
-                            borderRadius: BorderRadius.circular(8),
-                            child: Container(
-                              alignment: Alignment.center,
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              decoration: BoxDecoration(
-                                color: _selectedMoneda == 'USD' ? AppColors.surface : Colors.transparent,
-                                borderRadius: BorderRadius.circular(8),
-                                boxShadow: _selectedMoneda == 'USD'
-                                    ? [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 4)]
-                                    : null,
-                              ),
-                              child: Text(
-                                'USD',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: _selectedMoneda == 'USD' ? FontWeight.bold : FontWeight.normal,
-                                  color: AppColors.textPrimary,
+                        for (final m in ['USD', 'VES', 'EUR', 'USDT'])
+                          Expanded(
+                            child: InkWell(
+                              key: Key('expense_currency_${m.toLowerCase()}_btn'),
+                              onTap: () {
+                                setState(() {
+                                  _selectedMoneda = m;
+                                  _recalcularTotalUsd();
+                                });
+                              },
+                              borderRadius: BorderRadius.circular(8),
+                              child: Container(
+                                alignment: Alignment.center,
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: _selectedMoneda == m ? AppColors.surface : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(8),
+                                  boxShadow: _selectedMoneda == m
+                                      ? [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 4)]
+                                      : null,
+                                ),
+                                child: Text(
+                                  m,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: _selectedMoneda == m ? FontWeight.bold : FontWeight.normal,
+                                    color: AppColors.textPrimary,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                        Expanded(
-                          child: InkWell(
-                            onTap: () {
-                              setState(() {
-                                _selectedMoneda = 'VES';
-                                _recalcularTotalUsd();
-                              });
-                            },
-                            borderRadius: BorderRadius.circular(8),
-                            child: Container(
-                              alignment: Alignment.center,
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              decoration: BoxDecoration(
-                                color: _selectedMoneda == 'VES' ? AppColors.surface : Colors.transparent,
-                                borderRadius: BorderRadius.circular(8),
-                                boxShadow: _selectedMoneda == 'VES'
-                                    ? [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 4)]
-                                    : null,
-                              ),
-                              child: Text(
-                                'VES',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: _selectedMoneda == 'VES' ? FontWeight.bold : FontWeight.normal,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
                       ],
                     ),
                   ),
@@ -1105,6 +1088,68 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                       validator: (val) => (double.tryParse((val ?? '').replaceAll(',', '.')) == null) ? 'Inválido' : null,
                     ),
                     const SizedBox(height: 12),
+                    // Chips rápidos de tasa para Bolívares
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          ActionChip(
+                            key: const Key('chip_rate_usd_bcv'),
+                            avatar: const Icon(Icons.attach_money, size: 14, color: AppColors.primaryDark),
+                            label: Text(
+                              'Dólar BCV: Bs. ${settings.tasaCambioVesUsd.toStringAsFixed(2)}',
+                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                            ),
+                            backgroundColor: AppColors.surface,
+                            side: const BorderSide(color: AppColors.border),
+                            onPressed: () {
+                              setState(() {
+                                _tasaCambioCtrl.text = settings.tasaCambioVesUsd.toStringAsFixed(2);
+                                _fuenteTasa = 'Dólar BCV oficial';
+                                _recalcularTotalUsd();
+                              });
+                            },
+                          ),
+                          const SizedBox(width: 8),
+                          ActionChip(
+                            key: const Key('chip_rate_eur_bcv'),
+                            avatar: const Icon(Icons.euro, size: 14, color: AppColors.primaryDark),
+                            label: Text(
+                              'Euro BCV: Bs. ${settings.tasaCambioVesEur.toStringAsFixed(2)}',
+                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                            ),
+                            backgroundColor: AppColors.surface,
+                            side: const BorderSide(color: AppColors.border),
+                            onPressed: () {
+                              setState(() {
+                                _tasaCambioCtrl.text = settings.tasaCambioVesEur.toStringAsFixed(2);
+                                _fuenteTasa = 'Euro BCV oficial';
+                                _recalcularTotalUsd();
+                              });
+                            },
+                          ),
+                          const SizedBox(width: 8),
+                          ActionChip(
+                            key: const Key('chip_rate_usdt_binance'),
+                            avatar: const Icon(Icons.currency_bitcoin, size: 14, color: AppColors.primaryDark),
+                            label: Text(
+                              'USDT: Bs. ${settings.tasaCambioVesUsdt.toStringAsFixed(2)}',
+                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                            ),
+                            backgroundColor: AppColors.surface,
+                            side: const BorderSide(color: AppColors.border),
+                            onPressed: () {
+                              setState(() {
+                                _tasaCambioCtrl.text = settings.tasaCambioVesUsdt.toStringAsFixed(2);
+                                _fuenteTasa = 'USDT Binance P2P';
+                                _recalcularTotalUsd();
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     TextFormField(
                       controller: _tasaCambioCtrl,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -1130,9 +1175,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     TextFormField(
                       controller: _totalOriginalCtrl,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      decoration: const InputDecoration(
-                        labelText: 'Monto Total (USD)',
-                        prefixIcon: Icon(Icons.attach_money, color: AppColors.primaryDark),
+                      decoration: InputDecoration(
+                        labelText: 'Monto Total ($_selectedMoneda)',
+                        prefixIcon: const Icon(Icons.payments_outlined, color: AppColors.primaryDark),
                       ),
                       onChanged: (val) {
                         _totalUsdCtrl.text = val;

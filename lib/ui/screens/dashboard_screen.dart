@@ -18,7 +18,6 @@ import '../widgets/budget_bottom_sheet.dart';
 import '../widgets/ai_insight_card.dart';
 import '../widgets/global_scan_queue_banner.dart';
 import 'scan_screen.dart';
-import 'settings_screen.dart';
 import 'review_expense_screen.dart';
 import 'chat_screen.dart';
 import '../../data/models/gasto_model.dart';
@@ -224,6 +223,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               periodo: '$mesNombre $anio',
               monedaPrincipal: settings.monedaPrincipal,
               tasaCambio: settings.tasaCambioVesUsd,
+              tasaEur: settings.tasaCambioVesEur,
+              tasaUsdt: settings.tasaCambioVesUsdt,
               presupuestoGeneral: gastoProvider.presupuestoGeneral,
               metaAhorro: gastoProvider.metaAhorro,
               monedaPresupuesto: gastoProvider.monedaPresupuesto,

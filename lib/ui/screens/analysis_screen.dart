@@ -233,7 +233,14 @@ class AnalysisScreen extends StatelessWidget {
               builder: (context) {
                 String fmtAmount(double val) => isBudgetVes
                     ? CurrencyFormatter.formatVes(val)
-                    : CurrencyFormatter.formatPreferido(val, null, settings.tasaCambioVesUsd, settings.monedaPrincipal);
+                    : CurrencyFormatter.formatPreferido(
+                        val,
+                        null,
+                        settings.tasaCambioVesUsd,
+                        settings.monedaPrincipal,
+                        tasaEur: settings.tasaCambioVesEur,
+                        tasaUsdt: settings.tasaCambioVesUsdt,
+                      );
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

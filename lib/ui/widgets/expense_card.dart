@@ -130,14 +130,25 @@ class _ExpenseCardState extends State<ExpenseCard> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        widget.monedaPrincipal == 'VES'
-                            ? CurrencyFormatter.formatVes(
-                                widget.gasto.moneda == 'VES'
-                                    ? widget.gasto.totalOriginalDisplay
-                                    : widget.gasto.totalUsdDisplay *
-                                        (widget.gasto.tasaCambio > 0 ? widget.gasto.tasaCambio : 1.0),
-                              )
-                            : CurrencyFormatter.formatUsd(widget.gasto.totalUsdDisplay),
+                        () {
+                          final tasa = widget.gasto.tasaCambio > 0 ? widget.gasto.tasaCambio : 1.0;
+                          final double ves = widget.gasto.moneda == 'VES'
+                              ? widget.gasto.totalOriginalDisplay
+                              : widget.gasto.totalUsdDisplay * tasa;
+                          final double usd = widget.gasto.totalUsdDisplay;
+
+                          switch (widget.monedaPrincipal) {
+                            case 'VES':
+                              return CurrencyFormatter.formatVes(ves);
+                            case 'EUR':
+                              return CurrencyFormatter.formatEur(usd / 1.08);
+                            case 'USDT':
+                              return CurrencyFormatter.formatUsdt(usd);
+                            case 'USD':
+                            default:
+                              return CurrencyFormatter.formatUsd(usd);
+                          }
+                        }(),
                         style: const TextStyle(
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.bold,
