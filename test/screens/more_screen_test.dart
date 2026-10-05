@@ -82,6 +82,8 @@ void main() {
       expect(find.text('Exportar a Excel (.csv)', skipOffstage: false), findsOneWidget);
       expect(find.text('Exportar como Texto (.md)', skipOffstage: false), findsOneWidget);
       expect(find.text('Escribir a soporte', skipOffstage: false), findsOneWidget);
+      expect(find.text('Visitar sitio web', skipOffstage: false), findsOneWidget);
+      expect(find.text('Apoyar el proyecto ☕', skipOffstage: false), findsOneWidget);
       expect(find.text('Versión de la App', skipOffstage: false), findsOneWidget);
     });
 

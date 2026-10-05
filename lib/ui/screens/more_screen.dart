@@ -177,26 +177,43 @@ class MoreScreenState extends State<MoreScreen> {
     );
   }
 
-  Future<void> _contactarSoporteWhatsApp() async {
-    final uri = Uri.parse(AppConstants.soporteWhatsAppUrl);
+  Future<void> _abrirUrl(String url, String mensajeError) async {
+    final uri = Uri.parse(url);
     try {
       final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
       if (!launched && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No se pudo abrir WhatsApp. Escribe al: ${AppConstants.soporteWhatsAppNumero}'),
-          ),
+          SnackBar(content: Text(mensajeError)),
         );
       }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No se pudo abrir WhatsApp. Escribe al: ${AppConstants.soporteWhatsAppNumero}'),
-          ),
+          SnackBar(content: Text(mensajeError)),
         );
       }
     }
+  }
+
+  Future<void> _contactarSoporteWhatsApp() async {
+    await _abrirUrl(
+      AppConstants.soporteWhatsAppUrl,
+      'No se pudo abrir WhatsApp. Escribe al: ${AppConstants.soporteWhatsAppNumero}',
+    );
+  }
+
+  Future<void> _abrirSitioWeb() async {
+    await _abrirUrl(
+      AppConstants.websiteUrl,
+      'No se pudo abrir el sitio web.',
+    );
+  }
+
+  Future<void> _abrirDonaciones() async {
+    await _abrirUrl(
+      AppConstants.donarUrl,
+      'No se pudo abrir la página de donaciones.',
+    );
   }
 
   @override
@@ -583,7 +600,7 @@ class MoreScreenState extends State<MoreScreen> {
           ),
           const SizedBox(height: 16),
 
-          // Sección de Ayuda y Soporte
+          // Sección de Ayuda y Comunidad
           Material(
             color: AppColors.card,
             shape: RoundedRectangleBorder(
@@ -606,6 +623,36 @@ class MoreScreenState extends State<MoreScreen> {
                   ),
                   trailing: const Icon(Icons.open_in_new, size: 18, color: AppColors.textSecondary),
                   onTap: _contactarSoporteWhatsApp,
+                ),
+                const Divider(height: 1, color: AppColors.border),
+                ListTile(
+                  key: const Key('more_menu_website'),
+                  leading: const Icon(Icons.language_outlined, color: AppColors.primaryDark),
+                  title: const Text(
+                    'Visitar sitio web',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                  ),
+                  subtitle: const Text(
+                    'rindemas.cesarluis.com',
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                  ),
+                  trailing: const Icon(Icons.open_in_new, size: 18, color: AppColors.textSecondary),
+                  onTap: _abrirSitioWeb,
+                ),
+                const Divider(height: 1, color: AppColors.border),
+                ListTile(
+                  key: const Key('more_menu_donate'),
+                  leading: const Icon(Icons.coffee_outlined, color: AppColors.primaryDark),
+                  title: const Text(
+                    'Apoyar el proyecto ☕',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                  ),
+                  subtitle: const Text(
+                    'Haz una donación para mantener Rinde Más gratuito',
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                  ),
+                  trailing: const Icon(Icons.open_in_new, size: 18, color: AppColors.textSecondary),
+                  onTap: _abrirDonaciones,
                 ),
               ],
             ),

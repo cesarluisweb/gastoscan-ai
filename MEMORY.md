@@ -3,19 +3,16 @@
 
 ## Estado Actual Inmediato
 - **Rama:** `main`.
-- **Fase activa:** Fase 5 (Lanzamiento / Preparación Google Play) y Fase 6.1.
+- **Fase activa:** Fase 5 (Lanzamiento / Preparación Google Play).
 - **Últimos hitos:** 
-  1. **Actualizaciones Inteligentes (Semánticas + Críticas):** Soporte para detección por versión semántica (`isVersionHigher`), evitando falsos positivos de builds internos. Soporte para bandera `isMajor` / `is_major_release: true` con aviso directo al iniciar la app.
-  2. **Sistema Multimoneda y Selector de Tasas:** Soporte en toda la app para USD, VES, EUR y USDT. Tarjeta de 3 tasas en "Más", chips de tasa en Revisar Gasto, presupuestos dinámicos.
+  1. **Integración Web + Sección de Donaciones:** Opciones de "Visitar sitio web" (`rindemas.cesarluis.com`) y "Apoyar el proyecto ☕" agregadas a la pestaña **Más**. Nueva sección de donaciones (`#donar`) agregada a la landing page (PayPal, Binance Pay USDT ID `254881729`, Pago Móvil Banesco).
+  2. **Actualizaciones Inteligentes (Semánticas + Críticas):** Soporte para detección por versión semántica (`isVersionHigher`) y bandera `isMajor` / `is_major_release: true` con aviso directo al iniciar la app.
   3. **Gateway Cloudflare Workers + BanaHosting:** Operación serverless 100% gratuita y distribución de APK por FTP.
 
 ## Decisiones Técnicas y de Negocio Recientes
-- **Estrategia de Actualizaciones:**
-  - Actualización Menor: Notificación silenciosa en "Más -> Buscar" cuando hay nueva versión.
-  - Actualización Mayor / Crítica (`isMajor: true`): Diálogo modal obligatorio al abrir la app.
-  - La app compara versiones semánticas (`remote > current`), ignorando incrementos de compilaciones de CI del mismo release.
-- **Gateway Cloudflare Worker:** Proxy seguro con validación JWT de Firebase Auth y rate limiting.
-- **Distribución de APK en BanaHosting:** El CI sube `rindemas.apk` directamente por FTP.
+- **Cumplimiento Político de Google Play:** Las donaciones no se cobran dentro de la app (para evitar suspensión por bypass de Google Billing). El botón de la app redirige a la web oficial (`rindemas.cesarluis.com/#donar`), cumpliendo 100% las normativas de Play Store.
+- **Estrategia de Actualizaciones:** Actualizaciones menores en "Más -> Buscar" y mayores obligatorias al iniciar (`isMajor`).
+- **Gateway Cloudflare Worker:** Proxy seguro con validación JWT de Firebase Auth.
 
 ## Errores y Fricciones a Evitar
 - No tocar `android/` localmente (CI regenera con `flutter create`).
