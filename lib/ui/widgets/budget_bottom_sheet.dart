@@ -275,6 +275,7 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
     final disponible = limite - suma;
     final bool metaExceeded = _isMetaExceeded;
     final bool categoriesExceeded = _isCategoriesExceeded;
+    final bool exceeded = _isExceeded;
     final prefix = () {
       switch (_selectedMoneda) {
         case 'VES':

@@ -603,6 +603,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = Provider.of<SettingsProvider>(context);
     final queueProvider = Provider.of<ScanQueueProvider>(context);
     final readyCount = queueProvider.readyItems.length;
     final isQueueItem = widget.queueItemId != null;
