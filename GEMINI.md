@@ -100,6 +100,10 @@ La compilación en GitHub Actions (`build_apk.yml`) ejecuta `flutter create`, lo
 - **Publicidad en Tiempos de Espera y Better Ads:** La monetización publicitaria debe priorizar espacios no obstructivos, como el tiempo de análisis de imágenes ("Analizando comprobante..."), sin interrumpir el flujo de registro. Los anuncios intersticiales deben mostrarse EXCLUSIVAMENTE en puntos de transición naturales (ej. tras guardar exitosamente una factura). Queda estrictamente prohibido disparar anuncios al abrir la app, durante la captura de fotos o interrumpiendo acciones en curso para cumplir con las normas de *Better Ads Standards*.
 - **Cumplimiento Estricto de Pagos (Google Play):** Toda compra o suscripción digital dentro del APK distribuido en Google Play debe procesarse obligatoriamente mediante Google Play Billing para evitar sanciones o suspensión de cuenta. Pagos locales (Pago Móvil) solo podrán gestionarse externamente vía web.
 - **Prohibición de IA Vitalicia Ilimitada:** Ningún paquete de pago único podrá prometer consumo de IA sin límites en el tiempo, protegiendo los costos recurrentes de API.
+- **Inmutabilidad y Consistencia en Bolívares (VES):**
+  1. Los gastos cuyo pago se realiza en Bolívares (VES) guardan su monto original inmutable (`total_original`). Los totales y distribuciones por categoría en VES reflejan la suma exacta en Bolívares sin recalcularse por fluctuaciones futuras de la tasa diaria.
+  2. Los gastos pagados en divisas (USD, EUR, USDT) se convierten a Bolívares utilizando de forma determinista la tasa de cambio vigente en la fecha exacta del registro.
+  3. Toda vista de resumen en Bolívares debe garantizar exactitud matemática al céntimo entre el Total Gastado y la Distribución de Gastos.
 
 ## 12. Asistente IA: Reglas de Intención y Gestión de Compras
 - **Desambiguación Obligatoria (Gasto vs. Lista de Compras):** Si el usuario pide registrar o anotar productos sin monto y sin especificar claramente la intención (ej. *"anota una harina pan"*), el asistente NUNCA debe adivinar ni registrar a ciegas. Debe preguntar de forma directa:
