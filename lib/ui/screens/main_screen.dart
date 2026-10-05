@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../providers/gasto_provider.dart';
 import '../../providers/scan_queue_provider.dart';
 import '../../core/constants/app_colors.dart';
@@ -111,8 +112,24 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     NotificationService.instance.selectedPayloadNotifier.addListener(_handleNotificationPayload);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<GastoProvider>(context, listen: false).sincronizarConFirestore();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
+      gastoProvider.sincronizarConFirestore();
+
+      // Auto-reparación transparente de tasas incompletas en gastos históricos (ejecutada una sola vez)
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        if (!(prefs.getBool('pref_fixed_tasas_v1') ?? false)) {
+          final settings = Provider.of<SettingsProvider>(context, listen: false);
+          await gastoProvider.repararTasasHistoricas(
+            tasaFallback: settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : 40.0,
+          );
+          await prefs.setBool('pref_fixed_tasas_v1', true);
+        }
+      } catch (e) {
+        debugPrint('Error en reparación de tasas: $e');
+      }
+
       final initial = NotificationService.instance.initialPayload;
       if (initial != null) {
         _handleNotificationPayload();

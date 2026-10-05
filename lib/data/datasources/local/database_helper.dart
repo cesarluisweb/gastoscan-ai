@@ -487,61 +487,100 @@ class DatabaseHelper {
   }
 
   /// Calcula los totales del mes (suma en USD y suma en VES)
+  /// Calcula los totales del mes (suma en USD y suma en VES) de forma determinista y consistente.
   Future<Map<String, double>> getMonthlyTotals(int year, int month) async {
     final db = await instance.database;
     final monthStr = month.toString().padLeft(2, '0');
     final pattern = '$year-$monthStr%';
 
-    final usdResult = await db.rawQuery(
-      'SELECT SUM(total_usd) as total FROM gastos WHERE fecha LIKE ? AND eliminado_en IS NULL',
-      [pattern],
+    final rows = await db.query(
+      'gastos',
+      columns: ['moneda', 'total_original', 'total_usd', 'tasa_cambio'],
+      where: 'fecha LIKE ? AND eliminado_en IS NULL',
+      whereArgs: [pattern],
     );
 
-    final vesResult = await db.rawQuery(
-      'SELECT SUM(total_original) as total FROM gastos WHERE fecha LIKE ? AND moneda = ? AND eliminado_en IS NULL',
-      [pattern, 'VES'],
-    );
+    double sumUsd = 0.0;
+    double sumVes = 0.0;
 
-    // Dividimos entre 100 porque los montos ahora están en enteros
-    final double totalUsd = ((usdResult.first['total'] as num?)?.toDouble() ?? 0.0) / 100.0;
-    final double totalVes = ((vesResult.first['total'] as num?)?.toDouble() ?? 0.0) / 100.0;
+    for (final r in rows) {
+      final moneda = (r['moneda'] as String?) ?? 'VES';
+      final totalOrigInt = (r['total_original'] as num?)?.toInt() ?? 0;
+      final totalUsdInt = (r['total_usd'] as num?)?.toInt() ?? 0;
+      final tasa = (r['tasa_cambio'] as num?)?.toDouble() ?? 1.0;
+
+      final double totalOrig = totalOrigInt / 100.0;
+      final double totalUsd = totalUsdInt / 100.0;
+
+      sumUsd += totalUsd;
+
+      if (moneda == 'VES') {
+        sumVes += totalOrig;
+      } else {
+        sumVes += (totalUsd * (tasa > 0 ? tasa : 1.0));
+      }
+    }
 
     return {
-      'USD': totalUsd,
-      'VES': totalVes,
+      'USD': sumUsd,
+      'VES': sumVes,
     };
   }
 
-  /// Calcula el desglose de gastos en USD agrupado por categoría de cada ítem para el gráfico
-  Future<Map<String, double>> getCategoryTotals(int year, int month) async {
+  /// Calcula el desglose de gastos agrupado por categoría para el mes.
+  /// Si [moneda] es 'VES', devuelve los montos en Bolívares respetando el valor original o tasa fija del día de compra.
+  /// Si es 'USD', devuelve los montos en Dólares.
+  Future<Map<String, double>> getCategoryTotals(int year, int month, {String moneda = 'USD'}) async {
     final db = await instance.database;
     final monthStr = month.toString().padLeft(2, '0');
     final pattern = '$year-$monthStr%';
 
-    final result = await db.rawQuery('''
-      SELECT 
-        i.categoria, 
-        SUM(
-          CASE 
-            WHEN g.total_original > 0 
-            THEN (i.total * 1.0 / g.total_original) * g.total_usd 
-            ELSE 0 
-          END
-        ) as total
-      FROM items_gasto i
-      JOIN gastos g ON i.gasto_id = g.id
-      WHERE g.fecha LIKE ? AND g.eliminado_en IS NULL
-      GROUP BY i.categoria
-      ORDER BY total DESC
-    ''', [pattern]);
+    final gastosRows = await db.query(
+      'gastos',
+      columns: ['id', 'moneda', 'total_original', 'total_usd', 'tasa_cambio', 'categoria'],
+      where: 'fecha LIKE ? AND eliminado_en IS NULL',
+      whereArgs: [pattern],
+    );
 
     final Map<String, double> categoryMap = {};
-    for (final row in result) {
-      final cat = row['categoria'] as String;
-      // Convertimos los centavos a decimales para mostrar en la UI
-      final total = ((row['total'] as num?)?.toDouble() ?? 0.0) / 100.0;
-      categoryMap[cat] = total;
+
+    for (final g in gastosRows) {
+      final gastoId = g['id'] as int;
+      final gastoMoneda = (g['moneda'] as String?) ?? 'VES';
+      final totalOrig = ((g['total_original'] as num?)?.toInt() ?? 0) / 100.0;
+      final totalUsd = ((g['total_usd'] as num?)?.toInt() ?? 0) / 100.0;
+      final tasa = (g['tasa_cambio'] as num?)?.toDouble() ?? 1.0;
+      final gastoCat = (g['categoria'] as String?) ?? 'Otros';
+
+      final double targetTotal = (moneda == 'VES')
+          ? (gastoMoneda == 'VES' ? totalOrig : totalUsd * (tasa > 0 ? tasa : 1.0))
+          : totalUsd;
+
+      final items = await db.query(
+        'items_gasto',
+        columns: ['categoria', 'total'],
+        where: 'gasto_id = ?',
+        whereArgs: [gastoId],
+      );
+
+      if (items.isEmpty) {
+        categoryMap[gastoCat] = (categoryMap[gastoCat] ?? 0.0) + targetTotal;
+      } else {
+        double sumItems = 0.0;
+        for (final item in items) {
+          sumItems += ((item['total'] as num?)?.toInt() ?? 0) / 100.0;
+        }
+
+        for (final item in items) {
+          final cat = (item['categoria'] as String?) ?? gastoCat;
+          final itemTotal = ((item['total'] as num?)?.toInt() ?? 0) / 100.0;
+          final ratio = sumItems > 0 ? (itemTotal / sumItems) : (1.0 / items.length);
+          final allocated = ratio * targetTotal;
+          categoryMap[cat] = (categoryMap[cat] ?? 0.0) + allocated;
+        }
+      }
     }
+
     return categoryMap;
   }
 
@@ -1324,6 +1363,44 @@ class DatabaseHelper {
   Future<int> deleteCategoria(int id) async {
     final db = await instance.database;
     return await db.delete('categorias', where: 'id = ?', whereArgs: [id]);
+  }
+
+  /// Repara gastos históricos que tengan tasa_cambio <= 1.0 para que cuadren en Bolívares
+  Future<int> repararTasasHistoricasIncompletas({double tasaFallback = 40.0}) async {
+    final db = await instance.database;
+    final rows = await db.query(
+      'gastos',
+      columns: ['id', 'moneda', 'total_original', 'total_usd', 'tasa_cambio', 'fecha'],
+      where: 'tasa_cambio <= 1.0 AND eliminado_en IS NULL',
+    );
+
+    int actualizados = 0;
+    for (final row in rows) {
+      final id = row['id'] as int;
+      final moneda = (row['moneda'] as String?) ?? 'USD';
+      final totalOrig = ((row['total_original'] as num?)?.toInt() ?? 0) / 100.0;
+      final totalUsd = ((row['total_usd'] as num?)?.toInt() ?? 0) / 100.0;
+
+      double nuevaTasa = 0.0;
+      // Caso 1: Tasa implícita existente en los montos (ej: gasto en Bs. con total original y total USD ya calculados)
+      if (totalOrig > 0 && totalUsd > 0 && (totalOrig / totalUsd) > 2.0) {
+        nuevaTasa = totalOrig / totalUsd;
+      } else if (moneda == 'USD' && totalUsd > 0) {
+        // Caso 2: Gasto registrado en USD pero sin tasa asignada (ej: desde chat)
+        nuevaTasa = tasaFallback;
+      }
+
+      if (nuevaTasa > 1.0) {
+        await db.update(
+          'gastos',
+          {'tasa_cambio': nuevaTasa},
+          where: 'id = ?',
+          whereArgs: [id],
+        );
+        actualizados++;
+      }
+    }
+    return actualizados;
   }
 
   Future<void> close() async {

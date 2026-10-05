@@ -155,10 +155,10 @@ void main() {
           home: Scaffold(
             body: SingleChildScrollView(
               child: CategoryChart(
-                categoryTotals: const {'Alimentación': 20.0},
+                categoryTotals: const {'Alimentación': 800.0},
                 categoryBudgets: const {'Alimentación': 50.0},
                 presupuestoGeneral: 100.0,
-                totalGastadoMes: 20.0,
+                totalGastadoMes: 800.0,
                 monedaPrincipal: 'VES',
                 tasaCambio: 40.0,
               ),
@@ -168,8 +168,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // 20 USD * 40 = Bs. 800
-      // 50 USD * 40 = Bs. 2000
+      // En VES, categoryTotals ya viene provisto en Bolívares (Bs. 800)
+      // y categoryBudgets (50 USD * 40 = Bs. 2000)
       expect(
         find.text('${CurrencyFormatter.formatVes(800.0)} / ${CurrencyFormatter.formatVes(2000.0)}'),
         findsOneWidget,

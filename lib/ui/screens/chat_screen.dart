@@ -317,6 +317,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             );
           }).toList();
 
+          final settings = Provider.of<SettingsProvider>(context, listen: false);
+          final double tasaChat = settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : 1.0;
+
           final nuevoGasto = GastoModel(
             uuid: UuidGenerator.generate(),
             fecha: fecha,
@@ -324,6 +327,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             moneda: 'USD',
             totalOriginal: (totalUsd * 100).round(),
             totalUsd: (totalUsd * 100).round(),
+            tasaCambio: tasaChat,
+            fuenteTasaCambio: 'Tasa BCV del día',
+            fechaTasaCambio: fecha,
             categoria: categoria,
             creadoEn: DateTime.now().toIso8601String(),
           );

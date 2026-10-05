@@ -25,6 +25,7 @@ class GastoProvider with ChangeNotifier {
   double _metaAhorro = 0.0;
   String _monedaPresupuesto = 'USD';
   Map<String, double> _totalesPorCategoria = {};
+  Map<String, double> _totalesPorCategoriaVes = {};
   Map<String, double> _presupuestosPorCategoria = {};
 
   List<GastoModel> get gastos => _gastos;
@@ -38,30 +39,17 @@ class GastoProvider with ChangeNotifier {
   double get metaAhorro => _metaAhorro;
   String get monedaPresupuesto => _monedaPresupuesto;
   Map<String, double> get totalesPorCategoria => _totalesPorCategoria;
+  Map<String, double> get totalesPorCategoriaVes =>
+      _totalesPorCategoriaVes.isNotEmpty ? _totalesPorCategoriaVes : _totalesPorCategoria;
+
+  Map<String, double> totalesPorCategoriaPara(String moneda) {
+    return moneda == 'VES' ? _totalesPorCategoriaVes : _totalesPorCategoria;
+  }
+
   Map<String, double> get presupuestosPorCategoria => _presupuestosPorCategoria;
 
   SavingsHealthSnapshot get savingsSnapshot {
-    double gastoAcumulado = 0.0;
-    if (_monedaPresupuesto == 'VES') {
-      for (final g in _gastos) {
-        if (g.moneda == 'VES') {
-          gastoAcumulado += g.totalOriginalDisplay;
-        } else {
-          final tasa = g.tasaCambio > 0 ? g.tasaCambio : 1.0;
-          gastoAcumulado += (g.totalUsdDisplay * tasa);
-        }
-      }
-      if (gastoAcumulado == 0.0 && _totalMesVes > 0) {
-        gastoAcumulado = _totalMesVes;
-      }
-    } else {
-      for (final g in _gastos) {
-        gastoAcumulado += g.totalUsdDisplay;
-      }
-      if (gastoAcumulado == 0.0 && _totalMesUsd > 0) {
-        gastoAcumulado = _totalMesUsd;
-      }
-    }
+    final double gastoAcumulado = _monedaPresupuesto == 'VES' ? _totalMesVes : _totalMesUsd;
 
     final now = DateTime.now();
     final isCurrentMonth = (now.year == _selectedYear && now.month == _selectedMonth);
@@ -98,7 +86,8 @@ class GastoProvider with ChangeNotifier {
       _totalMesUsd = totales['USD'] ?? 0.0;
       _totalMesVes = totales['VES'] ?? 0.0;
 
-      _totalesPorCategoria = await _repository.obtenerTotalesPorCategoria(_selectedYear, _selectedMonth);
+      _totalesPorCategoria = await _repository.obtenerTotalesPorCategoria(_selectedYear, _selectedMonth, moneda: 'USD');
+      _totalesPorCategoriaVes = await _repository.obtenerTotalesPorCategoria(_selectedYear, _selectedMonth, moneda: 'VES');
 
       // Copiar del mes anterior si este mes no tiene registros de presupuesto
       await _repository.copiarPresupuestosMesAnteriorSiVacio(_selectedYear, _selectedMonth);
@@ -113,6 +102,14 @@ class GastoProvider with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<int> repararTasasHistoricas({double tasaFallback = 40.0}) async {
+    final count = await _repository.repararTasasHistoricasIncompletas(tasaFallback: tasaFallback);
+    if (count > 0) {
+      await cargarDatos();
+    }
+    return count;
   }
 
   Future<bool> agregarGasto(GastoModel gasto, List<ItemGastoModel> items, {List<int>? shoppingItemIds}) async {

@@ -22,6 +22,7 @@ class AnalysisScreen extends StatelessWidget {
     final anio = gastoProvider.selectedYear;
 
     final hasData = gastoProvider.totalesPorCategoria.isNotEmpty ||
+        gastoProvider.totalesPorCategoriaVes.isNotEmpty ||
         gastoProvider.presupuestosPorCategoria.isNotEmpty ||
         gastoProvider.presupuestoGeneral > 0;
 
@@ -120,10 +121,14 @@ class AnalysisScreen extends StatelessWidget {
             _buildGeneralBudgetCard(context, gastoProvider, settings),
             const SizedBox(height: 16),
             CategoryChart(
-              categoryTotals: gastoProvider.totalesPorCategoria,
+              categoryTotals: settings.monedaPrincipal == 'VES'
+                  ? gastoProvider.totalesPorCategoriaVes
+                  : gastoProvider.totalesPorCategoria,
               categoryBudgets: gastoProvider.presupuestosPorCategoria,
               presupuestoGeneral: gastoProvider.presupuestoGeneral,
-              totalGastadoMes: gastoProvider.totalMesUsd,
+              totalGastadoMes: settings.monedaPrincipal == 'VES'
+                  ? gastoProvider.totalMesVes
+                  : gastoProvider.totalMesUsd,
               gastosMes: gastoProvider.gastos,
               onSetBudget: (categoria, budget) async {
                 await gastoProvider.setPresupuestoCategoria(categoria, budget);
@@ -158,7 +163,7 @@ class AnalysisScreen extends StatelessWidget {
         : budget;
 
     final double spent = isBudgetVes
-        ? (gastoProvider.totalMesVes > 0 ? gastoProvider.totalMesVes : gastoProvider.totalMesUsd * settings.tasaCambioVesUsd)
+        ? gastoProvider.totalMesVes
         : gastoProvider.totalMesUsd;
     final bool hasBudget = budget > 0;
     final double targetBudget = hasSavingsGoal ? limiteParaGastar : budget;

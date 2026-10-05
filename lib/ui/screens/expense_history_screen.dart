@@ -98,7 +98,7 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
       final double totalOrig = result.totalOriginal;
       final double tasa = (result.tasaCambioDetectada != null && result.tasaCambioDetectada! > 0)
           ? result.tasaCambioDetectada!
-          : 1.0;
+          : (settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : 1.0);
       final double totalUsd = (result.moneda == 'USD')
           ? totalOrig
           : (tasa > 0 ? totalOrig / tasa : 0.0);

@@ -62,13 +62,11 @@ class CategoryChart extends StatefulWidget {
 class _CategoryChartState extends State<CategoryChart> {
   String? _expandedCategory;
 
-  String _fmt(double amountUsd) {
+  String _fmt(double amount) {
     if (widget.monedaPrincipal == 'VES') {
-      return CurrencyFormatter.formatVes(
-        amountUsd * (widget.tasaCambio > 0 ? widget.tasaCambio : 1.0),
-      );
+      return CurrencyFormatter.formatVes(amount);
     }
-    return CurrencyFormatter.formatUsd(amountUsd);
+    return CurrencyFormatter.formatUsd(amount);
   }
 
   @override
@@ -476,15 +474,24 @@ class _CategoryChartState extends State<CategoryChart> {
   }
 
   double _getBudget(String category) {
+    double rawBudget = 0.0;
     if (widget.categoryBudgets.containsKey(category)) {
-      return widget.categoryBudgets[category]!;
-    }
-    for (final entry in widget.categoryBudgets.entries) {
-      if (entry.key.toLowerCase().trim() == category.toLowerCase().trim()) {
-        return entry.value;
+      rawBudget = widget.categoryBudgets[category]!;
+    } else {
+      for (final entry in widget.categoryBudgets.entries) {
+        if (entry.key.toLowerCase().trim() == category.toLowerCase().trim()) {
+          rawBudget = entry.value;
+          break;
+        }
       }
     }
-    return 0.0;
+    if (rawBudget <= 0) return 0.0;
+
+    // Si los presupuestos están fijados en USD pero la vista actual es VES, adaptamos el límite con la tasa actual
+    if (widget.monedaPrincipal == 'VES') {
+      return rawBudget * (widget.tasaCambio > 0 ? widget.tasaCambio : 1.0);
+    }
+    return rawBudget;
   }
 
   Widget _buildCategoryBudgetItem(BuildContext context, String cat) {
@@ -677,18 +684,44 @@ class _CategoryChartState extends State<CategoryChart> {
   List<Widget> _buildCategoryItems(String cat) {
     final List<Map<String, dynamic>> items = [];
     for (final gasto in widget.gastosMes) {
-      for (final item in gasto.items) {
-        if (item.categoria.toLowerCase().trim() == cat.toLowerCase().trim()) {
-           double itemUsd = item.totalDisplay;
-           if (gasto.moneda != 'USD' && gasto.totalOriginalDisplay > 0) {
-             itemUsd = item.totalDisplay * (gasto.totalUsdDisplay / gasto.totalOriginalDisplay);
-           }
-           items.add({
-             'descripcion': item.descripcion,
-             'comercio': gasto.comercio,
-             'usd': itemUsd,
-             'cantidad': item.cantidad,
-           });
+      if (gasto.items.isEmpty) {
+        if (gasto.categoria.toLowerCase().trim() == cat.toLowerCase().trim()) {
+          final double amount = widget.monedaPrincipal == 'VES'
+              ? (gasto.moneda == 'VES' ? gasto.totalOriginalDisplay : gasto.totalUsdDisplay * (gasto.tasaCambio > 0 ? gasto.tasaCambio : 1.0))
+              : gasto.totalUsdDisplay;
+          items.add({
+            'descripcion': gasto.comercio,
+            'comercio': gasto.fecha,
+            'monto': amount,
+            'cantidad': 1.0,
+          });
+        }
+      } else {
+        for (final item in gasto.items) {
+          if (item.categoria.toLowerCase().trim() == cat.toLowerCase().trim()) {
+            double itemAmount;
+            if (widget.monedaPrincipal == 'VES') {
+              if (gasto.moneda == 'VES') {
+                itemAmount = item.totalDisplay;
+              } else {
+                final tasa = gasto.tasaCambio > 0 ? gasto.tasaCambio : 1.0;
+                itemAmount = item.totalDisplay * tasa;
+              }
+            } else {
+              if (gasto.moneda == 'USD') {
+                itemAmount = item.totalDisplay;
+              } else {
+                final ratio = gasto.totalOriginalDisplay > 0 ? (gasto.totalUsdDisplay / gasto.totalOriginalDisplay) : 0.0;
+                itemAmount = item.totalDisplay * ratio;
+              }
+            }
+            items.add({
+              'descripcion': item.descripcion,
+              'comercio': gasto.comercio,
+              'monto': itemAmount,
+              'cantidad': item.cantidad,
+            });
+          }
         }
       }
     }
@@ -701,7 +734,7 @@ class _CategoryChartState extends State<CategoryChart> {
       final double cantidad = (it['cantidad'] as num).toDouble();
       final String descripcion = it['descripcion'] as String;
       final String comercio = it['comercio'] as String;
-      final double usd = (it['usd'] as num).toDouble();
+      final double monto = (it['monto'] as num).toDouble();
 
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
@@ -724,7 +757,7 @@ class _CategoryChartState extends State<CategoryChart> {
               ),
             ),
             Text(
-              _fmt(usd),
+              _fmt(monto),
               style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.bold),
             ),
           ],

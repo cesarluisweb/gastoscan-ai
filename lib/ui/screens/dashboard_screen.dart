@@ -244,12 +244,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             const SizedBox(height: 16),
             if (gastoProvider.totalesPorCategoria.isNotEmpty ||
+                gastoProvider.totalesPorCategoriaVes.isNotEmpty ||
                 gastoProvider.presupuestosPorCategoria.isNotEmpty) ...[
               CategoryChart(
-                categoryTotals: gastoProvider.totalesPorCategoria,
+                categoryTotals: settings.monedaPrincipal == 'VES'
+                    ? gastoProvider.totalesPorCategoriaVes
+                    : gastoProvider.totalesPorCategoria,
                 categoryBudgets: gastoProvider.presupuestosPorCategoria,
                 presupuestoGeneral: gastoProvider.presupuestoGeneral,
-                totalGastadoMes: gastoProvider.totalMesUsd,
+                totalGastadoMes: settings.monedaPrincipal == 'VES'
+                    ? gastoProvider.totalMesVes
+                    : gastoProvider.totalMesUsd,
                 gastosMes: gastoProvider.gastos,
                 onSetBudget: (categoria, budget) async {
                   await gastoProvider.setPresupuestoCategoria(categoria, budget);
@@ -328,7 +333,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 final double totalOrig = result.totalOriginal;
                 final double tasa = (result.tasaCambioDetectada != null && result.tasaCambioDetectada! > 0)
                     ? result.tasaCambioDetectada!
-                    : 1.0;
+                    : (settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : 1.0);
                 final double totalUsd = (result.moneda == 'USD')
                     ? totalOrig
                     : (tasa > 0 ? totalOrig / tasa : 0.0);
