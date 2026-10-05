@@ -1,5 +1,8 @@
 
 ::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_totals_test.dart: Determinismo y consistencia matemática de totales en Bolívares y Dólares getMonthlyTotals suma exactamente todas las compras en Bs y en USD sin omitir ninguna
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_totals_test.dart: Determinismo y consistencia matemática de totales en Bolívares y Dólares getCategoryTotals en VES suma exactamente lo mismo que el Total Gastado del mes
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_totals_test.dart: Determinismo y consistencia matemática de totales en Bolívares y Dólares getCategoryTotals en USD suma exactamente lo mismo que el Total Gastado en USD
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_savings_test.dart: DatabaseHelper Monthly Budget & Savings Goal Tests initial state has zero general budget and zero savings goal
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_savings_test.dart: DatabaseHelper Monthly Budget & Savings Goal Tests setPresupuestoGeneral stores both general budget and metaAhorro
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_savings_test.dart: DatabaseHelper Monthly Budget & Savings Goal Tests copiarPresupuestosMesAnteriorSiVacio copies both general budget and metaAhorro
@@ -14,102 +17,82 @@
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests getAllPresupuestosCategorias returns all configured category budgets
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests insertCategoria and updateCategoria work correctly
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests deleteCategoria removes the category
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests renders 4 navigation destinations and center FAB
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests switching tabs changes current active screen
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping center FAB opens bottom sheet with 4 add options
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping AI chat button on Inicio navigates to Chat keeping bottom navigation and back returns to Inicio
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping Asistente IA in Mas and pressing back returns to Mas hub
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests does not show local processing banner in DashboardScreen (delegated to GlobalScanQueueBanner)
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests displays ready queue item card when items are ready for review
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests displays "Por revisar" badge when pending item has zero total
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests renders all hub sections in main view
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping shopping list navigates internally and back button returns to hub
 ::endgroup::
-::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart (failed)
-Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart":
-Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: lib/providers/settings_provider.dart:21:91: Error: Member not found: 'defaultApiKey'.
-  String get effectiveApiKey => _apiKey.trim().isNotEmpty ? _apiKey.trim() : AppConstants.defaultApiKey.trim();
-                                                                                          ^^^^^^^^^^^^^
-.
-
+NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping chat navigates internally and back button returns to hub
 ::endgroup::
-::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart (failed)
-Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart":
-Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: lib/providers/settings_provider.dart:21:91: Error: Member not found: 'defaultApiKey'.
-  String get effectiveApiKey => _apiKey.trim().isNotEmpty ? _apiKey.trim() : AppConstants.defaultApiKey.trim();
-                                                                                          ^^^^^^^^^^^^^
-.
-
+NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests calling openChat navigates directly to chat view
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) R3 Acceptance Criteria: Asignar $50 a Alimentación, y registrar un gasto de $60 en Alimentación hace que se dibuje un indicador visual de exceso (color rojo) en la UI de esa categoría
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Category within budget does NOT render the red excess alert
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Initial empty state displays analysis empty state and allows adding budget
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Editing budget to amount greater than expense clears red excess alert
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Validation: categories exceeding general budget shows alert and blocks save
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) General budget exceeded shows general excess alert in AnalysisScreen
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) AnalysisScreen month selector opens picker dialog and changes month
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) SummaryCard shows Presupuesto mensual and edit button opens budget bottom sheet
 ::endgroup::
-::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart (failed)
-Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart":
-Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: lib/providers/settings_provider.dart:21:91: Error: Member not found: 'defaultApiKey'.
-  String get effectiveApiKey => _apiKey.trim().isNotEmpty ? _apiKey.trim() : AppConstants.defaultApiKey.trim();
-                                                                                          ^^^^^^^^^^^^^
-.
-
+::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart: ScanScreen Multi-Image Selection Tests multi-image selection enqueues all images and pops back to Dashboard
+[ScanScreen] pickMultiImage returned 3 files
+[ScanScreen] Enqueueing multiple paths: [/tmp/receipt1.jpg, /tmp/receipt2.jpg, /tmp/receipt3.jpg]
+[ScanScreen] Finished enqueueMultiple. Provider pendingCount: 3
 ::endgroup::
-::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart (failed)
-Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart":
-Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: lib/providers/settings_provider.dart:21:91: Error: Member not found: 'defaultApiKey'.
-  String get effectiveApiKey => _apiKey.trim().isNotEmpty ? _apiKey.trim() : AppConstants.defaultApiKey.trim();
-                                                                                          ^^^^^^^^^^^^^
-.
-
+::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart: ScanScreen Multi-Image Selection Tests empty selection from gallery does not enqueue or pop
+[ScanScreen] pickMultiImage returned 0 files
 ::endgroup::
-::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart (failed)
-Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart":
-Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart: lib/providers/settings_provider.dart:21:91: Error: Member not found: 'defaultApiKey'.
-  String get effectiveApiKey => _apiKey.trim().isNotEmpty ? _apiKey.trim() : AppConstants.defaultApiKey.trim();
-                                                                                          ^^^^^^^^^^^^^
-.
-
+::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) tapping search icon reveals search text field with hint
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) entering search query immediately filters out non-matching expenses
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) expenses matching by commerce are included
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) expenses matching by product name are included
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) clearing search query via close button restores all expenses
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) clearing search text restores all expenses while keeping search open
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) displays friendly empty state message when search yields 0 matches
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) case-insensitive and diacritic-insensitive search works
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests renders all 5 predefined chat suggestions in horizontal bar
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests tapping a suggestion chip sends it immediately as a user message
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests tapping shopping list suggestion chip sends request directly
 ::endgroup::
-::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart (failed)
-Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart":
-Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: lib/providers/settings_provider.dart:21:91: Error: Member not found: 'defaultApiKey'.
-  String get effectiveApiKey => _apiKey.trim().isNotEmpty ? _apiKey.trim() : AppConstants.defaultApiKey.trim();
-                                                                                          ^^^^^^^^^^^^^
-.
-
-::endgroup::
-::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart (failed)
-Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart":
-Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: lib/providers/settings_provider.dart:21:91: Error: Member not found: 'defaultApiKey'.
-  String get effectiveApiKey => _apiKey.trim().isNotEmpty ? _apiKey.trim() : AppConstants.defaultApiKey.trim();
-                                                                                          ^^^^^^^^^^^^^
-.
+::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests renders edit expense button when assistant registers an expense
+Error al cotejar compras en chat: Bad state: databaseFactory not initialized
+databaseFactory is only initialized when using sqflite. When using `sqflite_common_ffi`
+You must call `databaseFactory = databaseFactoryFfi;` before using global openDatabase API
 
 ::endgroup::
 ::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests tapping textfield while listening stops microphone
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests sending message while listening stops microphone
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/local_ocr_service_test.dart: LocalOcrService Quality Scoring Tests factura completa con comercio, fecha, ítems y total supera umbral de score
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/local_ocr_service_test.dart: LocalOcrService Quality Scoring Tests texto borroso o escaso de 2 líneas no supera el umbral de score
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests Default singleton instance is available and accessible
 ::endgroup::
-::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests 7-day scheduling function defaults to Duration(days: 7)
-NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@136310200' has not been initialized.
-::endgroup::
-::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests Custom duration is respected when specified
-NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@136310200' has not been initialized.
-::endgroup::
-::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests cancelInactivityReminder cancels and clears scheduled state
-NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@136310200' has not been initialized.
-NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart (failed)
+Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart":
+Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: test/services/notification_service_test.dart:88:31: Error: The method 'FakeDatabaseHelperForNotifications.getCategoryTotals' has fewer named arguments than those of overridden method 'DatabaseHelper.getCategoryTotals'.
+  Future<Map<String, double>> getCategoryTotals(int year, int month) async {
+                              ^
+lib/data/datasources/local/database_helper.dart:533:31: Context: This is the overridden method ('getCategoryTotals').
+  Future<Map<String, double>> getCategoryTotals(int year, int month, {String moneda = 'USD'}) async {
+                              ^
+.
+
 ::endgroup::
 ::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests Rescheduling logic cancels previous notification and schedules new one
-::endgroup::
-::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests recordActivityAndReschedule updates activity time and reschedules for 7 days
-NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@136310200' has not been initialized.
-::endgroup::
-::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests Channel configuration and constants are correctly defined
-::endgroup::
-::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — Integration with GastoProvider agregarGasto triggers recordActivityAndReschedule on NotificationService
-Error en sincronización bidireccional: [core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()
-::endgroup::
-::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — Integration with GastoProvider actualizarGasto triggers recordActivityAndReschedule on NotificationService
-Error en sincronización bidireccional: [core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()
-::endgroup::
-::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — Integration with GastoProvider clearPayload resets initialPayload and selectedPayloadNotifier
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — AndroidManifest Permissions & Configuration Verification android/app/src/main/AndroidManifest.xml contains all required permissions and receivers
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — AndroidManifest Permissions & Configuration Verification AndroidManifest.xml contains permissions and receivers
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — AndroidManifest Permissions & Configuration Verification pubspec.yaml declares flutter_local_notifications and timezone
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/semantic_validator_test.dart: SemanticValidator Tests retorna inválido si la lista de facturas está vacía
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/semantic_validator_test.dart: SemanticValidator Tests retorna inválido si no tiene comercio ni total válido
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/semantic_validator_test.dart: SemanticValidator Tests retorna válido si tiene comercio y total válido coherente con ítems
@@ -159,8 +142,8 @@ NotificationService: Excepción al cancelar recordatorio de pendientes: MissingP
 ::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests reconnection stream triggers processing of pending offline items
-Reconexión detectada: reanudando procesamiento de cola de escaneo.
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+Reconexión detectada: reanudando procesamiento de cola de escaneo.
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::endgroup::
@@ -177,38 +160,32 @@ NotificationService: Excepción al cancelar recordatorio de pendientes: MissingP
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/domain/savings_health_calculator_test.dart: SavingsHealthCalculator Tests triggers comprometida whenever actual spent exceeds limit
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/domain/savings_health_calculator_test.dart: SavingsHealthCalculator Tests handles clamp when meta exceeds general budget
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/domain/savings_health_calculator_test.dart: SavingsHealthCalculator Tests handles February with 28 days correctly
-::endgroup::
-::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart (failed)
-Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart":
-Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: lib/providers/settings_provider.dart:21:91: Error: Member not found: 'defaultApiKey'.
-  String get effectiveApiKey => _apiKey.trim().isNotEmpty ? _apiKey.trim() : AppConstants.defaultApiKey.trim();
-                                                                                          ^^^^^^^^^^^^^
-.
-
-::endgroup::
-::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart (failed)
-Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart":
-Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: lib/providers/settings_provider.dart:21:91: Error: Member not found: 'defaultApiKey'.
-  String get effectiveApiKey => _apiKey.trim().isNotEmpty ? _apiKey.trim() : AppConstants.defaultApiKey.trim();
-                                                                                          ^^^^^^^^^^^^^
-.
-
-::endgroup::
-::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/global_scan_queue_banner_test.dart (failed)
-Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/global_scan_queue_banner_test.dart":
-Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/global_scan_queue_banner_test.dart: lib/providers/settings_provider.dart:21:91: Error: Member not found: 'defaultApiKey'.
-  String get effectiveApiKey => _apiKey.trim().isNotEmpty ? _apiKey.trim() : AppConstants.defaultApiKey.trim();
-                                                                                          ^^^^^^^^^^^^^
-.
-
-::endgroup::
-::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart (failed)
-Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart":
-Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: lib/providers/settings_provider.dart:21:91: Error: Member not found: 'defaultApiKey'.
-  String get effectiveApiKey => _apiKey.trim().isNotEmpty ? _apiKey.trim() : AppConstants.defaultApiKey.trim();
-                                                                                          ^^^^^^^^^^^^^
-.
-
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: VoiceExpenseSheet Editable Tests renders title, input field, mic button and cancel button
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: VoiceExpenseSheet Editable Tests allows editing text in TextField and enables process button
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: VoiceExpenseSheet Editable Tests clear button removes text and disables process button
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: VoiceExpenseSheet Editable Tests submitting edited text calls parseVoiceExpense with updated content
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests formatPreferido returns VES when preferred is VES
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests formatPreferido calculates VES using tasaCambio when totalVes is zero/null
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests formatPreferido returns USD when preferred is USD
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests formatSecundario returns opposite currency
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests convertFromUsd converts properly
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: SummaryCard Currency Preference Tests renders USD on top when monedaPrincipal is USD
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: SummaryCard Currency Preference Tests renders VES on top when monedaPrincipal is VES
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: ExpenseCard Currency Preference Tests displays USD as primary when monedaPrincipal is USD
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: ExpenseCard Currency Preference Tests displays VES as primary when monedaPrincipal is VES
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CategoryChart Currency Preference Tests renders category totals and budgets in VES when monedaPrincipal is VES
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/global_scan_queue_banner_test.dart: GlobalScanQueueBanner Tests renders nothing when queue is empty and idle
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/global_scan_queue_banner_test.dart: GlobalScanQueueBanner Tests renders processing banner with spinner when isProcessing is true
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/global_scan_queue_banner_test.dart: GlobalScanQueueBanner Tests renders offline banner when items are waiting for connection
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/global_scan_queue_banner_test.dart: GlobalScanQueueBanner Tests renders plural text for multiple items offline
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/global_scan_queue_banner_test.dart: GlobalScanQueueBanner Tests renders error banner when item failed with real non-network error
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/global_scan_queue_banner_test.dart: GlobalScanQueueBanner Tests renders ready banner when items are ready for review
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays welcome prompt when expenses are empty
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays over budget warning when spent exceeds budget
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays budget alert when spent is 85 percent or more
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests suggests defining budget when no general budget exists
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays new month motivational insight when in first days with budget
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays compromised savings goal alert when spent exceeds spending limit
 ::endgroup::
 
-::error::81 tests passed, 11 failed.
+::error::133 tests passed, 1 failed.
