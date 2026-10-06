@@ -233,9 +233,7 @@ class GlobalScanQueueBanner extends StatelessWidget {
                   ),
                 ),
                 TextButton(
-                  onPressed: () async {
-                    await scanQueue.cancelProcessing();
-                  },
+                  onPressed: () => _confirmCancelOrDiscard(context, scanQueue, isProcessing: true),
                   style: TextButton.styleFrom(
                     foregroundColor: AppColors.error,
                     padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -346,16 +344,14 @@ class GlobalScanQueueBanner extends StatelessWidget {
                   tooltip: 'Reintentar ahora',
                   visualDensity: VisualDensity.compact,
                   onPressed: () async {
-                    await scanQueue.processPendingItems();
+                    await scanQueue.processPendingItems(forceRetry: true);
                   },
                 ),
                 IconButton(
                   icon: const Icon(Icons.delete_outline, color: AppColors.error, size: 20),
                   tooltip: 'Descartar',
                   visualDensity: VisualDensity.compact,
-                  onPressed: () async {
-                    await scanQueue.cancelProcessing();
-                  },
+                  onPressed: () => _confirmCancelOrDiscard(context, scanQueue, isProcessing: false),
                 ),
               ],
             ),
@@ -379,5 +375,38 @@ class GlobalScanQueueBanner extends StatelessWidget {
               ),
             ),
     );
+  }
+
+  Future<void> _confirmCancelOrDiscard(
+    BuildContext context,
+    ScanQueueProvider scanQueue, {
+    required bool isProcessing,
+  }) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(isProcessing ? '¿Detener escaneo?' : '¿Descartar comprobantes?'),
+        content: Text(
+          isProcessing
+              ? 'Se cancelará el análisis actual y se descartarán los comprobantes pendientes de la cola.'
+              : '¿Deseas descartar los comprobantes pendientes de la cola? Esta acción no se puede deshacer.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Volver'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: const Text('Descartar', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await scanQueue.cancelProcessing();
+    }
   }
 }

@@ -89,6 +89,38 @@ class FakeDatabaseHelper extends DatabaseHelper {
   }
 
   @override
+  Future<int> resetStaleProcessingScanQueueItems() async {
+    int updated = 0;
+    for (final it in pendingDb) {
+      if (it['status'] == 'processing') {
+        it['status'] = 'pending';
+        updated++;
+      }
+    }
+    return updated;
+  }
+
+  @override
+  Future<int> resetFailedScanQueueItems() async {
+    int updated = 0;
+    for (final it in pendingDb) {
+      if (it['status'] == 'error') {
+        it['status'] = 'pending';
+        it['attempt_count'] = 0;
+        updated++;
+      }
+    }
+    return updated;
+  }
+
+  @override
+  Future<int> clearPendingScanQueueItems() async {
+    final count = pendingDb.length;
+    pendingDb.clear();
+    return count;
+  }
+
+  @override
   Future<List<ShoppingItemModel>> getPendingShoppingItems() async {
     return [];
   }

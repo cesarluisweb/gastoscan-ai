@@ -60,6 +60,7 @@ Este documento centraliza las ideas y mejoras pendientes, ordenadas estratégica
 - ~~**Sistema Multimoneda y Selector de Tasas (BCV, Euro, USDT):** (Completada ✅)~~ Soporte multimoneda (VES, USD, EUR, USDT) en toda la aplicación: selector de moneda en presupuesto con conversión automática en vivo, selector de moneda y chips de tasa rápida en revisión de gastos, tarjeta de 3 tasas con timestamp en "Más" e integración de APIs (DolarAPI oficial USD/EUR y Binance/Yadio USDT).
   - *Recurso útil para histórico de precios USDT:* [usdt.com.ve/historico](https://www.usdt.com.ve/historico) (referencia para consulta/histórico de tasas).
 - ~~**Monitoreo de Consumo de Tokens:** (Completada ✅)~~ Capturar la metadata de tokens consumidos devuelta por Gemini en Cloud Functions y registrar métricas de costo por escaneo.
+- ~~**Robustez de Cola de Escaneo y Ciclo de Vida (Puntos 4, 5 y 6 de auditoría):** (Completada ✅)~~ Protección contra carreras en el loop de escaneo con guarda síncrona, confirmación modal para descartar/cancelar evitando borrado en masa, retención de fotos ante respuestas vacías de IA, conteo estricto de reintentos, recuperación de ítems atascados en `processing`, opción de deshacer en lista de compras y guardas `mounted`/`_disposed` en providers y chat.
 
 ## Fase 7: Arquitectura de Producción y Confiabilidad (En Progreso 🔄)
 *Transformar el excelente MVP actual en un producto de grado financiero ("Bank-grade").*

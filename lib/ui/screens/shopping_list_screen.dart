@@ -71,8 +71,31 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
   }
 
   Future<void> _delete(ShoppingItemModel item) async {
+    if (item.id == null) return;
     await DatabaseHelper.instance.deleteShoppingItem(item.id!);
-    _loadItems();
+    if (mounted) {
+      _loadItems();
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('"${item.name}" eliminado'),
+          duration: const Duration(seconds: 3),
+          action: SnackBarAction(
+            label: 'Deshacer',
+            onPressed: () async {
+              await DatabaseHelper.instance.insertShoppingItem(
+                ShoppingItemModel(
+                  name: item.name,
+                  isPurchased: item.isPurchased,
+                  createdAt: DateTime.now().toIso8601String(),
+                ),
+              );
+              if (mounted) _loadItems();
+            },
+          ),
+        ),
+      );
+    }
   }
 
   @override

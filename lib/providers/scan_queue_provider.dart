@@ -68,13 +68,28 @@ class ScanQueueProvider with ChangeNotifier {
     });
   }
 
+  bool _isDisposed = false;
+
   @override
   void dispose() {
+    _isDisposed = true;
+    _cancelRequested = true;
     _connectivitySub?.cancel();
     super.dispose();
   }
 
+  @override
+  void notifyListeners() {
+    if (!_isDisposed) {
+      super.notifyListeners();
+    }
+  }
+
   Future<void> loadQueue() async {
+    if (_isDisposed) return;
+    if (!_isProcessing) {
+      await _dbHelper.resetStaleProcessingScanQueueItems();
+    }
     await loadReadyItems();
     await loadPendingItems();
     processPendingItems(); // Intenta procesar al iniciar
@@ -189,10 +204,25 @@ class ScanQueueProvider with ChangeNotifier {
     _cancelRequested = true;
     _lastError = null;
     _isWaitingForConnection = false;
+
+    // Eliminar archivos físicos de imagen asociados a los ítems pendientes
+    for (final item in _pendingItems) {
+      final path = item['image_path'] as String?;
+      if (path != null) {
+        try {
+          final f = File(path);
+          if (await f.exists()) {
+            await f.delete();
+          }
+        } catch (_) {}
+      }
+    }
+
     await _dbHelper.clearPendingScanQueueItems();
     _pendingItems = [];
-    _isProcessing = false;
-    notifyListeners();
+    if (!_isProcessing) {
+      notifyListeners();
+    }
   }
 
   bool _isNetworkError(dynamic error) {
@@ -209,7 +239,7 @@ class ScanQueueProvider with ChangeNotifier {
   }
 
   Future<void> resumeQueueWhenOnline() async {
-    if (_pendingItems.isNotEmpty && !_isProcessing) {
+    if (_pendingItems.isNotEmpty && !_isProcessing && !_isDisposed) {
       final isOnline = await _connectivityService.isConnected();
       if (isOnline) {
         _isWaitingForConnection = false;
@@ -218,42 +248,50 @@ class ScanQueueProvider with ChangeNotifier {
     }
   }
 
-  Future<void> processPendingItems() async {
-    if (_isProcessing) return;
-
-    final isOnline = await _connectivityService.isConnected();
-    if (!isOnline) {
-      _isWaitingForConnection = true;
-      _lastError = 'Guardada sin conexión. Se procesará al reconectar.';
-      notifyListeners();
-      return;
-    }
-
-    _isProcessing = true;
-    _cancelRequested = false;
-    _lastError = null;
-    _isWaitingForConnection = false;
-    await loadPendingItems();
-    notifyListeners();
+  Future<void> processPendingItems({bool forceRetry = false}) async {
+    if (_isProcessing || _isDisposed) return;
+    _isProcessing = true; // Guarda síncrona inmediata antes de cualquier await
 
     try {
+      if (forceRetry) {
+        await _dbHelper.resetFailedScanQueueItems();
+        await loadPendingItems();
+      }
+
+      final isOnline = await _connectivityService.isConnected();
+      if (!isOnline) {
+        _isProcessing = false;
+        _isWaitingForConnection = true;
+        _lastError = 'Guardada sin conexión. Se procesará al reconectar.';
+        notifyListeners();
+        return;
+      }
+
+      _cancelRequested = false;
+      _lastError = null;
+      _isWaitingForConnection = false;
+      await loadPendingItems();
+      notifyListeners();
+
       final pending = await _dbHelper.getPendingScanQueueItems();
       _pendingItems = List.from(pending);
       notifyListeners();
 
       for (final item in pending) {
-        if (_cancelRequested) break;
+        if (_cancelRequested || _isDisposed) break;
 
         final int id = item['id'];
         final String imagePath = item['image_path'];
         String? ocrText = item['ocr_text'] as String?;
         final int currentAttempts = (item['attempt_count'] as num?)?.toInt() ?? 0;
+        final String itemStatus = (item['status'] as String?) ?? 'pending';
 
-        if (currentAttempts >= 3) {
+        // Si el ítem ya está marcado como error o superó el umbral y no es forzado, saltar
+        if (itemStatus == 'error' || currentAttempts >= 3) {
           await _dbHelper.updateScanQueueItem(
             id,
             'error',
-            lastError: 'Máximo número de reintentos alcanzado.',
+            lastError: item['last_error'] ?? 'Máximo número de reintentos alcanzado.',
           );
           continue;
         }
@@ -271,10 +309,10 @@ class ScanQueueProvider with ChangeNotifier {
               await _dbHelper.updateScanQueueItem(id, 'processing', ocrText: ocrText);
             }
 
-            if (_cancelRequested) break;
+            if (_cancelRequested || _isDisposed) break;
 
             final compressedBytes = await ImageService.compressImage(file);
-            if (_cancelRequested) break;
+            if (_cancelRequested || _isDisposed) break;
 
             final pendingShopping = await _dbHelper.getPendingShoppingItems();
 
@@ -283,7 +321,6 @@ class ScanQueueProvider with ChangeNotifier {
 
             // 2. Evaluar evidencia para intentar Gemini Texto
             if (ocrText != null && ocrText.trim().isNotEmpty) {
-              // Heurística rápida sobre el texto estructurado
               final upper = ocrText.toUpperCase();
               final hasAmounts = RegExp(r'\b\d+[\.,]\d{2}\b').hasMatch(upper);
               final hasTotal = upper.contains('TOTAL') || upper.contains('SUBTOTAL') || upper.contains('MONTO');
@@ -305,17 +342,16 @@ class ScanQueueProvider with ChangeNotifier {
                     pendingShoppingItems: pendingShopping,
                   );
 
-                  // 3. Validación Semántica Multicriterio con tolerancia
                   final validation = _semanticValidator.validate(extractedList);
                   if (validation.isValid) {
                     processedByText = true;
                   } else {
                     debugPrint('Validación semántica falló: ${validation.reason}. Activando fallback a Visión.');
-                    extractedList = []; // Dispara fallback a Visión
+                    extractedList = [];
                   }
                 } catch (textErr) {
                   if (_isNetworkError(textErr)) {
-                    rethrow; // Si fue error de red, no caer a Visión; saltar al catch exterior
+                    rethrow;
                   }
                   debugPrint('Error en Gemini Texto: $textErr. Activando fallback a Visión.');
                   extractedList = [];
@@ -323,9 +359,9 @@ class ScanQueueProvider with ChangeNotifier {
               }
             }
 
-            // 4. Fallback a Gemini Visión si el texto no fue suficiente o falló la validación
+            // 3. Fallback a Gemini Visión si el texto no fue suficiente o falló la validación
             if (!processedByText || extractedList.isEmpty) {
-              if (_cancelRequested) break;
+              if (_cancelRequested || _isDisposed) break;
               extractedList = await _geminiService.analyzeReceiptImage(
                 imageBytes: compressedBytes,
                 apiKey: 'proxy',
@@ -333,7 +369,7 @@ class ScanQueueProvider with ChangeNotifier {
               );
             }
 
-            if (_cancelRequested) break;
+            if (_cancelRequested || _isDisposed) break;
 
             if (extractedList.isNotEmpty) {
               final firstJson = jsonEncode(extractedList.first.toMap());
@@ -349,16 +385,26 @@ class ScanQueueProvider with ChangeNotifier {
                 await _dbHelper.insertReadyScanQueueItem(imagePath, extraJson, ocrText: ocrText);
               }
             } else {
-              await _dbHelper.deleteScanQueueItem(id);
+              // No borrar la imagen en silencio. Pasar a error o pending con conteo de intento
+              final nextAttempts = currentAttempts + 1;
+              _lastError = 'No se detectaron datos de factura en la imagen.';
+              await _dbHelper.updateScanQueueItem(
+                id,
+                nextAttempts >= 3 ? 'error' : 'pending',
+                attemptCount: nextAttempts,
+                lastError: _lastError,
+              );
             }
           } catch (e) {
+            final nextAttempts = currentAttempts + 1;
             if (_isNetworkError(e)) {
               _isWaitingForConnection = true;
               _lastError = 'Guardada sin conexión. Se procesará al reconectar.';
               debugPrint('Falta de red al procesar cola: $e');
               await _dbHelper.updateScanQueueItem(
                 id,
-                'pending',
+                nextAttempts >= 3 ? 'error' : 'pending',
+                attemptCount: nextAttempts,
                 lastError: _lastError,
               );
               break;
@@ -367,7 +413,6 @@ class ScanQueueProvider with ChangeNotifier {
               final msg = e.toString().replaceFirst('Exception: ', '').trim();
               _lastError = msg.isNotEmpty ? msg : 'Error al procesar el comprobante.';
               debugPrint('Fallo al procesar item en cola: $e');
-              final nextAttempts = currentAttempts + 1;
               await _dbHelper.updateScanQueueItem(
                 id,
                 nextAttempts >= 3 ? 'error' : 'pending',
@@ -394,6 +439,20 @@ class ScanQueueProvider with ChangeNotifier {
   }
 
   Future<void> removeItem(int id) async {
+    final allKnown = [..._pendingItems, ..._readyItems];
+    final item = allKnown.firstWhere(
+      (i) => i['id'] == id,
+      orElse: () => <String, dynamic>{},
+    );
+    final path = item['image_path'] as String?;
+    if (path != null) {
+      try {
+        final f = File(path);
+        if (await f.exists()) {
+          await f.delete();
+        }
+      } catch (_) {}
+    }
     await _dbHelper.deleteScanQueueItem(id);
     await loadReadyItems();
     await loadPendingItems();

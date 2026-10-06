@@ -237,6 +237,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final text = (textOverride ?? _textCtrl.text).trim();
     if (text.isEmpty) return;
 
+    if (!mounted) return;
     setState(() {
       _messages.add({'role': 'user', 'text': text});
       if (textOverride == null) {
@@ -292,6 +293,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           final bool hasExpenseKeyword = userText.contains('gast') || userText.contains('compr') || userText.contains('pagu') || userText.contains('cost');
 
           if (totalUsd <= 0 || (!hasExplicitNumber && !hasExpenseKeyword)) {
+            if (!mounted) return;
             setState(() {
               _messages.add({
                 'role': 'assistant',
@@ -357,6 +359,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
           final success = await gastoProvider.agregarGasto(nuevoGasto, itemsGasto, shoppingItemIds: matchedShoppingIds);
 
+          if (!mounted) return;
           setState(() {
             if (success) {
               String msg = '¡Listo! He registrado tu compra en "$comercio" por \$${totalUsd.toStringAsFixed(2)}.';
@@ -396,6 +399,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               agregados.add(nombreStr);
             }
           }
+          if (!mounted) return;
           setState(() {
             if (agregados.isNotEmpty) {
               final plural = agregados.length == 1 ? 'producto' : 'productos';
@@ -424,6 +428,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             }
           }
 
+          if (!mounted) return;
           setState(() {
             if (match != null && match.id != null && nuevoNombre.isNotEmpty) {
               _dbHelper.updateShoppingItemName(match.id!, nuevoNombre);
@@ -456,6 +461,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               }
             }
           }
+          if (!mounted) return;
           setState(() {
             if (eliminados.isNotEmpty) {
               _messages.add({
@@ -488,6 +494,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               }
             }
           }
+          if (!mounted) return;
           setState(() {
             final estado = comprado ? 'comprado(s)' : 'pendiente(s)';
             if (modificados.isNotEmpty) {
@@ -505,19 +512,23 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         }
       } else {
         final String textResponse = responseMap['text'] ?? '';
+        if (!mounted) return;
         setState(() {
           _messages.add({'role': 'assistant', 'text': textResponse});
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _messages.add({'role': 'assistant', 'text': 'Error: $e'});
       });
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
-      _scrollToBottom();
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        _scrollToBottom();
+      }
     }
   }
 

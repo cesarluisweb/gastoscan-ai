@@ -758,8 +758,35 @@ class DatabaseHelper {
     final db = await instance.database;
     return await db.query(
       'scan_queue',
+      where: 'status = ? OR status = ?',
+      whereArgs: ['pending', 'error'],
+      orderBy: 'id ASC',
+    );
+  }
+
+  /// Resetea los ítems que quedaron atascados en 'processing' a 'pending' (recuperación al iniciar)
+  Future<int> resetStaleProcessingScanQueueItems() async {
+    final db = await instance.database;
+    return await db.update(
+      'scan_queue',
+      {'status': 'pending'},
       where: 'status = ?',
-      whereArgs: ['pending'],
+      whereArgs: ['processing'],
+    );
+  }
+
+  /// Resetea los ítems en 'error' a 'pending' con attempt_count en 0 para reintento manual
+  Future<int> resetFailedScanQueueItems() async {
+    final db = await instance.database;
+    return await db.update(
+      'scan_queue',
+      {
+        'status': 'pending',
+        'attempt_count': 0,
+        'last_error': null,
+      },
+      where: 'status = ?',
+      whereArgs: ['error'],
     );
   }
 
@@ -921,8 +948,8 @@ class DatabaseHelper {
     final db = await instance.database;
     return await db.delete(
       'scan_queue',
-      where: 'status = ?',
-      whereArgs: ['pending'],
+      where: 'status = ? OR status = ?',
+      whereArgs: ['pending', 'error'],
     );
   }
 
