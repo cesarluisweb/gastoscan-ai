@@ -20,6 +20,7 @@
 - En CI, `curl` para logs devuelve 403; los fallos de test se leen en `test_results.txt` tras `git pull --rebase`.
 - Prohibido `>` en PowerShell; usar siempre tubería `... | Out-File -Encoding utf8`.
 - En cPanel multidominio, el Document Root es `/home/user/dominio.com/`, no siempre `public_html/`.
+- Mantener `retention-days: 1` en artefactos de CI para no saturar el límite de 500 MB en GitHub Free.
 
 ## Próximo Paso Inmediato
 - Confirmar pipeline en CI y proceder con el paquete de Google Play Console (AAB + 20 testers).
