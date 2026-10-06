@@ -804,7 +804,6 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                         if (_priceComparisons.containsKey(idx)) {
                           final prevData = _priceComparisons[idx]!;
                           final prevUsd = (prevData['precio_usd'] as num?)?.toDouble() ?? 0.0;
-                          final prevFecha = prevData['fecha'] as String? ?? '';
                           final prevComercio = prevData['comercio'] as String? ?? '';
                           
                           final cant = item.cantidad > 0 ? item.cantidad : 1.0;

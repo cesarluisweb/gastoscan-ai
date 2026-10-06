@@ -334,7 +334,7 @@ class ScanQueueProvider with ChangeNotifier {
             bool processedByText = false;
 
             // 2. Evaluar evidencia para intentar Gemini Texto
-            if (ocrText != null && ocrText.trim().isNotEmpty) {
+            if (ocrText.trim().isNotEmpty) {
               final upper = ocrText.toUpperCase();
               final hasAmounts = RegExp(r'\b\d+[\.,]\d{2}\b').hasMatch(upper);
               final hasTotal = upper.contains('TOTAL') || upper.contains('SUBTOTAL') || upper.contains('MONTO');

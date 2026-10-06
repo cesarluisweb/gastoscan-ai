@@ -1,7 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gastoscan_ai/data/datasources/local/database_helper.dart';
-import 'package:gastoscan_ai/data/models/categoria_model.dart';
-import 'package:gastoscan_ai/data/models/gasto_model.dart';
 import 'package:gastoscan_ai/providers/gasto_provider.dart';
 
 class MockGastoProvider extends GastoProvider {

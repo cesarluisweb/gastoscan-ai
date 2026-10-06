@@ -14,15 +14,12 @@ import 'dashboard_screen.dart';
 import 'expense_history_screen.dart';
 import 'analysis_screen.dart';
 import 'more_screen.dart';
-import 'scan_screen.dart';
 import 'review_expense_screen.dart'; // Para agregar manual
-import 'chat_screen.dart';
 import '../../data/models/item_gasto_model.dart';
 import '../../services/update_service.dart';
 import '../widgets/update_dialog.dart';
 import '../../providers/settings_provider.dart';
 import '../widgets/voice_expense_sheet.dart';
-import '../widgets/global_scan_queue_banner.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({Key? key}) : super(key: key);
@@ -50,13 +47,11 @@ class _CustomCenterDockedFabLocation extends FloatingActionButtonLocation {
 class _FadeIndexedStack extends StatefulWidget {
   final int index;
   final List<Widget> children;
-  final Duration duration;
 
   const _FadeIndexedStack({
     Key? key,
     required this.index,
     required this.children,
-    this.duration = const Duration(milliseconds: 150),
   }) : super(key: key);
 
   @override
@@ -72,7 +67,7 @@ class _FadeIndexedStackState extends State<_FadeIndexedStack> with SingleTickerP
   void initState() {
     super.initState();
     _currentIndex = widget.index;
-    _controller = AnimationController(vsync: this, duration: widget.duration);
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 150));
     _animation = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
     _controller.forward();
   }

@@ -43,7 +43,7 @@ class SemanticValidator {
         }
 
         // Si hay impuesto desglosado, sumarlo
-        final totalWithTax = itemsSum + (factura.impuestoIva ?? 0.0);
+        final totalWithTax = itemsSum + factura.impuestoIva;
 
         if (factura.totalOriginal > 0 && totalWithTax > 0) {
           final diff = (factura.totalOriginal - totalWithTax).abs();

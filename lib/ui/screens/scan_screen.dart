@@ -6,11 +6,8 @@ import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../data/datasources/remote/gemini_service.dart';
 import '../../data/datasources/local/database_helper.dart';
-import '../../providers/settings_provider.dart';
 import '../../providers/scan_queue_provider.dart';
-import '../../services/image_service.dart';
 import '../../services/document_scanner_service.dart';
-import 'review_expense_screen.dart';
 
 class ScanScreen extends StatefulWidget {
   final ImagePicker? imagePicker;
@@ -33,8 +30,6 @@ class ScanScreen extends StatefulWidget {
 
 class _ScanScreenState extends State<ScanScreen> {
   late final ImagePicker _picker;
-  late final GeminiService _geminiService;
-  late final DatabaseHelper _dbHelper;
   late final DocumentScannerService _scannerService;
   File? _selectedImage;
   bool _isProcessing = false;
@@ -44,8 +39,6 @@ class _ScanScreenState extends State<ScanScreen> {
   void initState() {
     super.initState();
     _picker = widget.imagePicker ?? ImagePicker();
-    _geminiService = widget.geminiService ?? GeminiService();
-    _dbHelper = widget.dbHelper ?? DatabaseHelper.instance;
     _scannerService = widget.documentScannerService ?? DocumentScannerService();
     if (widget.initialSource != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {

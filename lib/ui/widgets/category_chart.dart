@@ -5,7 +5,6 @@ import '../../core/constants/app_constants.dart';
 import '../../core/utils/currency_formatter.dart';
 
 import '../../data/models/gasto_model.dart';
-import '../../core/utils/date_formatter.dart';
 import 'budget_bottom_sheet.dart';
 
 class CategoryChart extends StatefulWidget {
@@ -339,119 +338,6 @@ class _CategoryChartState extends State<CategoryChart> {
             ),
             const SizedBox(height: 8),
             ...sortedCategories.map((cat) => _buildCategoryBudgetItem(context, cat)),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGeneralBudgetItem(BuildContext context) {
-    final double spent = widget.totalGastadoMes;
-    final double budget = widget.presupuestoGeneral;
-    final bool isExceeded = spent > budget;
-    final double percent = (spent / budget).clamp(0.0, 1.0);
-    final Color progressColor = isExceeded
-        ? AppColors.error
-        : (percent >= 0.75 ? AppColors.warning : AppColors.primaryDark);
-
-    return Container(
-      key: const Key('general_budget_card'),
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isExceeded
-            ? AppColors.error.withOpacity(0.06)
-            : AppColors.cardLighter,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: isExceeded
-              ? AppColors.error.withOpacity(0.4)
-              : AppColors.border,
-          width: isExceeded ? 1.5 : 1.0,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.account_balance_wallet, size: 16, color: AppColors.primaryDark),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: Text(
-                  'Presupuesto General',
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                  ),
-                ),
-              ),
-              Text(
-                '${_fmt(spent)} / ${_fmt(budget)}',
-                style: TextStyle(
-                  color: isExceeded ? AppColors.error : AppColors.textPrimary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
-              ),
-              const SizedBox(width: 6),
-              IconButton(
-                key: const Key('edit_general_budget_button'),
-                icon: const Icon(
-                  Icons.edit_outlined,
-                  size: 16,
-                  color: AppColors.textSecondary,
-                ),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                onPressed: () => _showBudgetDialog(context),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              key: const Key('general_budget_progress'),
-              value: percent,
-              color: progressColor,
-              backgroundColor: isExceeded
-                  ? AppColors.error.withOpacity(0.2)
-                  : AppColors.border,
-              minHeight: 6,
-            ),
-          ),
-          if (isExceeded) ...[
-            const SizedBox(height: 6),
-            Container(
-              key: const Key('excess_alert_general'),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: AppColors.error.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: AppColors.error),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.warning_amber_rounded,
-                    color: AppColors.error,
-                    size: 14,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Presupuesto superado por ${_fmt(spent - budget)}',
-                    style: const TextStyle(
-                      color: AppColors.error,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ],
         ],
       ),

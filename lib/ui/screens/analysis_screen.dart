@@ -3,8 +3,6 @@ import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../core/utils/currency_formatter.dart';
-import '../../domain/finance/savings_health_models.dart';
-import '../../domain/finance/savings_health_calculator.dart';
 import '../../providers/gasto_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../widgets/category_chart.dart';

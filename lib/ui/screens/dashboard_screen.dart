@@ -8,16 +8,13 @@ import '../../providers/settings_provider.dart';
 import '../../providers/scan_queue_provider.dart';
 import 'dart:io';
 import 'dart:convert';
-import '../../services/export_service.dart';
 import '../../services/notification_service.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/category_chart.dart';
 import '../widgets/expense_card.dart';
 import '../widgets/pending_expense_card.dart';
-import '../widgets/budget_bottom_sheet.dart';
 import '../widgets/ai_insight_card.dart';
 import '../widgets/global_scan_queue_banner.dart';
-import 'scan_screen.dart';
 import 'review_expense_screen.dart';
 import 'chat_screen.dart';
 import '../../data/models/gasto_model.dart';
@@ -341,9 +338,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                 final dummyGasto = GastoModel(
                   uuid: 'pending_${item['id']}',
-                  fecha: result.fecha ?? DateTime.now().toIso8601String().substring(0, 10),
-                  comercio: result.comercio ?? 'Comercio Desconocido',
-                  moneda: result.moneda ?? 'VES',
+                  fecha: result.fecha,
+                  comercio: result.comercio,
+                  moneda: result.moneda,
                   totalOriginal: (totalOrig * 100).round(),
                   totalUsd: (totalUsd * 100).round(),
                   tasaCambio: tasa,
@@ -606,111 +603,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 TextButton(
                   onPressed: () => Navigator.pop(dContext),
                   child: const Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  void _mostrarDialogoPresupuesto(
-    BuildContext context,
-    GastoProvider gastoProvider, {
-    String? categoriaInicial,
-    double? montoInicial,
-  }) {
-    String selectedCategory = categoriaInicial ?? AppConstants.categorias.first;
-    final montoCtrl = TextEditingController(
-      text: (montoInicial != null && montoInicial > 0) ? montoInicial.toStringAsFixed(0) : '',
-    );
-
-    showDialog(
-      context: context,
-      builder: (dContext) {
-        return StatefulBuilder(
-          builder: (context, setStateDialog) {
-            return AlertDialog(
-              title: Text(
-                categoriaInicial != null ? 'Presupuesto: $categoriaInicial' : 'Definir Presupuesto',
-                style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary, fontSize: 16),
-              ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (categoriaInicial == null) ...[
-                      const Text('Categoría:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                      const SizedBox(height: 6),
-                      DropdownButtonFormField<String>(
-                        value: selectedCategory,
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: AppColors.cardLighter,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: AppColors.border),
-                          ),
-                        ),
-                        dropdownColor: AppColors.card,
-                        items: AppConstants.categorias.map((String cat) {
-                          return DropdownMenuItem<String>(
-                            value: cat,
-                            child: Text(cat, style: const TextStyle(color: AppColors.textPrimary)),
-                          );
-                        }).toList(),
-                        onChanged: (String? newValue) {
-                          if (newValue != null) {
-                            setStateDialog(() {
-                              selectedCategory = newValue;
-                            });
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                    ],
-                    const Text('Límite mensual (USD):', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                    const SizedBox(height: 6),
-                    TextField(
-                      key: const Key('input_presupuesto_monto'),
-                      controller: montoCtrl,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      decoration: InputDecoration(
-                        prefixText: '\$ ',
-                        hintText: '50.00',
-                        filled: true,
-                        fillColor: AppColors.cardLighter,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(color: AppColors.border),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dContext).pop(),
-                  child: const Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
-                ),
-                ElevatedButton(
-                  key: const Key('btn_guardar_presupuesto'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: AppColors.secondary,
-                  ),
-                  onPressed: () async {
-                    final catName = selectedCategory;
-                    final amount = double.tryParse(montoCtrl.text.replaceAll(',', '.')) ?? 0.0;
-                    if (catName.isNotEmpty && amount >= 0) {
-                      await gastoProvider.setPresupuestoCategoria(catName, amount);
-                      Navigator.of(dContext).pop();
-                    }
-                  },
-                  child: const Text('Guardar'),
                 ),
               ],
             );

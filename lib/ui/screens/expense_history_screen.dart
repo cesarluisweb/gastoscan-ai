@@ -105,9 +105,9 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
 
       final dummyGasto = GastoModel(
         uuid: 'pending_${item['id']}',
-        fecha: result.fecha ?? DateTime.now().toIso8601String().substring(0, 10),
-        comercio: result.comercio ?? 'Comercio Desconocido',
-        moneda: result.moneda ?? 'VES',
+        fecha: result.fecha,
+        comercio: result.comercio,
+        moneda: result.moneda,
         totalOriginal: (totalOrig * 100).round(),
         totalUsd: (totalUsd * 100).round(),
         tasaCambio: tasa,
