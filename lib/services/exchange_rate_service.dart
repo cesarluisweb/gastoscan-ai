@@ -148,13 +148,15 @@ class ExchangeRateService {
     String isoDate, {
     String moneda = 'USD',
     String tipo = 'oficial',
+    http.Client? client,
   }) async {
     final today = DateTime.now().toIso8601String().substring(0, 10);
     final monedaClean = moneda.toUpperCase();
+    final httpClient = client ?? http.Client();
 
     // Si es hoy, consultar en vivo
     if (isoDate.isEmpty || isoDate == today) {
-      final allRates = await getAllTodayRates();
+      final allRates = await getAllTodayRates(client: client);
       if (monedaClean == 'EUR') return allRates.eur;
       if (monedaClean == 'USDT') return allRates.usdt;
       return allRates.usd;
@@ -180,7 +182,7 @@ class ExchangeRateService {
       }
 
       final url = Uri.parse(endpoint);
-      final response = await http.get(url).timeout(const Duration(seconds: 5));
+      final response = await httpClient.get(url).timeout(const Duration(seconds: 5));
       if (response.statusCode == 200) {
         final List<dynamic> list = jsonDecode(response.body);
         
@@ -221,7 +223,7 @@ class ExchangeRateService {
         for (int i = 0; i < 5; i++) {
           final targetIso = parsedDate.subtract(Duration(days: i)).toIso8601String().substring(0, 10);
           final url = Uri.parse('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@$targetIso/v1/currencies/usd.json');
-          final response = await http.get(url).timeout(const Duration(seconds: 4));
+          final response = await httpClient.get(url).timeout(const Duration(seconds: 4));
           if (response.statusCode == 200) {
             final data = jsonDecode(response.body);
             final vesRate = (data['usd']?['ves'] as num?)?.toDouble();
@@ -235,7 +237,7 @@ class ExchangeRateService {
     }
 
     // 4. Fallback final a tasa del día
-    final allRates = await getAllTodayRates();
+    final allRates = await getAllTodayRates(client: client);
     if (monedaClean == 'EUR') return allRates.eur;
     if (monedaClean == 'USDT') return allRates.usdt;
     return allRates.usd;

@@ -12,19 +12,32 @@ void main() {
       SharedPreferences.setMockInitialValues({});
     });
 
+    // Históricos enlatados: sin depender de red. El sábado 2026-10-03 no
+    // tiene dato exacto y debe resolver al viernes 2026-10-02.
+    http.Client historicosMock() {
+      return MockClient((request) async {
+        if (request.url.toString().contains('/historicos/')) {
+          return http.Response(
+            '[{"fecha":"2026-10-01","promedio":148.0},{"fecha":"2026-10-02","promedio":150.0}]',
+            200,
+          );
+        }
+        return http.Response('error', 500);
+      });
+    }
+
     test('retorna tasa exacta cuando la fecha existe en el histórico', () async {
-      final rate = await ExchangeRateService.getRateForDate('2026-10-02');
-      // Puede consultar la API real si hay conexión o mock si usamos el flujo
-      expect(rate, isPositive);
+      final rate = await ExchangeRateService.getRateForDate('2026-10-02', client: historicosMock());
+      expect(rate, equals(150.0));
     });
 
     test('encuentra el último día hábil anterior si la fecha es fin de semana', () async {
-      // 2026-10-03 y 2026-10-04 son sábado y domingo
-      final rateSabado = await ExchangeRateService.getRateForDate('2026-10-03');
-      final rateViernes = await ExchangeRateService.getRateForDate('2026-10-02');
-      
-      expect(rateSabado, isPositive);
-      expect(rateViernes, isPositive);
+      // 2026-10-03 es sábado: sin dato exacto, usa el viernes 2026-10-02.
+      final rateSabado = await ExchangeRateService.getRateForDate('2026-10-03', client: historicosMock());
+      final rateViernes = await ExchangeRateService.getRateForDate('2026-10-02', client: historicosMock());
+
+      expect(rateSabado, equals(150.0));
+      expect(rateViernes, equals(150.0));
       expect(rateSabado, equals(rateViernes));
     });
 
