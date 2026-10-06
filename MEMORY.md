@@ -7,12 +7,14 @@
 - **Últimos hitos:** 
   1. **Tasas por Fecha y Días Hábiles:** `ExchangeRateService.getRateForDate` busca automáticamente la tasa del último día hábil anterior si la factura corresponde a fin de semana o feriado sin cotización oficial BCV.
   2. **Integración Web + Donaciones:** "Visitar sitio web" y "Apoyar el proyecto ☕" en Más; sección `#donar` en landing page.
-  3. **Robustez de Cola de Escaneo (Bloques 1 y 1b):** Protección de fotos compartidas en lotes, descarte individual por ID, recuperación de `processing` a `pending`, no reescritura de errores en DB, eliminación de doble catch, `flutter analyze` activo en CI y tests de comportamiento de cola pasando al 100%.
+  3. **Robustez de Cola de Escaneo (Bloques 1 y 1b):** Protección de fotos compartidas, hoja inferior modal en banner para descarte individual de pendientes/error, tests con archivos reales en disco (Directory.systemTemp), y 0 advertencias en analizador.
+  4. **Gate Estricto de CI:** `flutter analyze --fatal-warnings --no-fatal-infos` activo en GitHub Actions y pasando en verde al 100%.
 
 ## Decisiones Técnicas y de Negocio Recientes
 - **Fotos Compartidas en Lotes:** `removeItem` consulta `isImagePathUsedByOtherQueueItems` antes de borrar el archivo físico; `cancelProcessing` valida contra `readyItems` para no romper previews.
+- **Descarte Individual en Cola:** Si hay 1 ítem en el banner, confirmación directa; si hay varios, abre hoja inferior con lista, miniatura, error y botón de papelera por ítem.
 - **Transición a Error sin Reintentos Inútiles:** Extracción vacía de Gemini transiciona directamente a `error` con motivo explícito, evitando quemar tokens en fotos no reconocibles.
-- **CI con Análisis Estático:** `flutter analyze --no-fatal-warnings --no-fatal-infos` corre antes de `flutter test` en GitHub Actions.
+- **Calidad de Código:** Gate de CI con `--fatal-warnings` activo. Código depurado con 0 advertencias del analizador.
 
 ## Errores y Fricciones a Evitar
 - No tocar `android/` localmente (CI regenera con `flutter create`).
