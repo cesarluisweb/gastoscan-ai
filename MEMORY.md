@@ -3,14 +3,15 @@
 
 ## Estado Actual Inmediato
 - **Rama:** `main`.
-- **Fase activa:** Fase 5 (Lanzamiento / Preparación Google Play).
+- **Fase activa:** Fase 5 (Lanzamiento / Preparación Google Play) y Fase 6.1.
 - **Últimos hitos:** 
-  0. **Banners de cola apilados:** `GlobalScanQueueBanner` ya no usa if/else excluyente; "lista para revisar" y "procesando" se muestran uno debajo del otro.
-  1. **Integración Web + Sección de Donaciones:** Opciones de "Visitar sitio web" (`rindemas.cesarluis.com`) y "Apoyar el proyecto ☕" agregadas a la pestaña **Más**. Nueva sección de donaciones (`#donar`) agregada a la landing page (PayPal, Binance Pay USDT ID `254881729`, Pago Móvil Banesco).
-  2. **Actualizaciones Inteligentes (Semánticas + Críticas):** Soporte para detección por versión semántica (`isVersionHigher`) y bandera `isMajor` / `is_major_release: true` con aviso directo al iniciar la app.
-  3. **Gateway Cloudflare Workers + BanaHosting:** Operación serverless 100% gratuita y distribución de APK por FTP.
+  1. **Tasas por Fecha y Días Hábiles:** `ExchangeRateService.getRateForDate` ahora busca automáticamente la tasa del último día hábil anterior si la factura corresponde a un fin de semana o feriado sin cotización oficial BCV.
+  2. **Integración Web + Sección de Donaciones:** Opciones de "Visitar sitio web" (`rindemas.cesarluis.com`) y "Apoyar el proyecto ☕" agregadas a la pestaña **Más**. Nueva sección de donaciones (`#donar`) agregada a la landing page.
+  3. **Actualizaciones Inteligentes (Semánticas + Críticas):** Soporte para detección por versión semántica (`isVersionHigher`) y bandera `isMajor` con aviso directo al iniciar la app.
+  4. **Gateway Cloudflare Workers + BanaHosting:** Operación serverless 100% gratuita y distribución de APK por FTP.
 
 ## Decisiones Técnicas y de Negocio Recientes
+- **Tasas Históricas Deterministas:** Si la fecha del gasto cae en sábado/domingo/feriado, se retrocede en el histórico de DolarAPI / Currency-API hasta la última tasa hábil previa (`itemFecha <= isoDate`).
 - **Cumplimiento Político de Google Play:** Las donaciones no se cobran dentro de la app (para evitar suspensión por bypass de Google Billing). El botón de la app redirige a la web oficial (`rindemas.cesarluis.com/#donar`), cumpliendo 100% las normativas de Play Store.
 - **Estrategia de Actualizaciones:** Actualizaciones menores en "Más -> Buscar" y mayores obligatorias al iniciar (`isMajor`).
 - **Gateway Cloudflare Worker:** Proxy seguro con validación JWT de Firebase Auth.

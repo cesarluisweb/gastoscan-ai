@@ -152,6 +152,8 @@ class ExchangeRateService {
       final response = await http.get(url).timeout(const Duration(seconds: 5));
       if (response.statusCode == 200) {
         final List<dynamic> list = jsonDecode(response.body);
+        
+        // Buscar coincidencia exacta
         for (final item in list) {
           if (item['fecha'] == isoDate) {
             final rate = (item['promedio'] as num?)?.toDouble();
@@ -161,20 +163,41 @@ class ExchangeRateService {
             }
           }
         }
+
+        // Si no hay fecha exacta (ej. fin de semana o feriado), buscar el último día hábil anterior a isoDate
+        double? lastValidRate;
+        for (final item in list) {
+          final itemFecha = item['fecha']?.toString() ?? '';
+          if (itemFecha.isNotEmpty && itemFecha.compareTo(isoDate) <= 0) {
+            final rate = (item['promedio'] as num?)?.toDouble();
+            if (rate != null && rate > 0) {
+              lastValidRate = rate;
+            }
+          }
+        }
+
+        if (lastValidRate != null && lastValidRate > 0) {
+          await prefs.setDouble(cacheKey, lastValidRate);
+          return lastValidRate;
+        }
       }
     } catch (_) {}
 
-    // 3. Fallback a Fawaz Ahmed Currency API para USD
+    // 3. Fallback retrocediendo día a día en Fawaz Ahmed Currency API para USD
     if (monedaClean == 'USD') {
       try {
-        final url = Uri.parse('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@$isoDate/v1/currencies/usd.json');
-        final response = await http.get(url).timeout(const Duration(seconds: 4));
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-          final vesRate = (data['usd']?['ves'] as num?)?.toDouble();
-          if (vesRate != null && vesRate > 0) {
-            await prefs.setDouble(cacheKey, vesRate);
-            return vesRate;
+        DateTime parsedDate = DateTime.tryParse(isoDate) ?? DateTime.now();
+        for (int i = 0; i < 5; i++) {
+          final targetIso = parsedDate.subtract(Duration(days: i)).toIso8601String().substring(0, 10);
+          final url = Uri.parse('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@$targetIso/v1/currencies/usd.json');
+          final response = await http.get(url).timeout(const Duration(seconds: 4));
+          if (response.statusCode == 200) {
+            final data = jsonDecode(response.body);
+            final vesRate = (data['usd']?['ves'] as num?)?.toDouble();
+            if (vesRate != null && vesRate > 0) {
+              await prefs.setDouble(cacheKey, vesRate);
+              return vesRate;
+            }
           }
         }
       } catch (_) {}
