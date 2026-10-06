@@ -184,6 +184,7 @@ jobs:
           cd landing
           npm install
           npm run build
+          cd ..
 
       - name: Desplegar Landing y APK a Firebase Hosting
         env:
