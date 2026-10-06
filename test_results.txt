@@ -1,16 +1,7 @@
 
 ::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_batch_and_async_test.dart: Bloque 2: Database & Async Unit Tests GastoRepository.eliminarGasto calls softDeleteGasto directly
-::endgroup::
-::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_batch_and_async_test.dart: Bloque 2: Database & Async Unit Tests GastoProvider adopts previous month budget in memory when month is unconfigured (failed)
-Expected: <450.0>
-  Actual: <0.0>
-
-package:matcher                                                   expect
-package:flutter_test/src/widget_tester.dart 473:18                expect
-test/datasources/database_helper_batch_and_async_test.dart 121:7  main.<fn>.<fn>
-::endgroup::
-::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_batch_and_async_test.dart: Bloque 2: Database & Async Unit Tests GastoProvider adopts previous month budget in memory when month is unconfigured
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_batch_and_async_test.dart: Bloque 2: Database & Async Unit Tests GastoProvider mutators return false and map friendly error on failure
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_batch_and_async_test.dart: Bloque 2: Database & Async Unit Tests GeminiService.parseVoiceExpense throws when speech contains no amounts
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_totals_test.dart: Determinismo y consistencia matemática de totales en Bolívares y Dólares getMonthlyTotals suma exactamente todas las compras en Bs y en USD sin omitir ninguna
@@ -54,6 +45,10 @@ NotificationService: Excepción al cancelar recordatorio de pendientes: MissingP
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests calling openChat navigates directly to chat view
+::endgroup::
+NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) R3 Acceptance Criteria: Asignar $50 a Alimentación, y registrar un gasto de $60 en Alimentación hace que se dibuje un indicador visual de exceso (color rojo) en la UI de esa categoría
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Category within budget does NOT render the red excess alert
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Initial empty state displays analysis empty state and allows adding budget
@@ -144,9 +139,35 @@ Error al verificar actualización: Exception: Connection failed
 ::endgroup::
 ::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/update_service_test.dart: UpdateService Tests respects throttle duration when force is false
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/exchange_rate_service_test.dart: ExchangeRateService - getRateForDate Tests retorna tasa exacta cuando la fecha existe en el histórico
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/exchange_rate_service_test.dart: ExchangeRateService - getRateForDate Tests encuentra el último día hábil anterior si la fecha es fin de semana
+::endgroup::
+::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/exchange_rate_service_test.dart: ExchangeRateService - getRateForDate Tests retorna tasa exacta cuando la fecha existe en el histórico (failed)
+Warning: At least one test in this suite creates an HttpClient. When running a test suite that uses
+TestWidgetsFlutterBinding, all HTTP requests will return status code 400, and no network request
+will actually be made. Any test expecting a real network connection and status code will fail.
+To test code that needs an HttpClient, provide your own HttpClient implementation to the code under
+test, so that your test can consistently provide a testable response to the code under test.
+Expected: a positive value
+  Actual: <0.0>
+   Which: is not a positive value
+
+package:matcher                                     expect
+package:flutter_test/src/widget_tester.dart 473:18  expect
+test/services/exchange_rate_service_test.dart 18:7  main.<fn>.<fn>
+::endgroup::
+::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/exchange_rate_service_test.dart: ExchangeRateService - getRateForDate Tests encuentra el último día hábil anterior si la fecha es fin de semana (failed)
+Expected: a positive value
+  Actual: <0.0>
+   Which: is not a positive value
+
+package:matcher                                     expect
+package:flutter_test/src/widget_tester.dart 473:18  expect
+test/services/exchange_rate_service_test.dart 26:7  main.<fn>.<fn>
+::endgroup::
+::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/exchange_rate_service_test.dart: ExchangeRateService - getRateForDate Tests ExchangeRatesData serializa y deserializa correctamente
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/exchange_rate_service_test.dart: ExchangeRateService - esReferencia Tests sin red ni caché: marca referencia y NO avanza el timestamp
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/exchange_rate_service_test.dart: ExchangeRateService - esReferencia Tests con fetch USD en vivo: no es referencia y el timestamp avanza
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/exchange_rate_service_test.dart: ExchangeRateService - esReferencia Tests con caché y sin red: conserva caché marcada como referencia
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/connectivity_service_test.dart: ConnectivityService Tests isConnected returns configured test value
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/connectivity_service_test.dart: ConnectivityService Tests onConnectivityChanged emits updates via testController
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests instantiates with required nombre and default presupuestoMensual 0.0
@@ -206,16 +227,16 @@ Error en LocalOcrService.processImage: MissingPluginException(No implementation 
 Error en LocalOcrService.processImage: MissingPluginException(No implementation found for method vision#startTextRecognizer on channel google_mlkit_text_recognizer)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al programar recordatorio de pendientes: LateInitializationError: Field '_local@820310200' has not been initialized.
-Fallo al procesar item en cola: PathNotFoundException: Cannot open file, path = '/tmp/scan_queue_test_SFVHST/ready_shared.jpg' (OS Error: No such file or directory, errno = 2)
+Fallo al procesar item en cola: PathNotFoundException: Cannot open file, path = '/tmp/scan_queue_test_NRKDGC/ready_shared.jpg' (OS Error: No such file or directory, errno = 2)
 ::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests loadQueue recovers stale processing items back to pending
 ::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests processPendingItems skips items already in error status without extra DB updates
 ::endgroup::
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: GeminiExtractionResult.listFromJson Tests parses single legacy JSON correctly
@@ -261,4 +282,4 @@ NotificationService: Excepción al cancelar recordatorio de pendientes: MissingP
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/budget_bottom_sheet_test.dart: BudgetBottomSheet renders all 4 currency buttons and converts values
 ::endgroup::
 
-::error::161 tests passed, 1 failed.
+::error::163 tests passed, 2 failed.
