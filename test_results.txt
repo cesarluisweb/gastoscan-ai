@@ -1,293 +1,178 @@
+Analyzing gastoscan-ai...                                       
 
-::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_totals_test.dart: Determinismo y consistencia matemática de totales en Bolívares y Dólares getMonthlyTotals suma exactamente todas las compras en Bs y en USD sin omitir ninguna
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_totals_test.dart: Determinismo y consistencia matemática de totales en Bolívares y Dólares getCategoryTotals en VES suma exactamente lo mismo que el Total Gastado del mes
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_totals_test.dart: Determinismo y consistencia matemática de totales en Bolívares y Dólares getCategoryTotals en USD suma exactamente lo mismo que el Total Gastado en USD
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_savings_test.dart: DatabaseHelper Monthly Budget & Savings Goal Tests initial state has zero general budget and zero savings goal
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_savings_test.dart: DatabaseHelper Monthly Budget & Savings Goal Tests setPresupuestoGeneral stores both general budget and metaAhorro
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_savings_test.dart: DatabaseHelper Monthly Budget & Savings Goal Tests copiarPresupuestosMesAnteriorSiVacio copies both general budget and metaAhorro
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_savings_test.dart: DatabaseHelper Monthly Budget & Savings Goal Tests copiarPresupuestosMesAnteriorSiVacio does not overwrite existing records
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_fts_test.dart: FTS Search and Sync Tests searchGastosFts encuentra gastos por términos en el ocr_text
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_fts_test.dart: FTS Search and Sync Tests searchGastosFts encuentra gastos por comercio
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_fts_test.dart: FTS Search and Sync Tests searchGastosFts retorna lista vacía si no hay coincidencias o query está vacío
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_fts_test.dart: FTS Search and Sync Tests deleteGastoFts elimina del índice
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests initial state has empty categories and budgets
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests setPresupuestoCategoria creates category with budget if not exists
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests setPresupuestoCategoria is case-insensitive
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests getAllPresupuestosCategorias returns all configured category budgets
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests insertCategoria and updateCategoria work correctly
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests deleteCategoria removes the category
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests renders 4 navigation destinations and center FAB
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests switching tabs changes current active screen
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping center FAB opens bottom sheet with 4 add options
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping AI chat button on Inicio navigates to Chat keeping bottom navigation and back returns to Inicio
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping Asistente IA in Mas and pressing back returns to Mas hub
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests does not show local processing banner in DashboardScreen (delegated to GlobalScanQueueBanner)
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests displays ready queue item card when items are ready for review
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests displays "Por revisar" badge when pending item has zero total
-::endgroup::
-::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests renders all hub sections in main view (failed)
-Warning: At least one test in this suite creates an HttpClient. When running a test suite that uses
-TestWidgetsFlutterBinding, all HTTP requests will return status code 400, and no network request
-will actually be made. Any test expecting a real network connection and status code will fail.
-To test code that needs an HttpClient, provide your own HttpClient implementation to the code under
-test, so that your test can consistently provide a testable response to the code under test.
-Bad state: databaseFactory not initialized
-databaseFactory is only initialized when using sqflite. When using `sqflite_common_ffi`
-You must call `databaseFactory = databaseFactoryFfi;` before using global openDatabase API
+   info • The import of 'package:flutter/foundation.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart'. Try removing the import directive • lib/main.dart:1:8 • unnecessary_import
+   info • Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter • lib/main.dart:50:9 • use_super_parameters
+warning • The operand can't be 'null', so the condition is always 'true'. Remove the condition • lib/providers/scan_queue_provider.dart:337:25 • unnecessary_null_comparison
+warning • The left operand can't be null, so the right operand is never executed. Try removing the operator and the right operand • lib/services/semantic_validator.dart:46:65 • dead_null_aware_expression
+warning • Unused import: '../../domain/finance/savings_health_models.dart'. Try removing the import directive • lib/ui/screens/analysis_screen.dart:6:8 • unused_import
+warning • Unused import: '../../domain/finance/savings_health_calculator.dart'. Try removing the import directive • lib/ui/screens/analysis_screen.dart:7:8 • unused_import
+   info • Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter • lib/ui/screens/analysis_screen.dart:15:9 • use_super_parameters
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/screens/analysis_screen.dart:190:45 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/screens/analysis_screen.dart:193:47 • deprecated_member_use
+   info • Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter • lib/ui/screens/chat_screen.dart:52:9 • use_super_parameters
+   info • 'localeId' is deprecated and shouldn't be used. Use SpeechListenOptions.localeId instead. Try replacing the use of the deprecated member with the replacement • lib/ui/screens/chat_screen.dart:193:11 • deprecated_member_use
+   info • 'listenFor' is deprecated and shouldn't be used. Use SpeechListenOptions.listenFor instead. Try replacing the use of the deprecated member with the replacement • lib/ui/screens/chat_screen.dart:204:11 • deprecated_member_use
+   info • 'pauseFor' is deprecated and shouldn't be used. Use SpeechListenOptions.pauseFor instead. Try replacing the use of the deprecated member with the replacement • lib/ui/screens/chat_screen.dart:205:11 • deprecated_member_use
+   info • Don't use 'BuildContext's across async gaps. Try rewriting the code to not use the 'BuildContext', or guard the use with a 'mounted' check • lib/ui/screens/chat_screen.dart:322:58 • use_build_context_synchronously
+warning • Unused import: '../../services/export_service.dart'. Try removing the import directive • lib/ui/screens/dashboard_screen.dart:11:8 • unused_import
+warning • Unused import: '../widgets/budget_bottom_sheet.dart'. Try removing the import directive • lib/ui/screens/dashboard_screen.dart:17:8 • unused_import
+warning • Unused import: 'scan_screen.dart'. Try removing the import directive • lib/ui/screens/dashboard_screen.dart:20:8 • unused_import
+   info • Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter • lib/ui/screens/dashboard_screen.dart:34:9 • use_super_parameters
+   info • Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation • lib/ui/screens/dashboard_screen.dart:79:16 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation • lib/ui/screens/dashboard_screen.dart:94:19 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation • lib/ui/screens/dashboard_screen.dart:97:22 • prefer_const_constructors
+warning • The left operand can't be null, so the right operand is never executed. Try removing the operator and the right operand • lib/ui/screens/dashboard_screen.dart:344:42 • dead_null_aware_expression
+warning • The left operand can't be null, so the right operand is never executed. Try removing the operator and the right operand • lib/ui/screens/dashboard_screen.dart:345:48 • dead_null_aware_expression
+warning • The left operand can't be null, so the right operand is never executed. Try removing the operator and the right operand • lib/ui/screens/dashboard_screen.dart:346:44 • dead_null_aware_expression
+   info • Unnecessary braces in a string interpolation. Try removing the braces • lib/ui/screens/dashboard_screen.dart:577:44 • unnecessary_brace_in_string_interps
+warning • The declaration '_mostrarDialogoPresupuesto' isn't referenced. Try removing the declaration of '_mostrarDialogoPresupuesto' • lib/ui/screens/dashboard_screen.dart:618:8 • unused_element
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre. Try replacing the use of the deprecated member with the replacement • lib/ui/screens/dashboard_screen.dart:648:25 • deprecated_member_use
+   info • Don't use 'BuildContext's across async gaps. Try rewriting the code to not use the 'BuildContext', or guard the use with a 'mounted' check • lib/ui/screens/dashboard_screen.dart:710:36 • use_build_context_synchronously
+   info • Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter • lib/ui/screens/expense_history_screen.dart:18:9 • use_super_parameters
+warning • The left operand can't be null, so the right operand is never executed. Try removing the operator and the right operand • lib/ui/screens/expense_history_screen.dart:108:32 • dead_null_aware_expression
+warning • The left operand can't be null, so the right operand is never executed. Try removing the operator and the right operand • lib/ui/screens/expense_history_screen.dart:109:38 • dead_null_aware_expression
+warning • The left operand can't be null, so the right operand is never executed. Try removing the operator and the right operand • lib/ui/screens/expense_history_screen.dart:110:34 • dead_null_aware_expression
+warning • Unused import: 'scan_screen.dart'. Try removing the import directive • lib/ui/screens/main_screen.dart:17:8 • unused_import
+warning • Unused import: 'chat_screen.dart'. Try removing the import directive • lib/ui/screens/main_screen.dart:19:8 • unused_import
+warning • Unused import: '../widgets/global_scan_queue_banner.dart'. Try removing the import directive • lib/ui/screens/main_screen.dart:25:8 • unused_import
+   info • Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter • lib/ui/screens/main_screen.dart:28:9 • use_super_parameters
+   info • Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter • lib/ui/screens/main_screen.dart:55:9 • use_super_parameters
+warning • A value for optional parameter 'duration' isn't ever given. Try removing the unused parameter • lib/ui/screens/main_screen.dart:59:10 • unused_element_parameter
+   info • Don't use 'BuildContext's across async gaps. Try rewriting the code to not use the 'BuildContext', or guard the use with a 'mounted' check • lib/ui/screens/main_screen.dart:125:58 • use_build_context_synchronously
+   info • Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation • lib/ui/screens/main_screen.dart:243:15 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation • lib/ui/screens/main_screen.dart:245:24 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation • lib/ui/screens/main_screen.dart:247:26 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation • lib/ui/screens/main_screen.dart:255:26 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation • lib/ui/screens/main_screen.dart:292:26 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation • lib/ui/screens/main_screen.dart:320:26 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation • lib/ui/screens/main_screen.dart:349:26 • prefer_const_constructors
+   info • Use a 'SizedBox' to add whitespace to a layout. Try using a 'SizedBox' rather than a 'Container' • lib/ui/screens/main_screen.dart:453:14 • sized_box_for_whitespace
+   info • Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter • lib/ui/screens/more_screen.dart:23:9 • use_super_parameters
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre. Try replacing the use of the deprecated member with the replacement • lib/ui/screens/more_screen.dart:504:19 • deprecated_member_use
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre. Try replacing the use of the deprecated member with the replacement • lib/ui/screens/more_screen.dart:555:21 • deprecated_member_use
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted' check on the State, and other BuildContext use with a 'mounted' check on the BuildContext • lib/ui/screens/more_screen.dart:852:42 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted' check on the State, and other BuildContext use with a 'mounted' check on the BuildContext • lib/ui/screens/more_screen.dart:856:42 • use_build_context_synchronously
+   info • Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter • lib/ui/screens/review_expense_screen.dart:26:9 • use_super_parameters
+   info • The private field _priceComparisons could be 'final'. Try making the field 'final' • lib/ui/screens/review_expense_screen.dart:136:34 • prefer_final_fields
+   info • Don't use 'BuildContext's across async gaps. Try rewriting the code to not use the 'BuildContext', or guard the use with a 'mounted' check • lib/ui/screens/review_expense_screen.dart:433:52 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps. Try rewriting the code to not use the 'BuildContext', or guard the use with a 'mounted' check • lib/ui/screens/review_expense_screen.dart:437:20 • use_build_context_synchronously
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/screens/review_expense_screen.dart:486:52 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/screens/review_expense_screen.dart:488:71 • deprecated_member_use
+   info • Don't use 'BuildContext's across async gaps. Try rewriting the code to not use the 'BuildContext', or guard the use with a 'mounted' check • lib/ui/screens/review_expense_screen.dart:575:32 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps. Try rewriting the code to not use the 'BuildContext', or guard the use with a 'mounted' check • lib/ui/screens/review_expense_screen.dart:582:32 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps. Try rewriting the code to not use the 'BuildContext', or guard the use with a 'mounted' check • lib/ui/screens/review_expense_screen.dart:691:68 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted' check on the State, and other BuildContext use with a 'mounted' check on the BuildContext • lib/ui/screens/review_expense_screen.dart:704:42 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted' check on the State, and other BuildContext use with a 'mounted' check on the BuildContext • lib/ui/screens/review_expense_screen.dart:713:23 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted' check on the State, and other BuildContext use with a 'mounted' check on the BuildContext • lib/ui/screens/review_expense_screen.dart:723:35 • use_build_context_synchronously
+warning • The value of the local variable 'prevFecha' isn't used. Try removing the variable or using it • lib/ui/screens/review_expense_screen.dart:807:33 • unused_local_variable
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre. Try replacing the use of the deprecated member with the replacement • lib/ui/screens/review_expense_screen.dart:947:35 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/screens/review_expense_screen.dart:965:63 • deprecated_member_use
+   info • Unnecessary use of 'toList' in a spread. Try removing the invocation of 'toList' • lib/ui/screens/review_expense_screen.dart:992:26 • unnecessary_to_list_in_spreads
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/screens/review_expense_screen.dart:1062:72 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/screens/review_expense_screen.dart:1269:43 • deprecated_member_use
+warning • Unused import: '../../providers/settings_provider.dart'. Try removing the import directive • lib/ui/screens/scan_screen.dart:9:8 • unused_import
+warning • Unused import: '../../services/image_service.dart'. Try removing the import directive • lib/ui/screens/scan_screen.dart:11:8 • unused_import
+warning • Unused import: 'review_expense_screen.dart'. Try removing the import directive • lib/ui/screens/scan_screen.dart:13:8 • unused_import
+   info • Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter • lib/ui/screens/scan_screen.dart:21:9 • use_super_parameters
+warning • The value of the field '_geminiService' isn't used. Try removing the field, or using it • lib/ui/screens/scan_screen.dart:36:28 • unused_field
+warning • The value of the field '_dbHelper' isn't used. Try removing the field, or using it • lib/ui/screens/scan_screen.dart:37:29 • unused_field
+   info • The private field _isProcessing could be 'final'. Try making the field 'final' • lib/ui/screens/scan_screen.dart:40:8 • prefer_final_fields
+   info • Don't use 'BuildContext's across async gaps. Try rewriting the code to not use the 'BuildContext', or guard the use with a 'mounted' check • lib/ui/screens/scan_screen.dart:68:66 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps. Try rewriting the code to not use the 'BuildContext', or guard the use with a 'mounted' check • lib/ui/screens/scan_screen.dart:86:66 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps. Try rewriting the code to not use the 'BuildContext', or guard the use with a 'mounted' check • lib/ui/screens/scan_screen.dart:95:28 • use_build_context_synchronously
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/screens/scan_screen.dart:156:40 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/screens/scan_screen.dart:211:37 • deprecated_member_use
+   info • Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter • lib/ui/screens/shopping_list_screen.dart:9:9 • use_super_parameters
+   info • Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter • lib/ui/widgets/ai_insight_card.dart:22:9 • use_super_parameters
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/widgets/ai_insight_card.dart:159:33 • deprecated_member_use
+   info • Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter • lib/ui/widgets/budget_bottom_sheet.dart:12:9 • use_super_parameters
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/widgets/budget_bottom_sheet.dart:377:68 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/widgets/budget_bottom_sheet.dart:526:54 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/widgets/budget_bottom_sheet.dart:549:54 • deprecated_member_use
+   info • Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation • lib/ui/widgets/budget_bottom_sheet.dart:585:19 • prefer_const_constructors
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/widgets/budget_bottom_sheet.dart:609:44 • deprecated_member_use
+   info • Unnecessary use of 'toList' in a spread. Try removing the invocation of 'toList' • lib/ui/widgets/budget_bottom_sheet.dart:648:22 • unnecessary_to_list_in_spreads
+warning • Unused import: '../../core/utils/date_formatter.dart'. Try removing the import directive • lib/ui/widgets/category_chart.dart:8:8 • unused_import
+   info • Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter • lib/ui/widgets/category_chart.dart:23:9 • use_super_parameters
+   info • Use 'const' for final variables initialized to a constant value. Try replacing 'final' with 'const' • lib/ui/widgets/category_chart.dart:119:5 • prefer_const_declarations
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/widgets/category_chart.dart:159:33 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/widgets/category_chart.dart:274:46 • deprecated_member_use
+warning • The declaration '_buildGeneralBudgetItem' isn't referenced. Try removing the declaration of '_buildGeneralBudgetItem' • lib/ui/widgets/category_chart.dart:348:10 • unused_element
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/widgets/category_chart.dart:363:31 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/widgets/category_chart.dart:368:33 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/widgets/category_chart.dart:420:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/widgets/category_chart.dart:431:40 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/widgets/category_chart.dart:509:31 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/widgets/category_chart.dart:514:33 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/widgets/category_chart.dart:542:46 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/widgets/category_chart.dart:605:45 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/widgets/category_chart.dart:617:46 • deprecated_member_use
+   info • Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter • lib/ui/widgets/expense_card.dart:14:9 • use_super_parameters
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/widgets/expense_card.dart:93:39 • deprecated_member_use
+   info • Unnecessary use of 'toList' in a spread. Try removing the invocation of 'toList' • lib/ui/widgets/expense_card.dart:282:22 • unnecessary_to_list_in_spreads
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/widgets/global_scan_queue_banner.dart:51:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/widgets/global_scan_queue_banner.dart:171:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/widgets/global_scan_queue_banner.dart:279:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/widgets/global_scan_queue_banner.dart:293:37 • deprecated_member_use
+   info • Don't use 'BuildContext's across async gaps. Try rewriting the code to not use the 'BuildContext', or guard the use with a 'mounted' check • lib/ui/widgets/global_scan_queue_banner.dart:481:52 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps. Try rewriting the code to not use the 'BuildContext', or guard the use with a 'mounted' check • lib/ui/widgets/global_scan_queue_banner.dart:482:50 • use_build_context_synchronously
+   info • Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter • lib/ui/widgets/pending_expense_card.dart:12:9 • use_super_parameters
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/widgets/pending_expense_card.dart:24:39 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/widgets/pending_expense_card.dart:39:44 • deprecated_member_use
+   info • Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation • lib/ui/widgets/pending_expense_card.dart:72:25 • prefer_const_constructors
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/widgets/pending_expense_card.dart:122:54 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/widgets/pending_expense_card.dart:124:73 • deprecated_member_use
+   info • Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter • lib/ui/widgets/summary_card.dart:22:9 • use_super_parameters
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/widgets/summary_card.dart:132:33 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/widgets/summary_card.dart:270:62 • deprecated_member_use
+   info • Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter • lib/ui/widgets/update_dialog.dart:8:9 • use_super_parameters
+   info • Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter • lib/ui/widgets/voice_expense_sheet.dart:11:9 • use_super_parameters
+   info • 'localeId' is deprecated and shouldn't be used. Use SpeechListenOptions.localeId instead. Try replacing the use of the deprecated member with the replacement • lib/ui/widgets/voice_expense_sheet.dart:131:7 • deprecated_member_use
+   info • 'listenFor' is deprecated and shouldn't be used. Use SpeechListenOptions.listenFor instead. Try replacing the use of the deprecated member with the replacement • lib/ui/widgets/voice_expense_sheet.dart:142:7 • deprecated_member_use
+   info • 'pauseFor' is deprecated and shouldn't be used. Use SpeechListenOptions.pauseFor instead. Try replacing the use of the deprecated member with the replacement • lib/ui/widgets/voice_expense_sheet.dart:143:7 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement • lib/ui/widgets/voice_expense_sheet.dart:262:30 • deprecated_member_use
+   info • Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation • lib/ui/widgets/voice_expense_sheet.dart:331:15 • prefer_const_constructors
+warning • Unused import: 'package:gastoscan_ai/data/datasources/local/database_helper.dart'. Try removing the import directive • test/providers/gasto_provider_budget_test.dart:2:8 • unused_import
+warning • Unused import: 'package:gastoscan_ai/data/models/categoria_model.dart'. Try removing the import directive • test/providers/gasto_provider_budget_test.dart:3:8 • unused_import
+warning • Unused import: 'package:gastoscan_ai/data/models/gasto_model.dart'. Try removing the import directive • test/providers/gasto_provider_budget_test.dart:4:8 • unused_import
+   info • 'window' is deprecated and shouldn't be used. Use WidgetTester.platformDispatcher or WidgetTester.view instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.9.0-0.1.pre. Try replacing the use of the deprecated member with the replacement • test/screens/chat_screen_test.dart:112:15 • deprecated_member_use
+   info • 'physicalSizeTestValue' is deprecated and shouldn't be used. Use WidgetTester.view.physicalSize instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.9.0-0.1.pre. Try replacing the use of the deprecated member with the replacement • test/screens/chat_screen_test.dart:112:22 • deprecated_member_use
+   info • 'window' is deprecated and shouldn't be used. Use WidgetTester.platformDispatcher or WidgetTester.view instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.9.0-0.1.pre. Try replacing the use of the deprecated member with the replacement • test/screens/chat_screen_test.dart:113:15 • deprecated_member_use
+   info • 'devicePixelRatioTestValue' is deprecated and shouldn't be used. Use WidgetTester.view.devicePixelRatio instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.9.0-0.1.pre. Try replacing the use of the deprecated member with the replacement • test/screens/chat_screen_test.dart:113:22 • deprecated_member_use
+   info • 'window' is deprecated and shouldn't be used. Use WidgetTester.platformDispatcher or WidgetTester.view instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.9.0-0.1.pre. Try replacing the use of the deprecated member with the replacement • test/screens/chat_screen_test.dart:123:15 • deprecated_member_use
+   info • 'clearPhysicalSizeTestValue' is deprecated and shouldn't be used. Use WidgetTester.view.resetPhysicalSize() instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.9.0-0.1.pre. Try replacing the use of the deprecated member with the replacement • test/screens/chat_screen_test.dart:123:22 • deprecated_member_use
+   info • 'window' is deprecated and shouldn't be used. Use WidgetTester.platformDispatcher or WidgetTester.view instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.9.0-0.1.pre. Try replacing the use of the deprecated member with the replacement • test/screens/chat_screen_test.dart:124:15 • deprecated_member_use
+   info • 'clearDevicePixelRatioTestValue' is deprecated and shouldn't be used. Use WidgetTester.view.resetDevicePixelRatio() instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.9.0-0.1.pre. Try replacing the use of the deprecated member with the replacement • test/screens/chat_screen_test.dart:124:22 • deprecated_member_use
+   info • 'window' is deprecated and shouldn't be used. Use WidgetTester.platformDispatcher or WidgetTester.view instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.9.0-0.1.pre. Try replacing the use of the deprecated member with the replacement • test/screens/dashboard_category_budget_test.dart:152:15 • deprecated_member_use
+   info • 'physicalSizeTestValue' is deprecated and shouldn't be used. Use WidgetTester.view.physicalSize instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.9.0-0.1.pre. Try replacing the use of the deprecated member with the replacement • test/screens/dashboard_category_budget_test.dart:152:22 • deprecated_member_use
+   info • 'window' is deprecated and shouldn't be used. Use WidgetTester.platformDispatcher or WidgetTester.view instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.9.0-0.1.pre. Try replacing the use of the deprecated member with the replacement • test/screens/dashboard_category_budget_test.dart:153:15 • deprecated_member_use
+   info • 'devicePixelRatioTestValue' is deprecated and shouldn't be used. Use WidgetTester.view.devicePixelRatio instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.9.0-0.1.pre. Try replacing the use of the deprecated member with the replacement • test/screens/dashboard_category_budget_test.dart:153:22 • deprecated_member_use
+   info • 'window' is deprecated and shouldn't be used. Use WidgetTester.platformDispatcher or WidgetTester.view instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.9.0-0.1.pre. Try replacing the use of the deprecated member with the replacement • test/screens/dashboard_search_test.dart:136:15 • deprecated_member_use
+   info • 'physicalSizeTestValue' is deprecated and shouldn't be used. Use WidgetTester.view.physicalSize instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.9.0-0.1.pre. Try replacing the use of the deprecated member with the replacement • test/screens/dashboard_search_test.dart:136:22 • deprecated_member_use
+   info • 'window' is deprecated and shouldn't be used. Use WidgetTester.platformDispatcher or WidgetTester.view instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.9.0-0.1.pre. Try replacing the use of the deprecated member with the replacement • test/screens/dashboard_search_test.dart:137:15 • deprecated_member_use
+   info • 'devicePixelRatioTestValue' is deprecated and shouldn't be used. Use WidgetTester.view.devicePixelRatio instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.9.0-0.1.pre. Try replacing the use of the deprecated member with the replacement • test/screens/dashboard_search_test.dart:137:22 • deprecated_member_use
+   info • 'window' is deprecated and shouldn't be used. Use WidgetTester.platformDispatcher or WidgetTester.view instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.9.0-0.1.pre. Try replacing the use of the deprecated member with the replacement • test/screens/more_screen_test.dart:51:15 • deprecated_member_use
+   info • 'physicalSizeTestValue' is deprecated and shouldn't be used. Use WidgetTester.view.physicalSize instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.9.0-0.1.pre. Try replacing the use of the deprecated member with the replacement • test/screens/more_screen_test.dart:51:22 • deprecated_member_use
+   info • 'window' is deprecated and shouldn't be used. Use WidgetTester.platformDispatcher or WidgetTester.view instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.9.0-0.1.pre. Try replacing the use of the deprecated member with the replacement • test/screens/more_screen_test.dart:52:15 • deprecated_member_use
+   info • 'devicePixelRatioTestValue' is deprecated and shouldn't be used. Use WidgetTester.view.devicePixelRatio instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.9.0-0.1.pre. Try replacing the use of the deprecated member with the replacement • test/screens/more_screen_test.dart:52:22 • deprecated_member_use
+   info • 'window' is deprecated and shouldn't be used. Use WidgetTester.platformDispatcher or WidgetTester.view instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.9.0-0.1.pre. Try replacing the use of the deprecated member with the replacement • test/screens/more_screen_test.dart:61:15 • deprecated_member_use
+   info • 'clearPhysicalSizeTestValue' is deprecated and shouldn't be used. Use WidgetTester.view.resetPhysicalSize() instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.9.0-0.1.pre. Try replacing the use of the deprecated member with the replacement • test/screens/more_screen_test.dart:61:22 • deprecated_member_use
+   info • 'window' is deprecated and shouldn't be used. Use WidgetTester.platformDispatcher or WidgetTester.view instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.9.0-0.1.pre. Try replacing the use of the deprecated member with the replacement • test/screens/more_screen_test.dart:62:15 • deprecated_member_use
+   info • 'clearDevicePixelRatioTestValue' is deprecated and shouldn't be used. Use WidgetTester.view.resetDevicePixelRatio() instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.9.0-0.1.pre. Try replacing the use of the deprecated member with the replacement • test/screens/more_screen_test.dart:62:22 • deprecated_member_use
+warning • Unused import: 'dart:convert'. Try removing the import directive • test/services/exchange_rate_service_test.dart:1:8 • unused_import
+warning • Unused import: 'package:http/http.dart'. Try removing the import directive • test/services/exchange_rate_service_test.dart:3:8 • unused_import
+warning • Unused import: 'package:http/testing.dart'. Try removing the import directive • test/services/exchange_rate_service_test.dart:4:8 • unused_import
+warning • The value of the local variable 'mockData' isn't used. Try removing the variable or using it • test/services/exchange_rate_service_test.dart:17:13 • unused_local_variable
+   info • Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation • test/widgets/currency_display_test.dart:169:9 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation • test/widgets/currency_display_test.dart:170:17 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation • test/widgets/currency_display_test.dart:171:19 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation • test/widgets/currency_display_test.dart:172:22 • prefer_const_constructors
+   info • 'window' is deprecated and shouldn't be used. Use WidgetTester.platformDispatcher or WidgetTester.view instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.9.0-0.1.pre. Try replacing the use of the deprecated member with the replacement • test/widgets/voice_expense_sheet_test.dart:56:15 • deprecated_member_use
+   info • 'physicalSizeTestValue' is deprecated and shouldn't be used. Use WidgetTester.view.physicalSize instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.9.0-0.1.pre. Try replacing the use of the deprecated member with the replacement • test/widgets/voice_expense_sheet_test.dart:56:22 • deprecated_member_use
+   info • 'window' is deprecated and shouldn't be used. Use WidgetTester.platformDispatcher or WidgetTester.view instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.9.0-0.1.pre. Try replacing the use of the deprecated member with the replacement • test/widgets/voice_expense_sheet_test.dart:57:15 • deprecated_member_use
+   info • 'devicePixelRatioTestValue' is deprecated and shouldn't be used. Use WidgetTester.view.devicePixelRatio instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.9.0-0.1.pre. Try replacing the use of the deprecated member with the replacement • test/widgets/voice_expense_sheet_test.dart:57:22 • deprecated_member_use
+   info • 'window' is deprecated and shouldn't be used. Use WidgetTester.platformDispatcher or WidgetTester.view instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.9.0-0.1.pre. Try replacing the use of the deprecated member with the replacement • test/widgets/voice_expense_sheet_test.dart:68:15 • deprecated_member_use
+   info • 'clearPhysicalSizeTestValue' is deprecated and shouldn't be used. Use WidgetTester.view.resetPhysicalSize() instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.9.0-0.1.pre. Try replacing the use of the deprecated member with the replacement • test/widgets/voice_expense_sheet_test.dart:68:22 • deprecated_member_use
+   info • 'window' is deprecated and shouldn't be used. Use WidgetTester.platformDispatcher or WidgetTester.view instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.9.0-0.1.pre. Try replacing the use of the deprecated member with the replacement • test/widgets/voice_expense_sheet_test.dart:69:15 • deprecated_member_use
+   info • 'clearDevicePixelRatioTestValue' is deprecated and shouldn't be used. Use WidgetTester.view.resetDevicePixelRatio() instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.9.0-0.1.pre. Try replacing the use of the deprecated member with the replacement • test/widgets/voice_expense_sheet_test.dart:69:22 • deprecated_member_use
 
-package:sqflite_common/src/sqflite_database_factory.dart 33:7            databaseFactory.<fn>
-package:sqflite_common/src/sqflite_database_factory.dart 37:6            databaseFactory
-package:sqflite_common/sqflite.dart 106:38                               getDatabasesPath
-package:gastoscan_ai/data/datasources/local/database_helper.dart 22:26   DatabaseHelper._initDB
-package:gastoscan_ai/data/datasources/local/database_helper.dart 17:23   DatabaseHelper.database
-package:gastoscan_ai/data/datasources/local/database_helper.dart 769:31  DatabaseHelper.resetStaleProcessingScanQueueItems
-package:gastoscan_ai/providers/scan_queue_provider.dart 91:23            ScanQueueProvider.loadQueue
-package:gastoscan_ai/providers/scan_queue_provider.dart 54:7             new ScanQueueProvider
-test/screens/more_screen_test.dart 45:27                                 main.<fn>.<fn>
-===== asynchronous gap ===========================
-dart:async                                                               _CustomZone.registerBinaryCallback
-package:gastoscan_ai/providers/scan_queue_provider.dart 91:7             ScanQueueProvider.loadQueue
-package:gastoscan_ai/providers/scan_queue_provider.dart 54:7             new ScanQueueProvider
-test/screens/more_screen_test.dart 45:27                                 main.<fn>.<fn>
-::endgroup::
-::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping shopping list navigates internally and back button returns to hub (failed)
-Bad state: databaseFactory not initialized
-databaseFactory is only initialized when using sqflite. When using `sqflite_common_ffi`
-You must call `databaseFactory = databaseFactoryFfi;` before using global openDatabase API
-
-package:sqflite_common/src/sqflite_database_factory.dart 33:7            databaseFactory.<fn>
-package:sqflite_common/src/sqflite_database_factory.dart 37:6            databaseFactory
-package:sqflite_common/sqflite.dart 106:38                               getDatabasesPath
-package:gastoscan_ai/data/datasources/local/database_helper.dart 22:26   DatabaseHelper._initDB
-package:gastoscan_ai/data/datasources/local/database_helper.dart 17:23   DatabaseHelper.database
-package:gastoscan_ai/data/datasources/local/database_helper.dart 769:31  DatabaseHelper.resetStaleProcessingScanQueueItems
-package:gastoscan_ai/providers/scan_queue_provider.dart 91:23            ScanQueueProvider.loadQueue
-package:gastoscan_ai/providers/scan_queue_provider.dart 54:7             new ScanQueueProvider
-test/screens/more_screen_test.dart 45:27                                 main.<fn>.<fn>
-===== asynchronous gap ===========================
-dart:async                                                               _CustomZone.registerBinaryCallback
-package:gastoscan_ai/providers/scan_queue_provider.dart 91:7             ScanQueueProvider.loadQueue
-package:gastoscan_ai/providers/scan_queue_provider.dart 54:7             new ScanQueueProvider
-test/screens/more_screen_test.dart 45:27                                 main.<fn>.<fn>
-::endgroup::
-::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping chat navigates internally and back button returns to hub (failed)
-Bad state: databaseFactory not initialized
-databaseFactory is only initialized when using sqflite. When using `sqflite_common_ffi`
-You must call `databaseFactory = databaseFactoryFfi;` before using global openDatabase API
-
-package:sqflite_common/src/sqflite_database_factory.dart 33:7            databaseFactory.<fn>
-package:sqflite_common/src/sqflite_database_factory.dart 37:6            databaseFactory
-package:sqflite_common/sqflite.dart 106:38                               getDatabasesPath
-package:gastoscan_ai/data/datasources/local/database_helper.dart 22:26   DatabaseHelper._initDB
-package:gastoscan_ai/data/datasources/local/database_helper.dart 17:23   DatabaseHelper.database
-package:gastoscan_ai/data/datasources/local/database_helper.dart 769:31  DatabaseHelper.resetStaleProcessingScanQueueItems
-package:gastoscan_ai/providers/scan_queue_provider.dart 91:23            ScanQueueProvider.loadQueue
-package:gastoscan_ai/providers/scan_queue_provider.dart 54:7             new ScanQueueProvider
-test/screens/more_screen_test.dart 45:27                                 main.<fn>.<fn>
-===== asynchronous gap ===========================
-dart:async                                                               _CustomZone.registerBinaryCallback
-package:gastoscan_ai/providers/scan_queue_provider.dart 91:7             ScanQueueProvider.loadQueue
-package:gastoscan_ai/providers/scan_queue_provider.dart 54:7             new ScanQueueProvider
-test/screens/more_screen_test.dart 45:27                                 main.<fn>.<fn>
-::endgroup::
-::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests calling openChat navigates directly to chat view (failed)
-Bad state: databaseFactory not initialized
-databaseFactory is only initialized when using sqflite. When using `sqflite_common_ffi`
-You must call `databaseFactory = databaseFactoryFfi;` before using global openDatabase API
-
-package:sqflite_common/src/sqflite_database_factory.dart 33:7            databaseFactory.<fn>
-package:sqflite_common/src/sqflite_database_factory.dart 37:6            databaseFactory
-package:sqflite_common/sqflite.dart 106:38                               getDatabasesPath
-package:gastoscan_ai/data/datasources/local/database_helper.dart 22:26   DatabaseHelper._initDB
-package:gastoscan_ai/data/datasources/local/database_helper.dart 17:23   DatabaseHelper.database
-package:gastoscan_ai/data/datasources/local/database_helper.dart 769:31  DatabaseHelper.resetStaleProcessingScanQueueItems
-package:gastoscan_ai/providers/scan_queue_provider.dart 91:23            ScanQueueProvider.loadQueue
-package:gastoscan_ai/providers/scan_queue_provider.dart 54:7             new ScanQueueProvider
-test/screens/more_screen_test.dart 45:27                                 main.<fn>.<fn>
-===== asynchronous gap ===========================
-dart:async                                                               _CustomZone.registerBinaryCallback
-package:gastoscan_ai/providers/scan_queue_provider.dart 91:7             ScanQueueProvider.loadQueue
-package:gastoscan_ai/providers/scan_queue_provider.dart 54:7             new ScanQueueProvider
-test/screens/more_screen_test.dart 45:27                                 main.<fn>.<fn>
-::endgroup::
-::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) R3 Acceptance Criteria: Asignar $50 a Alimentación, y registrar un gasto de $60 en Alimentación hace que se dibuje un indicador visual de exceso (color rojo) en la UI de esa categoría
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Category within budget does NOT render the red excess alert
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Initial empty state displays analysis empty state and allows adding budget
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Editing budget to amount greater than expense clears red excess alert
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Validation: categories exceeding general budget shows alert and blocks save
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) General budget exceeded shows general excess alert in AnalysisScreen
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) AnalysisScreen month selector opens picker dialog and changes month
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) SummaryCard shows Presupuesto mensual and edit button opens budget bottom sheet
-::endgroup::
-::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart: ScanScreen Multi-Image Selection Tests multi-image selection enqueues all images and pops back to Dashboard
-[ScanScreen] pickMultiImage returned 3 files
-[ScanScreen] Enqueueing multiple paths: [/tmp/receipt1.jpg, /tmp/receipt2.jpg, /tmp/receipt3.jpg]
-[ScanScreen] Finished enqueueMultiple. Provider pendingCount: 3
-::endgroup::
-::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart: ScanScreen Multi-Image Selection Tests empty selection from gallery does not enqueue or pop
-[ScanScreen] pickMultiImage returned 0 files
-::endgroup::
-::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) tapping search icon reveals search text field with hint
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) entering search query immediately filters out non-matching expenses
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) expenses matching by commerce are included
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) expenses matching by product name are included
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) clearing search query via close button restores all expenses
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) clearing search text restores all expenses while keeping search open
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) displays friendly empty state message when search yields 0 matches
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) case-insensitive and diacritic-insensitive search works
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests renders all 5 predefined chat suggestions in horizontal bar
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests tapping a suggestion chip sends it immediately as a user message
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests tapping shopping list suggestion chip sends request directly
-::endgroup::
-::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests renders edit expense button when assistant registers an expense
-Error al cotejar compras en chat: Bad state: databaseFactory not initialized
-databaseFactory is only initialized when using sqflite. When using `sqflite_common_ffi`
-You must call `databaseFactory = databaseFactoryFfi;` before using global openDatabase API
-
-::endgroup::
-::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests tapping textfield while listening stops microphone
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests sending message while listening stops microphone
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/local_ocr_service_test.dart: LocalOcrService Quality Scoring Tests factura completa con comercio, fecha, ítems y total supera umbral de score
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/local_ocr_service_test.dart: LocalOcrService Quality Scoring Tests texto borroso o escaso de 2 líneas no supera el umbral de score
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests Default singleton instance is available and accessible
-::endgroup::
-::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests 7-day scheduling function defaults to Duration(days: 7)
-NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@832310200' has not been initialized.
-::endgroup::
-::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests Custom duration is respected when specified
-NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@832310200' has not been initialized.
-::endgroup::
-::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests cancelInactivityReminder cancels and clears scheduled state
-NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@832310200' has not been initialized.
-NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-::endgroup::
-::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests Rescheduling logic cancels previous notification and schedules new one
-::endgroup::
-::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests recordActivityAndReschedule updates activity time and reschedules for 7 days
-NotificationService: Excepción al cancelar recordatorio: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al programar recordatorio: LateInitializationError: Field '_local@832310200' has not been initialized.
-::endgroup::
-::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — R4 Inactivity Reminders Tests Channel configuration and constants are correctly defined
-::endgroup::
-::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — Integration with GastoProvider agregarGasto triggers recordActivityAndReschedule on NotificationService
-Error en sincronización bidireccional: [core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()
-::endgroup::
-::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — Integration with GastoProvider actualizarGasto triggers recordActivityAndReschedule on NotificationService
-Error en sincronización bidireccional: [core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()
-::endgroup::
-::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — Integration with GastoProvider clearPayload resets initialPayload and selectedPayloadNotifier
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — AndroidManifest Permissions & Configuration Verification android/app/src/main/AndroidManifest.xml contains all required permissions and receivers
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — AndroidManifest Permissions & Configuration Verification AndroidManifest.xml contains permissions and receivers
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/notification_service_test.dart: NotificationService — AndroidManifest Permissions & Configuration Verification pubspec.yaml declares flutter_local_notifications and timezone
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/semantic_validator_test.dart: SemanticValidator Tests retorna inválido si la lista de facturas está vacía
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/semantic_validator_test.dart: SemanticValidator Tests retorna inválido si no tiene comercio ni total válido
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/semantic_validator_test.dart: SemanticValidator Tests retorna válido si tiene comercio y total válido coherente con ítems
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/semantic_validator_test.dart: SemanticValidator Tests acepta discrepancia pequeña dentro del porcentaje de tolerancia (15%)
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/semantic_validator_test.dart: SemanticValidator Tests rechaza discrepancia grave superior al porcentaje de tolerancia (>15%)
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/update_service_test.dart: UpdateService Tests detects available update when remote version is higher or remote build number is greater
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/update_service_test.dart: UpdateService Tests reports no update when local version and build number are equal or higher
-::endgroup::
-::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/update_service_test.dart: UpdateService Tests handles network failure gracefully without throwing exceptions
-Error al verificar actualización: Exception: Connection failed
-::endgroup::
-::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/update_service_test.dart: UpdateService Tests respects throttle duration when force is false
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/exchange_rate_service_test.dart: ExchangeRateService - getRateForDate Tests retorna tasa exacta cuando la fecha existe en el histórico
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/exchange_rate_service_test.dart: ExchangeRateService - getRateForDate Tests encuentra el último día hábil anterior si la fecha es fin de semana
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/exchange_rate_service_test.dart: ExchangeRateService - getRateForDate Tests ExchangeRatesData serializa y deserializa correctamente
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/connectivity_service_test.dart: ConnectivityService Tests isConnected returns configured test value
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/connectivity_service_test.dart: ConnectivityService Tests onConnectivityChanged emits updates via testController
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests instantiates with required nombre and default presupuestoMensual 0.0
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests instantiates with custom id and presupuestoMensual
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests toMap produces correct key-value map with id
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests toMap omits id when null
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests fromMap parses standard map correctly
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests fromMap parses integer budget as double
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests fromMap supports fallback aliases: name, budget, presupuesto, categoria
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests copyWith updates specified fields correctly
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests equality and hashCode work as expected
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests CategoryModel typedef works interchangeably
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/shopping_item_model_test.dart: ShoppingItemModel Tests instantiates with required name and default values
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/shopping_item_model_test.dart: ShoppingItemModel Tests toMap and fromMap work correctly
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/shopping_item_model_test.dart: ShoppingItemModel Tests copyWith updates fields appropriately
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests initial state has empty category budgets and totals
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests setPresupuestoGeneral updates general budget
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests guardarTodoElPresupuesto updates general and category budgets and filters zero budgets
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests setPresupuestoCategoria updates budget for given category
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests getPresupuestoCategoria is case-insensitive
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests isCategoryOverBudget returns true when spent > budget and budget > 0
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests isCategoryOverBudget returns false when spent <= budget
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests isCategoryOverBudget returns false when budget is 0 or unassigned
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests initial state has empty pending and ready items
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests enqueue inserts single image and updates pendingCount
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests enqueueMultiple enqueues all images and updates pendingItems
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests addPendingItem delegates to enqueue and preserves backwards compatibility
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests removeItem removes item from database and refreshes queue
-::endgroup::
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests manual state mutation helpers update state and notify listeners
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests offline enqueue marks queue as waiting for connection without crashing
-::endgroup::
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests reconnection stream triggers processing of pending offline items
-Reconexión detectada: reanudando procesamiento de cola de escaneo.
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-::endgroup::
-::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: GeminiExtractionResult.listFromJson Tests parses single legacy JSON correctly
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: GeminiExtractionResult.listFromJson Tests parses multiple facturas JSON array correctly
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: GeminiExtractionResult.listFromJson Tests parses fiscal markers (E) and (G) into item descriptions
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/domain/savings_health_calculator_test.dart: SavingsHealthCalculator Tests returns sinMeta when metaAhorro is zero or negative
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/domain/savings_health_calculator_test.dart: SavingsHealthCalculator Tests calculates correct limiteParaGastar when metaAhorro is positive
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/domain/savings_health_calculator_test.dart: SavingsHealthCalculator Tests grace period days 1 to 3 does not trigger enRiesgo even if projected is high
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/domain/savings_health_calculator_test.dart: SavingsHealthCalculator Tests grace period days 1 to 3 triggers comprometida if actual spent exceeds limit
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/domain/savings_health_calculator_test.dart: SavingsHealthCalculator Tests day 4 or later triggers enRiesgo if projected exceeds limit
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/domain/savings_health_calculator_test.dart: SavingsHealthCalculator Tests day 4 or later maintains protegida if projected is within limit
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/domain/savings_health_calculator_test.dart: SavingsHealthCalculator Tests triggers comprometida whenever actual spent exceeds limit
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/domain/savings_health_calculator_test.dart: SavingsHealthCalculator Tests handles clamp when meta exceeds general budget
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/domain/savings_health_calculator_test.dart: SavingsHealthCalculator Tests handles February with 28 days correctly
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: VoiceExpenseSheet Editable Tests renders title, input field, mic button and cancel button
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: VoiceExpenseSheet Editable Tests allows editing text in TextField and enables process button
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: VoiceExpenseSheet Editable Tests clear button removes text and disables process button
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: VoiceExpenseSheet Editable Tests submitting edited text calls parseVoiceExpense with updated content
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests formatPreferido returns VES when preferred is VES
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests formatPreferido calculates VES using tasaCambio when totalVes is zero/null
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests formatPreferido returns USD when preferred is USD
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests formatSecundario returns opposite currency
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests convertFromUsd converts properly
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CurrencyFormatter Tests formatAmount and formatPreferido support EUR and USDT
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: SummaryCard Currency Preference Tests renders USD on top when monedaPrincipal is USD
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: SummaryCard Currency Preference Tests renders VES on top when monedaPrincipal is VES
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: ExpenseCard Currency Preference Tests displays USD as primary when monedaPrincipal is USD
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: ExpenseCard Currency Preference Tests displays VES as primary when monedaPrincipal is VES
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CategoryChart Currency Preference Tests renders category totals and budgets in VES when monedaPrincipal is VES
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/global_scan_queue_banner_test.dart: GlobalScanQueueBanner Tests renders nothing when queue is empty and idle
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/global_scan_queue_banner_test.dart: GlobalScanQueueBanner Tests renders processing banner with spinner when isProcessing is true
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/global_scan_queue_banner_test.dart: GlobalScanQueueBanner Tests renders offline banner when items are waiting for connection
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/global_scan_queue_banner_test.dart: GlobalScanQueueBanner Tests renders plural text for multiple items offline
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/global_scan_queue_banner_test.dart: GlobalScanQueueBanner Tests renders error banner when item failed with real non-network error
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/global_scan_queue_banner_test.dart: GlobalScanQueueBanner Tests renders ready banner when items are ready for review
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/global_scan_queue_banner_test.dart: GlobalScanQueueBanner Tests stacks ready and processing banners when both states coexist
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays welcome prompt when expenses are empty
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays over budget warning when spent exceeds budget
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays budget alert when spent is 85 percent or more
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests suggests defining budget when no general budget exists
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays new month motivational insight when in first days with budget
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays compromised savings goal alert when spent exceeds spending limit
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/budget_bottom_sheet_test.dart: BudgetBottomSheet renders all 4 currency buttons and converts values
-::endgroup::
-
-::error::148 tests passed, 4 failed.
