@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gastoscan_ai/data/datasources/local/database_helper.dart';
 import 'package:gastoscan_ai/data/datasources/remote/gemini_service.dart';
+import 'package:gastoscan_ai/data/models/gasto_model.dart';
 import 'package:gastoscan_ai/data/repositories/gasto_repository.dart';
 import 'package:gastoscan_ai/providers/gasto_provider.dart';
 
@@ -90,6 +91,9 @@ class MockMemoryBudgetRepository extends GastoRepository {
 
   @override
   Future<Map<String, double>> obtenerTotalesPorCategoria(int year, int month, {String moneda = 'USD'}) async => {};
+
+  @override
+  Future<List<GastoModel>> obtenerGastosPorMes(int year, int month) async => [];
 }
 
 void main() {
