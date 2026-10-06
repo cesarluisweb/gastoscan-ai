@@ -117,12 +117,12 @@ void main() {
 
     testWidgets('displays new month motivational insight when in first days with budget', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
           home: Scaffold(
             body: AiInsightCard(
-              gastos: [],
+              gastos: const [],
               presupuestoGeneral: 150.0,
-              totalesPorCategoria: {},
+              totalesPorCategoria: const {},
               totalGastadoMes: 0.0,
               currentDate: DateTime(2026, 10, 3),
             ),
