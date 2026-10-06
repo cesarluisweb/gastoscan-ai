@@ -236,10 +236,13 @@ class GastoProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> setPresupuestoCategoria(String categoria, double presupuesto, {String moneda = 'USD'}) async {
+  Future<bool> setPresupuestoCategoria(String categoria, double presupuesto, {String? moneda}) async {
     _errorMessage = null;
+    // Herencia formal (auditoría 2): las categorías siempre usan la moneda del
+    // presupuesto general, salvo que se indique otra explícitamente.
+    final effectiveMoneda = moneda ?? _monedaPresupuesto;
     try {
-      await _repository.guardarPresupuestoCategoriaMes(_selectedYear, _selectedMonth, categoria, presupuesto, moneda: moneda);
+      await _repository.guardarPresupuestoCategoriaMes(_selectedYear, _selectedMonth, categoria, presupuesto, moneda: effectiveMoneda);
       if (presupuesto <= 0) {
         _presupuestosPorCategoria.remove(categoria);
         _presupuestosPorCategoria.removeWhere((key, value) => key.toLowerCase().trim() == categoria.toLowerCase().trim());

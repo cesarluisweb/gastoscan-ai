@@ -69,7 +69,7 @@ class FakeGastoProvider extends GastoProvider {
   }
 
   @override
-  Future<bool> setPresupuestoCategoria(String categoria, double monto, {String moneda = 'USD'}) async {
+  Future<bool> setPresupuestoCategoria(String categoria, double monto, {String? moneda}) async {
     _customPresupuestosPorCategoria[categoria] = monto;
     notifyListeners();
     return true;

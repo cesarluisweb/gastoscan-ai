@@ -1380,42 +1380,6 @@ class DatabaseHelper {
     });
   }
 
-  /// Copia el presupuesto general y por categorías del mes anterior si el mes actual no tiene registros
-  Future<bool> copiarPresupuestosMesAnteriorSiVacio(int anio, int mes) async {
-    final db = await instance.database;
-    final generalCount = Sqflite.firstIntValue(await db.rawQuery(
-      'SELECT COUNT(*) FROM presupuestos_mensuales WHERE anio = ? AND mes = ?',
-      [anio, mes],
-    )) ?? 0;
-    final catCount = Sqflite.firstIntValue(await db.rawQuery(
-      'SELECT COUNT(*) FROM presupuestos_categorias_mensuales WHERE anio = ? AND mes = ?',
-      [anio, mes],
-    )) ?? 0;
-
-    if (generalCount > 0 || catCount > 0) {
-      return false;
-    }
-
-    final int prevMes = mes == 1 ? 12 : mes - 1;
-    final int prevAnio = mes == 1 ? anio - 1 : anio;
-
-    final prevGeneral = await getPresupuestoGeneral(prevAnio, prevMes);
-    final prevMetaAhorro = await getMetaAhorro(prevAnio, prevMes);
-    final prevMoneda = await getPresupuestoGeneralMoneda(prevAnio, prevMes);
-    final prevCats = await getPresupuestosCategorias(prevAnio, prevMes);
-
-    if (prevGeneral > 0 || prevMetaAhorro > 0 || prevCats.isNotEmpty) {
-      if (prevGeneral > 0 || prevMetaAhorro > 0) {
-        await setPresupuestoGeneral(anio, mes, prevGeneral, moneda: prevMoneda, metaAhorro: prevMetaAhorro);
-      }
-      if (prevCats.isNotEmpty) {
-        await setPresupuestosCategorias(anio, mes, prevCats, moneda: prevMoneda);
-      }
-      return true;
-    }
-    return false;
-  }
-
   /// Elimina una categoría por su ID
   Future<int> deleteCategoria(int id) async {
     final db = await instance.database;

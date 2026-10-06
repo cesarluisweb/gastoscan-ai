@@ -46,27 +46,6 @@ class MockableDatabaseHelperMonthly extends DatabaseHelper {
     };
   }
 
-  @override
-  Future<bool> copiarPresupuestosMesAnteriorSiVacio(int anio, int mes) async {
-    final currentGeneral = await getPresupuestoGeneral(anio, mes);
-    final currentMeta = await getMetaAhorro(anio, mes);
-
-    if (currentGeneral > 0 || currentMeta > 0) {
-      return false;
-    }
-
-    final int prevMes = mes == 1 ? 12 : mes - 1;
-    final int prevAnio = mes == 1 ? anio - 1 : anio;
-
-    final prevGeneral = await getPresupuestoGeneral(prevAnio, prevMes);
-    final prevMeta = await getMetaAhorro(prevAnio, prevMes);
-
-    if (prevGeneral > 0 || prevMeta > 0) {
-      await setPresupuestoGeneral(anio, mes, prevGeneral, metaAhorro: prevMeta);
-      return true;
-    }
-    return false;
-  }
 }
 
 void main() {
@@ -93,35 +72,6 @@ void main() {
 
       expect(general, 500.0);
       expect(meta, 100.0);
-    });
-
-    test('copiarPresupuestosMesAnteriorSiVacio copies both general budget and metaAhorro', () async {
-      // Configurar mes previo (Septiembre 2026)
-      await dbHelper.setPresupuestoGeneral(2026, 9, 600.0, metaAhorro: 150.0);
-
-      // Copiar a Octubre 2026 (vacio)
-      final copied = await dbHelper.copiarPresupuestosMesAnteriorSiVacio(2026, 10);
-      expect(copied, isTrue);
-
-      final generalOct = await dbHelper.getPresupuestoGeneral(2026, 10);
-      final metaOct = await dbHelper.getMetaAhorro(2026, 10);
-
-      expect(generalOct, 600.0);
-      expect(metaOct, 150.0);
-    });
-
-    test('copiarPresupuestosMesAnteriorSiVacio does not overwrite existing records', () async {
-      await dbHelper.setPresupuestoGeneral(2026, 9, 600.0, metaAhorro: 150.0);
-      await dbHelper.setPresupuestoGeneral(2026, 10, 400.0, metaAhorro: 50.0);
-
-      final copied = await dbHelper.copiarPresupuestosMesAnteriorSiVacio(2026, 10);
-      expect(copied, isFalse);
-
-      final generalOct = await dbHelper.getPresupuestoGeneral(2026, 10);
-      final metaOct = await dbHelper.getMetaAhorro(2026, 10);
-
-      expect(generalOct, 400.0);
-      expect(metaOct, 50.0);
     });
   });
 }

@@ -44,7 +44,7 @@ class MockGastoProvider extends GastoProvider {
   }
 
   @override
-  Future<bool> setPresupuestoCategoria(String categoria, double presupuesto, {String moneda = 'USD'}) async {
+  Future<bool> setPresupuestoCategoria(String categoria, double presupuesto, {String? moneda}) async {
     if (presupuesto <= 0) {
       _testPresupuestos.remove(categoria);
     } else {

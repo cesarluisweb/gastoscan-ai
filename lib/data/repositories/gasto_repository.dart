@@ -99,10 +99,6 @@ class GastoRepository {
     return _dbHelper.setPresupuestosCategorias(anio, mes, presupuestos, moneda: moneda);
   }
 
-  Future<bool> copiarPresupuestosMesAnteriorSiVacio(int anio, int mes) {
-    return _dbHelper.copiarPresupuestosMesAnteriorSiVacio(anio, mes);
-  }
-
   Future<List<CategoriaModel>> obtenerCategorias() {
     return _dbHelper.getAllCategorias();
   }
