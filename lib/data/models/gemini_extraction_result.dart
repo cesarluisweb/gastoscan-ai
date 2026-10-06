@@ -1,3 +1,4 @@
+import '../../core/utils/amount_parser.dart';
 import 'item_gasto_model.dart';
 
 class GeminiExtractionResult {
@@ -21,48 +22,11 @@ class GeminiExtractionResult {
     this.matchedShoppingItemIds = const [],
   });
 
-  static double _parseAmount(dynamic value, {bool isPrice = true}) {
-    if (value == null) return 0.0;
-    
-    String s = value.toString().trim();
-    if (s.isEmpty) return 0.0;
-    
-    // Si la cadena ya contiene un punto o coma (ej. "12.50", "12,50", "1.250"),
-    // asumimos que los decimales o separadores de miles ya están explícitos.
-    if (s.contains('.') || s.contains(',')) {
-      s = s.replaceAll(RegExp(r'[^\d.,]'), '');
-      if (s.contains(',') && s.contains('.')) {
-        if (s.lastIndexOf(',') > s.lastIndexOf('.')) {
-          s = s.replaceAll('.', '').replaceAll(',', '.');
-        } else {
-          s = s.replaceAll(',', '');
-        }
-      } else {
-        s = s.replaceAll(',', '.');
-      }
-      return double.tryParse(s) ?? 0.0;
-    } else {
-      // No tiene punto ni coma (ej. "1250" o "1").
-      s = s.replaceAll(RegExp(r'[^\d]'), '');
-      if (s.isEmpty) return 0.0;
-      
-      if (isPrice) {
-        // Regla: añadir el punto decimal siempre después del segundo número de derecha a izquierda.
-        if (s.length <= 2) {
-          s = s.padLeft(3, '0'); // "5" -> "005" -> "0.05"
-        }
-        final length = s.length;
-        final integerPart = s.substring(0, length - 2);
-        final decimalPart = s.substring(length - 2);
-        
-        final parsedStr = '$integerPart.$decimalPart';
-        return double.tryParse(parsedStr) ?? 0.0;
-      } else {
-        // Es una cantidad u otro valor que no requiere forzar 2 decimales
-        return double.tryParse(s) ?? 0.0;
-      }
+    static double _parseAmount(dynamic value, {bool isPrice = true}) {
+      // Lógica centralizada en amount_parser.dart; aquí se conserva la firma
+      // y la semántica histórica (0.0 ante dato ausente/inválido de la IA).
+      return tryParseAmount(value, isPrice: isPrice) ?? 0.0;
     }
-  }
 
   static List<GeminiExtractionResult> listFromJson(Map<String, dynamic> json) {
     if (json.containsKey('facturas') && json['facturas'] is List) {

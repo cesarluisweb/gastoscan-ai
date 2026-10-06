@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/utils/amount_parser.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../data/datasources/local/database_helper.dart';
 import '../../data/models/gasto_model.dart';
@@ -184,13 +185,13 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
   }
 
   void _recalcularTotalUsd() {
-    final original = double.tryParse(_totalOriginalCtrl.text.replaceAll(',', '.')) ?? 0.0;
+    final original = tryParseAmount(_totalOriginalCtrl.text, isPrice: false) ?? 0.0;
     final settings = Provider.of<SettingsProvider>(context, listen: false);
 
     if (_selectedMoneda == 'USD') {
       _totalUsdCtrl.text = original.toStringAsFixed(2);
     } else if (_selectedMoneda == 'VES') {
-      final tasa = double.tryParse(_tasaCambioCtrl.text.replaceAll(',', '.')) ?? 1.0;
+      final tasa = tryParseAmount(_tasaCambioCtrl.text, isPrice: false) ?? 1.0;
       final enUsd = tasa > 0 ? (original / tasa) : original;
       _totalUsdCtrl.text = enUsd.toStringAsFixed(2);
     } else if (_selectedMoneda == 'EUR') {
@@ -327,9 +328,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       }
     }
 
-    final totalOrig = double.tryParse(_totalOriginalCtrl.text.replaceAll(',', '.')) ?? 0.0;
-    final totalUsd = double.tryParse(_totalUsdCtrl.text.replaceAll(',', '.')) ?? 0.0;
-    final tasa = double.tryParse(_tasaCambioCtrl.text.replaceAll(',', '.')) ?? 1.0;
+    final totalOrig = tryParseAmount(_totalOriginalCtrl.text, isPrice: false) ?? 0.0;
+    final totalUsd = tryParseAmount(_totalUsdCtrl.text, isPrice: false) ?? 0.0;
+    final tasa = tryParseAmount(_tasaCambioCtrl.text, isPrice: false) ?? 1.0;
 
     String predominantCat = 'Otros';
     if (_items.isNotEmpty) {
@@ -813,12 +814,12 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                           }
 
                           double currentUsd = unitPrice;
-                          final tasa = double.tryParse(_tasaCambioCtrl.text.replaceAll(',', '.')) ?? 1.0;
+                          final tasa = tryParseAmount(_tasaCambioCtrl.text, isPrice: false) ?? 1.0;
                           if (_selectedMoneda == 'VES') {
                             if (tasa > 0) currentUsd = unitPrice / tasa;
                           } else {
                             double sumItems = _items.fold(0.0, (prev, it) => prev + it.totalDisplay);
-                            final totalOrig = double.tryParse(_totalOriginalCtrl.text.replaceAll(',', '.')) ?? 0.0;
+                            final totalOrig = tryParseAmount(_totalOriginalCtrl.text, isPrice: false) ?? 0.0;
                             if (totalOrig > 0 && sumItems > totalOrig * 5 && tasa > 0) {
                               currentUsd = unitPrice / tasa;
                             }
@@ -890,7 +891,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                                         ),
                                         onChanged: (v) {
-                                          final cant = double.tryParse(v.replaceAll(',', '.')) ?? 1.0;
+                                          final cant = tryParseAmount(v, isPrice: false) ?? 1.0;
                                           setState(() {
                                             _items[idx] = _items[idx].copyWith(
                                               cantidad: cant,
@@ -911,7 +912,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                                         ),
                                         onChanged: (v) {
-                                          final prec = double.tryParse(v.replaceAll(',', '.')) ?? 0.0;
+                                          final prec = tryParseAmount(v, isPrice: false) ?? 0.0;
                                           setState(() {
                                             _items[idx] = _items[idx].copyWith(
                                               precioUnitario: (prec * 100).round(),
@@ -1085,7 +1086,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                         prefixIcon: Icon(Icons.payments_outlined, color: AppColors.textSecondary),
                       ),
                       onChanged: (_) => _recalcularTotalUsd(),
-                      validator: (val) => (double.tryParse((val ?? '').replaceAll(',', '.')) == null) ? 'Inválido' : null,
+                      validator: (val) => (tryParseAmount(val ?? '', isPrice: false) == null) ? 'Inválido' : null,
                     ),
                     const SizedBox(height: 12),
                     // Chips rápidos de tasa para Bolívares
@@ -1169,7 +1170,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                         labelText: 'Total Equivalente (USD)',
                         prefixIcon: Icon(Icons.attach_money, color: AppColors.primaryDark),
                       ),
-                      validator: (val) => (double.tryParse((val ?? '').replaceAll(',', '.')) == null) ? 'Inválido' : null,
+                      validator: (val) => (tryParseAmount(val ?? '', isPrice: false) == null) ? 'Inválido' : null,
                     ),
                   ] else ...[
                     TextFormField(
@@ -1183,7 +1184,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                         _totalUsdCtrl.text = val;
                         _recalcularTotalUsd();
                       },
-                      validator: (val) => (double.tryParse((val ?? '').replaceAll(',', '.')) == null) ? 'Inválido' : null,
+                      validator: (val) => (tryParseAmount(val ?? '', isPrice: false) == null) ? 'Inválido' : null,
                     ),
                   ],
                 ],

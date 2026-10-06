@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/utils/amount_parser.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../providers/gasto_provider.dart';
@@ -115,7 +116,7 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
     }
 
     // Convertir presupuesto general
-    final genVal = double.tryParse(_generalBudgetCtrl.text.replaceAll(',', '.')) ?? 0.0;
+    final genVal = tryParseAmount(_generalBudgetCtrl.text, isPrice: false) ?? 0.0;
     if (genVal > 0) {
       final double ves = toVes(genVal, _selectedMoneda);
       final double nuevoGen = fromVes(ves, nuevaMoneda);
@@ -125,7 +126,7 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
     }
 
     // Convertir meta de ahorro
-    final metaVal = double.tryParse(_savingsGoalCtrl.text.replaceAll(',', '.')) ?? 0.0;
+    final metaVal = tryParseAmount(_savingsGoalCtrl.text, isPrice: false) ?? 0.0;
     if (metaVal > 0) {
       final double ves = toVes(metaVal, _selectedMoneda);
       final double nuevoMeta = fromVes(ves, nuevaMoneda);
@@ -136,7 +137,7 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
 
     // Convertir categorías
     for (final ctrl in _categoryControllers.values) {
-      final val = double.tryParse(ctrl.text.replaceAll(',', '.')) ?? 0.0;
+      final val = tryParseAmount(ctrl.text, isPrice: false) ?? 0.0;
       if (val > 0) {
         final double ves = toVes(val, _selectedMoneda);
         final double nuevoVal = fromVes(ves, nuevaMoneda);
@@ -165,11 +166,11 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
   }
 
   double get _montoGeneral {
-    return double.tryParse(_generalBudgetCtrl.text.replaceAll(',', '.')) ?? 0.0;
+    return tryParseAmount(_generalBudgetCtrl.text, isPrice: false) ?? 0.0;
   }
 
   double get _montoMetaAhorro {
-    return double.tryParse(_savingsGoalCtrl.text.replaceAll(',', '.')) ?? 0.0;
+    return tryParseAmount(_savingsGoalCtrl.text, isPrice: false) ?? 0.0;
   }
 
   double get _limiteParaGastar {
@@ -182,7 +183,7 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
   double get _sumaCategorias {
     double total = 0.0;
     for (final ctrl in _categoryControllers.values) {
-      final val = double.tryParse(ctrl.text.replaceAll(',', '.')) ?? 0.0;
+      final val = tryParseAmount(ctrl.text, isPrice: false) ?? 0.0;
       if (val > 0) total += val;
     }
     return total;
@@ -203,7 +204,41 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
 
   bool get _isExceeded => _isMetaExceeded || _isCategoriesExceeded;
 
+  /// true si algún campo tiene texto no vacío que no es un monto válido
+  /// (ej. "1.234,56" mal formado o letras). Evita guardar 0 en silencio.
+  bool get _hasInvalidAmount {
+    if (_generalBudgetCtrl.text.trim().isNotEmpty &&
+        tryParseAmount(_generalBudgetCtrl.text, isPrice: false) == null) {
+      return true;
+    }
+    if (_savingsGoalCtrl.text.trim().isNotEmpty &&
+        tryParseAmount(_savingsGoalCtrl.text, isPrice: false) == null) {
+      return true;
+    }
+    for (final ctrl in _categoryControllers.values) {
+      if (ctrl.text.trim().isNotEmpty &&
+          tryParseAmount(ctrl.text, isPrice: false) == null) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   Future<void> _guardar() async {
+    if (_hasInvalidAmount) {
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Hay montos no válidos. Revisa los campos antes de guardar.',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
     if (_isMetaExceeded) {
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
@@ -235,7 +270,7 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
     final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
     final Map<String, double> categoriasMap = {};
     for (final entry in _categoryControllers.entries) {
-      final val = double.tryParse(entry.value.text.replaceAll(',', '.')) ?? 0.0;
+      final val = tryParseAmount(entry.value.text, isPrice: false) ?? 0.0;
       if (val > 0) {
         categoriasMap[entry.key] = val;
       }

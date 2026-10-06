@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:http/http.dart' as http;
 import '../../../core/constants/app_constants.dart';
+import '../../../core/utils/amount_parser.dart';
 import '../../models/gemini_extraction_result.dart';
 import '../../models/item_gasto_model.dart';
 import '../../models/shopping_item_model.dart';
@@ -242,7 +243,9 @@ class GeminiService {
     final regexMonto = RegExp(r'(\d+([.,]\d+)?)');
     final match = regexMonto.firstMatch(spokenText);
     if (match != null) {
-      montoFallback = double.tryParse(match.group(1)!.replaceAll(',', '.')) ?? 0.0;
+      // Misma semántica que antes (isPrice: false): el regex solo captura
+      // dígitos con un separador opcional, sin miles.
+      montoFallback = tryParseAmount(match.group(1)!, isPrice: false) ?? 0.0;
     }
 
     if (montoFallback <= 0.0) {
