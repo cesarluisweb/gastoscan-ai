@@ -25,20 +25,93 @@
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests does not show local processing banner in DashboardScreen (delegated to GlobalScanQueueBanner)
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests displays ready queue item card when items are ready for review
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests displays "Por revisar" badge when pending item has zero total
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests renders all hub sections in main view
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping shopping list navigates internally and back button returns to hub
 ::endgroup::
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping chat navigates internally and back button returns to hub
+::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests renders all hub sections in main view (failed)
+Warning: At least one test in this suite creates an HttpClient. When running a test suite that uses
+TestWidgetsFlutterBinding, all HTTP requests will return status code 400, and no network request
+will actually be made. Any test expecting a real network connection and status code will fail.
+To test code that needs an HttpClient, provide your own HttpClient implementation to the code under
+test, so that your test can consistently provide a testable response to the code under test.
+Bad state: databaseFactory not initialized
+databaseFactory is only initialized when using sqflite. When using `sqflite_common_ffi`
+You must call `databaseFactory = databaseFactoryFfi;` before using global openDatabase API
+
+package:sqflite_common/src/sqflite_database_factory.dart 33:7            databaseFactory.<fn>
+package:sqflite_common/src/sqflite_database_factory.dart 37:6            databaseFactory
+package:sqflite_common/sqflite.dart 106:38                               getDatabasesPath
+package:gastoscan_ai/data/datasources/local/database_helper.dart 22:26   DatabaseHelper._initDB
+package:gastoscan_ai/data/datasources/local/database_helper.dart 17:23   DatabaseHelper.database
+package:gastoscan_ai/data/datasources/local/database_helper.dart 769:31  DatabaseHelper.resetStaleProcessingScanQueueItems
+package:gastoscan_ai/providers/scan_queue_provider.dart 91:23            ScanQueueProvider.loadQueue
+package:gastoscan_ai/providers/scan_queue_provider.dart 54:7             new ScanQueueProvider
+test/screens/more_screen_test.dart 45:27                                 main.<fn>.<fn>
+===== asynchronous gap ===========================
+dart:async                                                               _CustomZone.registerBinaryCallback
+package:gastoscan_ai/providers/scan_queue_provider.dart 91:7             ScanQueueProvider.loadQueue
+package:gastoscan_ai/providers/scan_queue_provider.dart 54:7             new ScanQueueProvider
+test/screens/more_screen_test.dart 45:27                                 main.<fn>.<fn>
 ::endgroup::
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping shopping list navigates internally and back button returns to hub (failed)
+Bad state: databaseFactory not initialized
+databaseFactory is only initialized when using sqflite. When using `sqflite_common_ffi`
+You must call `databaseFactory = databaseFactoryFfi;` before using global openDatabase API
+
+package:sqflite_common/src/sqflite_database_factory.dart 33:7            databaseFactory.<fn>
+package:sqflite_common/src/sqflite_database_factory.dart 37:6            databaseFactory
+package:sqflite_common/sqflite.dart 106:38                               getDatabasesPath
+package:gastoscan_ai/data/datasources/local/database_helper.dart 22:26   DatabaseHelper._initDB
+package:gastoscan_ai/data/datasources/local/database_helper.dart 17:23   DatabaseHelper.database
+package:gastoscan_ai/data/datasources/local/database_helper.dart 769:31  DatabaseHelper.resetStaleProcessingScanQueueItems
+package:gastoscan_ai/providers/scan_queue_provider.dart 91:23            ScanQueueProvider.loadQueue
+package:gastoscan_ai/providers/scan_queue_provider.dart 54:7             new ScanQueueProvider
+test/screens/more_screen_test.dart 45:27                                 main.<fn>.<fn>
+===== asynchronous gap ===========================
+dart:async                                                               _CustomZone.registerBinaryCallback
+package:gastoscan_ai/providers/scan_queue_provider.dart 91:7             ScanQueueProvider.loadQueue
+package:gastoscan_ai/providers/scan_queue_provider.dart 54:7             new ScanQueueProvider
+test/screens/more_screen_test.dart 45:27                                 main.<fn>.<fn>
+::endgroup::
+::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping chat navigates internally and back button returns to hub (failed)
+Bad state: databaseFactory not initialized
+databaseFactory is only initialized when using sqflite. When using `sqflite_common_ffi`
+You must call `databaseFactory = databaseFactoryFfi;` before using global openDatabase API
+
+package:sqflite_common/src/sqflite_database_factory.dart 33:7            databaseFactory.<fn>
+package:sqflite_common/src/sqflite_database_factory.dart 37:6            databaseFactory
+package:sqflite_common/sqflite.dart 106:38                               getDatabasesPath
+package:gastoscan_ai/data/datasources/local/database_helper.dart 22:26   DatabaseHelper._initDB
+package:gastoscan_ai/data/datasources/local/database_helper.dart 17:23   DatabaseHelper.database
+package:gastoscan_ai/data/datasources/local/database_helper.dart 769:31  DatabaseHelper.resetStaleProcessingScanQueueItems
+package:gastoscan_ai/providers/scan_queue_provider.dart 91:23            ScanQueueProvider.loadQueue
+package:gastoscan_ai/providers/scan_queue_provider.dart 54:7             new ScanQueueProvider
+test/screens/more_screen_test.dart 45:27                                 main.<fn>.<fn>
+===== asynchronous gap ===========================
+dart:async                                                               _CustomZone.registerBinaryCallback
+package:gastoscan_ai/providers/scan_queue_provider.dart 91:7             ScanQueueProvider.loadQueue
+package:gastoscan_ai/providers/scan_queue_provider.dart 54:7             new ScanQueueProvider
+test/screens/more_screen_test.dart 45:27                                 main.<fn>.<fn>
+::endgroup::
+::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests calling openChat navigates directly to chat view (failed)
+Bad state: databaseFactory not initialized
+databaseFactory is only initialized when using sqflite. When using `sqflite_common_ffi`
+You must call `databaseFactory = databaseFactoryFfi;` before using global openDatabase API
+
+package:sqflite_common/src/sqflite_database_factory.dart 33:7            databaseFactory.<fn>
+package:sqflite_common/src/sqflite_database_factory.dart 37:6            databaseFactory
+package:sqflite_common/sqflite.dart 106:38                               getDatabasesPath
+package:gastoscan_ai/data/datasources/local/database_helper.dart 22:26   DatabaseHelper._initDB
+package:gastoscan_ai/data/datasources/local/database_helper.dart 17:23   DatabaseHelper.database
+package:gastoscan_ai/data/datasources/local/database_helper.dart 769:31  DatabaseHelper.resetStaleProcessingScanQueueItems
+package:gastoscan_ai/providers/scan_queue_provider.dart 91:23            ScanQueueProvider.loadQueue
+package:gastoscan_ai/providers/scan_queue_provider.dart 54:7             new ScanQueueProvider
+test/screens/more_screen_test.dart 45:27                                 main.<fn>.<fn>
+===== asynchronous gap ===========================
+dart:async                                                               _CustomZone.registerBinaryCallback
+package:gastoscan_ai/providers/scan_queue_provider.dart 91:7             ScanQueueProvider.loadQueue
+package:gastoscan_ai/providers/scan_queue_provider.dart 54:7             new ScanQueueProvider
+test/screens/more_screen_test.dart 45:27                                 main.<fn>.<fn>
+::endgroup::
 ::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests calling openChat navigates directly to chat view
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) R3 Acceptance Criteria: Asignar $50 a Alimentación, y registrar un gasto de $60 en Alimentación hace que se dibuje un indicador visual de exceso (color rojo) en la UI de esa categoría
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Category within budget does NOT render the red excess alert
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Initial empty state displays analysis empty state and allows adding budget
@@ -129,6 +202,9 @@ Error al verificar actualización: Exception: Connection failed
 ::endgroup::
 ::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/update_service_test.dart: UpdateService Tests respects throttle duration when force is false
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/exchange_rate_service_test.dart: ExchangeRateService - getRateForDate Tests retorna tasa exacta cuando la fecha existe en el histórico
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/exchange_rate_service_test.dart: ExchangeRateService - getRateForDate Tests encuentra el último día hábil anterior si la fecha es fin de semana
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/exchange_rate_service_test.dart: ExchangeRateService - getRateForDate Tests ExchangeRatesData serializa y deserializa correctamente
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/connectivity_service_test.dart: ConnectivityService Tests isConnected returns configured test value
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/connectivity_service_test.dart: ConnectivityService Tests onConnectivityChanged emits updates via testController
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/models/categoria_model_test.dart: CategoriaModel Tests instantiates with required nombre and default presupuestoMensual 0.0
@@ -205,18 +281,13 @@ NotificationService: Excepción al cancelar recordatorio de pendientes: MissingP
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/global_scan_queue_banner_test.dart: GlobalScanQueueBanner Tests renders error banner when item failed with real non-network error
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/global_scan_queue_banner_test.dart: GlobalScanQueueBanner Tests renders ready banner when items are ready for review
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/global_scan_queue_banner_test.dart: GlobalScanQueueBanner Tests stacks ready and processing banners when both states coexist
-::endgroup::
-::group::❌ loading /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart (failed)
-Failed to load "/home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart":
-Compilation failed for testPath=/home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: test/widgets/ai_insight_card_test.dart:127:28: Error: Cannot invoke a non-'const' constructor where a const expression is expected.
-Try using a constructor or factory that is 'const'.
-              currentDate: DateTime(2026, 10, 3),
-                           ^^^^^^^^
-.
-
-::endgroup::
-::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays welcome prompt when expenses are empty
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays over budget warning when spent exceeds budget
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays budget alert when spent is 85 percent or more
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests suggests defining budget when no general budget exists
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays new month motivational insight when in first days with budget
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays compromised savings goal alert when spent exceeds spending limit
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/budget_bottom_sheet_test.dart: BudgetBottomSheet renders all 4 currency buttons and converts values
 ::endgroup::
 
-::error::143 tests passed, 1 failed.
+::error::148 tests passed, 4 failed.
