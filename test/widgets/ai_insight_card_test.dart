@@ -124,6 +124,7 @@ void main() {
               presupuestoGeneral: 150.0,
               totalesPorCategoria: {},
               totalGastadoMes: 0.0,
+              currentDate: DateTime(2026, 10, 3),
             ),
           ),
         ),

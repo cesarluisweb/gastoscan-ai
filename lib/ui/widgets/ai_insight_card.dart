@@ -17,6 +17,7 @@ class AiInsightCard extends StatelessWidget {
   final String monedaPresupuesto;
   final double tasaCambio;
   final VoidCallback? onChatTap;
+  final DateTime? currentDate;
 
   const AiInsightCard({
     Key? key,
@@ -29,10 +30,11 @@ class AiInsightCard extends StatelessWidget {
     this.monedaPresupuesto = 'USD',
     this.tasaCambio = 1.0,
     this.onChatTap,
+    this.currentDate,
   }) : super(key: key);
 
   String _generarMensaje() {
-    final now = DateTime.now();
+    final now = currentDate ?? DateTime.now();
     final diasEnMes = DateTime(now.year, now.month + 1, 0).day;
     final diasRestantes = (diasEnMes - now.day).clamp(1, diasEnMes);
     final mesActualNombre = DateFormatter.getMonthName(now.month);
