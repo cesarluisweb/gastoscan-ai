@@ -56,9 +56,10 @@ class CurrencyFormatter {
       case 'VES':
         return formatVes(ves);
       case 'EUR':
-        final double eurRate = tasaEur > 0
-            ? tasaEur
-            : (tasaCambio > 0 ? tasaCambio * 1.08 : 1.0);
+        // Sin tasa EUR no se inventa ratio (antes: tasaUsd * 1.08): se usa la
+        // tasa USD como aproximación solo si existe; si no hay dato, la rama
+        // neutra muestra el equivalente en USD.
+        final double eurRate = tasaEur > 0 ? tasaEur : (tasaCambio > 0 ? tasaCambio : 0.0);
         return formatEur(eurRate > 0 ? ves / eurRate : totalUsd);
       case 'USDT':
         final double usdtRate = tasaUsdt > 0 ? tasaUsdt : (tasaCambio > 0 ? tasaCambio : 1.0);
@@ -98,7 +99,8 @@ class CurrencyFormatter {
     }
     if (monedaPreferida == 'EUR') {
       final ves = amountUsd * (tasaCambio > 0 ? tasaCambio : 1.0);
-      final eurRate = tasaEur > 0 ? tasaEur : (tasaCambio > 0 ? tasaCambio * 1.08 : 1.0);
+      // Sin tasa EUR no se inventa ratio: aproximación con tasa USD o neutro.
+      final eurRate = tasaEur > 0 ? tasaEur : (tasaCambio > 0 ? tasaCambio : 0.0);
       return eurRate > 0 ? ves / eurRate : amountUsd;
     }
     if (monedaPreferida == 'USDT') {

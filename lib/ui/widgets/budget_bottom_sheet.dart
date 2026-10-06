@@ -86,12 +86,14 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
         case 'VES':
           return val;
         case 'EUR':
-          return val * (tasaEur > 0 ? tasaEur : (tasaUsd > 0 ? tasaUsd * 1.08 : 43.0));
+          // Sin tasa EUR no se inventa ratio (antes: USD * 1.08 / 43.0):
+          // aproximación con tasa USD, o passthrough si no hay dato.
+          return val * (tasaEur > 0 ? tasaEur : (tasaUsd > 0 ? tasaUsd : 1.0));
         case 'USDT':
-          return val * (tasaUsdt > 0 ? tasaUsdt : (tasaUsd > 0 ? tasaUsd : 40.0));
+          return val * (tasaUsdt > 0 ? tasaUsdt : (tasaUsd > 0 ? tasaUsd : 1.0));
         case 'USD':
         default:
-          return val * (tasaUsd > 0 ? tasaUsd : 40.0);
+          return val * (tasaUsd > 0 ? tasaUsd : 1.0);
       }
     }
 
@@ -100,14 +102,14 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
         case 'VES':
           return ves;
         case 'EUR':
-          final r = tasaEur > 0 ? tasaEur : (tasaUsd > 0 ? tasaUsd * 1.08 : 43.0);
+          final r = tasaEur > 0 ? tasaEur : (tasaUsd > 0 ? tasaUsd : 0.0);
           return r > 0 ? ves / r : ves;
         case 'USDT':
-          final r = tasaUsdt > 0 ? tasaUsdt : (tasaUsd > 0 ? tasaUsd : 40.0);
+          final r = tasaUsdt > 0 ? tasaUsdt : (tasaUsd > 0 ? tasaUsd : 0.0);
           return r > 0 ? ves / r : ves;
         case 'USD':
         default:
-          final r = tasaUsd > 0 ? tasaUsd : 40.0;
+          final r = tasaUsd > 0 ? tasaUsd : 0.0;
           return r > 0 ? ves / r : ves;
       }
     }

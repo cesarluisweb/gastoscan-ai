@@ -84,6 +84,8 @@ void main() {
       expect(find.text('Lista de Compras'), findsOneWidget);
       expect(find.text('Asistente IA'), findsOneWidget);
       expect(find.text('Tasas de Cambio'), findsOneWidget);
+      // Sin sincronización en vivo el provider conserva tasasSonReferencia=true
+      expect(find.text('⚠ Tasa de referencia'), findsOneWidget);
       expect(find.text('Dólar BCV'), findsOneWidget);
       expect(find.text('Euro BCV'), findsOneWidget);
       expect(find.text('USDT Binance'), findsOneWidget);

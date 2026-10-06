@@ -356,6 +356,8 @@ class MoreScreenState extends State<MoreScreen> {
                           ),
                           child: Text(
                             () {
+                              // Sin dato en vivo no se afirma vigencia: se avisa.
+                              if (settings.tasasSonReferencia) return '⚠ Tasa de referencia';
                               final updateDate = settings.ultimaActualizacionTasas;
                               final today = DateTime.now();
                               if (updateDate != null &&
@@ -366,10 +368,12 @@ class MoreScreenState extends State<MoreScreen> {
                               }
                               return 'Tasas del día';
                             }(),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.textSecondary,
+                              color: settings.tasasSonReferencia
+                                  ? AppColors.warning
+                                  : AppColors.textSecondary,
                             ),
                           ),
                         ),

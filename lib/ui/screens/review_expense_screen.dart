@@ -196,7 +196,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     } else if (_selectedMoneda == 'EUR') {
       final tasaEur = settings.tasaCambioVesEur;
       final tasaUsd = settings.tasaCambioVesUsd;
-      final eurToUsdRatio = (tasaUsd > 0 && tasaEur > 0) ? (tasaEur / tasaUsd) : 1.08;
+        final eurToUsdRatio = (tasaUsd > 0 && tasaEur > 0) ? (tasaEur / tasaUsd) : 1.0;
       final enUsd = original * eurToUsdRatio;
       _totalUsdCtrl.text = enUsd.toStringAsFixed(2);
     } else if (_selectedMoneda == 'USDT') {

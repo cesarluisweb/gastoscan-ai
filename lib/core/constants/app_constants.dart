@@ -25,6 +25,8 @@ class AppConstants {
 
   // Valores por defecto
   static const bool defaultGuardarFotos = false;
+  // Último recurso cuando no hay caché ni red. NUNCA presentarlo como tasa
+  // vigente: `SettingsProvider.tasasSonReferencia` lo señala en la UI.
   static const double defaultTasaCambio = 40.0;
   static const String defaultMoneda = 'USD';
   static const String defaultApiKey = String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');

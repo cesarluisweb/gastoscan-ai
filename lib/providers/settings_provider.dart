@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../core/constants/app_constants.dart';
@@ -10,9 +11,12 @@ class SettingsProvider with ChangeNotifier {
   String _apiKey = '';
   bool _guardarFotos = AppConstants.defaultGuardarFotos;
   double _tasaCambioVesUsd = AppConstants.defaultTasaCambio;
-  double _tasaCambioVesEur = 43.0;
+  double _tasaCambioVesEur = 0.0;
   double _tasaCambioVesUsdt = AppConstants.defaultTasaCambio;
   DateTime? _ultimaActualizacionTasas;
+  /// true mientras no se haya verificado una tasa en vivo: los valores
+  /// pueden venir de caché antigua o de semillas. La UI lo muestra.
+  bool _tasasSonReferencia = true;
   String _monedaPrincipal = AppConstants.defaultMoneda;
   String _tipoTasa = 'oficial'; // 'oficial' o 'paralelo'
   bool _isSyncingRate = false;
@@ -27,6 +31,7 @@ class SettingsProvider with ChangeNotifier {
   double get tasaCambioVesEur => _tasaCambioVesEur;
   double get tasaCambioVesUsdt => _tasaCambioVesUsdt;
   DateTime? get ultimaActualizacionTasas => _ultimaActualizacionTasas;
+  bool get tasasSonReferencia => _tasasSonReferencia;
   String get monedaPrincipal => _monedaPrincipal;
   String get tipoTasa => _tipoTasa;
   bool get isSyncingRate => _isSyncingRate;
@@ -57,7 +62,9 @@ class SettingsProvider with ChangeNotifier {
 
     _guardarFotos = prefs.getBool(AppConstants.prefGuardarFotos) ?? AppConstants.defaultGuardarFotos;
     _tasaCambioVesUsd = prefs.getDouble(AppConstants.prefTasaCambio) ?? AppConstants.defaultTasaCambio;
-    _tasaCambioVesEur = prefs.getDouble('cached_rate_eur') ?? (_tasaCambioVesUsd * 1.08);
+    // Sin caché EUR no se inventa ratio (antes: USD * 1.08): queda en 0 y los
+    // formateadores usan sus ramas neutras hasta la primera sincronización.
+    _tasaCambioVesEur = prefs.getDouble('cached_rate_eur') ?? 0.0;
     _tasaCambioVesUsdt = prefs.getDouble('cached_rate_usdt') ?? _tasaCambioVesUsd;
 
     final timestampStr = prefs.getString('cached_exchange_rates_timestamp');
@@ -76,22 +83,34 @@ class SettingsProvider with ChangeNotifier {
     actualizarTasaAutomatica();
   }
 
-  Future<void> actualizarTasaAutomatica() async {
+  Future<void> actualizarTasaAutomatica({http.Client? client}) async {
     _isSyncingRate = true;
     notifyListeners();
     try {
-      final allRates = await ExchangeRateService.getAllTodayRates();
-      if (allRates.usd > 0) {
-        _tasaCambioVesUsd = allRates.usd;
-        _tasaCambioVesEur = allRates.eur;
-        _tasaCambioVesUsdt = allRates.usdt;
-        _ultimaActualizacionTasas = allRates.fecha;
-
+      final allRates = await ExchangeRateService.getAllTodayRates(client: client);
+      if (!allRates.esReferencia) {
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setDouble(AppConstants.prefTasaCambio, _tasaCambioVesUsd);
-        await prefs.setDouble('cached_rate_eur', _tasaCambioVesEur);
-        await prefs.setDouble('cached_rate_usdt', _tasaCambioVesUsdt);
+        // Solo se aplica lo que llegó en vivo (> 0); el resto conserva su
+        // valor previo en vez de pisarse con ceros.
+        if (allRates.usd > 0) {
+          _tasaCambioVesUsd = allRates.usd;
+          await prefs.setDouble(AppConstants.prefTasaCambio, _tasaCambioVesUsd);
+        }
+        if (allRates.eur > 0) {
+          _tasaCambioVesEur = allRates.eur;
+          await prefs.setDouble('cached_rate_eur', _tasaCambioVesEur);
+        }
+        if (allRates.usdt > 0) {
+          _tasaCambioVesUsdt = allRates.usdt;
+          await prefs.setDouble('cached_rate_usdt', _tasaCambioVesUsdt);
+        }
+        _ultimaActualizacionTasas = allRates.fecha;
+        _tasasSonReferencia = false;
         await prefs.setString('cached_exchange_rates_timestamp', _ultimaActualizacionTasas!.toIso8601String());
+      } else {
+        // Sin dato en vivo: NO se toca el timestamp. La fecha mostrada sigue
+        // siendo la última actualización real y el badge lo señala.
+        _tasasSonReferencia = true;
       }
     } finally {
       _isSyncingRate = false;
