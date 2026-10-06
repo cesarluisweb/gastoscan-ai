@@ -9,12 +9,13 @@
   2. **Integración Web + Donaciones:** "Visitar sitio web" y "Apoyar el proyecto ☕" en Más; sección `#donar` en landing page.
   3. **Robustez de Cola de Escaneo (Bloques 1 y 1b):** Protección de fotos compartidas, hoja inferior modal en banner para descarte individual de pendientes/error, tests con archivos reales en disco (Directory.systemTemp), y 0 advertencias en analizador.
   4. **Gate Estricto de CI:** `flutter analyze --fatal-warnings --no-fatal-infos` activo en GitHub Actions y pasando en verde al 100%.
+  5. **Base de Datos y Asincronía (Bloque 2 - Puntos 8, 9 y 10):** Eliminación de consultas N+1 con hidratación en lotes, índices en SQLite v15 (`items_gasto.gasto_id`, `scan_queue.status`, `gastos.synced`), borrado lógico directo O(1), adopción de presupuestos en memoria sin escrituras fantasmas, mutadores asíncronos con `Future<bool>` y control de errores amigables.
 
 ## Decisiones Técnicas y de Negocio Recientes
-- **Fotos Compartidas en Lotes:** `removeItem` consulta `isImagePathUsedByOtherQueueItems` antes de borrar el archivo físico; `cancelProcessing` valida contra `readyItems` para no romper previews.
-- **Descarte Individual en Cola:** Si hay 1 ítem en el banner, confirmación directa; si hay varios, abre hoja inferior con lista, miniatura, error y botón de papelera por ítem.
-- **Transición a Error sin Reintentos Inútiles:** Extracción vacía de Gemini transiciona directamente a `error` con motivo explícito, evitando quemar tokens en fotos no reconocibles.
-- **Calidad de Código:** Gate de CI con `--fatal-warnings` activo. Código depurado con 0 advertencias del analizador.
+- **Presupuestos sin Escrituras Fantasmas:** En meses vacíos, `GastoProvider` adopta en memoria el presupuesto del mes previo sin escribir en SQLite ni alterar timestamps de sincronización.
+- **Rutas Calientes O(1) e Índices:** `softDeleteGasto` no recarga toda la BD; consultas de gastos e ítems usan hidratación en lotes con `WHERE gasto_id IN (...)` e índices dedicados (DB v15).
+- **Mutadores con Estado y Feedback Real:** `guardarTodoElPresupuesto`, `setPresupuestoGeneral`, etc., retornan `Future<bool>`, limpian `_errorMessage` al iniciar y mapean excepciones a mensajes amigables para el usuario.
+- **Protección contra Compras de $0.00:** Dictado por voz lanza excepción explícita si no se detecta monto, impidiendo registros fantasmas.
 
 ## Errores y Fricciones a Evitar
 - No tocar `android/` localmente (CI regenera con `flutter create`).
@@ -24,4 +25,4 @@
 - Mantener `retention-days: 1` en artefactos de CI para no saturar el límite de 500 MB en GitHub Free.
 
 ## Próximo Paso Inmediato
-- Iniciar Bloque 2: Base de datos y asincronía (Puntos 8, 9 y 10 de auditoría).
+- Iniciar Bloque 3: Monedas, Categorías y Tasas (Puntos 1, 2, 3 y 7 de auditoría).

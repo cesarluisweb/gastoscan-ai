@@ -239,7 +239,7 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
       }
     }
 
-    await gastoProvider.guardarTodoElPresupuesto(
+    final success = await gastoProvider.guardarTodoElPresupuesto(
       _montoGeneral,
       categoriasMap,
       moneda: _selectedMoneda,
@@ -247,17 +247,30 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
     );
 
     if (mounted) {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Presupuestos actualizados correctamente',
-            style: TextStyle(color: Colors.black),
+      if (success) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Presupuestos actualizados correctamente',
+              style: TextStyle(color: Colors.black),
+            ),
+            backgroundColor: AppColors.primary,
+            duration: Duration(seconds: 2),
           ),
-          backgroundColor: AppColors.primary,
-          duration: Duration(seconds: 2),
-        ),
-      );
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              gastoProvider.errorMessage ?? 'Error al guardar los presupuestos',
+              style: const TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.red.shade700,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 

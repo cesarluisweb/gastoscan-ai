@@ -24,7 +24,7 @@ class TestGastoProvider extends GastoProvider {
   double getPresupuestoCategoria(String categoria) => _cats[categoria] ?? 0.0;
 
   @override
-  Future<void> guardarTodoElPresupuesto(
+  Future<bool> guardarTodoElPresupuesto(
     double general,
     Map<String, double> categorias, {
     String moneda = 'USD',
@@ -36,6 +36,7 @@ class TestGastoProvider extends GastoProvider {
     _moneda = moneda;
     _meta = metaAhorro;
     notifyListeners();
+    return true;
   }
 }
 

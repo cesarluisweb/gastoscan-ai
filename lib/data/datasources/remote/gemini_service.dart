@@ -245,6 +245,10 @@ class GeminiService {
       montoFallback = double.tryParse(match.group(1)!.replaceAll(',', '.')) ?? 0.0;
     }
 
+    if (montoFallback <= 0.0) {
+      throw Exception('No se detectó el monto en el dictado. Por favor incluye el precio de la compra.');
+    }
+
     return GeminiExtractionResult(
       comercio: 'Gasto por voz',
       fecha: DateTime.now().toIso8601String().substring(0, 10),

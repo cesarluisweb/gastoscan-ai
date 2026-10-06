@@ -424,8 +424,16 @@ class ScanQueueProvider with ChangeNotifier {
               break;
             } else {
               _isWaitingForConnection = false;
-              final msg = e.toString().replaceFirst('Exception: ', '').trim();
-              _lastError = msg.isNotEmpty ? msg : 'Error al procesar el comprobante.';
+              final rawMsg = e.toString().replaceFirst('Exception: ', '').trim();
+              if (rawMsg.contains('SocketException') || rawMsg.contains('Failed host lookup') || rawMsg.contains('ClientException')) {
+                _lastError = 'Problema de conexión con el servidor. Revisa tu internet.';
+              } else if (rawMsg.contains('HandshakeException') || rawMsg.contains('CERTIFICATE_VERIFY_FAILED')) {
+                _lastError = 'Error de conexión segura. Verifica la fecha del teléfono.';
+              } else if (rawMsg.contains('TimeoutException')) {
+                _lastError = 'El servidor tardó demasiado en responder.';
+              } else {
+                _lastError = rawMsg.isNotEmpty ? rawMsg : 'Error al procesar el comprobante.';
+              }
               debugPrint('Fallo al procesar item en cola: $e');
               await _dbHelper.updateScanQueueItem(
                 id,

@@ -24,7 +24,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 14,
+      version: 15,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
       onConfigure: _onConfigure,
@@ -203,6 +203,17 @@ class DatabaseHelper {
         // Invariante: FTS5 es optimización de búsqueda, nunca bloquea la ejecución en dispositivos sin FTS5
       }
     }
+    if (oldVersion < 15) {
+      try {
+        await db.execute('CREATE INDEX IF NOT EXISTS idx_items_gasto_gasto_id ON items_gasto (gasto_id);');
+      } catch (_) {}
+      try {
+        await db.execute('CREATE INDEX IF NOT EXISTS idx_scan_queue_status ON scan_queue (status);');
+      } catch (_) {}
+      try {
+        await db.execute('CREATE INDEX IF NOT EXISTS idx_gastos_synced ON gastos (synced);');
+      } catch (_) {}
+    }
   }
 
   Future<void> _onConfigure(Database db) async {
@@ -312,9 +323,12 @@ class DatabaseHelper {
       )
     ''');
 
-    // Índices para búsquedas y filtros rápidos por fecha y categoría
+    // Índices para búsquedas y filtros rápidos por fecha, categoría, ítems y sincronización
     await db.execute('CREATE INDEX idx_gastos_fecha ON gastos (fecha);');
     await db.execute('CREATE INDEX idx_gastos_categoria ON gastos (categoria);');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_items_gasto_gasto_id ON items_gasto (gasto_id);');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_scan_queue_status ON scan_queue (status);');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_gastos_synced ON gastos (synced);');
 
     // Tabla virtual FTS5 independiente para búsqueda profunda
     try {
@@ -379,12 +393,59 @@ class DatabaseHelper {
     }
   }
 
+  /// Marca un gasto como eliminado lógicamente y no sincronizado sin recargar toda la base de datos
+  Future<int> softDeleteGasto(int id) async {
+    final db = await instance.database;
+    final nowIso = DateTime.now().toIso8601String();
+    final count = await db.update(
+      'gastos',
+      {
+        'eliminado_en': nowIso,
+        'synced': 0,
+        'actualizado_en': nowIso,
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    await deleteGastoFts(id);
+    return count;
+  }
+
   /// Elimina un gasto. Los ítems se eliminan automáticamente gracias a ON DELETE CASCADE
   Future<int> deleteGasto(int id) async {
     final db = await instance.database;
     final count = await db.delete('gastos', where: 'id = ?', whereArgs: [id]);
     await deleteGastoFts(id);
     return count;
+  }
+
+  /// Hidrata una lista de filas de gastos con sus ítems en lotes para evitar consultas N+1
+  Future<List<GastoModel>> _hydrateGastosWithItems(Database db, List<Map<String, dynamic>> gastosRows) async {
+    if (gastosRows.isEmpty) return [];
+
+    final gastoIds = gastosRows.map((m) => m['id'] as int).toList();
+    final Map<int, List<ItemGastoModel>> itemsMap = {};
+
+    for (var i = 0; i < gastoIds.length; i += 500) {
+      final chunk = gastoIds.sublist(i, (i + 500 > gastoIds.length) ? gastoIds.length : i + 500);
+      final placeholders = List.filled(chunk.length, '?').join(',');
+      final itemsResult = await db.query(
+        'items_gasto',
+        where: 'gasto_id IN ($placeholders)',
+        whereArgs: chunk,
+      );
+      for (final itemMap in itemsResult) {
+        final gId = itemMap['gasto_id'] as int;
+        final item = ItemGastoModel.fromMap(itemMap);
+        itemsMap.putIfAbsent(gId, () => []).add(item);
+      }
+    }
+
+    return gastosRows.map((map) {
+      final gId = map['id'] as int;
+      final items = itemsMap[gId] ?? [];
+      return GastoModel.fromMap(map, items: items);
+    }).toList();
   }
 
   /// Obtiene todos los gastos ordenados de más reciente a más antiguo (sin borrados lógicos)
@@ -395,38 +456,14 @@ class DatabaseHelper {
       where: 'eliminado_en IS NULL',
       orderBy: 'fecha DESC, id DESC'
     );
-    
-    final List<GastoModel> gastosList = [];
-    for (final map in result) {
-      final gastoId = map['id'] as int;
-      final itemsResult = await db.query(
-        'items_gasto',
-        where: 'gasto_id = ?',
-        whereArgs: [gastoId],
-      );
-      final items = itemsResult.map((i) => ItemGastoModel.fromMap(i)).toList();
-      gastosList.add(GastoModel.fromMap(map, items: items));
-    }
-    return gastosList;
+    return _hydrateGastosWithItems(db, result);
   }
 
   /// Obtiene TODOS los gastos, incluyendo los borrados lógicos, para resolver conflictos de sincronización
   Future<List<GastoModel>> getAllGastosConBorrados() async {
     final db = await instance.database;
     final result = await db.query('gastos');
-    
-    final List<GastoModel> gastosList = [];
-    for (final map in result) {
-      final gastoId = map['id'] as int;
-      final itemsResult = await db.query(
-        'items_gasto',
-        where: 'gasto_id = ?',
-        whereArgs: [gastoId],
-      );
-      final items = itemsResult.map((i) => ItemGastoModel.fromMap(i)).toList();
-      gastosList.add(GastoModel.fromMap(map, items: items));
-    }
-    return gastosList;
+    return _hydrateGastosWithItems(db, result);
   }
 
   Future<List<GastoModel>> getUnsyncedGastos() async {
@@ -435,18 +472,7 @@ class DatabaseHelper {
       'gastos',
       where: 'synced = 0 OR synced IS NULL',
     );
-    final List<GastoModel> gastosList = [];
-    for (final map in result) {
-      final gastoId = map['id'] as int;
-      final itemsResult = await db.query(
-        'items_gasto',
-        where: 'gasto_id = ?',
-        whereArgs: [gastoId],
-      );
-      final items = itemsResult.map((i) => ItemGastoModel.fromMap(i)).toList();
-      gastosList.add(GastoModel.fromMap(map, items: items));
-    }
-    return gastosList;
+    return _hydrateGastosWithItems(db, result);
   }
 
   Future<void> updateGastoSyncStatus(GastoModel gasto) async {
@@ -471,19 +497,7 @@ class DatabaseHelper {
       whereArgs: [pattern],
       orderBy: 'fecha DESC, id DESC',
     );
-
-    final List<GastoModel> gastosList = [];
-    for (final map in result) {
-      final gastoId = map['id'] as int;
-      final itemsResult = await db.query(
-        'items_gasto',
-        where: 'gasto_id = ?',
-        whereArgs: [gastoId],
-      );
-      final items = itemsResult.map((i) => ItemGastoModel.fromMap(i)).toList();
-      gastosList.add(GastoModel.fromMap(map, items: items));
-    }
-    return gastosList;
+    return _hydrateGastosWithItems(db, result);
   }
 
   /// Calcula los totales del mes (suma en USD y suma en VES)
@@ -542,6 +556,27 @@ class DatabaseHelper {
       whereArgs: [pattern],
     );
 
+    if (gastosRows.isEmpty) {
+      return {};
+    }
+
+    final gastoIds = gastosRows.map((g) => g['id'] as int).toList();
+    final Map<int, List<Map<String, dynamic>>> itemsMap = {};
+    for (var i = 0; i < gastoIds.length; i += 500) {
+      final chunk = gastoIds.sublist(i, (i + 500 > gastoIds.length) ? gastoIds.length : i + 500);
+      final placeholders = List.filled(chunk.length, '?').join(',');
+      final itemsResult = await db.query(
+        'items_gasto',
+        columns: ['gasto_id', 'categoria', 'total'],
+        where: 'gasto_id IN ($placeholders)',
+        whereArgs: chunk,
+      );
+      for (final row in itemsResult) {
+        final gId = row['gasto_id'] as int;
+        itemsMap.putIfAbsent(gId, () => []).add(row);
+      }
+    }
+
     final Map<String, double> categoryMap = {};
 
     for (final g in gastosRows) {
@@ -556,12 +591,7 @@ class DatabaseHelper {
           ? (gastoMoneda == 'VES' ? totalOrig : totalUsd * (tasa > 0 ? tasa : 1.0))
           : totalUsd;
 
-      final items = await db.query(
-        'items_gasto',
-        columns: ['categoria', 'total'],
-        where: 'gasto_id = ?',
-        whereArgs: [gastoId],
-      );
+      final items = itemsMap[gastoId] ?? const [];
 
       if (items.isEmpty) {
         categoryMap[gastoCat] = (categoryMap[gastoCat] ?? 0.0) + targetTotal;

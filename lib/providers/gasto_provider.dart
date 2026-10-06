@@ -89,19 +89,45 @@ class GastoProvider with ChangeNotifier {
       _totalesPorCategoria = await _repository.obtenerTotalesPorCategoria(_selectedYear, _selectedMonth, moneda: 'USD');
       _totalesPorCategoriaVes = await _repository.obtenerTotalesPorCategoria(_selectedYear, _selectedMonth, moneda: 'VES');
 
-      // Copiar del mes anterior si este mes no tiene registros de presupuesto
-      await _repository.copiarPresupuestosMesAnteriorSiVacio(_selectedYear, _selectedMonth);
-
       _presupuestoGeneral = await _repository.obtenerPresupuestoGeneralMes(_selectedYear, _selectedMonth);
       _metaAhorro = await _repository.obtenerMetaAhorroMes(_selectedYear, _selectedMonth);
       _monedaPresupuesto = await _repository.obtenerMonedaPresupuestoGeneralMes(_selectedYear, _selectedMonth);
       _presupuestosPorCategoria = await _repository.obtenerPresupuestosCategoriasMes(_selectedYear, _selectedMonth);
+
+      // Si este mes no tiene registros de presupuesto en BD, adoptar en memoria la configuración del mes previo
+      // sin escribir filas fantasmas en SQLite que alteren timestamps de sincronización
+      if (_presupuestoGeneral == 0.0 && _metaAhorro == 0.0 && _presupuestosPorCategoria.isEmpty) {
+        final int prevMes = _selectedMonth == 1 ? 12 : _selectedMonth - 1;
+        final int prevAnio = _selectedMonth == 1 ? _selectedYear - 1 : _selectedYear;
+        final prevGeneral = await _repository.obtenerPresupuestoGeneralMes(prevAnio, prevMes);
+        final prevMeta = await _repository.obtenerMetaAhorroMes(prevAnio, prevMes);
+        final prevMoneda = await _repository.obtenerMonedaPresupuestoGeneralMes(prevAnio, prevMes);
+        final prevCats = await _repository.obtenerPresupuestosCategoriasMes(prevAnio, prevMes);
+
+        if (prevGeneral > 0 || prevMeta > 0 || prevCats.isNotEmpty) {
+          _presupuestoGeneral = prevGeneral;
+          _metaAhorro = prevMeta;
+          _monedaPresupuesto = prevMoneda;
+          _presupuestosPorCategoria = prevCats;
+        }
+      }
     } catch (e) {
-      _errorMessage = 'Error al cargar los gastos: ${e.toString()}';
+      _errorMessage = _mapHumanFriendlyError(e, 'Error al cargar los gastos: ${e.toString()}');
     } finally {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  String _mapHumanFriendlyError(dynamic e, String defaultMessage) {
+    final str = e.toString();
+    if (str.contains('SocketException') || str.contains('Failed host lookup') || str.contains('ClientException')) {
+      return 'No hay conexión a internet para sincronizar con la nube.';
+    }
+    if (str.contains('DatabaseException') || str.contains('sqflite')) {
+      return 'Error al acceder a la base de datos local.';
+    }
+    return defaultMessage;
   }
 
   Future<int> repararTasasHistoricas({double tasaFallback = 40.0}) async {
@@ -113,6 +139,7 @@ class GastoProvider with ChangeNotifier {
   }
 
   Future<bool> agregarGasto(GastoModel gasto, List<ItemGastoModel> items, {List<int>? shoppingItemIds}) async {
+    _errorMessage = null;
     try {
       final newId = await _repository.guardarGasto(gasto, items);
       
@@ -126,13 +153,14 @@ class GastoProvider with ChangeNotifier {
       NotificationService.instance.recordActivityAndReschedule();
       return true;
     } catch (e) {
-      _errorMessage = 'Error al guardar el gasto: ${e.toString()}';
+      _errorMessage = _mapHumanFriendlyError(e, 'Error al guardar el gasto: ${e.toString()}');
       notifyListeners();
       return false;
     }
   }
 
   Future<bool> actualizarGasto(GastoModel gasto, List<ItemGastoModel> items) async {
+    _errorMessage = null;
     try {
       final gastoAActualizar = gasto.copyWith(
         actualizadoEn: DateTime.now().toIso8601String(),
@@ -144,7 +172,7 @@ class GastoProvider with ChangeNotifier {
       NotificationService.instance.recordActivityAndReschedule();
       return true;
     } catch (e) {
-      _errorMessage = 'Error al actualizar el gasto: ${e.toString()}';
+      _errorMessage = _mapHumanFriendlyError(e, 'Error al actualizar el gasto: ${e.toString()}');
       notifyListeners();
       return false;
     }
@@ -165,13 +193,14 @@ class GastoProvider with ChangeNotifier {
   }
 
   Future<bool> eliminarGasto(int id) async {
+    _errorMessage = null;
     try {
       await _repository.eliminarGasto(id); // Ahora hace borrado lógico
       await cargarDatos();
       _syncService.syncBidirectional(); // Manda a borrar en firebase
       return true;
     } catch (e) {
-      _errorMessage = 'Error al eliminar el gasto: ${e.toString()}';
+      _errorMessage = _mapHumanFriendlyError(e, 'Error al eliminar el gasto: ${e.toString()}');
       notifyListeners();
       return false;
     }
@@ -191,20 +220,24 @@ class GastoProvider with ChangeNotifier {
     return await _repository.buscarPrecioAnterior(descripcion, excludeGastoId: excludeGastoId);
   }
 
-  Future<void> setPresupuestoGeneral(double monto, {String moneda = 'USD'}) async {
+  Future<bool> setPresupuestoGeneral(double monto, {String moneda = 'USD'}) async {
+    _errorMessage = null;
     try {
       await _repository.guardarPresupuestoGeneralMes(_selectedYear, _selectedMonth, monto, moneda: moneda);
       _presupuestoGeneral = monto >= 0 ? monto : 0.0;
       _monedaPresupuesto = moneda;
       notifyListeners();
       _syncService.syncBidirectional();
+      return true;
     } catch (e) {
-      _errorMessage = 'Error al guardar presupuesto general: ${e.toString()}';
+      _errorMessage = _mapHumanFriendlyError(e, 'Error al guardar presupuesto general: ${e.toString()}');
       notifyListeners();
+      return false;
     }
   }
 
-  Future<void> setPresupuestoCategoria(String categoria, double presupuesto, {String moneda = 'USD'}) async {
+  Future<bool> setPresupuestoCategoria(String categoria, double presupuesto, {String moneda = 'USD'}) async {
+    _errorMessage = null;
     try {
       await _repository.guardarPresupuestoCategoriaMes(_selectedYear, _selectedMonth, categoria, presupuesto, moneda: moneda);
       if (presupuesto <= 0) {
@@ -215,18 +248,21 @@ class GastoProvider with ChangeNotifier {
       }
       notifyListeners();
       _syncService.syncBidirectional();
+      return true;
     } catch (e) {
-      _errorMessage = 'Error al guardar presupuesto: ${e.toString()}';
+      _errorMessage = _mapHumanFriendlyError(e, 'Error al guardar presupuesto: ${e.toString()}');
       notifyListeners();
+      return false;
     }
   }
 
-  Future<void> guardarTodoElPresupuesto(
+  Future<bool> guardarTodoElPresupuesto(
     double general,
     Map<String, double> categorias, {
     String moneda = 'USD',
     double metaAhorro = 0.0,
   }) async {
+    _errorMessage = null;
     try {
       await _repository.guardarPresupuestoGeneralMes(
         _selectedYear,
@@ -242,13 +278,16 @@ class GastoProvider with ChangeNotifier {
       _presupuestosPorCategoria = Map.from(categorias)..removeWhere((key, value) => value <= 0);
       notifyListeners();
       _syncService.syncBidirectional();
+      return true;
     } catch (e) {
-      _errorMessage = 'Error al guardar presupuestos: ${e.toString()}';
+      _errorMessage = _mapHumanFriendlyError(e, 'Error al guardar presupuestos: ${e.toString()}');
       notifyListeners();
+      return false;
     }
   }
 
-  Future<void> setMetaAhorro(double meta) async {
+  Future<bool> setMetaAhorro(double meta) async {
+    _errorMessage = null;
     try {
       await _repository.guardarPresupuestoGeneralMes(
         _selectedYear,
@@ -260,14 +299,16 @@ class GastoProvider with ChangeNotifier {
       _metaAhorro = meta >= 0 ? meta : 0.0;
       notifyListeners();
       _syncService.syncBidirectional();
+      return true;
     } catch (e) {
-      _errorMessage = 'Error al guardar meta de ahorro: ${e.toString()}';
+      _errorMessage = _mapHumanFriendlyError(e, 'Error al guardar meta de ahorro: ${e.toString()}');
       notifyListeners();
+      return false;
     }
   }
 
-  Future<void> eliminarPresupuestoCategoria(String categoria) async {
-    await setPresupuestoCategoria(categoria, 0.0);
+  Future<bool> eliminarPresupuestoCategoria(String categoria) async {
+    return await setPresupuestoCategoria(categoria, 0.0);
   }
 
   double getPresupuestoCategoria(String categoria) {

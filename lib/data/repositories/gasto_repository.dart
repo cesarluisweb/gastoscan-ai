@@ -22,19 +22,8 @@ class GastoRepository {
   }
 
   /// Borrado lógico
-  Future<int> eliminarGasto(int id) async {
-    final gastos = await _dbHelper.getAllGastos();
-    final index = gastos.indexWhere((g) => g.id == id);
-    if (index != -1) {
-      final gasto = gastos[index];
-      final gastoBorrado = gasto.copyWith(
-        eliminadoEn: DateTime.now().toIso8601String(),
-        synced: 0,
-      );
-      await _dbHelper.updateGasto(gastoBorrado, gasto.items);
-      return 1;
-    }
-    return 0;
+  Future<int> eliminarGasto(int id) {
+    return _dbHelper.softDeleteGasto(id);
   }
 
   /// Borrado físico (usado por el SyncService cuando ya se borró en Firebase)

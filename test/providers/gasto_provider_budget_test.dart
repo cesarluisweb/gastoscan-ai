@@ -37,23 +37,25 @@ class MockGastoProvider extends GastoProvider {
   Map<String, double> get presupuestosPorCategoria => _testPresupuestos;
 
   @override
-  Future<void> setPresupuestoGeneral(double monto, {String moneda = 'USD'}) async {
+  Future<bool> setPresupuestoGeneral(double monto, {String moneda = 'USD'}) async {
     _testPresupuestoGeneral = monto;
     notifyListeners();
+    return true;
   }
 
   @override
-  Future<void> setPresupuestoCategoria(String categoria, double presupuesto, {String moneda = 'USD'}) async {
+  Future<bool> setPresupuestoCategoria(String categoria, double presupuesto, {String moneda = 'USD'}) async {
     if (presupuesto <= 0) {
       _testPresupuestos.remove(categoria);
     } else {
       _testPresupuestos[categoria] = presupuesto;
     }
     notifyListeners();
+    return true;
   }
 
   @override
-  Future<void> guardarTodoElPresupuesto(
+  Future<bool> guardarTodoElPresupuesto(
     double general,
     Map<String, double> categorias, {
     String moneda = 'USD',
@@ -65,6 +67,7 @@ class MockGastoProvider extends GastoProvider {
       if (v > 0) _testPresupuestos[k] = v;
     });
     notifyListeners();
+    return true;
   }
 
   @override
@@ -182,6 +185,17 @@ void main() {
 
       expect(provider.getPresupuestoCategoria('Comida'), 0.0);
       expect(provider.isCategoryOverBudget('Comida'), isFalse);
+    });
+
+    test('budget mutators return true on success', () async {
+      final genOk = await provider.setPresupuestoGeneral(400.0);
+      expect(genOk, isTrue);
+
+      final catOk = await provider.setPresupuestoCategoria('Alimentacion', 150.0);
+      expect(catOk, isTrue);
+
+      final allOk = await provider.guardarTodoElPresupuesto(600.0, {'Alimentacion': 250.0});
+      expect(allOk, isTrue);
     });
   });
 }
