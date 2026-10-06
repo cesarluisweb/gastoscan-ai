@@ -148,7 +148,9 @@ jobs:
 
       - name: Subir APK a BanaHosting
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        continue-on-error: true
+        # SIN continue-on-error a proposito: si el APK no sube, el job debe
+        # detenerse AQUI para no publicar un version.json que anuncie un build
+        # inexistente (fail-closed en distribucion).
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
@@ -156,6 +158,20 @@ jobs:
           local-dir: ftp_deploy/
           server-dir: ./
           dangerous-clean-slate: false
+
+      - name: Verificar APK publicado
+        # Fail-closed: el version.json (paso siguiente) solo debe generarse si
+        # el APK compilado es el que sirve el redirect. Compara tamanos con
+        # reintentos por propagacion del servidor.
+        run: |
+          LOCAL_SIZE=$(stat -c%s build/app/outputs/flutter-apk/app-release.apk)
+          for i in 1 2 3 4 5; do
+            REMOTE_SIZE=$(curl -sI "https://cesarluis.com/rindemas/rindemas.apk" | grep -i '^content-length' | tr -d '\r' | awk '{print $2}')
+            if [ "$REMOTE_SIZE" = "$LOCAL_SIZE" ]; then echo "APK verificado: $LOCAL_SIZE bytes"; exit 0; fi
+            echo "Intento $i: local=$LOCAL_SIZE remoto=$REMOTE_SIZE. Reintentando en 15s..."
+            sleep 15
+          done
+          echo "ERROR: el APK publicado no coincide con el compilado" && exit 1
 
       - name: Configurar Node.js
         uses: actions/setup-node@v4
@@ -196,14 +212,3 @@ jobs:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_GATOSCAN_AI }}
         run: |
           npx firebase-tools deploy --only hosting --project gastoscan-ai --token "${{ secrets.FIREBASE_SERVICE_ACCOUNT_GATOSCAN_AI }}" --non-interactive
-
-      - name: Guardar Artefacto del Build
-        uses: actions/upload-artifact@v4
-        continue-on-error: true
-        with:
-          name: app-release
-          path: |
-            build/app/outputs/flutter-apk/app-release.apk
-            ftp_deploy/rindemas.apk
-          if-no-files-found: warn
-          retention-days: 1
