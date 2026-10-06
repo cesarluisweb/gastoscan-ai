@@ -88,7 +88,11 @@ class ScanQueueProvider with ChangeNotifier {
   Future<void> loadQueue() async {
     if (_isDisposed) return;
     if (!_isProcessing) {
-      await _dbHelper.resetStaleProcessingScanQueueItems();
+      try {
+        await _dbHelper.resetStaleProcessingScanQueueItems();
+      } catch (e) {
+        debugPrint('Aviso: no se pudo resetear ítems en procesamiento: $e');
+      }
     }
     await loadReadyItems();
     await loadPendingItems();
