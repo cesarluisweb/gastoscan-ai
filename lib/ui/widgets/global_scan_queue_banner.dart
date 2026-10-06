@@ -352,10 +352,14 @@ class GlobalScanQueueBanner extends StatelessWidget {
                   tooltip: 'Descartar',
                   visualDensity: VisualDensity.compact,
                   onPressed: () {
-                    final int? singleId = scanQueue.pendingItems.length == 1
-                        ? (scanQueue.pendingItems.first['id'] as num?)?.toInt()
-                        : null;
-                    _confirmCancelOrDiscard(context, scanQueue, isProcessing: false, itemId: singleId);
+                    if (scanQueue.pendingItems.length <= 1) {
+                      final int? singleId = scanQueue.pendingItems.isNotEmpty
+                          ? (scanQueue.pendingItems.first['id'] as num?)?.toInt()
+                          : null;
+                      _confirmCancelOrDiscard(context, scanQueue, isProcessing: false, itemId: singleId);
+                    } else {
+                      _showQueueDiscardSheet(context, scanQueue);
+                    }
                   },
                 ),
               ],
@@ -379,6 +383,203 @@ class GlobalScanQueueBanner extends StatelessWidget {
                 children: banners,
               ),
             ),
+    );
+  }
+
+  Future<void> _showQueueDiscardSheet(
+    BuildContext context,
+    ScanQueueProvider scanQueue,
+  ) async {
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (bottomSheetCtx) {
+        return Consumer<ScanQueueProvider>(
+          builder: (ctx, queue, _) {
+            final items = queue.pendingItems;
+            if (items.isEmpty) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (Navigator.of(ctx).canPop()) {
+                  Navigator.of(ctx).pop();
+                }
+              });
+              return const SizedBox.shrink();
+            }
+
+            return Material(
+              color: AppColors.card,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              clipBehavior: Clip.antiAlias,
+              child: SafeArea(
+                top: false,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(ctx).size.height * 0.75,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(height: 12),
+                      Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.receipt_long, color: AppColors.primaryDark),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Comprobantes en cola (${items.length})',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const Spacer(),
+                            TextButton.icon(
+                              icon: const Icon(Icons.delete_sweep, size: 18, color: AppColors.error),
+                              label: const Text(
+                                'Descartar todos',
+                                style: TextStyle(
+                                  color: AppColors.error,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              onPressed: () async {
+                                final confirm = await showDialog<bool>(
+                                  context: ctx,
+                                  builder: (dCtx) => AlertDialog(
+                                    title: const Text('¿Descartar todos?'),
+                                    content: const Text(
+                                      '¿Deseas descartar todos los comprobantes de la cola? Esta acción no se puede deshacer.',
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.of(dCtx).pop(false),
+                                        child: const Text('Volver'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () => Navigator.of(dCtx).pop(true),
+                                        style: TextButton.styleFrom(foregroundColor: AppColors.error),
+                                        child: const Text('Descartar todos', style: TextStyle(fontWeight: FontWeight.bold)),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                                if (confirm == true) {
+                                  await queue.cancelProcessing();
+                                  if (Navigator.of(ctx).canPop()) {
+                                    Navigator.of(ctx).pop();
+                                  }
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Divider(height: 1),
+                      Flexible(
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          itemCount: items.length,
+                          separatorBuilder: (_, __) => const Divider(height: 1),
+                          itemBuilder: (listCtx, index) {
+                            final item = items[index];
+                            final int id = item['id'];
+                            final String imagePath = item['image_path'] ?? '';
+                            final String status = item['status'] ?? 'pending';
+                            final String? lastError = item['last_error'] as String?;
+                            final File imageFile = File(imagePath);
+
+                            return Material(
+                              type: MaterialType.transparency,
+                              child: ListTile(
+                                leading: ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: imageFile.existsSync()
+                                      ? Image.file(
+                                          imageFile,
+                                          width: 44,
+                                          height: 44,
+                                          fit: BoxFit.cover,
+                                        )
+                                      : Container(
+                                          width: 44,
+                                          height: 44,
+                                          color: Colors.grey.shade200,
+                                          child: const Icon(Icons.image_not_supported, size: 20, color: Colors.grey),
+                                        ),
+                                ),
+                                title: Text(
+                                  status == 'error'
+                                      ? 'Error de procesamiento'
+                                      : (status == 'processing' ? 'Procesando con IA...' : 'En cola de espera'),
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: status == 'error' ? AppColors.error : AppColors.textPrimary,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  lastError?.isNotEmpty == true
+                                      ? lastError!
+                                      : (status == 'processing' ? 'Extrayendo datos de la factura' : 'Pendiente por analizar'),
+                                  style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                trailing: IconButton(
+                                  icon: const Icon(Icons.delete_outline, color: AppColors.error, size: 22),
+                                  tooltip: 'Descartar este comprobante',
+                                  onPressed: () async {
+                                    final confirm = await showDialog<bool>(
+                                      context: ctx,
+                                      builder: (dCtx) => AlertDialog(
+                                        title: const Text('¿Descartar este comprobante?'),
+                                        content: const Text(
+                                          '¿Deseas descartar esta factura de la cola? Esta acción no se puede deshacer.',
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.of(dCtx).pop(false),
+                                            child: const Text('Volver'),
+                                          ),
+                                          TextButton(
+                                            onPressed: () => Navigator.of(dCtx).pop(true),
+                                            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+                                            child: const Text('Descartar', style: TextStyle(fontWeight: FontWeight.bold)),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                    if (confirm == true) {
+                                      await queue.removeItem(id);
+                                    }
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 

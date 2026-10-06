@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gastoscan_ai/data/datasources/local/database_helper.dart';
 import 'package:gastoscan_ai/data/models/gemini_extraction_result.dart';
@@ -134,10 +135,20 @@ void main() {
   group('ScanQueueProvider Tests', () {
     late FakeDatabaseHelper fakeDb;
     late ScanQueueProvider provider;
+    late Directory tempDir;
 
     setUp(() {
       fakeDb = FakeDatabaseHelper();
       provider = ScanQueueProvider(dbHelper: fakeDb, autoProcess: false);
+      tempDir = Directory.systemTemp.createTempSync('scan_queue_test_');
+    });
+
+    tearDown(() {
+      try {
+        if (tempDir.existsSync()) {
+          tempDir.deleteSync(recursive: true);
+        }
+      } catch (_) {}
     });
 
     test('initial state has empty pending and ready items', () {
@@ -265,9 +276,12 @@ void main() {
       await streamController.close();
     });
 
-    test('removeItem preserves batch item if image path is shared with other queue item', () async {
-      await provider.enqueue('/path/to/batch_shared.jpg');
-      await provider.enqueue('/path/to/batch_shared.jpg');
+    test('removeItem preserves physical file on disk when path is shared with other queue item', () async {
+      final realFile = File('${tempDir.path}/shared_batch.jpg')..writeAsStringSync('dummy image data');
+      expect(realFile.existsSync(), isTrue);
+
+      await provider.enqueue(realFile.path);
+      await provider.enqueue(realFile.path);
       expect(provider.pendingCount, equals(2));
 
       final firstId = provider.pendingItems.first['id'] as int;
@@ -275,35 +289,66 @@ void main() {
 
       await provider.removeItem(firstId);
 
+      // Fila borrada de la cola, pero archivo fisico en disco conservado por fila hermana
       expect(provider.pendingCount, equals(1));
       expect(provider.pendingItems.first['id'], equals(secondId));
-      expect(fakeDb.pendingDb.length, equals(1));
+      expect(realFile.existsSync(), isTrue);
+
+      // Al remover la ultima referencia, el archivo fisico se elimina
+      await provider.removeItem(secondId);
+      expect(provider.pendingCount, equals(0));
+      expect(realFile.existsSync(), isFalse);
     });
 
-    test('cancelProcessing clears pending items and preserves ready items', () async {
+    test('removeItem deletes physical file on disk when it is the only reference in queue', () async {
+      final realFile = File('${tempDir.path}/sole_receipt.jpg')..writeAsStringSync('dummy image data');
+      expect(realFile.existsSync(), isTrue);
+
+      await provider.enqueue(realFile.path);
+      expect(provider.pendingCount, equals(1));
+      final itemId = provider.pendingItems.first['id'] as int;
+
+      await provider.removeItem(itemId);
+
+      // Fila borrada de la cola y archivo fisico eliminado de disco
+      expect(provider.pendingCount, equals(0));
+      expect(realFile.existsSync(), isFalse);
+    });
+
+    test('cancelProcessing preserves physical file shared with ready item and cleans up unshared', () async {
+      final sharedFile = File('${tempDir.path}/ready_shared.jpg')..writeAsStringSync('shared image data');
+      final unsharedFile = File('${tempDir.path}/pending_only.jpg')..writeAsStringSync('unshared image data');
+
       fakeDb.readyDb.add({
         'id': 99,
-        'image_path': '/path/to/ready_shared.jpg',
+        'image_path': sharedFile.path,
         'status': 'ready',
         'extracted_data': '{}',
       });
-      await provider.enqueue('/path/to/ready_shared.jpg');
+
+      await provider.enqueue(sharedFile.path);
+      await provider.enqueue(unsharedFile.path);
       await provider.loadQueue();
 
       expect(provider.readyItems.length, equals(1));
-      expect(provider.pendingCount, equals(1));
+      expect(provider.pendingCount, equals(2));
 
       await provider.cancelProcessing();
 
       expect(provider.pendingCount, equals(0));
       expect(fakeDb.pendingDb, isEmpty);
       expect(provider.readyItems.length, equals(1));
+
+      // El archivo compartido con ready debe seguir existiendo en disco
+      expect(sharedFile.existsSync(), isTrue);
+      // El archivo que solo pertenecia a pending debe ser eliminado
+      expect(unsharedFile.existsSync(), isFalse);
     });
 
     test('loadQueue recovers stale processing items back to pending', () async {
       fakeDb.pendingDb.add({
         'id': 42,
-        'image_path': '/path/to/stale.jpg',
+        'image_path': '${tempDir.path}/stale.jpg',
         'status': 'processing',
       });
 
@@ -316,7 +361,7 @@ void main() {
     test('processPendingItems skips items already in error status without extra DB updates', () async {
       fakeDb.pendingDb.add({
         'id': 55,
-        'image_path': '/path/to/error_item.jpg',
+        'image_path': '${tempDir.path}/error_item.jpg',
         'status': 'error',
         'attempt_count': 3,
         'last_error': 'Error previo',
