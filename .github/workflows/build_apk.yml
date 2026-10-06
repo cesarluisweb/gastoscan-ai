@@ -55,6 +55,11 @@ jobs:
       - name: Instalar paquetes
         run: flutter pub get
 
+      - name: Analisis Estatico de Codigo
+        run: |
+          touch test_results.txt
+          flutter analyze --no-fatal-warnings --no-fatal-infos || (flutter analyze > test_results.txt && cat test_results.txt && exit 1)
+
       - name: Ejecutar Unit Tests
         run: flutter test > test_results.txt || (cat test_results.txt && exit 1)
 

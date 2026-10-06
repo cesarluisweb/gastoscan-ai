@@ -766,36 +766,28 @@ class DatabaseHelper {
 
   /// Resetea los ítems que quedaron atascados en 'processing' a 'pending' (recuperación al iniciar)
   Future<int> resetStaleProcessingScanQueueItems() async {
-    try {
-      final db = await database;
-      return await db.update(
-        'scan_queue',
-        {'status': 'pending'},
-        where: 'status = ?',
-        whereArgs: ['processing'],
-      );
-    } catch (_) {
-      return 0;
-    }
+    final db = await database;
+    return await db.update(
+      'scan_queue',
+      {'status': 'pending'},
+      where: 'status = ?',
+      whereArgs: ['processing'],
+    );
   }
 
   /// Resetea los ítems en 'error' a 'pending' con attempt_count en 0 para reintento manual
   Future<int> resetFailedScanQueueItems() async {
-    try {
-      final db = await database;
-      return await db.update(
-        'scan_queue',
-        {
-          'status': 'pending',
-          'attempt_count': 0,
-          'last_error': null,
-        },
-        where: 'status = ?',
-        whereArgs: ['error'],
-      );
-    } catch (_) {
-      return 0;
-    }
+    final db = await database;
+    return await db.update(
+      'scan_queue',
+      {
+        'status': 'pending',
+        'attempt_count': 0,
+        'last_error': null,
+      },
+      where: 'status = ?',
+      whereArgs: ['error'],
+    );
   }
 
   Future<List<Map<String, dynamic>>> getReadyScanQueueItems() async {

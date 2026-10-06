@@ -351,7 +351,12 @@ class GlobalScanQueueBanner extends StatelessWidget {
                   icon: const Icon(Icons.delete_outline, color: AppColors.error, size: 20),
                   tooltip: 'Descartar',
                   visualDensity: VisualDensity.compact,
-                  onPressed: () => _confirmCancelOrDiscard(context, scanQueue, isProcessing: false),
+                  onPressed: () {
+                    final int? singleId = scanQueue.pendingItems.length == 1
+                        ? (scanQueue.pendingItems.first['id'] as num?)?.toInt()
+                        : null;
+                    _confirmCancelOrDiscard(context, scanQueue, isProcessing: false, itemId: singleId);
+                  },
                 ),
               ],
             ),
@@ -381,16 +386,27 @@ class GlobalScanQueueBanner extends StatelessWidget {
     BuildContext context,
     ScanQueueProvider scanQueue, {
     required bool isProcessing,
+    int? itemId,
   }) async {
+    final String title;
+    final String content;
+
+    if (isProcessing) {
+      title = '¿Detener escaneo?';
+      content = 'Se cancelará el análisis actual y se descartarán los comprobantes pendientes de la cola.';
+    } else if (itemId != null) {
+      title = '¿Descartar este comprobante?';
+      content = '¿Deseas descartar esta factura de la cola? Esta acción no se puede deshacer.';
+    } else {
+      title = '¿Descartar comprobantes?';
+      content = '¿Deseas descartar las facturas pendientes de la cola? Esta acción no se puede deshacer.';
+    }
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(isProcessing ? '¿Detener escaneo?' : '¿Descartar comprobantes?'),
-        content: Text(
-          isProcessing
-              ? 'Se cancelará el análisis actual y se descartarán los comprobantes pendientes de la cola.'
-              : '¿Deseas descartar los comprobantes pendientes de la cola? Esta acción no se puede deshacer.',
-        ),
+        title: Text(title),
+        content: Text(content),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -406,7 +422,11 @@ class GlobalScanQueueBanner extends StatelessWidget {
     );
 
     if (confirmed == true) {
-      await scanQueue.cancelProcessing();
+      if (itemId != null) {
+        await scanQueue.removeItem(itemId);
+      } else {
+        await scanQueue.cancelProcessing();
+      }
     }
   }
 }

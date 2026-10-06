@@ -51,9 +51,12 @@ class FakeDatabaseHelper extends DatabaseHelper {
       item['status'] = status;
       if (extractedData != null) item['extracted_data'] = extractedData;
       if (ocrText != null) item['ocr_text'] = ocrText;
+      if (attemptCount != null) item['attempt_count'] = attemptCount;
       if (lastError != null) item['last_error'] = lastError;
       if (status == 'ready') {
         readyDb.add(item);
+      } else {
+        pendingDb.insert(index, item);
       }
       return 1;
     }
@@ -260,6 +263,72 @@ void main() {
 
       expect(dynamicProvider.isWaitingForConnection, isFalse);
       await streamController.close();
+    });
+
+    test('removeItem preserves batch item if image path is shared with other queue item', () async {
+      await provider.enqueue('/path/to/batch_shared.jpg');
+      await provider.enqueue('/path/to/batch_shared.jpg');
+      expect(provider.pendingCount, equals(2));
+
+      final firstId = provider.pendingItems.first['id'] as int;
+      final secondId = provider.pendingItems.last['id'] as int;
+
+      await provider.removeItem(firstId);
+
+      expect(provider.pendingCount, equals(1));
+      expect(provider.pendingItems.first['id'], equals(secondId));
+      expect(fakeDb.pendingDb.length, equals(1));
+    });
+
+    test('cancelProcessing clears pending items and preserves ready items', () async {
+      fakeDb.readyDb.add({
+        'id': 99,
+        'image_path': '/path/to/ready_shared.jpg',
+        'status': 'ready',
+        'extracted_data': '{}',
+      });
+      await provider.enqueue('/path/to/ready_shared.jpg');
+      await provider.loadQueue();
+
+      expect(provider.readyItems.length, equals(1));
+      expect(provider.pendingCount, equals(1));
+
+      await provider.cancelProcessing();
+
+      expect(provider.pendingCount, equals(0));
+      expect(fakeDb.pendingDb, isEmpty);
+      expect(provider.readyItems.length, equals(1));
+    });
+
+    test('loadQueue recovers stale processing items back to pending', () async {
+      fakeDb.pendingDb.add({
+        'id': 42,
+        'image_path': '/path/to/stale.jpg',
+        'status': 'processing',
+      });
+
+      await provider.loadQueue();
+
+      expect(fakeDb.pendingDb.first['status'], equals('pending'));
+      expect(provider.pendingItems.first['status'], equals('pending'));
+    });
+
+    test('processPendingItems skips items already in error status without extra DB updates', () async {
+      fakeDb.pendingDb.add({
+        'id': 55,
+        'image_path': '/path/to/error_item.jpg',
+        'status': 'error',
+        'attempt_count': 3,
+        'last_error': 'Error previo',
+      });
+
+      await provider.loadPendingItems();
+      expect(provider.pendingItems.length, equals(1));
+
+      await provider.processPendingItems();
+
+      expect(fakeDb.pendingDb.first['status'], equals('error'));
+      expect(fakeDb.pendingDb.first['attempt_count'], equals(3));
     });
   });
 

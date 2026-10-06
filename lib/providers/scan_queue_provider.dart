@@ -209,14 +209,19 @@ class ScanQueueProvider with ChangeNotifier {
     _lastError = null;
     _isWaitingForConnection = false;
 
-    // Eliminar archivos físicos de imagen asociados a los ítems pendientes
+    // Eliminar archivos fisicos de imagen asociados a los items pendientes
+    // protegiendo imagenes compartidas con items en estado 'ready'
+    final readyItems = await _dbHelper.getReadyScanQueueItems();
     for (final item in _pendingItems) {
       final path = item['image_path'] as String?;
       if (path != null) {
         try {
-          final f = File(path);
-          if (await f.exists()) {
-            await f.delete();
+          final isUsedByReady = readyItems.any((r) => r['image_path'] == path);
+          if (!isUsedByReady) {
+            final f = File(path);
+            if (await f.exists()) {
+              await f.delete();
+            }
           }
         } catch (_) {}
       }
@@ -290,8 +295,13 @@ class ScanQueueProvider with ChangeNotifier {
         final int currentAttempts = (item['attempt_count'] as num?)?.toInt() ?? 0;
         final String itemStatus = (item['status'] as String?) ?? 'pending';
 
-        // Si el ítem ya está marcado como error o superó el umbral y no es forzado, saltar
-        if (itemStatus == 'error' || currentAttempts >= 3) {
+        // Si el ítem ya está marcado como error, saltar sin re-escribir en DB
+        if (itemStatus == 'error') {
+          continue;
+        }
+
+        // Si superó el umbral de reintentos, marcar como error
+        if (currentAttempts >= 3) {
           await _dbHelper.updateScanQueueItem(
             id,
             'error',
@@ -389,12 +399,12 @@ class ScanQueueProvider with ChangeNotifier {
                 await _dbHelper.insertReadyScanQueueItem(imagePath, extraJson, ocrText: ocrText);
               }
             } else {
-              // No borrar la imagen en silencio. Pasar a error o pending con conteo de intento
+              // No borrar la imagen en silencio. Pasar directamente a error para no quemar tokens en reintentos esteriles
               final nextAttempts = currentAttempts + 1;
               _lastError = 'No se detectaron datos de factura en la imagen.';
               await _dbHelper.updateScanQueueItem(
                 id,
-                nextAttempts >= 3 ? 'error' : 'pending',
+                'error',
                 attemptCount: nextAttempts,
                 lastError: _lastError,
               );
@@ -451,9 +461,12 @@ class ScanQueueProvider with ChangeNotifier {
     final path = item['image_path'] as String?;
     if (path != null) {
       try {
-        final f = File(path);
-        if (await f.exists()) {
-          await f.delete();
+        final isShared = await _dbHelper.isImagePathUsedByOtherQueueItems(id, path);
+        if (!isShared) {
+          final f = File(path);
+          if (await f.exists()) {
+            await f.delete();
+          }
         }
       } catch (_) {}
     }
