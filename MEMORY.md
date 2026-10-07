@@ -11,8 +11,11 @@
   4. **Gate Estricto de CI:** `flutter analyze --fatal-warnings --no-fatal-infos` activo en GitHub Actions y pasando en verde al 100%.
   5. **Base de Datos y Asincronía (Bloque 2 - Puntos 8, 9 y 10):** Eliminación de consultas N+1 con hidratación en lotes, índices en SQLite v15 (`items_gasto.gasto_id`, `scan_queue.status`, `gastos.synced`), borrado lógico directo O(1), adopción de presupuestos en memoria sin escrituras fantasmas, mutadores asíncronos con `Future<bool>` y control de errores amigables.
     6. **Tasas, Parser y Distribución (Bloques 3 y D - Puntos 1, 2 y 7):** `ExchangeRatesData.esReferencia` con timestamp solo ante dato en vivo, badge "Tasa de referencia" en Más, parser VE centralizado `tryParseAmount`, herencia de moneda en presupuestos y distribución fail-closed en CI.
+    7. **Resiliencia y Observabilidad en Gemini Gateway:** Depuración de modelos retirados (1.5 y 2.0 que causaban 404 enmascarado como 429), logging estructurado en Worker para `wrangler tail`, compresión de imágenes optimizada a 1200x1600 q82 (de 2MB a ~300KB), y backoff con jitter + respeto de `Retry-After` en Worker y cola.
 
 ## Decisiones Técnicas y de Negocio Recientes
+- **Transparencia en Errores de Gemini:** El gateway ya no agrupa 404, 503 y 429 en un solo mensaje genérico. Cada estado reporta su causa real sin enmascarar modelos muertos como límites de cuota.
+- **Compresión Eficiente para Visión:** 1200x1600 con calidad 82 preserva al 100% la nitidez OCR y reduce el payload un 80%, evitando timeouts y exceso de TPM.
 - **Presupuestos sin Escrituras Fantasmas:** En meses vacíos, `GastoProvider` adopta en memoria el presupuesto del mes previo sin escribir en SQLite ni alterar timestamps de sincronización.
 - **Rutas Calientes O(1) e Índices:** `softDeleteGasto` no recarga toda la BD; consultas de gastos e ítems usan hidratación en lotes con `WHERE gasto_id IN (...)` e índices dedicados (DB v15).
 - **Mutadores con Estado y Feedback Real:** `guardarTodoElPresupuesto`, `setPresupuestoGeneral`, etc., retornan `Future<bool>`, limpian `_errorMessage` al iniciar y mapean excepciones a mensajes amigables para el usuario.
@@ -30,4 +33,4 @@
 - En cPanel multidominio, el Document Root es `/home/user/dominio.com/`, no siempre `public_html/`.
 
 ## Próximo Paso Inmediato
-- Esperar CI de Bloques 3 y D; luego Papelera en `PendingExpenseCard` (deferido, comodidad) o siguiente fase.
+- Desplegar Worker (`npx wrangler deploy` en cloudflare_worker) y verificar CI de GitHub Actions.

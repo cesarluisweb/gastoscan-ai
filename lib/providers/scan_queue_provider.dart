@@ -441,6 +441,14 @@ class ScanQueueProvider with ChangeNotifier {
                 attemptCount: nextAttempts,
                 lastError: _lastError,
               );
+
+              final isRateLimit = rawMsg.toLowerCase().contains('límite') ||
+                  rawMsg.toLowerCase().contains('limite') ||
+                  rawMsg.contains('429');
+              if (isRateLimit) {
+                await Future.delayed(const Duration(seconds: 10));
+              }
+
               break;
             }
           }

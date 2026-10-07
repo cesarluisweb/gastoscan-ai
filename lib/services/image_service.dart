@@ -11,9 +11,9 @@ class ImageService {
     try {
       final compressedBytes = await FlutterImageCompress.compressWithFile(
         file.absolute.path,
-        minWidth: 1800,
-        minHeight: 2400,
-        quality: 92,
+        minWidth: 1200,
+        minHeight: 1600,
+        quality: 82,
         format: CompressFormat.jpeg,
       );
 

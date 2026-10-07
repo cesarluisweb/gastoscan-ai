@@ -10,9 +10,7 @@
 
 const FALLBACK_MODELS = [
   "gemini-flash-latest",
-  "gemini-2.5-flash",
-  "gemini-2.0-flash",
-  "gemini-1.5-flash"
+  "gemini-2.5-flash"
 ];
 
 const JWKS_URL = "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com";
@@ -278,11 +276,13 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
 
     let response;
     let responseText = "";
-    const retries = 3;
+    let lastStatus = 500;
+    let lastRetryAfter = null;
 
-    for (let i = 0; i < retries; i++) {
+    for (let i = 0; i < FALLBACK_MODELS.length; i++) {
       const currentModel = FALLBACK_MODELS[modelIndex];
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${geminiKey}`;
+      const attemptStart = Date.now();
 
       try {
         response = await fetch(url, {
@@ -292,34 +292,73 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
           signal: AbortSignal.timeout(25000)
         });
 
+        const latencyMs = Date.now() - attemptStart;
         responseText = await response.text();
+        lastStatus = response.status;
+
+        console.log(JSON.stringify({
+          event: "gemini_receipt_attempt",
+          model: currentModel,
+          status: response.status,
+          latencyMs,
+          isTextMode,
+          imageSizeChars: imageBase64 ? imageBase64.length : 0
+        }));
 
         if (response.ok) {
           break;
-        } else if (response.status === 429 || response.status === 404 || response.status >= 500) {
-          modelIndex++;
-          if (modelIndex < FALLBACK_MODELS.length) {
-            i--;
-            continue;
-          } else {
-            return new Response(JSON.stringify({ error: "Límite o indisponibilidad en la API de Gemini." }), {
-              status: response.status,
-              headers: { ...corsHeaders, "Content-Type": "application/json" }
-            });
-          }
+        }
+
+        // Si Google devuelve 429 o >= 500, aplicar backoff con jitter antes del siguiente modelo
+        if (response.status === 429 || response.status >= 500) {
+          const retryHeader = response.headers.get("Retry-After");
+          if (retryHeader) lastRetryAfter = retryHeader;
+          const delayMs = retryHeader
+            ? Math.min(parseInt(retryHeader, 10) * 1000, 3000)
+            : (400 + Math.floor(Math.random() * 400));
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
+        }
+
+        modelIndex++;
+        if (modelIndex < FALLBACK_MODELS.length) {
+          continue;
         } else {
-          return new Response(JSON.stringify({ error: `Error API Gemini: ${response.status}`, details: responseText }), {
-            status: response.status,
+          let userFriendlyError = `Error API Gemini: ${lastStatus}`;
+          if (lastStatus === 429) {
+            userFriendlyError = "Límite de solicitudes de Gemini alcanzado (RPM). Espera unos segundos.";
+          } else if (lastStatus === 404) {
+            userFriendlyError = `Modelo de Gemini no disponible (${currentModel} 404).`;
+          } else if (lastStatus >= 500) {
+            userFriendlyError = `Servidores de Gemini temporalmente saturados (${lastStatus}).`;
+          }
+
+          return new Response(JSON.stringify({
+            error: userFriendlyError,
+            statusCode: lastStatus,
+            retryAfter: lastRetryAfter,
+            details: responseText
+          }), {
+            status: lastStatus,
             headers: { ...corsHeaders, "Content-Type": "application/json" }
           });
         }
       } catch (netErr) {
+        const latencyMs = Date.now() - attemptStart;
+        console.log(JSON.stringify({
+          event: "gemini_receipt_timeout_or_network",
+          model: currentModel,
+          latencyMs,
+          error: netErr.message
+        }));
+
         modelIndex++;
         if (modelIndex < FALLBACK_MODELS.length) {
-          i--;
           continue;
         }
-        return new Response(JSON.stringify({ error: "Tiempo de espera agotado al conectar con Gemini." }), {
+        return new Response(JSON.stringify({
+          error: "Tiempo de espera agotado al conectar con Gemini.",
+          statusCode: 504
+        }), {
           status: 504,
           headers: { ...corsHeaders, "Content-Type": "application/json" }
         });
@@ -516,6 +555,7 @@ ${JSON.stringify(contextData)}
     for (let i = 0; i < FALLBACK_MODELS.length; i++) {
       const currentModel = FALLBACK_MODELS[modelIndex];
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${geminiKey}`;
+      const attemptStart = Date.now();
 
       try {
         response = await fetch(url, {
@@ -525,21 +565,48 @@ ${JSON.stringify(contextData)}
           signal: AbortSignal.timeout(20000)
         });
 
+        const latencyMs = Date.now() - attemptStart;
         responseText = await response.text();
+
+        console.log(JSON.stringify({
+          event: "gemini_chat_attempt",
+          model: currentModel,
+          status: response.status,
+          latencyMs
+        }));
+
         if (response.ok) {
           break;
         } else {
+          if (response.status === 429 || response.status >= 500) {
+            const delayMs = 400 + Math.floor(Math.random() * 400);
+            await new Promise((resolve) => setTimeout(resolve, delayMs));
+          }
           modelIndex++;
           if (modelIndex < FALLBACK_MODELS.length) continue;
-          return new Response(JSON.stringify({ error: `Error API Gemini: ${response.status}`, details: responseText }), {
+          return new Response(JSON.stringify({
+            error: response.status === 429 ? "Límite de solicitudes de Gemini alcanzado." : `Error API Gemini: ${response.status}`,
+            statusCode: response.status,
+            details: responseText
+          }), {
             status: response.status,
             headers: { ...corsHeaders, "Content-Type": "application/json" }
           });
         }
       } catch (err) {
+        const latencyMs = Date.now() - attemptStart;
+        console.log(JSON.stringify({
+          event: "gemini_chat_timeout_or_network",
+          model: currentModel,
+          latencyMs,
+          error: err.message
+        }));
         modelIndex++;
         if (modelIndex < FALLBACK_MODELS.length) continue;
-        return new Response(JSON.stringify({ error: "Fallo de conexión con Gemini." }), {
+        return new Response(JSON.stringify({
+          error: "Fallo de conexión o tiempo agotado con Gemini.",
+          statusCode: 504
+        }), {
           status: 504,
           headers: { ...corsHeaders, "Content-Type": "application/json" }
         });
