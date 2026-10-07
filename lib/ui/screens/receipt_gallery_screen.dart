@@ -61,7 +61,7 @@ class ReceiptGalleryScreen extends StatelessWidget {
                       prevMes = 12;
                       prevAnio--;
                     }
-                    gastoProvider.seleccionarMes(prevMes, prevAnio);
+                    gastoProvider.cambiarMes(prevAnio, prevMes);
                   },
                 ),
                 Text(
@@ -82,7 +82,7 @@ class ReceiptGalleryScreen extends StatelessWidget {
                       nextMes = 1;
                       nextAnio++;
                     }
-                    gastoProvider.seleccionarMes(nextMes, nextAnio);
+                    gastoProvider.cambiarMes(nextAnio, nextMes);
                   },
                 ),
               ],

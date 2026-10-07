@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -8,7 +7,7 @@ import 'package:gastoscan_ai/providers/settings_provider.dart';
 import 'package:gastoscan_ai/ui/screens/receipt_gallery_screen.dart';
 
 class FakeGastoProvider extends GastoProvider {
-  List<GastoModel> _customGastos;
+  final List<GastoModel> _customGastos;
   int _mes;
   int _anio;
 
@@ -33,9 +32,9 @@ class FakeGastoProvider extends GastoProvider {
   Future<void> cargarDatos() async {}
 
   @override
-  void seleccionarMes(int mes, int anio) {
-    _mes = mes;
-    _anio = anio;
+  void cambiarMes(int year, int month) {
+    _anio = year;
+    _mes = month;
     notifyListeners();
   }
 }

@@ -343,6 +343,7 @@ void main() {
         totalUsd: 1200,
         categoria: 'Alimentacion',
         rutaFotoLocal: '/path/to/fake_receipt.jpg',
+        creadoEn: '2026-09-21T10:00:00',
         items: [],
       );
       final gastoSinFoto = GastoModel(
@@ -355,6 +356,7 @@ void main() {
         totalUsd: 800,
         categoria: 'Servicios',
         rutaFotoLocal: null,
+        creadoEn: '2026-09-21T10:00:00',
         items: [],
       );
 
