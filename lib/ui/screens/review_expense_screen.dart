@@ -508,7 +508,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Gasto registrado. Cargando siguiente factura...', style: TextStyle(color: Colors.white)),
+              content: Text('Gasto registrado. Cargando siguiente factura...', style: TextStyle(color: Colors.black)),
               backgroundColor: AppColors.primaryDark,
               duration: Duration(seconds: 1),
             ),
@@ -667,7 +667,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
           } else {
             rootMessenger.showSnackBar(
               const SnackBar(
-                content: Text('Gasto registrado con éxito', style: TextStyle(color: Colors.white)),
+                content: Text('Gasto registrado con éxito', style: TextStyle(color: Colors.black)),
                 backgroundColor: AppColors.primaryDark,
               ),
             );
@@ -677,14 +677,14 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         if (matchedIds.isNotEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Gasto registrado y ${matchedIds.length} ítem(s) de tu lista marcados como comprados.', style: const TextStyle(color: Colors.white)),
+              content: Text('Gasto registrado y ${matchedIds.length} ítem(s) de tu lista marcados como comprados.', style: const TextStyle(color: Colors.black)),
               backgroundColor: AppColors.primaryDark,
             ),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Gasto registrado con éxito', style: TextStyle(color: Colors.white)),
+              content: Text('Gasto registrado con éxito', style: TextStyle(color: Colors.black)),
               backgroundColor: AppColors.primaryDark,
             ),
           );
@@ -827,7 +827,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
 
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Factura descartada. Cargando siguiente...', style: TextStyle(color: Colors.white)),
+                        content: Text('Factura descartada. Cargando siguiente...', style: TextStyle(color: Colors.black)),
                         backgroundColor: AppColors.primaryDark,
                         duration: Duration(seconds: 1),
                       ),

@@ -1023,7 +1023,7 @@ class MoreScreenState extends State<MoreScreen> {
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                       onPressed: () => _showApiKeyModal(context, settings),
-                      child: const Text('Gestionar', style: TextStyle(color: AppColors.primaryDark, fontSize: 13, fontWeight: FontWeight.bold)),
+                      child: const Text('Gestionar', style: TextStyle(color: AppColors.textPrimary, fontSize: 13, fontWeight: FontWeight.bold)),
                     ),
                   ],
                 )

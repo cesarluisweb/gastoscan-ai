@@ -301,7 +301,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
                             flex: 2,
                             child: Text(
                               it.categoria,
-                              style: const TextStyle(color: AppColors.primaryDark, fontSize: 11, fontWeight: FontWeight.w600),
+                              style: const TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.w600),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),

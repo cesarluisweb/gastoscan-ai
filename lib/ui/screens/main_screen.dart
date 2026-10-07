@@ -437,7 +437,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       iconWidget = Badge.count(
         count: badgeCount,
         backgroundColor: AppColors.primaryDark,
-        textColor: Colors.white,
+        textColor: Colors.black,
         child: iconWidget,
       );
     }
