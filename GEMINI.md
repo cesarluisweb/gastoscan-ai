@@ -51,6 +51,7 @@ La compilación en GitHub Actions (`build_apk.yml`) ejecuta `flutter create`, lo
 - El color amarillo (`AppColors.primaryDark` preferiblemente) queda reservado de forma estricta y exclusiva para **iconos**, contenedores de fondo y símbolos gráficos de acción.
 - **Banners y SnackBars:** Todo `SnackBar` o elemento flotante con fondo amarillo (`AppColors.primary` o `AppColors.primaryDark`) DEBE llevar su texto explícitamente en color negro (`style: TextStyle(color: Colors.black)`) para garantizar su legibilidad.
 - **Botón Único en Listas Dinámicas:** En formularios con listas dinámicas desplazables de ítems (como el desglose de productos de un gasto), no duplicar botones de agregar arriba y abajo. Usar un único botón de ancho completo al final de la lista para respetar el flujo natural de scroll y carga secuencial. Iconos de acción en dicho botón deben usar `AppColors.primaryDark`.
+- **No Exclusión en Estados Asíncronos Concurrentes (Banners):** En componentes que notifican estados de colas o tareas en segundo plano (ej. procesamiento OCR, ítems pendientes de revisión, estados sin conexión), NUNCA estructurar la presentación como `if / else if` excluyente si los estados pueden coexistir. Deben acumularse y apilarse verticalmente (ej. en un `Column` con espaciado compacto) para que una tarea terminada no oculte el progreso o estado de otra en curso.
 
 ## 5. Verificación de CI y Promesas al Usuario
 - **NUNCA** le digas al usuario que la aplicación "ya está lista para descargar" inmediatamente después de hacer un git push.
@@ -70,12 +71,17 @@ La compilación en GitHub Actions (`build_apk.yml`) ejecuta `flutter create`, lo
 - **Widget Tests en Pantallas con Scroll:** En pruebas unitarias de pantallas con `ListView` o vistas desplazables, define siempre en `setUp()` el tamaño de viewport (`binding.window.physicalSizeTestValue = const Size(1080, 4000);`) y límpialo en `tearDown()`, o utiliza `skipOffstage: false` en los `find.text(...)` / `find.byKey(...)` de elementos inferiores para evitar falsos negativos por renderizado fuera de pantalla.
 - **Resiliencia de Firebase en UI y Tests:** Todo widget que interactúe con `FirebaseAuth` o servicios nativos debe validar `Firebase.apps.isNotEmpty` antes de instanciar streams o métodos para garantizar que los widget tests se ejecuten limpiamente sin requerir un backend simulado.
 - **Firmas Exactas en Mocks/Fakes de Test:** Al implementar clases simuladas para testing (`FakeGastoProvider`, `FakeSettingsProvider`), es obligatorio replicar exactamente la firma de los métodos de la clase real, verificando si los parámetros son posicionales o nombrados para evitar fallos de compilación en CI.
+- **Determinismo Temporal en Widgets y Tests:** Todo widget o servicio cuya lógica dependa del día del mes o de umbrales temporales (ej. mensajes de "Nuevo mes" en los primeros 5 días, alertas de cierre de ciclo) DEBE admitir un parámetro opcional de fecha (ej. `DateTime? currentDate`) con fallback a `DateTime.now()`. En los tests unitarios o de widgets queda estrictamente prohibido evaluar comportamientos temporales sin fijar una fecha determinista.
 
 ## 7. Gestión de Documentación del Proyecto
 - **Archivos de Planificación:** Siempre que se genere, actualice o discuta un documento estratégico para el proyecto (como ROADMAP.md, PROJECT.md, planes de arquitectura, o guías de estilo), DEBE guardarse directamente en la raíz del repositorio.
 - **Actualización Obligatoria del Roadmap:** Cada vez que se complete una tarea, funcionalidad, corrección o hito planificado, se DEBE actualizar inmediatamente `ROADMAP.md` marcando el ítem como completado (`(Completada ✅)`) o tachándolo, manteniendo el estado de avance siempre al día.
 - **Bitácora de Marketing Obligatoria:** Cada vez que se ejecute una nueva acción, post, experimento, campaña o se recopilen aprendizajes de marketing y comunidad, se DEBE registrar y actualizar inmediatamente en `DOC_BITACORA_MARKETING.md` para acumular conocimiento reutilizable para este y futuros proyectos.
-- **Artefactos Prohibidos:** Está estrictamente prohibido dejar estos documentos clave confinados únicamente a los artefactos internos del agente (carpeta .gemini/antigravity/brain/...).
+- **Protocolo para Cambios Importantes o Numerosos:** Para cambios estructurales, refactorizaciones o funcionalidades con múltiples componentes:
+  1. Registrar los cambios en detalle en un documento técnico dedicado en la raíz del repositorio (`DOC_*.md`) y mantenerlo referenciado.
+  2. Proveer al usuario una guía de pruebas paso a paso para que realice la verificación manual en su dispositivo o entorno.
+  3. Queda prohibido dar por finalizada la tarea o marcar hitos como completados en `ROADMAP.md` antes de recibir el visto bueno explícito del usuario tras sus pruebas.
+  4. Solo tras la aprobación del usuario, asentar los apuntes finales y actualizar el estado en `ROADMAP.md`.
 - **Sincronización:** Tras cualquier actualización a estos documentos, se debe hacer un git commit y git push de inmediato para asegurar que el resto del equipo (humanos y otros agentes) tenga acceso a la fuente de verdad actualizada.
 
 ## 8. Extracción y Parsing de Facturas con IA (Gemini OCR)
