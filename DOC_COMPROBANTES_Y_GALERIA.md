@@ -4,7 +4,7 @@
 
 En respuesta directa a la experiencia de usuario y requerimientos funcionales solicitados:
 1. **Adjuntar y Eliminar Comprobantes Manuales:** En el formulario de registro y edición de gastos (`ReviewExpenseScreen`), ahora es posible adjuntar fotos desde la cámara o galería en transacciones manuales, así como sustituirlas o eliminarlas en cualquier momento.
-2. **Visor Directo de Comprobante a Pantalla Completa (`ReceiptViewerDialog`):** Al tocar el indicador visual "Foto" en cualquier tarjeta de gasto (`ExpenseCard`), o seleccionando la opción *"Ver comprobante"* en el menú contextual de tres puntos, se abre de inmediato un visor a pantalla completa con zoom interactivo (`InteractiveViewer`), detalles del comercio/monto/fecha, opción de compartir y guardado directo en galería.
+2. **Visor de Comprobante a Pantalla Completa (`ReceiptViewerDialog`):** Los gastos con comprobante muestran un icono discreto de foto junto a la fecha (no cliqueable). Al pulsar el menú contextual de opciones (tres puntos), el orden es: *Editar*, *Ver comprobante* y *Eliminar*. Al seleccionar *Ver comprobante*, se abre de inmediato el visor a pantalla completa con zoom interactivo (`InteractiveViewer`), detalles del comercio/monto/fecha, opción de compartir y guardado directo en galería.
 3. **Filtro Rápido de Comprobantes en Historial de Gastos (`ExpenseHistoryScreen`):** Se integró un botón de acción con icono de galería (`Icons.photo_library_outlined`) en la barra superior. Con un solo toque, el usuario puede filtrar toda la lista para ver exclusivamente los gastos que cuentan con foto de comprobante adjunta.
 4. **Galería Mensual de Comprobantes (`ReceiptGalleryScreen`):** Dentro de la tarjeta existente de *"Almacenamiento y Fotos"* en la pantalla *"Más"*, se agregó la opción *"Ver comprobantes guardados"*, que muestra el conteo mensual y abre una cuadrícula organizada por mes y año con todas las fotos guardadas en el dispositivo.
 5. **Cero Duplicidad y Álbum "Rinde Más" (`gal`):** Cuando la opción de guardar fotos está activa, las fotos se guardan en el álbum "Rinde Más" de la galería del teléfono sin duplicar almacenamiento ni consumir doble espacio.
@@ -37,12 +37,16 @@ En respuesta directa a la experiencia de usuario y requerimientos funcionales so
 4. Confirmar que la previsualización se muestra con la opción de ampliar, cambiar o eliminar.
 5. Guardar el gasto.
 
-### 2. Visor directo desde la lista de gastos
+### 2. Visor desde el menú de opciones del gasto
 1. En la pantalla principal o pestaña de **Gastos**, ubicar el gasto recién guardado.
-2. Comprobar que aparece una etiqueta pequeña **"Foto"** al lado de la fecha.
-3. Tocar directamente sobre la etiqueta **"Foto"** (o en el menú de tres puntos > **"Ver comprobante"**).
-4. Verificar que se abre la pantalla completa oscura con el nombre del comercio y el monto.
-5. Probar el zoom pellizcando la pantalla y los botones superiores de compartir y guardar en galería.
+2. Comprobar que aparece un icono pequeño de foto junto a la fecha (indicador no cliqueable).
+3. Tocar el menú de opciones (tres puntos) y verificar el orden de las acciones:
+   - 1. **Editar**
+   - 2. **Ver comprobante**
+   - 3. **Eliminar**
+4. Tocar **"Ver comprobante"**.
+5. Verificar que se abre la pantalla completa oscura con el nombre del comercio y el monto.
+6. Probar el zoom pellizcando la pantalla y los botones superiores de compartir y guardar en galería.
 
 ### 3. Filtro de comprobantes en Historial de Gastos
 1. Entrar en la pestaña **Gastos**.

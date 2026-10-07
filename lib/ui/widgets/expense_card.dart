@@ -126,39 +126,11 @@ class _ExpenseCardState extends State<ExpenseCard> {
                               ),
                             ),
                             if (widget.gasto.rutaFotoLocal != null && widget.gasto.rutaFotoLocal!.isNotEmpty) ...[
-                              const SizedBox(width: 6),
-                              GestureDetector(
-                                onTap: () {
-                                  ReceiptViewerDialog.show(
-                                    context,
-                                    imagePath: widget.gasto.rutaFotoLocal!,
-                                    title: widget.gasto.comercio,
-                                    subtitle: DateFormatter.formatDate(widget.gasto.fecha),
-                                    amount: CurrencyFormatter.formatUsd(widget.gasto.totalUsdDisplay),
-                                  );
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primaryLight,
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: const Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(Icons.receipt_long, size: 12, color: AppColors.primaryDark),
-                                      SizedBox(width: 3),
-                                      Text(
-                                        'Foto',
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.textPrimary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                              const SizedBox(width: 5),
+                              const Icon(
+                                Icons.photo_outlined,
+                                size: 14,
+                                color: AppColors.textSecondary,
                               ),
                             ],
                           ],
@@ -217,7 +189,6 @@ class _ExpenseCardState extends State<ExpenseCard> {
                     icon: const Icon(Icons.more_vert, color: AppColors.textSecondary, size: 20),
                     color: AppColors.surface,
                     onSelected: (val) {
-                      if (val == 'delete') widget.onDelete();
                       if (val == 'edit') widget.onEdit();
                       if (val == 'view_receipt' && widget.gasto.rutaFotoLocal != null && widget.gasto.rutaFotoLocal!.isNotEmpty) {
                         ReceiptViewerDialog.show(
@@ -228,8 +199,19 @@ class _ExpenseCardState extends State<ExpenseCard> {
                           amount: CurrencyFormatter.formatUsd(widget.gasto.totalUsdDisplay),
                         );
                       }
+                      if (val == 'delete') widget.onDelete();
                     },
                     itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit_outlined, color: AppColors.primaryDark, size: 18),
+                            SizedBox(width: 8),
+                            Text('Editar', style: TextStyle(color: AppColors.textPrimary)),
+                          ],
+                        ),
+                      ),
                       if (widget.gasto.rutaFotoLocal != null && widget.gasto.rutaFotoLocal!.isNotEmpty)
                         const PopupMenuItem(
                           value: 'view_receipt',
@@ -241,16 +223,6 @@ class _ExpenseCardState extends State<ExpenseCard> {
                             ],
                           ),
                         ),
-                      const PopupMenuItem(
-                        value: 'edit',
-                        child: Row(
-                          children: [
-                            Icon(Icons.edit_outlined, color: AppColors.primaryDark, size: 18),
-                            SizedBox(width: 8),
-                            Text('Editar', style: TextStyle(color: AppColors.textPrimary)),
-                          ],
-                        ),
-                      ),
                       const PopupMenuItem(
                         value: 'delete',
                         child: Row(
