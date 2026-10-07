@@ -131,6 +131,8 @@ Este documento registra la estrategia real ejecutada en comunidades, los textos 
 8. **Cumplimiento de Better Ads en Intersticiales:** Para evitar baneos en AdMob o rechazos en Google Play, los anuncios de pantalla completa solo deben desplegarse en pausas naturales de flujo (tras guardar un gasto), nunca por sorpresa al iniciar o escanear.
 9. **Reencuadre de Usuario de Negocios a Personal:** Cuando un usuario pida funciones contables de empresa (libros auxiliares, costos de producción), la respuesta debe validar la idea pero dejar claro el foco único de Rinde Más: finanzas personales cotidianas sin fricción.
 10. **Suscripción como blindaje para costos de IA:** Aunque los usuarios prefieran pagos únicos de por vida ("no me metas suscripción"), una app con consumo de tokens por escaneo requiere un modelo recurrente para funciones avanzadas Pro, manteniendo el registro manual y por voz siempre gratuito.
+11. **El modelo BYOK (Bring Your Own Key) para IA intensiva:** Para usuarios avanzados o cuando hay saturación de cuota en el backend, permitir ingresar una clave propia de Google AI Studio / Gemini elimina los costos del desarrollador y empodera al usuario técnico.
+12. **Privacidad de identidad (Alias y Google Drive):** Para usuarios celosos de su privacidad, obligar a Google Sign-In genera fricción por el temor a exponer su correo principal. Soportar alias (Addy.io) o respaldo directo en su Google Drive personal (tipo 2FAS/WhatsApp) es el estándar de oro en transparencia.
 
 ---
 
