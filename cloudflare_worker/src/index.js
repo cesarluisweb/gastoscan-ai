@@ -9,12 +9,8 @@
  */
 
 const FALLBACK_MODELS = [
-  "gemini-flash-lite-latest",
-  "gemini-3.5-flash-lite",
   "gemini-3.1-flash-lite",
-  "gemini-flash-latest",
-  "gemini-3.5-flash",
-  "gemini-3.8-flash"
+  "gemini-3.5-flash-lite"
 ];
 
 const JWKS_URL = "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com";
@@ -156,7 +152,8 @@ async function verifyFirebaseToken(authHeader, projectId) {
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, x-custom-gemini-key",
+  "Access-Control-Expose-Headers": "x-gemini-model, x-gemini-tokens",
 };
 
 export default {
@@ -372,6 +369,7 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
     let responseText = "";
     let bestErrorStatus = 500;
     let bestRetryAfter = null;
+    let winningModel = FALLBACK_MODELS[0];
 
     for (let i = 0; i < FALLBACK_MODELS.length; i++) {
       const currentModel = FALLBACK_MODELS[modelIndex];
@@ -409,6 +407,7 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
         }));
 
         if (response.ok) {
+          winningModel = currentModel;
           break;
         }
 
@@ -497,9 +496,25 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
     const resultJson = JSON.parse(rawText);
     resultJson.modo_procesamiento = isTextMode ? "texto" : "vision";
 
+    const usage = parsedData.usageMetadata || {};
+    const totalTokens = usage.totalTokenCount || 0;
+
+    console.log(JSON.stringify({
+      event: "gemini_receipt_success",
+      model: winningModel,
+      totalTokens,
+      promptTokens: usage.promptTokenCount || 0,
+      candidatesTokens: usage.candidatesTokenCount || 0
+    }));
+
     return new Response(JSON.stringify(resultJson), {
       status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" }
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "application/json",
+        "x-gemini-model": winningModel,
+        "x-gemini-tokens": String(totalTokens)
+      }
     });
   } catch (err) {
     return new Response(JSON.stringify({ error: "Fallo al procesar la factura.", message: err.message }), {
@@ -664,6 +679,7 @@ ${JSON.stringify(contextData)}
     let response;
     let responseText = "";
     let bestErrorStatus = 500;
+    let winningModel = FALLBACK_MODELS[0];
 
     for (let i = 0; i < FALLBACK_MODELS.length; i++) {
       const currentModel = FALLBACK_MODELS[modelIndex];
@@ -697,6 +713,7 @@ ${JSON.stringify(contextData)}
         }));
 
         if (response.ok) {
+          winningModel = currentModel;
           break;
         } else {
           if (isCustomKey && (response.status === 400 || response.status === 403)) {
@@ -764,6 +781,24 @@ ${JSON.stringify(contextData)}
       });
     }
 
+    const usage = responseData.usageMetadata || {};
+    const totalTokens = usage.totalTokenCount || 0;
+
+    console.log(JSON.stringify({
+      event: "gemini_chat_success",
+      model: winningModel,
+      totalTokens,
+      promptTokens: usage.promptTokenCount || 0,
+      candidatesTokens: usage.candidatesTokenCount || 0
+    }));
+
+    const responseHeaders = {
+      ...corsHeaders,
+      "Content-Type": "application/json",
+      "x-gemini-model": winningModel,
+      "x-gemini-tokens": String(totalTokens)
+    };
+
     const part = candidates[0]?.content?.parts?.[0];
     if (part?.functionCall) {
       return new Response(JSON.stringify({
@@ -773,13 +808,13 @@ ${JSON.stringify(contextData)}
         }
       }), {
         status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
+        headers: responseHeaders
       });
     }
 
     return new Response(JSON.stringify({ text: part?.text || "" }), {
       status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" }
+      headers: responseHeaders
     });
   } catch (error) {
     return new Response(JSON.stringify({ error: "Fallo al conectar con el asistente.", message: error.message }), {
