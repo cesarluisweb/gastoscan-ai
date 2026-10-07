@@ -23,6 +23,7 @@ class ExpenseHistoryScreen extends StatefulWidget {
 
 class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
   bool _isSearching = false;
+  bool _onlyWithReceipt = false;
   final TextEditingController _searchCtrl = TextEditingController();
   String _searchQuery = '';
 
@@ -77,9 +78,12 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
 
     final scanQueue = Provider.of<ScanQueueProvider>(context);
 
-    // Filtrar gastos por búsqueda
+    // Filtrar gastos por búsqueda y comprobante
     final query = _normalizeText(_searchQuery.trim());
     final filteredGastos = gastoProvider.gastos.where((gasto) {
+      if (_onlyWithReceipt && (gasto.rutaFotoLocal == null || gasto.rutaFotoLocal!.isEmpty)) {
+        return false;
+      }
       if (query.isEmpty) return true;
       final matchComercio = _normalizeText(gasto.comercio).contains(query);
       final matchItems = gasto.items.any((item) => _normalizeText(item.descripcion).contains(query));
@@ -89,6 +93,11 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
     // Crear borradores pendientes si no hay búsqueda activa (o si deciden buscar en pendientes)
     final List<GastoModel> pendingGastos = [];
     for (final item in scanQueue.readyItems) {
+      final imagePath = item['image_path'] as String?;
+      if (_onlyWithReceipt && (imagePath == null || imagePath.isEmpty)) {
+        continue;
+      }
+
       Map<String, dynamic> data = {};
       if (item['extracted_data'] != null) {
         data = Map<String, dynamic>.from(jsonDecode(item['extracted_data']));
@@ -114,14 +123,15 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
         categoria: 'Pendiente',
         creadoEn: DateTime.now().toIso8601String(),
         items: result.items,
+        rutaFotoLocal: imagePath,
       );
 
       if (query.isEmpty) {
-         pendingGastos.add(dummyGasto);
+        pendingGastos.add(dummyGasto);
       } else {
-         final matchComercio = _normalizeText(dummyGasto.comercio).contains(query);
-         final matchItems = dummyGasto.items.any((it) => _normalizeText(it.descripcion).contains(query));
-         if (matchComercio || matchItems) pendingGastos.add(dummyGasto);
+        final matchComercio = _normalizeText(dummyGasto.comercio).contains(query);
+        final matchItems = dummyGasto.items.any((it) => _normalizeText(it.descripcion).contains(query));
+        if (matchComercio || matchItems) pendingGastos.add(dummyGasto);
       }
     }
 
@@ -157,6 +167,17 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
               )
             : const Text('Gastos'),
         actions: [
+          IconButton(
+            key: const Key('expense_history_receipt_filter_toggle'),
+            icon: Icon(_onlyWithReceipt ? Icons.photo_library : Icons.photo_library_outlined),
+            tooltip: _onlyWithReceipt ? 'Ver todos los gastos' : 'Ver solo comprobantes',
+            color: _onlyWithReceipt ? AppColors.primaryDark : null,
+            onPressed: () {
+              setState(() {
+                _onlyWithReceipt = !_onlyWithReceipt;
+              });
+            },
+          ),
           IconButton(
             key: const Key('expense_history_search_toggle'),
             icon: Icon(_isSearching ? Icons.close : Icons.search),

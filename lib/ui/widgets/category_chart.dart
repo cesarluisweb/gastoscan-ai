@@ -153,7 +153,7 @@ class _CategoryChartState extends State<CategoryChart> {
         border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -268,7 +268,7 @@ class _CategoryChartState extends State<CategoryChart> {
                               width: 24,
                               height: 24,
                               decoration: BoxDecoration(
-                                color: color.withOpacity(0.12),
+                                color: color.withValues(alpha: 0.12),
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(icon, size: 13, color: color),
@@ -385,12 +385,12 @@ class _CategoryChartState extends State<CategoryChart> {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: isExceeded
-            ? AppColors.error.withOpacity(0.06)
+            ? AppColors.error.withValues(alpha: 0.06)
             : AppColors.cardLighter,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: isExceeded
-              ? AppColors.error.withOpacity(0.4)
+              ? AppColors.error.withValues(alpha: 0.4)
               : AppColors.border,
           width: isExceeded ? 1.5 : 1.0,
         ),
@@ -418,7 +418,7 @@ class _CategoryChartState extends State<CategoryChart> {
                       width: 24,
                       height: 24,
                       decoration: BoxDecoration(
-                        color: categoryColor.withOpacity(0.12),
+                        color: categoryColor.withValues(alpha: 0.12),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -481,7 +481,7 @@ class _CategoryChartState extends State<CategoryChart> {
                           ? AppColors.error
                           : (AppColors.categoryColors[cat] ?? AppColors.primary),
                       backgroundColor: isExceeded
-                          ? AppColors.error.withOpacity(0.2)
+                          ? AppColors.error.withValues(alpha: 0.2)
                           : AppColors.border,
                       minHeight: 6,
                     ),
@@ -493,7 +493,7 @@ class _CategoryChartState extends State<CategoryChart> {
                     key: Key('excess_alert_$cat'),
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: AppColors.error.withOpacity(0.12),
+                      color: AppColors.error.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(color: AppColors.error),
                     ),

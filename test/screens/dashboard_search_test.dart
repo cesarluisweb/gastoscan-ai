@@ -331,5 +331,57 @@ void main() {
       expect(find.text('Farmatodo'), findsOneWidget);
       expect(find.text('Automercados Plaza'), findsNothing);
     });
+
+    testWidgets('filtering by receipt only shows expenses that have receipt image', (tester) async {
+      final gastoConFoto = GastoModel(
+        id: 99,
+        uuid: 'uuid-foto-1',
+        fecha: '2026-09-21',
+        comercio: 'Comercio Con Foto',
+        moneda: 'USD',
+        totalOriginal: 1200,
+        totalUsd: 1200,
+        categoria: 'Alimentacion',
+        rutaFotoLocal: '/path/to/fake_receipt.jpg',
+        items: [],
+      );
+      final gastoSinFoto = GastoModel(
+        id: 100,
+        uuid: 'uuid-sin-foto-1',
+        fecha: '2026-09-21',
+        comercio: 'Comercio Sin Foto',
+        moneda: 'USD',
+        totalOriginal: 800,
+        totalUsd: 800,
+        categoria: 'Servicios',
+        rutaFotoLocal: null,
+        items: [],
+      );
+
+      gastoProvider.setGastos([gastoConFoto, gastoSinFoto]);
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      // Before filtering, both are displayed
+      expect(find.text('Comercio Con Foto'), findsOneWidget);
+      expect(find.text('Comercio Sin Foto'), findsOneWidget);
+
+      // Tap receipt filter button
+      await tester.tap(find.byKey(const Key('expense_history_receipt_filter_toggle')));
+      await tester.pumpAndSettle();
+
+      // Only the expense with photo is shown
+      expect(find.text('Comercio Con Foto'), findsOneWidget);
+      expect(find.text('Comercio Sin Foto'), findsNothing);
+
+      // Tap again to deactivate
+      await tester.tap(find.byKey(const Key('expense_history_receipt_filter_toggle')));
+      await tester.pumpAndSettle();
+
+      // Both are displayed again
+      expect(find.text('Comercio Con Foto'), findsOneWidget);
+      expect(find.text('Comercio Sin Foto'), findsOneWidget);
+    });
   });
 }

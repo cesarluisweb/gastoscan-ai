@@ -208,7 +208,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Reconocimiento de voz no disponible o sin permiso.'),
+              content: Text('Reconocimiento de voz no disponible o sin permiso.', style: TextStyle(color: Colors.black)),
               backgroundColor: AppColors.warning,
               duration: Duration(seconds: 3),
             ),

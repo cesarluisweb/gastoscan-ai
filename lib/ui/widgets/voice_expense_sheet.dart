@@ -259,7 +259,7 @@ class _VoiceExpenseSheetState extends State<VoiceExpenseSheet> {
                     boxShadow: [
                       BoxShadow(
                         color: (_isListening ? AppColors.error : AppColors.primary)
-                            .withOpacity(0.35),
+                            .withValues(alpha: 0.35),
                         blurRadius: _isListening ? 24 : 12,
                         spreadRadius: _isListening ? 6 : 2,
                       ),

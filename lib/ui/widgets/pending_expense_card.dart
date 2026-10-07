@@ -21,7 +21,7 @@ class PendingExpenseCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: AppColors.primaryLight.withOpacity(0.5),
+        color: AppColors.primaryLight.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.primary),
       ),
@@ -36,7 +36,7 @@ class PendingExpenseCard extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.2),
+                  color: AppColors.primary.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
@@ -119,9 +119,9 @@ class PendingExpenseCard extends StatelessWidget {
                         return Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: AppColors.warning.withOpacity(0.12),
+                            color: AppColors.warning.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: AppColors.warning.withOpacity(0.4)),
+                            border: Border.all(color: AppColors.warning.withValues(alpha: 0.4)),
                           ),
                           child: const Text(
                             'Por revisar',

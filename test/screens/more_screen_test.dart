@@ -161,5 +161,26 @@ void main() {
       expect(find.byIcon(Icons.arrow_back), findsOneWidget);
       expect(find.text('Asistente IA'), findsOneWidget);
     });
+
+    testWidgets('tapping view receipts navigates to ReceiptGalleryScreen and back button returns to hub', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      // Tap view receipts
+      await tester.tap(find.byKey(const Key('more_menu_view_receipts'), skipOffstage: false));
+      await tester.pumpAndSettle();
+
+      // We should be in ReceiptGalleryScreen
+      expect(find.byIcon(Icons.arrow_back), findsOneWidget);
+      expect(find.text('Comprobantes Guardados'), findsOneWidget);
+
+      // Tap back button
+      await tester.tap(find.byIcon(Icons.arrow_back));
+      await tester.pumpAndSettle();
+
+      // We should be back in MoreScreen hub
+      expect(find.text('Más'), findsOneWidget);
+      expect(find.text('Almacenamiento y Fotos', skipOffstage: false), findsOneWidget);
+    });
   });
 }

@@ -1,8 +1,10 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
+import 'package:gal/gal.dart';
 
 class ImageService {
   /// Comprime la imagen para reducir el peso antes de enviarla a Gemini
@@ -33,7 +35,26 @@ class ImageService {
     final targetPath = p.join(appDir.path, fileName);
 
     final savedImage = await tempFile.copy(targetPath);
+
+    // Intentar registrar también en la galería de fotos del sistema en el álbum "Rinde Más"
+    try {
+      await Gal.putImage(savedImage.path, album: 'Rinde Más');
+    } catch (e) {
+      debugPrint("No se pudo registrar la imagen en la galería del sistema: $e");
+    }
+
     return savedImage.path;
+  }
+
+  /// Guarda explícitamente una imagen local en el álbum de la galería del teléfono
+  static Future<bool> saveToGallery(String filePath) async {
+    try {
+      await Gal.putImage(filePath, album: 'Rinde Más');
+      return true;
+    } catch (e) {
+      debugPrint("Error guardando imagen en galería: $e");
+      return false;
+    }
   }
 
   /// Limpia de inmediato el archivo temporal si no se va a conservar

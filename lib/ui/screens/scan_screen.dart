@@ -86,7 +86,7 @@ class _ScanScreenState extends State<ScanScreen> {
     } catch (e, stack) {
       debugPrint('Error en _pickImage: $e\n$stack');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al capturar imagen: ${e.toString()}')),
+        const SnackBar(content: Text('No se pudo abrir la cámara. Intenta de nuevo.'), backgroundColor: AppColors.error),
       );
     }
   }
@@ -146,7 +146,7 @@ class _ScanScreenState extends State<ScanScreen> {
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -201,7 +201,7 @@ class _ScanScreenState extends State<ScanScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.75),
+                color: Colors.black.withValues(alpha: 0.75),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.white24),
               ),

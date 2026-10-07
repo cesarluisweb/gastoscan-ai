@@ -129,7 +129,7 @@ class SummaryCard extends StatelessWidget {
         border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -267,7 +267,7 @@ class SummaryCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: badgeColor,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: badgeTextColor.withOpacity(0.25)),
+                    border: Border.all(color: badgeTextColor.withValues(alpha: 0.25)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,

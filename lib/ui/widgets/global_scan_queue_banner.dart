@@ -48,7 +48,7 @@ class GlobalScanQueueBanner extends StatelessWidget {
             border: Border.all(color: const Color(0xFFFEF08A)), // Borde amarillo sutil
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.02),
+                color: Colors.black.withValues(alpha: 0.02),
                 blurRadius: 6,
                 offset: const Offset(0, 2),
               ),
@@ -168,7 +168,7 @@ class GlobalScanQueueBanner extends StatelessWidget {
             border: Border.all(color: const Color(0xFFFEF08A)), // Borde amarillo sutil
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.02),
+                color: Colors.black.withValues(alpha: 0.02),
                 blurRadius: 6,
                 offset: const Offset(0, 2),
               ),
@@ -276,7 +276,7 @@ class GlobalScanQueueBanner extends StatelessWidget {
           : const Color(0xFFFEF3C7);
       final iconContainerBorder = isOffline
           ? AppColors.border
-          : const Color(0xFFF59E0B).withOpacity(0.3);
+          : const Color(0xFFF59E0B).withValues(alpha: 0.3);
 
       banners.add(Padding(
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
@@ -290,7 +290,7 @@ class GlobalScanQueueBanner extends StatelessWidget {
             border: Border.all(color: borderColor),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.02),
+                color: Colors.black.withValues(alpha: 0.02),
                 blurRadius: 6,
                 offset: const Offset(0, 2),
               ),

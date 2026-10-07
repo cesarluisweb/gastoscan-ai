@@ -3,6 +3,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../data/models/gasto_model.dart';
+import 'receipt_viewer_dialog.dart';
 
 class ExpenseCard extends StatefulWidget {
   final GastoModel gasto;
@@ -90,7 +91,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: catColor.withOpacity(0.15),
+                      color: catColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
@@ -115,12 +116,52 @@ class _ExpenseCardState extends State<ExpenseCard> {
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          DateFormatter.formatDate(widget.gasto.fecha),
-                          style: const TextStyle(
-                            color: AppColors.textMuted,
-                            fontSize: 12,
-                          ),
+                        Row(
+                          children: [
+                            Text(
+                              DateFormatter.formatDate(widget.gasto.fecha),
+                              style: const TextStyle(
+                                color: AppColors.textMuted,
+                                fontSize: 12,
+                              ),
+                            ),
+                            if (widget.gasto.rutaFotoLocal != null && widget.gasto.rutaFotoLocal!.isNotEmpty) ...[
+                              const SizedBox(width: 6),
+                              GestureDetector(
+                                onTap: () {
+                                  ReceiptViewerDialog.show(
+                                    context,
+                                    imagePath: widget.gasto.rutaFotoLocal!,
+                                    title: widget.gasto.comercio,
+                                    subtitle: DateFormatter.formatDate(widget.gasto.fecha),
+                                    amount: CurrencyFormatter.formatUsd(widget.gasto.totalUsdDisplay),
+                                  );
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primaryLight,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.receipt_long, size: 12, color: AppColors.primaryDark),
+                                      SizedBox(width: 3),
+                                      Text(
+                                        'Foto',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.textPrimary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ],
                     ),
@@ -178,8 +219,28 @@ class _ExpenseCardState extends State<ExpenseCard> {
                     onSelected: (val) {
                       if (val == 'delete') widget.onDelete();
                       if (val == 'edit') widget.onEdit();
+                      if (val == 'view_receipt' && widget.gasto.rutaFotoLocal != null && widget.gasto.rutaFotoLocal!.isNotEmpty) {
+                        ReceiptViewerDialog.show(
+                          context,
+                          imagePath: widget.gasto.rutaFotoLocal!,
+                          title: widget.gasto.comercio,
+                          subtitle: DateFormatter.formatDate(widget.gasto.fecha),
+                          amount: CurrencyFormatter.formatUsd(widget.gasto.totalUsdDisplay),
+                        );
+                      }
                     },
                     itemBuilder: (context) => [
+                      if (widget.gasto.rutaFotoLocal != null && widget.gasto.rutaFotoLocal!.isNotEmpty)
+                        const PopupMenuItem(
+                          value: 'view_receipt',
+                          child: Row(
+                            children: [
+                              Icon(Icons.photo_outlined, color: AppColors.primaryDark, size: 18),
+                              SizedBox(width: 8),
+                              Text('Ver comprobante', style: TextStyle(color: AppColors.textPrimary)),
+                            ],
+                          ),
+                        ),
                       const PopupMenuItem(
                         value: 'edit',
                         child: Row(

@@ -304,7 +304,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).clearSnackBars();
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error al capturar imagen: $e')),
+                        const SnackBar(content: Text('No se pudo abrir la cámara. Intenta de nuevo.'), backgroundColor: AppColors.error),
                       );
                     }
                   }
@@ -333,7 +333,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).clearSnackBars();
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error al seleccionar imágenes: $e')),
+                        const SnackBar(content: Text('No se pudieron seleccionar las imágenes. Intenta de nuevo.'), backgroundColor: AppColors.error),
                       );
                     }
                   }

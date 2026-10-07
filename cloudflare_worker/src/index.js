@@ -166,7 +166,8 @@ export default {
     const projectId = env.FIREBASE_PROJECT_ID || "gastoscan-ai";
     const customKeyHeader = request.headers.get("x-custom-gemini-key");
     const isCustomKey = Boolean(customKeyHeader && customKeyHeader.trim().length > 10);
-    const geminiKey = isCustomKey ? customKeyHeader.trim() : env.GEMINI_API_KEY;
+    const rawKey = isCustomKey ? customKeyHeader : env.GEMINI_API_KEY;
+    const geminiKey = (rawKey || "").trim().replace(/[\r\n\t ]+/g, "");
 
     if (!geminiKey) {
       return new Response(JSON.stringify({ error: "GEMINI_API_KEY no configurada en los secretos de Cloudflare." }), {
@@ -177,9 +178,21 @@ export default {
 
     // Endpoint de salud y diagnóstico rápido de modelos
     if (url.pathname === "/health" && request.method === "GET") {
+      if (url.searchParams.get("test") === "key") {
+        return new Response(JSON.stringify({ 
+          key_prefix: geminiKey.substring(0, 10), 
+          length: geminiKey.length,
+          had_whitespace: rawKey !== geminiKey
+        }), { headers: corsHeaders });
+      }
       if (url.searchParams.get("list") === "1") {
         try {
-          const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${geminiKey}`);
+          // Probar solo con header x-goog-api-key sin query param
+          const listRes = await fetch("https://generativelanguage.googleapis.com/v1beta/models", {
+            headers: {
+              "x-goog-api-key": geminiKey
+            }
+          });
           const listData = await listRes.json();
           const available = (listData.models || [])
             .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"))
@@ -239,9 +252,12 @@ export default {
             };
           }
 
-          const testRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${geminiKey}`, {
+          const testRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { 
+              "Content-Type": "application/json",
+              "x-goog-api-key": geminiKey
+            },
             body: JSON.stringify(bodyPayload),
             signal: AbortSignal.timeout(10000)
           });
@@ -379,7 +395,10 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
       try {
         response = await fetch(url, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "x-goog-api-key": geminiKey
+          },
           body: JSON.stringify(payload),
           signal: AbortSignal.timeout(25000)
         });

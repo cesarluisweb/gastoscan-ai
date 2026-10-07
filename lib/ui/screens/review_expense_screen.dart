@@ -18,6 +18,7 @@ import '../../services/image_service.dart';
 import '../../services/exchange_rate_service.dart';
 import '../../providers/scan_queue_provider.dart';
 import '../../core/utils/uuid_generator.dart';
+import '../widgets/receipt_viewer_dialog.dart';
 
 class ReviewExpenseScreen extends StatefulWidget {
   final File? imageFile;
@@ -89,6 +90,42 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
   double? _tasaEurFecha;
   double? _tasaUsdtFecha;
 
+  String _initialComercio = '';
+  String _initialFecha = '';
+  String _initialMoneda = '';
+  double _initialTotalOriginal = 0.0;
+  double _initialTasa = 0.0;
+  List<ItemGastoModel>? _initialItems;
+  bool _initialHasImage = false;
+  String _initialTotalUsdStr = '';
+
+  bool _isDirty() {
+    if (_isSaving) return false;
+    if (_comercioCtrl.text.trim() != _initialComercio.trim()) return true;
+    if (_selectedFecha != _initialFecha) return true;
+    if (_selectedMoneda != _initialMoneda) return true;
+    if (double.tryParse(_totalOriginalCtrl.text.replaceAll(',', '.')) != _initialTotalOriginal) return true;
+    if (double.tryParse(_tasaCambioCtrl.text.replaceAll(',', '.')) != _initialTasa) return true;
+    if ((_pickedImage != null && !_initialHasImage) || (_imageDeleted && _initialHasImage)) return true;
+    if (_totalUsdCtrl.text != _initialTotalUsdStr) return true;
+    final initial = _initialItems;
+    if (initial != null) {
+      if (initial.length != _items.length) return true;
+      for (int i = 0; i < _items.length; i++) {
+        final a = initial[i];
+        final b = _items[i];
+        if (a.descripcion != b.descripcion ||
+            a.cantidad != b.cantidad ||
+            a.precioUnitario != b.precioUnitario ||
+            a.total != b.total ||
+            a.categoria != b.categoria) return true;
+      }
+    } else {
+      if (_items.isNotEmpty) return true;
+    }
+    return false;
+  }
+
   Future<void> _cargarTasasChips(String fecha) async {
     final tUsd = await ExchangeRateService.getRateForDate(fecha, moneda: 'USD');
     final tEur = await ExchangeRateService.getRateForDate(fecha, moneda: 'EUR');
@@ -150,7 +187,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       } else {
         _fuenteTasa = 'Buscando tasa de la fecha...';
         if (_selectedMoneda == 'VES') {
-          _actualizarTasaPorFecha(_selectedFecha);
+          _actualizarTasaPorFecha(_selectedFecha, esRellenoInicial: true);
         }
       }
 
@@ -166,6 +203,16 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     }
     
     // Verificar precios anteriores para los items recien cargados
+
+    _initialComercio = _comercioCtrl.text;
+    _initialFecha = _selectedFecha;
+    _initialMoneda = _selectedMoneda;
+    _initialTotalOriginal = double.tryParse(_totalOriginalCtrl.text.replaceAll(',', '.')) ?? 0.0;
+    _initialTasa = double.tryParse(_tasaCambioCtrl.text.replaceAll(',', '.')) ?? 0.0;
+    _initialItems = List.from(_items);
+    _initialHasImage = (widget.existingGasto?.rutaFotoLocal != null && !_imageDeleted) ||
+        (widget.imageFile != null && !_imageDeleted);
+    _initialTotalUsdStr = _totalUsdCtrl.text;
     _verificarPreciosAnteriores();
     _cargarTasasChips(_selectedFecha);
   }
@@ -256,7 +303,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     }
   }
 
-  Future<void> _actualizarTasaPorFecha(String fecha) async {
+  Future<void> _actualizarTasaPorFecha(String fecha, {bool esRellenoInicial = false}) async {
     if (_selectedMoneda != 'VES') return;
 
     final settings = Provider.of<SettingsProvider>(context, listen: false);
@@ -278,6 +325,11 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
             ? 'Tasa oficial BCV (Hoy)'
             : 'Tasa oficial BCV ($fecha)';
         _recalcularTotalUsd();
+        if (esRellenoInicial) {
+          _initialTasa = tasaAplicar;
+          _initialTotalOriginal = double.tryParse(_totalOriginalCtrl.text.replaceAll(',', '.')) ?? 0.0;
+          _initialTotalUsdStr = _totalUsdCtrl.text;
+        }
       });
     }
   }
@@ -456,7 +508,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Gasto registrado. Cargando siguiente factura...', style: TextStyle(color: Colors.black)),
+              content: Text('Gasto registrado. Cargando siguiente factura...', style: TextStyle(color: Colors.white)),
               backgroundColor: AppColors.primaryDark,
               duration: Duration(seconds: 1),
             ),
@@ -533,9 +585,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: AppColors.error.withOpacity(0.08),
+                            color: AppColors.error.withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: AppColors.error.withOpacity(0.3)),
+                            border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
                           ),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -608,14 +660,14 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
           if (cuentaVinculada) {
             rootMessenger.showSnackBar(
               const SnackBar(
-                content: Text('Cuenta vinculada con éxito. Gastos sincronizados.', style: TextStyle(color: Colors.black)),
-                backgroundColor: AppColors.primary,
+                content: Text('Cuenta vinculada con éxito. Gastos sincronizados.', style: TextStyle(color: Colors.white)),
+                backgroundColor: AppColors.secondary,
               ),
             );
           } else {
             rootMessenger.showSnackBar(
               const SnackBar(
-                content: Text('Gasto registrado con éxito', style: TextStyle(color: Colors.black)),
+                content: Text('Gasto registrado con éxito', style: TextStyle(color: Colors.white)),
                 backgroundColor: AppColors.primaryDark,
               ),
             );
@@ -625,14 +677,14 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         if (matchedIds.isNotEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Gasto registrado y ${matchedIds.length} ítem(s) de tu lista marcados como comprados.', style: const TextStyle(color: Colors.black)),
+              content: Text('Gasto registrado y ${matchedIds.length} ítem(s) de tu lista marcados como comprados.', style: const TextStyle(color: Colors.white)),
               backgroundColor: AppColors.primaryDark,
             ),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Gasto registrado con éxito', style: TextStyle(color: Colors.black)),
+              content: Text('Gasto registrado con éxito', style: TextStyle(color: Colors.white)),
               backgroundColor: AppColors.primaryDark,
             ),
           );
@@ -645,7 +697,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(gastoProvider.errorMessage ?? 'Error al guardar'),
+          content: Text(gastoProvider.errorMessage?.isNotEmpty == true ? gastoProvider.errorMessage! : 'No se pudo guardar el gasto. Intenta de nuevo.'),
           backgroundColor: AppColors.error,
         ),
       );
@@ -660,7 +712,28 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     final isQueueItem = widget.queueItemId != null;
     final hasMoreInQueue = isQueueItem && readyCount > 1;
 
-    return Scaffold(
+    return PopScope(
+      canPop: !_isDirty() || _isSaving,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final confirm = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            backgroundColor: AppColors.card,
+            title: const Text('Descartar cambios', style: TextStyle(color: AppColors.textPrimary)),
+            content: const Text('¿Quieres descartar el formulario?', style: TextStyle(color: AppColors.textSecondary)),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+              FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Descartar')),
+            ],
+          ),
+        );
+        if (confirm == true && mounted) {
+          Navigator.pop(context);
+        }
+      },
+      child: Scaffold(
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -754,7 +827,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
 
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Factura descartada. Cargando siguiente...', style: TextStyle(color: Colors.black)),
+                        content: Text('Factura descartada. Cargando siguiente...', style: TextStyle(color: Colors.white)),
                         backgroundColor: AppColors.primaryDark,
                         duration: Duration(seconds: 1),
                       ),
@@ -1012,7 +1085,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                             width: 24,
                                             height: 24,
                                             decoration: BoxDecoration(
-                                              color: catColor.withOpacity(0.15),
+                                              color: catColor.withValues(alpha: 0.15),
                                               shape: BoxShape.circle,
                                             ),
                                             child: Icon(catIcon, size: 14, color: catColor),
@@ -1109,7 +1182,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                   color: _selectedMoneda == m ? AppColors.surface : Colors.transparent,
                                   borderRadius: BorderRadius.circular(8),
                                   boxShadow: _selectedMoneda == m
-                                      ? [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 4)]
+                                      ? [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 4)]
                                       : null,
                                 ),
                                 child: Text(
@@ -1256,32 +1329,17 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 
   void _verImagenCompleta(File file) {
-    Navigator.push(
+    ReceiptViewerDialog.show(
       context,
-      MaterialPageRoute(
-        fullscreenDialog: true,
-        builder: (ctx) => Scaffold(
-          backgroundColor: Colors.black,
-          appBar: AppBar(
-            backgroundColor: Colors.black,
-            foregroundColor: Colors.white,
-            elevation: 0,
-            title: const Text('Comprobante', style: TextStyle(color: Colors.white, fontSize: 16)),
-          ),
-          body: Center(
-            child: InteractiveViewer(
-              panEnabled: true,
-              minScale: 0.5,
-              maxScale: 4.0,
-              child: Image.file(file),
-            ),
-          ),
-        ),
-      ),
+      imagePath: file.path,
+      title: _comercioCtrl.text.trim().isNotEmpty ? _comercioCtrl.text.trim() : 'Comprobante',
+      subtitle: DateFormatter.formatDate(_selectedFecha),
+      amount: _totalUsdCtrl.text.trim().isNotEmpty ? '\$ ${_totalUsdCtrl.text.trim()}' : null,
     );
   }
 
@@ -1344,7 +1402,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.65),
+                          color: Colors.black.withValues(alpha: 0.65),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(color: Colors.white24),
                         ),

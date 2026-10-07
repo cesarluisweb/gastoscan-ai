@@ -424,7 +424,7 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                               color: _selectedMoneda == m ? AppColors.surface : Colors.transparent,
                               borderRadius: BorderRadius.circular(8),
                               boxShadow: _selectedMoneda == m
-                                  ? [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 4)]
+                                  ? [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 4)]
                                   : null,
                             ),
                             child: Text(
@@ -573,7 +573,7 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                             key: const Key('alert_meta_ahorro_excedida'),
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: AppColors.error.withOpacity(0.1),
+                              color: AppColors.error.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(color: AppColors.error),
                             ),
@@ -596,7 +596,7 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                             key: const Key('alert_presupuesto_excedido'),
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: AppColors.error.withOpacity(0.1),
+                              color: AppColors.error.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(color: AppColors.error),
                             ),
@@ -656,7 +656,7 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                             width: 26,
                             height: 26,
                             decoration: BoxDecoration(
-                              color: color.withOpacity(0.12),
+                              color: color.withValues(alpha: 0.12),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(

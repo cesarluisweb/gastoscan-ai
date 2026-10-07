@@ -15,9 +15,10 @@ import '../widgets/update_dialog.dart';
 import '../widgets/global_scan_queue_banner.dart';
 import 'shopping_list_screen.dart';
 import 'chat_screen.dart';
+import 'receipt_gallery_screen.dart';
 import '../../data/datasources/remote/gemini_service.dart';
 
-enum MoreSubView { hub, shoppingList, chat }
+enum MoreSubView { hub, shoppingList, chat, receiptGallery }
 
 class MoreScreen extends StatefulWidget {
   final VoidCallback? onNavigateToHome;
@@ -270,7 +271,22 @@ class MoreScreenState extends State<MoreScreen> {
       );
     }
 
+    if (_currentSubView == MoreSubView.receiptGallery) {
+      return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop) return;
+          setState(() => _currentSubView = MoreSubView.hub);
+        },
+        child: ReceiptGalleryScreen(
+          showBackButton: true,
+          onBack: () => setState(() => _currentSubView = MoreSubView.hub),
+        ),
+      );
+    }
+
     final settings = Provider.of<SettingsProvider>(context);
+    final gastoProvider = Provider.of<GastoProvider>(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -581,6 +597,30 @@ class MoreScreenState extends State<MoreScreen> {
                     value: settings.guardarFotos,
                     onChanged: (val) => settings.setGuardarFotos(val),
                   ),
+                  const Divider(height: 16, color: AppColors.border),
+                  ListTile(
+                    key: const Key('more_menu_view_receipts'),
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.photo_library_outlined, color: AppColors.primaryDark, size: 22),
+                    title: const Text(
+                      'Ver comprobantes guardados',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary),
+                    ),
+                    subtitle: Text(
+                      () {
+                        final count = gastoProvider.gastos.where((g) => g.rutaFotoLocal != null && g.rutaFotoLocal!.isNotEmpty).length;
+                        final mes = DateFormatter.getMonthName(gastoProvider.selectedMonth);
+                        return '$count ${count == 1 ? 'comprobante' : 'comprobantes'} en $mes';
+                      }(),
+                      style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                    ),
+                    trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary, size: 20),
+                    onTap: () {
+                      setState(() {
+                        _currentSubView = MoreSubView.receiptGallery;
+                      });
+                    },
+                  ),
                 ],
               ),
             ),
@@ -871,7 +911,7 @@ class MoreScreenState extends State<MoreScreen> {
                   if (!mounted) return;
                   if (error != null && error != 'CANCELLED') {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error: $error')),
+                      const SnackBar(content: Text('No se pudo vincular la cuenta de Google. Intenta de nuevo.'), backgroundColor: AppColors.error),
                     );
                   } else if (error == null) {
                     await Provider.of<SettingsProvider>(context, listen: false).loadSettings();
@@ -946,7 +986,7 @@ class MoreScreenState extends State<MoreScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.12),
+                        color: Colors.green.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: Colors.green.shade400, width: 0.8),
                       ),

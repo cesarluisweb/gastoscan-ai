@@ -183,10 +183,10 @@ class AnalysisScreen extends StatelessWidget {
       key: const Key('general_budget_card'),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isExceeded ? AppColors.error.withOpacity(0.06) : AppColors.card,
+        color: isExceeded ? AppColors.error.withValues(alpha: 0.06) : AppColors.card,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isExceeded ? AppColors.error.withOpacity(0.4) : AppColors.border,
+          color: isExceeded ? AppColors.error.withValues(alpha: 0.4) : AppColors.border,
           width: isExceeded ? 1.5 : 1.0,
         ),
       ),
