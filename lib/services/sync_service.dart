@@ -397,4 +397,142 @@ class SyncService {
       return e.toString();
     }
   }
+
+  String _mapearErrorFirebaseAuth(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'user-not-found':
+        return 'No existe una cuenta registrada con este correo.';
+      case 'wrong-password':
+      case 'invalid-credential':
+        return 'Correo o contraseña incorrectos.';
+      case 'email-already-in-use':
+      case 'credential-already-in-use':
+        return 'Este correo ya está registrado con otra cuenta.';
+      case 'weak-password':
+        return 'La contraseña debe tener al menos 6 caracteres.';
+      case 'invalid-email':
+        return 'El formato del correo electrónico no es válido.';
+      case 'user-disabled':
+        return 'Esta cuenta ha sido deshabilitada.';
+      case 'too-many-requests':
+        return 'Demasiados intentos fallidos. Intenta más tarde.';
+      case 'network-request-failed':
+        return 'Sin conexión a internet. Verifica tu red.';
+      default:
+        return e.message ?? 'Error de autenticación: ${e.code}';
+    }
+  }
+
+  Future<String?> vincularConEmail(String email, String password) async {
+    final cleanEmail = email.trim();
+    if (cleanEmail.isEmpty || !cleanEmail.contains('@') || !cleanEmail.contains('.')) {
+      return 'Ingresa un correo electrónico válido.';
+    }
+    if (password.length < 6) {
+      return 'La contraseña debe tener al menos 6 caracteres.';
+    }
+
+    try {
+      final auth = FirebaseAuth.instance;
+      final credential = EmailAuthProvider.credential(
+        email: cleanEmail,
+        password: password,
+      );
+
+      final user = auth.currentUser;
+      if (user == null) {
+        try {
+          await auth.signInWithCredential(credential);
+        } on FirebaseAuthException catch (e) {
+          if (e.code == 'user-not-found' || e.code == 'invalid-credential') {
+            await auth.createUserWithEmailAndPassword(
+              email: cleanEmail,
+              password: password,
+            );
+          } else {
+            return _mapearErrorFirebaseAuth(e);
+          }
+        }
+        await syncBidirectional();
+        return null;
+      }
+
+      if (user.isAnonymous) {
+        try {
+          final userCred = await user.linkWithCredential(credential);
+          final activeUser = userCred.user ?? auth.currentUser ?? user;
+          await activeUser.reload();
+          await syncBidirectional();
+          return null;
+        } on FirebaseAuthException catch (e) {
+          if (e.code == 'credential-already-in-use' ||
+              e.code == 'email-already-in-use' ||
+              e.code == 'account-exists-with-different-credential') {
+            final userCred = await auth.signInWithCredential(credential);
+            final activeUser = userCred.user ?? auth.currentUser;
+            if (activeUser != null) {
+              await activeUser.reload();
+            }
+
+            final gastos = await _repository.obtenerGastos();
+            for (var g in gastos) {
+              await _repository.actualizarGastoSyncStatus(g.copyWith(synced: 0));
+            }
+            await syncBidirectional();
+            return null;
+          } else {
+            return _mapearErrorFirebaseAuth(e);
+          }
+        }
+      } else {
+        try {
+          await user.linkWithCredential(credential);
+          await user.reload();
+          await syncBidirectional();
+          return null;
+        } on FirebaseAuthException catch (e) {
+          return _mapearErrorFirebaseAuth(e);
+        }
+      }
+    } on FirebaseAuthException catch (e) {
+      return _mapearErrorFirebaseAuth(e);
+    } catch (e) {
+      debugPrint("Error al vincular con email: $e");
+      return e.toString();
+    }
+  }
+
+  Future<String?> iniciarSesionConEmail(String email, String password) async {
+    final cleanEmail = email.trim();
+    if (cleanEmail.isEmpty || !cleanEmail.contains('@') || !cleanEmail.contains('.')) {
+      return 'Ingresa un correo electrónico válido.';
+    }
+    if (password.length < 6) {
+      return 'La contraseña debe tener al menos 6 caracteres.';
+    }
+
+    try {
+      final auth = FirebaseAuth.instance;
+      final userCred = await auth.signInWithEmailAndPassword(
+        email: cleanEmail,
+        password: password,
+      );
+      final activeUser = userCred.user ?? auth.currentUser;
+      if (activeUser != null) {
+        await activeUser.reload();
+      }
+
+      final gastos = await _repository.obtenerGastos();
+      for (var g in gastos) {
+        await _repository.actualizarGastoSyncStatus(g.copyWith(synced: 0));
+      }
+      await syncBidirectional();
+      return null;
+    } on FirebaseAuthException catch (e) {
+      return _mapearErrorFirebaseAuth(e);
+    } catch (e) {
+      debugPrint("Error al iniciar sesión con email: $e");
+      return e.toString();
+    }
+  }
 }

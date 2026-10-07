@@ -32,6 +32,12 @@ class FakeGastoProvider extends GastoProvider {
 
   @override
   Future<void> sincronizarConFirestore() async {}
+
+  @override
+  Future<String?> vincularConEmail(String email, String password) async => null;
+
+  @override
+  Future<String?> iniciarSesionConEmail(String email, String password) async => null;
 }
 
 class FakeSettingsProvider extends SettingsProvider {
@@ -181,6 +187,29 @@ void main() {
       // We should be back in MoreScreen hub
       expect(find.text('Más'), findsOneWidget);
       expect(find.text('Almacenamiento y Fotos', skipOffstage: false), findsOneWidget);
+    });
+
+    testWidgets('renders email auth button and opens email auth modal', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('btn_vincular_email')), findsOneWidget);
+      expect(find.text('Usar correo o alias (Addy.io, etc.)'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('btn_vincular_email')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Vincular con Correo'), findsOneWidget);
+      expect(find.text('Correo electrónico o alias'), findsOneWidget);
+      expect(find.text('Contraseña'), findsOneWidget);
+      expect(find.text('Vincular y Respaldar'), findsOneWidget);
+
+      // Toggle to login mode
+      await tester.tap(find.text('¿Ya tienes una cuenta registrada? Inicia sesión aquí'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Iniciar Sesión con Correo'), findsOneWidget);
+      expect(find.text('Iniciar Sesión'), findsWidgets);
     });
   });
 }

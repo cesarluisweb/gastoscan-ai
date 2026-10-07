@@ -5,10 +5,10 @@
 - **Rama:** `main`.
 - **Fase activa:** Finalizadas Fases 1 a 6 (Estabilidad IA, Comprobantes persistentes, Reportes Privacidad, Mejoras UI Tasas).
 - **Últimos hitos:** 
-  1. **Frases Predeterminadas en Asistente IA (`ChatScreen`):** Barra horizontal de 5 chips de sugerencia rápida con envío directo, auto-scroll, bloqueo de concurrencia y enriquecimiento de contexto con presupuestos (`test/screens/chat_screen_test.dart`).
-  2. **Gestión de Comprobantes, Visor Directo y Galería Mensual (`DOC_COMPROBANTES_Y_GALERIA.md`):** Adjuntar/eliminar comprobantes en gastos manuales, visor interactivo con zoom y compartir (`ReceiptViewerDialog`), filtro por foto en historial y galería mensual (`ReceiptGalleryScreen`).
-  3. **API Key Propia (BYOK Gemini) con Sincronización en Nube:** Soporte en Cloudflare Worker con cabecera `x-custom-gemini-key`, rate limit ampliado (60 rpm). En Flutter, persistencia segura en Firestore (`user_settings`).
-  4. **Cadena Gemini Optimizada a Flash-Lite y Headers x-goog-api-key:** Exclusividad `gemini-3.1-flash-lite` y `gemini-3.5-flash-lite`. Soporte para keys `AQ.` vía `x-goog-api-key`.
+  1. **Autenticación Agnóstica de Correo y Alias (Addy.io / Dominios Propios):** Soporte en `SyncService` y `GastoProvider` para registrar o iniciar sesión con cualquier correo/contraseña sin forzar la cuenta de Google de Android. Modal ergonómico en `MoreScreen` (`btn_vincular_email`), vinculación limpia de cuentas anónimas sin pérdida de datos locales y tests unitarios/widgets dedicados (`test/services/sync_service_auth_test.dart`).
+  2. **Frases Predeterminadas en Asistente IA (`ChatScreen`):** Barra horizontal de 5 chips de sugerencia rápida con envío directo, auto-scroll, bloqueo de concurrencia y enriquecimiento de contexto con presupuestos (`test/screens/chat_screen_test.dart`).
+  3. **Gestión de Comprobantes, Visor Directo y Galería Mensual (`DOC_COMPROBANTES_Y_GALERIA.md`):** Adjuntar/eliminar comprobantes en gastos manuales, visor interactivo con zoom y compartir (`ReceiptViewerDialog`), filtro por foto en historial y galería mensual (`ReceiptGalleryScreen`).
+  4. **API Key Propia (BYOK Gemini) con Sincronización en Nube:** Soporte en Cloudflare Worker con cabecera `x-custom-gemini-key`, rate limit ampliado (60 rpm). En Flutter, persistencia segura en Firestore (`user_settings`).
   5. **Gate Estricto de CI:** Pruebas unitarias/widgets al 100% en verde y compilación automatizada de APK release.
 
 ## Decisiones Técnicas y de Negocio Recientes

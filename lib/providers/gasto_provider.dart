@@ -183,6 +183,24 @@ class GastoProvider with ChangeNotifier {
     return error;
   }
 
+  Future<String?> vincularConEmail(String email, String password) async {
+    final error = await _syncService.vincularConEmail(email, password);
+    if (error == null) {
+      await cargarDatos();
+      notifyListeners();
+    }
+    return error;
+  }
+
+  Future<String?> iniciarSesionConEmail(String email, String password) async {
+    final error = await _syncService.iniciarSesionConEmail(email, password);
+    if (error == null) {
+      await cargarDatos();
+      notifyListeners();
+    }
+    return error;
+  }
+
   Future<void> sincronizarConFirestore() async {
     await _syncService.syncBidirectional();
     await cargarDatos();
