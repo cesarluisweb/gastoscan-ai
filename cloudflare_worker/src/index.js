@@ -163,7 +163,9 @@ export default {
 
     const url = new URL(request.url);
     const projectId = env.FIREBASE_PROJECT_ID || "gastoscan-ai";
-    const geminiKey = env.GEMINI_API_KEY;
+    const customKeyHeader = request.headers.get("x-custom-gemini-key");
+    const isCustomKey = Boolean(customKeyHeader && customKeyHeader.trim().length > 10);
+    const geminiKey = isCustomKey ? customKeyHeader.trim() : env.GEMINI_API_KEY;
 
     if (!geminiKey) {
       return new Response(JSON.stringify({ error: "GEMINI_API_KEY no configurada en los secretos de Cloudflare." }), {
@@ -184,9 +186,10 @@ export default {
       });
     }
 
-    // 2. Rate Limiting por UID
+    // 2. Rate Limiting por UID (si usa clave propia, límite ampliado a 60 rpm para prevención DoS)
     const uid = userPayload.sub;
-    if (isRateLimited(uid)) {
+    const rateLimitCap = isCustomKey ? 60 : 30;
+    if (isRateLimited(uid, rateLimitCap)) {
       return new Response(JSON.stringify({ error: "Límite de solicitudes alcanzado. Espera un momento." }), {
         status: 429,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -195,9 +198,9 @@ export default {
 
     // 3. Enrutamiento de Endpoints
     if (url.pathname === "/analyze-receipt" && request.method === "POST") {
-      return handleAnalyzeReceipt(request, geminiKey);
+      return handleAnalyzeReceipt(request, geminiKey, isCustomKey);
     } else if (url.pathname === "/chat-analyst" && request.method === "POST") {
-      return handleChatAnalyst(request, geminiKey);
+      return handleChatAnalyst(request, geminiKey, isCustomKey);
     }
 
     return new Response(JSON.stringify({ error: "Endpoint no encontrado" }), {
@@ -208,7 +211,7 @@ export default {
 };
 
 // Controlador: Análisis de Facturas (OCR / Visión)
-async function handleAnalyzeReceipt(request, geminiKey) {
+async function handleAnalyzeReceipt(request, geminiKey, isCustomKey = false) {
   try {
     const data = await request.json();
     const { imageBase64, ocrText, forceVision, shoppingList } = data;
@@ -314,6 +317,17 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
           break;
         }
 
+        if (isCustomKey && (response.status === 400 || response.status === 403)) {
+          return new Response(JSON.stringify({
+            error: "Tu API Key de Gemini personalizada tiene un error o no tiene permisos/cuota válida en Google AI Studio.",
+            statusCode: response.status,
+            isCustomKey: true
+          }), {
+            status: response.status,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        }
+
         if (response.status === 429 || response.status >= 500) {
           const delayMs = bestRetryAfter
             ? Math.min(parseInt(bestRetryAfter, 10) * 1000, 3000)
@@ -328,13 +342,16 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
           // Si fallaron todos, retornar el "mejor" error sin revelar detalles técnicos de los fallbacks fallidos
           let userFriendlyError = "Nuestros servidores están muy concurridos procesando facturas. Por favor, espera un momento y reintenta.";
           if (bestErrorStatus === 429) {
-            userFriendlyError = "Límite de solicitudes procesadas. El servidor está pausando por seguridad. Reintenta en breves segundos.";
+            userFriendlyError = isCustomKey
+              ? "Tu API Key de Gemini personalizada alcanzó su límite de cuota (Rate Limit 429)."
+              : "Límite de solicitudes procesadas. El servidor está pausando por seguridad. Reintenta en breves segundos.";
           }
 
           return new Response(JSON.stringify({
             error: userFriendlyError,
             statusCode: bestErrorStatus,
             retryAfter: bestRetryAfter,
+            isCustomKey: isCustomKey,
             details: "Todos los modelos de respaldo fallaron."
           }), {
             status: bestErrorStatus,
@@ -397,7 +414,7 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
 }
 
 // Controlador: Chat y Asistente Financiero / Voz
-async function handleChatAnalyst(request, geminiKey) {
+async function handleChatAnalyst(request, geminiKey, isCustomKey = false) {
   try {
     const data = await request.json();
     const { messages, contextData } = data;
@@ -582,6 +599,17 @@ ${JSON.stringify(contextData)}
         if (response.ok) {
           break;
         } else {
+          if (isCustomKey && (response.status === 400 || response.status === 403)) {
+            return new Response(JSON.stringify({
+              error: "Tu API Key de Gemini personalizada tiene un error o no tiene permisos/cuota válida en Google AI Studio.",
+              statusCode: response.status,
+              isCustomKey: true
+            }), {
+              status: response.status,
+              headers: { ...corsHeaders, "Content-Type": "application/json" }
+            });
+          }
+
           if (response.status === 429 || response.status >= 500) {
             const delayMs = 400 + Math.floor(Math.random() * 400);
             await new Promise((resolve) => setTimeout(resolve, delayMs));
@@ -591,12 +619,15 @@ ${JSON.stringify(contextData)}
           
           let userFriendlyError = "Nuestros servidores están muy concurridos procesando información. Por favor, espera un momento y reintenta.";
           if (bestErrorStatus === 429) {
-             userFriendlyError = "Límite de solicitudes procesadas. El servidor está pausando por seguridad. Reintenta en breves segundos.";
+             userFriendlyError = isCustomKey
+               ? "Tu API Key de Gemini personalizada alcanzó su límite de cuota (Rate Limit 429)."
+               : "Límite de solicitudes procesadas. El servidor está pausando por seguridad. Reintenta en breves segundos.";
           }
           
           return new Response(JSON.stringify({
             error: userFriendlyError,
             statusCode: bestErrorStatus,
+            isCustomKey: isCustomKey,
             details: "Todos los modelos de respaldo fallaron."
           }), {
             status: bestErrorStatus,

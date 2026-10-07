@@ -5,13 +5,13 @@
 - **Rama:** `main`.
 - **Fase activa:** Finalizadas Fases 1 a 6 (Estabilidad IA, Comprobantes persistentes, Reportes Privacidad, Mejoras UI Tasas).
 - **Últimos hitos:** 
-  1. **Chips Dinámicos por Fecha:** En `ReviewExpenseScreen`, los chips (USD, EUR, USDT) cargan y aplican las tasas históricas de la fecha del gasto (`_selectedFecha`), y el campo muestra la etiqueta limpia "Tasa de Cambio".
-  2. **Resiliencia de IA (Fase 1 y 2):** Errores de Gemini (429, 503, red) en `ScanQueueProvider` y `GeminiService` reescritos sin jerga técnica ("El servicio de IA no está disponible en este momento. Tu comprobante está seguro...").
-  3. **Cola Recuperable:** Añadido `retryItem` y botón "Reintentar" (refresh) en `global_scan_queue_banner.dart` para reanudar tickets estancados en "error".
-  4. **Comprobantes Manuales (Fase 3 y 4):** Refactorizado `ReviewExpenseScreen` con `image_picker`. "Adjuntar comprobante" en nuevos gastos y "Cambiar/Eliminar" en existentes. MVP con `rutaFotoLocal`.
-  5. **Auditoría y Privacidad (Fase 5, 6 y 7):** Artefactos técnicos creados sobre viabilidad de cuota individual de Gemini y Backup de Privacidad (.zip local exportable).
-  6. **Gate Estricto de CI:** `flutter analyze --fatal-warnings` y suite completa de pruebas unitarias/widgets activas en verde.
-  7. **Voz Editable y Micrófono Inteligente:** `VoiceExpenseSheet` editable con teclado y botón limpiar; `ChatScreen` detiene el micrófono automáticamente al interactuar con el teclado, scroll o salir; botón "Ver / Editar gasto" en chat.
+  1. **API Key Propia (BYOK Gemini):** Soporte en Cloudflare Worker con cabecera `x-custom-gemini-key`, rate limit ampliado (60 rpm) y aislamiento de errores. En Flutter, validación en vivo contra Google AI Studio, almacenamiento seguro en Keystore (`FlutterSecureStorage`) y tarjeta interactiva en "Más" debajo de Almacenamiento y Fotos (`DOC_BYOK_GEMINI.md`).
+  2. **Chips Dinámicos por Fecha:** En `ReviewExpenseScreen`, los chips (USD, EUR, USDT) cargan y aplican las tasas históricas de la fecha del gasto (`_selectedFecha`), y el campo muestra la etiqueta limpia "Tasa de Cambio".
+  3. **Resiliencia de IA (Fase 1 y 2):** Errores de Gemini (429, 503, red) en `ScanQueueProvider` y `GeminiService` reescritos sin jerga técnica ("El servicio de IA no está disponible en este momento. Tu comprobante está seguro...").
+  4. **Cola Recuperable:** Añadido `retryItem` y botón "Reintentar" (refresh) en `global_scan_queue_banner.dart` para reanudar tickets estancados en "error".
+  5. **Comprobantes Manuales (Fase 3 y 4):** Refactorizado `ReviewExpenseScreen` con `image_picker`. "Adjuntar comprobante" en nuevos gastos y "Cambiar/Eliminar" en existentes. MVP con `rutaFotoLocal`.
+  6. **Auditoría y Privacidad (Fase 5, 6 y 7):** Artefactos técnicos creados sobre viabilidad de cuota individual de Gemini y Backup de Privacidad (.zip local exportable).
+  7. **Gate Estricto de CI:** `flutter analyze --fatal-warnings` y suite completa de pruebas unitarias/widgets activas en verde.
 
 ## Decisiones Técnicas y de Negocio Recientes
 - **Mocks con `noSuchMethod` para Plugins:** En tests, clases de dependencias externas como `SpeechToText` se simulan extendiendo `Fake` y delegando llamadas dinámicas en `noSuchMethod` para evitar roturas de compilación por parámetros nombrados entre versiones de CI.

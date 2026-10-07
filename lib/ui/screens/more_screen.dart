@@ -15,6 +15,7 @@ import '../widgets/update_dialog.dart';
 import '../widgets/global_scan_queue_banner.dart';
 import 'shopping_list_screen.dart';
 import 'chat_screen.dart';
+import '../../data/datasources/remote/gemini_service.dart';
 
 enum MoreSubView { hub, shoppingList, chat }
 
@@ -574,6 +575,10 @@ class MoreScreenState extends State<MoreScreen> {
           ),
           const SizedBox(height: 16),
 
+          // Sección de API Key de Gemini (Opcional - BYOK)
+          _buildApiKeyCard(context, settings),
+          const SizedBox(height: 16),
+
           // Sección de Exportar Reportes
           Material(
             color: AppColors.card,
@@ -884,6 +889,322 @@ class MoreScreenState extends State<MoreScreen> {
             ),
         ],
       ),
+    );
+  }
+
+  Widget _buildApiKeyCard(BuildContext context, SettingsProvider settings) {
+    final hasKey = settings.apiKey.trim().isNotEmpty;
+    final maskedKey = hasKey
+        ? (settings.apiKey.length > 8
+            ? '${settings.apiKey.substring(0, 6)}...${settings.apiKey.substring(settings.apiKey.length - 4)}'
+            : '••••••••')
+        : '';
+
+    return Material(
+      color: AppColors.card,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: AppColors.border),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => _showApiKeyModal(context, settings),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.vpn_key_outlined, color: AppColors.primaryDark, size: 20),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      'API Key de Gemini (Opcional)',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  if (hasKey)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.green.shade400, width: 0.8),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.check_circle, size: 12, color: Colors.green),
+                          SizedBox(width: 4),
+                          Text(
+                            'Activa',
+                            style: TextStyle(color: Colors.green, fontSize: 11, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    const Icon(Icons.chevron_right, color: AppColors.textSecondary, size: 20),
+                ],
+              ),
+              const SizedBox(height: 8),
+              if (hasKey)
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Usando clave propia: $maskedKey',
+                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                      ),
+                    ),
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: const Size(50, 30),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      onPressed: () => _showApiKeyModal(context, settings),
+                      child: const Text('Gestionar', style: TextStyle(color: AppColors.primaryDark, fontSize: 13, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                )
+              else
+                const Text(
+                  'Usa tu propia cuota gratuita de Google AI Studio para facturas y chat sin depender de los servidores compartidos.',
+                  style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showApiKeyModal(BuildContext context, SettingsProvider settings) {
+    final controller = TextEditingController(text: settings.apiKey);
+    bool obscure = true;
+    bool isValidating = false;
+    String? validationError;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (modalCtx) {
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            final hasExistingKey = settings.apiKey.trim().isNotEmpty;
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(ctx).viewInsets.bottom,
+              ),
+              child: Material(
+                color: AppColors.surface,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                clipBehavior: Clip.antiAlias,
+                child: SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Center(
+                          child: Container(
+                            width: 36,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade300,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            const Icon(Icons.vpn_key_outlined, color: AppColors.primaryDark, size: 22),
+                            const SizedBox(width: 8),
+                            const Expanded(
+                              child: Text(
+                                'API Key de Gemini',
+                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.close, size: 20, color: AppColors.textSecondary),
+                              onPressed: () => Navigator.pop(modalCtx),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Si eres usuario avanzado, puedes vincular tu propia clave personal de Google AI Studio. Todo el escaneo de facturas y el chat consumirán directamente tu cuota sin depender de la app.',
+                          style: TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
+                        ),
+                        const SizedBox(height: 12),
+                        InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: () async {
+                            final uri = Uri.parse('https://aistudio.google.com/app/apikey');
+                            if (await canLaunchUrl(uri)) {
+                              await launchUrl(uri, mode: LaunchMode.externalApplication);
+                            }
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4.0),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.open_in_new, size: 15, color: AppColors.primaryDark),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Obtener API Key gratis en Google AI Studio',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.blue.shade700,
+                                    fontWeight: FontWeight.w600,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: controller,
+                          obscureText: obscure,
+                          autocorrect: false,
+                          enableSuggestions: false,
+                          decoration: InputDecoration(
+                            labelText: 'Clave de API de Gemini',
+                            hintText: 'AIzaSy...',
+                            prefixIcon: const Icon(Icons.key, color: AppColors.textSecondary),
+                            suffixIcon: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: Icon(obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+                                  onPressed: () => setModalState(() => obscure = !obscure),
+                                ),
+                                if (controller.text.isNotEmpty)
+                                  IconButton(
+                                    icon: const Icon(Icons.clear, size: 18),
+                                    onPressed: () {
+                                      controller.clear();
+                                      setModalState(() {});
+                                    },
+                                  ),
+                              ],
+                            ),
+                            errorText: validationError,
+                          ),
+                          onChanged: (_) {
+                            if (validationError != null) {
+                              setModalState(() => validationError = null);
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: AppColors.textPrimary,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          icon: isValidating
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.textPrimary),
+                                )
+                              : const Icon(Icons.check, size: 18),
+                          label: Text(
+                            isValidating ? 'Validando con Google...' : 'Validar y guardar clave',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                          ),
+                          onPressed: isValidating
+                              ? null
+                              : () async {
+                                  final entered = controller.text.trim();
+                                  if (entered.isEmpty) {
+                                    setModalState(() => validationError = 'Ingresa una clave válida');
+                                    return;
+                                  }
+                                  setModalState(() {
+                                    isValidating = true;
+                                    validationError = null;
+                                  });
+
+                                  final isValid = await GeminiService.validateGeminiApiKey(entered);
+                                  if (!ctx.mounted) return;
+
+                                  if (isValid) {
+                                    await settings.setApiKey(entered);
+                                    if (context.mounted) {
+                                      Navigator.pop(modalCtx);
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'API Key de Gemini validada y guardada correctamente.',
+                                            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                                          ),
+                                          backgroundColor: AppColors.primary,
+                                        ),
+                                      );
+                                    }
+                                  } else {
+                                    setModalState(() {
+                                      isValidating = false;
+                                      validationError = 'Clave inválida o sin acceso a Gemini. Verifica tu clave.';
+                                    });
+                                  }
+                                },
+                        ),
+                        if (hasExistingKey) ...[
+                          const SizedBox(height: 10),
+                          OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.error,
+                              side: const BorderSide(color: AppColors.error),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            icon: const Icon(Icons.delete_outline, size: 18),
+                            label: const Text('Eliminar clave personalizada'),
+                            onPressed: () async {
+                              await settings.removeApiKey();
+                              if (context.mounted) {
+                                Navigator.pop(modalCtx);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Clave personalizada eliminada. Se ha restablecido el servicio de Rinde Más.',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                    backgroundColor: Colors.black87,
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

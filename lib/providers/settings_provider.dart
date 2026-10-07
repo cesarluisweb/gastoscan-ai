@@ -124,6 +124,12 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> removeApiKey() async {
+    _apiKey = '';
+    await _secureStorage.delete(key: AppConstants.prefApiKey);
+    notifyListeners();
+  }
+
   Future<void> setGuardarFotos(bool value) async {
     _guardarFotos = value;
     final prefs = await SharedPreferences.getInstance();

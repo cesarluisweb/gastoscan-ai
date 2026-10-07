@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/amount_parser.dart';
@@ -18,6 +19,19 @@ class GeminiService {
     http.Client? client,
   })  : _baseUrl = (baseUrl ?? AppConstants.defaultGatewayUrl).replaceAll(RegExp(r'/+$'), ''),
         _client = client ?? http.Client();
+
+  /// Valida una API key directamente contra el endpoint público de Google Gemini
+  static Future<bool> validateGeminiApiKey(String apiKey) async {
+    final trimmed = apiKey.trim();
+    if (trimmed.length < 10) return false;
+    try {
+      final uri = Uri.parse('https://generativelanguage.googleapis.com/v1beta/models?key=$trimmed');
+      final res = await http.get(uri).timeout(const Duration(seconds: 10));
+      return res.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
 
   Future<String> _getAuthToken() async {
     // Si Firebase no está inicializado (ej. en tests locales de widgets), retornar token dummy
@@ -41,13 +55,38 @@ class GeminiService {
     }
   }
 
+  Future<Map<String, String>> _buildHeaders({String? explicitKey}) async {
+    final token = await _getAuthToken();
+    final headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+
+    String? keyToUse = explicitKey;
+    if (keyToUse == null || keyToUse.isEmpty || keyToUse == 'proxy') {
+      try {
+        const secureStorage = FlutterSecureStorage();
+        final stored = await secureStorage.read(key: AppConstants.prefApiKey);
+        if (stored != null && stored.trim().length > 10) {
+          keyToUse = stored.trim();
+        }
+      } catch (_) {}
+    }
+
+    if (keyToUse != null && keyToUse.trim().length > 10 && keyToUse != 'proxy') {
+      headers['x-custom-gemini-key'] = keyToUse.trim();
+    }
+
+    return headers;
+  }
+
   Future<List<GeminiExtractionResult>> analyzeReceiptImage({
     required Uint8List imageBytes,
     required String apiKey,
     List<ShoppingItemModel>? pendingShoppingItems,
   }) async {
     try {
-      final token = await _getAuthToken();
+      final headers = await _buildHeaders(explicitKey: apiKey);
       final base64Image = base64Encode(imageBytes);
       final shoppingListContext = pendingShoppingItems != null && pendingShoppingItems.isNotEmpty
           ? pendingShoppingItems.map((e) => {'id': e.id, 'name': e.name}).toList()
@@ -56,10 +95,7 @@ class GeminiService {
       final uri = Uri.parse('$_baseUrl/analyze-receipt');
       final response = await _client.post(
         uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
+        headers: headers,
         body: jsonEncode({
           'imageBase64': base64Image,
           'forceVision': true,
@@ -81,7 +117,7 @@ class GeminiService {
     List<ShoppingItemModel>? pendingShoppingItems,
   }) async {
     try {
-      final token = await _getAuthToken();
+      final headers = await _buildHeaders();
       final shoppingListContext = pendingShoppingItems != null && pendingShoppingItems.isNotEmpty
           ? pendingShoppingItems.map((e) => {'id': e.id, 'name': e.name}).toList()
           : [];
@@ -89,10 +125,7 @@ class GeminiService {
       final uri = Uri.parse('$_baseUrl/analyze-receipt');
       final response = await _client.post(
         uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
+        headers: headers,
         body: jsonEncode({
           'ocrText': ocrText,
           'shoppingList': shoppingListContext,
@@ -112,7 +145,21 @@ class GeminiService {
       return GeminiExtractionResult.listFromJson(jsonResult);
     } else if (response.statusCode == 401) {
       throw Exception('No estás autenticado en Firebase o la sesión caducó.');
-    } else if (response.statusCode == 429) {
+    }
+
+    try {
+      final errorBody = jsonDecode(response.body);
+      if (errorBody is Map && errorBody['isCustomKey'] == true) {
+        final errText = errorBody['error']?.toString();
+        throw Exception(errText?.isNotEmpty == true
+            ? errText!
+            : 'Tu API Key de Gemini personalizada tiene un error o agotó su cuota.');
+      }
+    } catch (e) {
+      if (e is Exception && !e.toString().contains('FormatException')) rethrow;
+    }
+
+    if (response.statusCode == 429) {
       String msg = 'El servicio de IA no está disponible en este momento. Tu comprobante está seguro y pendiente de procesamiento.';
       try {
         final errorBody = jsonDecode(response.body);
@@ -147,15 +194,12 @@ class GeminiService {
     required Map<String, dynamic> contextData,
   }) async {
     try {
-      final token = await _getAuthToken();
+      final headers = await _buildHeaders();
       final uri = Uri.parse('$_baseUrl/chat-analyst');
 
       final response = await _client.post(
         uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
+        headers: headers,
         body: jsonEncode({
           'messages': messages,
           'contextData': contextData,
@@ -166,7 +210,21 @@ class GeminiService {
         return jsonDecode(response.body) as Map<String, dynamic>;
       } else if (response.statusCode == 401) {
         throw Exception('No estás autenticado en Firebase.');
-      } else if (response.statusCode == 429) {
+      }
+
+      try {
+        final errorBody = jsonDecode(response.body);
+        if (errorBody is Map && errorBody['isCustomKey'] == true) {
+          final errText = errorBody['error']?.toString();
+          throw Exception(errText?.isNotEmpty == true
+              ? errText!
+              : 'Tu API Key de Gemini personalizada tiene un error o agotó su cuota.');
+        }
+      } catch (e) {
+        if (e is Exception && !e.toString().contains('FormatException')) rethrow;
+      }
+
+      if (response.statusCode == 429) {
         String msg = 'El asistente no está disponible en este momento por límites de capacidad. Intenta de nuevo más tarde.';
         try {
           final errorBody = jsonDecode(response.body);
