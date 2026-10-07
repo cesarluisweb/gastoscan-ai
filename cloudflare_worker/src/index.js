@@ -9,12 +9,12 @@
  */
 
 const FALLBACK_MODELS = [
+  "gemini-flash-lite-latest",
   "gemini-3.5-flash-lite",
   "gemini-3.1-flash-lite",
-  "gemini-flash-lite-latest",
+  "gemini-flash-latest",
   "gemini-3.5-flash",
-  "gemini-3.8-flash",
-  "gemini-flash-latest"
+  "gemini-3.8-flash"
 ];
 
 const JWKS_URL = "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com";
@@ -210,6 +210,7 @@ export default {
 
       const testFull = url.searchParams.get("test") === "full";
       const testJson = url.searchParams.get("test") === "json";
+      const testAll = url.searchParams.get("test") === "all";
       const testResult = { status: "unknown", models_tested: [] };
       for (const m of FALLBACK_MODELS) {
         try {
@@ -251,8 +252,8 @@ export default {
           testResult.models_tested.push({ model: m, status: testRes.status, ok: testRes.ok, snippet: testBody.substring(0, 500) });
           if (testRes.ok) {
             testResult.status = "success";
-            testResult.working_model = m;
-            break;
+            testResult.working_model = testResult.working_model || m;
+            if (!testAll) break;
           }
         } catch (e) {
           testResult.models_tested.push({ model: m, error: e.message });
@@ -388,10 +389,14 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
         const latencyMs = Date.now() - attemptStart;
         responseText = await response.text();
         
-        // Priorizar el error más informativo (429 tiene prioridad sobre 404 o 500)
-        if (bestErrorStatus === 500 || response.status === 429) {
-          bestErrorStatus = response.status;
+        // Priorizar el error más informativo (429 tiene prioridad sobre 503, ignorando 404/410 de modelos retirados)
+        if (response.status === 429) {
+          bestErrorStatus = 429;
           bestRetryAfter = response.headers.get("Retry-After") || bestRetryAfter;
+        } else if (response.status === 503 && bestErrorStatus !== 429) {
+          bestErrorStatus = 503;
+        } else if (bestErrorStatus === 500 && response.status !== 404 && response.status !== 410) {
+          bestErrorStatus = response.status;
         }
 
         console.log(JSON.stringify({
@@ -676,7 +681,11 @@ ${JSON.stringify(contextData)}
         const latencyMs = Date.now() - attemptStart;
         responseText = await response.text();
 
-        if (bestErrorStatus === 500 || response.status === 429) {
+        if (response.status === 429) {
+          bestErrorStatus = 429;
+        } else if (response.status === 503 && bestErrorStatus !== 429) {
+          bestErrorStatus = 503;
+        } else if (bestErrorStatus === 500 && response.status !== 404 && response.status !== 410) {
           bestErrorStatus = response.status;
         }
 
