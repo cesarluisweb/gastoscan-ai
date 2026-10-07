@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/utils/amount_parser.dart';
@@ -47,6 +48,24 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
   late String _selectedFecha;
   late String _selectedMoneda;
 
+  File? _pickedImage;
+  bool _imageDeleted = false;
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(source: source, imageQuality: 85);
+      if (pickedFile != null) {
+        setState(() {
+          _pickedImage = File(pickedFile.path);
+          _imageDeleted = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error picking image: $e');
+    }
+  }
+
   String _formatDouble(double value) {
     if (value == 0) return '';
     return value.truncateToDouble() == value ? value.toInt().toString() : value.toString();
@@ -66,6 +85,22 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
   late List<ItemGastoModel> _items;
   String _fuenteTasa = 'Tasa oficial BCV automática';
   bool _isSaving = false;
+  double? _tasaUsdFecha;
+  double? _tasaEurFecha;
+  double? _tasaUsdtFecha;
+
+  Future<void> _cargarTasasChips(String fecha) async {
+    final tUsd = await ExchangeRateService.getRateForDate(fecha, moneda: 'USD');
+    final tEur = await ExchangeRateService.getRateForDate(fecha, moneda: 'EUR');
+    final tUsdt = await ExchangeRateService.getRateForDate(fecha, moneda: 'USDT');
+    if (mounted && _selectedFecha == fecha) {
+      setState(() {
+        _tasaUsdFecha = tUsd;
+        _tasaEurFecha = tEur;
+        _tasaUsdtFecha = tUsdt;
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -132,6 +167,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     
     // Verificar precios anteriores para los items recien cargados
     _verificarPreciosAnteriores();
+    _cargarTasasChips(_selectedFecha);
   }
 
   Map<int, Map<String, dynamic>> _priceComparisons = {};
@@ -228,10 +264,15 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       _fuenteTasa = 'Buscando tasa del $fecha...';
     });
 
-    final tasa = await ExchangeRateService.getRateForDate(fecha, tipo: settings.tipoTasa);
+    await _cargarTasasChips(fecha);
+
     if (mounted && _selectedMoneda == 'VES') {
       setState(() {
-        _tasaCambioCtrl.text = tasa.toStringAsFixed(2);
+        double tasaAplicar = _tasaUsdFecha ?? settings.tasaCambioVesUsd;
+        if (settings.tipoTasa == 'paralelo') {
+          tasaAplicar = _tasaUsdtFecha ?? settings.tasaCambioVesUsdt;
+        }
+        _tasaCambioCtrl.text = tasaAplicar.toStringAsFixed(2);
         final today = DateTime.now().toIso8601String().substring(0, 10);
         _fuenteTasa = (fecha == today)
             ? 'Tasa oficial BCV (Hoy)'
@@ -281,6 +322,8 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       // Si la factura no traía tasa fija impresa, busca la tasa correspondiente a la fecha elegida
       if (widget.existingGasto == null && (widget.extractedData?.tasaCambioDetectada == null || widget.extractedData!.tasaCambioDetectada! <= 0)) {
         _actualizarTasaPorFecha(nuevaFecha);
+      } else {
+        _cargarTasasChips(nuevaFecha);
       }
     }
   }
@@ -310,21 +353,27 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
 
     String? rutaFotoFinal;
-    if (widget.existingGasto != null) {
-      rutaFotoFinal = widget.existingGasto!.rutaFotoLocal;
-      if (widget.imageFile != null && settings.guardarFotos) {
-        rutaFotoFinal = await ImageService.saveImagePermanently(widget.imageFile!);
-      }
+    if (_imageDeleted) {
+      rutaFotoFinal = null;
+    } else if (_pickedImage != null) {
+      rutaFotoFinal = await ImageService.saveImagePermanently(_pickedImage!);
     } else {
-      if (settings.guardarFotos && widget.imageFile != null) {
-        rutaFotoFinal = await ImageService.saveImagePermanently(widget.imageFile!);
-      } else if (widget.imageFile != null && widget.queueItemId != null) {
-        final isUsed = await DatabaseHelper.instance.isImagePathUsedByOtherQueueItems(widget.queueItemId!, widget.imageFile!.path);
-        if (!isUsed) {
+      if (widget.existingGasto != null) {
+        rutaFotoFinal = widget.existingGasto!.rutaFotoLocal;
+        if (widget.imageFile != null && settings.guardarFotos) {
+          rutaFotoFinal = await ImageService.saveImagePermanently(widget.imageFile!);
+        }
+      } else {
+        if (settings.guardarFotos && widget.imageFile != null) {
+          rutaFotoFinal = await ImageService.saveImagePermanently(widget.imageFile!);
+        } else if (widget.imageFile != null && widget.queueItemId != null) {
+          final isUsed = await DatabaseHelper.instance.isImagePathUsedByOtherQueueItems(widget.queueItemId!, widget.imageFile!.path);
+          if (!isUsed) {
+            await ImageService.deleteTempFile(widget.imageFile!);
+          }
+        } else if (widget.imageFile != null) {
           await ImageService.deleteTempFile(widget.imageFile!);
         }
-      } else if (widget.imageFile != null) {
-        await ImageService.deleteTempFile(widget.imageFile!);
       }
     }
 
@@ -1098,15 +1147,19 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                             key: const Key('chip_rate_usd_bcv'),
                             avatar: const Icon(Icons.attach_money, size: 14, color: AppColors.primaryDark),
                             label: Text(
-                              'Dólar BCV: Bs. ${settings.tasaCambioVesUsd.toStringAsFixed(2)}',
+                              'Dólar BCV: Bs. ${(_tasaUsdFecha ?? settings.tasaCambioVesUsd).toStringAsFixed(2)}',
                               style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
                             ),
                             backgroundColor: AppColors.surface,
                             side: const BorderSide(color: AppColors.border),
                             onPressed: () {
                               setState(() {
-                                _tasaCambioCtrl.text = settings.tasaCambioVesUsd.toStringAsFixed(2);
-                                _fuenteTasa = 'Dólar BCV oficial';
+                                final valor = _tasaUsdFecha ?? settings.tasaCambioVesUsd;
+                                _tasaCambioCtrl.text = valor.toStringAsFixed(2);
+                                final today = DateTime.now().toIso8601String().substring(0, 10);
+                                _fuenteTasa = (_selectedFecha == today)
+                                    ? 'Dólar BCV oficial (Hoy)'
+                                    : 'Dólar BCV oficial ($_selectedFecha)';
                                 _recalcularTotalUsd();
                               });
                             },
@@ -1116,15 +1169,19 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                             key: const Key('chip_rate_eur_bcv'),
                             avatar: const Icon(Icons.euro, size: 14, color: AppColors.primaryDark),
                             label: Text(
-                              'Euro BCV: Bs. ${settings.tasaCambioVesEur.toStringAsFixed(2)}',
+                              'Euro BCV: Bs. ${(_tasaEurFecha ?? settings.tasaCambioVesEur).toStringAsFixed(2)}',
                               style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
                             ),
                             backgroundColor: AppColors.surface,
                             side: const BorderSide(color: AppColors.border),
                             onPressed: () {
                               setState(() {
-                                _tasaCambioCtrl.text = settings.tasaCambioVesEur.toStringAsFixed(2);
-                                _fuenteTasa = 'Euro BCV oficial';
+                                final valor = _tasaEurFecha ?? settings.tasaCambioVesEur;
+                                _tasaCambioCtrl.text = valor.toStringAsFixed(2);
+                                final today = DateTime.now().toIso8601String().substring(0, 10);
+                                _fuenteTasa = (_selectedFecha == today)
+                                    ? 'Euro BCV oficial (Hoy)'
+                                    : 'Euro BCV oficial ($_selectedFecha)';
                                 _recalcularTotalUsd();
                               });
                             },
@@ -1134,15 +1191,19 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                             key: const Key('chip_rate_usdt_binance'),
                             avatar: const Icon(Icons.currency_bitcoin, size: 14, color: AppColors.primaryDark),
                             label: Text(
-                              'USDT: Bs. ${settings.tasaCambioVesUsdt.toStringAsFixed(2)}',
+                              'USDT: Bs. ${(_tasaUsdtFecha ?? settings.tasaCambioVesUsdt).toStringAsFixed(2)}',
                               style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
                             ),
                             backgroundColor: AppColors.surface,
                             side: const BorderSide(color: AppColors.border),
                             onPressed: () {
                               setState(() {
-                                _tasaCambioCtrl.text = settings.tasaCambioVesUsdt.toStringAsFixed(2);
-                                _fuenteTasa = 'USDT Binance P2P';
+                                final valor = _tasaUsdtFecha ?? settings.tasaCambioVesUsdt;
+                                _tasaCambioCtrl.text = valor.toStringAsFixed(2);
+                                final today = DateTime.now().toIso8601String().substring(0, 10);
+                                _fuenteTasa = (_selectedFecha == today)
+                                    ? 'USDT Binance P2P (Hoy)'
+                                    : 'USDT Binance P2P ($_selectedFecha)';
                                 _recalcularTotalUsd();
                               });
                             },
@@ -1155,7 +1216,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                       controller: _tasaCambioCtrl,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       decoration: InputDecoration(
-                        labelText: 'Tasa de Cambio (VES / USD)',
+                        labelText: 'Tasa de Cambio',
                         prefixIcon: const Icon(Icons.currency_exchange, color: AppColors.textSecondary),
                         helperText: _fuenteTasa,
                         helperStyle: const TextStyle(color: AppColors.textPrimary, fontSize: 11),
@@ -1225,81 +1286,148 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
 
   Widget _buildImageHeader() {
     File? fileToShow;
-    bool hasRutaLocal = widget.existingGasto?.rutaFotoLocal != null;
 
-    if (widget.imageFile != null) {
+    if (_imageDeleted) {
+      fileToShow = null;
+    } else if (_pickedImage != null) {
+      fileToShow = _pickedImage;
+    } else if (widget.imageFile != null) {
       fileToShow = widget.imageFile;
-    } else if (hasRutaLocal) {
+    } else if (widget.existingGasto?.rutaFotoLocal != null) {
       final file = File(widget.existingGasto!.rutaFotoLocal!);
       if (file.existsSync()) {
         fileToShow = file;
       }
     }
 
-    if (fileToShow == null && !hasRutaLocal) {
-      return const SizedBox.shrink();
-    }
-
-    Widget imageWidget;
-    if (fileToShow != null) {
-      imageWidget = Image.file(fileToShow, fit: BoxFit.cover);
-    } else {
-      imageWidget = const Center(child: Icon(Icons.image_not_supported, color: AppColors.textMuted, size: 48));
-    }
-
-    final header = Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          height: 140,
-          width: double.infinity,
-          color: Colors.black,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              imageWidget,
-              if (fileToShow != null)
-                Positioned(
-                  right: 12,
-                  bottom: 12,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.65),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white24),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.zoom_in, color: Colors.white, size: 16),
-                        SizedBox(width: 4),
-                        Text(
-                          'Tocar para ampliar',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-            ],
+    if (fileToShow == null) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 16.0),
+        child: OutlinedButton.icon(
+          onPressed: _showImagePickerOptions,
+          icon: const Icon(Icons.add_a_photo, color: AppColors.primaryDark),
+          label: const Text(
+            'Adjuntar comprobante (Opcional)',
+            style: TextStyle(color: AppColors.textPrimary),
+          ),
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: AppColors.border),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            minimumSize: const Size(double.infinity, 50),
           ),
         ),
-      ),
-    );
-
-    if (fileToShow != null) {
-      return GestureDetector(
-        onTap: () => _verImagenCompleta(fileToShow!),
-        child: header,
       );
     }
 
-    return header;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          GestureDetector(
+            onTap: () => _verImagenCompleta(fileToShow!),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                height: 140,
+                width: double.infinity,
+                color: Colors.black,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.file(fileToShow, fit: BoxFit.cover),
+                    Positioned(
+                      right: 12,
+                      bottom: 12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.65),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white24),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.zoom_in, color: Colors.white, size: 16),
+                            SizedBox(width: 4),
+                            Text(
+                              'Tocar para ampliar',
+                              style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              TextButton.icon(
+                onPressed: _showImagePickerOptions,
+                icon: const Icon(Icons.edit, size: 18, color: AppColors.textPrimary),
+                label: const Text('Cambiar comprobante', style: TextStyle(color: AppColors.textPrimary)),
+              ),
+              TextButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _imageDeleted = true;
+                    _pickedImage = null;
+                  });
+                },
+                icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.error),
+                label: const Text('Eliminar comprobante', style: TextStyle(color: AppColors.error)),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showImagePickerOptions() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Adjuntar comprobante',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+            ),
+            const SizedBox(height: 20),
+            ListTile(
+              leading: const Icon(Icons.camera_alt, color: AppColors.primaryDark),
+              title: const Text('Tomar foto con la cámara'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _pickImage(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library, color: AppColors.primaryDark),
+              title: const Text('Elegir de la galería'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _pickImage(ImageSource.gallery);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

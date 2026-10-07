@@ -26,13 +26,13 @@ void main() {
       });
     }
 
-    test('retorna tasa exacta cuando la fecha existe en el histórico', () async {
+    test('retorna tasa exacta cuando la fecha existe en el historico', () async {
       final rate = await ExchangeRateService.getRateForDate('2026-10-02', client: historicosMock());
       expect(rate, equals(150.0));
     });
 
-    test('encuentra el último día hábil anterior si la fecha es fin de semana', () async {
-      // 2026-10-03 es sábado: sin dato exacto, usa el viernes 2026-10-02.
+    test('encuentra el ultimo dia habil anterior si la fecha es fin de semana', () async {
+      // 2026-10-03 es sabado: sin dato exacto, usa el viernes 2026-10-02.
       final rateSabado = await ExchangeRateService.getRateForDate('2026-10-03', client: historicosMock());
       final rateViernes = await ExchangeRateService.getRateForDate('2026-10-02', client: historicosMock());
 
@@ -64,7 +64,7 @@ void main() {
       SharedPreferences.setMockInitialValues({});
     });
 
-    test('sin red ni caché: marca referencia y NO avanza el timestamp', () async {
+    test('sin red ni cache: marca referencia y NO avanza el timestamp', () async {
       final failing = MockClient((_) async => http.Response('error', 500));
       final rates = await ExchangeRateService.getAllTodayRates(client: failing);
 
@@ -94,7 +94,7 @@ void main() {
       expect(prefs.getDouble('cached_rate_usd'), equals(100.0));
     });
 
-    test('con caché y sin red: conserva caché marcada como referencia', () async {
+    test('con cache y sin red: conserva cache marcada como referencia', () async {
       SharedPreferences.setMockInitialValues({
         'cached_rate_usd': 95.5,
         'cached_exchange_rates_timestamp': '2026-10-05T12:00:00.000',
@@ -110,6 +110,24 @@ void main() {
         prefs.getString('cached_exchange_rates_timestamp'),
         equals('2026-10-05T12:00:00.000'),
       );
+    });
+
+    test('retorna tasa de EUR y USDT para fechas historicas', () async {
+      final mock = MockClient((request) async {
+        if (request.url.toString().contains('/euros/oficial')) {
+          return http.Response('[{"fecha":"2026-10-02","promedio":162.5}]', 200);
+        }
+        if (request.url.toString().contains('/dolares/paralelo')) {
+          return http.Response('[{"fecha":"2026-10-02","promedio":155.0}]', 200);
+        }
+        return http.Response('error', 500);
+      });
+
+      final eurRate = await ExchangeRateService.getRateForDate('2026-10-02', moneda: 'EUR', client: mock);
+      final usdtRate = await ExchangeRateService.getRateForDate('2026-10-02', moneda: 'USDT', client: mock);
+
+      expect(eurRate, equals(162.5));
+      expect(usdtRate, equals(155.0));
     });
   });
 }

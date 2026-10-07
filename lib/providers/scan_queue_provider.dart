@@ -426,13 +426,17 @@ class ScanQueueProvider with ChangeNotifier {
               _isWaitingForConnection = false;
               final rawMsg = e.toString().replaceFirst('Exception: ', '').trim();
               if (rawMsg.contains('SocketException') || rawMsg.contains('Failed host lookup') || rawMsg.contains('ClientException')) {
-                _lastError = 'Problema de conexión con el servidor. Revisa tu internet.';
+                _lastError = 'Sin conexión. Tu comprobante quedó guardado y se procesará automáticamente.';
               } else if (rawMsg.contains('HandshakeException') || rawMsg.contains('CERTIFICATE_VERIFY_FAILED')) {
                 _lastError = 'Error de conexión segura. Verifica la fecha del teléfono.';
-              } else if (rawMsg.contains('TimeoutException')) {
-                _lastError = 'El servidor tardó demasiado en responder.';
+              } else if (rawMsg.contains('TimeoutException') || rawMsg.contains('tiempo de espera') || rawMsg.contains('504')) {
+                _lastError = 'El servicio de IA no está disponible en este momento. Tu comprobante está seguro y pendiente de procesamiento.';
+              } else if (rawMsg.toLowerCase().contains('límite') || rawMsg.toLowerCase().contains('cuota') || rawMsg.contains('429')) {
+                _lastError = 'El servicio de IA no está disponible en este momento. Tu comprobante está seguro y pendiente de procesamiento.';
+              } else if (rawMsg.contains('servicio de IA no está disponible')) {
+                _lastError = rawMsg;
               } else {
-                _lastError = rawMsg.isNotEmpty ? rawMsg : 'Error al procesar el comprobante.';
+                _lastError = 'Guardamos tu factura. La procesaremos cuando el servicio vuelva a estar disponible.';
               }
               debugPrint('Fallo al procesar item en cola: $e');
               await _dbHelper.updateScanQueueItem(
@@ -466,6 +470,18 @@ class ScanQueueProvider with ChangeNotifier {
       await loadPendingItems();
       notifyListeners();
     }
+  }
+
+  Future<void> retryItem(int id) async {
+    await _dbHelper.updateScanQueueItem(
+      id,
+      'pending',
+      attemptCount: 0,
+      lastError: 'Reintentando...',
+    );
+    await loadPendingItems();
+    await loadReadyItems();
+    processPendingItems();
   }
 
   Future<void> removeItem(int id) async {

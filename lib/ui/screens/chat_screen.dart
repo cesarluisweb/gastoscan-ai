@@ -520,7 +520,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _messages.add({'role': 'assistant', 'text': 'Error: $e'});
+        final cleanError = e.toString().replaceFirst('Exception: ', '').trim();
+        _messages.add({'role': 'assistant', 'text': cleanError});
       });
     } finally {
       if (mounted) {

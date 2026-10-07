@@ -538,9 +538,20 @@ class GlobalScanQueueBanner extends StatelessWidget {
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                trailing: IconButton(
-                                  icon: const Icon(Icons.delete_outline, color: AppColors.error, size: 22),
-                                  tooltip: 'Descartar este comprobante',
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (status == 'error')
+                                      IconButton(
+                                        icon: const Icon(Icons.refresh, color: AppColors.primaryDark, size: 22),
+                                        tooltip: 'Reintentar procesamiento',
+                                        onPressed: () async {
+                                          await queue.retryItem(id);
+                                        },
+                                      ),
+                                    IconButton(
+                                      icon: const Icon(Icons.delete_outline, color: AppColors.error, size: 22),
+                                      tooltip: 'Descartar este comprobante',
                                   onPressed: () async {
                                     final confirm = await showDialog<bool>(
                                       context: ctx,
@@ -566,6 +577,8 @@ class GlobalScanQueueBanner extends StatelessWidget {
                                       await queue.removeItem(id);
                                     }
                                   },
+                                ),
+                                  ],
                                 ),
                               ),
                             );

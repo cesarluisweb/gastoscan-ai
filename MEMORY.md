@@ -3,15 +3,14 @@
 
 ## Estado Actual Inmediato
 - **Rama:** `main`.
-- **Fase activa:** Fase 5 (Lanzamiento / Preparación Google Play) y Fase 6.1.
+- **Fase activa:** Finalizadas Fases 1 a 6 (Estabilidad IA, Comprobantes persistentes, Reportes Privacidad, Mejoras UI Tasas).
 - **Últimos hitos:** 
-  1. **Tasas por Fecha y Días Hábiles:** `ExchangeRateService.getRateForDate` busca automáticamente la tasa del último día hábil anterior si la factura corresponde a fin de semana o feriado sin cotización oficial BCV.
-  2. **Integración Web + Donaciones:** "Visitar sitio web" y "Apoyar el proyecto ☕" en Más; sección `#donar` en landing page.
-  3. **Robustez de Cola de Escaneo (Bloques 1 y 1b):** Protección de fotos compartidas, hoja inferior modal en banner para descarte individual de pendientes/error, tests con archivos reales en disco (Directory.systemTemp), y 0 advertencias en analizador.
-  4. **Gate Estricto de CI:** `flutter analyze --fatal-warnings --no-fatal-infos` activo en GitHub Actions y pasando en verde al 100%.
-  5. **Base de Datos y Asincronía (Bloque 2 - Puntos 8, 9 y 10):** Eliminación de consultas N+1 con hidratación en lotes, índices en SQLite v15 (`items_gasto.gasto_id`, `scan_queue.status`, `gastos.synced`), borrado lógico directo O(1), adopción de presupuestos en memoria sin escrituras fantasmas, mutadores asíncronos con `Future<bool>` y control de errores amigables.
-    6. **Tasas, Parser y Distribución (Bloques 3 y D - Puntos 1, 2 y 7):** `ExchangeRatesData.esReferencia` con timestamp solo ante dato en vivo, badge "Tasa de referencia" en Más, parser VE centralizado `tryParseAmount`, herencia de moneda en presupuestos y distribución fail-closed en CI.
-    7. **Resiliencia y Observabilidad en Gemini Gateway:** Depuración de modelos retirados (1.5 y 2.0 que causaban 404 enmascarado como 429), logging estructurado en Worker para `wrangler tail`, compresión de imágenes optimizada a 1200x1600 q82 (de 2MB a ~300KB), y backoff con jitter + respeto de `Retry-After` en Worker y cola.
+  1. **Chips Dinámicos por Fecha:** En `ReviewExpenseScreen`, los chips (USD, EUR, USDT) cargan y aplican las tasas históricas de la fecha del gasto (`_selectedFecha`), y el campo muestra la etiqueta limpia "Tasa de Cambio".
+  2. **Resiliencia de IA (Fase 1 y 2):** Errores de Gemini (429, 503, red) en `ScanQueueProvider` y `GeminiService` reescritos sin jerga técnica ("El servicio de IA no está disponible en este momento. Tu comprobante está seguro...").
+  3. **Cola Recuperable:** Añadido `retryItem` y botón "Reintentar" (refresh) en `global_scan_queue_banner.dart` para reanudar tickets estancados en "error".
+  4. **Comprobantes Manuales (Fase 3 y 4):** Refactorizado `ReviewExpenseScreen` con `image_picker`. "Adjuntar comprobante" en nuevos gastos y "Cambiar/Eliminar" en existentes. MVP con `rutaFotoLocal`.
+  5. **Auditoría y Privacidad (Fase 5, 6 y 7):** Artefactos técnicos creados sobre viabilidad de cuota individual de Gemini y Backup de Privacidad (.zip local exportable).
+  6. **Gate Estricto de CI:** `flutter analyze --fatal-warnings` activo en verde.
 
 ## Decisiones Técnicas y de Negocio Recientes
 - **Transparencia en Errores de Gemini:** El gateway ya no agrupa 404, 503 y 429 en un solo mensaje genérico. Cada estado reporta su causa real sin enmascarar modelos muertos como límites de cuota.
@@ -33,4 +32,4 @@
 - En cPanel multidominio, el Document Root es `/home/user/dominio.com/`, no siempre `public_html/`.
 
 ## Próximo Paso Inmediato
-- Desplegar Worker (`npx wrangler deploy` en cloudflare_worker) y verificar CI de GitHub Actions.
+- Probar en dispositivo y verificar CI de GitHub Actions.

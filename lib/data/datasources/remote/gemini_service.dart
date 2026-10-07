@@ -113,23 +113,23 @@ class GeminiService {
     } else if (response.statusCode == 401) {
       throw Exception('No estás autenticado en Firebase o la sesión caducó.');
     } else if (response.statusCode == 429) {
-      String msg = 'Límite de solicitudes alcanzado. Espera unos segundos e intenta nuevamente.';
+      String msg = 'El servicio de IA no está disponible en este momento. Tu comprobante está seguro y pendiente de procesamiento.';
       try {
         final errorBody = jsonDecode(response.body);
         if (errorBody is Map) {
           final retry = errorBody['retryAfter'];
           if (retry != null && retry.toString().isNotEmpty) {
-            msg = 'Límite de solicitudes alcanzado (esperar ${retry}s).';
+            msg = 'Límite de solicitudes alcanzado (esperar ${retry}s). Tu comprobante está seguro y pendiente de procesamiento.';
           } else if (errorBody['error'] != null) {
-            msg = errorBody['error'].toString();
+            // Se mantiene el genérico de indisponibilidad para no mostrar el error crudo del Worker
           }
         }
       } catch (_) {}
       throw Exception(msg);
     } else if (response.statusCode == 504) {
-      throw Exception('Tiempo de espera agotado. El servidor tardó demasiado en procesar.');
+      throw Exception('El servicio de IA no está disponible en este momento. Tu comprobante está seguro y pendiente de procesamiento.');
     } else if (response.statusCode == 502 || response.statusCode == 503) {
-      throw Exception('Servidores de Gemini temporalmente saturados (${response.statusCode}). Intenta nuevamente en unos instantes.');
+      throw Exception('El servicio de IA no está disponible en este momento. Tu comprobante está seguro y pendiente de procesamiento.');
     } else {
       try {
         final errorBody = jsonDecode(response.body);
@@ -167,18 +167,18 @@ class GeminiService {
       } else if (response.statusCode == 401) {
         throw Exception('No estás autenticado en Firebase.');
       } else if (response.statusCode == 429) {
-        String msg = 'Límite de solicitudes alcanzado. Espera unos segundos e intenta nuevamente.';
+        String msg = 'El asistente no está disponible en este momento por límites de capacidad. Intenta de nuevo más tarde.';
         try {
           final errorBody = jsonDecode(response.body);
           if (errorBody is Map && errorBody['error'] != null) {
-            msg = errorBody['error'].toString();
+            // Keep generic to avoid raw errors
           }
         } catch (_) {}
         throw Exception(msg);
       } else if (response.statusCode == 504) {
-        throw Exception('Tiempo de espera agotado al conectar con el asistente.');
+        throw Exception('El asistente no pudo conectarse. Revisa tu conexión a internet e intenta nuevamente.');
       } else if (response.statusCode == 502 || response.statusCode == 503) {
-        throw Exception('Servidores de Gemini temporalmente saturados (${response.statusCode}). Intenta nuevamente.');
+        throw Exception('El asistente está experimentando alta demanda. Intenta nuevamente más tarde.');
       } else {
         try {
           final errorBody = jsonDecode(response.body);
