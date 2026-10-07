@@ -25,6 +25,7 @@
 - **Tasas sin invenciones (Punto 7):** `getAllTodayRates({client})` inyectable para tests; `esReferencia=true` sin tocar timestamp cuando no hay dato en vivo; `SettingsProvider.tasasSonReferencia` gobierna el badge.
 - **Parser VE centralizado (Punto 1):** `tryParseAmount(raw, {isPrice})` en `core/utils/amount_parser.dart`; formularios usan `isPrice:false`.
 - **Distribución fail-closed:** paso FTP sin `continue-on-error` + verificación HEAD post-subida; paso de artefactos eliminado.
+- **Cache-Buster en APKs OTA:** BanaHosting está bajo Cloudflare (`max-age=14400`). Toda URL de descarga (`apkUrl`) y verificación de APK DEBE llevar `?b=$BUILD_NUM` para evitar que usuarios descarguen versiones obsoletas cacheadas.
 
 ## Errores y Fricciones a Evitar
 - No tocar `android/` localmente (CI regenera con `flutter create`).
@@ -33,4 +34,4 @@
 - No replicar manualmente firmas complejas de paquetes de terceros en fakes de test; delegar en `noSuchMethod`.
 
 ## Próximo Paso Inmediato
-- Probar en dispositivo y verificar CI de GitHub Actions.
+- Probar en dispositivo la actualización limpia con build 351 y verificar que el bucle desapareció.
