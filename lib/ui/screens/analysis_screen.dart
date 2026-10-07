@@ -228,16 +228,20 @@ class AnalysisScreen extends StatelessWidget {
           if (hasBudget) ...[
             Builder(
               builder: (context) {
-                String fmtAmount(double val) => isBudgetVes
-                    ? CurrencyFormatter.formatVes(val)
-                    : CurrencyFormatter.formatPreferido(
-                        val,
-                        null,
-                        settings.tasaCambioVesUsd,
-                        settings.monedaPrincipal,
-                        tasaEur: settings.tasaCambioVesEur,
-                        tasaUsdt: settings.tasaCambioVesUsdt,
-                      );
+                String fmtAmount(double val) {
+                  final m = gastoProvider.monedaPresupuesto.toUpperCase();
+                  switch (m) {
+                    case 'VES':
+                      return CurrencyFormatter.formatVes(val);
+                    case 'EUR':
+                      return CurrencyFormatter.formatEur(val);
+                    case 'USDT':
+                      return CurrencyFormatter.formatUsdt(val);
+                    case 'USD':
+                    default:
+                      return CurrencyFormatter.formatUsd(val);
+                  }
+                }
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
