@@ -153,7 +153,7 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization, x-custom-gemini-key",
-  "Access-Control-Expose-Headers": "x-gemini-model, x-gemini-tokens",
+  "Access-Control-Expose-Headers": "x-gemini-model, x-gemini-tokens, x-receipt-mode, x-receipt-image-kb",
 };
 
 export default {
@@ -518,9 +518,18 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
     const usage = parsedData.usageMetadata || {};
     const totalTokens = usage.totalTokenCount || 0;
 
+    const imageKb = imageBase64 ? Math.round((imageBase64.length * 0.75) / 1024) : 0;
+    const textChars = ocrText ? ocrText.length : 0;
+    const modeLabel = isTextMode ? `TEXTO_OCR (${textChars} caracteres)` : `VISION_MULTIMODAL (${imageKb} KB)`;
+
+    console.log(`[RECEIPT] Factura procesada con éxito | Modo: ${modeLabel} | Modelo: ${winningModel} | Tokens: ${totalTokens}`);
+
     console.log(JSON.stringify({
       event: "gemini_receipt_success",
       model: winningModel,
+      modo: isTextMode ? "texto" : "vision",
+      imageSizeKB: imageKb,
+      textLengthChars: textChars,
       totalTokens,
       promptTokens: usage.promptTokenCount || 0,
       candidatesTokens: usage.candidatesTokenCount || 0
@@ -532,7 +541,9 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
         ...corsHeaders,
         "Content-Type": "application/json",
         "x-gemini-model": winningModel,
-        "x-gemini-tokens": String(totalTokens)
+        "x-gemini-tokens": String(totalTokens),
+        "x-receipt-mode": isTextMode ? "text" : "vision",
+        "x-receipt-image-kb": String(imageKb)
       }
     });
   } catch (err) {
