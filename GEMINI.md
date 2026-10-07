@@ -110,6 +110,9 @@ La compilación en GitHub Actions (`build_apk.yml`) ejecuta `flutter create`, lo
   1. Los gastos cuyo pago se realiza en Bolívares (VES) guardan su monto original inmutable (`total_original`). Los totales y distribuciones por categoría en VES reflejan la suma exacta en Bolívares sin recalcularse por fluctuaciones futuras de la tasa diaria.
   2. Los gastos pagados en divisas (USD, EUR, USDT) se convierten a Bolívares utilizando de forma determinista la tasa de cambio vigente en la fecha exacta del registro.
   3. Toda vista de resumen en Bolívares debe garantizar exactitud matemática al céntimo entre el Total Gastado y la Distribución de Gastos.
+- **Sincronización Histórica de Tasas en UI y Neutralidad de Etiquetas:**
+  1. En todo formulario o modal con selectores rápidos de divisas (chips de USD, EUR, USDT), las tasas mostradas y aplicables DEBEN sincronizarse de forma asíncrona con la fecha del gasto (`_selectedFecha`), aplicando automáticamente el retroceso al último día hábil anterior si la fecha corresponde a fines de semana o feriados sin cotización oficial.
+  2. Los campos de entrada de tasa de cambio deben usar etiquetas neutras (ej. `"Tasa de Cambio"`) sin fijar pares específicos como `(VES / USD)` en el título, delegando la indicación de la moneda, fuente y fecha al texto de ayuda (`helperText`).
 
 ## 12. Asistente IA: Reglas de Intención y Gestión de Compras
 - **Desambiguación Obligatoria (Gasto vs. Lista de Compras):** Si el usuario pide registrar o anotar productos sin monto y sin especificar claramente la intención (ej. *"anota una harina pan"*), el asistente NUNCA debe adivinar ni registrar a ciegas. Debe preguntar de forma directa:
