@@ -151,7 +151,6 @@ class AnalysisScreen extends StatelessWidget {
     GastoProvider gastoProvider,
     SettingsProvider settings,
   ) {
-    final isBudgetVes = gastoProvider.monedaPresupuesto == 'VES';
     final double budget = gastoProvider.presupuestoGeneral;
     final double metaAhorro = gastoProvider.metaAhorro;
     final bool hasSavingsGoal = metaAhorro > 0;
