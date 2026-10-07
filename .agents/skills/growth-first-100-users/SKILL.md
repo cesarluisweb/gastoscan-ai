@@ -69,6 +69,8 @@ Google Play exige para cuentas personales nuevas que al menos **20 evaluadores i
 
 El 70% de las descargas en utilidades provienen de personas buscando palabras exactas en el buscador de la tienda.
 
+* **Ficha Oficial para Google Play:** Consultar y copiar los textos definitivos de título, descripción breve, descripción completa y formulario Data Safety desde [`FICHA_GOOGLE_PLAY.md`](../../FICHA_GOOGLE_PLAY.md) en la raíz del repositorio.
+
 ### Palabras Clave de Búsqueda Frecuente
 * `control de gastos venezuela`
 * `presupuesto bolívares y dólares`

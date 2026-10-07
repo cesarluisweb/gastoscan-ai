@@ -138,7 +138,8 @@ La compilación en GitHub Actions (`build_apk.yml`) ejecuta `flutter create`, lo
   1. Si se requiere desplegar desde local, compilar Astro con telemetría desactivada: en `landing/`, ejecutar `$env:ASTRO_TELEMETRY_DISABLED="1"; .\node_modules\.bin\astro.cmd build`.
   2. Desplegar a Firebase Hosting: desde la raíz del proyecto, ejecutar `firebase.cmd deploy --only hosting --non-interactive`. El parámetro `--non-interactive` es **estrictamente obligatorio** en Windows para evitar bloqueos indefinidos del proceso en PowerShell.
   3. Verificación en vivo: Comprobar el despliegue con `curl.exe -sI https://rindemas.cesarluis.com/rindemas.apk` antes de confirmar al usuario.
-- **Mockups de la Aplicación:** Todo mockup o representación gráfica de la aplicación en la web DEBE tener chasis y proporción de smartphone (teléfono móvil vertical ~20:9 con bordes redondeados y altavoz), quedando prohibido el formato tablet o de escritorio.
+- **Enrutamiento Multi-Página en Firebase Hosting (Astro):** Queda estrictamente prohibido usar la reescritura SPA comodín (`"rewrites": [{"source": "**", "destination": "/index.html"}]`) en `firebase.json` para el sitio web. Para que subrutas como `/panel` resuelvan limpiamente sus archivos estáticos (`dist/panel/index.html`), `firebase.json` DEBE configurarse con `"cleanUrls": true` y `"trailingSlash": false`.
+- **Mockups de la Aplicación y Panel Web:** Las representaciones visuales de la app móvil DEBEN tener chasis y proporción de smartphone (teléfono móvil vertical ~20:9 con bordes redondeados y altavoz). Las secciones dedicadas al panel web se representan con marco de ventana de navegador de escritorio.
 - **Paleta de Colores Web:** Usar estrictamente la paleta oficial de Rinde Más: amarillo (`#FACC15` / `#EAB308`) para acentos y botones, fondos limpios (`#F8FAFC` / `#FFFFFF`) y textos oscuros legibles (`#0F172A` / `#334155`). Prohibido el uso de colores naranjas.
 
 ## 14. Gateway Serverless de IA (Cloudflare Workers) y Entrada por Voz
@@ -160,6 +161,7 @@ La compilación en GitHub Actions (`build_apk.yml`) ejecuta `flutter create`, lo
   1. **NUNCA afirmar que es "exclusivamente local":** Debe explicarse con precisión que el almacenamiento es local-first con respaldo en la nube en su cuenta privada de Google.
   2. **Enfatizar la ausencia de riesgo bancario:** Aclarar siempre que la app **nunca** solicita claves bancarias, números de tarjeta, acceso a SMS ni credenciales financieras, y que no vende ni comparte datos con terceros.
   3. **Privacidad estricta por reglas:** Los datos en Firestore están blindados por reglas de seguridad donde cada usuario solo puede leer y escribir sus propios documentos (`request.auth.uid == userId`).
+- **Microcopy Obligatorio al Vincular Google:** En todo diálogo, modal o pantalla de la app móvil que invite al usuario a iniciar sesión o vincular su cuenta de Google, se DEBE incluir el texto explícito de tranquilidad: *"Solo usamos tu cuenta de Google para respaldar tus facturas en tu propio espacio privado. Sin bancos ni contraseñas."*
 
 ## 16. Comunicación con Comunidades y Usuarios (Voz de César)
 Al redactar sugerencias de respuestas para foros (Reddit), redes, mensajes directos o soporte de la app:
