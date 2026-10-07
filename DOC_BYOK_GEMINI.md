@@ -6,7 +6,9 @@
 - `cloudflare_worker/src/index.js` (desplegado a producción)
 - `lib/data/datasources/remote/gemini_service.dart`
 - `lib/providers/settings_provider.dart`
+- `lib/services/sync_service.dart`
 - `lib/ui/screens/more_screen.dart`
+- `lib/ui/screens/review_expense_screen.dart`
 - `MEMORY.md`
 
 ---
@@ -19,10 +21,11 @@
 - **Detección y respuesta de errores propios:** Ante errores 400 (clave inválida), 403 (permisos/cuota) o 429 de Google cuando se usa clave propia, el worker responde con `{ isCustomKey: true, error: "Tu API Key de Gemini personalizada tiene un error o agotó su cuota..." }`, impidiendo que la app confunda errores de la clave del usuario con caídas del servicio de Rinde Más.
 - **Despliegue verificado:** Desplegado exitosamente a `rindemas-gateway.cesarluispuntocom.workers.dev`.
 
-### 1.2 Cliente Flutter (`GeminiService` y `SettingsProvider`)
+### 1.2 Cliente Flutter (`GeminiService`, `SettingsProvider` y `SyncService`)
 - **Validación en vivo previa:** Método estático `GeminiService.validateGeminiApiKey(key)` que consulta directamente `https://generativelanguage.googleapis.com/v1beta/models?key=...` antes de guardar, comprobando al instante si la clave es auténtica y tiene acceso activo.
 - **Inyección transparente:** `GeminiService._buildHeaders()` consulta `FlutterSecureStorage` de forma asíncrona e inyecta la cabecera `x-custom-gemini-key` sin necesidad de alterar las firmas de métodos existentes ni romper tests o componentes llamadores.
-- **Eliminación y retorno:** `SettingsProvider.removeApiKey()` borra la clave del Keystore seguro y notifica a los listeners, revirtiendo la app inmediatamente al servicio estándar.
+- **Sincronización con cuenta de Google:** Si el usuario tiene o vincula su cuenta de Google, `SettingsProvider` y `SyncService` respaldan la clave en Firestore (`/users/{uid}/presupuestos/user_settings`) y la restauran automáticamente en otros dispositivos o tras reinstalar la aplicación.
+- **Eliminación y retorno:** `SettingsProvider.removeApiKey()` borra la clave del Keystore seguro, actualiza el estado en Firestore y notifica a los listeners, revirtiendo la app inmediatamente al servicio estándar.
 
 ### 1.3 Interfaz de Usuario (`more_screen.dart`)
 - **Ubicación:** Tarjeta dedicada situada inmediatamente debajo de la sección **Almacenamiento y Fotos**.
@@ -31,7 +34,7 @@
   - Si hay clave activa: muestra badge verde **"Activa"**, miniatura enmascarada (`AIzaSy...****`) y botón "Gestionar".
 - **Modal de gestión:**
   - Explicación clara del funcionamiento.
-  - Enlace directo a Google AI Studio (`https://aistudio.google.com/app/apikey`) para obtener la clave con un toque.
+  - Enlace directo a Google AI Studio (`https://aistudio.google.com/app/apikey`) con apertura directa en navegador externo (`LaunchMode.externalApplication` con fallback a navegador del sistema).
   - Campo de texto con alternancia de visibilidad (ocultar/mostrar caracteres) y botón para limpiar.
   - Botón **"Validar y guardar clave"** con indicador de carga durante la comprobación.
   - Botón **"Eliminar clave personalizada"** (cuando ya existe una configurada).
@@ -43,11 +46,13 @@
 
 Sigue estos pasos en la aplicación para verificar el funcionamiento de la nueva funcionalidad:
 
-### Prueba A: Visualización y apertura del modal
+### Prueba A: Visualización y apertura del enlace en el navegador
 1. Abre la app y navega a la pestaña **Más** (última pestaña de la barra inferior).
 2. Haz scroll hasta pasar la tarjeta de **Almacenamiento y Fotos**.
-3. Verifica que inmediatamente debajo aparece la nueva tarjeta: **"API Key de Gemini (Opcional)"**.
-4. Pulsa sobre la tarjeta y comprueba que se despliega la hoja modal con el título, la explicación y el enlace a Google AI Studio.
+3. Verifica que inmediatamente debajo aparece la tarjeta: **"API Key de Gemini (Opcional)"**.
+4. Pulsa sobre la tarjeta para desplegar el modal.
+5. Toca el enlace azul **"Obtener API Key gratis en Google AI Studio"**.
+6. Comprueba que el navegador de tu teléfono se abre directamente en la página de Google AI Studio.
 
 ### Prueba B: Validación de clave inválida
 1. En el campo de texto, escribe cualquier texto falso (ej. `clave_falsa_12345`).
@@ -60,11 +65,17 @@ Sigue estos pasos en la aplicación para verificar el funcionamiento de la nueva
 3. Verifica que valida exitosamente contra Google, se cierra el modal y aparece el SnackBar de confirmación.
 4. En la tarjeta de la pantalla Más, verifica que ahora dice **"Activa"** con la clave enmascarada (`AIzaSy...****`).
 
-### Prueba D: Escaneo o Chat con la clave propia
+### Prueba D: Respaldo y sincronización con Cuenta de Google
+1. En la misma pantalla **Más**, asegúrate de tener tu cuenta de Google vinculada (o pulsa "Vincular con Google").
+2. Guarda una API Key de Gemini.
+3. La clave queda respaldada en tu perfil privado en la nube (`users/{uid}/presupuestos/user_settings`).
+4. Si cierras la sesión y vuelves a vincular la cuenta, la clave se restaurará automáticamente en la app.
+
+### Prueba E: Escaneo o Chat con la clave propia
 1. Ve al Chat IA o escanea una factura.
 2. Comprueba que el procesamiento o consulta responde normalmente (utilizando tu cuota personal a través del Worker).
 
-### Prueba E: Eliminación de la clave
+### Prueba F: Eliminación de la clave
 1. Vuelve a la pantalla Más y pulsa en la tarjeta de API Key (o en "Gestionar").
 2. Pulsa el botón rojo **"Eliminar clave personalizada"**.
-3. Comprueba que la clave se borra, la tarjeta vuelve a su estado inicial y la app sigue funcionando con el servicio estándar de Rinde Más.
+3. Comprueba que la clave se borra del teléfono y de la nube, la tarjeta vuelve a su estado inicial y la app sigue funcionando con el servicio estándar de Rinde Más.

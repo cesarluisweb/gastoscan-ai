@@ -591,6 +591,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                 });
                               } else {
                                 cuentaVinculada = true;
+                                await Provider.of<SettingsProvider>(context, listen: false).loadSettings();
                                 Navigator.pop(ctx);
                               }
                             },

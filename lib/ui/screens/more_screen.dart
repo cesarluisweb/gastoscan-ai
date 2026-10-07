@@ -181,17 +181,29 @@ class MoreScreenState extends State<MoreScreen> {
   Future<void> _abrirUrl(String url, String mensajeError) async {
     final uri = Uri.parse(url);
     try {
-      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      bool launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched) {
+        launched = await launchUrl(uri, mode: LaunchMode.platformDefault);
+      }
       if (!launched && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(mensajeError)),
         );
       }
     } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(mensajeError)),
-        );
+      try {
+        final launched = await launchUrl(uri, mode: LaunchMode.platformDefault);
+        if (!launched && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(mensajeError)),
+          );
+        }
+      } catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(mensajeError)),
+          );
+        }
       }
     }
   }
@@ -862,6 +874,8 @@ class MoreScreenState extends State<MoreScreen> {
                       SnackBar(content: Text('Error: $error')),
                     );
                   } else if (error == null) {
+                    await Provider.of<SettingsProvider>(context, listen: false).loadSettings();
+                    if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('Cuenta vinculada con éxito',
@@ -1050,12 +1064,10 @@ class MoreScreenState extends State<MoreScreen> {
                         const SizedBox(height: 12),
                         InkWell(
                           borderRadius: BorderRadius.circular(8),
-                          onTap: () async {
-                            final uri = Uri.parse('https://aistudio.google.com/app/apikey');
-                            if (await canLaunchUrl(uri)) {
-                              await launchUrl(uri, mode: LaunchMode.externalApplication);
-                            }
-                          },
+                          onTap: () => _abrirUrl(
+                            'https://aistudio.google.com/app/apikey',
+                            'No se pudo abrir el navegador para obtener la API Key.',
+                          ),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(vertical: 4.0),
                             child: Row(

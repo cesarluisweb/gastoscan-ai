@@ -2,7 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import '../core/constants/app_constants.dart';
 import '../data/models/gasto_model.dart';
 import '../data/models/item_gasto_model.dart';
 import '../data/repositories/gasto_repository.dart';
@@ -21,8 +23,68 @@ class SyncService {
       await syncFromFirestore(user);
       await syncPresupuestosToFirestore(user);
       await syncPresupuestosFromFirestore(user);
+
+      // Sincronizar API Key personalizada de Gemini con la cuenta de Google
+      await syncApiKeyBidireccional(user);
     } catch (e) {
       debugPrint("Error en sincronización bidireccional: $e");
+    }
+  }
+
+  Future<void> syncApiKeyBidireccional(User user) async {
+    try {
+      if (user.isAnonymous) return;
+      const secureStorage = FlutterSecureStorage();
+      final localKey = await secureStorage.read(key: AppConstants.prefApiKey);
+      final remoteKey = await syncSettingsFromFirestore(user);
+
+      if (remoteKey != null && remoteKey.trim().isNotEmpty) {
+        if (localKey != remoteKey.trim()) {
+          await secureStorage.write(key: AppConstants.prefApiKey, value: remoteKey.trim());
+        }
+      } else if (localKey != null && localKey.trim().isNotEmpty) {
+        await syncSettingsToFirestore(user, apiKey: localKey.trim());
+      }
+    } catch (e) {
+      debugPrint("Error sincronizando API Key de Gemini: $e");
+    }
+  }
+
+  Future<void> syncSettingsToFirestore(User user, {required String apiKey}) async {
+    try {
+      if (user.isAnonymous) return;
+      final docRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('presupuestos')
+          .doc('user_settings');
+
+      await docRef.set({
+        'gemini_api_key': apiKey.trim(),
+        'updated_at': DateTime.now().toIso8601String(),
+      }, SetOptions(merge: true));
+    } catch (e) {
+      debugPrint("Error guardando settings en Firestore: $e");
+    }
+  }
+
+  Future<String?> syncSettingsFromFirestore(User user) async {
+    try {
+      if (user.isAnonymous) return null;
+      final docRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('presupuestos')
+          .doc('user_settings');
+
+      final doc = await docRef.get();
+      if (!doc.exists) return null;
+      final data = doc.data();
+      if (data == null) return null;
+      return data['gemini_api_key'] as String?;
+    } catch (e) {
+      debugPrint("Error leyendo settings de Firestore: $e");
+      return null;
     }
   }
 

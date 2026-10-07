@@ -2,8 +2,11 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../core/constants/app_constants.dart';
 import '../services/exchange_rate_service.dart';
+import '../services/sync_service.dart';
 
 class SettingsProvider with ChangeNotifier {
   final _secureStorage = const FlutterSecureStorage();
@@ -58,6 +61,29 @@ class SettingsProvider with ChangeNotifier {
       }
     } else {
       _apiKey = secureKey;
+    }
+
+    // Sincronizar API Key con Firestore si el usuario está autenticado con Google
+    if (Firebase.apps.isNotEmpty) {
+      try {
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null && !user.isAnonymous) {
+          if (_apiKey.isEmpty) {
+            final remoteKey = await SyncService().syncSettingsFromFirestore(user);
+            if (remoteKey != null && remoteKey.trim().isNotEmpty) {
+              _apiKey = remoteKey.trim();
+              await _secureStorage.write(key: AppConstants.prefApiKey, value: _apiKey);
+            }
+          } else {
+            final remoteKey = await SyncService().syncSettingsFromFirestore(user);
+            if (remoteKey == null || remoteKey.trim().isEmpty) {
+              await SyncService().syncSettingsToFirestore(user, apiKey: _apiKey);
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint("Error sincronizando API Key con Firestore en loadSettings: $e");
+      }
     }
 
     _guardarFotos = prefs.getBool(AppConstants.prefGuardarFotos) ?? AppConstants.defaultGuardarFotos;
@@ -122,12 +148,34 @@ class SettingsProvider with ChangeNotifier {
     _apiKey = key.trim();
     await _secureStorage.write(key: AppConstants.prefApiKey, value: _apiKey);
     notifyListeners();
+
+    if (Firebase.apps.isNotEmpty) {
+      try {
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null && !user.isAnonymous) {
+          await SyncService().syncSettingsToFirestore(user, apiKey: _apiKey);
+        }
+      } catch (e) {
+        debugPrint("Error sincronizando API Key a Firestore en setApiKey: $e");
+      }
+    }
   }
 
   Future<void> removeApiKey() async {
     _apiKey = '';
     await _secureStorage.delete(key: AppConstants.prefApiKey);
     notifyListeners();
+
+    if (Firebase.apps.isNotEmpty) {
+      try {
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null && !user.isAnonymous) {
+          await SyncService().syncSettingsToFirestore(user, apiKey: '');
+        }
+      } catch (e) {
+        debugPrint("Error sincronizando API Key a Firestore en removeApiKey: $e");
+      }
+    }
   }
 
   Future<void> setGuardarFotos(bool value) async {
