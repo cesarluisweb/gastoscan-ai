@@ -9,8 +9,8 @@
  */
 
 const FALLBACK_MODELS = [
-  "gemini-flash-latest",
-  "gemini-2.5-flash"
+  "gemini-1.5-flash",
+  "gemini-2.0-flash"
 ];
 
 const JWKS_URL = "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com";
@@ -276,8 +276,8 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
 
     let response;
     let responseText = "";
-    let lastStatus = 500;
-    let lastRetryAfter = null;
+    let bestErrorStatus = 500;
+    let bestRetryAfter = null;
 
     for (let i = 0; i < FALLBACK_MODELS.length; i++) {
       const currentModel = FALLBACK_MODELS[modelIndex];
@@ -294,7 +294,12 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
 
         const latencyMs = Date.now() - attemptStart;
         responseText = await response.text();
-        lastStatus = response.status;
+        
+        // Priorizar el error más informativo (429 tiene prioridad sobre 404 o 500)
+        if (bestErrorStatus === 500 || response.status === 429) {
+          bestErrorStatus = response.status;
+          bestRetryAfter = response.headers.get("Retry-After") || bestRetryAfter;
+        }
 
         console.log(JSON.stringify({
           event: "gemini_receipt_attempt",
@@ -309,12 +314,9 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
           break;
         }
 
-        // Si Google devuelve 429 o >= 500, aplicar backoff con jitter antes del siguiente modelo
         if (response.status === 429 || response.status >= 500) {
-          const retryHeader = response.headers.get("Retry-After");
-          if (retryHeader) lastRetryAfter = retryHeader;
-          const delayMs = retryHeader
-            ? Math.min(parseInt(retryHeader, 10) * 1000, 3000)
+          const delayMs = bestRetryAfter
+            ? Math.min(parseInt(bestRetryAfter, 10) * 1000, 3000)
             : (400 + Math.floor(Math.random() * 400));
           await new Promise((resolve) => setTimeout(resolve, delayMs));
         }
@@ -323,22 +325,19 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
         if (modelIndex < FALLBACK_MODELS.length) {
           continue;
         } else {
-          let userFriendlyError = `Error API Gemini: ${lastStatus}`;
-          if (lastStatus === 429) {
-            userFriendlyError = "Límite de solicitudes de Gemini alcanzado (RPM). Espera unos segundos.";
-          } else if (lastStatus === 404) {
-            userFriendlyError = `Modelo de Gemini no disponible (${currentModel} 404).`;
-          } else if (lastStatus >= 500) {
-            userFriendlyError = `Servidores de Gemini temporalmente saturados (${lastStatus}).`;
+          // Si fallaron todos, retornar el "mejor" error sin revelar detalles técnicos de los fallbacks fallidos
+          let userFriendlyError = "Nuestros servidores están muy concurridos procesando facturas. Por favor, espera un momento y reintenta.";
+          if (bestErrorStatus === 429) {
+            userFriendlyError = "Límite de solicitudes procesadas. El servidor está pausando por seguridad. Reintenta en breves segundos.";
           }
 
           return new Response(JSON.stringify({
             error: userFriendlyError,
-            statusCode: lastStatus,
-            retryAfter: lastRetryAfter,
-            details: responseText
+            statusCode: bestErrorStatus,
+            retryAfter: bestRetryAfter,
+            details: "Todos los modelos de respaldo fallaron."
           }), {
-            status: lastStatus,
+            status: bestErrorStatus,
             headers: { ...corsHeaders, "Content-Type": "application/json" }
           });
         }
@@ -551,6 +550,7 @@ ${JSON.stringify(contextData)}
 
     let response;
     let responseText = "";
+    let bestErrorStatus = 500;
 
     for (let i = 0; i < FALLBACK_MODELS.length; i++) {
       const currentModel = FALLBACK_MODELS[modelIndex];
@@ -568,6 +568,10 @@ ${JSON.stringify(contextData)}
         const latencyMs = Date.now() - attemptStart;
         responseText = await response.text();
 
+        if (bestErrorStatus === 500 || response.status === 429) {
+          bestErrorStatus = response.status;
+        }
+
         console.log(JSON.stringify({
           event: "gemini_chat_attempt",
           model: currentModel,
@@ -584,12 +588,18 @@ ${JSON.stringify(contextData)}
           }
           modelIndex++;
           if (modelIndex < FALLBACK_MODELS.length) continue;
+          
+          let userFriendlyError = "Nuestros servidores están muy concurridos procesando información. Por favor, espera un momento y reintenta.";
+          if (bestErrorStatus === 429) {
+             userFriendlyError = "Límite de solicitudes procesadas. El servidor está pausando por seguridad. Reintenta en breves segundos.";
+          }
+          
           return new Response(JSON.stringify({
-            error: response.status === 429 ? "Límite de solicitudes de Gemini alcanzado." : `Error API Gemini: ${response.status}`,
-            statusCode: response.status,
-            details: responseText
+            error: userFriendlyError,
+            statusCode: bestErrorStatus,
+            details: "Todos los modelos de respaldo fallaron."
           }), {
-            status: response.status,
+            status: bestErrorStatus,
             headers: { ...corsHeaders, "Content-Type": "application/json" }
           });
         }
