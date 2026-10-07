@@ -1005,7 +1005,7 @@ class MoreScreenState extends State<MoreScreen> {
                             const Icon(Icons.alternate_email, color: AppColors.primaryDark, size: 24),
                             const SizedBox(width: 8),
                             Text(
-                              esRegistro ? 'Vincular con Correo' : 'Iniciar Sesión',
+                              esRegistro ? 'Vincular con Correo' : 'Iniciar Sesión con Correo',
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
