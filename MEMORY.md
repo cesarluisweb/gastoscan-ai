@@ -16,6 +16,7 @@
 - **Acceso Directo a Comprobantes:** Chip táctil "Foto" en `ExpenseCard` abre el visor completo en 1 toque sin obligar a entrar en la pantalla de edición.
 - **Mocks con `noSuchMethod` para Plugins:** En tests, clases de dependencias externas se simulan extendiendo `Fake` y delegando en `noSuchMethod`.
 - **Transparencia en Errores de Gemini:** El gateway reporta causa real sin enmascarar modelos muertos como límites de cuota.
+- **Observabilidad Declarativa:** Logs y telemetría de Cloudflare Workers fijados con `[observability] enabled = true` en `wrangler.toml`.
 - **Cache-Buster en APKs OTA:** URLs de descarga y verificación de APK llevan `?b=$BUILD_NUM` para evitar descargas cacheadas por Cloudflare.
 
 ## Errores y Fricciones a Evitar
