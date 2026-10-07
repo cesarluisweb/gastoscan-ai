@@ -100,6 +100,11 @@ La compilación en GitHub Actions (`build_apk.yml`) ejecuta `flutter create`, lo
   3. *Autenticación con Claves `AQ.` (Encabezado Estricto):* Las peticiones a `generativelanguage.googleapis.com` deben autenticarse mediante el encabezado HTTP `x-goog-api-key: <KEY>`. Prohibido enviar la clave en cabeceras `Authorization: Bearer` para evitar el error `401 UNAUTHENTICATED` (`ACCESS_TOKEN_TYPE_UNSUPPORTED`).
   4. *Sanitización en Cloudflare Workers:* Toda credencial leída de `env` o cabeceras personalizadas debe ser sanitizada con `.trim().replace(/[\r\n\t ]+/g, "")` antes de despacharse a Google.
   5. *Observabilidad Declarativa en Cloudflare:* `wrangler.toml` DEBE incluir siempre `[observability] enabled = true` (con `head_sampling_rate = 1`) para garantizar que la retención de eventos, métricas de tokens y logs de fallback queden activos automáticamente tras cualquier despliegue sin depender de configuraciones manuales en el dashboard web.
+- **Arquitectura Híbrida de Escaneo (Ahorro de Tokens y Red):**
+  1. *Fase 1 (OCR Local Dispositivo):* Toda captura ejecuta primero Google ML Kit en el teléfono sin costo de API ni consumo de red.
+  2. *Fase 2 (Envío Solo Texto):* Si el texto extraído tiene score >= 6 (montos, totales, palabras clave fiscales, fechas), se envía únicamente el texto estructurado a Gemini (`analyzeReceiptText`), reduciendo el consumo de tokens en un 70-80% (~300 tokens vs ~1.400).
+  3. *Fase 3 (Fallback a Visión):* Si el texto no es confiable o falla la validación semántica local, se activa el modo multimodal enviando la imagen comprimida a 1200x1600 px, calidad 82% JPEG (~150-250 KB en Base64).
+  4. *Telemetría y Cabeceras en Gateway:* El Cloudflare Worker (`rindemas-gateway`) tiene activo y emite en sus logs de observabilidad el modo utilizado (`TEXTO_OCR` vs `VISION_MULTIMODAL`), peso en KB de la imagen o longitud del texto, y tokens consumidos, exponiendo las cabeceras HTTP de respuesta `x-receipt-mode` y `x-receipt-image-kb`.
 
 ## 9. Lógica de Negocio: Presupuestos Mensuales
 - **Aislamiento por Mes:** Los presupuestos (general y por categoría) se persisten por mes y año `(anio, mes)` en SQLite. Modificar el presupuesto de un mes nunca debe alterar los meses pasados ni futuros.
