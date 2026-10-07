@@ -162,11 +162,15 @@ jobs:
       - name: Verificar APK publicado
         # Fail-closed: el version.json (paso siguiente) solo debe generarse si
         # el APK compilado es el que sirve el redirect. Compara tamanos con
-        # reintentos por propagacion del servidor.
+        # reintentos por propagacion del servidor usando cache buster para bypass de Cloudflare.
         run: |
           LOCAL_SIZE=$(stat -c%s build/app/outputs/flutter-apk/app-release.apk)
+          APP_VERSION=$(grep "^version:" pubspec.yaml | sed -e 's/version:[[:space:]]*//' | cut -d '+' -f 1 | tr -d '[:space:]')
+          BASE_BUILD=$(grep "^version:" pubspec.yaml | sed -e 's/version:[[:space:]]*//' | cut -d '+' -f 2 | tr -d '[:space:]')
+          BUILD_NUM=$(( BASE_BUILD + ${{ github.run_number }} ))
+          
           for i in 1 2 3 4 5; do
-            REMOTE_SIZE=$(curl -sI "https://cesarluis.com/rindemas/rindemas.apk" | grep -i '^content-length' | tr -d '\r' | awk '{print $2}')
+            REMOTE_SIZE=$(curl -sI "https://cesarluis.com/rindemas/rindemas.apk?b=$BUILD_NUM" | grep -i '^content-length' | tr -d '\r' | awk '{print $2}')
             if [ "$REMOTE_SIZE" = "$LOCAL_SIZE" ]; then echo "APK verificado: $LOCAL_SIZE bytes"; exit 0; fi
             echo "Intento $i: local=$LOCAL_SIZE remoto=$REMOTE_SIZE. Reintentando en 15s..."
             sleep 15
@@ -197,7 +201,7 @@ jobs:
             "buildNumber": $BUILD_NUM,
             "isMajor": $IS_MAJOR,
             "releaseNotes": "Actualización de Rinde Más con mejoras de rendimiento y nuevas funciones.",
-            "apkUrl": "https://rindemas.cesarluis.com/rindemas.apk"
+            "apkUrl": "https://rindemas.cesarluis.com/rindemas.apk?b=$BUILD_NUM"
           }
           EOF
           

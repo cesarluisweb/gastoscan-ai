@@ -42,7 +42,7 @@ void main() {
       expect(result.isMajor, isTrue);
       expect(result.version, equals('1.0.4'));
       expect(result.buildNumber, equals(309));
-      expect(result.apkUrl, equals('https://rindemas.cesarluis.com/rindemas.apk'));
+      expect(result.apkUrl, equals('https://rindemas.cesarluis.com/rindemas.apk?b=309'));
       expect(result.releaseNotes, contains('presupuesto'));
     });
 

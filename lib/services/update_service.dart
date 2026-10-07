@@ -48,7 +48,9 @@ class UpdateInfo {
         : int.tryParse(json['buildNumber']?.toString() ?? '0') ?? 0;
     final String remoteVersion = json['version']?.toString() ?? '';
     final String notes = json['releaseNotes']?.toString() ?? 'Mejoras y correcciones en la aplicación.';
-    final String url = json['apkUrl']?.toString() ?? 'https://rindemas.cesarluis.com/rindemas.apk';
+    final String rawUrl = json['apkUrl']?.toString() ?? 'https://rindemas.cesarluis.com/rindemas.apk';
+    // Anti-caché de CDN (Cloudflare): agregar parámetro del build si no lo tiene
+    final String url = rawUrl.contains('?') ? '$rawUrl&b=$remoteBuildNumber' : '$rawUrl?b=$remoteBuildNumber';
     final bool isMajorUpdate = json['isMajor'] == true || json['isCritical'] == true;
 
     // Hay actualización si la versión semántica es mayor O si el buildNumber es mayor teniendo igual o superior versión
