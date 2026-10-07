@@ -232,9 +232,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
               gastos: gastoProvider.gastos,
               presupuestoGeneral: gastoProvider.presupuestoGeneral,
               metaAhorro: gastoProvider.metaAhorro,
-              totalesPorCategoria: gastoProvider.totalesPorCategoria,
-              totalGastadoMes: gastoProvider.totalMesUsd,
-              monedaPrincipal: settings.monedaPrincipal,
+              totalesPorCategoria: gastoProvider.monedaPresupuesto == 'VES'
+                  ? gastoProvider.totalesPorCategoriaVes
+                  : gastoProvider.totalesPorCategoria,
+              totalGastadoMes: gastoProvider.monedaPresupuesto == 'VES'
+                  ? gastoProvider.totalMesVes
+                  : gastoProvider.totalMesUsd,
               monedaPresupuesto: gastoProvider.monedaPresupuesto,
               tasaCambio: settings.tasaCambioVesUsd,
               onChatTap: widget.onNavigateToChat,
@@ -244,20 +247,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 gastoProvider.totalesPorCategoriaVes.isNotEmpty ||
                 gastoProvider.presupuestosPorCategoria.isNotEmpty) ...[
               CategoryChart(
-                categoryTotals: settings.monedaPrincipal == 'VES'
+                categoryTotals: gastoProvider.monedaPresupuesto == 'VES'
                     ? gastoProvider.totalesPorCategoriaVes
                     : gastoProvider.totalesPorCategoria,
                 categoryBudgets: gastoProvider.presupuestosPorCategoria,
                 presupuestoGeneral: gastoProvider.presupuestoGeneral,
-                totalGastadoMes: settings.monedaPrincipal == 'VES'
+                totalGastadoMes: gastoProvider.monedaPresupuesto == 'VES'
                     ? gastoProvider.totalMesVes
                     : gastoProvider.totalMesUsd,
                 gastosMes: gastoProvider.gastos,
                 onSetBudget: (categoria, budget) async {
                   await gastoProvider.setPresupuestoCategoria(categoria, budget);
                 },
-                monedaPrincipal: settings.monedaPrincipal,
-                tasaCambio: settings.tasaCambioVesUsd,
+                monedaPrincipal: gastoProvider.monedaPresupuesto,
                 showBudgetBars: false,
                 onNavigateToAnalysis: widget.onNavigateToAnalysis,
               ),

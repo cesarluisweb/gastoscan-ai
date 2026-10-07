@@ -15,7 +15,6 @@ class CategoryChart extends StatefulWidget {
   final List<GastoModel> gastosMes;
   final void Function(String categoria, double budget)? onSetBudget;
   final String monedaPrincipal;
-  final double tasaCambio;
   final bool showBudgetBars;
   final VoidCallback? onNavigateToAnalysis;
 
@@ -28,7 +27,6 @@ class CategoryChart extends StatefulWidget {
     this.gastosMes = const [],
     this.onSetBudget,
     this.monedaPrincipal = 'USD',
-    this.tasaCambio = 1.0,
     this.showBudgetBars = true,
     this.onNavigateToAnalysis,
   }) : super(key: key);
@@ -369,11 +367,6 @@ class _CategoryChartState extends State<CategoryChart> {
       }
     }
     if (rawBudget <= 0) return 0.0;
-
-    // Si los presupuestos están fijados en USD pero la vista actual es VES, adaptamos el límite con la tasa actual
-    if (widget.monedaPrincipal == 'VES') {
-      return rawBudget * (widget.tasaCambio > 0 ? widget.tasaCambio : 1.0);
-    }
     return rawBudget;
   }
 

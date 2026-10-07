@@ -13,7 +13,6 @@ class AiInsightCard extends StatelessWidget {
   final double metaAhorro;
   final Map<String, double> totalesPorCategoria;
   final double totalGastadoMes;
-  final String monedaPrincipal;
   final String monedaPresupuesto;
   final double tasaCambio;
   final VoidCallback? onChatTap;
@@ -26,7 +25,6 @@ class AiInsightCard extends StatelessWidget {
     this.metaAhorro = 0.0,
     required this.totalesPorCategoria,
     required this.totalGastadoMes,
-    this.monedaPrincipal = 'USD',
     this.monedaPresupuesto = 'USD',
     this.tasaCambio = 1.0,
     this.onChatTap,
@@ -61,7 +59,7 @@ class AiInsightCard extends StatelessWidget {
         metaAhorro,
         null,
         tasaCambio,
-        monedaPrincipal,
+        monedaPresupuesto,
       );
 
       if (savingsSnapshot.status == SavingsGoalStatus.comprometida) {
@@ -70,7 +68,7 @@ class AiInsightCard extends StatelessWidget {
           exceso,
           null,
           tasaCambio,
-          monedaPrincipal,
+          monedaPresupuesto,
         );
         return 'Has superado tu límite de gasto por $formattedExceso. Tu meta de ahorro de $formattedMeta está siendo comprometida.';
       }
@@ -81,7 +79,7 @@ class AiInsightCard extends StatelessWidget {
           proy,
           null,
           tasaCambio,
-          monedaPrincipal,
+          monedaPresupuesto,
         );
         return 'Atención: a tu ritmo actual proyectas gastar $formattedProy. Modera tus consumos para proteger tu meta de ahorro de $formattedMeta.';
       }
@@ -102,7 +100,7 @@ class AiInsightCard extends StatelessWidget {
           excesoUsd,
           null,
           tasaCambio,
-          monedaPrincipal,
+          monedaPresupuesto,
         );
         return 'Has superado tu presupuesto general por $formattedExceso. Conviene moderar consumos no esenciales.';
       }

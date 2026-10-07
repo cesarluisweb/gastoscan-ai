@@ -164,18 +164,17 @@ void main() {
   });
 
   group('CategoryChart Currency Preference Tests', () {
-    testWidgets('renders category totals and budgets in VES when monedaPrincipal is VES', (tester) async {
+    testWidgets('renders category totals and budgets in the budget currency (VES)', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: SingleChildScrollView(
               child: CategoryChart(
                 categoryTotals: const {'Alimentación': 800.0},
-                categoryBudgets: const {'Alimentación': 50.0},
-                presupuestoGeneral: 100.0,
+                categoryBudgets: const {'Alimentación': 2000.0},
+                presupuestoGeneral: 10000.0,
                 totalGastadoMes: 800.0,
                 monedaPrincipal: 'VES',
-                tasaCambio: 40.0,
               ),
             ),
           ),
@@ -183,8 +182,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // En VES, categoryTotals ya viene provisto en Bolívares (Bs. 800)
-      // y categoryBudgets (50 USD * 40 = Bs. 2000)
+      // La vista usa la moneda del presupuesto: totales y budgets llegan ya
+      // convertidos por el llamador, el chart no aplica tasas.
       expect(
         find.text('${CurrencyFormatter.formatVes(800.0)} / ${CurrencyFormatter.formatVes(2000.0)}'),
         findsOneWidget,

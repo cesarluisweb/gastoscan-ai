@@ -42,10 +42,6 @@ class GastoProvider with ChangeNotifier {
   Map<String, double> get totalesPorCategoriaVes =>
       _totalesPorCategoriaVes.isNotEmpty ? _totalesPorCategoriaVes : _totalesPorCategoria;
 
-  Map<String, double> totalesPorCategoriaPara(String moneda) {
-    return moneda == 'VES' ? _totalesPorCategoriaVes : _totalesPorCategoria;
-  }
-
   Map<String, double> get presupuestosPorCategoria => _presupuestosPorCategoria;
 
   SavingsHealthSnapshot get savingsSnapshot {

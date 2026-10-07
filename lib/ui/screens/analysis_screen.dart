@@ -119,20 +119,19 @@ class AnalysisScreen extends StatelessWidget {
             _buildGeneralBudgetCard(context, gastoProvider, settings),
             const SizedBox(height: 16),
             CategoryChart(
-              categoryTotals: settings.monedaPrincipal == 'VES'
+              categoryTotals: gastoProvider.monedaPresupuesto == 'VES'
                   ? gastoProvider.totalesPorCategoriaVes
                   : gastoProvider.totalesPorCategoria,
               categoryBudgets: gastoProvider.presupuestosPorCategoria,
               presupuestoGeneral: gastoProvider.presupuestoGeneral,
-              totalGastadoMes: settings.monedaPrincipal == 'VES'
+              totalGastadoMes: gastoProvider.monedaPresupuesto == 'VES'
                   ? gastoProvider.totalMesVes
                   : gastoProvider.totalMesUsd,
               gastosMes: gastoProvider.gastos,
               onSetBudget: (categoria, budget) async {
                 await gastoProvider.setPresupuestoCategoria(categoria, budget);
               },
-              monedaPrincipal: settings.monedaPrincipal,
-              tasaCambio: settings.tasaCambioVesUsd,
+              monedaPrincipal: gastoProvider.monedaPresupuesto,
               showBudgetBars: true,
             ),
           ] else
