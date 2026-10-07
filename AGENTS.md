@@ -1,12 +1,12 @@
-# Reglas Técnicas del Proyecto (Control de Gastos VE)
+# Reglas Técnicas del Proyecto (Rinde Más)
 
 ## 0. Autonomía Ejecutiva y Protocolo de Memoria
 
 ### Semáforo de Límites
 - 🟢 **Siempre (Incondicional):**
-  - Monitorear el CI en GitHub Actions vía API (`curl`) tras cada `git push` hasta confirmar `success` antes de notificar al usuario.
+  - Monitorear el CI en GitHub Actions vía API tras cada `git push` hasta confirmar `success` antes de notificar al usuario.
   - Mantener textos de interfaz y respuestas en español neutro/venezolano.
-  - Respetar la paleta oficial (textos oscuros legibles, amarillo reservado para iconos y acentos).
+  - Respetar la paleta oficial y reglas de contraste en [`DESIGN.md`](./DESIGN.md) (texto negro sobre amarillo, texto negro/gris sobre blanco).
   - Consultar `MEMORY.md` al iniciar una tarea y actualizarlo al finalizarla.
   - Guardar scripts y modificaciones en PowerShell con codificación UTF-8 explícita.
   - Romper el análisis e iterar hacia la acción (editar/probar) en un máximo de 2 lecturas por bloque de código.
@@ -29,7 +29,7 @@
 1. **Al iniciar:** Leer `MEMORY.md` para situarse en el estado inmediato del trabajo.
 2. **Al finalizar:** Actualizar `MEMORY.md` con el estado final, decisiones tomadas y errores a evitar.
 3. **Brevedad:** Mantener `MEMORY.md` en máximo ~50 líneas, depurando lo que ya no aporte.
-4. **Graduación:** Si un patrón o lección se vuelve permanente, moverlo a `GEMINI.md` y eliminarlo de `MEMORY.md`.
+4. **Graduación:** Si un patrón o lección se vuelve permanente, moverlo a `AGENTS.md` o `DESIGN.md` y eliminarlo de `MEMORY.md`.
 
 ## 1. Entorno de Desarrollo y Ejecución
 **IMPORTANTE:** El repositorio oficial de este proyecto ha sido migrado permanentemente a `C:\Development\Control de gastos VE` para evitar conflictos con Google Drive.
@@ -46,17 +46,17 @@ La compilación en GitHub Actions (`build_apk.yml`) ejecuta `flutter create`, lo
 - **Inyección por Bash:** Toda configuración nativa requerida DEBE inyectarse programáticamente usando scripts automatizados (ej. `sed`) directamente dentro del archivo `.github/workflows/build_apk.yml` en el paso posterior a la regeneración de la plataforma.
 - **Auth Bypass:** Para evitar el Error 10 de Google Sign-In por la ausencia del archivo `google-services.json` generado nativamente, debes pasar explícitamente el `serverClientId` (Web Client ID) como parámetro en el constructor de `GoogleSignIn()` en Dart.
 
-## 4. Guía de Diseño UI (Colores y Formularios)
-- **Prohibido textos amarillos:** NUNCA apliques los colores de acento amarillos (`AppColors.primary` o `AppColors.primaryDark`) a textos regulares, descripciones o etiquetas. Todos los textos deben usar `AppColors.textPrimary` (negro/oscuro) para garantizar su legibilidad.
-- El color amarillo (`AppColors.primaryDark` preferiblemente) queda reservado de forma estricta y exclusiva para **iconos**, contenedores de fondo y símbolos gráficos de acción.
-- **Banners y SnackBars:** Todo `SnackBar` o elemento flotante con fondo amarillo (`AppColors.primary` o `AppColors.primaryDark`) DEBE llevar su texto explícitamente en color negro (`style: TextStyle(color: Colors.black)`) para garantizar su legibilidad.
-- **Botón Único en Listas Dinámicas:** En formularios con listas dinámicas desplazables de ítems (como el desglose de productos de un gasto), no duplicar botones de agregar arriba y abajo. Usar un único botón de ancho completo al final de la lista para respetar el flujo natural de scroll y carga secuencial. Iconos de acción en dicho botón deben usar `AppColors.primaryDark`.
-- **No Exclusión en Estados Asíncronos Concurrentes (Banners):** En componentes que notifican estados de colas o tareas en segundo plano (ej. procesamiento OCR, ítems pendientes de revisión, estados sin conexión), NUNCA estructurar la presentación como `if / else if` excluyente si los estados pueden coexistir. Deben acumularse y apilarse verticalmente (ej. en un `Column` con espaciado compacto) para que una tarea terminada no oculte el progreso o estado de otra en curso.
-- **Flexibilidad en Etiquetas con Iconos (Evitar RenderFlex Overflow):** En filas (`Row`) dentro de tarjetas, modales o formularios que contengan iconos descriptivos junto a textos de etiquetas o subtítulos, envolver SIEMPRE el widget `Text` en un `Expanded` (o `Flexible`). Esto previene desbordamientos horizontales (`RenderFlex overflow`) ante textos largos, sufijos dinámicos de moneda o pantallas estrechas.
+## 4. Guía de Diseño UI (Fuente de Verdad: DESIGN.md)
+Toda interfaz, pantalla, componente y diálogo debe ceñirse rigurosamente a [`DESIGN.md`](./DESIGN.md).
+- **Regla Estricta de Contraste:**
+  - **Fondo amarillo (`AppColors.primary*`):** Texto SIEMPRE **negro** (`Colors.black` o `AppColors.textPrimary`). Queda terminantemente prohibido usar texto blanco (`Colors.white`) en `SnackBar`, `Badge.count`, botones o chips.
+  - **Fondo blanco/claro (`AppColors.card`, `surface`, `background`):** Texto negro (`AppColors.textPrimary`) para títulos, montos y acciones (`TextButton`), o gris (`AppColors.textSecondary`) para metadatos y categorías de ítems (`it.categoria`). Prohibido usar texto amarillo sobre fondo blanco.
+  - **Uso Exclusivo del Amarillo:** Reservado estrictamente para **iconos**, contenedores de fondo con texto negro y bordes de acento activo.
+- **Maquetación Robusta:** Envolver textos en `Expanded` dentro de filas (`Row`) con iconos para prevenir desbordamientos (`RenderFlex overflow`), botón único de agregar al final de listas dinámicas, y usar contenedor `Material` para `ListTile` en Flutter 3.24+. Consultar snippets completos en [`DESIGN.md`](./DESIGN.md).
 
 ## 5. Verificación de CI y Promesas al Usuario
 - **NUNCA** le digas al usuario que la aplicación "ya está lista para descargar" inmediatamente después de hacer un git push.
-- DEBES utilizar la API de GitHub (usando curl a https://api.github.com/repos/cesarluisweb/gastoscan-ai/actions/runs) para monitorear activamente el estado del workflow.
+- DEBES utilizar la API de GitHub para monitorear activamente el estado del workflow.
 - Solo puedes notificar éxito cuando el workflow correspondiente al último commit haya finalizado con un estado de success. Si falla, debes intentar leer los logs para autocorregir el error sin que el usuario te lo tenga que pedir.
 - **Lectura de Logs de Error:** La API de GitHub para descargar logs de jobs (`/jobs/{id}/logs`) devuelve `403` en este repositorio. En su lugar, el workflow ya guarda los resultados de pruebas en `test_results.txt` y hace commit automáticamente al fallar. Para leer los errores de CI, haz `git pull --rebase` y luego lee `test_results.txt`.
 - **Diagnóstico de Fallos en CI:** Para inspeccionar rápidamente el fallo en GitHub Actions sin depender exclusivamente de `test_results.txt`, consultar los pasos del job mediante la API de GitHub (`GET /repos/:owner/:repo/actions/runs/:run_id/jobs`). Si un paso falla, se pueden extraer las líneas de error consultando el log del job específico (`GET /actions/jobs/:job_id/logs`) con PowerShell filtrando por patrones (`FAIL`, `Error:`, `Exception`).
@@ -80,9 +80,9 @@ La compilación en GitHub Actions (`build_apk.yml`) ejecuta `flutter create`, lo
 - **Ajustes de Usuario en Firestore bajo Reglas Existentes:** Al persistir configuraciones o credenciales del usuario (como la API Key de Gemini BYOK) en Firestore sin alterar `firestore.rules`, utilizar el documento `/users/{userId}/presupuestos/user_settings`. La lógica de lectura de presupuestos debe ignorar explícitamente este documento (`if (anio == 0 || mes == 0) continue`).
 
 ## 7. Gestión de Documentación del Proyecto
-- **Archivos de Planificación:** Siempre que se genere, actualice o discuta un documento estratégico para el proyecto (como ROADMAP.md, PROJECT.md, planes de arquitectura, o guías de estilo), DEBE guardarse directamente en la raíz del repositorio.
+- **Archivos de Planificación y Estilo:** Siempre que se genere, actualice o discuta un documento estratégico para el proyecto (como `ROADMAP.md`, `PROJECT.md`, `DESIGN.md`, planes de arquitectura, o guías de estilo), DEBE guardarse directamente en la raíz del repositorio.
 - **Actualización Obligatoria del Roadmap:** Cada vez que se complete una tarea, funcionalidad, corrección o hito planificado, se DEBE actualizar inmediatamente `ROADMAP.md` marcando el ítem como completado (`(Completada ✅)`) o tachándolo, manteniendo el estado de avance siempre al día.
-- **Bitácora de Marketing Obligatoria:** Cada vez que se ejecute una nueva acción, post, experimento, campaña o se recopilen aprendizajes de marketing y comunidad, se DEBE registrar y actualizar inmediatamente en `DOC_BITACORA_MARKETING.md` para acumular conocimiento reutilizable para este y futuros proyectos.
+- **Bitácora de Marketing Obligatoria:** Cada vez que se ejecute una nueva acción, post, experimento, campaña o se recopilen aprendizajes de marketing y comunidad, se DEBE registrar y actualizar inmediatamente en `DOC_BITACORA_MARKETING.md`.
 - **Protocolo para Cambios Importantes o Numerosos:** Para cambios estructurales, refactorizaciones o funcionalidades con múltiples componentes:
   1. Registrar los cambios en detalle en un documento técnico dedicado en la raíz del repositorio (`DOC_*.md`) y mantenerlo referenciado.
   2. Proveer al usuario una guía de pruebas paso a paso para que realice la verificación manual en su dispositivo o entorno.
@@ -183,7 +183,3 @@ Al redactar sugerencias de respuestas para foros (Reddit), redes, mensajes direc
 - **Llamado a la Acción Directo y Puntuación Casual:** Invitar a probar con preguntas de una sola línea sin rodeos y puntuación digital relajada, omitiendo el signo de apertura `¿` (ej. *"Genial, te gustaría probarla?"*, *"Si la pruebas, me dejas tu opinión sincera"*).
 - **Claridad Técnica Serena:** Explicar el funcionamiento de forma transparente, directa y sin rodeos (ej. sin bancos, sin contraseñas, respaldo privado en su Google).
 - **Cierre Constructivo:** Conectar el feedback con la mejora del producto (ej. *"me ayuda a seguir dándole prioridad a la privacidad"*).
-
-
-
-
