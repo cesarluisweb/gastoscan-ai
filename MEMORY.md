@@ -7,7 +7,7 @@
 - **Últimos hitos:** 
   1. **Gestión de Comprobantes, Visor Directo y Galería Mensual (`DOC_COMPROBANTES_Y_GALERIA.md`):** Adjuntar/eliminar comprobantes en gastos manuales, visor interactivo a pantalla completa con zoom y compartir (`ReceiptViewerDialog`), filtro rápido por foto en historial de gastos (`Icons.photo_library_outlined`), acceso a galería mensual desde la tarjeta "Almacenamiento y Fotos" en Más (`ReceiptGalleryScreen`), y guardado directo en álbum "Rinde Más" del teléfono sin duplicidad de almacenamiento (`gal: ^2.3.0`).
   2. **API Key Propia (BYOK Gemini) con Sincronización en Nube:** Soporte en Cloudflare Worker con cabecera `x-custom-gemini-key`, rate limit ampliado (60 rpm). En Flutter, almacenamiento seguro y sincronización bidireccional en Firestore (`users/{uid}/presupuestos/user_settings`).
-  3. **Cadena Gemini Optimizada a Flash-Lite:** `gemini-3.1-flash-lite` (ahorro) y `gemini-3.5-flash-lite` (respaldo) con métricas en cabeceras HTTP.
+  3. **Cadena Gemini Optimizada a Flash-Lite y Headers x-goog-api-key:** Reducción estricta a `gemini-3.1-flash-lite` y `gemini-3.5-flash-lite`. Soporte para nuevas keys `AQ.` vía `x-goog-api-key` y métricas expuestas (`x-gemini-model`, `x-gemini-tokens`).
   4. **Chips Dinámicos por Fecha:** Tasas históricas de la fecha del gasto en `ReviewExpenseScreen`.
   5. **Gate Estricto de CI:** `flutter analyze --fatal-warnings` y suite completa de pruebas unitarias/widgets activas en verde.
 

@@ -94,6 +94,11 @@ La compilación en GitHub Actions (`build_apk.yml`) ejecuta `flutter create`, lo
 - **Prompt de Decimales:** En los prompts de extracción OCR, NUNCA pidas "no usar comas" (ya que la IA tiende a eliminarlas dejando números inflados). En su lugar, ordena explícitamente: *"Si el precio usa coma (ej. 12,50), reemplázala por un punto (12.50)"*.
 - **Moneda Unificada:** Para facturas venezolanas con ítems en Bolívares (VES) y total en USD ("Ref"), la IA DEBE extraer todos los montos en la moneda principal de los ítems (VES) para evitar descuadres en los cálculos de la app.
 - **Red de Seguridad en Dart:** La aplicación debe mantener una validación matemática local que sume los ítems y los compare con el total de la factura, aplicando autocorrección si la IA omite un separador de decimales.
+- **Arquitectura de Gateway y Cuotas de Gemini API:**
+  1. *Alcance por Proyecto:* Las cuotas (RPM, RPD y límites de facturación por ventana de 10 min) son evaluadas por proyecto en Google AI Studio, nunca por API Key. Ante un bloqueo general de proyecto, crear nuevas claves en el mismo proyecto no restablece el servicio; requiere nuevo proyecto, reinicio diario (medianoche PST) o habilitar facturación.
+  2. *Exclusividad Flash-Lite:* El Cloudflare Gateway (`rindemas-gateway`) debe limitar estrictamente su cadena de fallback a versiones explícitas de Flash-Lite (`gemini-3.1-flash-lite` y `gemini-3.5-flash-lite`). Prohibido incluir modelos pesados (3.8 Flash, Pro) o alias `latest` en la cadena para evitar bloqueos por cuotas mínimas y proteger el límite de gasto de Tier 1 ($10 / 10 min).
+  3. *Autenticación con Claves `AQ.` (Encabezado Estricto):* Las peticiones a `generativelanguage.googleapis.com` deben autenticarse mediante el encabezado HTTP `x-goog-api-key: <KEY>`. Prohibido enviar la clave en cabeceras `Authorization: Bearer` para evitar el error `401 UNAUTHENTICATED` (`ACCESS_TOKEN_TYPE_UNSUPPORTED`).
+  4. *Sanitización en Cloudflare Workers:* Toda credencial leída de `env` o cabeceras personalizadas debe ser sanitizada con `.trim().replace(/[\r\n\t ]+/g, "")` antes de despacharse a Google.
 
 ## 9. Lógica de Negocio: Presupuestos Mensuales
 - **Aislamiento por Mes:** Los presupuestos (general y por categoría) se persisten por mes y año `(anio, mes)` en SQLite. Modificar el presupuesto de un mes nunca debe alterar los meses pasados ni futuros.
