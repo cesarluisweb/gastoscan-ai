@@ -159,7 +159,7 @@ class AnalysisScreen extends StatelessWidget {
         ? (budget - metaAhorro).clamp(0.0, double.infinity)
         : budget;
 
-    final double spent = isBudgetVes
+    final double spent = gastoProvider.monedaPresupuesto == 'VES'
         ? gastoProvider.totalMesVes
         : gastoProvider.totalMesUsd;
     final bool hasBudget = budget > 0;
