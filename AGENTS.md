@@ -5,6 +5,7 @@
 ### Semáforo de Límites
 - 🟢 **Siempre (Incondicional):**
   - Monitorear el CI en GitHub Actions vía API tras cada `git push` hasta confirmar `success` antes de notificar al usuario.
+  - Al modificar la landing page o el panel web (`landing/`), compilar con `npm run build`, desplegar a Firebase Hosting (`firebase deploy --only hosting`), hacer `git push`, y validar con una petición HTTP que los cambios estén visibles en producción antes de confirmar la tarea.
   - Mantener textos de interfaz y respuestas en español neutro/venezolano.
   - Respetar la paleta oficial y reglas de contraste en [`DESIGN.md`](./DESIGN.md) (texto negro sobre amarillo, texto negro/gris sobre blanco).
   - Consultar `MEMORY.md` al iniciar una tarea y actualizarlo al finalizarla.
@@ -24,6 +25,7 @@
   - Ejecutar bucles de relectura redundante (`view_file` más de 2 veces sobre el mismo rango de archivo sin cambios intermedios). Tras identificar la causa, proceder inmediatamente a editar o consultar.
   - Alojar archivos `.apk` directamente en `landing/public/` o `landing/dist/` (Firebase Hosting bloquea ejecutables en plan Spark con error HTTP 400).
   - Usar dominios con proxy naranja de Cloudflare como `FTP_SERVER` en CI/CD (el proxy bloquea el puerto 21 de FTP).
+  - Afirmar en textos de usuario o interfaz que los datos se guardan en el "Google Drive personal" (se guardan localmente con sincronización segura en la nube). Tampoco saturar los textos de usuario con tecnicismos innecesarios como "Firebase".
 
 ### Protocolo de Memoria Dinámica
 1. **Al iniciar:** Leer `MEMORY.md` para situarse en el estado inmediato del trabajo.
@@ -45,6 +47,16 @@ La compilación en GitHub Actions (`build_apk.yml`) ejecuta `flutter create`, lo
 - **Prohibición de Edición Local:** Queda **estrictamente prohibido** modificar manualmente archivos como `android/app/build.gradle` o `android/settings.gradle` para instalar dependencias nativas, ya que estos cambios se perderán en la nube.
 - **Inyección por Bash:** Toda configuración nativa requerida DEBE inyectarse programáticamente usando scripts automatizados (ej. `sed`) directamente dentro del archivo `.github/workflows/build_apk.yml` en el paso posterior a la regeneración de la plataforma.
 - **Auth Bypass:** Para evitar el Error 10 de Google Sign-In por la ausencia del archivo `google-services.json` generado nativamente, debes pasar explícitamente el `serverClientId` (Web Client ID) como parámetro en el constructor de `GoogleSignIn()` en Dart.
+
+### 3.1. Despliegue de la Landing Web y Panel (`landing/`)
+La landing page y el panel web se alojan en **Firebase Hosting** (`gastoscan-ai`) apuntando al directorio `landing/dist`.
+- **Flujo Obligatorio de Publicación:**
+  1. Compilar con `npm run build` dentro de `landing/`.
+  2. Desplegar inmediatamente a Firebase Hosting con `firebase deploy --only hosting` desde la raíz.
+  3. Hacer `git commit` y `git push` a `main` para sincronizar el repositorio y disparar el pipeline de CI/CD.
+  4. Comprobar mediante petición HTTP que la URL pública (`https://rindemas.cesarluis.com`) devuelve el contenido nuevo antes de dar la tarea por concluida.
+- **Prohibición de Suposición de Despliegue:** NUNCA asumir que la web está actualizada únicamente porque el comando local de build finalizó con éxito.
+- **Comunicación al Usuario:** Al comunicar privacidad y sincronización al usuario final, usar términos claros como "sincronización segura y cifrada en la nube con tu cuenta", evitando tecnicismos innecesarios (como "Firebase") o conceptos erróneos (como "Google Drive").
 
 ## 4. Guía de Diseño UI (Fuente de Verdad: DESIGN.md)
 Toda interfaz, pantalla, componente y diálogo debe ceñirse rigurosamente a [`DESIGN.md`](./DESIGN.md).
