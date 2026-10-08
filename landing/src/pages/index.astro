@@ -364,6 +364,7 @@ import '../styles/global.css';
                     <button 
                         id="copy-pagomovil-btn" 
                         type="button" 
+                        onclick="copyPagoMovil()"
                         class="mt-4 w-full py-2 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
                     >
                         <span id="copy-pagomovil-icon">📋</span>
@@ -409,52 +410,54 @@ import '../styles/global.css';
     </footer>
 
     <script is:inline>
-        document.addEventListener('DOMContentLoaded', () => {
-            const copyBtn = document.getElementById('copy-pagomovil-btn');
-            if (copyBtn) {
-                copyBtn.addEventListener('click', () => {
-                    const textToCopy = '0102 04148431543 18903218';
-                    const doFeedback = () => {
-                        const btnText = document.getElementById('copy-pagomovil-text');
-                        const btnIcon = document.getElementById('copy-pagomovil-icon');
-                        if (btnText && btnIcon) {
-                            const originalText = btnText.textContent;
-                            const originalIcon = btnIcon.textContent;
-                            btnText.textContent = '¡Copiado!';
-                            btnIcon.textContent = '✓';
-                            setTimeout(() => {
-                                btnText.textContent = originalText;
-                                btnIcon.textContent = originalIcon;
-                            }, 2000);
-                        }
-                    };
+        window.copyPagoMovil = function() {
+            const textToCopy = '0102 04148431543 18903218';
+            const btnText = document.getElementById('copy-pagomovil-text');
+            const btnIcon = document.getElementById('copy-pagomovil-icon');
 
-                    if (navigator.clipboard && window.isSecureContext) {
-                        navigator.clipboard.writeText(textToCopy).then(doFeedback).catch(() => {
-                            fallbackCopy(textToCopy);
-                            doFeedback();
-                        });
-                    } else {
+            const doFeedback = () => {
+                if (btnText && btnIcon) {
+                    const originalText = btnText.textContent;
+                    const originalIcon = btnIcon.textContent;
+                    btnText.textContent = '¡Copiado!';
+                    btnIcon.textContent = '✓';
+                    setTimeout(() => {
+                        btnText.textContent = originalText;
+                        btnIcon.textContent = originalIcon;
+                    }, 2000);
+                }
+            };
+
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(textToCopy)
+                    .then(doFeedback)
+                    .catch(() => {
                         fallbackCopy(textToCopy);
                         doFeedback();
-                    }
-                });
+                    });
+            } else {
+                fallbackCopy(textToCopy);
+                doFeedback();
             }
+        };
 
-            function fallbackCopy(text) {
-                const textArea = document.createElement('textarea');
-                textArea.value = text;
-                textArea.style.position = 'fixed';
-                textArea.style.opacity = '0';
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-                try {
-                    document.execCommand('copy');
-                } catch (e) {}
-                document.body.removeChild(textArea);
+        function fallbackCopy(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-9999px';
+            textArea.style.top = '0';
+            textArea.setAttribute('readonly', '');
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+            } catch (err) {
+                console.error('Error al copiar:', err);
             }
-        });
+            document.body.removeChild(textArea);
+        }
     </script>
 
 </body>
