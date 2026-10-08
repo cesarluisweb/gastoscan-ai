@@ -9,7 +9,7 @@
   2. **Documentación de Roadmap y Especificación Web:** Registrado en `ROADMAP.md` (Fase 8.1) y detalle técnico en `DOC_MODERNIZACION_PANEL_WEB.md`.
   3. **Sistema de Diseño y Reglas Modulares (`DESIGN.md` y `AGENTS.md`):** Reglas visuales extraídas a `DESIGN.md`.
   4. **Autenticación Agnóstica de Correo y Alias (Addy.io / Dominios Propios):** Soporte en `SyncService` y `GastoProvider`.
-  5. **Actualización de Textos de la Landing:** Integración de multimoneda ampliada (Euro BCV, USDT), meta de ahorro, funcionamiento offline, sincronización segura en Firebase y ajuste de métodos de donación (PayPal, Binance Pay, Pago Móvil). Compilación exitosa en Astro.
+  5. **Actualización de Textos y Donaciones de la Landing:** Integración de multimoneda ampliada (Euro BCV, USDT), meta de ahorro, funcionamiento offline, sincronización en nube sin tecnicismos, métodos de pago (PayPal directo, Binance Pay con ID/correo) y botón interactivo "Copiar datos" para Pago Móvil (`0102 04148431543 18903218`). Despliegue validado en Firebase Hosting.
   6. **Gate Estricto de CI:** Pruebas unitarias/widgets al 100% en verde y compilación automatizada de APK release.
 
 ## Decisiones Técnicas y de Negocio Recientes
