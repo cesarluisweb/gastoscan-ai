@@ -361,9 +361,14 @@ import '../styles/global.css';
                             <div class="flex justify-between items-center"><span class="text-slate-500 text-[11px]">Cédula:</span> <span class="font-mono font-bold select-all text-slate-900">18.903.218</span></div>
                         </div>
                     </div>
-                    <span class="mt-4 w-full py-2 px-3 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 text-[11px] font-mono font-bold text-center select-all block">
-                        0102 · 04148431543 · 18903218
-                    </span>
+                    <button 
+                        id="copy-pagomovil-btn" 
+                        type="button" 
+                        class="mt-4 w-full py-2 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
+                    >
+                        <span id="copy-pagomovil-icon">📋</span>
+                        <span id="copy-pagomovil-text">Copiar datos</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -402,6 +407,55 @@ import '../styles/global.css';
             <p class="text-slate-400 text-xs mt-6">© 2026 Rinde Más. Todos los derechos reservados.</p>
         </div>
     </footer>
+
+    <script is:inline>
+        document.addEventListener('DOMContentLoaded', () => {
+            const copyBtn = document.getElementById('copy-pagomovil-btn');
+            if (copyBtn) {
+                copyBtn.addEventListener('click', () => {
+                    const textToCopy = '0102 04148431543 18903218';
+                    const doFeedback = () => {
+                        const btnText = document.getElementById('copy-pagomovil-text');
+                        const btnIcon = document.getElementById('copy-pagomovil-icon');
+                        if (btnText && btnIcon) {
+                            const originalText = btnText.textContent;
+                            const originalIcon = btnIcon.textContent;
+                            btnText.textContent = '¡Copiado!';
+                            btnIcon.textContent = '✓';
+                            setTimeout(() => {
+                                btnText.textContent = originalText;
+                                btnIcon.textContent = originalIcon;
+                            }, 2000);
+                        }
+                    };
+
+                    if (navigator.clipboard && window.isSecureContext) {
+                        navigator.clipboard.writeText(textToCopy).then(doFeedback).catch(() => {
+                            fallbackCopy(textToCopy);
+                            doFeedback();
+                        });
+                    } else {
+                        fallbackCopy(textToCopy);
+                        doFeedback();
+                    }
+                });
+            }
+
+            function fallbackCopy(text) {
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.opacity = '0';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                } catch (e) {}
+                document.body.removeChild(textArea);
+            }
+        });
+    </script>
 
 </body>
 </html>
