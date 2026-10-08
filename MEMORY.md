@@ -9,7 +9,8 @@
   2. **Documentación de Roadmap y Especificación Web:** Registrado en `ROADMAP.md` (Fase 8.1) y detalle técnico en `DOC_MODERNIZACION_PANEL_WEB.md`.
   3. **Sistema de Diseño y Reglas Modulares (`DESIGN.md` y `AGENTS.md`):** Reglas visuales extraídas a `DESIGN.md`.
   4. **Autenticación Agnóstica de Correo y Alias (Addy.io / Dominios Propios):** Soporte en `SyncService` y `GastoProvider`.
-  5. **Gate Estricto de CI:** Pruebas unitarias/widgets al 100% en verde y compilación automatizada de APK release.
+  5. **Actualización de Textos de la Landing:** Integración de multimoneda ampliada (Euro BCV, USDT), meta de ahorro, funcionamiento offline, sincronización segura en Firebase y ajuste de métodos de donación (PayPal, Binance Pay, Pago Móvil). Compilación exitosa en Astro.
+  6. **Gate Estricto de CI:** Pruebas unitarias/widgets al 100% en verde y compilación automatizada de APK release.
 
 ## Decisiones Técnicas y de Negocio Recientes
 - **Paridad Web en Presupuestos y Monedas:** El panel web preserva y sincroniza `meta_ahorro` y soporta 4 divisas sin alterar tasas locales. Compras en USD, EUR y USDT guardan su tasa real en Firestore para no descalabrar las conversiones en el móvil.

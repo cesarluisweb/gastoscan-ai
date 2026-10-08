@@ -85,26 +85,40 @@ import '../styles/global.css';
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16">
                 <h2 class="text-3xl font-bold text-slate-900 sm:text-4xl">Hecha para la realidad económica de Venezuela</h2>
-                <p class="mt-4 text-lg text-slate-600 max-w-2xl mx-auto">Sin configuraciones engorrosas ni tutoriales interminables. Abre la app y registra tus compras al instante.</p>
+                <p class="mt-4 text-lg text-slate-600 max-w-2xl mx-auto">Sin configuraciones engorrosas ni hojas de cálculo complicadas. Abre la app y toma el control de tu dinero al instante.</p>
             </div>
-            <div class="grid md:grid-cols-3 gap-8">
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <!-- Feature 1 -->
-                <div class="bg-[#F8FAFC] p-8 rounded-2xl border border-slate-100 hover:shadow-lg transition-shadow">
-                    <div class="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-2xl mb-6">📸</div>
-                    <h3 class="text-xl font-bold text-slate-900 mb-3">Registra tus gastos con voz o cámara</h3>
-                    <p class="text-slate-600">Sin escribir nada a mano. Fotografía la factura o dicta lo que gastaste y la app desglosa cada ítem en segundos.</p>
+                <div class="bg-[#F8FAFC] p-7 rounded-2xl border border-slate-100 hover:shadow-lg transition-shadow flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-2xl mb-6">📸</div>
+                        <h3 class="text-lg font-bold text-slate-900 mb-2">Registra con foto o dictado por voz</h3>
+                        <p class="text-sm text-slate-600 leading-relaxed">Fotografía tu factura física o dicta lo que compraste. La inteligencia artificial desglosa automáticamente cada producto, el precio unitario y separa el IVA (exento y gravado).</p>
+                    </div>
                 </div>
                 <!-- Feature 2 -->
-                <div class="bg-[#F8FAFC] p-8 rounded-2xl border border-slate-100 hover:shadow-lg transition-shadow">
-                    <div class="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-xl font-bold text-slate-900 mb-6 border border-slate-100">$</div>
-                    <h3 class="text-xl font-bold text-slate-900 mb-3">Multimoneda con tasas BCV actualizadas</h3>
-                    <p class="text-slate-600">Tus gastos quedan registrados en su moneda original y convertidos a tasa oficial BCV sin cálculos extras.</p>
+                <div class="bg-[#F8FAFC] p-7 rounded-2xl border border-slate-100 hover:shadow-lg transition-shadow flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-xl font-bold text-slate-900 mb-6 border border-slate-100">💱</div>
+                        <h3 class="text-lg font-bold text-slate-900 mb-2">Multimoneda real: Bs., USD, Euro y USDT</h3>
+                        <p class="text-sm text-slate-600 leading-relaxed">Registra en la moneda que pagaste. La app sincroniza en vivo las tasas oficiales del BCV (Dólar y Euro) y el promedio de mercado USDT, congelando la tasa exacta de la fecha de compra.</p>
+                    </div>
                 </div>
                 <!-- Feature 3 -->
-                <div class="bg-[#F8FAFC] p-8 rounded-2xl border border-slate-100 hover:shadow-lg transition-shadow">
-                    <div class="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-2xl mb-6">🤖</div>
-                    <h3 class="text-xl font-bold text-slate-900 mb-3">Asistente financiero personal</h3>
-                    <p class="text-slate-600">No necesitas armar hojas de cálculo para entender tus números. Pregúntale al chat en qué se te fue el dinero y recibe respuestas claras al instante.</p>
+                <div class="bg-[#F8FAFC] p-7 rounded-2xl border border-slate-100 hover:shadow-lg transition-shadow flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-2xl mb-6">🎯</div>
+                        <h3 class="text-lg font-bold text-slate-900 mb-2">Meta de ahorro y semáforo de gasto</h3>
+                        <p class="text-sm text-slate-600 leading-relaxed">Define cuánto quieres ahorrar o invertir este mes. La app calcula tu límite de gasto por día y te alerta con un semáforo inteligente si tu meta está a salvo, en riesgo o comprometida.</p>
+                    </div>
+                </div>
+                <!-- Feature 4 -->
+                <div class="bg-[#F8FAFC] p-7 rounded-2xl border border-slate-100 hover:shadow-lg transition-shadow flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-2xl mb-6">🤖</div>
+                        <h3 class="text-lg font-bold text-slate-900 mb-2">Asistente financiero y lista inteligente</h3>
+                        <p class="text-sm text-slate-600 leading-relaxed">Pregúntale al chat en qué se te fue el sueldo y recibe análisis claros al momento. Además, arma tu lista de compras y mira cómo se tachan los productos solos al escanear tu factura.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -117,7 +131,7 @@ import '../styles/global.css';
                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-200/80 text-slate-800 border border-slate-300 mb-3">
                     🛡️ Tu tranquilidad primero
                 </span>
-                <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">Tus finanzas son tuyas: sin bancos ni contraseñas</h2>
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">Tus finanzas son tuyas: sin bancos, sin contraseñas y 100% privada</h2>
                 <p class="mt-3 text-base sm:text-lg text-slate-600">
                     Diseñada para darte orden financiero real sin pedirte datos sensibles ni comprometer tu seguridad.
                 </p>
@@ -131,29 +145,29 @@ import '../styles/global.css';
                     </div>
                     <h3 class="text-lg font-bold text-slate-900 mb-2">Cero accesos bancarios</h3>
                     <p class="text-sm text-slate-600 leading-relaxed">
-                        Nunca te pediremos contraseñas de bancos, números de tarjeta ni accesos financieros. Registras tus compras con tu voz o escaneando facturas.
+                        Nunca te pediremos contraseñas de bancos, números de tarjeta ni accesos financieros. Tú registras tus compras a tu propio ritmo sin exponer tus cuentas.
                     </p>
                 </div>
 
                 <!-- Pillar 2 -->
                 <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
                     <div class="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-2xl mb-6 shadow-xs">
-                        🔒
+                        ⚡
                     </div>
-                    <h3 class="text-lg font-bold text-slate-900 mb-2">Tus datos en tu cuenta de Google</h3>
+                    <h3 class="text-lg font-bold text-slate-900 mb-2">Funciona sin conexión a internet</h3>
                     <p class="text-sm text-slate-600 leading-relaxed">
-                        La app funciona directamente en tu teléfono y respalda tus datos de forma cifrada en tu cuenta privada de Google. Nadie más tiene acceso.
+                        ¿Sin señal en el supermercado o sin datos en la calle? Registra tus compras o toma fotos sin problemas; la app guarda todo en tu teléfono y procesa los datos en cuanto te conectes.
                     </p>
                 </div>
 
                 <!-- Pillar 3 -->
                 <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
                     <div class="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-2xl mb-6 shadow-xs">
-                        🤝
+                        🔒
                     </div>
-                    <h3 class="text-lg font-bold text-slate-900 mb-2">Sin venta de datos</h3>
+                    <h3 class="text-lg font-bold text-slate-900 mb-2">Sincronización segura en la nube</h3>
                     <p class="text-sm text-slate-600 leading-relaxed">
-                        Tus registros no se venden ni se comparten con empresas ni anunciantes. Nos sostenemos con publicidad no invasiva y opción de pago único para eliminar anuncios.
+                        Tus registros se guardan primero en tu propio teléfono y se respaldan de forma privada en la nube mediante Firebase de Google. Nadie más tiene acceso a tus compras ni a tus números.
                     </p>
                 </div>
             </div>
@@ -203,7 +217,7 @@ import '../styles/global.css';
                             </div>
                             <div>
                                 <h3 class="font-bold text-sm text-slate-900">Sincronización instantánea</h3>
-                                <p class="text-xs sm:text-sm text-slate-600">Tus datos en la web y en la app se mantienen siempre actualizados en tu Google personal.</p>
+                                <p class="text-xs sm:text-sm text-slate-600">Tus datos en la web y en la app se mantienen siempre sincronizados al instante en la nube.</p>
                             </div>
                         </div>
                     </div>
@@ -308,38 +322,47 @@ import '../styles/global.css';
 
             <div class="mt-8 grid sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
                 <!-- PayPal -->
-                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between items-center">
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between items-center text-center">
                     <div>
                         <div class="text-2xl mb-2">💳</div>
                         <h3 class="font-bold text-slate-900 text-sm">PayPal</h3>
-                        <p class="text-xs text-slate-500 mt-1">Donación puntual o mensual</p>
+                        <p class="text-xs text-slate-500 mt-1">Aporte o donación directa</p>
                     </div>
-                    <a href="https://paypal.me/cesarluisweb" target="_blank" rel="noopener noreferrer" class="mt-4 w-full py-2 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all">
+                    <a href="https://paypal.me/cesarluisweb" target="_blank" rel="noopener noreferrer" class="mt-4 w-full py-2 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all text-center">
                         Donar con PayPal
                     </a>
                 </div>
 
                 <!-- Binance Pay / Crypto -->
-                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between items-center">
-                    <div>
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between items-center text-center">
+                    <div class="w-full">
                         <div class="text-2xl mb-2">🪙</div>
                         <h3 class="font-bold text-slate-900 text-sm">Binance Pay (USDT)</h3>
-                        <p class="text-xs text-slate-500 mt-1">Binance ID / Pay</p>
+                        <p class="text-xs text-slate-500 mt-1">Paga con Pay ID o correo</p>
+                        <div class="mt-3 space-y-1.5 text-left bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-xs">
+                            <div class="flex justify-between items-center"><span class="text-slate-500 text-[11px]">Pay ID:</span> <span class="font-mono font-bold select-all text-slate-900">254881729</span></div>
+                            <div class="flex justify-between items-center"><span class="text-slate-500 text-[11px]">Correo:</span> <span class="font-mono font-semibold select-all text-slate-900 truncate">cesar77a@gmail.com</span></div>
+                        </div>
                     </div>
-                    <a href="https://binance.com" target="_blank" rel="noopener noreferrer" class="mt-4 w-full py-2 px-4 rounded-xl bg-[#FACC15] hover:bg-[#EAB308] text-slate-900 text-xs font-bold transition-all">
-                        ID: 254881729
+                    <a href="https://binance.com" target="_blank" rel="noopener noreferrer" class="mt-4 w-full py-2 px-4 rounded-xl bg-[#FACC15] hover:bg-[#EAB308] text-slate-900 text-xs font-bold transition-all text-center">
+                        Abrir Binance
                     </a>
                 </div>
 
                 <!-- Pago Móvil -->
-                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between items-center">
-                    <div>
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between items-center text-center">
+                    <div class="w-full">
                         <div class="text-2xl mb-2">📲</div>
                         <h3 class="font-bold text-slate-900 text-sm">Pago Móvil (Bs.)</h3>
-                        <p class="text-xs text-slate-500 mt-1">Banesco / Venz</p>
+                        <p class="text-xs text-slate-500 mt-1">0102 - Banco de Venezuela</p>
+                        <div class="mt-3 space-y-1.5 text-left bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-xs">
+                            <div class="flex justify-between items-center"><span class="text-slate-500 text-[11px]">Banco:</span> <span class="font-mono font-bold text-slate-900">0102 (BDV)</span></div>
+                            <div class="flex justify-between items-center"><span class="text-slate-500 text-[11px]">Teléfono:</span> <span class="font-mono font-bold select-all text-slate-900">0414-8431543</span></div>
+                            <div class="flex justify-between items-center"><span class="text-slate-500 text-[11px]">Cédula:</span> <span class="font-mono font-bold select-all text-slate-900">18.903.218</span></div>
+                        </div>
                     </div>
-                    <span class="mt-4 w-full py-2 px-3 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 text-[11px] font-mono font-bold select-all">
-                        0414-8431543
+                    <span class="mt-4 w-full py-2 px-3 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 text-[11px] font-mono font-bold text-center select-all block">
+                        0102 · 04148431543 · 18903218
                     </span>
                 </div>
             </div>
