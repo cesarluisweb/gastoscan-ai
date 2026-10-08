@@ -5,25 +5,20 @@
 - **Rama:** `main`.
 - **Fase activa:** Finalizadas Fases 1 a 6 (Estabilidad IA, Comprobantes persistentes, Reportes Privacidad, Mejoras UI Tasas).
 - **Últimos hitos:** 
-  1. **Modernización y Paridad del Panel Web (Fases 1, 2 y 3):** Implementación de `meta_ahorro` y salud financiera en web; resolución de discrepancias en USD; integración de cotizaciones en vivo (USD BCV, EUR BCV, USDT Binance/Yadio); paridad matemática con SQLite (`DatabaseHelper.getMonthlyTotals`); selector de 4 divisas (USD, VES, EUR, USDT) y persistencia de tasa real en Firestore.
-  2. **Documentación de Roadmap y Especificación Web:** Registrado en `ROADMAP.md` (Fase 8.1) y detalle técnico en `DOC_MODERNIZACION_PANEL_WEB.md`.
-  3. **Sistema de Diseño y Reglas Modulares (`DESIGN.md` y `AGENTS.md`):** Reglas visuales extraídas a `DESIGN.md`.
-  4. **Autenticación Agnóstica de Correo y Alias (Addy.io / Dominios Propios):** Soporte en `SyncService` y `GastoProvider`.
-  5. **Actualización de Textos y Donaciones de la Landing:** Integración de multimoneda ampliada (Euro BCV, USDT), meta de ahorro, funcionamiento offline, sincronización en nube sin tecnicismos, métodos de pago (PayPal directo, Binance Pay con ID/correo) y botón interactivo "Copiar datos" para Pago Móvil (`0102 04148431543 18903218`). Despliegue validado en Firebase Hosting.
-  6. **Gate Estricto de CI:** Pruebas unitarias/widgets al 100% en verde y compilación automatizada de APK release.
+  1. **Cuenta de Desarrollador Google Play Console Creada y Pagada ($25 USD):** Pago exitoso procesado mediante la ruta `Zinli` → `OKX P2P` → `OKX Pay` → `OKX Card` → `Google Payments`. Cuenta "Rinde Más" lista para configuración.
+  2. **Actualización de Playbook y Aprendizaje (/learn):** Documentación técnica y skill `growth-first-100-users` actualizados con la ruta de pago (evitando error `OR_CCR_61`), el requisito de 12+ testers por 14 días y la bitácora obligatoria para la solicitud de producción.
+  3. **Modernización y Paridad del Panel Web:** Integración de `meta_ahorro`, salud financiera, 4 divisas (USD, VES, EUR, USDT) y despliegue validado en Firebase Hosting (`rindemas.cesarluis.com`).
+  4. **Gate Estricto de CI:** Pruebas unitarias/widgets al 100% en verde y compilación automatizada de APK release.
 
 ## Decisiones Técnicas y de Negocio Recientes
-- **Paridad Web en Presupuestos y Monedas:** El panel web preserva y sincroniza `meta_ahorro` y soporta 4 divisas sin alterar tasas locales. Compras en USD, EUR y USDT guardan su tasa real en Firestore para no descalabrar las conversiones en el móvil.
-- **Motor Determinista de Salud en Web:** Replicación en JavaScript de `SavingsHealthCalculator` para cálculo de ritmo diario y estatus de ahorro.
-- **Fuente de Verdad de Estilos en `DESIGN.md`:** Paleta `AppColors` y reglas de contraste en `DESIGN.md`.
-- **Mocks con `noSuchMethod` para Plugins:** En tests, dependencias externas se simulan con `Fake` y `noSuchMethod`.
+- **Estrategia de Lanzamiento Google Play:** Reclutamiento de 15 a 18 testers (margen de seguridad sobre los 12 mínimos) organizados por Google Groups (`rindemas-testers@googlegroups.com`), llevando registro de bugs y versiones para el formulario de producción.
+- **Ruta Verificada de Pago en Venezuela:** Uso de OKX Card (Mastercard virtual) para salvar el bloqueo de tarjetas prepago directas (`OR_CCR_61`).
 
 ## Errores y Fricciones a Evitar
 - No tocar `android/` localmente (CI regenera con `flutter create`).
 - En CI, `curl` para logs devuelve 403; los fallos de test se leen en `test_results.txt` tras `git pull --rebase`.
 - Prohibido `>` en PowerShell; usar siempre tubería `... | Out-File -Encoding utf8`.
-- Contraste estricto en UI (`DESIGN.md`): Texto sobre amarillo SIEMPRE negro (`Colors.black`); texto sobre blanco SIEMPRE negro o gris, NUNCA amarillo.
-- No omitir `creadoEn` al construir instancias dummy de `GastoModel`.
+- Contraste estricto en UI (`DESIGN.md`): Texto sobre amarillo SIEMPRE negro; texto sobre blanco SIEMPRE negro o gris, NUNCA amarillo.
 
 ## Próximo Paso Inmediato
-- Probar en producción/hosting tras CI y esperar visto bueno del usuario sobre las Fases 1, 2 y 3.
+- Ajustar pipeline en CI para compilar el paquete `.aab` firmado junto al `.apk`, y proceder a la configuración inicial de la app en Play Console.

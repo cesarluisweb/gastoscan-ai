@@ -24,8 +24,12 @@ Esta skill guía la ejecución táctica para publicar la aplicación en Google P
 
 ## 2. Etapa 1: Preparación Técnica para Google Play
 
-### Requisitos Previos
-* **Cuenta de desarrollador:** Pago único de $25 USD en [Google Play Console](https://play.google.com/console) con tarjeta habilitada para compras internacionales en USD.
+### Requisitos Previos y Pago desde Venezuela
+* **Cuenta de desarrollador:** Pago único de $25 USD en [Google Play Console](https://play.google.com/console).
+* **Ruta Verificada de Pago de $25 USD (Venezuela):**
+  * **Rechazo Prepago (`OR_CCR_61`):** Google Play Console **rechaza tarjetas prepago directas** como Zinli para el pago inicial de $25.
+  * **Ruta Verificada y Probada:** `Zinli` → `OKX P2P` (USDT) → `OKX Pay` → `OKX Card` (Mastercard virtual) → `Google Payments` ($25 USD).
+  * **Titularidad:** Los datos del método de pago P2P deben coincidir con el titular verificado de la cuenta OKX.
 * **Tipo de cuenta:** Cuenta Personal (rápida, pero muestra el nombre legal del desarrollador en la ficha) vs Cuenta de Empresa (requiere D-U-N-S, dominio web y verificación de varias semanas).
 * **Formato de entrega:** Google Play exige formato Android App Bundle (`.aab`), no `.apk`.
 * **Keystore firmado:** La llave privada de firma debe estar configurada en los Secrets de GitHub Actions para que el pipeline genere el `.aab` automáticamente.
@@ -43,19 +47,26 @@ Esta skill guía la ejecución táctica para publicar la aplicación en Google P
 
 ---
 
-## 3. Etapa 2: Estrategia para los 20 Testers (Closed Testing)
+## 3. Etapa 2: Estrategia para los 12 Testers (Closed Testing)
 
-Google Play exige para cuentas personales nuevas que al menos **20 evaluadores independientes** estén inscritos en una prueba cerrada durante **14 días consecutivos** antes de habilitar la solicitud de publicación a producción.
+Google Play exige para cuentas personales nuevas creadas después de noviembre de 2023 que al menos **12 evaluadores independientes** estén inscritos en una prueba cerrada durante **14 días consecutivos** antes de habilitar la solicitud de publicación a producción.
 
 ### Mecánica de Reclutamiento y Margen de Seguridad
 1. **Crear un Grupo de Google:** En lugar de agregar correos uno a uno en Google Play Console, crea un grupo público en Google Groups (ej. `rindemas-testers@googlegroups.com`) y vincula ese grupo a la pista de prueba cerrada.
-2. **Reclutar 22 a 25 testers (Margen de Seguridad):**
-   * Si un usuario se da de baja durante el período, Google puede reiniciar el conteo de los 14 días. Apuntar a 25 testers activos garantiza superar el umbral sin contratiempos.
+2. **Reclutar 15 a 18 testers (Margen de Seguridad):**
+   * Si un usuario se da de baja durante el período, Google puede reiniciar o detener el conteo de los 14 días. Apuntar a 15-18 testers activos garantiza superar el umbral sin contratiempos.
    * Amigos directos, familiares, compañeros de trabajo y comunidades afines (`r/vzla`, grupos de Telegram de testers).
-   * Pedirles explícitamente: *"Descarga la app desde el enlace oficial y ábrela al menos 2 veces por semana para que Google registre actividad continua"*.
+   * Pedirles explícitamente: *"Descarga la app desde el enlace oficial y ábrela al menos 2 a 3 veces por semana para que Google registre actividad continua"*.
+
+### Bitácora Obligatoria para Solicitud de Producción (Apply for Production)
+Al finalizar los 14 días, Google evaluará la solicitud mediante un formulario obligatorio. Se debe llevar registro activo de:
+1. Método de reclutamiento de los evaluadores.
+2. Uso real de las funciones principales (escaneo de facturas, cambio de moneda BCV, presupuestos, modo offline).
+3. Feedback recopilado y fallos detectados.
+4. Cambios realizados y versiones corregidas (`v1.0.4`, etc.) desplegadas durante los 14 días.
 
 ### Mensaje Directo para Reclutar Testers (Sin rodeos)
-> *"Estoy preparando el lanzamiento de Rinde Más en Google Play, una app para escanear facturas y controlar presupuestos en bolívares y dólares con tasa BCV. Google me exige 20 personas probando la app durante 14 días para darme el permiso de publicación. Necesito tu apoyo instalando la app desde este enlace: [LINK]. Solo tienes que abrirla un par de veces durante estas dos semanas."*
+> *"Estoy preparando el lanzamiento de Rinde Más en Google Play, una app para escanear facturas y controlar presupuestos en bolívares y dólares con tasa BCV. Google me exige 12 personas probando la app durante 14 días para darme el permiso de publicación. Necesito tu apoyo instalando la app desde este enlace: [LINK]. Solo tienes que abrirla un par de veces durante estas dos semanas."*
 
 ### Tiempos de Revisión y Regla de Lanzamiento
 * **Primera versión:** La revisión inicial de una app nueva en Google Play suele demorar entre 3 y 7 días hábiles.
