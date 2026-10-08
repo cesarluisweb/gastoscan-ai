@@ -5,20 +5,17 @@
 - **Rama:** `main`.
 - **Fase activa:** Finalizadas Fases 1 a 6 (Estabilidad IA, Comprobantes persistentes, Reportes Privacidad, Mejoras UI Tasas).
 - **Últimos hitos:** 
-  1. **Sistema de Diseño y Reglas Modulares (`DESIGN.md` y `AGENTS.md`):** Reglas visuales extraídas a `DESIGN.md` para reducir consumo de tokens. Reglas globales unificadas en el estándar `AGENTS.md`.
-  2. **Corrección de Contraste Cromático:** Textos sobre fondo amarillo estandarizados en negro (`Colors.black` en `Badge.count` y `SnackBar`). Textos sobre fondo blanco estandarizados en negro (acciones como "Gestionar") y gris (categorías en desglose `it.categoria`), eliminando texto amarillo sobre blanco.
-  3. **Autenticación Agnóstica de Correo y Alias (Addy.io / Dominios Propios):** Soporte en `SyncService` y `GastoProvider` para registrar o iniciar sesión con cualquier correo/contraseña sin forzar la cuenta de Google de Android.
-  4. **Frases Predeterminadas en Asistente IA (`ChatScreen`):** Barra de chips de sugerencia rápida con envío directo, auto-scroll y enriquecimiento de contexto.
-  5. **Pausa Real y Tolerancia en Dictado por Voz:** Ciclo no destructivo acumulativo en `VoiceExpenseSheet`, umbral de 10s de silencio, 60s total e indicadores de estado.
-  6. **Gate Estricto de CI:** Pruebas unitarias/widgets al 100% en verde y compilación automatizada de APK release.
+  1. **Modernización y Paridad del Panel Web (Fases 1 y 2):** Implementación de `meta_ahorro` en Firestore y modal web, validaciones reactivas de categorías contra límite real, y cálculo determinista de salud financiera (`calculateSavingsHealth`) con chips de estado (`Protegida`, `En riesgo`, `Comprometida`), ritmo diario y barra de consumo relativo.
+  2. **Documentación de Roadmap y Especificación Web:** Planificación registrada en `ROADMAP.md` (Fase 8.1) y detalle técnico en `DOC_MODERNIZACION_PANEL_WEB.md`.
+  3. **Sistema de Diseño y Reglas Modulares (`DESIGN.md` y `AGENTS.md`):** Reglas visuales extraídas a `DESIGN.md`.
+  4. **Autenticación Agnóstica de Correo y Alias (Addy.io / Dominios Propios):** Soporte en `SyncService` y `GastoProvider`.
+  5. **Gate Estricto de CI:** Pruebas unitarias/widgets al 100% en verde y compilación automatizada de APK release.
 
 ## Decisiones Técnicas y de Negocio Recientes
-- **Fuente de Verdad de Estilos en `DESIGN.md`:** La paleta `AppColors`, reglas de contraste y snippets de maquetación residen en `DESIGN.md`. `AGENTS.md` mantiene solo guardrails y punteros compactos.
-- **Pausa No Destructiva en Dictado:** `VoiceExpenseSheet` preserva texto acumulado entre sesiones (`previousText`), amplía silencio a 10s y tiempo total a 60s.
-- **Modelos Sintéticos con `creadoEn`:** Borradores de `GastoModel` en colas deben incluir siempre `creadoEn` obligatorio.
-- **Cero Duplicidad en Comprobantes:** Fotos registradas en álbum "Rinde Más" vía `gal` (MediaStore) sin clonar archivos.
-- **Mocks con `noSuchMethod` para Plugins:** En tests, clases de dependencias externas se simulan extendiendo `Fake` y delegando en `noSuchMethod`.
-- **Cache-Buster en APKs OTA:** URLs de descarga y verificación de APK llevan `?b=$BUILD_NUM` para evitar descargas cacheadas por Cloudflare.
+- **Paridad Web en Presupuestos:** El panel web preserva y sincroniza `meta_ahorro` con Firestore sin sobreescribir la configuración del teléfono, validando límites antes de guardar.
+- **Motor Determinista de Salud en Web:** Replicación en JavaScript de `SavingsHealthCalculator` para cálculo de ritmo diario y estatus de ahorro.
+- **Fuente de Verdad de Estilos en `DESIGN.md`:** Paleta `AppColors` y reglas de contraste en `DESIGN.md`.
+- **Mocks con `noSuchMethod` para Plugins:** En tests, dependencias externas se simulan con `Fake` y `noSuchMethod`.
 
 ## Errores y Fricciones a Evitar
 - No tocar `android/` localmente (CI regenera con `flutter create`).
@@ -26,7 +23,6 @@
 - Prohibido `>` en PowerShell; usar siempre tubería `... | Out-File -Encoding utf8`.
 - Contraste estricto en UI (`DESIGN.md`): Texto sobre amarillo SIEMPRE negro (`Colors.black`); texto sobre blanco SIEMPRE negro o gris, NUNCA amarillo.
 - No omitir `creadoEn` al construir instancias dummy de `GastoModel`.
-- No reiniciar `SpeechToText.listen` sin preservar el búfer acumulado previo.
 
 ## Próximo Paso Inmediato
-- Monitorear ejecución del pipeline en GitHub Actions hasta confirmar `success` tras el push de la reestructuración documental.
+- Notificar al usuario con la guía de pruebas de las Fases 1 y 2 del panel web y esperar su visto bueno antes de marcar como completado en `ROADMAP.md`.
