@@ -131,6 +131,28 @@ import '../styles/global.css';
                 </div>
             </div>
 
+            <!-- Barra de Tasas de Referencia del Día -->
+            <div id="live-rates-bar" class="bg-white px-4 py-2.5 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div class="flex items-center gap-2 text-slate-500 font-semibold">
+                    <span>📊</span>
+                    <span>Tasas de Referencia:</span>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 sm:gap-3 font-mono font-bold text-slate-800">
+                    <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-50 border border-slate-100">
+                        <span class="text-slate-400 font-sans text-[11px]">BCV USD</span>
+                        <span id="rate-usd-val">Bs. --</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-50 border border-slate-100">
+                        <span class="text-slate-400 font-sans text-[11px]">BCV EUR</span>
+                        <span id="rate-eur-val">Bs. --</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-50 border border-slate-100">
+                        <span class="text-slate-400 font-sans text-[11px]">USDT P2P</span>
+                        <span id="rate-usdt-val">Bs. --</span>
+                    </div>
+                </div>
+            </div>
+
             <!-- Tarjetas de Métricas Clave (4 Cards) -->
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <!-- Tarjeta 1: Presupuesto General -->
@@ -266,6 +288,8 @@ import '../styles/global.css';
                     <select id="modal-budget-currency" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 bg-slate-50 font-medium text-slate-800">
                         <option value="USD">Dólares (USD $)</option>
                         <option value="VES">Bolívares (VES Bs.)</option>
+                        <option value="EUR">Euros (EUR €)</option>
+                        <option value="USDT">Tether (USDT)</option>
                     </select>
                 </div>
 
@@ -401,28 +425,46 @@ import '../styles/global.css';
 
                     <!-- Selector de Moneda -->
                     <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">Moneda</label>
-                        <div class="flex p-1 bg-slate-200/80 rounded-xl max-w-xs">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">Moneda del gasto</label>
+                        <div class="flex p-1 bg-slate-200/80 rounded-xl max-w-sm gap-1">
                             <button 
                                 type="button" 
                                 id="btn-currency-usd" 
+                                data-currency="USD"
                                 class="flex-1 py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-slate-900 shadow-sm"
                             >
-                                USD
+                                USD ($)
                             </button>
                             <button 
                                 type="button" 
                                 id="btn-currency-ves" 
+                                data-currency="VES"
                                 class="flex-1 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 transition-all"
                             >
-                                VES
+                                VES (Bs.)
+                            </button>
+                            <button 
+                                type="button" 
+                                id="btn-currency-eur" 
+                                data-currency="EUR"
+                                class="flex-1 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 transition-all"
+                            >
+                                EUR (€)
+                            </button>
+                            <button 
+                                type="button" 
+                                id="btn-currency-usdt" 
+                                data-currency="USDT"
+                                class="flex-1 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 transition-all"
+                            >
+                                USDT
                             </button>
                         </div>
                     </div>
 
-                    <!-- Campo de Tasa de Cambio (visible si es VES) -->
-                    <div id="container-tasa-cambio" class="hidden">
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Tasa de cambio (BCV)</label>
+                    <!-- Campo de Tasa de Cambio (Siempre disponible para equivalencia determinista) -->
+                    <div id="container-tasa-cambio" class="space-y-1">
+                        <label id="label-tasa-cambio" class="block text-xs font-semibold text-slate-600">Tasa de cambio USD (BCV)</label>
                         <input 
                             id="modal-exp-tasa" 
                             type="number" 
@@ -431,7 +473,7 @@ import '../styles/global.css';
                             placeholder="Ej. 36.50" 
                             class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 bg-white text-slate-900 focus:ring-2 focus:ring-[#FACC15] focus:outline-none"
                         />
-                        <span id="tasa-fuente-label" class="text-[10px] text-slate-400 mt-0.5 block">Tasa oficial BCV</span>
+                        <span id="tasa-fuente-label" class="text-[10px] text-slate-400 block">Tasa de referencia para equivalencia y reportes. Puedes ajustarla.</span>
                     </div>
 
                     <!-- Input Monto Total -->
@@ -544,6 +586,87 @@ import '../styles/global.css';
         let currentGastos = [];
         let currentPresupuesto = { general: 0, meta_ahorro: 0, moneda: 'USD', categorias: {} };
 
+        // Tasas de Referencia en Vivo (USD BCV, EUR BCV, USDT Binance / Paralelo)
+        let liveRates = {
+            usd: 36.5,
+            eur: 0.0,
+            usdt: 36.5,
+            timestamp: null
+        };
+
+        const updateRatesTicker = () => {
+            const elUsd = document.getElementById('rate-usd-val');
+            const elEur = document.getElementById('rate-eur-val');
+            const elUsdt = document.getElementById('rate-usdt-val');
+            if (elUsd) elUsd.textContent = liveRates.usd > 0 ? `Bs. ${liveRates.usd.toFixed(2)}` : 'Bs. --';
+            if (elEur) elEur.textContent = liveRates.eur > 0 ? `Bs. ${liveRates.eur.toFixed(2)}` : 'Bs. --';
+            if (elUsdt) elUsdt.textContent = liveRates.usdt > 0 ? `Bs. ${liveRates.usdt.toFixed(2)}` : 'Bs. --';
+        };
+
+        const getRateForCurrency = (currency) => {
+            switch ((currency || 'USD').toUpperCase()) {
+                case 'EUR':
+                    return liveRates.eur > 0 ? liveRates.eur : (liveRates.usd > 0 ? liveRates.usd * 1.08 : 40.0);
+                case 'USDT':
+                    return liveRates.usdt > 0 ? liveRates.usdt : (liveRates.usd > 0 ? liveRates.usd : 36.5);
+                case 'VES':
+                case 'USD':
+                default:
+                    return liveRates.usd > 0 ? liveRates.usd : 36.5;
+            }
+        };
+
+        const fetchLiveRates = async () => {
+            const fetchWithTimeout = async (url, timeoutMs = 6000) => {
+                const controller = new AbortController();
+                const id = setTimeout(() => controller.abort(), timeoutMs);
+                try {
+                    const res = await fetch(url, { signal: controller.signal });
+                    clearTimeout(id);
+                    return res.ok ? await res.json() : null;
+                } catch (_) {
+                    clearTimeout(id);
+                    return null;
+                }
+            };
+
+            try {
+                const [dolarData, euroData, yadioData] = await Promise.all([
+                    fetchWithTimeout('https://ve.dolarapi.com/v1/dolares/oficial'),
+                    fetchWithTimeout('https://ve.dolarapi.com/v1/euros/oficial'),
+                    fetchWithTimeout('https://api.yadio.io/json', 5000)
+                ]);
+
+                if (dolarData && dolarData.promedio > 0) {
+                    liveRates.usd = Number(dolarData.promedio);
+                }
+
+                if (euroData && euroData.promedio > 0) {
+                    liveRates.eur = Number(euroData.promedio);
+                }
+
+                if (yadioData && yadioData.USD && yadioData.USD.other && yadioData.USD.other.p2p_usdt && yadioData.USD.other.p2p_usdt.rate > 0) {
+                    liveRates.usdt = Number(yadioData.USD.other.p2p_usdt.rate);
+                } else if (yadioData && yadioData.USD && yadioData.USD.rate > 0) {
+                    liveRates.usdt = Number(yadioData.USD.rate);
+                } else {
+                    const paraleloData = await fetchWithTimeout('https://ve.dolarapi.com/v1/dolares/paralelo', 3000);
+                    if (paraleloData && paraleloData.promedio > 0) {
+                        liveRates.usdt = Number(paraleloData.promedio);
+                    } else if (liveRates.usd > 0) {
+                        liveRates.usdt = liveRates.usd;
+                    }
+                }
+
+                liveRates.timestamp = new Date();
+                updateRatesTicker();
+            } catch (err) {
+                console.warn("Fallo al actualizar tasas en vivo:", err);
+            }
+        };
+
+        fetchLiveRates();
+
         // Elementos DOM
         const viewLoading = document.getElementById('view-loading');
         const viewLoggedOut = document.getElementById('view-logged-out');
@@ -606,16 +729,30 @@ import '../styles/global.css';
         const itemsCountBadge = document.getElementById('items-count-badge');
         const btnCurrencyUsd = document.getElementById('btn-currency-usd');
         const btnCurrencyVes = document.getElementById('btn-currency-ves');
+        const btnCurrencyEur = document.getElementById('btn-currency-eur');
+        const btnCurrencyUsdt = document.getElementById('btn-currency-usdt');
         const containerTasaCambio = document.getElementById('container-tasa-cambio');
+        const labelTasaCambio = document.getElementById('label-tasa-cambio');
         const modalExpTasa = document.getElementById('modal-exp-tasa');
         const labelMontoTotal = document.getElementById('label-monto-total');
         const labelMontoUsdEquiv = document.getElementById('label-monto-usd-equiv');
         const modalExpTotal = document.getElementById('modal-exp-total');
 
-        // Helpers de Formato
+        // Helpers de Formato Multimoneda (USD, VES, EUR, USDT)
         const formatMoney = (amount, currency = 'USD') => {
-            const sym = currency === 'VES' ? 'Bs. ' : '$';
-            return `${sym}${Number(amount || 0).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            const num = Number(amount || 0);
+            const formatted = num.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            switch ((currency || 'USD').toUpperCase()) {
+                case 'VES':
+                    return `Bs. ${formatted}`;
+                case 'EUR':
+                    return `€ ${formatted}`;
+                case 'USDT':
+                    return `${formatted} USDT`;
+                case 'USD':
+                default:
+                    return `$${formatted}`;
+            }
         };
 
         const getDocId = (year, month) => `${year}_${String(month).padStart(2, '0')}`;
@@ -793,24 +930,38 @@ import '../styles/global.css';
             };
         };
 
-        // Renderizado de Métricas Clave
+        // Renderizado de Métricas Clave (Paridad exacta con DatabaseHelper y SummaryCard)
         const renderMetrics = () => {
-            let totalSpentCentsUsd = 0;
-            let totalSpentCentsVes = 0;
+            let sumUsd = 0;
+            let sumVes = 0;
 
             currentGastos.forEach(g => {
-                totalSpentCentsUsd += Number(g.total_usd || 0);
+                const totalUsd = (Number(g.total_usd || 0)) / 100.0;
+                const totalOrig = (Number(g.total_original || 0)) / 100.0;
+                const tasa = Number(g.tasa_cambio || 0) > 0 ? Number(g.tasa_cambio) : (liveRates.usd || 1.0);
+
+                sumUsd += totalUsd;
+
                 if (g.moneda === 'VES') {
-                    totalSpentCentsVes += Number(g.total_original || 0);
+                    // Inmutabilidad del bolívar: los gastos en VES suman su monto original
+                    sumVes += totalOrig;
+                } else {
+                    // Gastos en divisas (USD, EUR, USDT) se convierten determinísticamente con su tasa
+                    sumVes += (totalUsd * (tasa > 0 ? tasa : 1.0));
                 }
             });
 
-            const totalSpentUsd = totalSpentCentsUsd / 100.0;
-            const totalSpentVes = totalSpentCentsVes / 100.0;
-            const isBudgetVes = currentPresupuesto.moneda === 'VES';
-            const effectiveSpent = isBudgetVes
-                ? (totalSpentVes > 0 ? totalSpentVes : totalSpentUsd * (bcvRate || 1))
-                : totalSpentUsd;
+            const budgetCurrency = currentPresupuesto.moneda || 'USD';
+            let effectiveSpent = 0;
+            if (budgetCurrency === 'VES') {
+                effectiveSpent = sumVes;
+            } else if (budgetCurrency === 'EUR') {
+                effectiveSpent = liveRates.eur > 0 ? (sumVes / liveRates.eur) : sumUsd;
+            } else if (budgetCurrency === 'USDT') {
+                effectiveSpent = liveRates.usdt > 0 ? (sumVes / liveRates.usdt) : sumUsd;
+            } else {
+                effectiveSpent = sumUsd;
+            }
 
             // Fechas y Días
             const today = new Date();
@@ -833,31 +984,35 @@ import '../styles/global.css';
             const targetBudget = hasSavings ? health.limiteParaGastar : currentPresupuesto.general;
 
             // Tarjeta 1: Presupuesto
-            cardBudgetAmount.textContent = formatMoney(currentPresupuesto.general, currentPresupuesto.moneda);
-            cardCurrencyBadge.textContent = currentPresupuesto.moneda;
+            cardBudgetAmount.textContent = formatMoney(currentPresupuesto.general, budgetCurrency);
+            cardCurrencyBadge.textContent = budgetCurrency;
             if (hasSavings) {
-                cardBudgetStatus.textContent = `Límite: ${formatMoney(health.limiteParaGastar, currentPresupuesto.moneda)}`;
+                cardBudgetStatus.textContent = `Límite: ${formatMoney(health.limiteParaGastar, budgetCurrency)}`;
                 cardBudgetSavingsInfo.classList.remove('hidden');
-                cardBudgetSavingsInfo.textContent = `Meta ahorro: ${formatMoney(health.metaAhorro, currentPresupuesto.moneda)}`;
+                cardBudgetSavingsInfo.textContent = `Meta ahorro: ${formatMoney(health.metaAhorro, budgetCurrency)}`;
             } else {
                 cardBudgetStatus.textContent = 'Límite mensual';
                 cardBudgetSavingsInfo.classList.add('hidden');
             }
 
             // Tarjeta 2: Gastado
-            cardSpentUsd.textContent = formatMoney(totalSpentUsd, 'USD');
-            cardSpentVes.textContent = totalSpentVes > 0 ? `${formatMoney(totalSpentVes, 'VES')} en bolívares` : 'Sin compras en Bs.';
+            cardSpentUsd.textContent = formatMoney(effectiveSpent, budgetCurrency);
+            if (budgetCurrency === 'VES') {
+                cardSpentVes.textContent = sumUsd > 0 ? `≈ ${formatMoney(sumUsd, 'USD')} en dólares` : 'Sin compras en divisas';
+            } else {
+                cardSpentVes.textContent = sumVes > 0 ? `≈ ${formatMoney(sumVes, 'VES')} en bolívares` : 'Sin compras en bolívares';
+            }
 
             // Tarjeta 3: Restante y Salud
             if (hasBudget) {
                 const diff = targetBudget - effectiveSpent;
                 if (diff >= 0) {
-                    cardRemainingAmount.textContent = `+${formatMoney(diff, currentPresupuesto.moneda)}`;
+                    cardRemainingAmount.textContent = `+${formatMoney(diff, budgetCurrency)}`;
                     cardRemainingAmount.className = "text-xl sm:text-2xl font-extrabold text-emerald-600";
                     cardRemainingBadge.textContent = hasSavings ? "Para gastar" : "Disponible";
                     cardRemainingBadge.className = "text-[11px] font-semibold text-emerald-600";
                 } else {
-                    cardRemainingAmount.textContent = `-${formatMoney(Math.abs(diff), currentPresupuesto.moneda)}`;
+                    cardRemainingAmount.textContent = `-${formatMoney(Math.abs(diff), budgetCurrency)}`;
                     cardRemainingAmount.className = "text-xl sm:text-2xl font-extrabold text-rose-600";
                     cardRemainingBadge.textContent = hasSavings ? "Límite excedido" : "Excedido";
                     cardRemainingBadge.className = "text-[11px] font-semibold text-rose-600";
@@ -889,8 +1044,8 @@ import '../styles/global.css';
 
             // Tarjeta 4: Facturas
             cardBillsCount.textContent = currentGastos.length.toString();
-            const avg = currentGastos.length > 0 ? (totalSpentUsd / currentGastos.length) : 0;
-            cardBillsAverage.textContent = `Promedio: ${formatMoney(avg, 'USD')}`;
+            const avg = currentGastos.length > 0 ? (effectiveSpent / currentGastos.length) : 0;
+            cardBillsAverage.textContent = `Promedio: ${formatMoney(avg, budgetCurrency)}`;
 
             // Ritmo Diario
             if (hasBudget && targetBudget > 0) {
@@ -899,11 +1054,11 @@ import '../styles/global.css';
                     const diasCalculo = diasRestantes > 0 ? diasRestantes : 1;
                     const ritmo = rem / diasCalculo;
                     const diasTexto = diasRestantes === 1 ? 'Falta 1 día' : `Faltan ${diasRestantes} días`;
-                    cardDailyPace.textContent = `${diasTexto} • Ritmo sugerido: ${formatMoney(ritmo, currentPresupuesto.moneda)}/día`;
+                    cardDailyPace.textContent = `${diasTexto} • Ritmo sugerido: ${formatMoney(ritmo, budgetCurrency)}/día`;
                 } else {
                     cardDailyPace.textContent = effectiveSpent <= targetBudget
-                        ? `Período cerrado • Ahorraste ${formatMoney(targetBudget - effectiveSpent, currentPresupuesto.moneda)}`
-                        : `Período cerrado • Superado por ${formatMoney(effectiveSpent - targetBudget, currentPresupuesto.moneda)}`;
+                        ? `Período cerrado • Ahorraste ${formatMoney(targetBudget - effectiveSpent, budgetCurrency)}`
+                        : `Período cerrado • Superado por ${formatMoney(effectiveSpent - targetBudget, budgetCurrency)}`;
                 }
             } else {
                 cardDailyPace.textContent = isCurrentMonth ? `Faltan ${diasRestantes} días para el cierre` : 'Período cerrado';
@@ -932,26 +1087,50 @@ import '../styles/global.css';
             }
         };
 
-        // Renderizado de Categorías
+        // Renderizado de Categorías (Paridad con DatabaseHelper.getCategoryTotals)
         const renderCategories = () => {
             categoriesList.innerHTML = '';
 
-            // Calcular gasto por categoría
+            const budgetCurrency = currentPresupuesto.moneda || 'USD';
             const catSpent = {};
             CATEGORIAS_DEF.forEach(c => catSpent[c] = 0);
 
-            const isVesBudget = currentPresupuesto.moneda === 'VES';
             currentGastos.forEach(g => {
-                const cat = g.categoria || 'Otros';
-                let spent = 0;
-                if (isVesBudget) {
-                    spent = g.moneda === 'VES'
-                        ? (Number(g.total_original || 0) / 100.0)
-                        : ((Number(g.total_usd || 0) / 100.0) * (bcvRate || 1.0));
+                const gastoCat = g.categoria || 'Otros';
+                const totalUsd = (Number(g.total_usd || 0)) / 100.0;
+                const totalOrig = (Number(g.total_original || 0)) / 100.0;
+                const tasa = Number(g.tasa_cambio || 0) > 0 ? Number(g.tasa_cambio) : (liveRates.usd || 1.0);
+
+                let targetTotal = 0;
+                if (budgetCurrency === 'VES') {
+                    targetTotal = g.moneda === 'VES' ? totalOrig : (totalUsd * (tasa > 0 ? tasa : 1.0));
+                } else if (budgetCurrency === 'EUR') {
+                    const vesEquiv = g.moneda === 'VES' ? totalOrig : (totalUsd * (tasa > 0 ? tasa : 1.0));
+                    targetTotal = liveRates.eur > 0 ? (vesEquiv / liveRates.eur) : totalUsd;
+                } else if (budgetCurrency === 'USDT') {
+                    targetTotal = totalUsd;
                 } else {
-                    spent = Number(g.total_usd || 0) / 100.0;
+                    // USD
+                    targetTotal = totalUsd;
                 }
-                catSpent[cat] = (catSpent[cat] || 0) + spent;
+
+                const items = g.items || [];
+                if (items.length === 0) {
+                    catSpent[gastoCat] = (catSpent[gastoCat] || 0) + targetTotal;
+                } else {
+                    let sumItems = 0;
+                    items.forEach(it => {
+                        sumItems += (Number(it.total || 0) / 100.0);
+                    });
+
+                    items.forEach(it => {
+                        const cat = it.categoria || gastoCat;
+                        const itTotal = (Number(it.total || 0) / 100.0);
+                        const ratio = sumItems > 0 ? (itTotal / sumItems) : (1.0 / items.length);
+                        const allocated = ratio * targetTotal;
+                        catSpent[cat] = (catSpent[cat] || 0) + allocated;
+                    });
+                }
             });
 
             // Combinar con presupuestos
@@ -976,8 +1155,8 @@ import '../styles/global.css';
                             <span>${cat}</span>
                         </div>
                         <div class="text-right">
-                            <span class="font-bold text-slate-900">${formatMoney(spent, currentPresupuesto.moneda)}</span>
-                            ${budget > 0 ? `<span class="text-slate-400"> / ${formatMoney(budget, currentPresupuesto.moneda)}</span>` : ''}
+                            <span class="font-bold text-slate-900">${formatMoney(spent, budgetCurrency)}</span>
+                            ${budget > 0 ? `<span class="text-slate-400"> / ${formatMoney(budget, budgetCurrency)}</span>` : ''}
                         </div>
                     </div>
                     ${budget > 0 ? `
@@ -987,7 +1166,7 @@ import '../styles/global.css';
                         <div class="flex justify-between items-center text-[10px]">
                             <span class="${isOver ? 'text-rose-600 font-bold' : 'text-slate-500'}">${percent}% consumido</span>
                             <span class="${isOver ? 'text-rose-600 font-semibold' : 'text-slate-400'}">
-                                ${isOver ? 'Excedido' : `Restan ${formatMoney(budget - spent, currentPresupuesto.moneda)}`}
+                                ${isOver ? 'Excedido' : `Restan ${formatMoney(budget - spent, budgetCurrency)}`}
                             </span>
                         </div>
                     ` : ''}
@@ -1004,7 +1183,7 @@ import '../styles/global.css';
             }
         };
 
-        // Renderizado de Facturas
+        // Renderizado de Facturas (Con indicación exacta de moneda y tasa)
         const renderBills = (searchTerm = '') => {
             billsList.innerHTML = '';
 
@@ -1026,9 +1205,18 @@ import '../styles/global.css';
             filtered.forEach(gasto => {
                 const totalUsd = (Number(gasto.total_usd || 0) / 100.0);
                 const totalOrig = (Number(gasto.total_original || 0) / 100.0);
-                const isVes = gasto.moneda === 'VES';
+                const moneda = gasto.moneda || 'USD';
+                const tasa = Number(gasto.tasa_cambio || 0) > 0 ? Number(gasto.tasa_cambio) : (liveRates.usd || 1.0);
                 const items = gasto.items || [];
                 const icon = CATEGORIA_ICONS[gasto.categoria] || '🧾';
+
+                let secondarySubtext = '';
+                if (moneda === 'VES') {
+                    secondarySubtext = `≈ ${formatMoney(totalUsd, 'USD')} (Tasa: Bs. ${tasa.toFixed(2)})`;
+                } else {
+                    const equivVes = (totalUsd * tasa);
+                    secondarySubtext = `≈ ${formatMoney(equivVes, 'VES')} (Tasa: Bs. ${tasa.toFixed(2)})`;
+                }
 
                 const card = document.createElement('div');
                 card.className = "p-4 rounded-xl border border-slate-200 hover:border-slate-300 bg-white transition-all";
@@ -1048,8 +1236,8 @@ import '../styles/global.css';
                             </div>
                         </div>
                         <div class="text-right flex-shrink-0">
-                            <span class="font-bold text-base text-slate-900 block">${formatMoney(totalUsd, 'USD')}</span>
-                            ${isVes ? `<span class="text-xs text-slate-400 block">${formatMoney(totalOrig, 'VES')}</span>` : ''}
+                            <span class="font-bold text-base text-slate-900 block">${formatMoney(totalOrig, moneda)}</span>
+                            <span class="text-xs text-slate-400 block">${secondarySubtext}</span>
                         </div>
                     </div>
 
@@ -1261,23 +1449,6 @@ import '../styles/global.css';
         // Modal Registrar Gasto con Ítems (Mismo flujo que la app móvil)
         let modalExpenseItems = [];
         let expMoneda = 'USD';
-        let bcvRate = 36.5;
-
-        const fetchBcvRate = async () => {
-            try {
-                const res = await fetch('https://ve.dolarapi.com/v1/dolares/oficial');
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data && data.promedio > 0) {
-                        bcvRate = Number(data.promedio);
-                        if (modalExpTasa && !modalExpTasa.value) {
-                            modalExpTasa.value = bcvRate.toFixed(2);
-                        }
-                    }
-                }
-            } catch (_) {}
-        };
-        fetchBcvRate();
 
         const renderExpenseItems = () => {
             if (!modalExpItemsList) return;
@@ -1423,39 +1594,76 @@ import '../styles/global.css';
             updateCurrencyDisplay();
         };
 
-        const updateCurrencyDisplay = () => {
-            const tasa = Number(modalExpTasa.value) || bcvRate || 1;
-            const total = Number(modalExpTotal.value) || 0;
+        const setCurrencyButtonActive = (activeBtn) => {
+            const buttons = [btnCurrencyUsd, btnCurrencyVes, btnCurrencyEur, btnCurrencyUsdt];
+            buttons.forEach(btn => {
+                if (!btn) return;
+                if (btn === activeBtn) {
+                    btn.className = "flex-1 py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-slate-900 shadow-sm";
+                } else {
+                    btn.className = "flex-1 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 transition-all";
+                }
+            });
+        };
 
-            if (expMoneda === 'VES') {
-                btnCurrencyVes.className = "flex-1 py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-slate-900 shadow-sm";
-                btnCurrencyUsd.className = "flex-1 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 transition-all";
-                containerTasaCambio.classList.remove('hidden');
-                labelMontoTotal.textContent = "Monto Total (Bs.)";
-                labelMontoUsdEquiv.classList.remove('hidden');
-                const equivUsd = tasa > 0 ? (total / tasa).toFixed(2) : '0.00';
-                labelMontoUsdEquiv.textContent = `≈ $${equivUsd} USD`;
-            } else {
-                btnCurrencyUsd.className = "flex-1 py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-slate-900 shadow-sm";
-                btnCurrencyVes.className = "flex-1 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 transition-all";
-                containerTasaCambio.classList.add('hidden');
-                labelMontoTotal.textContent = "Monto Total (USD)";
-                labelMontoUsdEquiv.classList.add('hidden');
+        const updateCurrencyDisplay = () => {
+            const currentTasa = Number(modalExpTasa?.value) || getRateForCurrency(expMoneda) || 1;
+            const total = Number(modalExpTotal?.value) || 0;
+
+            if (expMoneda === 'USD') {
+                setCurrencyButtonActive(btnCurrencyUsd);
+                if (labelTasaCambio) labelTasaCambio.textContent = "Tasa de cambio USD (BCV)";
+                if (labelMontoTotal) labelMontoTotal.textContent = "Monto Total (USD $)";
+                if (labelMontoUsdEquiv) {
+                    labelMontoUsdEquiv.classList.remove('hidden');
+                    const equivVes = total * currentTasa;
+                    labelMontoUsdEquiv.textContent = `≈ ${formatMoney(equivVes, 'VES')}`;
+                }
+            } else if (expMoneda === 'VES') {
+                setCurrencyButtonActive(btnCurrencyVes);
+                if (labelTasaCambio) labelTasaCambio.textContent = "Tasa de cambio USD (BCV)";
+                if (labelMontoTotal) labelMontoTotal.textContent = "Monto Total (Bolívares Bs.)";
+                if (labelMontoUsdEquiv) {
+                    labelMontoUsdEquiv.classList.remove('hidden');
+                    const equivUsd = currentTasa > 0 ? (total / currentTasa) : 0;
+                    labelMontoUsdEquiv.textContent = `≈ ${formatMoney(equivUsd, 'USD')}`;
+                }
+            } else if (expMoneda === 'EUR') {
+                setCurrencyButtonActive(btnCurrencyEur);
+                if (labelTasaCambio) labelTasaCambio.textContent = "Tasa de cambio EUR (BCV)";
+                if (labelMontoTotal) labelMontoTotal.textContent = "Monto Total (Euros €)";
+                if (labelMontoUsdEquiv) {
+                    labelMontoUsdEquiv.classList.remove('hidden');
+                    const equivVes = total * currentTasa;
+                    const refUsdRate = liveRates.usd > 0 ? liveRates.usd : currentTasa;
+                    const equivUsd = refUsdRate > 0 ? (equivVes / refUsdRate) : total;
+                    labelMontoUsdEquiv.textContent = `≈ ${formatMoney(equivVes, 'VES')} (${formatMoney(equivUsd, 'USD')})`;
+                }
+            } else if (expMoneda === 'USDT') {
+                setCurrencyButtonActive(btnCurrencyUsdt);
+                if (labelTasaCambio) labelTasaCambio.textContent = "Tasa de cambio USDT (P2P)";
+                if (labelMontoTotal) labelMontoTotal.textContent = "Monto Total (USDT)";
+                if (labelMontoUsdEquiv) {
+                    labelMontoUsdEquiv.classList.remove('hidden');
+                    const equivVes = total * currentTasa;
+                    labelMontoUsdEquiv.textContent = `≈ ${formatMoney(equivVes, 'VES')}`;
+                }
             }
         };
 
-        btnCurrencyUsd?.addEventListener('click', () => {
-            expMoneda = 'USD';
-            updateCurrencyDisplay();
-        });
-
-        btnCurrencyVes?.addEventListener('click', () => {
-            expMoneda = 'VES';
-            if (!modalExpTasa.value && bcvRate > 0) {
-                modalExpTasa.value = bcvRate.toFixed(2);
+        const selectCurrency = (cur) => {
+            expMoneda = cur;
+            const rate = getRateForCurrency(cur);
+            if (modalExpTasa) {
+                modalExpTasa.value = rate > 0 ? rate.toFixed(2) : '';
             }
             updateCurrencyDisplay();
-        });
+        };
+
+        btnCurrencyUsd?.addEventListener('click', () => selectCurrency('USD'));
+        btnCurrencyVes?.addEventListener('click', () => selectCurrency('VES'));
+        btnCurrencyEur?.addEventListener('click', () => selectCurrency('EUR'));
+        btnCurrencyUsdt?.addEventListener('click', () => selectCurrency('USDT'));
 
         modalExpTasa?.addEventListener('input', updateCurrencyDisplay);
         modalExpTotal?.addEventListener('input', updateCurrencyDisplay);
@@ -1474,8 +1682,9 @@ import '../styles/global.css';
         const openExpenseModal = () => {
             modalExpComercio.value = '';
             modalExpTotal.value = '';
-            expMoneda = 'USD';
-            modalExpTasa.value = bcvRate.toFixed(2);
+            expMoneda = currentPresupuesto.moneda || 'USD';
+            const rate = getRateForCurrency(expMoneda);
+            if (modalExpTasa) modalExpTasa.value = rate > 0 ? rate.toFixed(2) : '';
             
             const d = new Date();
             const monthStr = String(selectedMonth).padStart(2, '0');
@@ -1522,11 +1731,21 @@ import '../styles/global.css';
                 return;
             }
 
-            const tasa = expMoneda === 'VES' ? (Number(modalExpTasa.value) || bcvRate || 1) : 1.0;
+            const tasa = Number(modalExpTasa.value) || getRateForCurrency(expMoneda) || 1.0;
             const totalOriginalCents = Math.round(monto * 100);
-            const totalUsdCents = expMoneda === 'USD' 
-                ? totalOriginalCents 
-                : Math.round((monto / tasa) * 100);
+            let totalUsdCents = 0;
+
+            if (expMoneda === 'USD') {
+                totalUsdCents = totalOriginalCents;
+            } else if (expMoneda === 'VES') {
+                totalUsdCents = Math.round((monto / tasa) * 100);
+            } else if (expMoneda === 'EUR') {
+                const equivVes = monto * tasa;
+                const refUsd = liveRates.usd > 0 ? liveRates.usd : tasa;
+                totalUsdCents = Math.round((equivVes / refUsd) * 100);
+            } else if (expMoneda === 'USDT') {
+                totalUsdCents = totalOriginalCents;
+            }
 
             // Preparar ítems para guardar
             const validItems = modalExpenseItems
@@ -1565,6 +1784,8 @@ import '../styles/global.css';
                     total_original: totalOriginalCents,
                     total_usd: totalUsdCents,
                     tasa_cambio: tasa,
+                    fuente_tasa_cambio: expMoneda === 'USDT' ? 'Binance P2P' : 'BCV',
+                    fecha_tasa_cambio: fecha,
                     categoria: primaryCat,
                     items: validItems,
                     creado_en: new Date().toISOString(),
