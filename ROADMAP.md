@@ -36,8 +36,9 @@ Este documento centraliza las ideas y mejoras pendientes, ordenadas estratégica
 ## Fase 5: Marketing y Lanzamiento (En Progreso 🔄)
 *El paso para empezar a captar usuarios reales en Venezuela.*
 - ~~**Landing Page (rindemas.cesarluis.com):** (Completada ✅)~~ Creada en Astro + Tailwind y desplegada en Firebase Hosting con mockup de smartphone, propuesta de valor y guía de instalación directa de APK.
+- **Código QR de Descarga en Landing (Desktop):** Incorporar tarjeta con código QR en la sección de descarga para facilitar la instalación directa en el teléfono al navegar desde computadoras.
+- **Subida a Google Play Store:** (En proceso 🔄) Configuración de ficha, pruebas cerradas (20 testers por 14 días) y posterior actualización de botones y QR en landing apuntando a Play Store.
 - **Plan de Crecimiento Inicial (100 Usuarios):** (Documentado ✅) Playbook táctico definido en `marketing_plan.md` y `.agents/skills/growth-first-100-users/SKILL.md`.
-- **Subida de APK / Google Play Console:** (En preparación 🔄) Pago de cuenta de desarrollador ($25), configuración de Keystore y reclutamiento de 20 testers por 14 días.
 - **Correo de bienvenida automatizado:** Disparar un correo de bienvenida y primeros pasos cuando el usuario vincule su cuenta de Google (mediante Cloud Functions / trigger de autenticación o Firestore).
 - ~~**Canal directo de soporte y contacto en "Más":** (Completada ✅)~~ Tarjeta con acción "Escribir a soporte" para abrir chat directo por WhatsApp al número de soporte oficial.
   - *Nota futura:* Evaluar la transición del canal de soporte a una dirección de correo electrónico dedicada en lugar de WhatsApp a medida que crezca el volumen de usuarios o para mayor formalidad.
