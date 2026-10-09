@@ -322,11 +322,12 @@ class NotificationService {
         iOS: darwinDetails,
       );
 
+      final titulo = count == 1 ? 'Factura lista para revisar' : 'Facturas listas para revisar';
       final facturaTexto = count == 1 ? '1 factura esperando' : '$count facturas esperando';
 
       await _notificationsPlugin.zonedSchedule(
         1002,
-        'Facturas listas para revisar',
+        titulo,
         'Tienes $facturaTexto revisión para sumarse a este mes.',
         scheduledTzDate,
         notificationDetails,

@@ -71,7 +71,7 @@ void main() {
       await tester.pump();
 
       expect(find.byKey(const Key('global_scan_processing_banner')), findsOneWidget);
-      expect(find.text('Procesando 1 factura con IA...'), findsOneWidget);
+      expect(find.text('Analizando foto con IA...'), findsOneWidget);
       expect(find.text('Extrayendo datos en segundo plano'), findsOneWidget);
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
       expect(find.text('Cancelar'), findsOneWidget);
@@ -88,7 +88,7 @@ void main() {
       await tester.pump();
 
       expect(find.byKey(const Key('global_scan_offline_banner')), findsOneWidget);
-      expect(find.text('1 factura guardada sin conexión'), findsOneWidget);
+      expect(find.text('1 foto guardada sin conexión'), findsOneWidget);
       expect(find.text('Se procesará automáticamente al reconectar.'), findsOneWidget);
       // No spinner giratorio en modo offline
       expect(find.byType(CircularProgressIndicator), findsNothing);
@@ -108,7 +108,7 @@ void main() {
       await tester.pump();
 
       expect(find.byKey(const Key('global_scan_offline_banner')), findsOneWidget);
-      expect(find.text('2 facturas guardadas sin conexión'), findsOneWidget);
+      expect(find.text('2 fotos guardadas sin conexión'), findsOneWidget);
     });
 
     testWidgets('renders error banner when item failed with real non-network error', (tester) async {
@@ -123,7 +123,7 @@ void main() {
       await tester.pump();
 
       expect(find.byKey(const Key('global_scan_error_banner')), findsOneWidget);
-      expect(find.text('Pausado: 1 factura'), findsOneWidget);
+      expect(find.text('Pausado: 1 foto'), findsOneWidget);
       expect(find.text('Imagen ilegible o dañada.'), findsOneWidget);
       expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget);
     });
@@ -164,7 +164,7 @@ void main() {
       final processingFinder = find.byKey(const Key('global_scan_processing_banner'));
       expect(readyFinder, findsOneWidget);
       expect(processingFinder, findsOneWidget);
-      expect(find.text('Procesando 1 factura con IA...'), findsOneWidget);
+      expect(find.text('Analizando foto con IA...'), findsOneWidget);
 
       // El banner de procesamiento queda debajo del de "lista para revisar", sin superponerse
       final readyRect = tester.getRect(readyFinder);

@@ -156,7 +156,7 @@ class GlobalScanQueueBanner extends StatelessWidget {
     if (scanQueue.isProcessing) {
       // 2. Procesamiento activo con IA (se muestra debajo de "lista para revisar")
       final count = scanQueue.pendingCount > 0 ? scanQueue.pendingCount : 1;
-      final itemText = count == 1 ? 'factura' : 'facturas';
+      final processingTitle = count == 1 ? 'Analizando foto con IA...' : 'Analizando $count fotos con IA...';
 
       banners.add(Padding(
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
@@ -214,7 +214,7 @@ class GlobalScanQueueBanner extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Procesando $count $itemText con IA...',
+                        processingTitle,
                         style: const TextStyle(
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.bold,
@@ -249,7 +249,7 @@ class GlobalScanQueueBanner extends StatelessWidget {
     } else if (scanQueue.pendingItems.isNotEmpty) {
       // 3. Ítems pendientes cuando no hay proceso activo (sin conexión o error)
       final count = scanQueue.pendingCount;
-      final itemText = count == 1 ? 'factura' : 'facturas';
+      final itemText = count == 1 ? 'foto' : 'fotos';
       final isOffline = scanQueue.isWaitingForConnection;
 
       final title = isOffline
@@ -437,7 +437,7 @@ class GlobalScanQueueBanner extends StatelessWidget {
                             const Icon(Icons.receipt_long, color: AppColors.primaryDark),
                             const SizedBox(width: 8),
                             Text(
-                              'Comprobantes en cola (${items.length})',
+                              'Fotos en cola (${items.length})',
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -448,7 +448,7 @@ class GlobalScanQueueBanner extends StatelessWidget {
                             TextButton.icon(
                               icon: const Icon(Icons.delete_sweep, size: 18, color: AppColors.error),
                               label: const Text(
-                                'Descartar todos',
+                                'Descartar todas',
                                 style: TextStyle(
                                   color: AppColors.error,
                                   fontSize: 13,
@@ -459,9 +459,9 @@ class GlobalScanQueueBanner extends StatelessWidget {
                                 final confirm = await showDialog<bool>(
                                   context: ctx,
                                   builder: (dCtx) => AlertDialog(
-                                    title: const Text('¿Descartar todos?'),
+                                    title: const Text('¿Descartar todas?'),
                                     content: const Text(
-                                      '¿Deseas descartar todos los comprobantes de la cola? Esta acción no se puede deshacer.',
+                                      '¿Deseas descartar todas las fotos de la cola? Esta acción no se puede deshacer.',
                                     ),
                                     actions: [
                                       TextButton(
@@ -471,7 +471,7 @@ class GlobalScanQueueBanner extends StatelessWidget {
                                       TextButton(
                                         onPressed: () => Navigator.of(dCtx).pop(true),
                                         style: TextButton.styleFrom(foregroundColor: AppColors.error),
-                                        child: const Text('Descartar todos', style: TextStyle(fontWeight: FontWeight.bold)),
+                                        child: const Text('Descartar todas', style: TextStyle(fontWeight: FontWeight.bold)),
                                       ),
                                     ],
                                   ),
@@ -533,7 +533,7 @@ class GlobalScanQueueBanner extends StatelessWidget {
                                 subtitle: Text(
                                   lastError?.isNotEmpty == true
                                       ? lastError!
-                                      : (status == 'processing' ? 'Extrayendo datos de la factura' : 'Pendiente por analizar'),
+                                      : (status == 'processing' ? 'Extrayendo datos de la imagen' : 'Pendiente por analizar'),
                                   style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
@@ -551,14 +551,14 @@ class GlobalScanQueueBanner extends StatelessWidget {
                                       ),
                                     IconButton(
                                       icon: const Icon(Icons.delete_outline, color: AppColors.error, size: 22),
-                                      tooltip: 'Descartar este comprobante',
+                                      tooltip: 'Descartar esta foto',
                                   onPressed: () async {
                                     final confirm = await showDialog<bool>(
                                       context: ctx,
                                       builder: (dCtx) => AlertDialog(
-                                        title: const Text('¿Descartar este comprobante?'),
+                                        title: const Text('¿Descartar esta foto?'),
                                         content: const Text(
-                                          '¿Deseas descartar esta factura de la cola? Esta acción no se puede deshacer.',
+                                          '¿Deseas descartar esta foto de la cola? Esta acción no se puede deshacer.',
                                         ),
                                         actions: [
                                           TextButton(
@@ -607,13 +607,13 @@ class GlobalScanQueueBanner extends StatelessWidget {
 
     if (isProcessing) {
       title = '¿Detener escaneo?';
-      content = 'Se cancelará el análisis actual y se descartarán los comprobantes pendientes de la cola.';
+      content = 'Se cancelará el análisis actual y se descartarán las fotos pendientes de la cola.';
     } else if (itemId != null) {
-      title = '¿Descartar este comprobante?';
-      content = '¿Deseas descartar esta factura de la cola? Esta acción no se puede deshacer.';
+      title = '¿Descartar esta foto?';
+      content = '¿Deseas descartar esta foto de la cola? Esta acción no se puede deshacer.';
     } else {
-      title = '¿Descartar comprobantes?';
-      content = '¿Deseas descartar las facturas pendientes de la cola? Esta acción no se puede deshacer.';
+      title = '¿Descartar fotos?';
+      content = '¿Deseas descartar las fotos pendientes de la cola? Esta acción no se puede deshacer.';
     }
 
     final confirmed = await showDialog<bool>(
