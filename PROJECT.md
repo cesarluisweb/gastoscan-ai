@@ -61,3 +61,10 @@ La navegación principal (`MainScreen`) se basa en un patrón ergonómico de 4 p
 4. **Despliegue Dinámico (Remote Config):** Arquitectura preparada para modificar cuotas, textos de paywall y parámetros de IA desde la nube sin depender de revisiones demoradas en tiendas de aplicaciones.
 5. **Infraestructura como Activo Permanente:** Los módulos centrales (autenticación anónima/Google, base de datos SQLite con migraciones, cola offline resiliente, orquestación de Gemini y sincronización en Firestore) se diseñan como piezas desacopladas y reutilizables para futuros productos del mismo ecosistema financiero.
 
+---
+
+## 📌 Documentación Externa en Obsidian
+Existe una ficha técnica extendida y mapa de componentes en la bóveda de Obsidian en:
+`H:\My Drive\Documentos\Notas\Trabajo\Rinde Más - Control de Gastos.md`
+*(Nota: Sirve como documento de referencia y consulta conceptual; no requiere actualización continua obligatoria en cada tarea).*
+

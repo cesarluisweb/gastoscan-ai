@@ -20,6 +20,7 @@
 - **Package Name Oficial:** `com.cesarluis.rindemas` en Google Play Console y Android.
 - **Estrategia de Lanzamiento Google Play:** Reclutamiento de 15 a 18 testers organizados por Google Groups (`rindemas-testers@googlegroups.com`), llevando registro de bugs y versiones para el formulario de producción.
 - **Ruta Verificada de Pago en Venezuela:** Uso de OKX Card (Mastercard virtual) para salvar el bloqueo de tarjetas prepago directas (`OR_CCR_61`).
+- **Ficha Maestra en Obsidian:** Ubicada en `H:\My Drive\Documentos\Notas\Trabajo\Rinde Más - Control de Gastos.md` (consulta de referencia, sin obligación de actualización en cada commit).
 
 ## Errores y Fricciones a Evitar
 - Minutos de GitHub Actions en repositorio privado: Si la cuenta llega al límite, los runners no arrancan; requiere revisar Billing o pasar a público temporalmente para compilar.
