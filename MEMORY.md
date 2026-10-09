@@ -27,5 +27,7 @@
 - Prohibido `>` en PowerShell; usar siempre tubería `... | Out-File -Encoding utf8`.
 - Contraste estricto en UI (`DESIGN.md`): Texto sobre amarillo SIEMPRE negro; texto sobre blanco SIEMPRE negro o gris, NUNCA amarillo.
 
+- **Tarjeta de Donación Pago Móvil:** Actualizados campos a 'Teléfono:' (0414-8431543) y 'Cédula:' (18.903.218) en `landing/src/pages/index.astro`, desplegado a Firebase Hosting (`rindemas.cesarluis.com`) y verificado online.
+
 ## Próximo Paso Inmediato
-- Monitorear CI del nuevo commit que compila el AAB 100% compliant con Google Play.
+- Esperar siguientes instrucciones de César o continuar con la preparación para el release de Google Play.
