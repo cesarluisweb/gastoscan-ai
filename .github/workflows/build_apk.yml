@@ -135,10 +135,9 @@ jobs:
           echo "Compilando AAB para Google Play v$APP_VERSION (Build $BUILD_NUM)..."
           flutter build appbundle --release --no-tree-shake-icons --build-name="$APP_VERSION" --build-number="$BUILD_NUM" --dart-define=GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}"
 
-      - name: Firmar AAB con Keystore de Produccion
+      - name: Verificar Firma Oficial Unica del AAB
         run: |
-          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore android_template/rindemas.jks -storepass rindemas123 -keypass rindemas123 build/app/outputs/bundle/release/app-release.aab rindemas
-          jarsigner -verify build/app/outputs/bundle/release/app-release.aab
+          jarsigner -verify -verbose -certs build/app/outputs/bundle/release/app-release.aab
 
       - name: Subir AAB como Artefacto de GitHub Actions
         uses: actions/upload-artifact@v4

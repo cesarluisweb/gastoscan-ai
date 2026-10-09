@@ -154,6 +154,9 @@ Row(
    - NUNCA envolver `ListTile` o `SwitchListTile` en `Container(decoration: BoxDecoration(...))`. Usar siempre widget `Material` con `shape: RoundedRectangleBorder(...)` y `clipBehavior: Clip.antiAlias` para evitar excepciones de renderizado de tinta.
 4. **Banners Concurrentes No Excluyentes:**
    - Si existen múltiples tareas en segundo plano (OCR en curso, ítems pendientes de revisión, alertas), apilar verticalmente en `Column` compacto, nunca con `if / else if` que oculte tareas activas.
+5. **Reutilización y Homologación de Componentes Transversales:**
+   - Cualquier control interactivo o componente visual compartido por más de una pantalla (ej. `MonthSelectorBar`, filtros, selectores de fecha) DEBE residir como widget modular reutilizable en `lib/ui/widgets/`. Queda prohibido duplicar árboles de widgets equivalentes entre pantallas.
+   - Estos componentes comunes compartidos entre pantallas de primer nivel (Inicio, Gastos, Análisis, Comprobantes) DEBEN ubicarse directamente sobre el fondo de la pantalla (`AppColors.background`), sin envoltorios redundantes (`Container(color: AppColors.surface)`) ni bordes locales que generen franjas inconsistentes.
 
 ---
 

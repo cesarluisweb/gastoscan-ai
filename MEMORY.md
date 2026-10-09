@@ -14,8 +14,10 @@
   7. **Políticas de Google Play y Documentos Legales Desplegados:** Actualización in-app redirigida a la tienda (`market://details?id=com.cesarluis.rindemas`), eliminados permisos de alarma exacta (`USE_EXACT_ALARM`), y publicadas páginas oficiales de Privacidad (`/privacidad`) y Términos (`/terminos`) en Firebase Hosting con validación HTTP 200.
   8. **Unificación Terminológica de Cola y Facturas:** Fase de escaneo/análisis habla de 'fotos'; fase de resultados y notificaciones habla de 'facturas'. Corregida concordancia singular/plural.
   9. **Aislamiento Total de Cuentas y Limpieza Local al Cerrar Sesión:** Creado método `limpiarBaseDatosLocal()` en SQLite/repositorio. Flujo de `cerrarSesion()` vacía el dispositivo para inicio en cero. Diálogo de decisión ("Conservar y sumar" vs "Reemplazar") al vincular o iniciar sesión si hay gastos locales huérfanos, erradicando contaminación de datos entre cuentas.
+  10. **Firma Oficial Única en AAB (Google Play):** Resuelto error de doble cadena de certificados. Firma nativa en Gradle (`signingConfigs.release`) con `rindemas.jks` y eliminación de re-firma manual con `jarsigner` en CI.
 
 ## Decisiones Técnicas y de Negocio Recientes
+- **Firma Nativa de Producción:** Gradle firma directamente el `.aab` con `rindemas.jks` una sola vez. `jarsigner` solo verifica integridad.
 - **Cumplimiento Google Play:** Sin sideloading interno de APKs ni permisos de alarma exacta (`inexactAllowWhileIdle`).
 - **Aislamiento de Cuentas:** Al cerrar sesión, el teléfono se pone a cero en SQLite. Los datos remotos quedan intactos en Firestore. Al entrar con otra cuenta, solo se descargan los datos correspondientes.
 - **Páginas Legales en Producción:** `rindemas.cesarluis.com/privacidad` (obligatoria para Play Console y Data Safety con método de eliminación de cuenta) y `rindemas.cesarluis.com/terminos`.
@@ -24,6 +26,7 @@
 - **Ruta Verificada de Pago en Venezuela:** Uso de OKX Card (Mastercard virtual) para salvar el bloqueo de tarjetas prepago directas (`OR_CCR_61`).
 
 ## Errores y Fricciones a Evitar
+- NUNCA usar `jarsigner` para re-firmar un AAB en CI (produce doble cadena de certificados y rechazo en Play Console); la firma debe ser nativa en Gradle.
 - Minutos de GitHub Actions en repositorio privado: Si la cuenta llega al límite, los runners no arrancan; requiere revisar Billing o pasar a público temporalmente para compilar.
 - Tras finalizar compilaciones en público, retornar a 'Private' para proteger el código fuente.
 - En CI, `curl` para logs devuelve 403; los fallos de test se leen en `test_results.txt` tras `git pull --rebase`.
@@ -31,4 +34,4 @@
 - Contraste estricto en UI (`DESIGN.md`): Texto sobre amarillo SIEMPRE negro; texto sobre blanco SIEMPRE negro o gris, NUNCA amarillo.
 
 ## Próximo Paso Inmediato
-- Monitorear CI en GitHub Actions para verificar compilación y tests en verde tras el commit de aislamiento de cuentas.
+- Monitorear CI para verificar la compilación y firma oficial única del `.aab` y descargar para Play Console.

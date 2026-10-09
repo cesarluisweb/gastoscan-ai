@@ -19,6 +19,7 @@
 - 🚫 **Nunca (Prohibiciones estrictas):**
   - Modificar archivos en `android/` de forma manual o local (CI los regenera).
   - Usar el operador `>` en PowerShell (provoca corrupción a UTF-16 LE).
+  - Usar el operador `&&` en PowerShell 5.1 para encadenar sentencias (provoca `ParserError`; usar siempre `;` o llamadas independientes).
   - Cantar victoria o decir que la app "está lista" tras un commit sin verificar CI.
   - Introducir conceptos de conciliación bancaria o cuentas múltiples (anti-filosofía Rinde Más).
   - Prometer planes de IA ilimitada de por vida.
@@ -41,6 +42,7 @@
 ## 2. Codificación en PowerShell y Scripts
 - Al modificar archivos de texto usando `Set-Content` en PowerShell, **SIEMPRE** debes usar el parámetro `-Encoding UTF8`. Si lo omites, Windows romperá todos los acentos y caracteres especiales en español.
 - **Prohibición de Redirección:** NUNCA uses el operador de redirección `>` para crear archivos o scripts desde PowerShell (ej. `echo "..." > script.py`), ya que esto guarda en UTF-16 LE y corrompe el código. Siempre usa tuberías: `... | Out-File script.py -Encoding utf8`.
+- **Separador de Comandos en PowerShell:** En Windows PowerShell 5.1, queda prohibido encadenar comandos con `&&`, ya que produce un error de sintaxis del analizador (`ParserError`). Se debe utilizar siempre el punto y coma `;` (ej. `git add . ; git commit -m '...'`) o invocar comandos en pasos separados.
 
 ## 3. Integración Continua (CI) y Plugins Nativos (Firebase)
 La compilación en GitHub Actions (`build_apk.yml`) ejecuta `flutter create`, lo que borra y regenera la carpeta `android/` desde cero en cada ejecución.
@@ -98,6 +100,7 @@ Toda interfaz, pantalla, componente y diálogo debe ceñirse rigurosamente a [`D
 - **Sincronización de Tests de Widgets ante Cambios de Arquitectura UI:** Al refactorizar o sustituir componentes de interfaz (por ejemplo, reemplazar banners globales por tarjetas individuales como `PendingExpenseCard`), se deben sincronizar inmediatamente los widget tests correspondientes actualizando las claves (`Key`) y aserciones esperadas para reflejar la nueva arquitectura y evitar fallos en CI.
 - **Flujo de Revisión Continua en Lote ("Guardar y siguiente"):** Al revisar elementos provenientes de una cola de escaneo con múltiples ítems listos, la interfaz DEBE ofrecer un botón de avance directo (*"Guardar y revisar siguiente"*) que reemplace limpiamente la pantalla (`Navigator.pushReplacement`) para evitar obligar al usuario a salir al Dashboard repetidamente. Los modales de fricción o vinculación (como cuenta de Google para usuarios anónimos) DEBEN posponerse hasta completar la última factura del lote o cuando el usuario pulse explícitamente "Guardar y salir".
 - **Borrado Seguro de Imágenes Temporales Compartidas:** Cuando múltiples ítems de la cola o múltiples gastos provengan de una misma captura o fotografía física, queda prohibido invocar `ImageService.deleteTempFile` sin antes verificar que no existan otros registros pendientes en `scan_queue` o en SQLite que aún dependan de dicha ruta de archivo.
+- **Reutilización Obligatoria de Componentes UI (DRY):** Si un patrón visual o interactivo (como selectores de período, modales de confirmación, tarjetas resumen o barras de filtro) se utiliza o requiere en 2 o más pantallas, queda estrictamente prohibido duplicar código o construir widgets locales análogos. Se DEBE abstraer en un widget modular reutilizable dentro de `lib/ui/widgets/` con parámetros configurables y callbacks limpios, sirviendo como única fuente de verdad para toda la aplicación.
 
 ## 7. Gestión de Documentación del Proyecto
 - **Archivos de Planificación y Estilo:** Siempre que se genere, actualice o discuta un documento estratégico para el proyecto (como `ROADMAP.md`, `PROJECT.md`, `DESIGN.md`, planes de arquitectura, o guías de estilo), DEBE guardarse directamente en la raíz del repositorio.
