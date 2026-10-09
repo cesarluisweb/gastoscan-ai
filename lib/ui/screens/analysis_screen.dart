@@ -1,3 +1,4 @@
+import '../widgets/month_selector_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
@@ -16,8 +17,6 @@ class AnalysisScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final gastoProvider = Provider.of<GastoProvider>(context);
     final settings = Provider.of<SettingsProvider>(context);
-    final mesNombre = DateFormatter.getMonthName(gastoProvider.selectedMonth);
-    final anio = gastoProvider.selectedYear;
 
     final hasData = gastoProvider.totalesPorCategoria.isNotEmpty ||
         gastoProvider.totalesPorCategoriaVes.isNotEmpty ||
@@ -45,68 +44,10 @@ class AnalysisScreen extends StatelessWidget {
             child: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
-          // Selector de Mes
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              InkWell(
-                key: const Key('analysis_month_selector_title'),
-                onTap: () => _mostrarPickerMes(context, gastoProvider),
-                borderRadius: BorderRadius.circular(8),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '$mesNombre $anio',
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      const Icon(
-                        Icons.arrow_drop_down,
-                        color: AppColors.textPrimary,
-                        size: 24,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.chevron_left, color: AppColors.textSecondary),
-                    onPressed: () {
-                      int nuevoMes = gastoProvider.selectedMonth - 1;
-                      int nuevoAnio = gastoProvider.selectedYear;
-                      if (nuevoMes < 1) {
-                        nuevoMes = 12;
-                        nuevoAnio--;
-                      }
-                      gastoProvider.cambiarMes(nuevoAnio, nuevoMes);
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
-                    onPressed: () {
-                      int nuevoMes = gastoProvider.selectedMonth + 1;
-                      int nuevoAnio = gastoProvider.selectedYear;
-                      if (nuevoMes > 12) {
-                        nuevoMes = 1;
-                        nuevoAnio++;
-                      }
-                      gastoProvider.cambiarMes(nuevoAnio, nuevoMes);
-                    },
-                  ),
-                ],
-              ),
-            ],
+          const MonthSelectorBar(
+            keyPrefix: 'analysis_',
+            padding: EdgeInsets.only(bottom: 12),
           ),
-          const SizedBox(height: 12),
 
           if (gastoProvider.isLoading)
             const Center(
@@ -422,110 +363,6 @@ class AnalysisScreen extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  void _mostrarPickerMes(BuildContext context, GastoProvider gastoProvider) {
-    int tempAnio = gastoProvider.selectedYear;
-
-    final meses = [
-      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-    ];
-
-    showDialog(
-      context: context,
-      builder: (dContext) {
-        return StatefulBuilder(
-          builder: (context, setStateDialog) {
-            return AlertDialog(
-              backgroundColor: AppColors.card,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              titlePadding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-              contentPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              title: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.chevron_left, color: AppColors.textPrimary),
-                    onPressed: () {
-                      setStateDialog(() {
-                        tempAnio--;
-                      });
-                    },
-                  ),
-                  Text(
-                    '$tempAnio',
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.chevron_right, color: AppColors.textPrimary),
-                    onPressed: () {
-                      setStateDialog(() {
-                        tempAnio++;
-                      });
-                    },
-                  ),
-                ],
-              ),
-              content: SizedBox(
-                width: 280,
-                child: GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    childAspectRatio: 2.2,
-                    crossAxisSpacing: 8,
-                    mainAxisSpacing: 8,
-                  ),
-                  itemCount: 12,
-                  itemBuilder: (context, index) {
-                    final mesNum = index + 1;
-                    final isSelected = (mesNum == gastoProvider.selectedMonth && tempAnio == gastoProvider.selectedYear);
-                    return InkWell(
-                      key: Key('analysis_month_pick_$mesNum'),
-                      borderRadius: BorderRadius.circular(8),
-                      onTap: () {
-                        gastoProvider.cambiarMes(tempAnio, mesNum);
-                        Navigator.pop(dContext);
-                      },
-                      child: Container(
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: isSelected ? AppColors.primary : AppColors.cardLighter,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: isSelected ? AppColors.primaryDark : AppColors.border,
-                          ),
-                        ),
-                        child: Text(
-                          meses[index].substring(0, 3),
-                          style: TextStyle(
-                            color: isSelected ? AppColors.secondary : AppColors.textPrimary,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dContext),
-                  child: const Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
-                ),
-              ],
-            );
-          },
-        );
-      },
     );
   }
 }

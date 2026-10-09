@@ -1,3 +1,4 @@
+import '../widgets/month_selector_bar.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -73,8 +74,6 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
   Widget build(BuildContext context) {
     final gastoProvider = Provider.of<GastoProvider>(context);
     final settings = Provider.of<SettingsProvider>(context);
-    final mesNombre = DateFormatter.getMonthName(gastoProvider.selectedMonth);
-    final anio = gastoProvider.selectedYear;
 
     final scanQueue = Provider.of<ScanQueueProvider>(context);
 
@@ -200,51 +199,13 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
           const GlobalScanQueueBanner(),
           // Selector de Mes
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             decoration: const BoxDecoration(
               color: AppColors.surface,
               border: Border(bottom: BorderSide(color: AppColors.border, width: 0.5)),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '$mesNombre $anio',
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.chevron_left, color: AppColors.textSecondary),
-                      onPressed: () {
-                        int nuevoMes = gastoProvider.selectedMonth - 1;
-                        int nuevoAnio = gastoProvider.selectedYear;
-                        if (nuevoMes < 1) {
-                          nuevoMes = 12;
-                          nuevoAnio--;
-                        }
-                        gastoProvider.cambiarMes(nuevoAnio, nuevoMes);
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
-                      onPressed: () {
-                        int nuevoMes = gastoProvider.selectedMonth + 1;
-                        int nuevoAnio = gastoProvider.selectedYear;
-                        if (nuevoMes > 12) {
-                          nuevoMes = 1;
-                          nuevoAnio++;
-                        }
-                        gastoProvider.cambiarMes(nuevoAnio, nuevoMes);
-                      },
-                    ),
-                  ],
-                ),
-              ],
+            child: const MonthSelectorBar(
+              keyPrefix: 'expense_history_',
             ),
           ),
 

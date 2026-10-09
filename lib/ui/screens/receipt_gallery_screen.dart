@@ -1,3 +1,4 @@
+import '../widgets/month_selector_bar.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -46,47 +47,9 @@ class ReceiptGalleryScreen extends StatelessWidget {
         children: [
           // Selector de Mes y Año
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             color: AppColors.surface,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.chevron_left, color: AppColors.textPrimary),
-                  tooltip: 'Mes anterior',
-                  onPressed: () {
-                    int prevMes = gastoProvider.selectedMonth - 1;
-                    int prevAnio = gastoProvider.selectedYear;
-                    if (prevMes < 1) {
-                      prevMes = 12;
-                      prevAnio--;
-                    }
-                    gastoProvider.cambiarMes(prevAnio, prevMes);
-                  },
-                ),
-                Text(
-                  '$mesNombre $anio',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.chevron_right, color: AppColors.textPrimary),
-                  tooltip: 'Mes siguiente',
-                  onPressed: () {
-                    int nextMes = gastoProvider.selectedMonth + 1;
-                    int nextAnio = gastoProvider.selectedYear;
-                    if (nextMes > 12) {
-                      nextMes = 1;
-                      nextAnio++;
-                    }
-                    gastoProvider.cambiarMes(nextAnio, nextMes);
-                  },
-                ),
-              ],
-            ),
+            child: const MonthSelectorBar(),
           ),
           const Divider(height: 1, color: AppColors.border),
 
