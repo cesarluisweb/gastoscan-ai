@@ -9,6 +9,7 @@ import '../../core/constants/app_constants.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/gasto_provider.dart';
+import '../../providers/scan_queue_provider.dart';
 import '../../services/export_service.dart';
 import '../../services/update_service.dart';
 import '../widgets/update_dialog.dart';

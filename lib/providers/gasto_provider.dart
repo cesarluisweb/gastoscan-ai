@@ -208,7 +208,7 @@ class GastoProvider with ChangeNotifier {
       _gastos = [];
       _presupuestoGeneral = 0.0;
       _metaAhorro = 0.0;
-      _presupuestosCategorias = {};
+      _presupuestosPorCategoria = {};
       await cargarDatos();
       notifyListeners();
     } catch (e) {
