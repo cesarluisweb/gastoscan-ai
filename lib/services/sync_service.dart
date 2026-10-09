@@ -311,7 +311,29 @@ class SyncService {
     }
   }
 
-  Future<String?> vincularCuentaGoogle() async {
+  /// Cierra sesión en Firebase y Google, vacía la base de datos local (SQLite)
+  /// e inicia una sesión anónima fresca para un aislamiento total.
+  Future<void> cerrarSesion() async {
+    try {
+      final auth = FirebaseAuth.instance;
+
+      try {
+        final googleSignIn = GoogleSignIn(
+          serverClientId: '758679432067-p4lll1b5vfia32fndd68gjif6bmfmvel.apps.googleusercontent.com',
+        );
+        await googleSignIn.signOut();
+      } catch (_) {}
+
+      await auth.signOut();
+      await _repository.limpiarDatosLocales();
+      await auth.signInAnonymously();
+    } catch (e) {
+      debugPrint("Error al cerrar sesión y limpiar datos locales: $e");
+      rethrow;
+    }
+  }
+
+  Future<String?> vincularCuentaGoogle({bool descartarDatosLocales = false}) async {
     try {
       final auth = FirebaseAuth.instance;
 
@@ -338,6 +360,9 @@ class SyncService {
 
       final user = auth.currentUser;
       if (user == null) {
+        if (descartarDatosLocales) {
+          await _repository.limpiarDatosLocales();
+        }
         final userCred = await auth.signInWithCredential(credential);
         if (userCred.user != null) {
           await userCred.user?.updateProfile(
@@ -352,6 +377,9 @@ class SyncService {
 
       if (user.isAnonymous) {
         try {
+          if (descartarDatosLocales) {
+            await _repository.limpiarDatosLocales();
+          }
           final userCred = await user.linkWithCredential(credential);
           final activeUser = userCred.user ?? auth.currentUser ?? user;
           await activeUser.updateProfile(displayName: googleUser.displayName, photoURL: googleUser.photoUrl);
@@ -361,6 +389,9 @@ class SyncService {
           if (e.code == 'credential-already-in-use' ||
               e.code == 'email-already-in-use' ||
               e.code == 'account-exists-with-different-credential') {
+            if (descartarDatosLocales) {
+              await _repository.limpiarDatosLocales();
+            }
             final userCred = await auth.signInWithCredential(credential);
             final activeUser = userCred.user ?? auth.currentUser;
             if (activeUser != null) {
@@ -368,13 +399,15 @@ class SyncService {
               await activeUser.reload();
             }
 
-            final gastos = await _repository.obtenerGastos();
-            for (var g in gastos) {
-              await _repository.actualizarGastoSyncStatus(g.copyWith(synced: 0));
+            if (!descartarDatosLocales) {
+              final gastos = await _repository.obtenerGastos();
+              for (var g in gastos) {
+                await _repository.actualizarGastoSyncStatus(g.copyWith(synced: 0));
+              }
             }
             await syncBidirectional();
           } else {
-            return e.message ?? e.toString();
+            return _mapearErrorFirebaseAuth(e);
           }
         }
       } else {
@@ -414,6 +447,8 @@ class SyncService {
         return 'El formato del correo electrónico no es válido.';
       case 'user-disabled':
         return 'Esta cuenta ha sido deshabilitada.';
+      case 'operation-not-allowed':
+        return 'El método de inicio de sesión no está habilitado en la consola de Firebase.';
       case 'too-many-requests':
         return 'Demasiados intentos fallidos. Intenta más tarde.';
       case 'network-request-failed':
@@ -423,7 +458,7 @@ class SyncService {
     }
   }
 
-  Future<String?> vincularConEmail(String email, String password) async {
+  Future<String?> vincularConEmail(String email, String password, {bool descartarDatosLocales = false}) async {
     final cleanEmail = email.trim();
     if (cleanEmail.isEmpty || !cleanEmail.contains('@') || !cleanEmail.contains('.')) {
       return 'Ingresa un correo electrónico válido.';
@@ -441,6 +476,9 @@ class SyncService {
 
       final user = auth.currentUser;
       if (user == null) {
+        if (descartarDatosLocales) {
+          await _repository.limpiarDatosLocales();
+        }
         try {
           await auth.signInWithCredential(credential);
         } on FirebaseAuthException catch (e) {
@@ -459,6 +497,9 @@ class SyncService {
 
       if (user.isAnonymous) {
         try {
+          if (descartarDatosLocales) {
+            await _repository.limpiarDatosLocales();
+          }
           final userCred = await user.linkWithCredential(credential);
           final activeUser = userCred.user ?? auth.currentUser ?? user;
           await activeUser.reload();
@@ -468,15 +509,20 @@ class SyncService {
           if (e.code == 'credential-already-in-use' ||
               e.code == 'email-already-in-use' ||
               e.code == 'account-exists-with-different-credential') {
+            if (descartarDatosLocales) {
+              await _repository.limpiarDatosLocales();
+            }
             final userCred = await auth.signInWithCredential(credential);
             final activeUser = userCred.user ?? auth.currentUser;
             if (activeUser != null) {
               await activeUser.reload();
             }
 
-            final gastos = await _repository.obtenerGastos();
-            for (var g in gastos) {
-              await _repository.actualizarGastoSyncStatus(g.copyWith(synced: 0));
+            if (!descartarDatosLocales) {
+              final gastos = await _repository.obtenerGastos();
+              for (var g in gastos) {
+                await _repository.actualizarGastoSyncStatus(g.copyWith(synced: 0));
+              }
             }
             await syncBidirectional();
             return null;
@@ -502,7 +548,7 @@ class SyncService {
     }
   }
 
-  Future<String?> iniciarSesionConEmail(String email, String password) async {
+  Future<String?> iniciarSesionConEmail(String email, String password, {bool descartarDatosLocales = true}) async {
     final cleanEmail = email.trim();
     if (cleanEmail.isEmpty || !cleanEmail.contains('@') || !cleanEmail.contains('.')) {
       return 'Ingresa un correo electrónico válido.';
@@ -513,6 +559,9 @@ class SyncService {
 
     try {
       final auth = FirebaseAuth.instance;
+      if (descartarDatosLocales) {
+        await _repository.limpiarDatosLocales();
+      }
       final userCred = await auth.signInWithEmailAndPassword(
         email: cleanEmail,
         password: password,
@@ -522,9 +571,11 @@ class SyncService {
         await activeUser.reload();
       }
 
-      final gastos = await _repository.obtenerGastos();
-      for (var g in gastos) {
-        await _repository.actualizarGastoSyncStatus(g.copyWith(synced: 0));
+      if (!descartarDatosLocales) {
+        final gastos = await _repository.obtenerGastos();
+        for (var g in gastos) {
+          await _repository.actualizarGastoSyncStatus(g.copyWith(synced: 0));
+        }
       }
       await syncBidirectional();
       return null;

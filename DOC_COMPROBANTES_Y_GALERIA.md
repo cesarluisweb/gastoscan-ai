@@ -60,3 +60,9 @@ En respuesta directa a la experiencia de usuario y requerimientos funcionales so
 3. Tocar la opción para entrar en la galería mensual.
 4. Navegar entre meses con las flechas superiores (< >) para revisar los comprobantes de meses pasados o futuros.
 5. Tocar cualquier comprobante de la cuadrícula para abrirlo en el visor completo.
+
+---
+
+## Próximos Pasos y Monetización Futura (Rinde Más Pro)
+
+- **Sincronización de Comprobantes en la Nube:** Actualmente las fotos se almacenan de forma local en el teléfono para garantizar privacidad y cero costos de hosting por almacenamiento masivo de imágenes. En una versión de pago futura (Rinde Más Pro), se ofrecerá la sincronización y resguardo automático de los comprobantes en almacenamiento en la nube para que sean accesibles al cambiar de dispositivo o desde el panel web.

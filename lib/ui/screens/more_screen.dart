@@ -908,12 +908,24 @@ class MoreScreenState extends State<MoreScreen> {
                     icon: const Icon(Icons.login),
                     label: const Text('Vincular con Google'),
                     onPressed: () async {
-                      final error = await Provider.of<GastoProvider>(context, listen: false)
-                          .vincularCuentaGoogle();
+                      final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
+                      bool descartarLocales = false;
+
+                      if (gastoProvider.gastos.isNotEmpty) {
+                        final decision = await _preguntarFusionarOReemplazar(context);
+                        if (decision == null) return;
+                        descartarLocales = decision;
+                      }
+
+                      final error = await gastoProvider
+                          .vincularCuentaGoogle(descartarDatosLocales: descartarLocales);
                       if (!mounted) return;
                       if (error != null && error != 'CANCELLED') {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('No se pudo vincular la cuenta de Google. Intenta de nuevo.'), backgroundColor: AppColors.error),
+                          SnackBar(
+                            content: Text(error, style: const TextStyle(color: Colors.white)),
+                            backgroundColor: AppColors.error,
+                          ),
                         );
                       } else if (error == null) {
                         await Provider.of<SettingsProvider>(context, listen: false).loadSettings();
@@ -950,20 +962,86 @@ class MoreScreenState extends State<MoreScreen> {
               child: TextButton.icon(
                 icon: const Icon(Icons.logout, color: AppColors.error),
                 label: const Text('Cerrar Sesión', style: TextStyle(color: AppColors.error)),
-                onPressed: () async {
-                  if (_isFirebaseInitialized) {
-                    await FirebaseAuth.instance.signOut();
-                    await FirebaseAuth.instance.signInAnonymously();
-                    if (mounted) {
-                      setState(() {});
-                    }
-                  }
-                },
+                onPressed: () => _confirmarCerrarSesion(context),
               ),
             ),
         ],
       ),
     );
+  }
+
+  Future<bool?> _preguntarFusionarOReemplazar(BuildContext context) async {
+    return await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogCtx) => AlertDialog(
+        title: const Text('Gastos en este teléfono'),
+        content: const Text(
+          'Tienes gastos registrados en este dispositivo sin cuenta. ¿Deseas conservarlos y sumarlos a tu cuenta en la nube, o reemplazarlos con tu respaldo existente?',
+          style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx, true),
+            child: const Text('Reemplazar', style: TextStyle(color: AppColors.error)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.black,
+            ),
+            onPressed: () => Navigator.pop(dialogCtx, false),
+            child: const Text('Conservar y sumar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _confirmarCerrarSesion(BuildContext context) async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: const Text('¿Cerrar sesión?'),
+        content: const Text(
+          'Tus datos quedan guardados y respaldados en tu cuenta en la nube. Este dispositivo se pondrá a cero para que puedas empezar de nuevo o usar otra cuenta.',
+          style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx, false),
+            child: const Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(dialogCtx, true),
+            child: const Text('Cerrar sesión'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmar != true || !mounted) return;
+
+    final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
+    final scanQueue = Provider.of<ScanQueueProvider>(context, listen: false);
+
+    await gastoProvider.cerrarSesion();
+    await scanQueue.loadQueue();
+
+    if (mounted) {
+      setState(() {});
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Sesión cerrada. Dispositivo listo para una nueva cuenta.',
+              style: TextStyle(color: Colors.black)),
+          backgroundColor: AppColors.primary,
+        ),
+      );
+    }
   }
 
   void _mostrarModalAutenticacionEmail(BuildContext context) {
@@ -1121,9 +1199,24 @@ class MoreScreenState extends State<MoreScreen> {
                                 });
 
                                 final provider = Provider.of<GastoProvider>(context, listen: false);
+                                bool descartarLocales = false;
+
+                                if (provider.gastos.isNotEmpty) {
+                                  final decision = await _preguntarFusionarOReemplazar(context);
+                                  if (decision == null) {
+                                    if (modalContext.mounted) {
+                                      setModalState(() {
+                                        isLoading = false;
+                                      });
+                                    }
+                                    return;
+                                  }
+                                  descartarLocales = decision;
+                                }
+
                                 final error = esRegistro
-                                    ? await provider.vincularConEmail(email, password)
-                                    : await provider.iniciarSesionConEmail(email, password);
+                                    ? await provider.vincularConEmail(email, password, descartarDatosLocales: descartarLocales)
+                                    : await provider.iniciarSesionConEmail(email, password, descartarDatosLocales: descartarLocales);
 
                                 if (!modalContext.mounted) return;
 

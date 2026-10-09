@@ -174,8 +174,8 @@ class GastoProvider with ChangeNotifier {
     }
   }
 
-  Future<String?> vincularCuentaGoogle() async {
-    final error = await _syncService.vincularCuentaGoogle();
+  Future<String?> vincularCuentaGoogle({bool descartarDatosLocales = false}) async {
+    final error = await _syncService.vincularCuentaGoogle(descartarDatosLocales: descartarDatosLocales);
     if (error == null) {
       await cargarDatos(); // Recargar tras sincronizar
       notifyListeners();
@@ -183,8 +183,8 @@ class GastoProvider with ChangeNotifier {
     return error;
   }
 
-  Future<String?> vincularConEmail(String email, String password) async {
-    final error = await _syncService.vincularConEmail(email, password);
+  Future<String?> vincularConEmail(String email, String password, {bool descartarDatosLocales = false}) async {
+    final error = await _syncService.vincularConEmail(email, password, descartarDatosLocales: descartarDatosLocales);
     if (error == null) {
       await cargarDatos();
       notifyListeners();
@@ -192,13 +192,29 @@ class GastoProvider with ChangeNotifier {
     return error;
   }
 
-  Future<String?> iniciarSesionConEmail(String email, String password) async {
-    final error = await _syncService.iniciarSesionConEmail(email, password);
+  Future<String?> iniciarSesionConEmail(String email, String password, {bool descartarDatosLocales = true}) async {
+    final error = await _syncService.iniciarSesionConEmail(email, password, descartarDatosLocales: descartarDatosLocales);
     if (error == null) {
       await cargarDatos();
       notifyListeners();
     }
     return error;
+  }
+
+  Future<void> cerrarSesion() async {
+    _errorMessage = null;
+    try {
+      await _syncService.cerrarSesion();
+      _gastos = [];
+      _presupuestoGeneral = 0.0;
+      _metaAhorro = 0.0;
+      _presupuestosCategorias = {};
+      await cargarDatos();
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = _mapHumanFriendlyError(e, 'Error al cerrar sesión: $e');
+      notifyListeners();
+    }
   }
 
   Future<void> sincronizarConFirestore() async {

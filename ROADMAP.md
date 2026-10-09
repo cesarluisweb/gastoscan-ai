@@ -115,6 +115,7 @@ Este documento centraliza las ideas y mejoras pendientes, ordenadas estratégica
   - **Exportación Contable Avanzada:**
     - Generación de reportes mensuales en PDF con diseño limpio, gráficos de distribución y balance listos para imprimir o compartir.
     - Exportación en formato Excel/CSV detallado con el desglose ítem por ítem para contabilidad personal o negocios.
+  - **Sincronización de Comprobantes en la Nube:** Respaldo y sincronización automática de las fotos de facturas y comprobantes en la nube (Cloud Storage), permitiendo visualizarlos desde cualquier dispositivo o el panel web sin depender exclusivamente del almacenamiento local del teléfono.
   - **Consultas Profundas al Asistente IA:** Análisis financiero con comparativas de meses previos y proyecciones de gasto.
 - **Optimización del Embudo de Conversión (Funnel):**
   - Medición de fugas en cada paso con Firebase Analytics: Impresión → Ficha → Descarga → Onboarding → Activación (primer escaneo) → Retención → Pago.

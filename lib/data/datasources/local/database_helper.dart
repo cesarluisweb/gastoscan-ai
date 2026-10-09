@@ -1424,6 +1424,25 @@ class DatabaseHelper {
     return actualizados;
   }
 
+  /// Vacía todos los datos financieros y temporales del dispositivo (gastos, ítems, cola, presupuestos)
+  Future<void> limpiarBaseDatosLocal() async {
+    final db = await instance.database;
+    await db.transaction((txn) async {
+      await txn.delete('items_gasto');
+      await txn.delete('gastos');
+      try {
+        await txn.delete('gastos_fts');
+      } catch (_) {}
+      await txn.delete('shopping_items');
+      await txn.delete('scan_queue');
+      await txn.delete('presupuestos_mensuales');
+      await txn.delete('presupuestos_categorias_mensuales');
+      try {
+        await txn.update('categorias', {'presupuesto_mensual': 0.0});
+      } catch (_) {}
+    });
+  }
+
   Future<void> close() async {
     final db = await instance.database;
     db.close();

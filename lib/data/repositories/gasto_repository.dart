@@ -134,4 +134,9 @@ class GastoRepository {
       actualizadoEn: actualizadoEn,
     );
   }
+
+  /// Limpia todos los registros financieros locales de SQLite
+  Future<void> limpiarDatosLocales() {
+    return _dbHelper.limpiarBaseDatosLocal();
+  }
 }

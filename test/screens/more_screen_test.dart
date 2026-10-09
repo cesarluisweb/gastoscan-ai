@@ -24,6 +24,9 @@ class FakeDatabaseHelper extends DatabaseHelper {
 
   @override
   Future<int> clearPendingScanQueueItems() async => 0;
+
+  @override
+  Future<void> limpiarBaseDatosLocal() async {}
 }
 
 class FakeGastoProvider extends GastoProvider {
@@ -34,10 +37,16 @@ class FakeGastoProvider extends GastoProvider {
   Future<void> sincronizarConFirestore() async {}
 
   @override
-  Future<String?> vincularConEmail(String email, String password) async => null;
+  Future<String?> vincularConEmail(String email, String password, {bool descartarDatosLocales = false}) async => null;
 
   @override
-  Future<String?> iniciarSesionConEmail(String email, String password) async => null;
+  Future<String?> iniciarSesionConEmail(String email, String password, {bool descartarDatosLocales = true}) async => null;
+
+  @override
+  Future<String?> vincularCuentaGoogle({bool descartarDatosLocales = false}) async => null;
+
+  @override
+  Future<void> cerrarSesion() async {}
 }
 
 class FakeSettingsProvider extends SettingsProvider {
