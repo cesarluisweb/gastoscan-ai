@@ -176,104 +176,14 @@ export default {
       });
     }
 
-    // Endpoint de salud y diagnóstico rápido de modelos
+    // Endpoint de salud básico
     if (url.pathname === "/health" && request.method === "GET") {
-      if (url.searchParams.get("test") === "key") {
-        return new Response(JSON.stringify({ 
-          key_prefix: geminiKey.substring(0, 10), 
-          length: geminiKey.length,
-          had_whitespace: rawKey !== geminiKey
-        }), { headers: corsHeaders });
-      }
-      if (url.searchParams.get("list") === "1") {
-        try {
-          // Probar solo con header x-goog-api-key sin query param
-          const listRes = await fetch("https://generativelanguage.googleapis.com/v1beta/models", {
-            headers: {
-              "x-goog-api-key": geminiKey
-            }
-          });
-          const listData = await listRes.json();
-          const available = (listData.models || [])
-            .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"))
-            .map(m => m.name.replace("models/", ""));
-          return new Response(JSON.stringify({ available_models: available, raw_status: listRes.status, error: listData.error }), {
-            status: 200,
-            headers: { ...corsHeaders, "Content-Type": "application/json" }
-          });
-        } catch (e) {
-          return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: corsHeaders });
-        }
-      }
-
-      const testGemini = url.searchParams.has("test");
-      if (!testGemini) {
-        return new Response(JSON.stringify({
-          status: "ok",
-          models: FALLBACK_MODELS,
-          timestamp: new Date().toISOString()
-        }), {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        });
-      }
-
-      const testFull = url.searchParams.get("test") === "full";
-      const testJson = url.searchParams.get("test") === "json";
-      const testAll = url.searchParams.get("test") === "all";
-      const testResult = { status: "unknown", models_tested: [] };
-      for (const m of FALLBACK_MODELS) {
-        try {
-          let bodyPayload;
-          if (testFull) {
-            bodyPayload = {
-              contents: [{ role: "user", parts: [{ text: "Registra gasto de 5 dolares en panaderia" }] }],
-              tools: [{
-                functionDeclarations: [{
-                  name: "registrar_gasto",
-                  description: "Registra un gasto",
-                  parameters: {
-                    type: "object",
-                    properties: { total_usd: { type: "number" }, comercio: { type: "string" } },
-                    required: ["total_usd"]
-                  }
-                }]
-              }]
-            };
-          } else if (testJson) {
-            bodyPayload = {
-              contents: [{ role: "user", parts: [{ text: "Genera una lista con una factura: total 10.50, comercio Farmatodo" }] }],
-              generationConfig: { responseMimeType: "application/json" }
-            };
-          } else {
-            bodyPayload = {
-              contents: [{ role: "user", parts: [{ text: "ping" }] }],
-              generationConfig: { maxOutputTokens: 5 }
-            };
-          }
-
-          const testRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`, {
-            method: "POST",
-            headers: { 
-              "Content-Type": "application/json",
-              "x-goog-api-key": geminiKey
-            },
-            body: JSON.stringify(bodyPayload),
-            signal: AbortSignal.timeout(10000)
-          });
-          const testBody = await testRes.text();
-          testResult.models_tested.push({ model: m, status: testRes.status, ok: testRes.ok, snippet: testBody.substring(0, 500) });
-          if (testRes.ok) {
-            testResult.status = "success";
-            testResult.working_model = testResult.working_model || m;
-            if (!testAll) break;
-          }
-        } catch (e) {
-          testResult.models_tested.push({ model: m, error: e.message });
-        }
-      }
-      return new Response(JSON.stringify(testResult), {
-        status: testResult.status === "success" ? 200 : 502,
+      return new Response(JSON.stringify({
+        status: "ok",
+        models: FALLBACK_MODELS,
+        timestamp: new Date().toISOString()
+      }), {
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
