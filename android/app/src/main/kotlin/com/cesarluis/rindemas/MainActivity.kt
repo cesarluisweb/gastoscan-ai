@@ -1,4 +1,4 @@
-package com.gastoscan.ai
+package com.cesarluis.rindemas
 
 import io.flutter.embedding.android.FlutterActivity
 

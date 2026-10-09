@@ -11,6 +11,11 @@ Documento preparado para copiar y pegar directamente en la consola de Google Pla
 Rinde Más: Control de Gastos
 ```
 
+### Nombre de paquete / Application ID
+```
+com.cesarluis.rindemas
+```
+
 ### Descripción breve (Máximo 80 caracteres)
 ```
 Control de gastos en Bs y $ a tasa BCV. Sin bancos y con respaldo en tu Google.
