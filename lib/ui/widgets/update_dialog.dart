@@ -120,7 +120,7 @@ class UpdateDialog extends StatelessWidget {
                       Navigator.of(context).pop();
                       await UpdateService.openDownloadUrl(updateInfo.apkUrl);
                     },
-                    icon: const Icon(Icons.download_rounded, color: AppColors.textPrimary, size: 18),
+                    icon: const Icon(Icons.system_update_rounded, color: AppColors.textPrimary, size: 18),
                     label: const Text(
                       'Actualizar',
                       style: TextStyle(

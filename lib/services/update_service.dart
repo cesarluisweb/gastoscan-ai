@@ -131,13 +131,32 @@ class UpdateService {
     return null;
   }
 
-  /// Inicia la descarga abriendo la URL del APK directo
-  static Future<bool> openDownloadUrl(String url) async {
+  static const String playStoreMarketUrl = 'market://details?id=com.cesarluis.rindemas';
+  static const String playStoreWebUrl = 'https://play.google.com/store/apps/details?id=com.cesarluis.rindemas';
+
+  /// Abre la tienda oficial de Google Play Store para actualizar de forma segura y autorizada.
+  /// Si falla la app nativa de la tienda, abre la URL web oficial.
+  static Future<bool> openDownloadUrl([String? fallbackUrl]) async {
     try {
-      final uri = Uri.parse(url);
-      return await launchUrl(uri, mode: LaunchMode.externalApplication);
+      final marketUri = Uri.parse(playStoreMarketUrl);
+      try {
+        final launched = await launchUrl(marketUri, mode: LaunchMode.externalApplication);
+        if (launched) return true;
+      } catch (_) {}
+
+      final webUri = Uri.parse(playStoreWebUrl);
+      try {
+        final launchedWeb = await launchUrl(webUri, mode: LaunchMode.externalApplication);
+        if (launchedWeb) return true;
+      } catch (_) {}
+
+      if (fallbackUrl != null && fallbackUrl.isNotEmpty) {
+        final fallbackUri = Uri.parse(fallbackUrl);
+        return await launchUrl(fallbackUri, mode: LaunchMode.externalApplication);
+      }
+      return false;
     } catch (e) {
-      debugPrint('Error abriendo enlace de descarga: $e');
+      debugPrint('Error abriendo enlace de actualizacion: $e');
       return false;
     }
   }

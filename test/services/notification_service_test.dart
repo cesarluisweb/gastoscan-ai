@@ -301,17 +301,16 @@ void main() {
 
       final content = manifestFile.readAsStringSync();
 
-      // Verificar los 5 permisos requeridos
+      // Verificar los permisos requeridos
       expect(content.contains('android.permission.POST_NOTIFICATIONS'), isTrue,
           reason: 'Must declare POST_NOTIFICATIONS permission');
       expect(content.contains('android.permission.RECEIVE_BOOT_COMPLETED'), isTrue,
           reason: 'Must declare RECEIVE_BOOT_COMPLETED permission');
-      expect(content.contains('android.permission.SCHEDULE_EXACT_ALARM'), isTrue,
-          reason: 'Must declare SCHEDULE_EXACT_ALARM permission');
-      expect(content.contains('android.permission.USE_EXACT_ALARM'), isTrue,
-          reason: 'Must declare USE_EXACT_ALARM permission');
       expect(content.contains('android.permission.VIBRATE'), isTrue,
           reason: 'Must declare VIBRATE permission');
+      // Asegurar que permisos de alarma exacta restringidos por Google Play no estan presentes
+      expect(content.contains('android.permission.USE_EXACT_ALARM'), isFalse,
+          reason: 'Must NOT declare USE_EXACT_ALARM permission for Google Play compliance');
 
       // Verificar los receptores de flutter_local_notifications
       expect(
@@ -336,9 +335,8 @@ void main() {
 
       expect(content.contains('android.permission.POST_NOTIFICATIONS'), isTrue);
       expect(content.contains('android.permission.RECEIVE_BOOT_COMPLETED'), isTrue);
-      expect(content.contains('android.permission.SCHEDULE_EXACT_ALARM'), isTrue);
-      expect(content.contains('android.permission.USE_EXACT_ALARM'), isTrue);
       expect(content.contains('android.permission.VIBRATE'), isTrue);
+      expect(content.contains('android.permission.USE_EXACT_ALARM'), isFalse);
       expect(
         content.contains('com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver'),
         isTrue,

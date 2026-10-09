@@ -158,7 +158,6 @@ class NotificationService {
               AndroidFlutterLocalNotificationsPlugin>();
       if (androidImplementation != null) {
         await androidImplementation.requestNotificationsPermission();
-        await androidImplementation.requestExactAlarmsPermission();
       }
 
       final iosImplementation = _notificationsPlugin
@@ -243,7 +242,7 @@ class NotificationService {
         scheduledTzDate,
         notificationDetails,
         payload: 'inactivity_reminder',
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
       );
