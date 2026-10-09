@@ -34,4 +34,4 @@
 - Contraste estricto en UI (`DESIGN.md`): Texto sobre amarillo SIEMPRE negro; texto sobre blanco SIEMPRE negro o gris, NUNCA amarillo.
 
 ## Próximo Paso Inmediato
-- Monitorear CI para verificar la compilación y firma oficial única del `.aab` y descargar para Play Console.
+- Aislamiento de cuentas y limpieza local verificado en verde en CI. Proceder con las pruebas de usuario o siguientes pasos para Google Play Console.
