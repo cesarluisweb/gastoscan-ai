@@ -46,12 +46,9 @@ class ReceiptGalleryScreen extends StatelessWidget {
       body: Column(
         children: [
           // Selector de Mes y Año
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            color: AppColors.surface,
-            child: const MonthSelectorBar(),
+          const MonthSelectorBar(
+            padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
           ),
-          const Divider(height: 1, color: AppColors.border),
 
           // Resumen de cantidad
           if (receipts.isNotEmpty)

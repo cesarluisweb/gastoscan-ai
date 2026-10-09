@@ -198,15 +198,9 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
         children: [
           const GlobalScanQueueBanner(),
           // Selector de Mes
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            decoration: const BoxDecoration(
-              color: AppColors.surface,
-              border: Border(bottom: BorderSide(color: AppColors.border, width: 0.5)),
-            ),
-            child: const MonthSelectorBar(
-              keyPrefix: 'expense_history_',
-            ),
+          const MonthSelectorBar(
+            keyPrefix: 'expense_history_',
+            padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
           ),
 
           // Lista de Gastos agrupada por fecha
