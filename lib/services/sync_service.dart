@@ -372,13 +372,36 @@ class SyncService {
           await user.delete();
         } on FirebaseAuthException catch (e) {
           if (e.code == 'requires-recent-login') {
-            return 'Por seguridad, debes cerrar sesión e iniciar sesión nuevamente antes de eliminar tu cuenta definitivamente.';
+            // Intentar reautenticar automáticamente si la cuenta es de Google
+            final isGoogle = user.providerData.any((p) => p.providerId == 'google.com');
+            if (isGoogle) {
+              try {
+                final googleSignIn = GoogleSignIn(
+                  serverClientId: '758679432067-p4lll1b5vfia32fndd68gjif6bmfmvel.apps.googleusercontent.com',
+                );
+                final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+                if (googleUser != null) {
+                  final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+                  final credential = GoogleAuthProvider.credential(
+                    accessToken: googleAuth.accessToken,
+                    idToken: googleAuth.idToken,
+                  );
+                  await user.reauthenticateWithCredential(credential);
+                  await user.delete();
+                }
+              } catch (reauthErr) {
+                debugPrint("No se pudo reautenticar con Google para eliminar cuenta: $reauthErr");
+              }
+            }
+          } else {
+            debugPrint("Error de FirebaseAuth al eliminar cuenta: $e");
           }
-          return _mapearErrorFirebaseAuth(e);
+        } catch (e) {
+          debugPrint("Error inesperado al eliminar usuario en FirebaseAuth: $e");
         }
       }
 
-      // 3. Desvincular Google Sign-In si aplica
+      // 3. Desvincular y cerrar Google Sign-In si aplica
       try {
         final googleSignIn = GoogleSignIn(
           serverClientId: '758679432067-p4lll1b5vfia32fndd68gjif6bmfmvel.apps.googleusercontent.com',
@@ -386,10 +409,17 @@ class SyncService {
         await googleSignIn.signOut();
       } catch (_) {}
 
-      // 4. Limpiar datos locales y recrear sesión anónima limpia
+      // 4. Cerrar sesión en Firebase Auth para asegurar desvinculación total
+      try {
+        await auth.signOut();
+      } catch (_) {}
+
+      // 5. Limpiar datos locales y recrear sesión anónima limpia
       await _repository.limpiarDatosLocales();
-      if (auth.currentUser == null) {
+      try {
         await auth.signInAnonymously();
+      } catch (anonErr) {
+        debugPrint("Error al iniciar sesión anónima tras eliminar cuenta: $anonErr");
       }
 
       return null;

@@ -17,15 +17,17 @@
   10. **Firma Oficial Única en AAB (Google Play):** Resuelto error de doble cadena de certificados. Firma nativa en Gradle (`signingConfigs.release`) con `rindemas.jks` y eliminación de re-firma manual con `jarsigner` en CI.
   11. **Rediseño de Diálogo 'Compra Registrada' y Unificación de Vinculación:** Popup en modo anónimo adaptado a recomendación (ícono de check verde, texto amigable, botones de Google y 'Vincular con correo'). Unificado el modal de correo (`auth_modal_sheet.dart`) y diálogo de decisión ('Conservar y sumar' vs 'Reemplazar') tanto en Revisión de Gasto como en la pantalla Más cumpliendo DRY.
   12. **Facturación Activa en Gemini API (Google AI Studio Tier 1):** Plan de pago por uso prepago activo ($5 USD de saldo inicial, límite $250 USD). Elimina la cuota gratuita diaria (1500 RPD) y estabiliza el servicio OCR y asistente IA.
+  13. **Rediseño UX Acciones de Cuenta y Cierre Automático al Eliminar:** Rediseñados botones en `more_screen.dart` a una fila compacta con jerarquía semántica (cerrar sesión neutro a la izquierda, eliminar cuenta rojo a la derecha). Eliminado error `requires-recent-login` con reautenticación automática de Google y cierre forzado de sesión (`auth.signOut` + `limpiarDatosLocales`) para evitar cuentas zombi vinculadas.
 
 ## Decisiones Técnicas y de Negocio Recientes
+- **Jerarquía Visual de Acciones de Cuenta:** Cerrar sesión es una acción rutinaria/reversible y se muestra en gris neutro; eliminar cuenta es destructiva y se muestra en rojo. Ambas en fila compacta reduciendo la altura de la tarjeta en 50%.
+- **Eliminación Segura y Cierre Automático:** Al eliminar cuenta, siempre se cierra la sesión (`auth.signOut`), se limpia la base SQLite local, se inicia sesión anónima limpia y se purga Firestore, sin dejar al usuario en estado vinculado.
 - **Facturación de Gemini API:** Cuenta prepago Tier 1 activa en Google AI Studio. Se mantiene el enrutamiento exclusivo a Flash-Lite (`gemini-3.1-flash-lite` y `gemini-3.5-flash-lite`) vía Cloudflare Gateway para maximizar rendimiento del saldo.
 - **Firma Nativa de Producción:** Gradle firma directamente el `.aab` con `rindemas.jks` una sola vez. `jarsigner` solo verifica integridad.
 - **Cumplimiento Google Play:** Sin sideloading interno de APKs ni permisos de alarma exacta (`inexactAllowWhileIdle`).
 - **Aislamiento de Cuentas:** Al cerrar sesión, el teléfono se pone a cero en SQLite. Los datos remotos quedan intactos en Firestore. Al entrar con otra cuenta, solo se descargan los datos correspondientes.
 - **Flujo de Vinculación Unificado:** Diálogo de decisión ("Conservar y sumar" vs "Reemplazar") centralizado en `auth_modal_sheet.dart` accesible desde Más y desde el modal de compra guardada.
 - **Páginas Legales en Producción:** `rindemas.cesarluis.com/privacidad`, `rindemas.cesarluis.com/terminos` y `rindemas.cesarluis.com/eliminar-cuenta` (cumplimiento 100% Google Play Data Safety).
-- **Eliminación de Cuenta In-App y Web:** Botón directo en `more_screen.dart` purga Firestore y Auth (`eliminarCuentaYDatos`), y URL externa pública en `/eliminar-cuenta`.
 - **Package Name Oficial:** `com.cesarluis.rindemas` en Google Play Console y Android.
 
 ## Errores y Fricciones a Evitar
@@ -37,4 +39,4 @@
 - Contraste estricto en UI (`DESIGN.md`): Texto sobre amarillo SIEMPRE negro; texto sobre blanco SIEMPRE negro o gris, NUNCA amarillo.
 
 ## Próximo Paso Inmediato
-- Hacer git push de los cambios, verificar CI en GitHub Actions y completar los formularios de Play Console con la ficha actualizada.
+- Monitorear CI hasta confirmación en verde y verificar la experiencia de usuario con César.

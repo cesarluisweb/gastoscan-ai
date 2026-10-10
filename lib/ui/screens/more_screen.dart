@@ -900,8 +900,8 @@ class MoreScreenState extends State<MoreScreen> {
               'Solo usamos tu cuenta para respaldar tus facturas en tu propio espacio privado. Sin accesos bancarios ni contraseñas.',
               style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
             ),
-          const SizedBox(height: 16),
-          if (isAnon)
+          if (isAnon) ...[
+            const SizedBox(height: 16),
             Column(
               children: [
                 SizedBox(
@@ -957,34 +957,53 @@ class MoreScreenState extends State<MoreScreen> {
                   ),
                 ),
               ],
-            )
-          else
-            Column(
+            ),
+          ] else ...[
+            const SizedBox(height: 12),
+            const Divider(height: 1, color: AppColors.border),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                SizedBox(
-                  width: double.infinity,
-                  child: TextButton.icon(
-                    key: const Key('btn_cerrar_sesion'),
-                    icon: const Icon(Icons.logout, color: AppColors.error),
-                    label: const Text('Cerrar Sesión', style: TextStyle(color: AppColors.error)),
-                    onPressed: () => _confirmarCerrarSesion(context),
+                TextButton.icon(
+                  key: const Key('btn_cerrar_sesion'),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
-                ),
-                const SizedBox(height: 4),
-                SizedBox(
-                  width: double.infinity,
-                  child: TextButton.icon(
-                    key: const Key('btn_eliminar_cuenta'),
-                    icon: const Icon(Icons.delete_forever, color: AppColors.error),
-                    label: const Text(
-                      'Eliminar cuenta y datos',
-                      style: TextStyle(color: AppColors.error, fontWeight: FontWeight.bold),
+                  icon: const Icon(Icons.logout, size: 16, color: AppColors.textSecondary),
+                  label: const Text(
+                    'Cerrar sesión',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
                     ),
-                    onPressed: () => _confirmarEliminarCuenta(context),
                   ),
+                  onPressed: () => _confirmarCerrarSesion(context),
+                ),
+                TextButton.icon(
+                  key: const Key('btn_eliminar_cuenta'),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  icon: const Icon(Icons.delete_outline, size: 16, color: AppColors.error),
+                  label: const Text(
+                    'Eliminar cuenta',
+                    style: TextStyle(
+                      color: AppColors.error,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  onPressed: () => _confirmarEliminarCuenta(context),
                 ),
               ],
             ),
+          ],
         ],
       ),
     );
@@ -1020,9 +1039,11 @@ class MoreScreenState extends State<MoreScreen> {
 
     final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
     final scanQueue = Provider.of<ScanQueueProvider>(context, listen: false);
+    final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
 
     await gastoProvider.cerrarSesion();
     await scanQueue.loadQueue();
+    await settingsProvider.loadSettings();
 
     if (mounted) {
       setState(() {});
@@ -1066,9 +1087,11 @@ class MoreScreenState extends State<MoreScreen> {
 
     final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
     final scanQueue = Provider.of<ScanQueueProvider>(context, listen: false);
+    final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
 
     final error = await gastoProvider.eliminarCuentaYDatos();
     await scanQueue.loadQueue();
+    await settingsProvider.loadSettings();
 
     if (mounted) {
       setState(() {});
@@ -1082,7 +1105,7 @@ class MoreScreenState extends State<MoreScreen> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Cuenta y datos eliminados correctamente.',
+            content: Text('Cuenta y datos eliminados. Sesión cerrada.',
                 style: TextStyle(color: Colors.black)),
             backgroundColor: AppColors.primary,
           ),
