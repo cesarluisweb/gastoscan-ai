@@ -284,7 +284,7 @@ class SyncService {
       }
 
       final googleSignIn = GoogleSignIn(
-        serverClientId: '758679432067-p4lll1b5vfia32fndd68gjif6bmfmvel.apps.googleusercontent.com',
+        serverClientId: AppConstants.googleWebClientId,
       );
 
       final GoogleSignInAccount? googleUser = await googleSignIn.signInSilently();
@@ -319,7 +319,7 @@ class SyncService {
 
       try {
         final googleSignIn = GoogleSignIn(
-          serverClientId: '758679432067-p4lll1b5vfia32fndd68gjif6bmfmvel.apps.googleusercontent.com',
+          serverClientId: AppConstants.googleWebClientId,
         );
         await googleSignIn.signOut();
       } catch (_) {}
@@ -377,7 +377,7 @@ class SyncService {
             if (isGoogle) {
               try {
                 final googleSignIn = GoogleSignIn(
-                  serverClientId: '758679432067-p4lll1b5vfia32fndd68gjif6bmfmvel.apps.googleusercontent.com',
+                  serverClientId: AppConstants.googleWebClientId,
                 );
                 final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
                 if (googleUser != null) {
@@ -404,7 +404,7 @@ class SyncService {
       // 3. Desvincular y cerrar Google Sign-In si aplica
       try {
         final googleSignIn = GoogleSignIn(
-          serverClientId: '758679432067-p4lll1b5vfia32fndd68gjif6bmfmvel.apps.googleusercontent.com',
+          serverClientId: AppConstants.googleWebClientId,
         );
         await googleSignIn.signOut();
       } catch (_) {}
@@ -434,7 +434,7 @@ class SyncService {
       final auth = FirebaseAuth.instance;
 
       final googleSignIn = GoogleSignIn(
-        serverClientId: '758679432067-p4lll1b5vfia32fndd68gjif6bmfmvel.apps.googleusercontent.com',
+        serverClientId: AppConstants.googleWebClientId,
       );
 
       // Limpiar sesión previa para garantizar que siempre se muestre el selector de cuentas
