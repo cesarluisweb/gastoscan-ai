@@ -333,6 +333,72 @@ class SyncService {
     }
   }
 
+  /// Elimina permanentemente la cuenta en Firebase Auth, borra todos los gastos y presupuestos
+  /// asociados en Firestore, limpia la base de datos local (SQLite) y restablece una sesión anónima fresca.
+  Future<String?> eliminarCuentaYDatos() async {
+    try {
+      final auth = FirebaseAuth.instance;
+      final user = auth.currentUser;
+
+      if (user != null && !user.isAnonymous) {
+        final uid = user.uid;
+        final firestore = FirebaseFirestore.instance;
+
+        // 1. Purgar datos en Firestore (gastos y presupuestos)
+        try {
+          final gastosSnap = await firestore
+              .collection('users')
+              .doc(uid)
+              .collection('gastos')
+              .get();
+          for (final doc in gastosSnap.docs) {
+            await doc.reference.delete();
+          }
+
+          final presupuestosSnap = await firestore
+              .collection('users')
+              .doc(uid)
+              .collection('presupuestos')
+              .get();
+          for (final doc in presupuestosSnap.docs) {
+            await doc.reference.delete();
+          }
+        } catch (e) {
+          debugPrint("Error al purgar Firestore durante eliminación de cuenta: $e");
+        }
+
+        // 2. Eliminar la cuenta en Firebase Auth
+        try {
+          await user.delete();
+        } on FirebaseAuthException catch (e) {
+          if (e.code == 'requires-recent-login') {
+            return 'Por seguridad, debes cerrar sesión e iniciar sesión nuevamente antes de eliminar tu cuenta definitivamente.';
+          }
+          return _mapearErrorFirebaseAuth(e);
+        }
+      }
+
+      // 3. Desvincular Google Sign-In si aplica
+      try {
+        final googleSignIn = GoogleSignIn(
+          serverClientId: '758679432067-p4lll1b5vfia32fndd68gjif6bmfmvel.apps.googleusercontent.com',
+        );
+        await googleSignIn.signOut();
+      } catch (_) {}
+
+      // 4. Limpiar datos locales y recrear sesión anónima limpia
+      await _repository.limpiarDatosLocales();
+      if (auth.currentUser == null) {
+        await auth.signInAnonymously();
+      }
+
+      return null;
+    } catch (e) {
+      debugPrint("Error al eliminar cuenta y datos: $e");
+      return e.toString();
+    }
+  }
+
   Future<String?> vincularCuentaGoogle({bool descartarDatosLocales = false}) async {
     try {
       final auth = FirebaseAuth.instance;

@@ -68,16 +68,21 @@ Haz rendir tu dinero hoy mismo. Descarga Rinde Más gratis y toma el control de 
 
 ## 3. Formulario de Seguridad de los Datos (Data Safety en Google Play)
 
-Respuestas directas para completar el cuestionario obligatorio de Google Play Console:
+### URLs Obligatorias
+* **URL de la Política de Privacidad:** `https://rindemas.cesarluis.com/privacidad`
+* **URL de Solicitud de Eliminación de Cuenta y Datos:** `https://rindemas.cesarluis.com/eliminar-cuenta`
+
+### Respuestas directas para completar el cuestionario obligatorio en Play Console:
 
 | Pregunta en Consola | Respuesta | Explicación técnica |
 | :--- | :--- | :--- |
-| **¿La app recopila o comparte datos de usuario?** | **Sí (Solo recopilación)** | Para respaldo opcional en la cuenta personal del usuario. |
-| **¿Los datos se comparten con terceros?** | **No** | Ningún dato se transfiere a terceros ni empresas de publicidad. |
-| **¿Los datos se transmiten mediante conexión segura (HTTPS/TLS)?** | **Sí** | Todo tráfico con Firebase y la API oficial del BCV viaja por HTTPS cifrado. |
-| **¿El usuario puede solicitar que se eliminen sus datos?** | **Sí** | El usuario puede borrar sus gastos localmente y eliminar su cuenta/respaldo en la nube desde la app. |
-| **¿Qué datos personales se recopilan?** | **Información de la cuenta (Nombre y correo)** | Obtenidos exclusivamente a través de Google Sign-In para identificar la partición privada del usuario. |
-| **¿Recopila información financiera o bancaria?** | **No** | No se solicitan números de cuenta, tarjetas, saldos bancarios ni historiales crediticios. Los gastos ingresados son registros manuales o extraídos de comprobantes. |
+| **¿La app recopila o comparte datos de usuario?** | **Sí (Solo recopilación)** | Para respaldo opcional en la cuenta personal del usuario y autenticación. |
+| **¿Los datos se comparten con terceros?** | **No** | Ningún dato se comercializa ni se transfiere a redes de publicidad o corredores de datos. El procesamiento técnico se realiza exclusivamente con proveedores de infraestructura (Google Cloud y Cloudflare). |
+| **¿Los datos se transmiten mediante conexión segura (HTTPS/TLS)?** | **Sí** | Todo tráfico con Firebase, Cloudflare Gateway y la API de tasas viaja por HTTPS cifrado TLS. |
+| **¿Proporcionas una forma para que los usuarios soliciten que se eliminen sus datos?** | **Sí** | La app incluye botón directo (*Más > Eliminar cuenta y datos*) y existe URL pública externa para solicitarlo sin la app (`https://rindemas.cesarluis.com/eliminar-cuenta`). |
+| **¿Qué datos personales se recopilan?** | **Información de la cuenta (Nombre y correo)** | Obtenidos exclusivamente a través de Google Sign-In o email para identificar el espacio privado del usuario. No se usan con fines comerciales. |
+| **¿Recopila información financiera o bancaria?** | **No** | No se solicitan números de cuenta, tarjetas, saldos bancarios ni credenciales. Los gastos ingresados son registros manuales o extraídos de comprobantes. |
+| **¿Los datos son necesarios o el usuario puede elegir si se recopilan?** | **Opcional** | La app es 100% funcional en modo local sin crear cuenta ni sincronizar datos. |
 
 ---
 

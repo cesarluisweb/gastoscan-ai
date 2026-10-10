@@ -959,13 +959,31 @@ class MoreScreenState extends State<MoreScreen> {
               ],
             )
           else
-            SizedBox(
-              width: double.infinity,
-              child: TextButton.icon(
-                icon: const Icon(Icons.logout, color: AppColors.error),
-                label: const Text('Cerrar Sesión', style: TextStyle(color: AppColors.error)),
-                onPressed: () => _confirmarCerrarSesion(context),
-              ),
+            Column(
+              children: [
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton.icon(
+                    key: const Key('btn_cerrar_sesion'),
+                    icon: const Icon(Icons.logout, color: AppColors.error),
+                    label: const Text('Cerrar Sesión', style: TextStyle(color: AppColors.error)),
+                    onPressed: () => _confirmarCerrarSesion(context),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton.icon(
+                    key: const Key('btn_eliminar_cuenta'),
+                    icon: const Icon(Icons.delete_forever, color: AppColors.error),
+                    label: const Text(
+                      'Eliminar cuenta y datos',
+                      style: TextStyle(color: AppColors.error, fontWeight: FontWeight.bold),
+                    ),
+                    onPressed: () => _confirmarEliminarCuenta(context),
+                  ),
+                ),
+              ],
             ),
         ],
       ),
@@ -1015,6 +1033,61 @@ class MoreScreenState extends State<MoreScreen> {
           backgroundColor: AppColors.primary,
         ),
       );
+    }
+  }
+
+  Future<void> _confirmarEliminarCuenta(BuildContext context) async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: const Text('¿Eliminar cuenta y datos?'),
+        content: const Text(
+          'Esta acción es definitiva e irreversible. Se eliminará permanentemente tu usuario en la nube, tus gastos y tus presupuestos sincronizados. Los registros en este dispositivo también se borrarán.',
+          style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx, false),
+            child: const Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(dialogCtx, true),
+            child: const Text('Eliminar definitivamente'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmar != true || !mounted) return;
+
+    final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
+    final scanQueue = Provider.of<ScanQueueProvider>(context, listen: false);
+
+    final error = await gastoProvider.eliminarCuentaYDatos();
+    await scanQueue.loadQueue();
+
+    if (mounted) {
+      setState(() {});
+      if (error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error, style: const TextStyle(color: Colors.white)),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Cuenta y datos eliminados correctamente.',
+                style: TextStyle(color: Colors.black)),
+            backgroundColor: AppColors.primary,
+          ),
+        );
+      }
     }
   }
 

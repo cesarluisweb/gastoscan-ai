@@ -38,58 +38,63 @@ import '../styles/global.css';
             <section class="space-y-3">
                 <h2 class="text-xl font-bold text-slate-900">1. Compromiso de Privacidad</h2>
                 <p class="text-slate-700 text-sm leading-relaxed">
-                    En <strong>Rinde Más</strong> consideramos la privacidad financiera como un derecho fundamental. Nuestra aplicación fue diseñada bajo el principio de <em>cero intermediarios y cero acceso bancario</em>. Nunca solicitamos, accedemos, interceptamos ni almacenamos credenciales bancarias, números de tarjeta, claves temporales ni códigos SMS de entidades financieras.
+                    En <strong>Rinde Más</strong> consideramos la privacidad financiera como un derecho fundamental. Nuestra aplicación opera bajo el principio de <em>cero acceso bancario</em>. Nunca solicitamos, accedemos, interceptamos ni almacenamos credenciales bancarias, números de tarjeta, contraseñas, claves temporales ni códigos SMS de entidades financieras.
                 </p>
             </section>
 
             <section class="space-y-3">
                 <h2 class="text-xl font-bold text-slate-900">2. Datos que Recopilamos y Finalidad</h2>
                 <div class="space-y-2 text-sm text-slate-700">
-                    <p><strong>A. Datos de Registro y Cuenta (Opcional):</strong> Si decides vincular tu cuenta con Google Sign-In o correo electrónico, recopilamos tu nombre, dirección de correo y foto de perfil únicamente para autenticar tu acceso y asociar tu respaldo cifrado en la nube.</p>
-                    <p><strong>B. Datos de Gastos y Facturas:</strong> Los montos, categorías, nombres de comercios y comprobantes fotográficos que registras se almacenan primordialmente de forma local en tu dispositivo (SQLite). Si tienes la sincronización en la nube activada, estos datos se respaldan de manera privada y protegida en Firestore.</p>
-                    <p><strong>C. Extracción Inteligente de Facturas (IA):</strong> Las imágenes o textos de facturas procesados para extracción de datos se transmiten de forma cifrada mediante HTTPS a nuestro servicio seguro de inteligencia artificial. Ningún dato de tus comprobantes se utiliza para entrenar modelos públicos de terceros ni se comercializa con anunciantes.</p>
+                    <p><strong>A. Datos de Registro y Cuenta (Opcional):</strong> Si decides vincular tu cuenta con Google Sign-In o correo electrónico, recopilamos tu nombre, dirección de correo y foto de perfil provistos por el proveedor de autenticación únicamente para identificar tu acceso y sincronizar tu respaldo privado en la nube.</p>
+                    <p><strong>B. Datos de Gastos y Presupuestos:</strong> Los montos, categorías, nombres de comercios, fechas y notas que registras se almacenan primordialmente en tu dispositivo en una base de datos local (SQLite) ubicada en el almacenamiento interno privado de la aplicación, protegido por el aislamiento de procesos del sistema operativo Android. Si activas la sincronización con tu cuenta, estos datos se respaldan de forma privada en Google Cloud Firestore con cifrado en reposo.</p>
+                    <p><strong>C. Extracción Inteligente de Facturas y Asistente (IA):</strong> Las capturas de comprobantes procesadas para extracción de datos se analizan inicialmente de forma local en tu dispositivo mediante Google ML Kit. Cuando se requiere interpretación avanzada o consultas con el asistente, los textos o imágenes se transmiten de forma cifrada mediante HTTPS/TLS a través de nuestro gateway seguro en Cloudflare hacia la API de Google Gemini exclusivamente para procesar la respuesta solicitada. No vendemos ni comercializamos tus datos con anunciantes ni terceros.</p>
                 </div>
             </section>
 
             <section class="space-y-3">
                 <h2 class="text-xl font-bold text-slate-900">3. Permisos del Dispositivo</h2>
                 <ul class="list-disc list-inside space-y-1.5 text-sm text-slate-700">
-                    <li><strong>Cámara:</strong> Para fotografiar facturas y comprobantes físicos dentro de la app.</li>
-                    <li><strong>Fotos y Medios:</strong> Para seleccionar capturas de pago o comprobantes guardados en la galería.</li>
-                    <li><strong>Notificaciones:</strong> Para enviarte recordatorios locales opcionales si pasas más de 7 días sin registrar gastos.</li>
-                    <li><strong>Micrófono:</strong> Exclusivamente durante el uso del dictado de voz en el asistente si decides usarlo.</li>
+                    <li><strong>Cámara:</strong> Para fotografiar facturas y comprobantes físicos dentro de la app cuando usas el escáner.</li>
+                    <li><strong>Fotos y Medios:</strong> Para seleccionar comprobantes o capturas de pago guardados en tu galería.</li>
+                    <li><strong>Notificaciones:</strong> Para enviarte recordatorios locales opcionales programados en tu teléfono si pasas más de 7 días sin registrar gastos. Puedes desactivarlas en cualquier momento desde Ajustes.</li>
+                    <li><strong>Micrófono:</strong> Exclusivamente durante el uso del dictado de voz para registrar gastos por voz si decides utilizar esta función.</li>
                 </ul>
             </section>
 
             <section class="space-y-3">
-                <h2 class="text-xl font-bold text-slate-900">4. No Transferencia a Terceros</h2>
+                <h2 class="text-xl font-bold text-slate-900">4. Proveedores de Infraestructura Técnica</h2>
                 <p class="text-slate-700 text-sm leading-relaxed">
-                    No vendemos, alquilamos ni compartimos tus datos personales o financieros con redes publicitarias, corredores de datos ni empresas terceras. Todo intercambio de información se limita estrictamente a la infraestructura operativa propia (Google Firebase y Google Cloud) para brindar los servicios solicitados por el usuario.
+                    No vendemos, alquilamos ni transferimos tus datos personales o financieros a redes publicitarias ni corredores de datos. La transmisión de información se limita estrictamente a proveedores de infraestructura tecnológica necesarios para operar el servicio:
                 </p>
+                <ul class="list-disc list-inside space-y-1 text-sm text-slate-700">
+                    <li><strong>Google Firebase & Google Cloud:</strong> Autenticación de usuarios y base de datos en la nube (Firestore).</li>
+                    <li><strong>Cloudflare:</strong> Enrutamiento seguro y protección perimetral del servicio de procesamiento.</li>
+                    <li><strong>Google Gemini API:</strong> Procesamiento de lenguaje natural y extracción estructurada de comprobantes.</li>
+                </ul>
             </section>
 
             <section class="space-y-3">
                 <h2 class="text-xl font-bold text-slate-900">5. Seguridad de los Datos</h2>
                 <p class="text-slate-700 text-sm leading-relaxed">
-                    Todas las transmisiones entre la app y nuestros servicios utilizan protocolos seguros con cifrado TLS/HTTPS. Los datos almacenados en tu dispositivo se encuentran aislados por las protecciones del sistema operativo Android.
+                    Todas las transmisiones entre la app y nuestros servicios utilizan protocolos seguros con cifrado TLS/HTTPS. Los datos almacenados localmente en tu teléfono residen en el directorio interno de la aplicación, protegidos por el aislamiento y permisos del sistema operativo Android. Los datos sincronizados en la nube se almacenan con cifrado en reposo estándar en Google Cloud.
                 </p>
             </section>
 
             <section class="space-y-3">
                 <h2 class="text-xl font-bold text-slate-900">6. Eliminación de Cuenta y Datos Personales</h2>
                 <p class="text-slate-700 text-sm leading-relaxed">
-                    Tienes el derecho incondicional de solicitar y ejecutar la eliminación total de tus datos en cualquier momento:
+                    Tienes el derecho incondicional de solicitar y ejecutar la eliminación total y definitiva de tu cuenta y todos tus datos en cualquier momento:
                 </p>
                 <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm space-y-2">
-                    <p><strong>Desde la App:</strong> Ve a la pestaña <em>Más > Respaldo y Sincronización > Eliminar cuenta y datos</em>. Esta acción borra de inmediato tu usuario y todos los registros en la nube.</p>
-                    <p><strong>Por Correo Electrónico:</strong> También puedes solicitar la eliminación manual enviando un mensaje a <a href="mailto:info@cesarluis.com" class="text-blue-600 underline font-semibold">info@cesarluis.com</a> desde la dirección de correo asociada a tu cuenta. La eliminación se procesa en un plazo máximo de 48 horas laborables.</p>
+                    <p><strong>Desde la App:</strong> Ve a la pestaña <em>Más > Respaldo y Sincronización > Eliminar cuenta y datos</em>. Esta acción borra de forma irreversible tu usuario y todos tus registros respaldados en Firestore, restableciendo la app a cero.</p>
+                    <p><strong>Desde la Web:</strong> Puedes solicitar la eliminación de tu cuenta y datos sin necesidad de instalar la aplicación a través de nuestra página dedicada: <a href="/eliminar-cuenta" class="text-blue-600 underline font-semibold">rindemas.cesarluis.com/eliminar-cuenta</a> o enviando un correo a <a href="mailto:info@cesarluis.com" class="text-blue-600 underline font-semibold">info@cesarluis.com</a>.</p>
                 </div>
             </section>
 
             <section class="space-y-3">
                 <h2 class="text-xl font-bold text-slate-900">7. Contacto</h2>
                 <p class="text-slate-700 text-sm leading-relaxed">
-                    Para cualquier duda o consulta sobre esta política, puedes contactarnos a través de <a href="mailto:info@cesarluis.com" class="text-blue-600 underline font-semibold">info@cesarluis.com</a>.
+                    Para cualquier duda, solicitud o consulta sobre esta política, puedes contactarnos directamente en <a href="mailto:info@cesarluis.com" class="text-blue-600 underline font-semibold">info@cesarluis.com</a>.
                 </p>
             </section>
         </div>
@@ -101,6 +106,7 @@ import '../styles/global.css';
             <p>© 2026 Rinde Más. Todos los derechos reservados.</p>
             <div class="flex gap-4">
                 <a href="/privacidad" class="font-semibold text-slate-700 hover:text-slate-900">Privacidad</a>
+                <a href="/eliminar-cuenta" class="text-slate-500 hover:text-slate-700">Eliminar Cuenta</a>
                 <a href="/terminos" class="text-slate-500 hover:text-slate-700">Términos</a>
                 <a href="/" class="text-slate-500 hover:text-slate-700">Inicio</a>
             </div>

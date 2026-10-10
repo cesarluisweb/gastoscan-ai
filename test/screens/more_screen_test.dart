@@ -47,6 +47,9 @@ class FakeGastoProvider extends GastoProvider {
 
   @override
   Future<void> cerrarSesion() async {}
+
+  @override
+  Future<String?> eliminarCuentaYDatos() async => null;
 }
 
 class FakeSettingsProvider extends SettingsProvider {

@@ -217,6 +217,30 @@ class GastoProvider with ChangeNotifier {
     }
   }
 
+  Future<String?> eliminarCuentaYDatos() async {
+    _errorMessage = null;
+    try {
+      final error = await _syncService.eliminarCuentaYDatos();
+      if (error != null) {
+        _errorMessage = error;
+        notifyListeners();
+        return error;
+      }
+      _gastos = [];
+      _presupuestoGeneral = 0.0;
+      _metaAhorro = 0.0;
+      _presupuestosPorCategoria = {};
+      await cargarDatos();
+      notifyListeners();
+      return null;
+    } catch (e) {
+      final err = _mapHumanFriendlyError(e, 'Error al eliminar cuenta: $e');
+      _errorMessage = err;
+      notifyListeners();
+      return err;
+    }
+  }
+
   Future<void> sincronizarConFirestore() async {
     await _syncService.syncBidirectional();
     await cargarDatos();

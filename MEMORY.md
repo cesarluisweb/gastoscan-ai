@@ -22,7 +22,8 @@
 - **Cumplimiento Google Play:** Sin sideloading interno de APKs ni permisos de alarma exacta (`inexactAllowWhileIdle`).
 - **Aislamiento de Cuentas:** Al cerrar sesión, el teléfono se pone a cero en SQLite. Los datos remotos quedan intactos en Firestore. Al entrar con otra cuenta, solo se descargan los datos correspondientes.
 - **Flujo de Vinculación Unificado:** Diálogo de decisión ("Conservar y sumar" vs "Reemplazar") centralizado en `auth_modal_sheet.dart` accesible desde Más y desde el modal de compra guardada.
-- **Páginas Legales en Producción:** `rindemas.cesarluis.com/privacidad` y `rindemas.cesarluis.com/terminos`.
+- **Páginas Legales en Producción:** `rindemas.cesarluis.com/privacidad`, `rindemas.cesarluis.com/terminos` y `rindemas.cesarluis.com/eliminar-cuenta` (cumplimiento 100% Google Play Data Safety).
+- **Eliminación de Cuenta In-App y Web:** Botón directo en `more_screen.dart` purga Firestore y Auth (`eliminarCuentaYDatos`), y URL externa pública en `/eliminar-cuenta`.
 - **Package Name Oficial:** `com.cesarluis.rindemas` en Google Play Console y Android.
 
 ## Errores y Fricciones a Evitar
@@ -34,4 +35,4 @@
 - Contraste estricto en UI (`DESIGN.md`): Texto sobre amarillo SIEMPRE negro; texto sobre blanco SIEMPRE negro o gris, NUNCA amarillo.
 
 ## Próximo Paso Inmediato
-- Monitorear CI hasta confirmación en verde y proceder con la verificación de los flujos de vinculación.
+- Hacer git push de los cambios, verificar CI en GitHub Actions y completar los formularios de Play Console con la ficha actualizada.
