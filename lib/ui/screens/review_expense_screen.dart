@@ -19,6 +19,7 @@ import '../../services/exchange_rate_service.dart';
 import '../../providers/scan_queue_provider.dart';
 import '../../core/utils/uuid_generator.dart';
 import '../widgets/receipt_viewer_dialog.dart';
+import '../widgets/auth_modal_sheet.dart';
 
 class ReviewExpenseScreen extends StatefulWidget {
   final File? imageFile;
@@ -535,7 +536,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         final rootMessenger = ScaffoldMessenger.of(context);
         bool cuentaVinculada = false;
 
-        await showDialog(
+        final authAction = await showDialog<String>(
           context: context,
           barrierDismissible: false,
           builder: (ctx) {
@@ -549,7 +550,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                   backgroundColor: AppColors.card,
                   title: const Row(
                     children: [
-                      Icon(Icons.cloud_done_outlined, color: Colors.green),
+                      Icon(Icons.check_circle_outline, color: Colors.green),
                       SizedBox(width: 8),
                       Text(
                         'Compra registrada',
@@ -562,7 +563,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Tu compra quedó guardada en tu teléfono.\n\nSolo usamos tu cuenta de Google para respaldar tus facturas en tu propio espacio privado. Sin bancos ni contraseñas.',
+                        'Tu compra se guardó en tu teléfono.\n\nSi lo deseas, puedes vincular con Google para respaldar y sincronizar tus gastos entre dispositivos.',
                         style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
                       ),
                       if (isLinking) ...[
@@ -570,7 +571,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                         const Center(
                           child: Column(
                             children: [
-                              CircularProgressIndicator(color: AppColors.secondary),
+                              CircularProgressIndicator(color: Colors.black),
                               SizedBox(height: 12),
                               Text(
                                 'Conectando con Google...',
@@ -609,44 +610,79 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                   actions: isLinking
                       ? []
                       : [
-                          TextButton(
-                            onPressed: () => Navigator.pop(ctx),
-                            child: const Text('Ahora no', style: TextStyle(color: AppColors.textSecondary)),
-                          ),
-                          ElevatedButton.icon(
-                            icon: const Icon(Icons.login, size: 18),
-                            label: Text(
-                              errorMessage != null ? 'Reintentar vinculación' : 'Vincular con Google',
-                              style: const TextStyle(color: AppColors.secondary),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: AppColors.secondary,
-                            ),
-                            onPressed: () async {
-                              setDialogState(() {
-                                isLinking = true;
-                                errorMessage = null;
-                              });
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton.icon(
+                                  icon: const Icon(Icons.login, size: 18),
+                                  label: Text(
+                                    errorMessage != null ? 'Reintentar vinculación' : 'Vincular con Google',
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primary,
+                                    foregroundColor: Colors.black,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  ),
+                                  onPressed: () async {
+                                    final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
+                                    bool descartarLocales = false;
 
-                              final error = await Provider.of<GastoProvider>(context, listen: false).vincularCuentaGoogle();
-                              if (!ctx.mounted) return;
+                                    if (gastoProvider.gastos.isNotEmpty) {
+                                      final decision = await mostrarDialogoFusionarOReemplazar(context);
+                                      if (decision == null) return;
+                                      descartarLocales = decision;
+                                    }
 
-                              if (error == 'CANCELLED') {
-                                setDialogState(() {
-                                  isLinking = false;
-                                });
-                              } else if (error != null) {
-                                setDialogState(() {
-                                  isLinking = false;
-                                  errorMessage = error;
-                                });
-                              } else {
-                                cuentaVinculada = true;
-                                await Provider.of<SettingsProvider>(context, listen: false).loadSettings();
-                                Navigator.pop(ctx);
-                              }
-                            },
+                                    setDialogState(() {
+                                      isLinking = true;
+                                      errorMessage = null;
+                                    });
+
+                                    final error = await gastoProvider
+                                        .vincularCuentaGoogle(descartarDatosLocales: descartarLocales);
+                                    if (!ctx.mounted) return;
+
+                                    if (error == 'CANCELLED') {
+                                      setDialogState(() {
+                                        isLinking = false;
+                                      });
+                                    } else if (error != null) {
+                                      setDialogState(() {
+                                        isLinking = false;
+                                        errorMessage = error;
+                                      });
+                                    } else {
+                                      cuentaVinculada = true;
+                                      await Provider.of<SettingsProvider>(context, listen: false).loadSettings();
+                                      Navigator.pop(ctx, 'google');
+                                    }
+                                  },
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton.icon(
+                                  icon: const Icon(Icons.alternate_email, size: 18, color: AppColors.primaryDark),
+                                  label: const Text(
+                                    'Vincular con correo',
+                                    style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  ),
+                                  onPressed: () => Navigator.pop(ctx, 'email'),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx, 'skip'),
+                                child: const Text('Ahora no', style: TextStyle(color: AppColors.textSecondary)),
+                              ),
+                            ],
                           ),
                         ],
                 );
@@ -654,6 +690,15 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
             );
           },
         );
+
+        if (authAction == 'email' && mounted) {
+          await mostrarModalAutenticacionEmail(
+            context,
+            onSuccess: () {
+              cuentaVinculada = true;
+            },
+          );
+        }
 
         if (mounted) {
           Navigator.of(context).popUntil((route) => route.isFirst);

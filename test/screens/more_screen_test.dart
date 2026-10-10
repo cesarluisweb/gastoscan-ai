@@ -203,13 +203,13 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('btn_vincular_email')), findsOneWidget);
-      expect(find.text('Usar correo o alias (Addy.io, etc.)'), findsOneWidget);
+      expect(find.text('Vincular con correo'), findsOneWidget);
 
       await tester.tap(find.byKey(const Key('btn_vincular_email')));
       await tester.pumpAndSettle();
 
       expect(find.text('Vincular con Correo'), findsOneWidget);
-      expect(find.text('Correo electrónico o alias'), findsOneWidget);
+      expect(find.text('Correo electrónico'), findsOneWidget);
       expect(find.text('Contraseña'), findsOneWidget);
       expect(find.text('Vincular y Respaldar'), findsOneWidget);
 
