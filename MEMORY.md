@@ -15,15 +15,15 @@
   8. **Unificación Terminológica de Cola y Facturas:** Fase de escaneo/análisis habla de 'fotos'; fase de resultados y notificaciones habla de 'facturas'. Corregida concordancia singular/plural.
   9. **Aislamiento Total de Cuentas y Limpieza Local al Cerrar Sesión:** Creado método `limpiarBaseDatosLocal()` en SQLite/repositorio. Flujo de `cerrarSesion()` vacía el dispositivo para inicio en cero. Diálogo de decisión ("Conservar y sumar" vs "Reemplazar") al vincular o iniciar sesión si hay gastos locales huérfanos, erradicando contaminación de datos entre cuentas.
   10. **Firma Oficial Única en AAB (Google Play):** Resuelto error de doble cadena de certificados. Firma nativa en Gradle (`signingConfigs.release`) con `rindemas.jks` y eliminación de re-firma manual con `jarsigner` en CI.
+  11. **Rediseño de Diálogo 'Compra Registrada' y Unificación de Vinculación:** Popup en modo anónimo adaptado a recomendación (ícono de check verde, texto amigable, botones de Google y 'Vincular con correo'). Unificado el modal de correo (`auth_modal_sheet.dart`) y diálogo de decisión ('Conservar y sumar' vs 'Reemplazar') tanto en Revisión de Gasto como en la pantalla Más cumpliendo DRY.
 
 ## Decisiones Técnicas y de Negocio Recientes
 - **Firma Nativa de Producción:** Gradle firma directamente el `.aab` con `rindemas.jks` una sola vez. `jarsigner` solo verifica integridad.
 - **Cumplimiento Google Play:** Sin sideloading interno de APKs ni permisos de alarma exacta (`inexactAllowWhileIdle`).
 - **Aislamiento de Cuentas:** Al cerrar sesión, el teléfono se pone a cero en SQLite. Los datos remotos quedan intactos en Firestore. Al entrar con otra cuenta, solo se descargan los datos correspondientes.
-- **Páginas Legales en Producción:** `rindemas.cesarluis.com/privacidad` (obligatoria para Play Console y Data Safety con método de eliminación de cuenta) y `rindemas.cesarluis.com/terminos`.
+- **Flujo de Vinculación Unificado:** Diálogo de decisión ("Conservar y sumar" vs "Reemplazar") centralizado en `auth_modal_sheet.dart` accesible desde Más y desde el modal de compra guardada.
+- **Páginas Legales en Producción:** `rindemas.cesarluis.com/privacidad` y `rindemas.cesarluis.com/terminos`.
 - **Package Name Oficial:** `com.cesarluis.rindemas` en Google Play Console y Android.
-- **Estrategia de Lanzamiento Google Play:** Reclutamiento de 15 a 18 testers organizados por Google Groups (`rindemas-testers@googlegroups.com`), llevando registro de bugs y versiones para el formulario de producción.
-- **Ruta Verificada de Pago en Venezuela:** Uso de OKX Card (Mastercard virtual) para salvar el bloqueo de tarjetas prepago directas (`OR_CCR_61`).
 
 ## Errores y Fricciones a Evitar
 - NUNCA usar `jarsigner` para re-firmar un AAB en CI (produce doble cadena de certificados y rechazo en Play Console); la firma debe ser nativa en Gradle.
@@ -34,4 +34,4 @@
 - Contraste estricto en UI (`DESIGN.md`): Texto sobre amarillo SIEMPRE negro; texto sobre blanco SIEMPRE negro o gris, NUNCA amarillo.
 
 ## Próximo Paso Inmediato
-- Aislamiento de cuentas y limpieza local verificado en verde en CI. Proceder con las pruebas de usuario o siguientes pasos para Google Play Console.
+- Monitorear CI hasta confirmación en verde y proceder con la verificación de los flujos de vinculación.
