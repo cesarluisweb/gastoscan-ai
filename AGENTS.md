@@ -33,6 +33,7 @@
 2. **Al finalizar:** Actualizar `MEMORY.md` con el estado final, decisiones tomadas y errores a evitar.
 3. **Brevedad:** Mantener `MEMORY.md` en máximo ~50 líneas, depurando lo que ya no aporte.
 4. **Graduación:** Si un patrón o lección se vuelve permanente, moverlo a `AGENTS.md` o `DESIGN.md` y eliminarlo de `MEMORY.md`.
+5. **Prohibición de Anotar Solo en MEMORY.md:** Cuando César pida 'anotar por allí', registrar o documentar cualquier dato, decisión, credencial o cambio, queda terminantemente prohibido registrarlo únicamente en `MEMORY.md`. `MEMORY.md` es solo un contexto volátil de trabajo inmediato (~50 líneas). Toda anotación solicitada DEBE registrarse de inmediato en su documento permanente correspondiente (`AGENTS.md`, `PROJECT.md`, `DESIGN.md` o `DOC_*.md`).
 
 ## 1. Entorno de Desarrollo y Ejecución
 **IMPORTANTE:** El repositorio oficial de este proyecto ha sido migrado permanentemente a `C:\Development\Control de gastos VE` para evitar conflictos con Google Drive.
@@ -111,6 +112,7 @@ Toda interfaz, pantalla, componente y diálogo debe ceñirse rigurosamente a [`D
   2. Proveer al usuario una guía de pruebas paso a paso para que realice la verificación manual en su dispositivo o entorno.
   3. Queda prohibido dar por finalizada la tarea o marcar hitos como completados en `ROADMAP.md` antes de recibir el visto bueno explícito del usuario tras sus pruebas.
   4. Solo tras la aprobación del usuario, asentar los apuntes finales y actualizar el estado en `ROADMAP.md`.
+- **Anotaciones Permanentes vs Memoria Volátil:** Cuando el usuario pida "anotar algo", registrar cuotas, límites, credenciales o decisiones, queda estrictamente prohibido registrarlo únicamente en `MEMORY.md`. `MEMORY.md` es un borrador temporal (~50 líneas) que se depura periódicamente. Toda nota solicitada debe registrarse en el documento definitivo correspondiente (`AGENTS.md`, `PROJECT.md`, `DESIGN.md` o `DOC_*.md`).
 - **Sincronización:** Tras cualquier actualización a estos documentos, se debe hacer un git commit y git push de inmediato para asegurar que el resto del equipo (humanos y otros agentes) tenga acceso a la fuente de verdad actualizada.
 
 ## 8. Extracción y Parsing de Facturas con IA (Gemini OCR)
@@ -118,12 +120,16 @@ Toda interfaz, pantalla, componente y diálogo debe ceñirse rigurosamente a [`D
 - **Moneda Unificada:** Para facturas venezolanas con ítems en Bolívares (VES) y total en USD ("Ref"), la IA DEBE extraer todos los montos en la moneda principal de los ítems (VES) para evitar descuadres en los cálculos de la app.
 - **Red de Seguridad en Dart:** La aplicación debe mantener una validación matemática local que sume los ítems y los compare con el total de la factura, aplicando autocorrección si la IA omite un separador de decimales.
 - **Arquitectura de Gateway y Cuotas de Gemini API:**
-  1. *Alcance por Proyecto:* Las cuotas (RPM, RPD y límites de facturación por ventana de 10 min) son evaluadas por proyecto en Google AI Studio, nunca por API Key. Ante un bloqueo general de proyecto, crear nuevas claves en el mismo proyecto no restablece el servicio; requiere nuevo proyecto, reinicio diario (medianoche PST) o habilitar facturación.
-  2. *Exclusividad Flash-Lite:* El Cloudflare Gateway (`rindemas-gateway`) debe limitar estrictamente su cadena de fallback a versiones explícitas de Flash-Lite (`gemini-3.1-flash-lite` y `gemini-3.5-flash-lite`). Prohibido incluir modelos pesados (3.8 Flash, Pro) o alias `latest` en la cadena para evitar bloqueos por cuotas mínimas y proteger el límite de gasto de Tier 1 ($10 / 10 min).
-  3. *Autenticación con Claves `AQ.` (Encabezado Estricto):* Las peticiones a `generativelanguage.googleapis.com` deben autenticarse mediante el encabezado HTTP `x-goog-api-key: <KEY>`. Prohibido enviar la clave en cabeceras `Authorization: Bearer` para evitar el error `401 UNAUTHENTICATED` (`ACCESS_TOKEN_TYPE_UNSUPPORTED`).
-  4. *Sanitización en Cloudflare Workers:* Toda credencial leída de `env` o cabeceras personalizadas debe ser sanitizada con `.trim().replace(/[\r\n\t ]+/g, "")` antes de despacharse a Google.
-  5. *Observabilidad Declarativa en Cloudflare:* `wrangler.toml` DEBE incluir siempre `[observability] enabled = true` (con `head_sampling_rate = 1`) para garantizar que la retención de eventos, métricas de tokens y logs de fallback queden activos automáticamente tras cualquier despliegue sin depender de configuraciones manuales en el dashboard web.
-  6. *Blindaje de Endpoints de Salud y Diagnóstico:* El endpoint `/health` del Cloudflare Gateway DEBE ser estrictamente pasivo (retornando únicamente estado y modelos estáticos). Queda estrictamente prohibido exponer fragmentos o prefijos de la API Key (`key_prefix`) o permitir parámetros de consulta no autenticados (`?test=...`, `?list=...`) que ejecuten llamadas reales a Google Gemini consumiendo cuota del proyecto.
+  1. *Alcance por Proyecto y Nivel Tier 1 (Pay-as-you-go Prepago):* El proyecto oficial en Google AI Studio es `Rinde Mas` (ID: `gen-lang-client-0879336234`). Opera en **Nivel 1 (Tier 1)** con saldo prepago activo ($5.00 USD inicial) y límite de gasto configurado de $250 USD mensuales.
+  2. *Límites de Frecuencia Operativos Confirmados (Tier 1):*
+     - `gemini-3.1-flash-lite`: **4.000 RPM** (solicitudes/min), **4.000.000 TPM** (tokens/min), **150.000 RPD** (solicitudes/día).
+     - `gemini-3.5-flash-lite`: **4.000 RPM** (solicitudes/min), **4.000.000 TPM** (tokens/min), **150.000 RPD** (solicitudes/día).
+     - Modelo auxiliar de agentes (`Antigravity`): 30 RPM, 200.000 TPM, 1.000 RPD.
+  3. *Exclusividad Flash-Lite:* El Cloudflare Gateway (`rindemas-gateway`) debe limitar estrictamente su cadena de fallback a versiones explícitas de Flash-Lite (`gemini-3.1-flash-lite` y `gemini-3.5-flash-lite`). Prohibido incluir modelos pesados (3.8 Flash, Pro) o alias `latest` en la cadena para evitar bloqueos por cuotas mínimas y proteger el límite de gasto de Tier 1 ($10 / 10 min).
+  4. *Autenticación con Claves `AQ.` (Encabezado Estricto):* Las peticiones a `generativelanguage.googleapis.com` deben autenticarse mediante el encabezado HTTP `x-goog-api-key: <KEY>`. Prohibido enviar la clave en cabeceras `Authorization: Bearer` para evitar el error `401 UNAUTHENTICATED` (`ACCESS_TOKEN_TYPE_UNSUPPORTED`).
+  5. *Sanitización en Cloudflare Workers:* Toda credencial leída de `env` o cabeceras personalizadas debe ser sanitizada con `.trim().replace(/[\r\n\t ]+/g, "")` antes de despacharse a Google.
+  6. *Observabilidad Declarativa en Cloudflare:* `wrangler.toml` DEBE incluir siempre `[observability] enabled = true` (con `head_sampling_rate = 1`) para garantizar que la retención de eventos, métricas de tokens y logs de fallback queden activos automáticamente tras cualquier despliegue sin depender de configuraciones manuales en el dashboard web.
+  7. *Blindaje de Endpoints de Salud y Diagnóstico:* El endpoint `/health` del Cloudflare Gateway DEBE ser estrictamente pasivo (retornando únicamente estado y modelos estáticos). Queda estrictamente prohibido exponer fragmentos o prefijos de la API Key (`key_prefix`) o permitir parámetros de consulta no autenticados (`?test=...`, `?list=...`) que ejecuten llamadas reales a Google Gemini consumiendo cuota del proyecto.
 - **Arquitectura Híbrida de Escaneo (Ahorro de Tokens y Red):**
   1. *Fase 1 (OCR Local Dispositivo):* Toda captura ejecuta primero Google ML Kit en el teléfono sin costo de API ni consumo de red.
   2. *Fase 2 (Envío Solo Texto):* Si el texto extraído tiene score >= 6 (montos, totales, palabras clave fiscales, fechas), se envía únicamente el texto estructurado a Gemini (`analyzeReceiptText`), reduciendo el consumo de tokens en un 70-80% (~300 tokens vs ~1.400).

@@ -5,7 +5,7 @@
 - **Gestión de Estado:** Patrón Provider reactivo dividido por dominios (`GastoProvider`, `BudgetProvider`, `ScanQueueProvider`, `ShoppingListProvider`, `AuthProvider`, `SettingsProvider`).
 - **Persistencia Local:** SQLite (`sqflite`) para funcionamiento offline prioritario con esquemas relacionales e integridad transaccional.
 - **Backend & Cloud:** Firebase Authentication (anónimo y Google Sign-In), Cloud Firestore (sincronización y backup), Cloud Functions (orquestación segura de Gemini con Function Calling).
-- **Inteligencia Artificial:** Google Gemini API multimodal para extracción OCR de facturas y razonamiento financiero conversacional.
+- **Inteligencia Artificial:** Google Gemini API multimodal para extracción OCR de facturas y razonamiento financiero conversacional. Opera bajo Tier 1 (Pay-as-you-go Prepago en Google AI Studio, 4.000 RPM / 150.000 RPD) orquestado vía Cloudflare Gateway con exclusividad en modelos ligeros Flash-Lite (`gemini-3.1-flash-lite` y `gemini-3.5-flash-lite`).
 - **Presencia Web:** Landing page en Astro + Tailwind CSS alojada en Firebase Hosting (`rindemas.cesarluis.com`).
 
 ---
