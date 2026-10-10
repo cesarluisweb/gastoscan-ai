@@ -16,8 +16,10 @@
   9. **Aislamiento Total de Cuentas y Limpieza Local al Cerrar Sesión:** Creado método `limpiarBaseDatosLocal()` en SQLite/repositorio. Flujo de `cerrarSesion()` vacía el dispositivo para inicio en cero. Diálogo de decisión ("Conservar y sumar" vs "Reemplazar") al vincular o iniciar sesión si hay gastos locales huérfanos, erradicando contaminación de datos entre cuentas.
   10. **Firma Oficial Única en AAB (Google Play):** Resuelto error de doble cadena de certificados. Firma nativa en Gradle (`signingConfigs.release`) con `rindemas.jks` y eliminación de re-firma manual con `jarsigner` en CI.
   11. **Rediseño de Diálogo 'Compra Registrada' y Unificación de Vinculación:** Popup en modo anónimo adaptado a recomendación (ícono de check verde, texto amigable, botones de Google y 'Vincular con correo'). Unificado el modal de correo (`auth_modal_sheet.dart`) y diálogo de decisión ('Conservar y sumar' vs 'Reemplazar') tanto en Revisión de Gasto como en la pantalla Más cumpliendo DRY.
+  12. **Facturación Activa en Gemini API (Google AI Studio Tier 1):** Plan de pago por uso prepago activo ($5 USD de saldo inicial, límite $250 USD). Elimina la cuota gratuita diaria (1500 RPD) y estabiliza el servicio OCR y asistente IA.
 
 ## Decisiones Técnicas y de Negocio Recientes
+- **Facturación de Gemini API:** Cuenta prepago Tier 1 activa en Google AI Studio. Se mantiene el enrutamiento exclusivo a Flash-Lite (`gemini-3.1-flash-lite` y `gemini-3.5-flash-lite`) vía Cloudflare Gateway para maximizar rendimiento del saldo.
 - **Firma Nativa de Producción:** Gradle firma directamente el `.aab` con `rindemas.jks` una sola vez. `jarsigner` solo verifica integridad.
 - **Cumplimiento Google Play:** Sin sideloading interno de APKs ni permisos de alarma exacta (`inexactAllowWhileIdle`).
 - **Aislamiento de Cuentas:** Al cerrar sesión, el teléfono se pone a cero en SQLite. Los datos remotos quedan intactos en Firestore. Al entrar con otra cuenta, solo se descargan los datos correspondientes.
