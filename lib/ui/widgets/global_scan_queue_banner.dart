@@ -466,7 +466,7 @@ class GlobalScanQueueBanner extends StatelessWidget {
                                     actions: [
                                       TextButton(
                                         onPressed: () => Navigator.of(dCtx).pop(false),
-                                        child: const Text('Volver'),
+                                        child: const Text('Volver', style: TextStyle(color: AppColors.textSecondary)),
                                       ),
                                       TextButton(
                                         onPressed: () => Navigator.of(dCtx).pop(true),
@@ -563,7 +563,7 @@ class GlobalScanQueueBanner extends StatelessWidget {
                                         actions: [
                                           TextButton(
                                             onPressed: () => Navigator.of(dCtx).pop(false),
-                                            child: const Text('Volver'),
+                                            child: const Text('Volver', style: TextStyle(color: AppColors.textSecondary)),
                                           ),
                                           TextButton(
                                             onPressed: () => Navigator.of(dCtx).pop(true),
@@ -624,7 +624,7 @@ class GlobalScanQueueBanner extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Volver'),
+            child: const Text('Volver', style: TextStyle(color: AppColors.textSecondary)),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),

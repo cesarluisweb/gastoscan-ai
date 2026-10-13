@@ -21,30 +21,31 @@
   14. **Diagnóstico Error 10 Google Sign-In (Play App Signing):** Identificada discrepancia de firmas: Google Play re-firma el APK con su propia clave privada. Documentado en `DOC_CONFIGURACION_GOOGLE_SIGNIN.md` las huellas SHA-1 de `rindemas.jks` y los pasos en Firebase Console y Google Play Console. Centralizado Web Client ID en `AppConstants`.
   15. **Unificación Total del Sistema Multimoneda (EUR, USDT, VES, USD):** Corregido CategoryChart (distribución de gastos) para reflejar la divisa seleccionada y convertir montos de la dona y compras individuales; corregido ExpenseCard y PendingExpenseCard para usar tasas dinámicas (eliminada tasa fija 1.08 en EUR y 1:1 en USDT); unificada pantalla de Análisis para comparar en la moneda activa. Homologado panel web (`landing/`) con paridad exacta en USDT y pulido de saldo restante y badges de salud de ahorro.
   16. **Unificación de Categorías y Normalización de Sinónimos (Web y App):** Homologado el catálogo del panel web a las 8 categorías oficiales (`Alimentación`, `Salud`, `Higiene`, `Educación`, `Hogar`, `Servicios`, `Transporte`, `Otros`). Implementada normalización defensiva en web y app (`AppConstants.normalizarCategoria`) para mapear 'Alimentos' -> 'Alimentación' tanto en Firestore como en SQLite. Corregido icono y color en Gráficos y Tarjetas. Despliegue en Firebase Hosting validado y CI en verde (`success`).
-  17. **Ficha y Recursos Oficiales de Play Store Subidos:** Textos oficiales, icono 512x512, gráfico de funciones (1024x500 en fondo blanco con smartphone estilizado) y 5 capturas en alta resolución (1080x2280) completados y subidos a Google Play Console. Registrado en `DOC_FICHA_PLAY_STORE.md` y `ROADMAP.md`.
-  18. **Detección y Respeto de Moneda en Dictado por Voz y Chat:** Actualizado Cloudflare Gateway con parámetros `moneda` y `monto_original` en `registrar_gasto`. Añadida detección y normalización inteligente en Flutter (`AppConstants.detectarMonedaDeTexto`, `AppConstants.normalizarMoneda`) en `GeminiService.parseVoiceExpense` y `ChatScreen`. Si el usuario indica "1500 bolívares", la app abre Revisión con moneda `VES` y 1500 en lugar de asumir USD. CI en verde (`success`).
+  17. **Ficha Play Store Subida:** Textos oficiales, icono, gráfico de funciones y 5 capturas en alta resolución completados en Play Console (`DOC_FICHA_PLAY_STORE.md`).
+  18. **Detección de Moneda en Voz y Chat:** Actualizado Gateway y cliente Flutter con extracción determinista de moneda (VES, USD, EUR, USDT) y montos sin forzar USD por defecto. CI en verde (`success`).
+  19. **Contraste de Botón Cancelar y Tema TextButton:** Corregido botón 'Cancelar' en diálogo de descarte (`review_expense_screen.dart`) a gris (`AppColors.textSecondary`), 'Descartar' a rojo (`AppColors.error`), y establecido `textButtonTheme` en `AppTheme` con `AppColors.textPrimary` para evitar texto amarillo en botones planos.
 
 ## Decisiones Técnicas y de Negocio Recientes
-- **Detección de Moneda en Voz:** Toda entrada por voz o chat respeta prioritariamente la moneda mencionada por el usuario (VES, USD, EUR, USDT). El gateway y el cliente extraen tanto el monto original como la divisa, delegando el cálculo de equivalencia a las tasas dinámicas sin forzar USD por defecto.
-- **Normalización Canónica de Categorías:** En toda deserialización o carga de datos externos, `AppConstants.normalizarCategoria` (y su función homóloga en JavaScript en el panel web) unifica sinónimos frecuentes ('Alimentos', 'comida', 'farmacia', etc.) al catálogo canónico para garantizar que los mapas de iconos y colores nunca caigan en el fallback de 'Otros'.
-- **Jerarquía Visual de Acciones de Cuenta:** Cerrar sesión es una acción rutinaria/reversible y se muestra en gris neutro; eliminar cuenta es destructiva y se muestra en rojo. Ambas en fila compacta reduciendo la altura de la tarjeta en 50%.
-- **Eliminación Segura y Cierre Automático:** Al eliminar cuenta, siempre se cierra la sesión (`auth.signOut`), se limpia la base SQLite local, se inicia sesión anónima limpia y se purga Firestore, sin dejar al usuario en estado vinculado.
-- **Facturación de Gemini API:** Cuenta prepago Tier 1 activa en Google AI Studio. Se mantiene el enrutamiento exclusivo a Flash-Lite (`gemini-3.1-flash-lite` y `gemini-3.5-flash-lite`) vía Cloudflare Gateway para maximizar rendimiento del saldo.
-- **Firma Nativa de Producción:** Gradle firma directamente el `.aab` con `rindemas.jks` una sola vez. `jarsigner` solo verifica integridad.
-- **Cumplimiento Google Play:** Sin sideloading interno de APKs ni permisos de alarma exacta (`inexactAllowWhileIdle`).
-- **Aislamiento de Cuentas:** Al cerrar sesión, el teléfono se pone a cero en SQLite. Los datos remotos quedan intactos en Firestore. Al entrar con otra cuenta, solo se descargan los datos correspondientes.
-- **Flujo de Vinculación Unificado:** Diálogo de decisión ("Conservar y sumar" vs "Reemplazar") centralizado en `auth_modal_sheet.dart` accesible desde Más y desde el modal de compra guardada.
-- **Páginas Legales en Producción:** `rindemas.cesarluis.com/privacidad`, `rindemas.cesarluis.com/terminos` y `rindemas.cesarluis.com/eliminar-cuenta` (cumplimiento 100% Google Play Data Safety).
+- **Contraste de Botones Secundarios:** Los botones 'Cancelar' / 'Volver' en popups usan `AppColors.textSecondary` (gris). `textButtonTheme` global previene que botones planos hereden el amarillo primario sobre fondos claros.
+- **Detección de Moneda en Voz:** Toda entrada por voz o chat respeta prioritariamente la moneda mencionada por el usuario (VES, USD, EUR, USDT).
+- **Normalización Canónica de Categorías:** En toda deserialización o carga de datos externos, `AppConstants.normalizarCategoria` unifica sinónimos frecuentes al catálogo oficial.
+- **Jerarquía Visual de Acciones de Cuenta:** Cerrar sesión en gris neutro; eliminar cuenta en rojo. Ambas en fila compacta.
+- **Eliminación Segura y Cierre Automático:** Al eliminar cuenta, siempre se cierra sesión, se limpia SQLite local y se purga Firestore.
+- **Facturación de Gemini API:** Cuenta prepago Tier 1 activa en Google AI Studio (Flash-Lite prioritario).
+- **Firma Nativa de Producción:** Gradle firma directamente el `.aab` con `rindemas.jks`.
+- **Cumplimiento Google Play:** Sin sideloading interno de APKs ni permisos de alarma exacta.
+- **Aislamiento de Cuentas:** Al cerrar sesión, la BD local se pone a cero. Los datos remotos quedan seguros en Firestore.
+- **Flujo de Vinculación Unificado:** Diálogo de decisión ("Conservar y sumar" vs "Reemplazar") centralizado en `auth_modal_sheet.dart`.
+- **Páginas Legales en Producción:** `rindemas.cesarluis.com/privacidad`, `rindemas.cesarluis.com/terminos` y `rindemas.cesarluis.com/eliminar-cuenta`.
 - **Package Name Oficial:** `com.cesarluis.rindemas` en Google Play Console y Android.
 
 ## Errores y Fricciones a Evitar
-- Discrepancias de catálogo entre web y móvil: Toda lista de categorías en la web debe provenir de las constantes canónicas de la app móvil.
-- NUNCA usar `jarsigner` para re-firmar un AAB en CI (produce doble cadena de certificados y rechazo en Play Console); la firma debe ser nativa en Gradle.
-- Minutos de GitHub Actions en repositorio privado: Si la cuenta llega al límite, los runners no arrancan; requiere revisar Billing o pasar a público temporalmente para compilar.
-- Tras finalizar compilaciones en público, retornar a 'Private' para proteger el código fuente.
+- Contraste estricto en UI (`DESIGN.md`): Texto sobre amarillo SIEMPRE negro; texto sobre blanco SIEMPRE negro o gris, NUNCA amarillo.
+- Discrepancias de catálogo entre web y móvil: Toda lista de categorías debe provenir de las constantes canónicas.
+- NUNCA usar `jarsigner` para re-firmar un AAB en CI (produce doble cadena de certificados); la firma debe ser nativa en Gradle.
+- Minutos de GitHub Actions en repositorio privado: Si la cuota se agota, pasar a público temporalmente para compilar y regresar a privado.
 - En CI, `curl` para logs devuelve 403; los fallos de test se leen en `test_results.txt` tras `git pull --rebase`.
 - Prohibido `>` en PowerShell; usar siempre tubería `... | Out-File -Encoding utf8`.
-- Contraste estricto en UI (`DESIGN.md`): Texto sobre amarillo SIEMPRE negro; texto sobre blanco SIEMPRE negro o gris, NUNCA amarillo.
 
 ## Próximo Paso Inmediato
-- Validar sincronización y experiencia de categorías en la app móvil.
+- Verificar CI tras push y confirmar solución al usuario.
