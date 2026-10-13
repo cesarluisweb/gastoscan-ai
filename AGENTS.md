@@ -49,7 +49,9 @@
 La compilación en GitHub Actions (`build_apk.yml`) ejecuta `flutter create`, lo que borra y regenera la carpeta `android/` desde cero en cada ejecución.
 - **Prohibición de Edición Local:** Queda **estrictamente prohibido** modificar manualmente archivos como `android/app/build.gradle` o `android/settings.gradle` para instalar dependencias nativas, ya que estos cambios se perderán en la nube.
 - **Inyección por Bash:** Toda configuración nativa requerida DEBE inyectarse programáticamente usando scripts automatizados (ej. `sed`) directamente dentro del archivo `.github/workflows/build_apk.yml` en el paso posterior a la regeneración de la plataforma.
-- **Auth Bypass:** Para evitar el Error 10 de Google Sign-In por la ausencia del archivo `google-services.json` generado nativamente, debes pasar explícitamente el `serverClientId` (Web Client ID) como parámetro en el constructor de `GoogleSignIn()` en Dart.
+- **Auth Bypass (Error 10 / DEVELOPER_ERROR):** Para evitar el Error 10 de Google Sign-In:
+  1. *Código Dart:* Pasar explícitamente el `serverClientId` (Web Client ID) como parámetro en el constructor de `GoogleSignIn()`.
+  2. *Firebase Console (obligatorio):* Registrar **dos** huellas SHA-1 en la app Android `com.cesarluis.rindemas`: la de la clave de subida (`rindemas.jks`) **y** la de la clave de firma de Google Play (obtenida en Google Play Console → Configuración → Integridad de la app → Firma de apps → *Certificado de la clave de firma de la app*). Sin la segunda huella, cualquier instalación desde la tienda falla con Error 10 aunque el código esté correcto.
 
 ### 3.1. Despliegue de la Landing Web y Panel (`landing/`)
 La landing page y el panel web se alojan en **Firebase Hosting** (`gastoscan-ai`) apuntando al directorio `landing/dist`.
