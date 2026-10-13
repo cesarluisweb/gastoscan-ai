@@ -1007,14 +1007,14 @@ import '../styles/global.css';
             if (hasBudget) {
                 const diff = targetBudget - effectiveSpent;
                 if (diff >= 0) {
-                    cardRemainingAmount.textContent = `+${formatMoney(diff, budgetCurrency)}`;
+                    cardRemainingAmount.textContent = formatMoney(diff, budgetCurrency);
                     cardRemainingAmount.className = "text-xl sm:text-2xl font-extrabold text-emerald-600";
-                    cardRemainingBadge.textContent = hasSavings ? "Para gastar" : "Disponible";
+                    cardRemainingBadge.textContent = hasSavings ? "Disponible para gastar" : "Disponible";
                     cardRemainingBadge.className = "text-[11px] font-semibold text-emerald-600";
                 } else {
                     cardRemainingAmount.textContent = `-${formatMoney(Math.abs(diff), budgetCurrency)}`;
                     cardRemainingAmount.className = "text-xl sm:text-2xl font-extrabold text-rose-600";
-                    cardRemainingBadge.textContent = hasSavings ? "Límite excedido" : "Excedido";
+                    cardRemainingBadge.textContent = hasSavings ? "Límite superado" : "Presupuesto superado";
                     cardRemainingBadge.className = "text-[11px] font-semibold text-rose-600";
                 }
 
@@ -1023,13 +1023,13 @@ import '../styles/global.css';
                     cardSavingsBadge.classList.remove('hidden');
                     if (health.status === 'protegida') {
                         cardSavingsBadge.className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800 border border-emerald-200";
-                        cardSavingsBadge.textContent = "🛡️ Protegida";
+                        cardSavingsBadge.textContent = "🛡️ Ahorro protegido";
                     } else if (health.status === 'enRiesgo') {
                         cardSavingsBadge.className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800 border border-amber-200";
-                        cardSavingsBadge.textContent = "⚠️ En riesgo";
+                        cardSavingsBadge.textContent = "⚠️ Ahorro en riesgo";
                     } else if (health.status === 'comprometida') {
                         cardSavingsBadge.className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-rose-100 text-rose-800 border border-rose-200";
-                        cardSavingsBadge.textContent = "🚨 Comprometida";
+                        cardSavingsBadge.textContent = "🚨 Ahorro comprometido";
                     }
                 } else {
                     cardSavingsBadge.classList.add('hidden');
@@ -1108,7 +1108,8 @@ import '../styles/global.css';
                     const vesEquiv = g.moneda === 'VES' ? totalOrig : (totalUsd * (tasa > 0 ? tasa : 1.0));
                     targetTotal = liveRates.eur > 0 ? (vesEquiv / liveRates.eur) : totalUsd;
                 } else if (budgetCurrency === 'USDT') {
-                    targetTotal = totalUsd;
+                    const vesEquiv = g.moneda === 'VES' ? totalOrig : (totalUsd * (tasa > 0 ? tasa : 1.0));
+                    targetTotal = liveRates.usdt > 0 ? (vesEquiv / liveRates.usdt) : totalUsd;
                 } else {
                     // USD
                     targetTotal = totalUsd;
