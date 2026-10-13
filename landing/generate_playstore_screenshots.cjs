@@ -87,27 +87,18 @@ function generateHeaderSvg(item) {
     <rect width="${CANVAS_W}" height="${CANVAS_H}" fill="url(#bgGrad)" />
     <rect width="${CANVAS_W}" height="${CANVAS_H}" fill="url(#haloGlow)" />
 
-    <!-- Top Badge / Pill -->
-    <g transform="translate(${CANVAS_W / 2}, 110)">
-      <rect x="-140" y="0" width="280" height="42" rx="21" fill="#0F172A" />
-      <circle cx="-112" cy="21" r="5" fill="#FACC15" />
-      <text x="-95" y="27" font-family="system-ui, -apple-system, sans-serif" font-size="14.5" font-weight="800" fill="#FACC15" letter-spacing="1">${item.tag}</text>
-    </g>
-
-    <!-- Main Title -->
-    <text x="${CANVAS_W / 2}" y="235" font-family="system-ui, -apple-system, sans-serif" font-size="64" font-weight="900" fill="#0F172A" text-anchor="middle" letter-spacing="-1.5">
+    <!-- Main Title (Large, bold, clean) -->
+    <text x="${CANVAS_W / 2}" y="195" font-family="system-ui, -apple-system, sans-serif" font-size="74" font-weight="900" fill="#0F172A" text-anchor="middle" letter-spacing="-1.8">
       ${item.title}
     </text>
 
-    <!-- Highlighted second line with accent underline -->
-    <g transform="translate(${CANVAS_W / 2}, 310)">
-      <text font-family="system-ui, -apple-system, sans-serif" font-size="64" font-weight="900" fill="#0F172A" text-anchor="middle" letter-spacing="-1.5">
-        ${item.highlight}
-      </text>
-    </g>
+    <!-- Second Line -->
+    <text x="${CANVAS_W / 2}" y="285" font-family="system-ui, -apple-system, sans-serif" font-size="74" font-weight="900" fill="#0F172A" text-anchor="middle" letter-spacing="-1.8">
+      ${item.highlight}
+    </text>
 
     <!-- Subtitle -->
-    <text x="${CANVAS_W / 2}" y="405" font-family="system-ui, -apple-system, sans-serif" font-size="25" font-weight="500" fill="#475569" text-anchor="middle" letter-spacing="-0.3">
+    <text x="${CANVAS_W / 2}" y="380" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="500" fill="#475569" text-anchor="middle" letter-spacing="-0.4">
       ${item.subtitle}
     </text>
   </svg>
