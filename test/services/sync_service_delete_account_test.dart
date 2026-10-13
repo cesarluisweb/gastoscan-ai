@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:gastoscan_ai/core/constants/app_constants.dart';
@@ -78,144 +78,34 @@ class FakeFirebaseAuth extends Fake implements FirebaseAuth {
   }
 }
 
-class FakeFirebaseFirestore extends Fake implements FirebaseFirestore {
-  final Map<String, List<String>> collectionsData;
-  Exception? errorOnGet;
-  final List<String> deletedDocPaths = [];
-
-  FakeFirebaseFirestore({
-    this.collectionsData = const {},
-    this.errorOnGet,
-  });
-
-  @override
-  CollectionReference<Map<String, dynamic>> collection(String collectionPath) {
-    return FakeCollectionReference(this, collectionPath);
-  }
-}
-
-class FakeCollectionReference extends Fake implements CollectionReference<Map<String, dynamic>> {
-  final FakeFirebaseFirestore firestore;
-  final String path;
-
-  FakeCollectionReference(this.firestore, this.path);
-
-  @override
-  DocumentReference<Map<String, dynamic>> doc([String? docPath]) {
-    return FakeDocumentReference(firestore, '$path/${docPath ?? "auto"}');
-  }
-
-  @override
-  Future<QuerySnapshot<Map<String, dynamic>>> get([GetOptions? options]) async {
-    if (firestore.errorOnGet != null) {
-      throw firestore.errorOnGet!;
-    }
-    final docIds = firestore.collectionsData[path] ?? [];
-    return FakeQuerySnapshot(firestore, path, docIds);
-  }
-}
-
-class FakeDocumentReference extends Fake implements DocumentReference<Map<String, dynamic>> {
-  final FakeFirebaseFirestore firestore;
-  final String path;
-
-  FakeDocumentReference(this.firestore, this.path);
-
-  @override
-  CollectionReference<Map<String, dynamic>> collection(String collectionPath) {
-    return FakeCollectionReference(firestore, '$path/$collectionPath');
-  }
-
-  @override
-  Future<void> delete() async {
-    firestore.deletedDocPaths.add(path);
-  }
-}
-
-class FakeQuerySnapshot extends Fake implements QuerySnapshot<Map<String, dynamic>> {
-  final FakeFirebaseFirestore firestore;
-  final String collPath;
-  final List<String> docIds;
-
-  FakeQuerySnapshot(this.firestore, this.collPath, this.docIds);
-
-  @override
-  List<QueryDocumentSnapshot<Map<String, dynamic>>> get docs =>
-      docIds.map((id) => FakeQueryDocumentSnapshot(firestore, '$collPath/$id', id)).toList();
-}
-
-class FakeQueryDocumentSnapshot extends Fake implements QueryDocumentSnapshot<Map<String, dynamic>> {
-  final FakeFirebaseFirestore firestore;
-  final String docPath;
-  final String _id;
-
-  FakeQueryDocumentSnapshot(this.firestore, this.docPath, this._id);
-
-  @override
-  String get id => _id;
-
-  @override
-  DocumentReference<Map<String, dynamic>> get reference =>
-      FakeDocumentReference(firestore, docPath);
-}
-
 class FakeFlutterSecureStorage extends Fake implements FlutterSecureStorage {
   final Map<String, String> storage = {};
   bool deleteAllCalled = false;
 
   @override
-  Future<void> write({
-    required String key,
-    required String? value,
-    AppleOptions? iOptions,
-    AndroidOptions? aOptions,
-    LinuxOptions? lOptions,
-    WebOptions? webOptions,
-    MacOsOptions? mOptions,
-    WindowsOptions? wOptions,
-  }) async {
-    if (value != null) {
-      storage[key] = value;
+  dynamic noSuchMethod(Invocation invocation) {
+    final member = invocation.memberName;
+    if (member == #write) {
+      final key = invocation.namedArguments[#key] as String;
+      final value = invocation.namedArguments[#value] as String?;
+      if (value != null) storage[key] = value;
+      return Future<void>.value();
     }
-  }
-
-  @override
-  Future<String?> read({
-    required String key,
-    AppleOptions? iOptions,
-    AndroidOptions? aOptions,
-    LinuxOptions? lOptions,
-    WebOptions? webOptions,
-    MacOsOptions? mOptions,
-    WindowsOptions? wOptions,
-  }) async {
-    return storage[key];
-  }
-
-  @override
-  Future<void> delete({
-    required String key,
-    AppleOptions? iOptions,
-    AndroidOptions? aOptions,
-    LinuxOptions? lOptions,
-    WebOptions? webOptions,
-    MacOsOptions? mOptions,
-    WindowsOptions? wOptions,
-  }) async {
-    storage.remove(key);
-  }
-
-  @override
-  Future<void> deleteAll({
-    AppleOptions? iOptions,
-    AndroidOptions? aOptions,
-    LinuxOptions? lOptions,
-    WebOptions? webOptions,
-    MacOsOptions? mOptions,
-    WindowsOptions? wOptions,
-  }) async {
-    deleteAllCalled = true;
-    storage.clear();
+    if (member == #read) {
+      final key = invocation.namedArguments[#key] as String;
+      return Future<String?>.value(storage[key]);
+    }
+    if (member == #delete) {
+      final key = invocation.namedArguments[#key] as String;
+      storage.remove(key);
+      return Future<void>.value();
+    }
+    if (member == #deleteAll) {
+      deleteAllCalled = true;
+      storage.clear();
+      return Future<void>.value();
+    }
+    return super.noSuchMethod(invocation);
   }
 }
 
@@ -267,28 +157,24 @@ void main() {
     test('Caso de exito usuario autenticado: purga Firestore, Auth, Storage y BD local', () async {
       final fakeUser = FakeUser(uid: 'user-auth-123', isAnonymous: false);
       final fakeAuth = FakeFirebaseAuth(currentUser: fakeUser);
-      final fakeFirestore = FakeFirebaseFirestore(
-        collectionsData: {
-          'users/user-auth-123/gastos': ['gasto1', 'gasto2'],
-          'users/user-auth-123/presupuestos': ['2026_10'],
-        },
-      );
+      bool purgerCalled = false;
 
       final syncService = SyncService(
         repository: fakeRepo,
         auth: fakeAuth,
-        firestore: fakeFirestore,
         googleSignIn: fakeGoogle,
         secureStorage: fakeStorage,
+        firestorePurger: (uid) async {
+          expect(uid, equals('user-auth-123'));
+          purgerCalled = true;
+        },
       );
 
       final error = await syncService.eliminarCuentaYDatos();
 
       expect(error, isNull);
+      expect(purgerCalled, isTrue);
       expect(fakeUser.deleteCalled, isTrue);
-      expect(fakeFirestore.deletedDocPaths, contains('users/user-auth-123/gastos/gasto1'));
-      expect(fakeFirestore.deletedDocPaths, contains('users/user-auth-123/gastos/gasto2'));
-      expect(fakeFirestore.deletedDocPaths, contains('users/user-auth-123/presupuestos/2026_10'));
       expect(fakeRepo.limpiarDatosLocalesCalled, isTrue);
       // Verifica limpieza especifica de la clave de Rinde Mas sin deleteAll ciego
       expect(fakeStorage.storage.containsKey(AppConstants.prefApiKey), isFalse);
@@ -301,20 +187,19 @@ void main() {
     test('Caso de error de red en Firestore: no silencia error y no borra datos locales', () async {
       final fakeUser = FakeUser(uid: 'user-auth-123', isAnonymous: false);
       final fakeAuth = FakeFirebaseAuth(currentUser: fakeUser);
-      final fakeFirestore = FakeFirebaseFirestore(
-        errorOnGet: FirebaseException(
-          plugin: 'cloud_firestore',
-          code: 'unavailable',
-          message: 'The service is currently unavailable.',
-        ),
-      );
 
       final syncService = SyncService(
         repository: fakeRepo,
         auth: fakeAuth,
-        firestore: fakeFirestore,
         googleSignIn: fakeGoogle,
         secureStorage: fakeStorage,
+        firestorePurger: (uid) async {
+          throw FirebaseException(
+            plugin: 'cloud_firestore',
+            code: 'unavailable',
+            message: 'The service is currently unavailable.',
+          );
+        },
       );
 
       final error = await syncService.eliminarCuentaYDatos();
@@ -330,26 +215,24 @@ void main() {
     test('Caso de usuario anonimo: purga remoto y local correctamente', () async {
       final fakeAnonUser = FakeUser(uid: 'anon-user-456', isAnonymous: true);
       final fakeAuth = FakeFirebaseAuth(currentUser: fakeAnonUser);
-      final fakeFirestore = FakeFirebaseFirestore(
-        collectionsData: {
-          'users/anon-user-456/gastos': ['gasto_anon'],
-          'users/anon-user-456/presupuestos': [],
-        },
-      );
+      bool purgerCalled = false;
 
       final syncService = SyncService(
         repository: fakeRepo,
         auth: fakeAuth,
-        firestore: fakeFirestore,
         googleSignIn: fakeGoogle,
         secureStorage: fakeStorage,
+        firestorePurger: (uid) async {
+          expect(uid, equals('anon-user-456'));
+          purgerCalled = true;
+        },
       );
 
       final error = await syncService.eliminarCuentaYDatos();
 
       expect(error, isNull);
+      expect(purgerCalled, isTrue);
       expect(fakeAnonUser.deleteCalled, isTrue);
-      expect(fakeFirestore.deletedDocPaths, contains('users/anon-user-456/gastos/gasto_anon'));
       expect(fakeRepo.limpiarDatosLocalesCalled, isTrue);
       expect(fakeStorage.storage.containsKey(AppConstants.prefApiKey), isFalse);
       expect(fakeAuth.signInAnonymouslyCalled, isTrue);
@@ -366,14 +249,13 @@ void main() {
         ),
       );
       final fakeAuth = FakeFirebaseAuth(currentUser: fakeUser);
-      final fakeFirestore = FakeFirebaseFirestore();
 
       final syncService = SyncService(
         repository: fakeRepo,
         auth: fakeAuth,
-        firestore: fakeFirestore,
         googleSignIn: fakeGoogle,
         secureStorage: fakeStorage,
+        firestorePurger: (uid) async {},
       );
 
       final error = await syncService.eliminarCuentaYDatos();
@@ -393,14 +275,13 @@ void main() {
         ),
       );
       final fakeAuth = FakeFirebaseAuth(currentUser: fakeUser);
-      final fakeFirestore = FakeFirebaseFirestore();
 
       final syncService = SyncService(
         repository: fakeRepo,
         auth: fakeAuth,
-        firestore: fakeFirestore,
         googleSignIn: fakeGoogle,
         secureStorage: fakeStorage,
+        firestorePurger: (uid) async {},
       );
 
       final error = await syncService.eliminarCuentaYDatos();

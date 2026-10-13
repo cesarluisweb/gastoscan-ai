@@ -18,6 +18,7 @@ class SyncService {
   final FirebaseFirestore? _customFirestore;
   final GoogleSignIn? _customGoogleSignIn;
   final FlutterSecureStorage? _customSecureStorage;
+  final Future<void> Function(String uid)? _customFirestorePurger;
 
   SyncService({
     GastoRepository? repository,
@@ -25,11 +26,13 @@ class SyncService {
     FirebaseFirestore? firestore,
     GoogleSignIn? googleSignIn,
     FlutterSecureStorage? secureStorage,
+    Future<void> Function(String uid)? firestorePurger,
   })  : _repository = repository ?? GastoRepository(),
         _customAuth = auth,
         _customFirestore = firestore,
         _customGoogleSignIn = googleSignIn,
-        _customSecureStorage = secureStorage;
+        _customSecureStorage = secureStorage,
+        _customFirestorePurger = firestorePurger;
 
   FirebaseAuth? get _auth {
     if (_customAuth != null) return _customAuth;
@@ -391,8 +394,10 @@ class SyncService {
         final uid = user.uid;
 
         // 1. Purgar datos remotos en Firestore (gastos y presupuestos)
-        if (_firestore != null) {
-          try {
+        try {
+          if (_customFirestorePurger != null) {
+            await _customFirestorePurger!(uid);
+          } else if (_firestore != null) {
             final gastosSnap = await _firestore!
                 .collection('users')
                 .doc(uid)
@@ -410,16 +415,16 @@ class SyncService {
             for (final doc in presupuestosSnap.docs) {
               await doc.reference.delete();
             }
-          } on FirebaseException catch (e) {
-            debugPrint("Error al purgar Firestore durante eliminación de cuenta: $e");
-            if (e.code == 'unavailable' || e.code == 'network-request-failed') {
-              return 'Sin conexión a internet. Verifica tu red para eliminar los datos en la nube.';
-            }
-            return 'Error al eliminar datos en la nube: ${e.message ?? e.code}';
-          } catch (e) {
-            debugPrint("Error inesperado al purgar Firestore: $e");
-            return 'Error al eliminar datos en la nube: $e';
           }
+        } on FirebaseException catch (e) {
+          debugPrint("Error al purgar Firestore durante eliminación de cuenta: $e");
+          if (e.code == 'unavailable' || e.code == 'network-request-failed') {
+            return 'Sin conexión a internet. Verifica tu red para eliminar los datos en la nube.';
+          }
+          return 'Error al eliminar datos en la nube: ${e.message ?? e.code}';
+        } catch (e) {
+          debugPrint("Error inesperado al purgar Firestore: $e");
+          return 'Error al eliminar datos en la nube: $e';
         }
 
         // 2. Eliminar la cuenta en Firebase Auth (aplica para cuentas vinculadas y anónimas)
