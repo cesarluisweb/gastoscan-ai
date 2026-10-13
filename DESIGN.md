@@ -171,3 +171,17 @@ Row(
 3. **Microcopy de Tranquilidad y Privacidad:**
    - En pantallas de autenticación o respaldo: *"Solo usamos tu cuenta para respaldar tus facturas en tu propio espacio privado. Sin bancos ni contraseñas."*
    - Cero jerga corporativa: Directo a la utilidad del usuario sin rodeos.
+
+---
+
+## 6. Patrones de UX Financiera y Claridad Numérica
+
+### 6.1 Saldo Restante vs. Ingresos
+- **Prohibición del signo `+` en Saldos Restantes:** NUNCA anteponer el signo `+` a montos de saldo restante para gastar (ej. evitar `+$444,00`). En interfaces financieras, el signo `+` en verde comunica un ingreso de dinero (*inflow*).
+- **Etiquetado Claro:** Usar siempre términos que reflejen capacidad de gasto restante: *"Disponible"*, *"Disponible para gastar"* o *"Te queda"*, reservando el signo `-` en rojo exclusivamente para cuando el presupuesto o límite sea superado (*"Presupuesto superado por -$X"*).
+
+### 6.2 Semántica de Metas de Ahorro
+- Evitar términos ambiguos como únicamente *"Protegida"*. Utilizar etiquetas explícitas que identifiquen la meta: *"Ahorro protegido"*, *"Ahorro en riesgo"* o *"Ahorro comprometido"*.
+
+### 6.3 Accesibilidad y Contraste WCAG en Textos Secundarios
+- En interfaces web y móviles, los textos secundarios (metadatos, promedios, subtítulos informativos y enlaces de acción) deben mantener un contraste mínimo de 4.5:1 (WCAG AA). Queda prohibido usar grises excesivamente claros (`text-slate-400` en web o colores por debajo de `AppColors.textSecondary` en móvil) en elementos interactivos o informativos clave.
