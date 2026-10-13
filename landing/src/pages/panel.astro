@@ -1548,7 +1548,7 @@ import '../styles/global.css';
                         <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Categoría</label>
                         <select class="item-input-cat w-full px-2.5 py-1 text-xs rounded-lg border border-slate-200 bg-slate-50 text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#FACC15]">
                             ${CATEGORIAS_DEF.map(c => `
-                                <option value="${c}" ${c === normalizarCategoria(item.categoria || 'Alimentación') ? 'selected' : ''}>
+                                <option value="${c}" ${c === normalizarCategoria(item.categoria || 'Otros') ? 'selected' : ''}>
                                     ${CATEGORIA_ICONS[c] || '🏷️'} ${c}
                                 </option>
                             `).join('')}
@@ -1693,7 +1693,7 @@ import '../styles/global.css';
                 cantidad: 1,
                 precio: '',
                 total: '',
-                categoria: 'Alimentación'
+                categoria: 'Otros'
             });
             renderExpenseItems();
         });
@@ -1712,7 +1712,7 @@ import '../styles/global.css';
 
             // Iniciar con 1 ítem por defecto
             modalExpenseItems = [
-                { descripcion: '', cantidad: 1, precio: '', total: '', categoria: 'Alimentación' }
+                { descripcion: '', cantidad: 1, precio: '', total: '', categoria: 'Otros' }
             ];
 
             renderExpenseItems();
