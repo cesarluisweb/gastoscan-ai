@@ -20,8 +20,10 @@
   13. **Rediseño UX Acciones de Cuenta y Cierre Automático al Eliminar:** Rediseñados botones en `more_screen.dart` a fila compacta (cerrar gris neutro, eliminar rojo). Reautenticación Google ante `requires-recent-login` y cierre forzado para evitar cuentas zombi.
   14. **Diagnóstico Error 10 Google Sign-In (Play App Signing):** Identificada discrepancia de firmas: Google Play re-firma el APK con su propia clave privada. Documentado en `DOC_CONFIGURACION_GOOGLE_SIGNIN.md` las huellas SHA-1 de `rindemas.jks` y los pasos en Firebase Console y Google Play Console. Centralizado Web Client ID en `AppConstants`.
   15. **Unificación Total del Sistema Multimoneda (EUR, USDT, VES, USD):** Corregido CategoryChart (distribución de gastos) para reflejar la divisa seleccionada y convertir montos de la dona y compras individuales; corregido ExpenseCard y PendingExpenseCard para usar tasas dinámicas (eliminada tasa fija 1.08 en EUR y 1:1 en USDT); unificada pantalla de Análisis para comparar en la moneda activa. Homologado panel web (`landing/`) con paridad exacta en USDT y pulido de saldo restante y badges de salud de ahorro.
+  16. **Unificación de Categorías y Normalización de Sinónimos (Web y App):** Homologado el catálogo del panel web a las 8 categorías oficiales (`Alimentación`, `Salud`, `Higiene`, `Educación`, `Hogar`, `Servicios`, `Transporte`, `Otros`). Implementada normalización defensiva en web y app (`AppConstants.normalizarCategoria`) para mapear 'Alimentos' -> 'Alimentación' tanto en Firestore como en SQLite. Corregido icono y color en Gráficos y Tarjetas. Despliegue en Firebase Hosting validado y CI en verde (`success`).
 
 ## Decisiones Técnicas y de Negocio Recientes
+- **Normalización Canónica de Categorías:** En toda deserialización o carga de datos externos, `AppConstants.normalizarCategoria` (y su función homóloga en JavaScript en el panel web) unifica sinónimos frecuentes ('Alimentos', 'comida', 'farmacia', etc.) al catálogo canónico para garantizar que los mapas de iconos y colores nunca caigan en el fallback de 'Otros'.
 - **Jerarquía Visual de Acciones de Cuenta:** Cerrar sesión es una acción rutinaria/reversible y se muestra en gris neutro; eliminar cuenta es destructiva y se muestra en rojo. Ambas en fila compacta reduciendo la altura de la tarjeta en 50%.
 - **Eliminación Segura y Cierre Automático:** Al eliminar cuenta, siempre se cierra la sesión (`auth.signOut`), se limpia la base SQLite local, se inicia sesión anónima limpia y se purga Firestore, sin dejar al usuario en estado vinculado.
 - **Facturación de Gemini API:** Cuenta prepago Tier 1 activa en Google AI Studio. Se mantiene el enrutamiento exclusivo a Flash-Lite (`gemini-3.1-flash-lite` y `gemini-3.5-flash-lite`) vía Cloudflare Gateway para maximizar rendimiento del saldo.
@@ -33,6 +35,7 @@
 - **Package Name Oficial:** `com.cesarluis.rindemas` en Google Play Console y Android.
 
 ## Errores y Fricciones a Evitar
+- Discrepancias de catálogo entre web y móvil: Toda lista de categorías en la web debe provenir de las constantes canónicas de la app móvil.
 - NUNCA usar `jarsigner` para re-firmar un AAB en CI (produce doble cadena de certificados y rechazo en Play Console); la firma debe ser nativa en Gradle.
 - Minutos de GitHub Actions en repositorio privado: Si la cuenta llega al límite, los runners no arrancan; requiere revisar Billing o pasar a público temporalmente para compilar.
 - Tras finalizar compilaciones en público, retornar a 'Private' para proteger el código fuente.
@@ -41,4 +44,4 @@
 - Contraste estricto en UI (`DESIGN.md`): Texto sobre amarillo SIEMPRE negro; texto sobre blanco SIEMPRE negro o gris, NUNCA amarillo.
 
 ## Próximo Paso Inmediato
-- Monitorear CI hasta confirmación en verde y verificar la experiencia de usuario con César.
+- Validar sincronización y experiencia de categorías en la app móvil.
