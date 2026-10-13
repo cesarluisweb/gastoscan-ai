@@ -8,7 +8,13 @@ if (!fs.existsSync(outDir)) {
 }
 
 // 1024 x 500 Canvas
-// Phone is shifted right and centered vertically with margin
+// Minimalist, high-converting layout:
+// Top: Logo image + "Rinde Más" brand name
+// Main Title: "Control de gastos inteligente en Bs. y $" (with yellow curved stroke right under "inteligente")
+// Subtitle: "Haz rendir tu dinero sin esfuerzo. Nuestra IA organiza tus finanzas personales en Venezuela por ti."
+// CTA Button: "Descargar gratis" (Yellow background with black text)
+// Right: Clean smartphone mockup
+
 const svgBase = `
 <svg width="1024" height="500" viewBox="0 0 1024 500" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -19,104 +25,85 @@ const svgBase = `
     </linearGradient>
 
     <radialGradient id="phoneGlow" cx="84%" cy="50%" r="48%">
-      <stop offset="0%" stop-color="#FACC15" stop-opacity="0.32" />
+      <stop offset="0%" stop-color="#FACC15" stop-opacity="0.30" />
       <stop offset="55%" stop-color="#FEF08A" stop-opacity="0.10" />
       <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
     </radialGradient>
 
     <filter id="btnShadow" x="-10%" y="-20%" width="130%" height="160%">
-      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#CA8A04" flood-opacity="0.28" />
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#CA8A04" flood-opacity="0.25" />
+    </filter>
+
+    <filter id="logoShadow" x="-10%" y="-10%" width="125%" height="125%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0F172A" flood-opacity="0.12" />
     </filter>
   </defs>
 
   <rect width="1024" height="500" fill="url(#bgGrad)" />
   <rect width="1024" height="500" fill="url(#phoneGlow)" />
 
-  <!-- LEFT COLUMN CONTENT (x = 52) -->
+  <!-- LEFT COLUMN CONTENT (x = 58) -->
 
-  <!-- Tag Pill -->
-  <g transform="translate(52, 42)">
-    <rect width="216" height="30" rx="15" fill="#0F172A" />
-    <circle cx="16" cy="15" r="4.5" fill="#FACC15" />
-    <text x="29" y="20" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="800" fill="#FACC15" letter-spacing="0.8">FINANZAS INTELIGENTES VE</text>
+  <!-- 1. Brand Row: Logo (composited by sharp at left=58, top=58) + Brand Text -->
+  <g transform="translate(108, 86)">
+    <text font-family="system-ui, -apple-system, sans-serif" font-size="23" font-weight="900" fill="#0F172A" letter-spacing="-0.4">
+      Rinde Más
+    </text>
   </g>
 
-  <!-- Headline -->
-  <g transform="translate(52, 125)">
-    <text font-family="system-ui, -apple-system, sans-serif" font-size="44" font-weight="900" fill="#0F172A" letter-spacing="-0.8">
+  <!-- 2. Headline: Clean, large, with exact underline under 'inteligente' -->
+  <g transform="translate(58, 168)">
+    <text font-family="system-ui, -apple-system, sans-serif" font-size="46" font-weight="900" fill="#0F172A" letter-spacing="-1">
       Control de gastos
     </text>
     
-    <g transform="translate(0, 52)">
-      <path d="M 2 46 C 70 38, 170 38, 238 43" stroke="#FACC15" stroke-width="6" stroke-linecap="round" fill="none" />
-      <text font-family="system-ui, -apple-system, sans-serif" font-size="44" font-weight="900" fill="#0F172A" letter-spacing="-0.8">
+    <g transform="translate(0, 56)">
+      <!-- Yellow curved accent stroke exactly under 'inteligente' (starts at x=2, width ~232, y=6) -->
+      <path d="M 3 8 C 65 -1, 165 -1, 235 6" stroke="#FACC15" stroke-width="6" stroke-linecap="round" fill="none" />
+      <text font-family="system-ui, -apple-system, sans-serif" font-size="46" font-weight="900" fill="#0F172A" letter-spacing="-1">
         inteligente <tspan fill="#0F172A">en Bs. y $</tspan>
       </text>
     </g>
   </g>
 
-  <!-- Subtitle -->
-  <g transform="translate(52, 246)">
-    <text font-family="system-ui, -apple-system, sans-serif" font-size="15.5" font-weight="500" fill="#475569" letter-spacing="-0.2">
+  <!-- 3. Subtitle / Value proposition -->
+  <g transform="translate(58, 310)">
+    <text font-family="system-ui, -apple-system, sans-serif" font-size="16.5" font-weight="500" fill="#475569" letter-spacing="-0.2">
       Haz rendir tu dinero sin esfuerzo. Nuestra IA organiza tus finanzas
     </text>
-    <text y="24" font-family="system-ui, -apple-system, sans-serif" font-size="15.5" font-weight="500" fill="#475569" letter-spacing="-0.2">
+    <text y="26" font-family="system-ui, -apple-system, sans-serif" font-size="16.5" font-weight="500" fill="#475569" letter-spacing="-0.2">
       personales en Venezuela por ti.
     </text>
   </g>
 
-  <!-- CTA Button: Negro sobre fondo amarillo (DESIGN.md) -->
-  <g transform="translate(52, 305)" filter="url(#btnShadow)">
-    <rect width="170" height="42" rx="21" fill="#FACC15" />
-    <text x="85" y="26" font-family="system-ui, -apple-system, sans-serif" font-size="14.5" font-weight="800" fill="#000000" text-anchor="middle">
+  <!-- 4. CTA Pill Button: 'Descargar gratis' (DESIGN.md: Amarillo con texto NEGRO) -->
+  <g transform="translate(58, 384)" filter="url(#btnShadow)">
+    <rect width="186" height="46" rx="23" fill="#FACC15" />
+    <text x="93" y="28" font-family="system-ui, -apple-system, sans-serif" font-size="15.5" font-weight="800" fill="#000000" text-anchor="middle">
       Descargar gratis
     </text>
   </g>
-
-  <!-- Feature Badges -->
-  <g transform="translate(52, 370)">
-    <g transform="translate(0, 0)">
-      <rect width="180" height="34" rx="10" fill="#0F172A" />
-      <text x="90" y="22" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF" text-anchor="middle">
-        Facturas con IA
-      </text>
-    </g>
-
-    <g transform="translate(192, 0)">
-      <rect width="180" height="34" rx="10" fill="#0F172A" />
-      <text x="90" y="22" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF" text-anchor="middle">
-        Tasa Oficial BCV
-      </text>
-    </g>
-
-    <g transform="translate(0, 42)">
-      <rect width="180" height="34" rx="10" fill="#0F172A" />
-      <text x="90" y="22" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF" text-anchor="middle">
-        Metas de Ahorro
-      </text>
-    </g>
-
-    <g transform="translate(192, 42)">
-      <rect width="180" height="34" rx="10" fill="#0F172A" />
-      <text x="90" y="22" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF" text-anchor="middle">
-        100% Seguro y Privado
-      </text>
-    </g>
-  </g>
-
-  <!-- Microcopy -->
-  <text x="52" y="476" font-family="system-ui, -apple-system, sans-serif" font-size="11.5" font-weight="500" fill="#64748B">
-    Sin cuentas bancarias ni contraseñas · Diseñado para la economía real · Hecho en Venezuela
-  </text>
 </svg>
 `;
 
 async function buildFeatureGraphic() {
   const appScreenPath = 'C:/Development/Control de gastos VE/landing/public/app-screen.jpg';
+  const logoPath = 'C:/Development/Control de gastos VE/landing/public/logo.jpg';
 
-  // Total canvas height is 500. Let's make the phone height 464, leaving 18px top and 18px bottom!
-  // Width will be 216px.
-  // Phone will sit at left = 754, top = 18. This leaves 54px on the right margin!
+  // 1. Process Logo (40x40 rounded)
+  const logoSize = 40;
+  const logoResized = await sharp(logoPath).resize(logoSize, logoSize).toBuffer();
+  const logoMask = Buffer.from(`
+    <svg width="${logoSize}" height="${logoSize}">
+      <rect width="${logoSize}" height="${logoSize}" rx="10" ry="10" fill="#FFF" />
+    </svg>
+  `);
+  const logoRounded = await sharp(logoResized)
+    .composite([{ input: logoMask, blend: 'dest-in' }])
+    .png()
+    .toBuffer();
+
+  // 2. Process Smartphone Frame
   const phoneWidth = 216;
   const phoneHeight = 464;
   const screenWidth = 202;
@@ -166,11 +153,17 @@ async function buildFeatureGraphic() {
     .png()
     .toBuffer();
 
+  // 3. Composite everything onto canvas
   const baseSvgBuffer = Buffer.from(svgBase);
   const finalOutput = path.join(outDir, 'grafico_funciones_1024x500.png');
 
   await sharp(baseSvgBuffer)
     .composite([
+      {
+        input: logoRounded,
+        left: 58,
+        top: 58
+      },
       {
         input: assembledPhone,
         left: 750,
@@ -180,7 +173,7 @@ async function buildFeatureGraphic() {
     .png()
     .toFile(finalOutput);
 
-  console.log('SUCCESS: Final adjusted graphic written to:', finalOutput);
+  console.log('SUCCESS: Clean Minimalist Feature Graphic generated at:', finalOutput);
 }
 
 buildFeatureGraphic().catch(err => {
