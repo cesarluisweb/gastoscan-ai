@@ -24,6 +24,7 @@
   17. **Ficha Play Store Subida:** Textos oficiales, icono, gráfico de funciones y 5 capturas en alta resolución completados en Play Console (`DOC_FICHA_PLAY_STORE.md`).
   18. **Detección de Moneda en Voz y Chat:** Actualizado Gateway y cliente Flutter con extracción determinista de moneda (VES, USD, EUR, USDT) y montos sin forzar USD por defecto. CI en verde (`success`).
   19. **Contraste de Botón Cancelar y Tema TextButton:** Corregido botón 'Cancelar' en diálogo de descarte (`review_expense_screen.dart`) a gris (`AppColors.textSecondary`), 'Descartar' a rojo (`AppColors.error`), y establecido `textButtonTheme` en `AppTheme` con `AppColors.textPrimary` para evitar texto amarillo en botones planos.
+  20. **Corrección Descalce de Monedas y Alertas Presupuesto (FIN-01 y FIN-02):** Unificado Dashboard (`dashboard_screen.dart`) para convertir presupuestos a la divisa activa (VES/USD/EUR/USDT) antes de pasarlos a `CategoryChart`, eliminando descalce y barras distorsionadas; actualizado `getSpentForCategory` e `isCategoryOverBudget` en `GastoProvider` con parámetro `moneda` opcional para alertar sobregiros correctamente en Bolívares. Tests unitarios y de widgets validados en CI en verde (`success`).
 
 ## Decisiones Técnicas y de Negocio Recientes
 - **Contraste de Botones Secundarios:** Los botones 'Cancelar' / 'Volver' en popups usan `AppColors.textSecondary` (gris). `textButtonTheme` global previene que botones planos hereden el amarillo primario sobre fondos claros.
