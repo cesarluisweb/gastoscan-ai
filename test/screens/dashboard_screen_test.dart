@@ -93,12 +93,13 @@ class FakeSettingsProvider extends SettingsProvider {
   String _customMoneda = 'USD';
   double _customTasa = 40.0;
 
-  void setMonedaPrincipal(String m) {
+  @override
+  Future<void> setMonedaPrincipal(String m) async {
     _customMoneda = m;
     notifyListeners();
   }
 
-  void setTasaCambioVesUsd(double t) {
+  void setTestTasaCambioVesUsd(double t) {
     _customTasa = t;
     notifyListeners();
   }
@@ -195,7 +196,7 @@ void main() {
       });
 
       settingsProvider.setMonedaPrincipal('VES');
-      settingsProvider.setTasaCambioVesUsd(40.0);
+      settingsProvider.setTestTasaCambioVesUsd(40.0);
       gastoProvider.setMonedaPresupuestoVal('USD');
       gastoProvider.setPresupuestos({'Alimentacion': 50.0});
       gastoProvider.setPresupuestoGeneralVal(100.0);
@@ -224,7 +225,7 @@ void main() {
       });
 
       settingsProvider.setMonedaPrincipal('USD');
-      settingsProvider.setTasaCambioVesUsd(40.0);
+      settingsProvider.setTestTasaCambioVesUsd(40.0);
       gastoProvider.setMonedaPresupuestoVal('USD');
       gastoProvider.setPresupuestos({'Alimentacion': 50.0});
       gastoProvider.setPresupuestoGeneralVal(100.0);
