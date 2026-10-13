@@ -380,11 +380,13 @@ class GastoProvider with ChangeNotifier {
     return 0.0;
   }
 
-  double getSpentForCategory(String categoria) {
-    if (_totalesPorCategoria.containsKey(categoria)) {
-      return _totalesPorCategoria[categoria]!;
+  double getSpentForCategory(String categoria, {String? moneda}) {
+    final isVes = (moneda?.toUpperCase() == 'VES');
+    final map = isVes ? totalesPorCategoriaVes : _totalesPorCategoria;
+    if (map.containsKey(categoria)) {
+      return map[categoria]!;
     }
-    for (final entry in _totalesPorCategoria.entries) {
+    for (final entry in map.entries) {
       if (entry.key.toLowerCase().trim() == categoria.toLowerCase().trim()) {
         return entry.value;
       }
@@ -392,10 +394,11 @@ class GastoProvider with ChangeNotifier {
     return 0.0;
   }
 
-  bool isCategoryOverBudget(String categoria) {
+  bool isCategoryOverBudget(String categoria, {String? moneda}) {
     final budget = getPresupuestoCategoria(categoria);
     if (budget <= 0) return false;
-    final spent = getSpentForCategory(categoria);
+    final effectiveMoneda = moneda ?? _monedaPresupuesto;
+    final spent = getSpentForCategory(categoria, moneda: effectiveMoneda);
     return spent > budget;
   }
 

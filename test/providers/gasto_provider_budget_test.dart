@@ -3,21 +3,38 @@ import 'package:gastoscan_ai/providers/gasto_provider.dart';
 
 class MockGastoProvider extends GastoProvider {
   final Map<String, double> _testTotales = {};
+  final Map<String, double> _testTotalesVes = {};
   final Map<String, double> _testPresupuestos = {};
   double _testPresupuestoGeneral = 0.0;
+  String _testMonedaPresupuesto = 'USD';
 
   MockGastoProvider({
     Map<String, double>? initialTotales,
+    Map<String, double>? initialTotalesVes,
     Map<String, double>? initialPresupuestos,
     double initialPresupuestoGeneral = 0.0,
-  }) : _testPresupuestoGeneral = initialPresupuestoGeneral {
+    String initialMonedaPresupuesto = 'USD',
+  })  : _testPresupuestoGeneral = initialPresupuestoGeneral,
+        _testMonedaPresupuesto = initialMonedaPresupuesto {
     if (initialTotales != null) _testTotales.addAll(initialTotales);
+    if (initialTotalesVes != null) _testTotalesVes.addAll(initialTotalesVes);
     if (initialPresupuestos != null) _testPresupuestos.addAll(initialPresupuestos);
   }
 
   void setTestTotales(Map<String, double> totales) {
     _testTotales.clear();
     _testTotales.addAll(totales);
+    notifyListeners();
+  }
+
+  void setTestTotalesVes(Map<String, double> totales) {
+    _testTotalesVes.clear();
+    _testTotalesVes.addAll(totales);
+    notifyListeners();
+  }
+
+  void setTestMonedaPresupuesto(String moneda) {
+    _testMonedaPresupuesto = moneda;
     notifyListeners();
   }
 
@@ -28,10 +45,17 @@ class MockGastoProvider extends GastoProvider {
   }
 
   @override
+  String get monedaPresupuesto => _testMonedaPresupuesto;
+
+  @override
   double get presupuestoGeneral => _testPresupuestoGeneral;
 
   @override
   Map<String, double> get totalesPorCategoria => _testTotales;
+
+  @override
+  Map<String, double> get totalesPorCategoriaVes =>
+      _testTotalesVes.isNotEmpty ? _testTotalesVes : _testTotales;
 
   @override
   Map<String, double> get presupuestosPorCategoria => _testPresupuestos;
@@ -84,11 +108,13 @@ class MockGastoProvider extends GastoProvider {
   }
 
   @override
-  double getSpentForCategory(String categoria) {
-    if (_testTotales.containsKey(categoria)) {
-      return _testTotales[categoria]!;
+  double getSpentForCategory(String categoria, {String? moneda}) {
+    final isVes = (moneda?.toUpperCase() == 'VES');
+    final map = isVes ? totalesPorCategoriaVes : _testTotales;
+    if (map.containsKey(categoria)) {
+      return map[categoria]!;
     }
-    for (final entry in _testTotales.entries) {
+    for (final entry in map.entries) {
       if (entry.key.toLowerCase().trim() == categoria.toLowerCase().trim()) {
         return entry.value;
       }
@@ -97,10 +123,11 @@ class MockGastoProvider extends GastoProvider {
   }
 
   @override
-  bool isCategoryOverBudget(String categoria) {
+  bool isCategoryOverBudget(String categoria, {String? moneda}) {
     final budget = getPresupuestoCategoria(categoria);
     if (budget <= 0) return false;
-    final spent = getSpentForCategory(categoria);
+    final effectiveMoneda = moneda ?? monedaPresupuesto;
+    final spent = getSpentForCategory(categoria, moneda: effectiveMoneda);
     return spent > budget;
   }
 
@@ -196,6 +223,38 @@ void main() {
 
       final allOk = await provider.guardarTodoElPresupuesto(600.0, {'Alimentacion': 250.0});
       expect(allOk, isTrue);
+    });
+
+    test('getSpentForCategory returns USD by default and VES when requested', () {
+      provider.setTestTotales({'Alimentacion': 25.0});
+      provider.setTestTotalesVes({'Alimentacion': 1000.0});
+
+      expect(provider.getSpentForCategory('Alimentacion'), 25.0);
+      expect(provider.getSpentForCategory('Alimentacion', moneda: 'USD'), 25.0);
+      expect(provider.getSpentForCategory('Alimentacion', moneda: 'VES'), 1000.0);
+    });
+
+    test('isCategoryOverBudget works correctly in VES when budget is set in VES', () async {
+      provider.setTestMonedaPresupuesto('VES');
+      await provider.setPresupuestoCategoria('Alimentacion', 4000.0, moneda: 'VES');
+      provider.setTestTotales({'Alimentacion': 50.0});
+      provider.setTestTotalesVes({'Alimentacion': 4500.0});
+
+      expect(provider.getPresupuestoCategoria('Alimentacion'), 4000.0);
+      expect(provider.getSpentForCategory('Alimentacion', moneda: 'VES'), 4500.0);
+      expect(provider.isCategoryOverBudget('Alimentacion'), isTrue);
+
+      provider.setTestTotalesVes({'Alimentacion': 3500.0});
+      expect(provider.isCategoryOverBudget('Alimentacion'), isFalse);
+    });
+
+    test('isCategoryOverBudget works correctly with explicit moneda parameter', () async {
+      await provider.setPresupuestoCategoria('Alimentacion', 1000.0);
+      provider.setTestTotales({'Alimentacion': 20.0});
+      provider.setTestTotalesVes({'Alimentacion': 1200.0});
+
+      expect(provider.isCategoryOverBudget('Alimentacion', moneda: 'VES'), isTrue);
+      expect(provider.isCategoryOverBudget('Alimentacion', moneda: 'USD'), isFalse);
     });
   });
 }

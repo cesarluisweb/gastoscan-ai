@@ -106,8 +106,10 @@ class FakeGastoProvider extends GastoProvider {
   }
 
   @override
-  bool isCategoryOverBudget(String categoria) {
-    final spent = totalesPorCategoria[categoria] ?? 0.0;
+  bool isCategoryOverBudget(String categoria, {String? moneda}) {
+    final effectiveMoneda = moneda ?? monedaPresupuesto;
+    final map = effectiveMoneda == 'VES' ? totalesPorCategoriaVes : totalesPorCategoria;
+    final spent = map[categoria] ?? 0.0;
     final budget = getPresupuestoCategoria(categoria);
     return budget > 0 && spent > budget;
   }
