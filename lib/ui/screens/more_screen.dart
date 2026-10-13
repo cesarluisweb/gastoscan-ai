@@ -24,7 +24,15 @@ enum MoreSubView { hub, shoppingList, chat, receiptGallery }
 
 class MoreScreen extends StatefulWidget {
   final VoidCallback? onNavigateToHome;
-  const MoreScreen({Key? key, this.onNavigateToHome}) : super(key: key);
+  final User? customUser;
+  final Stream<User?>? customUserStream;
+
+  const MoreScreen({
+    Key? key,
+    this.onNavigateToHome,
+    this.customUser,
+    this.customUserStream,
+  }) : super(key: key);
 
   @override
   State<MoreScreen> createState() => MoreScreenState();
@@ -118,6 +126,7 @@ class MoreScreenState extends State<MoreScreen> {
   }
 
   Stream<User?>? get _userStream {
+    if (widget.customUserStream != null) return widget.customUserStream;
     if (!_isFirebaseInitialized) return null;
     try {
       return FirebaseAuth.instance.userChanges();
@@ -127,6 +136,7 @@ class MoreScreenState extends State<MoreScreen> {
   }
 
   User? get _currentUser {
+    if (widget.customUser != null) return widget.customUser;
     if (!_isFirebaseInitialized) return null;
     try {
       return FirebaseAuth.instance.currentUser;

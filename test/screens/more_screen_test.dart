@@ -1,11 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gastoscan_ai/data/datasources/local/database_helper.dart';
 import 'package:gastoscan_ai/providers/gasto_provider.dart';
 import 'package:gastoscan_ai/providers/scan_queue_provider.dart';
 import 'package:gastoscan_ai/providers/settings_provider.dart';
 import 'package:gastoscan_ai/ui/screens/more_screen.dart';
+
+class FakeTestUser extends Fake implements User {
+  @override
+  bool get isAnonymous => false;
+
+  @override
+  String get uid => 'user-test-uid';
+
+  @override
+  String? get email => 'test@rindemas.com';
+
+  @override
+  String? get displayName => 'Usuario Test';
+
+  @override
+  String? get photoURL => null;
+
+  @override
+  List<UserInfo> get providerData => [];
+}
 
 class FakeDatabaseHelper extends DatabaseHelper {
   FakeDatabaseHelper() : super.test();
@@ -82,15 +103,15 @@ void main() {
       binding.window.clearDevicePixelRatioTestValue();
     });
 
-    Widget createWidgetUnderTest() {
+    Widget createWidgetUnderTest({User? customUser}) {
       return MultiProvider(
         providers: [
           ChangeNotifierProvider<GastoProvider>.value(value: gastoProvider),
           ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
           ChangeNotifierProvider<ScanQueueProvider>.value(value: scanQueueProvider),
         ],
-        child: const MaterialApp(
-          home: MoreScreen(),
+        child: MaterialApp(
+          home: MoreScreen(customUser: customUser),
         ),
       );
     }
@@ -228,7 +249,7 @@ void main() {
 
     testWidgets('tapping eliminar cuenta and confirming shows success snackbar on success', (tester) async {
       gastoProvider.errorEliminarCuenta = null;
-      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpWidget(createWidgetUnderTest(customUser: FakeTestUser()));
       await tester.pumpAndSettle();
 
       await tester.tap(find.byKey(const Key('btn_eliminar_cuenta'), skipOffstage: false));
@@ -243,7 +264,7 @@ void main() {
 
     testWidgets('tapping eliminar cuenta and confirming shows error snackbar on failure', (tester) async {
       gastoProvider.errorEliminarCuenta = 'Sin conexión a internet. Verifica tu red.';
-      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpWidget(createWidgetUnderTest(customUser: FakeTestUser()));
       await tester.pumpAndSettle();
 
       await tester.tap(find.byKey(const Key('btn_eliminar_cuenta'), skipOffstage: false));
