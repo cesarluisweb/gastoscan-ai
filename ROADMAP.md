@@ -37,7 +37,7 @@ Este documento centraliza las ideas y mejoras pendientes, ordenadas estratégica
 *El paso para empezar a captar usuarios reales en Venezuela.*
 - ~~**Landing Page (rindemas.cesarluis.com):** (Completada ✅)~~ Creada en Astro + Tailwind y desplegada en Firebase Hosting con mockup de smartphone, propuesta de valor y guía de instalación directa de APK.
 - **Código QR de Descarga en Landing (Desktop):** Incorporar tarjeta con código QR en la sección de descarga para facilitar la instalación directa en el teléfono al navegar desde computadoras.
-- **Subida a Google Play Store:** (En proceso 🔄) Configuración de ficha, pruebas cerradas (20 testers por 14 días) y posterior actualización de botones y QR en landing apuntando a Play Store.
+- **Subida a Google Play Store:** (En proceso 🔄) Textos oficiales, icono, gráfico de funciones y 5 capturas en alta resolución subidos a Play Console (`DOC_FICHA_PLAY_STORE.md`). Pendiente: completar cuestionarios de política de la tienda y configurar pista de Closed Testing (12 testers por 14 días).
 - **Plan de Crecimiento Inicial (100 Usuarios):** (Documentado ✅) Playbook táctico definido en `marketing_plan.md` y `.agents/skills/growth-first-100-users/SKILL.md`.
 - **Correo de bienvenida automatizado:** Disparar un correo de bienvenida y primeros pasos cuando el usuario vincule su cuenta de Google (mediante Cloud Functions / trigger de autenticación o Firestore).
 - ~~**Canal directo de soporte y contacto en "Más":** (Completada ✅)~~ Tarjeta con acción "Escribir a soporte" para abrir chat directo por WhatsApp al número de soporte oficial.

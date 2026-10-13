@@ -56,13 +56,15 @@ Todos los recursos listos para subir a Google Play Console se encuentran central
 
 | Recurso | Archivo | Dimensiones | Formato y Peso | Estado |
 |---|---|---|---|---|
-| **Icono de la app** | `assets/icon/playstore_icon_512.png` | 512 × 512 px | PNG (228 KB, < 1 MB) | Listo ✅ |
-| **Gráfico de funciones** | `Google Play Assets/grafico_funciones_1024x500.png` | 1024 × 500 px | PNG (152 KB, < 15 MB) | Listo ✅ |
-| **Captura 1: Control Total** | `Google Play Assets/screenshots/screenshot_1_control_total.png` | 1080 × 2280 px | PNG (710 KB) | Listo ✅ |
-| **Captura 2: Registro Inteligente** | `Google Play Assets/screenshots/screenshot_2_registro_inteligente.png` | 1080 × 2280 px | PNG (482 KB) | Listo ✅ |
-| **Captura 3: Finanzas y Metas** | `Google Play Assets/screenshots/screenshot_3_finanzas_y_metas.png` | 1080 × 2280 px | PNG (645 KB) | Listo ✅ |
-| **Captura 4: Asistente con IA** | `Google Play Assets/screenshots/screenshot_4_asistente_con_ia.png` | 1080 × 2280 px | PNG (684 KB) | Listo ✅ |
-| **Captura 5: Seguridad y Privacidad** | `Google Play Assets/screenshots/screenshot_5_seguridad_y_privacidad.png` | 1080 × 2280 px | PNG (532 KB) | Listo ✅ |
+| **Icono de la app** | `assets/icon/playstore_icon_512.png` | 512 × 512 px | PNG (228 KB, < 1 MB) | Subido a Play Console ✅ |
+| **Gráfico de funciones** | `Google Play Assets/grafico_funciones_1024x500.png` | 1024 × 500 px | PNG (152 KB, < 15 MB) | Subido a Play Console ✅ |
+| **Captura 1: Control Total** | `Google Play Assets/screenshots/screenshot_1_control_total.png` | 1080 × 2280 px | PNG (710 KB) | Subido a Play Console ✅ |
+| **Captura 2: Registro Inteligente** | `Google Play Assets/screenshots/screenshot_2_registro_inteligente.png` | 1080 × 2280 px | PNG (482 KB) | Subido a Play Console ✅ |
+| **Captura 3: Finanzas y Metas** | `Google Play Assets/screenshots/screenshot_3_finanzas_y_metas.png` | 1080 × 2280 px | PNG (645 KB) | Subido a Play Console ✅ |
+| **Captura 4: Asistente con IA** | `Google Play Assets/screenshots/screenshot_4_asistente_con_ia.png` | 1080 × 2280 px | PNG (684 KB) | Subido a Play Console ✅ |
+| **Captura 5: Seguridad y Privacidad** | `Google Play Assets/screenshots/screenshot_5_seguridad_y_privacidad.png` | 1080 × 2280 px | PNG (532 KB) | Subido a Play Console ✅ |
+
+> **Fecha de subida a Google Play Console:** 13 de octubre de 2026.
 
 ---
 
