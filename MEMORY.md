@@ -3,50 +3,27 @@
 
 ## Estado Actual Inmediato
 - **Rama:** `main`.
-- **Fase activa:** Finalizadas Fases 1 a 6 (Estabilidad IA, Comprobantes persistentes, Reportes Privacidad, Mejoras UI Tasas).
+- **Fase activa:** Finalizada corrección integral del flujo de eliminación de datos y cuenta.
 - **Últimos hitos:** 
-  1. **Cuenta de Desarrollador Google Play Console Creada y Pagada ($25 USD):** Pago exitoso procesado mediante la ruta `Zinli` → `OKX P2P` → `OKX Pay` → `OKX Card` → `Google Payments`. Cuenta "Rinde Más" lista para configuración.
-  2. **Actualización de Playbook y Aprendizaje (/learn):** Documentación técnica y skill `growth-first-100-users` actualizados con la ruta de pago (evitando error `OR_CCR_61`), el requisito de 12+ testers por 14 días y la bitácora obligatoria para la solicitud de producción.
-  3. **Modernización y Paridad del Panel Web:** Integración de `meta_ahorro`, salud financiera, 4 divisas (USD, VES, EUR, USDT) y despliegue validado en Firebase Hosting (`rindemas.cesarluis.com`).
-  4. **Preparación de Google Play:** Paquete configurado a `com.cesarluis.rindemas` (Gradle, Kotlin, Firebase), ícono 512x512 PNG generado y pipeline CI actualizado para compilar y firmar `.aab` de producción.
-  5. **Auditoría y Robustecimiento de Seguridad (20/20):** Implementadas Security Headers en Firebase Hosting (`X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `X-XSS-Protection`, `Strict-Transport-Security`, `Permissions-Policy`, `Referrer-Policy`) desplegado y verificado en producción vía HTTP. Sanitizado endpoint de diagnóstico `/health` en Cloudflare Worker para eliminar exposición de fragmentos de API key y llamadas a Gemini no autenticadas. Activado `paths-ignore` en workflow de CI para no consumir minutos en documentación ni `.md`.
-  6. **Unificación del Selector de Meses (MonthSelectorBar):** Creado componente reutilizable `MonthSelectorBar` con botón píldora interactivo y diálogo de 12 meses + selector de año en Inicio, Gastos, Análisis y Galería de Comprobantes. Homologado diseño en Gastos eliminando contenedor blanco para paridad visual exacta.
-  7. **Políticas de Google Play y Documentos Legales Desplegados:** Actualización in-app redirigida a la tienda (`market://details?id=com.cesarluis.rindemas`), eliminados permisos de alarma exacta (`USE_EXACT_ALARM`), y publicadas páginas oficiales de Privacidad (`/privacidad`) y Términos (`/terminos`) en Firebase Hosting con validación HTTP 200.
-  8. **Unificación Terminológica de Cola y Facturas:** Fase de escaneo/análisis habla de 'fotos'; fase de resultados y notificaciones habla de 'facturas'. Corregida concordancia singular/plural.
-  9. **Aislamiento Total de Cuentas y Limpieza Local al Cerrar Sesión:** Creado método `limpiarBaseDatosLocal()` en SQLite/repositorio. Flujo de `cerrarSesion()` vacía el dispositivo para inicio en cero. Diálogo de decisión ("Conservar y sumar" vs "Reemplazar") al vincular o iniciar sesión si hay gastos locales huérfanos, erradicando contaminación de datos entre cuentas.
-  10. **Firma Oficial Única en AAB (Google Play):** Resuelto error de doble cadena de certificados. Firma nativa en Gradle (`signingConfigs.release`) con `rindemas.jks` y eliminación de re-firma manual con `jarsigner` en CI.
-  11. **Rediseño de Diálogo 'Compra Registrada' y Unificación de Vinculación:** Popup en modo anónimo adaptado a recomendación (ícono de check verde, texto amigable, botones de Google y 'Vincular con correo'). Unificado el modal de correo (`auth_modal_sheet.dart`) y diálogo de decisión ('Conservar y sumar' vs 'Reemplazar') tanto en Revisión de Gasto como en la pantalla Más cumpliendo DRY.
-  12. **Facturación Activa en Gemini API (Google AI Studio Tier 1):** Plan de pago por uso prepago activo ($5 USD de saldo inicial, límite $250 USD). Elimina la cuota gratuita diaria (1500 RPD) y estabiliza el servicio OCR y asistente IA.
-  13. **Rediseño UX Acciones de Cuenta y Cierre Automático al Eliminar:** Rediseñados botones en `more_screen.dart` a fila compacta (cerrar gris neutro, eliminar rojo). Reautenticación Google ante `requires-recent-login` y cierre forzado para evitar cuentas zombi.
-  14. **Diagnóstico Error 10 Google Sign-In (Play App Signing):** Identificada discrepancia de firmas: Google Play re-firma el APK con su propia clave privada. Documentado en `DOC_CONFIGURACION_GOOGLE_SIGNIN.md` las huellas SHA-1 de `rindemas.jks` y los pasos en Firebase Console y Google Play Console. Centralizado Web Client ID en `AppConstants`.
-  15. **Unificación Total del Sistema Multimoneda (EUR, USDT, VES, USD):** Corregido CategoryChart (distribución de gastos) para reflejar la divisa seleccionada y convertir montos de la dona y compras individuales; corregido ExpenseCard y PendingExpenseCard para usar tasas dinámicas (eliminada tasa fija 1.08 en EUR y 1:1 en USDT); unificada pantalla de Análisis para comparar en la moneda activa. Homologado panel web (`landing/`) con paridad exacta en USDT y pulido de saldo restante y badges de salud de ahorro.
-  16. **Unificación de Categorías y Normalización de Sinónimos (Web y App):** Homologado el catálogo del panel web a las 8 categorías oficiales (`Alimentación`, `Salud`, `Higiene`, `Educación`, `Hogar`, `Servicios`, `Transporte`, `Otros`). Implementada normalización defensiva en web y app (`AppConstants.normalizarCategoria`) para mapear 'Alimentos' -> 'Alimentación' tanto en Firestore como en SQLite. Corregido icono y color en Gráficos y Tarjetas. Despliegue en Firebase Hosting validado y CI en verde (`success`).
-  17. **Ficha Play Store Subida:** Textos oficiales, icono, gráfico de funciones y 5 capturas en alta resolución completados en Play Console (`DOC_FICHA_PLAY_STORE.md`).
-  18. **Detección de Moneda en Voz y Chat:** Actualizado Gateway y cliente Flutter con extracción determinista de moneda (VES, USD, EUR, USDT) y montos sin forzar USD por defecto. CI en verde (`success`).
-  19. **Contraste de Botón Cancelar y Tema TextButton:** Corregido botón 'Cancelar' en diálogo de descarte (`review_expense_screen.dart`) a gris (`AppColors.textSecondary`), 'Descartar' a rojo (`AppColors.error`), y establecido `textButtonTheme` en `AppTheme` con `AppColors.textPrimary` para evitar texto amarillo en botones planos.
-  20. **Corrección Descalce de Monedas y Alertas Presupuesto (FIN-01 y FIN-02):** Unificado Dashboard (`dashboard_screen.dart`) para convertir presupuestos a la divisa activa (VES/USD/EUR/USDT) antes de pasarlos a `CategoryChart`, eliminando descalce y barras distorsionadas; actualizado `getSpentForCategory` e `isCategoryOverBudget` en `GastoProvider` con parámetro `moneda` opcional para alertar sobregiros correctamente en Bolívares. Tests unitarios y de widgets validados en CI en verde (`success`).
+  1. **Eliminación Segura de Cuenta y Datos (Remota y Local):** `eliminarCuentaYDatos()` en `SyncService` no silencia fallos remotos de Firestore ni Firebase Auth. Si la operación remota crítica falla (red o reautenticación), se preserva la base local y se notifica el error.
+  2. **Inclusión de Usuarios Anónimos:** Limpieza remota en Firestore y eliminación de usuario Auth aplicada por igual a anónimos y registrados.
+  3. **Limpieza Selectiva de Storage y Archivos:** Borrado específico de claves de Rinde Más en `FlutterSecureStorage` (`AppConstants.prefApiKey`) sin usar `deleteAll()`. `ImageService.limpiarArchivosApp()` purga comprobantes y temporales propios (`recibo_*.jpg`, directorios internos) protegiendo fotos y exportaciones del usuario.
+  4. **Exclusión de `ruta_foto_local` en Firestore:** `GastoModel.toFirestoreMap()` excluye la ruta física del teléfono enviando solo datos semánticos, mientras `toMap()` preserva el campo para SQLite.
+  5. **Manejo de UI y Reautenticación en `more_screen.dart`:** Éxito mostrado únicamente si la operación concluyó sin fallos; gestión de `requires-recent-login` con flujo de reautenticación Google.
+  6. **Pruebas Automatizadas y CI 100% Verde:** Suite unitaria `sync_service_delete_account_test.dart` y widget tests en `more_screen_test.dart` validados exitosamente en GitHub Actions (run 38465349237, conclusión `success`).
 
 ## Decisiones Técnicas y de Negocio Recientes
-- **Contraste de Botones Secundarios:** Los botones 'Cancelar' / 'Volver' en popups usan `AppColors.textSecondary` (gris). `textButtonTheme` global previene que botones planos hereden el amarillo primario sobre fondos claros.
-- **Detección de Moneda en Voz:** Toda entrada por voz o chat respeta prioritariamente la moneda mencionada por el usuario (VES, USD, EUR, USDT).
-- **Normalización Canónica de Categorías:** En toda deserialización o carga de datos externos, `AppConstants.normalizarCategoria` unifica sinónimos frecuentes al catálogo oficial.
-- **Jerarquía Visual de Acciones de Cuenta:** Cerrar sesión en gris neutro; eliminar cuenta en rojo. Ambas en fila compacta.
-- **Eliminación Segura y Cierre Automático:** Al eliminar cuenta, siempre se cierra sesión, se limpia SQLite local y se purga Firestore.
-- **Facturación de Gemini API:** Cuenta prepago Tier 1 activa en Google AI Studio (Flash-Lite prioritario).
-- **Firma Nativa de Producción:** Gradle firma directamente el `.aab` con `rindemas.jks`.
-- **Cumplimiento Google Play:** Sin sideloading interno de APKs ni permisos de alarma exacta.
-- **Aislamiento de Cuentas:** Al cerrar sesión, la BD local se pone a cero. Los datos remotos quedan seguros en Firestore.
-- **Flujo de Vinculación Unificado:** Diálogo de decisión ("Conservar y sumar" vs "Reemplazar") centralizado en `auth_modal_sheet.dart`.
-- **Páginas Legales en Producción:** `rindemas.cesarluis.com/privacidad`, `rindemas.cesarluis.com/terminos` y `rindemas.cesarluis.com/eliminar-cuenta`.
-- **Package Name Oficial:** `com.cesarluis.rindemas` en Google Play Console y Android.
+- **Orden de Eliminación Transaccional:** 1. Purgar Firestore (colección gastos y presupuestos), 2. Eliminar cuenta en Firebase Auth (o reautenticar si expira token), 3. Limpiar SQLite local y archivos de comprobantes, 4. Limpiar credenciales específicas en secure storage, 5. Reiniciar sesión anónima fresca. Si paso 1 o 2 falla, la base local queda intacta.
+- **Exclusión de Rutas Locales en Firestore:** Firestore nunca debe almacenar rutas del sistema de archivos local (`/data/user/0/...`). Usar `toFirestoreMap()` para la nube y `toMap()` para SQLite.
+- **Limpieza Específica de Claves Seguras:** Solo borrar `AppConstants.prefApiKey` en `FlutterSecureStorage` para no colisionar con otros plugins.
+- **Aislamiento de Tests con Inyección de Usuario:** `MoreScreen` soporta `customUser` y `customUserStream` para pruebas deterministas sin backend simulado.
 
 ## Errores y Fricciones a Evitar
+- No borrar datos locales antes de asegurar que la purga remota crítica fue exitosa.
+- Prohibido `deleteAll()` ciego en `FlutterSecureStorage`.
+- En UI, no asumir éxito de `eliminarCuentaYDatos()` sin evaluar el valor devuelto.
+- No usar `>` en PowerShell ni `&&` en PowerShell 5.1.
 - Contraste estricto en UI (`DESIGN.md`): Texto sobre amarillo SIEMPRE negro; texto sobre blanco SIEMPRE negro o gris, NUNCA amarillo.
-- Discrepancias de catálogo entre web y móvil: Toda lista de categorías debe provenir de las constantes canónicas.
-- NUNCA usar `jarsigner` para re-firmar un AAB en CI (produce doble cadena de certificados); la firma debe ser nativa en Gradle.
-- Minutos de GitHub Actions en repositorio privado: Si la cuota se agota, pasar a público temporalmente para compilar y regresar a privado.
-- En CI, `curl` para logs devuelve 403; los fallos de test se leen en `test_results.txt` tras `git pull --rebase`.
-- Prohibido `>` en PowerShell; usar siempre tubería `... | Out-File -Encoding utf8`.
 
 ## Próximo Paso Inmediato
-- Verificar CI tras push y confirmar solución al usuario.
+- Esperar retroalimentación de César tras la revisión de los cambios de eliminación de cuenta.
