@@ -127,6 +127,7 @@ class MoreScreenState extends State<MoreScreen> {
 
   Stream<User?>? get _userStream {
     if (widget.customUserStream != null) return widget.customUserStream;
+    if (widget.customUser != null) return Stream.value(widget.customUser);
     if (!_isFirebaseInitialized) return null;
     try {
       return FirebaseAuth.instance.userChanges();
@@ -796,13 +797,14 @@ class MoreScreenState extends State<MoreScreen> {
     if (stream != null) {
       return StreamBuilder<User?>(
         stream: stream,
+        initialData: _currentUser,
         builder: (context, snapshot) {
           final user = snapshot.data ?? _currentUser;
           return _buildAccountCard(context, user);
         },
       );
     }
-    return _buildAccountCard(context, null);
+    return _buildAccountCard(context, _currentUser);
   }
 
   Widget _buildAccountCard(BuildContext context, User? user) {

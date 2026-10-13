@@ -252,7 +252,10 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest(customUser: FakeTestUser()));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('btn_eliminar_cuenta'), skipOffstage: false));
+      final btn = find.byKey(const Key('btn_eliminar_cuenta'));
+      await tester.ensureVisible(btn);
+      await tester.pumpAndSettle();
+      await tester.tap(btn);
       await tester.pumpAndSettle();
 
       expect(find.text('¿Eliminar cuenta y datos?'), findsOneWidget);
@@ -267,7 +270,10 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest(customUser: FakeTestUser()));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('btn_eliminar_cuenta'), skipOffstage: false));
+      final btn = find.byKey(const Key('btn_eliminar_cuenta'));
+      await tester.ensureVisible(btn);
+      await tester.pumpAndSettle();
+      await tester.tap(btn);
       await tester.pumpAndSettle();
 
       expect(find.text('¿Eliminar cuenta y datos?'), findsOneWidget);
