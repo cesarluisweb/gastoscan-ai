@@ -4,6 +4,7 @@ import '../../models/gasto_model.dart';
 import '../../models/item_gasto_model.dart';
 import '../../models/shopping_item_model.dart';
 import '../../models/categoria_model.dart';
+import '../../../core/constants/app_constants.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -585,7 +586,7 @@ class DatabaseHelper {
       final totalOrig = ((g['total_original'] as num?)?.toInt() ?? 0) / 100.0;
       final totalUsd = ((g['total_usd'] as num?)?.toInt() ?? 0) / 100.0;
       final tasa = (g['tasa_cambio'] as num?)?.toDouble() ?? 1.0;
-      final gastoCat = (g['categoria'] as String?) ?? 'Otros';
+      final gastoCat = AppConstants.normalizarCategoria(g['categoria'] as String?);
 
       final double targetTotal = (moneda == 'VES')
           ? (gastoMoneda == 'VES' ? totalOrig : totalUsd * (tasa > 0 ? tasa : 1.0))
@@ -602,7 +603,7 @@ class DatabaseHelper {
         }
 
         for (final item in items) {
-          final cat = (item['categoria'] as String?) ?? gastoCat;
+          final cat = AppConstants.normalizarCategoria((item['categoria'] as String?) ?? gastoCat);
           final itemTotal = ((item['total'] as num?)?.toInt() ?? 0) / 100.0;
           final ratio = sumItems > 0 ? (itemTotal / sumItems) : (1.0 / items.length);
           final allocated = ratio * targetTotal;

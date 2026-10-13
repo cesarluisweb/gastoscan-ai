@@ -1,3 +1,4 @@
+import '../../core/constants/app_constants.dart';
 import 'item_gasto_model.dart';
 
 class GastoModel {
@@ -78,7 +79,7 @@ class GastoModel {
       tasaCambio: (map['tasa_cambio'] as num?)?.toDouble() ?? 1.0,
       fuenteTasaCambio: map['fuente_tasa_cambio'] as String?,
       fechaTasaCambio: map['fecha_tasa_cambio'] as String?,
-      categoria: map['categoria'] as String? ?? 'Otros',
+      categoria: AppConstants.normalizarCategoria(map['categoria'] as String?),
       rutaFotoLocal: map['ruta_foto_local'] as String?,
       creadoEn: map['creado_en'] as String? ?? DateTime.now().toIso8601String(),
       actualizadoEn: map['actualizado_en'] as String?,

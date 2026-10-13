@@ -13,6 +13,50 @@ class AppConstants {
     'Otros',
   ];
 
+  /// Normaliza sinónimos y variaciones de nombres de categoría al catálogo estándar.
+  static String normalizarCategoria(String? cat) {
+    if (cat == null) return 'Otros';
+    final trimmed = cat.trim();
+    if (trimmed.isEmpty) return 'Otros';
+
+    final lower = trimmed.toLowerCase();
+    switch (lower) {
+      case 'alimentos':
+      case 'alimentacion':
+      case 'alimentación':
+      case 'comida':
+        return 'Alimentación';
+      case 'salud':
+      case 'farmacia':
+      case 'medicina':
+        return 'Salud';
+      case 'higiene':
+      case 'aseo':
+      case 'cuidado personal':
+        return 'Higiene';
+      case 'educacion':
+      case 'educación':
+      case 'estudios':
+        return 'Educación';
+      case 'hogar':
+      case 'casa':
+        return 'Hogar';
+      case 'servicios':
+      case 'servicio':
+        return 'Servicios';
+      case 'transporte':
+      case 'gasolina':
+      case 'pasaje':
+        return 'Transporte';
+      default:
+        // Si coincide exactamente con alguna categoría registrada respetando mayúsculas/minúsculas
+        for (final c in categorias) {
+          if (c.toLowerCase() == lower) return c;
+        }
+        return 'Otros';
+    }
+  }
+
   // Monedas soportadas
   static const List<String> monedas = ['USD', 'VES', 'EUR', 'USDT'];
 

@@ -550,27 +550,44 @@ import '../styles/global.css';
         const provider = new GoogleAuthProvider();
 
         const CATEGORIAS_DEF = [
-            'Alimentos',
-            'Transporte',
-            'Servicios',
+            'Alimentación',
             'Salud',
-            'Entretenimiento',
-            'Hogar',
+            'Higiene',
             'Educación',
-            'Ropa',
+            'Hogar',
+            'Servicios',
+            'Transporte',
             'Otros'
         ];
 
         const CATEGORIA_ICONS = {
-            'Alimentos': '🛒',
-            'Transporte': '🚗',
-            'Servicios': '💡',
+            'Alimentación': '🛒',
             'Salud': '💊',
-            'Entretenimiento': '🎬',
-            'Hogar': '🏠',
+            'Higiene': '🧼',
             'Educación': '📚',
-            'Ropa': '👕',
-            'Otros': '📦'
+            'Hogar': '🏠',
+            'Servicios': '💡',
+            'Transporte': '🚗',
+            'Otros': '📦',
+            // Compatibilidad hacia atrás
+            'Alimentos': '🛒',
+            'Entretenimiento': '🎬',
+            'Ropa': '👕'
+        };
+
+        const normalizarCategoria = (cat) => {
+            if (!cat) return 'Otros';
+            const trimmed = String(cat).trim();
+            const lower = trimmed.toLowerCase();
+            if (lower === 'alimentos' || lower === 'alimentacion' || lower === 'alimentación' || lower === 'comida') return 'Alimentación';
+            if (lower === 'salud' || lower === 'medicina' || lower === 'farmacia') return 'Salud';
+            if (lower === 'higiene' || lower === 'aseo') return 'Higiene';
+            if (lower === 'educacion' || lower === 'educación') return 'Educación';
+            if (lower === 'hogar' || lower === 'casa') return 'Hogar';
+            if (lower === 'servicios' || lower === 'servicio') return 'Servicios';
+            if (lower === 'transporte' || lower === 'gasolina' || lower === 'pasaje') return 'Transporte';
+            const match = CATEGORIAS_DEF.find(c => c.toLowerCase() === lower);
+            return match || 'Otros';
         };
 
         const MONTH_NAMES = [
@@ -1096,7 +1113,7 @@ import '../styles/global.css';
             CATEGORIAS_DEF.forEach(c => catSpent[c] = 0);
 
             currentGastos.forEach(g => {
-                const gastoCat = g.categoria || 'Otros';
+                const gastoCat = normalizarCategoria(g.categoria);
                 const totalUsd = (Number(g.total_usd || 0)) / 100.0;
                 const totalOrig = (Number(g.total_original || 0)) / 100.0;
                 const tasa = Number(g.tasa_cambio || 0) > 0 ? Number(g.tasa_cambio) : (liveRates.usd || 1.0);
@@ -1125,7 +1142,7 @@ import '../styles/global.css';
                     });
 
                     items.forEach(it => {
-                        const cat = it.categoria || gastoCat;
+                        const cat = normalizarCategoria(it.categoria || gastoCat);
                         const itTotal = (Number(it.total || 0) / 100.0);
                         const ratio = sumItems > 0 ? (itTotal / sumItems) : (1.0 / items.length);
                         const allocated = ratio * targetTotal;
@@ -1209,7 +1226,8 @@ import '../styles/global.css';
                 const moneda = gasto.moneda || 'USD';
                 const tasa = Number(gasto.tasa_cambio || 0) > 0 ? Number(gasto.tasa_cambio) : (liveRates.usd || 1.0);
                 const items = gasto.items || [];
-                const icon = CATEGORIA_ICONS[gasto.categoria] || '🧾';
+                const catNorm = normalizarCategoria(gasto.categoria);
+                const icon = CATEGORIA_ICONS[catNorm] || '🧾';
 
                 let secondarySubtext = '';
                 if (moneda === 'VES') {
@@ -1232,7 +1250,7 @@ import '../styles/global.css';
                                 <div class="flex items-center gap-2 mt-0.5 text-xs text-slate-400">
                                     <span>${gasto.fecha || ''}</span>
                                     <span>•</span>
-                                    <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium text-[10px]">${gasto.categoria || 'Otros'}</span>
+                                    <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium text-[10px]">${catNorm}</span>
                                 </div>
                             </div>
                         </div>
@@ -1530,7 +1548,7 @@ import '../styles/global.css';
                         <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Categoría</label>
                         <select class="item-input-cat w-full px-2.5 py-1 text-xs rounded-lg border border-slate-200 bg-slate-50 text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#FACC15]">
                             ${CATEGORIAS_DEF.map(c => `
-                                <option value="${c}" ${c === (item.categoria || 'Alimentos') ? 'selected' : ''}>
+                                <option value="${c}" ${c === normalizarCategoria(item.categoria || 'Alimentación') ? 'selected' : ''}>
                                     ${CATEGORIA_ICONS[c] || '🏷️'} ${c}
                                 </option>
                             `).join('')}
@@ -1675,7 +1693,7 @@ import '../styles/global.css';
                 cantidad: 1,
                 precio: '',
                 total: '',
-                categoria: 'Alimentos'
+                categoria: 'Alimentación'
             });
             renderExpenseItems();
         });
@@ -1694,7 +1712,7 @@ import '../styles/global.css';
 
             // Iniciar con 1 ítem por defecto
             modalExpenseItems = [
-                { descripcion: '', cantidad: 1, precio: '', total: '', categoria: 'Alimentos' }
+                { descripcion: '', cantidad: 1, precio: '', total: '', categoria: 'Alimentación' }
             ];
 
             renderExpenseItems();
@@ -1760,14 +1778,14 @@ import '../styles/global.css';
                         cantidad: cant,
                         precio_unitario: Math.round(prNum * 100),
                         total: Math.round(totNum * 100),
-                        categoria: it.categoria || 'Otros'
+                        categoria: normalizarCategoria(it.categoria)
                     };
                 });
 
             // Categoría principal del gasto
             let primaryCat = 'Otros';
             if (validItems.length > 0) {
-                primaryCat = validItems[0].categoria || 'Otros';
+                primaryCat = normalizarCategoria(validItems[0].categoria);
             }
 
             const uuid = crypto.randomUUID ? crypto.randomUUID() : `web_${Date.now()}`;

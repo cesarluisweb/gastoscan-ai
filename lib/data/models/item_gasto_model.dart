@@ -1,3 +1,5 @@
+import '../../core/constants/app_constants.dart';
+
 class ItemGastoModel {
   final int? id;
   final int? gastoId;
@@ -37,7 +39,7 @@ class ItemGastoModel {
       cantidad: (map['cantidad'] as num?)?.toDouble() ?? 1.0,
       precioUnitario: (map['precio_unitario'] as num?)?.toInt() ?? 0,
       total: (map['total'] as num?)?.toInt() ?? 0,
-      categoria: map['categoria'] as String? ?? 'Otros',
+      categoria: AppConstants.normalizarCategoria(map['categoria'] as String?),
     );
   }
 

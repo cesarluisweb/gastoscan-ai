@@ -1,5 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gastoscan_ai/core/constants/app_constants.dart';
 import 'package:gastoscan_ai/data/models/categoria_model.dart';
+import 'package:gastoscan_ai/data/models/gasto_model.dart';
+import 'package:gastoscan_ai/data/models/item_gasto_model.dart';
 
 void main() {
   group('CategoriaModel Tests', () {
@@ -136,6 +139,37 @@ void main() {
 
       expect(model, isA<CategoriaModel>());
       expect(model.presupuestoMensual, 50.0);
+    });
+
+    test('AppConstants.normalizarCategoria maps synonyms to official catalog', () {
+      expect(AppConstants.normalizarCategoria('Alimentos'), 'Alimentación');
+      expect(AppConstants.normalizarCategoria('alimentacion'), 'Alimentación');
+      expect(AppConstants.normalizarCategoria('comida'), 'Alimentación');
+      expect(AppConstants.normalizarCategoria('farmacia'), 'Salud');
+      expect(AppConstants.normalizarCategoria('aseo'), 'Higiene');
+      expect(AppConstants.normalizarCategoria('pasaje'), 'Transporte');
+      expect(AppConstants.normalizarCategoria('gasolina'), 'Transporte');
+      expect(AppConstants.normalizarCategoria('casa'), 'Hogar');
+      expect(AppConstants.normalizarCategoria('servicio'), 'Servicios');
+      expect(AppConstants.normalizarCategoria('estudios'), 'Educación');
+      expect(AppConstants.normalizarCategoria('Categoría Inexistente'), 'Otros');
+      expect(AppConstants.normalizarCategoria(null), 'Otros');
+    });
+
+    test('GastoModel and ItemGastoModel normalize category fromMap', () {
+      final gasto = GastoModel.fromMap({
+        'categoria': 'Alimentos',
+        'comercio': 'Automercado',
+        'total_usd': 1500,
+      });
+      expect(gasto.categoria, 'Alimentación');
+
+      final item = ItemGastoModel.fromMap({
+        'categoria': 'alimentos',
+        'descripcion': 'Arroz',
+        'total': 150,
+      });
+      expect(item.categoria, 'Alimentación');
     });
   });
 }
