@@ -19,21 +19,17 @@
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests getAllPresupuestosCategorias returns all configured category budgets
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests insertCategoria and updateCategoria work correctly
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_category_test.dart: DatabaseHelper Category & Budget Operations Tests deleteCategoria removes the category
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests renders 4 navigation destinations and center FAB
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests switching tabs changes current active screen
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping center FAB opens bottom sheet with 4 add options
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests does not show local processing banner in DashboardScreen (delegated to GlobalScanQueueBanner)
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests renders 4 navigation destinations and center FAB
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests displays ready queue item card when items are ready for review
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping AI chat button on Inicio navigates to Chat keeping bottom navigation and back returns to Inicio
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests displays "Por revisar" badge when pending item has zero total
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests CategoryChart in Dashboard expresses budgets in VES when viewing in VES
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests CategoryChart in Dashboard keeps USD when viewing in USD
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests switching tabs changes current active screen
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping center FAB opens bottom sheet with 4 add options
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping AI chat button on Inicio navigates to Chat keeping bottom navigation and back returns to Inicio
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping Asistente IA in Mas and pressing back returns to Mas hub
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests renders all hub sections in main view
-::endgroup::
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping shopping list navigates internally and back button returns to hub
 ::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
@@ -43,14 +39,16 @@ NotificationService: Excepción al cancelar recordatorio de pendientes: MissingP
 ::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) R3 Acceptance Criteria: Asignar $50 a Alimentación, y registrar un gasto de $60 en Alimentación hace que se dibuje un indicador visual de exceso (color rojo) en la UI de esa categoría
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Category within budget does NOT render the red excess alert
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests calling openChat navigates directly to chat view
 ::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) R3 Acceptance Criteria: Asignar $50 a Alimentación, y registrar un gasto de $60 en Alimentación hace que se dibuje un indicador visual de exceso (color rojo) en la UI de esa categoría
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Category within budget does NOT render the red excess alert
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping view receipts navigates to ReceiptGalleryScreen and back button returns to hub
 ::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
@@ -60,9 +58,6 @@ NotificationService: Excepción al cancelar recordatorio de pendientes: MissingP
 ::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Initial empty state displays analysis empty state and allows adding budget
-::endgroup::
 ::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping eliminar cuenta and confirming shows success snackbar on success (failed)
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following assertion was thrown running a test:
@@ -73,7 +68,7 @@ When the exception was thrown, this was the stack:
 #0      WidgetController._getElementPoint (package:flutter_test/src/controller.dart:2095:7)
 #1      WidgetController.getCenter (package:flutter_test/src/controller.dart:1947:12)
 #2      WidgetController.tap (package:flutter_test/src/controller.dart:1080:7)
-#3      main.<anonymous closure>.<anonymous closure> (file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart:234:20)
+#3      main.<anonymous closure>.<anonymous closure> (file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart:255:20)
 <asynchronous suspension>
 #4      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -92,7 +87,7 @@ The test description was: tapping eliminar cuenta and confirming shows success s
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Editing budget to amount greater than expense clears red excess alert
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Initial empty state displays analysis empty state and allows adding budget
 ::endgroup::
 ::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping eliminar cuenta and confirming shows error snackbar on failure (failed)
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
@@ -104,7 +99,7 @@ When the exception was thrown, this was the stack:
 #0      WidgetController._getElementPoint (package:flutter_test/src/controller.dart:2095:7)
 #1      WidgetController.getCenter (package:flutter_test/src/controller.dart:1947:12)
 #2      WidgetController.tap (package:flutter_test/src/controller.dart:1080:7)
-#3      main.<anonymous closure>.<anonymous closure> (file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart:249:20)
+#3      main.<anonymous closure>.<anonymous closure> (file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart:270:20)
 <asynchronous suspension>
 #4      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -120,9 +115,8 @@ Test failed. See exception logs above.
 The test description was: tapping eliminar cuenta and confirming shows error snackbar on failure
 
 ::endgroup::
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Editing budget to amount greater than expense clears red excess alert
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Validation: categories exceeding general budget shows alert and blocks save
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) General budget exceeded shows general excess alert in AnalysisScreen
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) AnalysisScreen month selector opens picker dialog and changes month
@@ -144,13 +138,14 @@ NotificationService: Excepción al cancelar recordatorio de pendientes: MissingP
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) entering search query immediately filters out non-matching expenses
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) expenses matching by commerce are included
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) expenses matching by product name are included
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests renders all 5 predefined chat suggestions in horizontal bar
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) clearing search query via close button restores all expenses
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests renders all 5 predefined chat suggestions in horizontal bar
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) clearing search text restores all expenses while keeping search open
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests tapping a suggestion chip sends it immediately as a user message
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) displays friendly empty state message when search yields 0 matches
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests tapping shopping list suggestion chip sends request directly
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) case-insensitive and diacritic-insensitive search works
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) filtering by receipt only shows expenses that have receipt image
 ::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests renders edit expense button when assistant registers an expense
 Error al cotejar compras en chat: Bad state: databaseFactory not initialized
@@ -159,7 +154,6 @@ You must call `databaseFactory = databaseFactoryFfi;` before using global openDa
 
 ::endgroup::
 ::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) filtering by receipt only shows expenses that have receipt image
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests tapping textfield while listening stops microphone
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests sending message while listening stops microphone
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/services/local_ocr_service_test.dart: LocalOcrService Quality Scoring Tests factura completa con comercio, fecha, ítems y total supera umbral de score
@@ -295,31 +289,33 @@ Error en LocalOcrService.processImage: MissingPluginException(No implementation 
 Error en LocalOcrService.processImage: MissingPluginException(No implementation found for method vision#startTextRecognizer on channel google_mlkit_text_recognizer)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al programar recordatorio de pendientes: LateInitializationError: Field '_local@817310200' has not been initialized.
-Fallo al procesar item en cola: PathNotFoundException: Cannot open file, path = '/tmp/scan_queue_test_XUKTAW/ready_shared.jpg' (OS Error: No such file or directory, errno = 2)
 ::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/core/utils/amount_parser_test.dart: tryParseAmount - formato venezolano e internacional miles con punto y decimal con coma
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/core/utils/amount_parser_test.dart: tryParseAmount - formato venezolano e internacional decimal con coma sin miles
+::endgroup::
+Fallo al procesar item en cola: PathNotFoundException: Cannot open file, path = '/tmp/scan_queue_test_QVVSGB/ready_shared.jpg' (OS Error: No such file or directory, errno = 2)
+::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/core/utils/amount_parser_test.dart: tryParseAmount - formato venezolano e internacional formato internacional con miles y decimal
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests loadQueue recovers stale processing items back to pending
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/core/utils/amount_parser_test.dart: tryParseAmount - formato venezolano e internacional decimal con punto
 ::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/core/utils/amount_parser_test.dart: tryParseAmount - formato venezolano e internacional entero sin separadores NO aplica regla de precio en formularios
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests processPendingItems skips items already in error status without extra DB updates
 ::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: GeminiExtractionResult.listFromJson Tests parses single legacy JSON correctly
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: GeminiExtractionResult.listFromJson Tests parses multiple facturas JSON array correctly
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: GeminiExtractionResult.listFromJson Tests parses fiscal markers (E) and (G) into item descriptions
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/core/utils/amount_parser_test.dart: tryParseAmount - formato venezolano e internacional miles con punto y decimal con coma
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/core/utils/amount_parser_test.dart: tryParseAmount - formato venezolano e internacional decimal con coma sin miles
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/core/utils/amount_parser_test.dart: tryParseAmount - formato venezolano e internacional formato internacional con miles y decimal
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/core/utils/amount_parser_test.dart: tryParseAmount - formato venezolano e internacional decimal con punto
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/core/utils/amount_parser_test.dart: tryParseAmount - formato venezolano e internacional entero sin separadores NO aplica regla de precio en formularios
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/core/utils/amount_parser_test.dart: tryParseAmount - formato venezolano e internacional modo precio OCR conserva regla historica
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/core/utils/amount_parser_test.dart: tryParseAmount - formato venezolano e internacional texto invalido da null
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/core/utils/amount_parser_test.dart: tryParseAmount - formato venezolano e internacional vacio da null
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: GeminiExtractionResult.listFromJson Tests parses single legacy JSON correctly
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/core/utils/amount_parser_test.dart: tryParseAmount - formato venezolano e internacional negativo conserva el signo
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: GeminiExtractionResult.listFromJson Tests parses multiple facturas JSON array correctly
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/core/utils/amount_parser_test.dart: tryParseAmount - formato venezolano e internacional simbolo de moneda se ignora
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: GeminiExtractionResult.listFromJson Tests parses fiscal markers (E) and (G) into item descriptions
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/domain/savings_health_calculator_test.dart: SavingsHealthCalculator Tests returns sinMeta when metaAhorro is zero or negative
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/domain/savings_health_calculator_test.dart: SavingsHealthCalculator Tests calculates correct limiteParaGastar when metaAhorro is positive
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/domain/savings_health_calculator_test.dart: SavingsHealthCalculator Tests grace period days 1 to 3 does not trigger enRiesgo even if projected is high
