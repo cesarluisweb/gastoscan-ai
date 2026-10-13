@@ -139,4 +139,20 @@ class GastoRepository {
   Future<void> limpiarDatosLocales() {
     return _dbHelper.limpiarBaseDatosLocal();
   }
+
+  /// Obtiene todas las rutas de archivos de recibos y temporales registradas localmente
+  Future<List<String>> obtenerRutasArchivosApp() async {
+    final rutas = <String>[];
+    try {
+      final gastos = await _dbHelper.getAllGastosConBorrados();
+      for (final g in gastos) {
+        if (g.rutaFotoLocal != null && g.rutaFotoLocal!.isNotEmpty) {
+          rutas.add(g.rutaFotoLocal!);
+        }
+      }
+      final queuePaths = await _dbHelper.getAllScanQueueImagePaths();
+      rutas.addAll(queuePaths);
+    } catch (_) {}
+    return rutas;
+  }
 }

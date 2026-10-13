@@ -48,8 +48,10 @@ class FakeGastoProvider extends GastoProvider {
   @override
   Future<void> cerrarSesion() async {}
 
+  String? errorEliminarCuenta;
+
   @override
-  Future<String?> eliminarCuentaYDatos() async => null;
+  Future<String?> eliminarCuentaYDatos() async => errorEliminarCuenta;
 }
 
 class FakeSettingsProvider extends SettingsProvider {
@@ -222,6 +224,37 @@ void main() {
 
       expect(find.text('Iniciar Sesión con Correo'), findsOneWidget);
       expect(find.text('Iniciar Sesión'), findsWidgets);
+    });
+
+    testWidgets('tapping eliminar cuenta and confirming shows success snackbar on success', (tester) async {
+      gastoProvider.errorEliminarCuenta = null;
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('btn_eliminar_cuenta'), skipOffstage: false));
+      await tester.pumpAndSettle();
+
+      expect(find.text('¿Eliminar cuenta y datos?'), findsOneWidget);
+      await tester.tap(find.text('Eliminar definitivamente'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Cuenta y datos eliminados. Sesión cerrada.'), findsOneWidget);
+    });
+
+    testWidgets('tapping eliminar cuenta and confirming shows error snackbar on failure', (tester) async {
+      gastoProvider.errorEliminarCuenta = 'Sin conexión a internet. Verifica tu red.';
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('btn_eliminar_cuenta'), skipOffstage: false));
+      await tester.pumpAndSettle();
+
+      expect(find.text('¿Eliminar cuenta y datos?'), findsOneWidget);
+      await tester.tap(find.text('Eliminar definitivamente'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Sin conexión a internet. Verifica tu red.'), findsOneWidget);
+      expect(find.text('Cuenta y datos eliminados. Sesión cerrada.'), findsNothing);
     });
   });
 }

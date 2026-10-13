@@ -67,6 +67,14 @@ class GastoModel {
     };
   }
 
+  /// Mapa preparado exclusivamente para sincronización con Firestore.
+  /// Excluye 'ruta_foto_local' para no almacenar rutas locales del dispositivo en la nube.
+  Map<String, dynamic> toFirestoreMap() {
+    final map = toMap();
+    map.remove('ruta_foto_local');
+    return map;
+  }
+
   factory GastoModel.fromMap(Map<String, dynamic> map, {List<ItemGastoModel> items = const []}) {
     return GastoModel(
       id: map['id'] as int?,

@@ -1090,19 +1090,21 @@ class MoreScreenState extends State<MoreScreen> {
     final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
 
     final error = await gastoProvider.eliminarCuentaYDatos();
-    await scanQueue.loadQueue();
-    await settingsProvider.loadSettings();
 
-    if (mounted) {
-      setState(() {});
-      if (error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error, style: const TextStyle(color: Colors.white)),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      } else {
+    if (!mounted) return;
+
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error, style: const TextStyle(color: Colors.white)),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    } else {
+      await scanQueue.loadQueue();
+      await settingsProvider.loadSettings();
+      if (mounted) {
+        setState(() {});
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Cuenta y datos eliminados. Sesión cerrada.',

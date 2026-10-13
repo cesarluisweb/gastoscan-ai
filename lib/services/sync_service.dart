@@ -1,22 +1,57 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../core/constants/app_constants.dart';
 import '../data/models/gasto_model.dart';
 import '../data/models/item_gasto_model.dart';
 import '../data/repositories/gasto_repository.dart';
+import 'image_service.dart';
 
 class SyncService {
   final GastoRepository _repository;
+  final FirebaseAuth? _customAuth;
+  final FirebaseFirestore? _customFirestore;
+  final GoogleSignIn? _customGoogleSignIn;
+  final FlutterSecureStorage? _customSecureStorage;
 
-  SyncService({GastoRepository? repository}) : _repository = repository ?? GastoRepository();
+  SyncService({
+    GastoRepository? repository,
+    FirebaseAuth? auth,
+    FirebaseFirestore? firestore,
+    GoogleSignIn? googleSignIn,
+    FlutterSecureStorage? secureStorage,
+  })  : _repository = repository ?? GastoRepository(),
+        _customAuth = auth,
+        _customFirestore = firestore,
+        _customGoogleSignIn = googleSignIn,
+        _customSecureStorage = secureStorage;
+
+  FirebaseAuth? get _auth {
+    if (_customAuth != null) return _customAuth;
+    if (Firebase.apps.isNotEmpty) return FirebaseAuth.instance;
+    return null;
+  }
+
+  FirebaseFirestore? get _firestore {
+    if (_customFirestore != null) return _customFirestore;
+    if (Firebase.apps.isNotEmpty) return FirebaseFirestore.instance;
+    return null;
+  }
+
+  GoogleSignIn get _googleSignInInstance =>
+      _customGoogleSignIn ?? GoogleSignIn(serverClientId: AppConstants.googleWebClientId);
+
+  FlutterSecureStorage get _secureStorageInstance =>
+      _customSecureStorage ?? const FlutterSecureStorage();
 
   Future<void> syncBidirectional() async {
     try {
-      final user = FirebaseAuth.instance.currentUser;
+      final user = _auth?.currentUser;
       if (user == null || user.isAnonymous) return;
 
       await syncToFirestore(user);
@@ -34,7 +69,7 @@ class SyncService {
   Future<void> syncApiKeyBidireccional(User user) async {
     try {
       if (user.isAnonymous) return;
-      const secureStorage = FlutterSecureStorage();
+      final secureStorage = _secureStorageInstance;
       final localKey = await secureStorage.read(key: AppConstants.prefApiKey);
       final remoteKey = await syncSettingsFromFirestore(user);
 
@@ -52,8 +87,8 @@ class SyncService {
 
   Future<void> syncSettingsToFirestore(User user, {required String apiKey}) async {
     try {
-      if (user.isAnonymous) return;
-      final docRef = FirebaseFirestore.instance
+      if (user.isAnonymous || _firestore == null) return;
+      final docRef = _firestore!
           .collection('users')
           .doc(user.uid)
           .collection('presupuestos')
@@ -70,8 +105,8 @@ class SyncService {
 
   Future<String?> syncSettingsFromFirestore(User user) async {
     try {
-      if (user.isAnonymous) return null;
-      final docRef = FirebaseFirestore.instance
+      if (user.isAnonymous || _firestore == null) return null;
+      final docRef = _firestore!
           .collection('users')
           .doc(user.uid)
           .collection('presupuestos')
@@ -89,10 +124,11 @@ class SyncService {
   }
 
   Future<void> syncToFirestore(User user) async {
+    if (_firestore == null) return;
     final unsyncedGastos = await _repository.obtenerGastosNoSincronizados();
     
     for (var gasto in unsyncedGastos) {
-      final docRef = FirebaseFirestore.instance
+      final docRef = _firestore!
           .collection('users')
           .doc(user.uid)
           .collection('gastos')
@@ -104,7 +140,8 @@ class SyncService {
           await _repository.eliminarGastoFisico(gasto.id!);
         }
       } else {
-        final data = gasto.toMap();
+        // Excluir ruta_foto_local de los datos enviados a Firestore
+        final data = gasto.toFirestoreMap();
         data['items'] = gasto.items.map((item) => item.toMap()).toList();
         
         await docRef.set(data, SetOptions(merge: true));
@@ -116,7 +153,8 @@ class SyncService {
   }
 
   Future<void> syncFromFirestore(User user) async {
-    final snapshot = await FirebaseFirestore.instance
+    if (_firestore == null) return;
+    final snapshot = await _firestore!
         .collection('users')
         .doc(user.uid)
         .collection('gastos')
@@ -157,7 +195,15 @@ class SyncService {
           if (gastoRemoto.eliminadoEn != null) {
             await _repository.eliminarGastoFisico(localGasto.id!);
           } else {
-            await _repository.actualizarGasto(gastoRemoto.copyWith(id: localGasto.id, synced: 1), items);
+            // Preservar la ruta local de la foto del dispositivo si ya existía
+            await _repository.actualizarGasto(
+              gastoRemoto.copyWith(
+                id: localGasto.id,
+                synced: 1,
+                rutaFotoLocal: localGasto.rutaFotoLocal,
+              ),
+              items,
+            );
           }
         }
       }
@@ -165,6 +211,7 @@ class SyncService {
   }
 
   Future<void> syncPresupuestosToFirestore(User user) async {
+    if (_firestore == null) return;
     final presupuestos = await _repository.obtenerTodosLosPresupuestosMensuales();
     for (var pres in presupuestos) {
       final anio = pres['anio'] as int;
@@ -177,7 +224,7 @@ class SyncService {
       if (general <= 0 && categorias.isEmpty) continue;
 
       final docId = '${anio}_${mes.toString().padLeft(2, '0')}';
-      final docRef = FirebaseFirestore.instance
+      final docRef = _firestore!
           .collection('users')
           .doc(user.uid)
           .collection('presupuestos')
@@ -208,7 +255,8 @@ class SyncService {
   }
 
   Future<void> syncPresupuestosFromFirestore(User user) async {
-    final snapshot = await FirebaseFirestore.instance
+    if (_firestore == null) return;
+    final snapshot = await _firestore!
         .collection('users')
         .doc(user.uid)
         .collection('presupuestos')
@@ -315,18 +363,17 @@ class SyncService {
   /// e inicia una sesión anónima fresca para un aislamiento total.
   Future<void> cerrarSesion() async {
     try {
-      final auth = FirebaseAuth.instance;
-
       try {
-        final googleSignIn = GoogleSignIn(
-          serverClientId: AppConstants.googleWebClientId,
-        );
-        await googleSignIn.signOut();
+        await _googleSignInInstance.signOut();
       } catch (_) {}
 
-      await auth.signOut();
+      if (_auth != null) {
+        await _auth!.signOut();
+      }
       await _repository.limpiarDatosLocales();
-      await auth.signInAnonymously();
+      if (_auth != null) {
+        await _auth!.signInAnonymously();
+      }
     } catch (e) {
       debugPrint("Error al cerrar sesión y limpiar datos locales: $e");
       rethrow;
@@ -334,92 +381,128 @@ class SyncService {
   }
 
   /// Elimina permanentemente la cuenta en Firebase Auth, borra todos los gastos y presupuestos
-  /// asociados en Firestore, limpia la base de datos local (SQLite) y restablece una sesión anónima fresca.
+  /// asociados en Firestore, limpia la base de datos local (SQLite), elimina las fotos de recibos
+  /// y temporales propios de la app, limpia las claves de SecureStorage y recrea una sesión anónima fresca.
   Future<String?> eliminarCuentaYDatos() async {
     try {
-      final auth = FirebaseAuth.instance;
-      final user = auth.currentUser;
+      final user = _auth?.currentUser;
 
-      if (user != null && !user.isAnonymous) {
+      if (user != null) {
         final uid = user.uid;
-        final firestore = FirebaseFirestore.instance;
 
-        // 1. Purgar datos en Firestore (gastos y presupuestos)
-        try {
-          final gastosSnap = await firestore
-              .collection('users')
-              .doc(uid)
-              .collection('gastos')
-              .get();
-          for (final doc in gastosSnap.docs) {
-            await doc.reference.delete();
-          }
+        // 1. Purgar datos remotos en Firestore (gastos y presupuestos)
+        if (_firestore != null) {
+          try {
+            final gastosSnap = await _firestore!
+                .collection('users')
+                .doc(uid)
+                .collection('gastos')
+                .get();
+            for (final doc in gastosSnap.docs) {
+              await doc.reference.delete();
+            }
 
-          final presupuestosSnap = await firestore
-              .collection('users')
-              .doc(uid)
-              .collection('presupuestos')
-              .get();
-          for (final doc in presupuestosSnap.docs) {
-            await doc.reference.delete();
+            final presupuestosSnap = await _firestore!
+                .collection('users')
+                .doc(uid)
+                .collection('presupuestos')
+                .get();
+            for (final doc in presupuestosSnap.docs) {
+              await doc.reference.delete();
+            }
+          } on FirebaseException catch (e) {
+            debugPrint("Error al purgar Firestore durante eliminación de cuenta: $e");
+            if (e.code == 'unavailable' || e.code == 'network-request-failed') {
+              return 'Sin conexión a internet. Verifica tu red para eliminar los datos en la nube.';
+            }
+            return 'Error al eliminar datos en la nube: ${e.message ?? e.code}';
+          } catch (e) {
+            debugPrint("Error inesperado al purgar Firestore: $e");
+            return 'Error al eliminar datos en la nube: $e';
           }
-        } catch (e) {
-          debugPrint("Error al purgar Firestore durante eliminación de cuenta: $e");
         }
 
-        // 2. Eliminar la cuenta en Firebase Auth
+        // 2. Eliminar la cuenta en Firebase Auth (aplica para cuentas vinculadas y anónimas)
         try {
           await user.delete();
         } on FirebaseAuthException catch (e) {
           if (e.code == 'requires-recent-login') {
-            // Intentar reautenticar automáticamente si la cuenta es de Google
             final isGoogle = user.providerData.any((p) => p.providerId == 'google.com');
             if (isGoogle) {
               try {
-                final googleSignIn = GoogleSignIn(
-                  serverClientId: AppConstants.googleWebClientId,
-                );
-                final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-                if (googleUser != null) {
-                  final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-                  final credential = GoogleAuthProvider.credential(
-                    accessToken: googleAuth.accessToken,
-                    idToken: googleAuth.idToken,
-                  );
-                  await user.reauthenticateWithCredential(credential);
-                  await user.delete();
+                final GoogleSignInAccount? googleUser = await _googleSignInInstance.signIn();
+                if (googleUser == null) {
+                  return 'Reautenticación cancelada. Se requiere iniciar sesión reciente para eliminar la cuenta.';
                 }
+                final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+                final credential = GoogleAuthProvider.credential(
+                  accessToken: googleAuth.accessToken,
+                  idToken: googleAuth.idToken,
+                );
+                await user.reauthenticateWithCredential(credential);
+                await user.delete();
               } catch (reauthErr) {
                 debugPrint("No se pudo reautenticar con Google para eliminar cuenta: $reauthErr");
+                if (reauthErr is FirebaseAuthException) {
+                  return _mapearErrorFirebaseAuth(reauthErr);
+                }
+                return 'No se pudo reautenticar para eliminar la cuenta: $reauthErr';
               }
+            } else {
+              return _mapearErrorFirebaseAuth(e);
             }
-          } else {
-            debugPrint("Error de FirebaseAuth al eliminar cuenta: $e");
+          } else if (e.code != 'user-not-found') {
+            return _mapearErrorFirebaseAuth(e);
           }
         } catch (e) {
           debugPrint("Error inesperado al eliminar usuario en FirebaseAuth: $e");
+          return 'Error al eliminar usuario en el servidor: $e';
         }
       }
 
       // 3. Desvincular y cerrar Google Sign-In si aplica
       try {
-        final googleSignIn = GoogleSignIn(
-          serverClientId: AppConstants.googleWebClientId,
-        );
-        await googleSignIn.signOut();
+        await _googleSignInInstance.signOut();
       } catch (_) {}
 
       // 4. Cerrar sesión en Firebase Auth para asegurar desvinculación total
+      if (_auth != null) {
+        try {
+          await _auth!.signOut();
+        } catch (_) {}
+      }
+
+      // 5. Limpiar claves de FlutterSecureStorage que pertenezcan a Rinde Más.
+      // Se limpia la clave específica AppConstants.prefApiKey en lugar de deleteAll()
+      // para evitar borrar inadvertidamente datos ajenos o de otros plugins.
       try {
-        await auth.signOut();
+        await _secureStorageInstance.delete(key: AppConstants.prefApiKey);
+      } catch (e) {
+        debugPrint("Error al limpiar claves de SecureStorage: $e");
+      }
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove(AppConstants.prefApiKey);
       } catch (_) {}
 
-      // 5. Limpiar datos locales y recrear sesión anónima limpia
-      await _repository.limpiarDatosLocales();
+      // 6. Eliminar imágenes de recibos y temporales propios de la app
       try {
-        await auth.signInAnonymously();
-      } catch (anonErr) {
-        debugPrint("Error al iniciar sesión anónima tras eliminar cuenta: $anonErr");
+        final rutasApp = await _repository.obtenerRutasArchivosApp();
+        await ImageService.limpiarArchivosApp(rutasConocidas: rutasApp);
+      } catch (e) {
+        debugPrint("Error al limpiar imágenes y temporales de la app: $e");
+      }
+
+      // 7. Limpiar base de datos local (SQLite)
+      await _repository.limpiarDatosLocales();
+
+      // 8. Recrear sesión anónima limpia
+      if (_auth != null) {
+        try {
+          await _auth!.signInAnonymously();
+        } catch (anonErr) {
+          debugPrint("Error al iniciar sesión anónima tras eliminar cuenta: $anonErr");
+        }
       }
 
       return null;
@@ -431,11 +514,10 @@ class SyncService {
 
   Future<String?> vincularCuentaGoogle({bool descartarDatosLocales = false}) async {
     try {
-      final auth = FirebaseAuth.instance;
+      final auth = _auth;
+      if (auth == null) return 'Servicio de autenticación no disponible.';
 
-      final googleSignIn = GoogleSignIn(
-        serverClientId: AppConstants.googleWebClientId,
-      );
+      final googleSignIn = _googleSignInInstance;
 
       // Limpiar sesión previa para garantizar que siempre se muestre el selector de cuentas
       try {
@@ -529,6 +611,8 @@ class SyncService {
 
   String _mapearErrorFirebaseAuth(FirebaseAuthException e) {
     switch (e.code) {
+      case 'requires-recent-login':
+        return 'Por seguridad, debes volver a iniciar sesión antes de eliminar tu cuenta.';
       case 'user-not-found':
         return 'No existe una cuenta registrada con este correo.';
       case 'wrong-password':
@@ -564,7 +648,8 @@ class SyncService {
     }
 
     try {
-      final auth = FirebaseAuth.instance;
+      final auth = _auth;
+      if (auth == null) return 'Servicio de autenticación no disponible.';
       final credential = EmailAuthProvider.credential(
         email: cleanEmail,
         password: password,
@@ -654,7 +739,8 @@ class SyncService {
     }
 
     try {
-      final auth = FirebaseAuth.instance;
+      final auth = _auth;
+      if (auth == null) return 'Servicio de autenticación no disponible.';
       if (descartarDatosLocales) {
         await _repository.limpiarDatosLocales();
       }

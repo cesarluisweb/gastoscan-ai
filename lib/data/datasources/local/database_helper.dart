@@ -984,6 +984,16 @@ class DatabaseHelper {
     );
   }
 
+  /// Retorna todas las rutas de imágenes registradas en scan_queue
+  Future<List<String>> getAllScanQueueImagePaths() async {
+    final db = await instance.database;
+    final res = await db.query('scan_queue', columns: ['image_path']);
+    return res
+        .map((r) => r['image_path'] as String? ?? '')
+        .where((p) => p.isNotEmpty)
+        .toList();
+  }
+
   // ==========================================
   // OPERACIONES PARA CATEGORIAS Y PRESUPUESTOS
   // ==========================================
