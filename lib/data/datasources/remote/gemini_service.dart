@@ -271,14 +271,21 @@ class GeminiService {
         if (call['name'] == 'registrar_gasto') {
           final args = call['args'] as Map;
           final double totalUsd = (args['total_usd'] as num?)?.toDouble() ?? 0.0;
+          final double montoOriginalArg = (args['monto_original'] as num?)?.toDouble() ?? totalUsd;
           final String comercio = args['comercio'] ?? 'Varios';
           final String fecha = args['fecha'] ?? DateTime.now().toIso8601String().substring(0, 10);
           final String categoria = args['categoria'] ?? 'Otros';
+          final String monedaArg = args['moneda']?.toString() ?? '';
+          final String moneda = AppConstants.normalizarMoneda(
+            monedaArg.isNotEmpty ? monedaArg : null,
+            fallback: AppConstants.detectarMonedaDeTexto(spokenText, fallback: 'USD'),
+          );
+          final double totalOriginal = montoOriginalArg > 0 ? montoOriginalArg : totalUsd;
           final List itemsList = args['items'] ?? [];
 
           List<ItemGastoModel> itemsGasto = itemsList.map((item) {
             final double cant = (item['cantidad'] as num?)?.toDouble() ?? 1.0;
-            final double precioUnit = (item['precio_unitario'] as num?)?.toDouble() ?? totalUsd;
+            final double precioUnit = (item['precio_unitario'] as num?)?.toDouble() ?? totalOriginal;
             return ItemGastoModel(
               descripcion: item['descripcion'] ?? 'Artículo',
               cantidad: cant,
@@ -293,8 +300,8 @@ class GeminiService {
               ItemGastoModel(
                 descripcion: spokenText,
                 cantidad: 1.0,
-                precioUnitario: (totalUsd * 100).round(),
-                total: (totalUsd * 100).round(),
+                precioUnitario: (totalOriginal * 100).round(),
+                total: (totalOriginal * 100).round(),
                 categoria: categoria,
               ),
             ];
@@ -303,8 +310,8 @@ class GeminiService {
           return GeminiExtractionResult(
             comercio: comercio,
             fecha: fecha,
-            moneda: 'USD',
-            totalOriginal: totalUsd,
+            moneda: moneda,
+            totalOriginal: totalOriginal,
             tasaCambioDetectada: null,
             impuestoIva: 0.0,
             items: itemsGasto,
@@ -329,10 +336,12 @@ class GeminiService {
       throw Exception('No se detectó el monto en el dictado. Por favor incluye el precio de la compra.');
     }
 
+    final String monedaFallback = AppConstants.detectarMonedaDeTexto(spokenText, fallback: 'USD');
+
     return GeminiExtractionResult(
       comercio: 'Gasto por voz',
       fecha: DateTime.now().toIso8601String().substring(0, 10),
-      moneda: 'USD',
+      moneda: monedaFallback,
       totalOriginal: montoFallback,
       tasaCambioDetectada: null,
       impuestoIva: 0.0,

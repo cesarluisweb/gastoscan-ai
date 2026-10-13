@@ -60,6 +60,48 @@ class AppConstants {
   // Monedas soportadas
   static const List<String> monedas = ['USD', 'VES', 'EUR', 'USDT'];
 
+  /// Normaliza representaciones y sinónimos de moneda al catálogo estándar ('USD', 'VES', 'EUR', 'USDT').
+  static String normalizarMoneda(String? moneda, {String fallback = 'USD'}) {
+    if (moneda == null) return fallback;
+    final trimmed = moneda.trim().toUpperCase();
+    if (trimmed == 'VES' || trimmed == 'BS' || trimmed == 'BS.' || trimmed == 'BOLIVAR' || trimmed == 'BOLIVARES' || trimmed == 'BOLÍVAR' || trimmed == 'BOLÍVARES') {
+      return 'VES';
+    }
+    if (trimmed == 'USD' || trimmed == 'DOLAR' || trimmed == 'DOLARES' || trimmed == 'DÓLAR' || trimmed == 'DÓLARES' || trimmed == '\$') {
+      return 'USD';
+    }
+    if (trimmed == 'EUR' || trimmed == 'EURO' || trimmed == 'EUROS' || trimmed == '€') {
+      return 'EUR';
+    }
+    if (trimmed == 'USDT' || trimmed == 'TETHER') {
+      return 'USDT';
+    }
+    if (monedas.contains(trimmed)) return trimmed;
+    return fallback;
+  }
+
+  /// Detecta la moneda a partir de palabras clave o símbolos en texto dictado o escrito.
+  static String detectarMonedaDeTexto(String texto, {String fallback = 'USD'}) {
+    final lower = texto.toLowerCase();
+    // Prioridad a bolívares si contiene referencias explícitas a la moneda venezolana
+    if (RegExp(r'\b(bol[ií]vares|bol[ií]var|bs\.?|ves)\b', caseSensitive: false).hasMatch(lower)) {
+      return 'VES';
+    }
+    // Dólares
+    if (RegExp(r'\b(d[oó]lares|d[oó]lar|usd)\b|\$', caseSensitive: false).hasMatch(lower)) {
+      return 'USD';
+    }
+    // Euros
+    if (RegExp(r'\b(euros?|eur)\b|€', caseSensitive: false).hasMatch(lower)) {
+      return 'EUR';
+    }
+    // USDT
+    if (RegExp(r'\b(usdt|tether)\b', caseSensitive: false).hasMatch(lower)) {
+      return 'USDT';
+    }
+    return fallback;
+  }
+
   // Claves de SharedPreferences
   static const String prefApiKey = 'gemini_api_key';
   static const String prefGuardarFotos = 'guardar_fotos_local';

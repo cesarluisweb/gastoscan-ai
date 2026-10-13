@@ -306,11 +306,31 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           final String comercio = args['comercio'] ?? 'General';
           final String fecha = args['fecha'] ?? DateTime.now().toIso8601String().substring(0, 10);
           final String categoria = args['categoria'] ?? 'Otros';
-          
+          final String monedaArg = args['moneda']?.toString() ?? '';
+          final String monedaGasto = AppConstants.normalizarMoneda(
+            monedaArg.isNotEmpty ? monedaArg : null,
+            fallback: AppConstants.detectarMonedaDeTexto(text, fallback: 'USD'),
+          );
+
+          final settings = Provider.of<SettingsProvider>(context, listen: false);
+          final double tasaChat = settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : 1.0;
+          final double montoOriginalArg = (args['monto_original'] as num?)?.toDouble() ?? 0.0;
+
+          double totalOrigVal;
+          double totalUsdVal;
+
+          if (monedaGasto == 'VES') {
+            totalOrigVal = montoOriginalArg > 0 ? montoOriginalArg : (totalUsd > 0 && totalUsd != montoOriginalArg ? totalUsd : (totalUsd * tasaChat));
+            totalUsdVal = tasaChat > 0 ? (totalOrigVal / tasaChat) : totalOrigVal;
+          } else {
+            totalOrigVal = montoOriginalArg > 0 ? montoOriginalArg : totalUsd;
+            totalUsdVal = totalOrigVal;
+          }
+
           final List itemsList = args['items'] ?? [];
           final List<ItemGastoModel> itemsGasto = itemsList.map((item) {
-            final double precioUnit = (item['precio_unitario'] as num?)?.toDouble() ?? totalUsd;
             final double cant = (item['cantidad'] as num?)?.toDouble() ?? 1.0;
+            final double precioUnit = (item['precio_unitario'] as num?)?.toDouble() ?? (cant > 0 ? totalOrigVal / cant : totalOrigVal);
             return ItemGastoModel(
               descripcion: item['descripcion'] ?? 'Artículo',
               cantidad: cant,
@@ -319,16 +339,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             );
           }).toList();
 
-          final settings = Provider.of<SettingsProvider>(context, listen: false);
-          final double tasaChat = settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : 1.0;
-
           final nuevoGasto = GastoModel(
             uuid: UuidGenerator.generate(),
             fecha: fecha,
             comercio: comercio,
-            moneda: 'USD',
-            totalOriginal: (totalUsd * 100).round(),
-            totalUsd: (totalUsd * 100).round(),
+            moneda: monedaGasto,
+            totalOriginal: (totalOrigVal * 100).round(),
+            totalUsd: (totalUsdVal * 100).round(),
             tasaCambio: tasaChat,
             fuenteTasaCambio: 'Tasa BCV del día',
             fechaTasaCambio: fecha,
@@ -362,7 +379,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           if (!mounted) return;
           setState(() {
             if (success) {
-              String msg = '¡Listo! He registrado tu compra en "$comercio" por \$${totalUsd.toStringAsFixed(2)}.';
+              final montoFormateado = CurrencyFormatter.formatAmount(totalOrigVal, monedaGasto);
+              String msg = '¡Listo! He registrado tu compra en "$comercio" por $montoFormateado.';
               if (matchedShoppingIds.isNotEmpty) {
                 msg += ' Se tacharon ${matchedShoppingIds.length} producto(s) de tu lista de compras.';
               }

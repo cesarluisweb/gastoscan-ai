@@ -171,5 +171,31 @@ void main() {
       });
       expect(item.categoria, 'Alimentación');
     });
+
+    test('AppConstants.normalizarMoneda maps currency symbols and synonyms to standard currencies', () {
+      expect(AppConstants.normalizarMoneda('VES'), 'VES');
+      expect(AppConstants.normalizarMoneda('bs'), 'VES');
+      expect(AppConstants.normalizarMoneda('Bs.'), 'VES');
+      expect(AppConstants.normalizarMoneda('bolívares'), 'VES');
+      expect(AppConstants.normalizarMoneda('bolivares'), 'VES');
+      expect(AppConstants.normalizarMoneda('dolares'), 'USD');
+      expect(AppConstants.normalizarMoneda('dólares'), 'USD');
+      expect(AppConstants.normalizarMoneda('\$'), 'USD');
+      expect(AppConstants.normalizarMoneda('euros'), 'EUR');
+      expect(AppConstants.normalizarMoneda('€'), 'EUR');
+      expect(AppConstants.normalizarMoneda('usdt'), 'USDT');
+      expect(AppConstants.normalizarMoneda(null), 'USD');
+      expect(AppConstants.normalizarMoneda('xyz', fallback: 'VES'), 'VES');
+    });
+
+    test('AppConstants.detectarMonedaDeTexto extracts currency from voice speech', () {
+      expect(AppConstants.detectarMonedaDeTexto('compré pan en 1500 bolívares'), 'VES');
+      expect(AppConstants.detectarMonedaDeTexto('pagué 200 bs de pasaje'), 'VES');
+      expect(AppConstants.detectarMonedaDeTexto('gasté 10 dolares en el almuerzo'), 'USD');
+      expect(AppConstants.detectarMonedaDeTexto('compré café por 5\$'), 'USD');
+      expect(AppConstants.detectarMonedaDeTexto('pagué 15 euros'), 'EUR');
+      expect(AppConstants.detectarMonedaDeTexto('transferí 20 usdt'), 'USDT');
+      expect(AppConstants.detectarMonedaDeTexto('compré 3 manzanas por 50'), 'USD');
+    });
   });
 }

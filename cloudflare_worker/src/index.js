@@ -498,7 +498,12 @@ REGLAS PARA LISTA DE COMPRAS:
 - Si pide marcar productos como comprados o pendientes, invoca "marcar_items_lista_compras".
 - Si pregunta qué tiene en su lista de compras, responde directamente listando los productos de su lista actual.
 
-Regla para registrar gastos por voz: Si el usuario te dicta registrar un gasto con precios en múltiples monedas mezcladas (ej. un ítem en dólares y otro en bolívares), CONVIERTE mentalmente todos los precios a una sola moneda unificada (la que predomine o USD) usando una tasa de cambio lógica antes de enviarlos a la función registrar_gasto. La app no soporta múltiples monedas en el mismo ticket.
+Regla para registrar gastos por voz:
+- Identifica la moneda en que el usuario realizó la compra: "VES" (si menciona bolívares, bs, o montos en moneda nacional), "USD" (si menciona dólares, $, verdes), "EUR" (si menciona euros, €) o "USDT".
+- Si no menciona ninguna moneda, usa "USD" por defecto.
+- En "monto_original" envía el monto numérico exacto en la moneda indicada (ej. si dice "1500 bolívares", monto_original: 1500, moneda: "VES").
+- En "total_usd" envía el equivalente estimado en dólares (si fue en bolívares, puedes dividirlo por la tasa BCV aproximada del contexto o enviarlo igual para que el cliente lo convierta).
+- Si el usuario te dicta registrar un gasto con precios en múltiples monedas mezcladas, unifica todos los precios a una sola moneda antes de llamar a registrar_gasto.
 
 Aquí están los datos del usuario en formato JSON (gastos del mes y lista de compras actual):
 ${JSON.stringify(contextData)}
@@ -529,11 +534,13 @@ ${JSON.stringify(contextData)}
                 properties: {
                   comercio: { type: "string", description: "Nombre del local o 'General' si no se especifica." },
                   fecha: { type: "string", description: "Fecha en formato YYYY-MM-DD. Usa la fecha actual si no dice otra." },
+                  moneda: { type: "string", description: "Moneda de la compra: VES, USD, EUR o USDT. Si dijo bolívares o Bs, usa 'VES'." },
+                  monto_original: { type: "number", description: "Monto total pagado en la moneda original (ej. 1500 si pagó 1500 bolívares)." },
                   total_usd: { type: "number", description: "Monto total estimado en dólares." },
                   categoria: { type: "string", description: "Una de: Alimentación, Salud, Educación, Hogar, Servicios, Transporte, Otros." },
                   items: {
                     type: "array",
-                    description: "Lista de productos comprados y sus precios estimados.",
+                    description: "Lista de productos comprados y sus precios estimados en la moneda original.",
                     items: {
                       type: "object",
                       properties: {
