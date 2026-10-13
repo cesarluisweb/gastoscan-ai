@@ -248,6 +248,9 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
                                     key: ValueKey('history_${gasto.uuid}'),
                                     gasto: gasto,
                                     monedaPrincipal: settings.monedaPrincipal,
+                                    tasaCambio: settings.tasaCambioVesUsd,
+                                    tasaEur: settings.tasaCambioVesEur,
+                                    tasaUsdt: settings.tasaCambioVesUsdt,
                                     onTap: () {
                                       Navigator.push(
                                         context,
@@ -269,6 +272,9 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
                                   key: ValueKey('history_${gasto.id ?? gasto.comercio}_${gasto.uuid}'),
                                   gasto: gasto,
                                   monedaPrincipal: settings.monedaPrincipal,
+                                  tasaCambio: settings.tasaCambioVesUsd,
+                                  tasaEur: settings.tasaCambioVesEur,
+                                  tasaUsdt: settings.tasaCambioVesUsdt,
                                   initiallyExpanded: query.isNotEmpty && gasto.items.any((item) => _normalizeText(item.descripcion).contains(query)),
                                   onEdit: () {
                                     Navigator.push(

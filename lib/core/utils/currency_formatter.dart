@@ -110,4 +110,57 @@ class CurrencyFormatter {
     }
     return amountUsd;
   }
+
+  /// Convierte un monto en VES a la moneda seleccionada.
+  static double convertFromVes(
+    double amountVes,
+    String monedaPreferida,
+    double tasaCambio, {
+    double tasaEur = 0.0,
+    double tasaUsdt = 0.0,
+  }) {
+    switch (monedaPreferida.toUpperCase()) {
+      case 'VES':
+        return amountVes;
+      case 'EUR':
+        final double eurRate = tasaEur > 0 ? tasaEur : (tasaCambio > 0 ? tasaCambio : 1.0);
+        return eurRate > 0 ? amountVes / eurRate : (tasaCambio > 0 ? amountVes / tasaCambio : 0.0);
+      case 'USDT':
+        final double usdtRate = tasaUsdt > 0 ? tasaUsdt : (tasaCambio > 0 ? tasaCambio : 1.0);
+        return usdtRate > 0 ? amountVes / usdtRate : (tasaCambio > 0 ? amountVes / tasaCambio : 0.0);
+      case 'USD':
+      default:
+        return tasaCambio > 0 ? amountVes / tasaCambio : 0.0;
+    }
+  }
+
+  /// Convierte un monto de cualquier moneda origen a la moneda preferida.
+  static double convertAmount(
+    double amount,
+    String fromCurrency,
+    String toCurrency,
+    double tasaCambioUsd, {
+    double tasaEur = 0.0,
+    double tasaUsdt = 0.0,
+  }) {
+    final from = fromCurrency.toUpperCase();
+    final to = toCurrency.toUpperCase();
+    if (from == to) return amount;
+
+    double ves;
+    if (from == 'VES') {
+      ves = amount;
+    } else if (from == 'EUR') {
+      final eurRate = tasaEur > 0 ? tasaEur : tasaCambioUsd;
+      ves = amount * (eurRate > 0 ? eurRate : 1.0);
+    } else if (from == 'USDT') {
+      final usdtRate = tasaUsdt > 0 ? tasaUsdt : tasaCambioUsd;
+      ves = amount * (usdtRate > 0 ? usdtRate : 1.0);
+    } else {
+      // USD
+      ves = amount * (tasaCambioUsd > 0 ? tasaCambioUsd : 1.0);
+    }
+
+    return convertFromVes(ves, to, tasaCambioUsd, tasaEur: tasaEur, tasaUsdt: tasaUsdt);
+  }
 }

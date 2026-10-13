@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/date_formatter.dart';
+import '../../core/utils/currency_formatter.dart';
 import '../../providers/gasto_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/scan_queue_provider.dart';
@@ -177,23 +178,55 @@ class _DashboardScreenState extends State<DashboardScreen> {
             if (gastoProvider.totalesPorCategoria.isNotEmpty ||
                 gastoProvider.totalesPorCategoriaVes.isNotEmpty ||
                 gastoProvider.presupuestosPorCategoria.isNotEmpty) ...[
-              CategoryChart(
-                categoryTotals: gastoProvider.monedaPresupuesto == 'VES'
-                    ? gastoProvider.totalesPorCategoriaVes
-                    : gastoProvider.totalesPorCategoria,
-                categoryBudgets: gastoProvider.presupuestosPorCategoria,
-                presupuestoGeneral: gastoProvider.presupuestoGeneral,
-                totalGastadoMes: gastoProvider.monedaPresupuesto == 'VES'
-                    ? gastoProvider.totalMesVes
-                    : gastoProvider.totalMesUsd,
-                gastosMes: gastoProvider.gastos,
-                onSetBudget: (categoria, budget) async {
-                  await gastoProvider.setPresupuestoCategoria(categoria, budget);
-                },
-                monedaPrincipal: gastoProvider.monedaPresupuesto,
-                showBudgetBars: false,
-                onNavigateToAnalysis: widget.onNavigateToAnalysis,
-              ),
+              () {
+                final moneda = settings.monedaPrincipal;
+                final Map<String, double> categoryTotals;
+                final double totalMes;
+
+                if (moneda == 'VES') {
+                  categoryTotals = gastoProvider.totalesPorCategoriaVes;
+                  totalMes = gastoProvider.totalMesVes;
+                } else if (moneda == 'USD') {
+                  categoryTotals = gastoProvider.totalesPorCategoria;
+                  totalMes = gastoProvider.totalMesUsd;
+                } else {
+                  // EUR o USDT: convertir desde USD usando las tasas activas
+                  categoryTotals = gastoProvider.totalesPorCategoria.map((k, v) => MapEntry(
+                        k,
+                        CurrencyFormatter.convertFromUsd(
+                          v,
+                          moneda,
+                          settings.tasaCambioVesUsd,
+                          tasaEur: settings.tasaCambioVesEur,
+                          tasaUsdt: settings.tasaCambioVesUsdt,
+                        ),
+                      ));
+                  totalMes = CurrencyFormatter.convertFromUsd(
+                    gastoProvider.totalMesUsd,
+                    moneda,
+                    settings.tasaCambioVesUsd,
+                    tasaEur: settings.tasaCambioVesEur,
+                    tasaUsdt: settings.tasaCambioVesUsdt,
+                  );
+                }
+
+                return CategoryChart(
+                  categoryTotals: categoryTotals,
+                  categoryBudgets: gastoProvider.presupuestosPorCategoria,
+                  presupuestoGeneral: gastoProvider.presupuestoGeneral,
+                  totalGastadoMes: totalMes,
+                  gastosMes: gastoProvider.gastos,
+                  onSetBudget: (categoria, budget) async {
+                    await gastoProvider.setPresupuestoCategoria(categoria, budget);
+                  },
+                  monedaPrincipal: moneda,
+                  showBudgetBars: false,
+                  onNavigateToAnalysis: widget.onNavigateToAnalysis,
+                  tasaCambio: settings.tasaCambioVesUsd,
+                  tasaEur: settings.tasaCambioVesEur,
+                  tasaUsdt: settings.tasaCambioVesUsdt,
+                );
+              }(),
               const SizedBox(height: 16),
             ],
             Padding(
@@ -286,6 +319,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     key: ValueKey('pending_${item['id']}'),
                     gasto: dummyGasto,
                     monedaPrincipal: settings.monedaPrincipal,
+                    tasaCambio: settings.tasaCambioVesUsd,
+                    tasaEur: settings.tasaCambioVesEur,
+                    tasaUsdt: settings.tasaCambioVesUsdt,
                     onTap: () {
                       Navigator.push(
                         context,
@@ -311,6 +347,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   key: ValueKey(gasto.id ?? gasto.comercio),
                   gasto: gasto,
                   monedaPrincipal: settings.monedaPrincipal,
+                  tasaCambio: settings.tasaCambioVesUsd,
+                  tasaEur: settings.tasaCambioVesEur,
+                  tasaUsdt: settings.tasaCambioVesUsdt,
                   onEdit: () {
                     Navigator.push(
                       context,

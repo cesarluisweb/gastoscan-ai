@@ -8,12 +8,18 @@ class PendingExpenseCard extends StatelessWidget {
   final GastoModel gasto;
   final VoidCallback onTap;
   final String monedaPrincipal;
+  final double tasaCambio;
+  final double tasaEur;
+  final double tasaUsdt;
 
   const PendingExpenseCard({
     Key? key,
     required this.gasto,
     required this.onTap,
     this.monedaPrincipal = 'USD',
+    this.tasaCambio = 1.0,
+    this.tasaEur = 0.0,
+    this.tasaUsdt = 0.0,
   }) : super(key: key);
 
   @override
@@ -96,23 +102,45 @@ class PendingExpenseCard extends StatelessWidget {
                 children: [
                   Builder(
                     builder: (context) {
+                      final tasa = gasto.tasaCambio > 0 ? gasto.tasaCambio : (tasaCambio > 0 ? tasaCambio : 1.0);
+                      final double ves = gasto.moneda == 'VES'
+                          ? gasto.totalOriginalDisplay
+                          : (gasto.totalUsdDisplay > 0
+                              ? gasto.totalUsdDisplay * tasa
+                              : gasto.totalOriginalDisplay * tasa);
+                      final double usd = gasto.moneda == 'USD'
+                          ? gasto.totalOriginalDisplay
+                          : (gasto.totalUsdDisplay > 0
+                              ? gasto.totalUsdDisplay
+                              : (tasa > 0 ? gasto.totalOriginalDisplay / tasa : 0.0));
+
                       final double amount;
-                      if (monedaPrincipal == 'VES') {
-                        amount = gasto.moneda == 'VES'
-                            ? gasto.totalOriginalDisplay
-                            : (gasto.totalUsdDisplay > 0
-                                ? gasto.totalUsdDisplay *
-                                    (gasto.tasaCambio > 0 ? gasto.tasaCambio : 1.0)
-                                : gasto.totalOriginalDisplay *
-                                    (gasto.tasaCambio > 0 ? gasto.tasaCambio : 1.0));
-                      } else {
-                        amount = gasto.moneda == 'USD'
-                            ? gasto.totalOriginalDisplay
-                            : (gasto.totalUsdDisplay > 0
-                                ? gasto.totalUsdDisplay
-                                : (gasto.tasaCambio > 0
-                                    ? gasto.totalOriginalDisplay / gasto.tasaCambio
-                                    : 0.0));
+                      switch (monedaPrincipal.toUpperCase()) {
+                        case 'VES':
+                          amount = ves;
+                          break;
+                        case 'EUR':
+                          amount = CurrencyFormatter.convertFromUsd(
+                            usd,
+                            'EUR',
+                            tasa,
+                            tasaEur: tasaEur,
+                            tasaUsdt: tasaUsdt,
+                          );
+                          break;
+                        case 'USDT':
+                          amount = CurrencyFormatter.convertFromUsd(
+                            usd,
+                            'USDT',
+                            tasa,
+                            tasaEur: tasaEur,
+                            tasaUsdt: tasaUsdt,
+                          );
+                          break;
+                        case 'USD':
+                        default:
+                          amount = usd;
+                          break;
                       }
 
                       if (amount <= 0) {
@@ -135,9 +163,7 @@ class PendingExpenseCard extends StatelessWidget {
                       }
 
                       return Text(
-                        monedaPrincipal == 'VES'
-                            ? CurrencyFormatter.formatVes(amount)
-                            : CurrencyFormatter.formatUsd(amount),
+                        CurrencyFormatter.formatAmount(amount, monedaPrincipal),
                         style: const TextStyle(
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.bold,

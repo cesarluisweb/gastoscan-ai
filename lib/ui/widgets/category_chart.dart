@@ -17,6 +17,9 @@ class CategoryChart extends StatefulWidget {
   final String monedaPrincipal;
   final bool showBudgetBars;
   final VoidCallback? onNavigateToAnalysis;
+  final double tasaCambio;
+  final double tasaEur;
+  final double tasaUsdt;
 
   const CategoryChart({
     Key? key,
@@ -29,6 +32,9 @@ class CategoryChart extends StatefulWidget {
     this.monedaPrincipal = 'USD',
     this.showBudgetBars = true,
     this.onNavigateToAnalysis,
+    this.tasaCambio = 1.0,
+    this.tasaEur = 0.0,
+    this.tasaUsdt = 0.0,
   }) : super(key: key);
 
   static IconData getCategoryIcon(String cat) {
@@ -560,11 +566,21 @@ class _CategoryChartState extends State<CategoryChart> {
   List<Widget> _buildCategoryItems(String cat) {
     final List<Map<String, dynamic>> items = [];
     for (final gasto in widget.gastosMes) {
+      final tasa = gasto.tasaCambio > 0 ? gasto.tasaCambio : (widget.tasaCambio > 0 ? widget.tasaCambio : 1.0);
       if (gasto.items.isEmpty) {
         if (gasto.categoria.toLowerCase().trim() == cat.toLowerCase().trim()) {
-          final double amount = widget.monedaPrincipal == 'VES'
-              ? (gasto.moneda == 'VES' ? gasto.totalOriginalDisplay : gasto.totalUsdDisplay * (gasto.tasaCambio > 0 ? gasto.tasaCambio : 1.0))
-              : gasto.totalUsdDisplay;
+          final double amount;
+          if (widget.monedaPrincipal == 'VES') {
+            amount = gasto.moneda == 'VES' ? gasto.totalOriginalDisplay : gasto.totalUsdDisplay * tasa;
+          } else {
+            amount = CurrencyFormatter.convertFromUsd(
+              gasto.totalUsdDisplay,
+              widget.monedaPrincipal,
+              tasa,
+              tasaEur: widget.tasaEur,
+              tasaUsdt: widget.tasaUsdt,
+            );
+          }
           items.add({
             'descripcion': gasto.comercio,
             'comercio': gasto.fecha,
@@ -575,21 +591,25 @@ class _CategoryChartState extends State<CategoryChart> {
       } else {
         for (final item in gasto.items) {
           if (item.categoria.toLowerCase().trim() == cat.toLowerCase().trim()) {
-            double itemAmount;
-            if (widget.monedaPrincipal == 'VES') {
-              if (gasto.moneda == 'VES') {
-                itemAmount = item.totalDisplay;
-              } else {
-                final tasa = gasto.tasaCambio > 0 ? gasto.tasaCambio : 1.0;
-                itemAmount = item.totalDisplay * tasa;
-              }
+            double itemUsd;
+            if (gasto.moneda == 'USD') {
+              itemUsd = item.totalDisplay;
             } else {
-              if (gasto.moneda == 'USD') {
-                itemAmount = item.totalDisplay;
-              } else {
-                final ratio = gasto.totalOriginalDisplay > 0 ? (gasto.totalUsdDisplay / gasto.totalOriginalDisplay) : 0.0;
-                itemAmount = item.totalDisplay * ratio;
-              }
+              final ratio = gasto.totalOriginalDisplay > 0 ? (gasto.totalUsdDisplay / gasto.totalOriginalDisplay) : 0.0;
+              itemUsd = ratio > 0 ? item.totalDisplay * ratio : item.totalDisplay / tasa;
+            }
+
+            final double itemAmount;
+            if (widget.monedaPrincipal == 'VES') {
+              itemAmount = gasto.moneda == 'VES' ? item.totalDisplay : item.totalDisplay * tasa;
+            } else {
+              itemAmount = CurrencyFormatter.convertFromUsd(
+                itemUsd,
+                widget.monedaPrincipal,
+                tasa,
+                tasaEur: widget.tasaEur,
+                tasaUsdt: widget.tasaUsdt,
+              );
             }
             items.add({
               'descripcion': item.descripcion,

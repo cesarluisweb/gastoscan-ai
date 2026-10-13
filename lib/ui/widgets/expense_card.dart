@@ -11,6 +11,9 @@ class ExpenseCard extends StatefulWidget {
   final VoidCallback onEdit;
   final String monedaPrincipal;
   final bool initiallyExpanded;
+  final double tasaCambio;
+  final double tasaEur;
+  final double tasaUsdt;
 
   const ExpenseCard({
     Key? key,
@@ -19,6 +22,9 @@ class ExpenseCard extends StatefulWidget {
     required this.onEdit,
     this.monedaPrincipal = 'USD',
     this.initiallyExpanded = false,
+    this.tasaCambio = 1.0,
+    this.tasaEur = 0.0,
+    this.tasaUsdt = 0.0,
   }) : super(key: key);
 
   @override
@@ -144,23 +150,22 @@ class _ExpenseCardState extends State<ExpenseCard> {
                     children: [
                       Text(
                         () {
-                          final tasa = widget.gasto.tasaCambio > 0 ? widget.gasto.tasaCambio : 1.0;
+                          final tasa = widget.gasto.tasaCambio > 0
+                              ? widget.gasto.tasaCambio
+                              : (widget.tasaCambio > 0 ? widget.tasaCambio : 1.0);
                           final double ves = widget.gasto.moneda == 'VES'
                               ? widget.gasto.totalOriginalDisplay
                               : widget.gasto.totalUsdDisplay * tasa;
                           final double usd = widget.gasto.totalUsdDisplay;
 
-                          switch (widget.monedaPrincipal) {
-                            case 'VES':
-                              return CurrencyFormatter.formatVes(ves);
-                            case 'EUR':
-                              return CurrencyFormatter.formatEur(usd / 1.08);
-                            case 'USDT':
-                              return CurrencyFormatter.formatUsdt(usd);
-                            case 'USD':
-                            default:
-                              return CurrencyFormatter.formatUsd(usd);
-                          }
+                          return CurrencyFormatter.formatPreferido(
+                            usd,
+                            ves,
+                            tasa,
+                            widget.monedaPrincipal,
+                            tasaEur: widget.tasaEur,
+                            tasaUsdt: widget.tasaUsdt,
+                          );
                         }(),
                         style: const TextStyle(
                           color: AppColors.textPrimary,
@@ -169,14 +174,22 @@ class _ExpenseCardState extends State<ExpenseCard> {
                         ),
                       ),
                       Text(
-                        widget.monedaPrincipal == 'VES'
-                            ? CurrencyFormatter.formatUsd(widget.gasto.totalUsdDisplay)
-                            : CurrencyFormatter.formatVes(
-                                widget.gasto.moneda == 'VES'
-                                    ? widget.gasto.totalOriginalDisplay
-                                    : widget.gasto.totalUsdDisplay *
-                                        (widget.gasto.tasaCambio > 0 ? widget.gasto.tasaCambio : 1.0),
-                              ),
+                        () {
+                          final tasa = widget.gasto.tasaCambio > 0
+                              ? widget.gasto.tasaCambio
+                              : (widget.tasaCambio > 0 ? widget.tasaCambio : 1.0);
+                          final double ves = widget.gasto.moneda == 'VES'
+                              ? widget.gasto.totalOriginalDisplay
+                              : widget.gasto.totalUsdDisplay * tasa;
+                          final double usd = widget.gasto.totalUsdDisplay;
+
+                          return CurrencyFormatter.formatSecundario(
+                            usd,
+                            ves,
+                            tasa,
+                            widget.monedaPrincipal,
+                          );
+                        }(),
                         style: const TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 12,
@@ -280,10 +293,35 @@ class _ExpenseCardState extends State<ExpenseCard> {
                       }
                     }
 
-                    final double itemDisplay = widget.monedaPrincipal == 'VES' ? itemVes : itemUsd;
-                    final String itemText = widget.monedaPrincipal == 'VES'
-                        ? CurrencyFormatter.formatVes(itemDisplay)
-                        : CurrencyFormatter.formatUsd(itemDisplay);
+                    final double itemDisplay;
+                    switch (widget.monedaPrincipal.toUpperCase()) {
+                      case 'VES':
+                        itemDisplay = itemVes;
+                        break;
+                      case 'EUR':
+                        itemDisplay = CurrencyFormatter.convertFromUsd(
+                          itemUsd,
+                          'EUR',
+                          tasa,
+                          tasaEur: widget.tasaEur,
+                          tasaUsdt: widget.tasaUsdt,
+                        );
+                        break;
+                      case 'USDT':
+                        itemDisplay = CurrencyFormatter.convertFromUsd(
+                          itemUsd,
+                          'USDT',
+                          tasa,
+                          tasaEur: widget.tasaEur,
+                          tasaUsdt: widget.tasaUsdt,
+                        );
+                        break;
+                      case 'USD':
+                      default:
+                        itemDisplay = itemUsd;
+                        break;
+                    }
+                    final String itemText = CurrencyFormatter.formatAmount(itemDisplay, widget.monedaPrincipal);
 
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4),

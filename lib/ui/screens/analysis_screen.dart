@@ -56,24 +56,93 @@ class AnalysisScreen extends StatelessWidget {
               ),
             )
           else if (hasData) ...[
-            _buildGeneralBudgetCard(context, gastoProvider, settings),
-            const SizedBox(height: 16),
-            CategoryChart(
-              categoryTotals: gastoProvider.monedaPresupuesto == 'VES'
-                  ? gastoProvider.totalesPorCategoriaVes
-                  : gastoProvider.totalesPorCategoria,
-              categoryBudgets: gastoProvider.presupuestosPorCategoria,
-              presupuestoGeneral: gastoProvider.presupuestoGeneral,
-              totalGastadoMes: gastoProvider.monedaPresupuesto == 'VES'
-                  ? gastoProvider.totalMesVes
-                  : gastoProvider.totalMesUsd,
-              gastosMes: gastoProvider.gastos,
-              onSetBudget: (categoria, budget) async {
-                await gastoProvider.setPresupuestoCategoria(categoria, budget);
-              },
-              monedaPrincipal: gastoProvider.monedaPresupuesto,
-              showBudgetBars: true,
-            ),
+            () {
+              final bool isBudgetVes = gastoProvider.monedaPresupuesto == 'VES';
+              final String activeMoneda = isBudgetVes ? 'VES' : settings.monedaPrincipal;
+
+              final Map<String, double> categoryTotals;
+              final Map<String, double> categoryBudgets;
+              final double totalMes;
+              final double budgetGeneral;
+
+              if (activeMoneda == 'VES') {
+                categoryTotals = gastoProvider.totalesPorCategoriaVes;
+                categoryBudgets = isBudgetVes
+                    ? gastoProvider.presupuestosPorCategoria
+                    : gastoProvider.presupuestosPorCategoria.map((k, v) => MapEntry(
+                          k,
+                          CurrencyFormatter.convertFromUsd(v, 'VES', settings.tasaCambioVesUsd),
+                        ));
+                totalMes = gastoProvider.totalMesVes;
+                budgetGeneral = isBudgetVes
+                    ? gastoProvider.presupuestoGeneral
+                    : CurrencyFormatter.convertFromUsd(gastoProvider.presupuestoGeneral, 'VES', settings.tasaCambioVesUsd);
+              } else if (activeMoneda == 'USD') {
+                categoryTotals = gastoProvider.totalesPorCategoria;
+                categoryBudgets = gastoProvider.presupuestosPorCategoria;
+                totalMes = gastoProvider.totalMesUsd;
+                budgetGeneral = gastoProvider.presupuestoGeneral;
+              } else {
+                // EUR o USDT
+                categoryTotals = gastoProvider.totalesPorCategoria.map((k, v) => MapEntry(
+                      k,
+                      CurrencyFormatter.convertFromUsd(
+                        v,
+                        activeMoneda,
+                        settings.tasaCambioVesUsd,
+                        tasaEur: settings.tasaCambioVesEur,
+                        tasaUsdt: settings.tasaCambioVesUsdt,
+                      ),
+                    ));
+                categoryBudgets = gastoProvider.presupuestosPorCategoria.map((k, v) => MapEntry(
+                      k,
+                      CurrencyFormatter.convertFromUsd(
+                        v,
+                        activeMoneda,
+                        settings.tasaCambioVesUsd,
+                        tasaEur: settings.tasaCambioVesEur,
+                        tasaUsdt: settings.tasaCambioVesUsdt,
+                      ),
+                    ));
+                totalMes = CurrencyFormatter.convertFromUsd(
+                  gastoProvider.totalMesUsd,
+                  activeMoneda,
+                  settings.tasaCambioVesUsd,
+                  tasaEur: settings.tasaCambioVesEur,
+                  tasaUsdt: settings.tasaCambioVesUsdt,
+                );
+                budgetGeneral = CurrencyFormatter.convertFromUsd(
+                  gastoProvider.presupuestoGeneral,
+                  activeMoneda,
+                  settings.tasaCambioVesUsd,
+                  tasaEur: settings.tasaCambioVesEur,
+                  tasaUsdt: settings.tasaCambioVesUsdt,
+                );
+              }
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildGeneralBudgetCard(context, gastoProvider, settings, activeMoneda),
+                  const SizedBox(height: 16),
+                  CategoryChart(
+                    categoryTotals: categoryTotals,
+                    categoryBudgets: categoryBudgets,
+                    presupuestoGeneral: budgetGeneral,
+                    totalGastadoMes: totalMes,
+                    gastosMes: gastoProvider.gastos,
+                    onSetBudget: (categoria, budget) async {
+                      await gastoProvider.setPresupuestoCategoria(categoria, budget);
+                    },
+                    monedaPrincipal: activeMoneda,
+                    showBudgetBars: true,
+                    tasaCambio: settings.tasaCambioVesUsd,
+                    tasaEur: settings.tasaCambioVesEur,
+                    tasaUsdt: settings.tasaCambioVesUsdt,
+                  ),
+                ],
+              );
+            }(),
           ] else
             _buildEmptyAnalysisState(context),
 
@@ -90,17 +159,54 @@ class AnalysisScreen extends StatelessWidget {
     BuildContext context,
     GastoProvider gastoProvider,
     SettingsProvider settings,
+    String activeMoneda,
   ) {
-    final double budget = gastoProvider.presupuestoGeneral;
-    final double metaAhorro = gastoProvider.metaAhorro;
+    final bool isBudgetVes = gastoProvider.monedaPresupuesto == 'VES';
+    final double rawBudget = gastoProvider.presupuestoGeneral;
+    final double rawMetaAhorro = gastoProvider.metaAhorro;
+
+    final double budget;
+    final double metaAhorro;
+    final double spent;
+
+    if (activeMoneda == 'VES') {
+      budget = isBudgetVes ? rawBudget : CurrencyFormatter.convertFromUsd(rawBudget, 'VES', settings.tasaCambioVesUsd);
+      metaAhorro = isBudgetVes ? rawMetaAhorro : CurrencyFormatter.convertFromUsd(rawMetaAhorro, 'VES', settings.tasaCambioVesUsd);
+      spent = gastoProvider.totalMesVes;
+    } else if (activeMoneda == 'USD') {
+      budget = isBudgetVes ? (settings.tasaCambioVesUsd > 0 ? rawBudget / settings.tasaCambioVesUsd : 0.0) : rawBudget;
+      metaAhorro = isBudgetVes ? (settings.tasaCambioVesUsd > 0 ? rawMetaAhorro / settings.tasaCambioVesUsd : 0.0) : rawMetaAhorro;
+      spent = gastoProvider.totalMesUsd;
+    } else {
+      // EUR o USDT
+      budget = CurrencyFormatter.convertFromUsd(
+        rawBudget,
+        activeMoneda,
+        settings.tasaCambioVesUsd,
+        tasaEur: settings.tasaCambioVesEur,
+        tasaUsdt: settings.tasaCambioVesUsdt,
+      );
+      metaAhorro = CurrencyFormatter.convertFromUsd(
+        rawMetaAhorro,
+        activeMoneda,
+        settings.tasaCambioVesUsd,
+        tasaEur: settings.tasaCambioVesEur,
+        tasaUsdt: settings.tasaCambioVesUsdt,
+      );
+      spent = CurrencyFormatter.convertFromUsd(
+        gastoProvider.totalMesUsd,
+        activeMoneda,
+        settings.tasaCambioVesUsd,
+        tasaEur: settings.tasaCambioVesEur,
+        tasaUsdt: settings.tasaCambioVesUsdt,
+      );
+    }
+
     final bool hasSavingsGoal = metaAhorro > 0;
     final double limiteParaGastar = hasSavingsGoal
         ? (budget - metaAhorro).clamp(0.0, double.infinity)
         : budget;
 
-    final double spent = gastoProvider.monedaPresupuesto == 'VES'
-        ? gastoProvider.totalMesVes
-        : gastoProvider.totalMesUsd;
     final bool hasBudget = budget > 0;
     final double targetBudget = hasSavingsGoal ? limiteParaGastar : budget;
     final bool isExceeded = hasBudget && (targetBudget > 0 ? spent > targetBudget : spent > 0);
@@ -168,18 +274,7 @@ class AnalysisScreen extends StatelessWidget {
             Builder(
               builder: (context) {
                 String fmtAmount(double val) {
-                  final m = gastoProvider.monedaPresupuesto.toUpperCase();
-                  switch (m) {
-                    case 'VES':
-                      return CurrencyFormatter.formatVes(val);
-                    case 'EUR':
-                      return CurrencyFormatter.formatEur(val);
-                    case 'USDT':
-                      return CurrencyFormatter.formatUsdt(val);
-                    case 'USD':
-                    default:
-                      return CurrencyFormatter.formatUsd(val);
-                  }
+                  return CurrencyFormatter.formatAmount(val, activeMoneda);
                 }
 
                 return Column(
@@ -283,7 +378,20 @@ class AnalysisScreen extends StatelessWidget {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 const Text('Gasto Proyectado Fin de Mes:', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                                Text(fmtAmount(snapshot.gastoProyectadoFinDeMes), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                                Text(
+                                  fmtAmount(
+                                    (activeMoneda == 'EUR' || activeMoneda == 'USDT')
+                                        ? CurrencyFormatter.convertFromUsd(
+                                            snapshot.gastoProyectadoFinDeMes,
+                                            activeMoneda,
+                                            settings.tasaCambioVesUsd,
+                                            tasaEur: settings.tasaCambioVesEur,
+                                            tasaUsdt: settings.tasaCambioVesUsdt,
+                                          )
+                                        : snapshot.gastoProyectadoFinDeMes,
+                                  ),
+                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                                ),
                               ],
                             ),
                           ],

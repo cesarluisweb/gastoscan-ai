@@ -161,6 +161,50 @@ void main() {
       expect(find.text(CurrencyFormatter.formatVes(800.0)), findsOneWidget);
       expect(find.text(CurrencyFormatter.formatUsd(20.0)), findsOneWidget);
     });
+
+    testWidgets('displays EUR as primary with converted amount when monedaPrincipal is EUR', (tester) async {
+      // 20 USD * 40 VES/USD = 800 VES. 800 VES / 50 VES/EUR = 16.0 EUR
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ExpenseCard(
+              gasto: gasto,
+              monedaPrincipal: 'EUR',
+              tasaCambio: 40.0,
+              tasaEur: 50.0,
+              onDelete: () {},
+              onEdit: () {},
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text(CurrencyFormatter.formatEur(16.0)), findsOneWidget);
+      expect(find.text(CurrencyFormatter.formatVes(800.0)), findsOneWidget);
+    });
+
+    testWidgets('displays USDT as primary with converted amount when monedaPrincipal is USDT', (tester) async {
+      // 20 USD * 40 VES/USD = 800 VES. 800 VES / 40 VES/USDT = 20.0 USDT
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ExpenseCard(
+              gasto: gasto,
+              monedaPrincipal: 'USDT',
+              tasaCambio: 40.0,
+              tasaUsdt: 40.0,
+              onDelete: () {},
+              onEdit: () {},
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text(CurrencyFormatter.formatUsdt(20.0)), findsOneWidget);
+      expect(find.text(CurrencyFormatter.formatVes(800.0)), findsOneWidget);
+    });
   });
 
   group('CategoryChart Currency Preference Tests', () {
@@ -182,10 +226,57 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // La vista usa la moneda del presupuesto: totales y budgets llegan ya
-      // convertidos por el llamador, el chart no aplica tasas.
       expect(
         find.text('${CurrencyFormatter.formatVes(800.0)} / ${CurrencyFormatter.formatVes(2000.0)}'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('renders EUR symbol and converted amounts when monedaPrincipal is EUR', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: CategoryChart(
+                categoryTotals: const {'Alimentación': 20.0},
+                categoryBudgets: const {'Alimentación': 50.0},
+                presupuestoGeneral: 200.0,
+                totalGastadoMes: 20.0,
+                monedaPrincipal: 'EUR',
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('${CurrencyFormatter.formatEur(20.0)} / ${CurrencyFormatter.formatEur(50.0)}'),
+        findsOneWidget,
+      );
+      expect(find.text(CurrencyFormatter.formatEur(20.0)), findsWidgets);
+    });
+
+    testWidgets('renders USDT symbol and amounts when monedaPrincipal is USDT', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: CategoryChart(
+                categoryTotals: const {'Alimentación': 25.0},
+                categoryBudgets: const {'Alimentación': 60.0},
+                presupuestoGeneral: 300.0,
+                totalGastadoMes: 25.0,
+                monedaPrincipal: 'USDT',
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('${CurrencyFormatter.formatUsdt(25.0)} / ${CurrencyFormatter.formatUsdt(60.0)}'),
         findsOneWidget,
       );
     });
