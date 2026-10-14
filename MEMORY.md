@@ -3,23 +3,24 @@
 
 ## Estado Actual Inmediato
 - **Rama:** `main`.
-- **Fase activa:** Correcciones críticas de Auditoría Integral (Fases 1 y 2 de Google Play).
+- **Fase activa:** Validación manual de Fase 7.1 (Auditoría Integral y Blindaje para Google Play) y preparación de Fase 2 pendiente.
 - **Últimos hitos:** 
-  1. **Auditoría Integral Guardada:** Diagnóstico exhaustivo consolidado en `DOC_AUDITORIA_INTEGRAL.md`.
-  2. **Chat IA con Revisión Obligatoria:** `chat_screen.dart` ya no muta SQLite/Firestore a espaldas del usuario; redirige a `ReviewExpenseScreen` y añade botón de reporte de IA.
+  1. **CI en Verde (Build 427):** GitHub Actions completó compilación de APK, AAB oficial, pruebas unitarias y despliegue web exitosamente.
+  2. **Chat IA Seguro:** Eliminada mutación silenciosa; los gastos en conversación muestran botón interactivo que abre `ReviewExpenseScreen`.
   3. **Seguridad en Vinculación:** `sync_service.dart` valida primero la autenticación antes de borrar la base de datos local SQLite.
-  4. **Multimoneda Dinámica en Galería:** `receipt_gallery_screen.dart` usa `CurrencyFormatter.formatPreferido` eliminando ratio fijo `usd / 1.08`.
-  5. **Cumplimiento Google Play:** Eliminados `READ_MEDIA_IMAGES` de `AndroidManifest.xml` y fallback de descarga de APK externo en `update_service.dart`. `exactAllowWhileIdle` cambiado a `inexactAllowWhileIdle`.
-  6. **Fuga de Memoria Corregida:** Controladores en `auth_modal_sheet.dart` liberados mediante `whenComplete`.
+  4. **Multimoneda Dinámica en Galería:** `receipt_gallery_screen.dart` usa `CurrencyFormatter.formatPreferido`.
+  5. **Cumplimiento Google Play:** Eliminados `READ_MEDIA_IMAGES` de `AndroidManifest.xml` y fallback de descarga de APK en `update_service.dart`. `exactAllowWhileIdle` cambiado a `inexactAllowWhileIdle`.
+  6. **Gráfico de Funciones Cumple Políticas:** Eliminado botón «Descargar gratis» y reemplazado por chips de valor.
 
 ## Decisiones Técnicas y de Negocio Recientes
-- **Cero Mutación Silenciosa de IA:** Todo gasto detectado en el chat exige confirmación humana en `ReviewExpenseScreen`.
-- **Actualizaciones Solo por Play Store:** La app no descarga ni distribuye APKs directamente.
-- **Protección de Datos Locales:** En flujos de vinculación (`descartarDatosLocales`), el borrado local solo ocurre tras `linkWithCredential` o `signInWithCredential` exitoso.
+- **Cero Mutación Silenciosa de IA:** Todo gasto en chat exige confirmación humana en `ReviewExpenseScreen`.
+- **Actualizaciones Solo por Play Store:** La app enruta exclusivamente a `market://` y web de Google Play.
+- **Protección de Datos Locales:** En vinculación, el borrado local solo ocurre tras autenticación exitosa.
 
 ## Errores y Fricciones a Evitar
 - Prohibido reintroducir URLs de descarga de `.apk` o permisos `READ_MEDIA_IMAGES` en Android 13+.
 - Toda conversión de divisas debe pasar por `CurrencyFormatter` y las tasas dinámicas de `settings`.
 
 ## Próximo Paso Inmediato
-- Verificar SHA-1 de Play App Signing en Firebase Console (`DOC_CONFIGURACION_GOOGLE_SIGNIN.md`) y sustituir gráfico de funciones sin botón CTA.
+- Probar en dispositivo físico los 5 recorridos críticos de la compilación 427.
+- Continuar con las tareas pendientes de Fase 2 (anonimizar captura 5, fijar compileSdk=35, soporte EUR/USDT en cola de escaneo).
