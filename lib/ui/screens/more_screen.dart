@@ -1101,7 +1101,58 @@ class MoreScreenState extends State<MoreScreen> {
     final scanQueue = Provider.of<ScanQueueProvider>(context, listen: false);
     final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
 
-    final error = await gastoProvider.eliminarCuentaYDatos();
+    String? error = await gastoProvider.eliminarCuentaYDatos();
+
+    if (!mounted) return;
+
+    if (error == 'REQUIRES_PASSWORD_REAUTH') {
+      final passwordCtrl = TextEditingController();
+      final reauthConfirm = await showDialog<bool>(
+        context: context,
+        builder: (reauthCtx) => AlertDialog(
+          title: const Text('Confirma tu contraseña'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Por seguridad, ingresa tu contraseña actual para autorizar la eliminación de tu cuenta.',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: passwordCtrl,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Contraseña',
+                  prefixIcon: Icon(Icons.lock_outline),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(reauthCtx, false),
+              child: const Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.error,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () => Navigator.pop(reauthCtx, true),
+              child: const Text('Confirmar y eliminar'),
+            ),
+          ],
+        ),
+      );
+
+      if (reauthConfirm == true && passwordCtrl.text.isNotEmpty && mounted) {
+        error = await gastoProvider.eliminarCuentaYDatos(reauthPassword: passwordCtrl.text.trim());
+      } else {
+        return;
+      }
+    }
 
     if (!mounted) return;
 

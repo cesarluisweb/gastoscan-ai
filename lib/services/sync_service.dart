@@ -373,6 +373,17 @@ class SyncService {
       if (_auth != null) {
         await _auth!.signOut();
       }
+
+      try {
+        await _secureStorageInstance.delete(key: AppConstants.prefApiKey);
+      } catch (e) {
+        debugPrint("Error al limpiar claves de SecureStorage en cerrarSesion: $e");
+      }
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove(AppConstants.prefApiKey);
+      } catch (_) {}
+
       await _repository.limpiarDatosLocales();
       if (_auth != null) {
         await _auth!.signInAnonymously();
@@ -386,7 +397,7 @@ class SyncService {
   /// Elimina permanentemente la cuenta en Firebase Auth, borra todos los gastos y presupuestos
   /// asociados en Firestore, limpia la base de datos local (SQLite), elimina las fotos de recibos
   /// y temporales propios de la app, limpia las claves de SecureStorage y recrea una sesión anónima fresca.
-  Future<String?> eliminarCuentaYDatos() async {
+  Future<String?> eliminarCuentaYDatos({String? reauthPassword}) async {
     try {
       final user = _auth?.currentUser;
 
@@ -433,6 +444,7 @@ class SyncService {
         } on FirebaseAuthException catch (e) {
           if (e.code == 'requires-recent-login') {
             final isGoogle = user.providerData.any((p) => p.providerId == 'google.com');
+            final isPassword = user.providerData.any((p) => p.providerId == 'password');
             if (isGoogle) {
               try {
                 final GoogleSignInAccount? googleUser = await _googleSignInInstance.signIn();
@@ -452,6 +464,25 @@ class SyncService {
                   return _mapearErrorFirebaseAuth(reauthErr);
                 }
                 return 'No se pudo reautenticar para eliminar la cuenta: $reauthErr';
+              }
+            } else if (isPassword) {
+              if (reauthPassword != null && reauthPassword.isNotEmpty && user.email != null) {
+                try {
+                  final credential = EmailAuthProvider.credential(
+                    email: user.email!,
+                    password: reauthPassword,
+                  );
+                  await user.reauthenticateWithCredential(credential);
+                  await user.delete();
+                } catch (reauthErr) {
+                  debugPrint("No se pudo reautenticar con email/password: $reauthErr");
+                  if (reauthErr is FirebaseAuthException) {
+                    return _mapearErrorFirebaseAuth(reauthErr);
+                  }
+                  return 'No se pudo reautenticar para eliminar la cuenta: $reauthErr';
+                }
+              } else {
+                return 'REQUIRES_PASSWORD_REAUTH';
               }
             } else {
               return _mapearErrorFirebaseAuth(e);

@@ -21,27 +21,58 @@ class ReceiptGalleryScreen extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  State<ReceiptGalleryScreen> createState() => _ReceiptGalleryScreenState();
+}
+
+class _ReceiptGalleryScreenState extends State<ReceiptGalleryScreen> {
+  List<GastoModel> _validReceipts = [];
+  List<GastoModel>? _lastGastos;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final gastos = Provider.of<GastoProvider>(context).gastos;
+    if (_lastGastos != gastos) {
+      _lastGastos = gastos;
+      _filterReceiptsAsync(gastos);
+    }
+  }
+
+  Future<void> _filterReceiptsAsync(List<GastoModel> gastos) async {
+    final withPath = gastos.where((g) => g.rutaFotoLocal != null && g.rutaFotoLocal!.isNotEmpty).toList();
+    final List<GastoModel> valid = [];
+    for (final g in withPath) {
+      final exists = await File(g.rutaFotoLocal!).exists();
+      if (exists) {
+        valid.add(g);
+      }
+    }
+    if (mounted) {
+      setState(() {
+        _validReceipts = valid;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final gastoProvider = Provider.of<GastoProvider>(context);
     final settings = Provider.of<SettingsProvider>(context);
     final mesNombre = DateFormatter.getMonthName(gastoProvider.selectedMonth);
     final anio = gastoProvider.selectedYear;
 
-    final List<GastoModel> receipts = gastoProvider.gastos.where((g) {
-      if (g.rutaFotoLocal == null || g.rutaFotoLocal!.isEmpty) return false;
-      return File(g.rutaFotoLocal!).existsSync();
-    }).toList();
+    final List<GastoModel> receipts = _validReceipts;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Comprobantes Guardados'),
-        leading: showBackButton
+        leading: widget.showBackButton
             ? IconButton(
                 icon: const Icon(Icons.arrow_back),
-                onPressed: onBack ?? () => Navigator.pop(context),
+                onPressed: widget.onBack ?? () => Navigator.pop(context),
               )
             : null,
-        automaticallyImplyLeading: showBackButton,
+        automaticallyImplyLeading: widget.showBackButton,
       ),
       body: Column(
         children: [

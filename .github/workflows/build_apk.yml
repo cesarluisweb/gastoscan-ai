@@ -94,18 +94,19 @@ jobs:
           -keep class com.google_mlkit_text_recognition.** { *; }
           EOF
           
-          # Inyectar configuracion de proguard-rules.pro en android/app/build.gradle.kts
-          if ! grep -q "proguardFiles" android/app/build.gradle.kts; then
-            python3 -c '
+          # Inyectar configuracion de proguard-rules.pro y fijar API 35 en android/app/build.gradle.kts
+          python3 -c '
           with open("android/app/build.gradle.kts", "r") as f:
               content = f.read()
-          target = "signingConfig = signingConfigs.getByName(\"debug\")"
-          replacement = target + "\n            proguardFiles(getDefaultProguardFile(\"proguard-android-optimize.txt\"), \"proguard-rules.pro\")"
-          new_content = content.replace(target, replacement)
+          if "proguardFiles" not in content:
+              target = "signingConfig = signingConfigs.getByName(\"debug\")"
+              replacement = target + "\n            proguardFiles(getDefaultProguardFile(\"proguard-android-optimize.txt\"), \"proguard-rules.pro\")"
+              content = content.replace(target, replacement)
+          content = content.replace("compileSdk = flutter.compileSdkVersion", "compileSdk = 35")
+          content = content.replace("targetSdk = flutter.targetSdkVersion", "targetSdk = 35")
           with open("android/app/build.gradle.kts", "w") as f:
-              f.write(new_content)
+              f.write(content)
           '
-          fi
           cat android/app/proguard-rules.pro
           cat android/app/build.gradle.kts
 
@@ -115,7 +116,7 @@ jobs:
           BASE_BUILD=$(grep "^version:" pubspec.yaml | sed -e 's/version:[[:space:]]*//' | cut -d '+' -f 2 | tr -d '[:space:]')
           BUILD_NUM=$(( BASE_BUILD + ${{ github.run_number }} ))
           echo "Compilando Rinde Más v$APP_VERSION (Build $BUILD_NUM)..."
-          flutter build apk --release --no-tree-shake-icons --build-name="$APP_VERSION" --build-number="$BUILD_NUM" --dart-define=GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}"
+          flutter build apk --release --no-tree-shake-icons --build-name="$APP_VERSION" --build-number="$BUILD_NUM"
         
       - name: Firmar APK con Keystore de Produccion
         run: |
@@ -133,7 +134,7 @@ jobs:
           BASE_BUILD=$(grep "^version:" pubspec.yaml | sed -e 's/version:[[:space:]]*//' | cut -d '+' -f 2 | tr -d '[:space:]')
           BUILD_NUM=$(( BASE_BUILD + ${{ github.run_number }} ))
           echo "Compilando AAB para Google Play v$APP_VERSION (Build $BUILD_NUM)..."
-          flutter build appbundle --release --no-tree-shake-icons --build-name="$APP_VERSION" --build-number="$BUILD_NUM" --dart-define=GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}"
+          flutter build appbundle --release --no-tree-shake-icons --build-name="$APP_VERSION" --build-number="$BUILD_NUM"
 
       - name: Verificar Firma Oficial Unica del AAB
         run: |

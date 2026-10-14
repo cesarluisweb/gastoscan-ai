@@ -3,26 +3,22 @@
 
 ## Estado Actual Inmediato
 - **Rama:** `main`.
-- **Fase activa:** Validación manual de Fase 7.1 (Auditoría Integral y Blindaje para Google Play) y preparación de Fase 2 pendiente.
+- **Fase activa:** Fase 2 de Auditoría Integral implementada (multimoneda EUR/USDT, adopción perezosa de presupuesto, reauth en eliminación de cuenta, compile/targetSdk=35, anonimización captura 5, limpieza de credenciales en logout, rendimiento y contraste).
 - **Últimos hitos:** 
-  1. **CI en Verde (Build 428):** GitHub Actions completó compilación de APK, AAB oficial firmado, pruebas unitarias y despliegue web.
-  2. **Blindaje de Permisos AAB Verificado:** Confirmada la ausencia total de `READ_MEDIA_IMAGES` y `READ_MEDIA_VIDEO` en el manifiesto binario fusionado del `.aab`.
-  3. **Chat IA Seguro:** Eliminada mutación silenciosa; los gastos en conversación muestran botón interactivo que abre `ReviewExpenseScreen`.
-  4. **Seguridad en Vinculación:** `sync_service.dart` valida primero la autenticación antes de borrar la base de datos local SQLite.
-  5. **Multimoneda Dinámica en Galería:** `receipt_gallery_screen.dart` usa `CurrencyFormatter.formatPreferido`.
-  6. **Cumplimiento Google Play:** Eliminados `READ_MEDIA_IMAGES` con `tools:node="remove"` y fallback de descarga de APK en `update_service.dart`. `exactAllowWhileIdle` cambiado a `inexactAllowWhileIdle`.
-  7. **Gráfico de Funciones Cumple Políticas:** Eliminado botón «Descargar gratis» y reemplazado por chips de valor.
+  1. **Multimoneda e Integridad (FIN-04, FIN-05, FIN-06, TEC-06):** Conversión dinámica EUR/USDT en colas de escaneo e historial; soporte completo de tasa EUR en `ReviewExpenseScreen`; adopción perezosa de presupuesto consolidada en BD local; UUIDs con `Random.secure()`.
+  2. **Seguridad y Sesión (SEC-03, SEC-04, SEC-06):** Reautenticación por contraseña en borrado de cuenta (`requires-recent-login`); purga de API key de SecureStorage en logout; eliminación de `--dart-define=GEMINI_API_KEY` en CI.
+  3. **Calidad Visual y Rendimiento (UX-01, UX-04, TEC-03, TEC-04):** Contraste dinámico blanco/negro en dona por luminancia; borde de foco en `primaryDark`; verificación asíncrona de archivos en galería; guardas `mounted` tras awaits.
+  4. **Activos Google Play y SDK (GP-07, GP-08):** Correo real anonimizado en captura 5 (`usuario@ejemplo.com`); `compileSdk = 35` y `targetSdk = 35` inyectados en build de CI.
 
 ## Decisiones Técnicas y de Negocio Recientes
-- **Cero Mutación Silenciosa de IA:** Todo gasto en chat exige confirmación humana en `ReviewExpenseScreen`.
-- **Actualizaciones Solo por Play Store:** La app enruta exclusivamente a `market://` y web de Google Play.
-- **Protección de Datos Locales:** En vinculación, el borrado local solo ocurre tras autenticación exitosa.
+- **Fotos Locales Preservadas:** No se eliminan fotos físicas del teléfono al cerrar sesión si el usuario las guardó.
+- **Historial Keystore:** No se reescribe el historial Git; el repositorio pasará a Privado tras finalizar.
+- **Soporte EUR Real:** `ReviewExpenseScreen` persiste la tasa oficial del euro y calcula equivalentes exactos en Bs. y USD.
 
 ## Errores y Fricciones a Evitar
 - Prohibido reintroducir URLs de descarga de `.apk` o permisos `READ_MEDIA_IMAGES` en Android 13+.
 - Toda conversión de divisas debe pasar por `CurrencyFormatter` y las tasas dinámicas de `settings`.
 
 ## Próximo Paso Inmediato
-- Probar en dispositivo físico los 5 recorridos críticos de la compilación 427.
-- Continuar con las tareas pendientes de Fase 2 (anonimizar captura 5, fijar compileSdk=35, soporte EUR/USDT en cola de escaneo).
-- Tarea registrada en ROADMAP (Fase 6.1): Revisión y expansión de categorías por defecto (ej. Vestimenta/Ropa).
+- Monitorear GitHub Actions CI tras el push hasta confirmar build exitoso y pruebas unitarias en verde.
+- Descargar nuevo AAB firmado y subir a la pista cerrada de Google Play.

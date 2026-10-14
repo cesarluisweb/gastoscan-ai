@@ -2,7 +2,7 @@ import 'dart:math';
 
 class UuidGenerator {
   static String generate() {
-    final random = Random();
+    final random = Random.secure();
     final data = List<int>.generate(16, (_) => random.nextInt(256));
     data[6] = (data[6] & 0x0f) | 0x40; // Version 4
     data[8] = (data[8] & 0x3f) | 0x80; // Variant 1

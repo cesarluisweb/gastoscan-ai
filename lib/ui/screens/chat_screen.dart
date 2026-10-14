@@ -332,6 +332,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         contextData: contextData,
       );
 
+      if (!mounted) return;
+
       if (responseMap.containsKey('functionCall')) {
         final call = responseMap['functionCall'] as Map;
         final callName = call['name'];

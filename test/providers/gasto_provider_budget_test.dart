@@ -256,5 +256,11 @@ void main() {
       expect(provider.isCategoryOverBudget('Alimentacion', moneda: 'VES'), isTrue);
       expect(provider.isCategoryOverBudget('Alimentacion', moneda: 'USD'), isFalse);
     });
+
+    test('presupuestoEsAdoptado default is false and resets when budget is set', () async {
+      expect(provider.presupuestoEsAdoptado, isFalse);
+      await provider.setPresupuestoGeneral(500.0);
+      expect(provider.presupuestoEsAdoptado, isFalse);
+    });
   });
 }

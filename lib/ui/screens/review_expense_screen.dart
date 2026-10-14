@@ -180,14 +180,17 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       final double totalOriginalVal = data?.totalOriginal ?? 0.0;
       _totalOriginalCtrl = TextEditingController(text: _formatDouble(totalOriginalVal));
 
-      double tasaInicial = data?.tasaCambioDetectada ?? settings.tasaCambioVesUsd;
+      double tasaInicial = data?.tasaCambioDetectada ??
+          (_selectedMoneda == 'EUR'
+              ? (settings.tasaCambioVesEur > 0 ? settings.tasaCambioVesEur : settings.tasaCambioVesUsd)
+              : settings.tasaCambioVesUsd);
       _tasaCambioCtrl = TextEditingController(text: tasaInicial.toStringAsFixed(2));
 
       if (data?.tasaCambioDetectada != null && data!.tasaCambioDetectada! > 0) {
         _fuenteTasa = 'Tasa detectada en la factura';
       } else {
         _fuenteTasa = 'Buscando tasa de la fecha...';
-        if (_selectedMoneda == 'VES') {
+        if (_selectedMoneda == 'VES' || _selectedMoneda == 'EUR') {
           _actualizarTasaPorFecha(_selectedFecha, esRellenoInicial: true);
         }
       }
@@ -197,6 +200,11 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         totalUsdCalculado = totalOriginalVal;
       } else if (_selectedMoneda == 'VES') {
         totalUsdCalculado = tasaInicial > 0 ? (totalOriginalVal / tasaInicial) : totalOriginalVal;
+      } else if (_selectedMoneda == 'EUR') {
+        final tasaEur = tasaInicial > 0 ? tasaInicial : settings.tasaCambioVesEur;
+        final tasaUsd = settings.tasaCambioVesUsd;
+        final eurToUsdRatio = (tasaUsd > 0 && tasaEur > 0) ? (tasaEur / tasaUsd) : 1.0;
+        totalUsdCalculado = totalOriginalVal * eurToUsdRatio;
       } else {
         totalUsdCalculado = totalOriginalVal;
       }
@@ -279,9 +287,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       final enUsd = tasa > 0 ? (original / tasa) : original;
       _totalUsdCtrl.text = enUsd.toStringAsFixed(2);
     } else if (_selectedMoneda == 'EUR') {
-      final tasaEur = settings.tasaCambioVesEur;
+      final tasaEur = tryParseAmount(_tasaCambioCtrl.text, isPrice: false) ?? settings.tasaCambioVesEur;
       final tasaUsd = settings.tasaCambioVesUsd;
-        final eurToUsdRatio = (tasaUsd > 0 && tasaEur > 0) ? (tasaEur / tasaUsd) : 1.0;
+      final eurToUsdRatio = (tasaUsd > 0 && tasaEur > 0) ? (tasaEur / tasaUsd) : 1.0;
       final enUsd = original * eurToUsdRatio;
       _totalUsdCtrl.text = enUsd.toStringAsFixed(2);
     } else if (_selectedMoneda == 'USDT') {
@@ -305,7 +313,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
   }
 
   Future<void> _actualizarTasaPorFecha(String fecha, {bool esRellenoInicial = false}) async {
-    if (_selectedMoneda != 'VES') return;
+    if (_selectedMoneda != 'VES' && _selectedMoneda != 'EUR') return;
 
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     setState(() {
@@ -314,20 +322,30 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
 
     await _cargarTasasChips(fecha);
 
-    if (mounted && _selectedMoneda == 'VES') {
+    if (mounted) {
       setState(() {
-        double tasaAplicar = _tasaUsdFecha ?? settings.tasaCambioVesUsd;
-        if (settings.tipoTasa == 'paralelo') {
-          tasaAplicar = _tasaUsdtFecha ?? settings.tasaCambioVesUsdt;
+        if (_selectedMoneda == 'VES') {
+          double tasaAplicar = _tasaUsdFecha ?? settings.tasaCambioVesUsd;
+          if (settings.tipoTasa == 'paralelo') {
+            tasaAplicar = _tasaUsdtFecha ?? settings.tasaCambioVesUsdt;
+          }
+          _tasaCambioCtrl.text = tasaAplicar.toStringAsFixed(2);
+          final today = DateTime.now().toIso8601String().substring(0, 10);
+          _fuenteTasa = (fecha == today)
+              ? 'Tasa oficial BCV (Hoy)'
+              : 'Tasa oficial BCV ($fecha)';
+        } else if (_selectedMoneda == 'EUR') {
+          double tasaAplicar = _tasaEurFecha ?? settings.tasaCambioVesEur;
+          if (tasaAplicar <= 0) tasaAplicar = settings.tasaCambioVesUsd;
+          _tasaCambioCtrl.text = tasaAplicar.toStringAsFixed(2);
+          final today = DateTime.now().toIso8601String().substring(0, 10);
+          _fuenteTasa = (fecha == today)
+              ? 'Euro BCV oficial (Hoy)'
+              : 'Euro BCV oficial ($fecha)';
         }
-        _tasaCambioCtrl.text = tasaAplicar.toStringAsFixed(2);
-        final today = DateTime.now().toIso8601String().substring(0, 10);
-        _fuenteTasa = (fecha == today)
-            ? 'Tasa oficial BCV (Hoy)'
-            : 'Tasa oficial BCV ($fecha)';
         _recalcularTotalUsd();
         if (esRellenoInicial) {
-          _initialTasa = tasaAplicar;
+          _initialTasa = tryParseAmount(_tasaCambioCtrl.text, isPrice: false) ?? 0.0;
           _initialTotalOriginal = double.tryParse(_totalOriginalCtrl.text.replaceAll(',', '.')) ?? 0.0;
           _initialTotalUsdStr = _totalUsdCtrl.text;
         }
@@ -434,6 +452,22 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     final totalUsd = tryParseAmount(_totalUsdCtrl.text, isPrice: false) ?? 0.0;
     final tasa = tryParseAmount(_tasaCambioCtrl.text, isPrice: false) ?? 1.0;
 
+    double tasaParaGasto = tasa;
+    String fuenteFinal = _fuenteTasa;
+    if (_selectedMoneda == 'EUR') {
+      final totalVes = totalOrig * tasa;
+      tasaParaGasto = (totalUsd > 0)
+          ? (totalVes / totalUsd)
+          : (settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : tasa);
+      if (!fuenteFinal.contains('Euro BCV')) {
+        fuenteFinal = 'Euro BCV (Bs. ${tasa.toStringAsFixed(2)})';
+      }
+    } else if (_selectedMoneda == 'USD') {
+      tasaParaGasto = settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : 1.0;
+    } else if (_selectedMoneda == 'USDT') {
+      tasaParaGasto = settings.tasaCambioVesUsdt > 0 ? settings.tasaCambioVesUsdt : settings.tasaCambioVesUsd;
+    }
+
     String predominantCat = 'Otros';
     if (_items.isNotEmpty) {
       Map<String, double> catTotals = {};
@@ -451,8 +485,8 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       moneda: _selectedMoneda,
       totalOriginal: (totalOrig * 100).round(),
       totalUsd: (totalUsd * 100).round(),
-      tasaCambio: tasa,
-      fuenteTasaCambio: _fuenteTasa,
+      tasaCambio: tasaParaGasto,
+      fuenteTasaCambio: fuenteFinal,
       fechaTasaCambio: _selectedFecha,
       categoria: predominantCat,
       rutaFotoLocal: rutaFotoFinal,
@@ -632,6 +666,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
 
                                     if (gastoProvider.gastos.isNotEmpty) {
                                       final decision = await mostrarDialogoFusionarOReemplazar(context);
+                                      if (!ctx.mounted) return;
                                       if (decision == null) return;
                                       descartarLocales = decision;
                                     }
@@ -657,6 +692,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                     } else {
                                       cuentaVinculada = true;
                                       await Provider.of<SettingsProvider>(context, listen: false).loadSettings();
+                                      if (!ctx.mounted) return;
                                       Navigator.pop(ctx, 'google');
                                     }
                                   },
@@ -1224,6 +1260,21 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                               onTap: () {
                                 setState(() {
                                   _selectedMoneda = m;
+                                  if (m == 'EUR') {
+                                    final val = _tasaEurFecha ?? settings.tasaCambioVesEur;
+                                    if (val > 0) _tasaCambioCtrl.text = val.toStringAsFixed(2);
+                                    final today = DateTime.now().toIso8601String().substring(0, 10);
+                                    _fuenteTasa = (_selectedFecha == today)
+                                        ? 'Euro BCV oficial (Hoy)'
+                                        : 'Euro BCV oficial ($_selectedFecha)';
+                                  } else if (m == 'VES') {
+                                    final val = _tasaUsdFecha ?? settings.tasaCambioVesUsd;
+                                    if (val > 0) _tasaCambioCtrl.text = val.toStringAsFixed(2);
+                                    final today = DateTime.now().toIso8601String().substring(0, 10);
+                                    _fuenteTasa = (_selectedFecha == today)
+                                        ? 'Dólar BCV oficial (Hoy)'
+                                        : 'Dólar BCV oficial ($_selectedFecha)';
+                                  }
                                   _recalcularTotalUsd();
                                 });
                               },
@@ -1344,6 +1395,61 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       decoration: InputDecoration(
                         labelText: 'Tasa de Cambio',
+                        prefixIcon: const Icon(Icons.currency_exchange, color: AppColors.textSecondary),
+                        helperText: _fuenteTasa,
+                        helperStyle: const TextStyle(color: AppColors.textPrimary, fontSize: 11),
+                      ),
+                      onChanged: (_) => _recalcularTotalUsd(),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _totalUsdCtrl,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: const InputDecoration(
+                        labelText: 'Total Equivalente (USD)',
+                        prefixIcon: Icon(Icons.attach_money, color: AppColors.primaryDark),
+                      ),
+                      validator: (val) => (tryParseAmount(val ?? '', isPrice: false) == null) ? 'Inválido' : null,
+                    ),
+                  } else if (_selectedMoneda == 'EUR') ...[
+                    TextFormField(
+                      controller: _totalOriginalCtrl,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: const InputDecoration(
+                        labelText: 'Monto Original (EUR)',
+                        prefixIcon: Icon(Icons.euro, color: AppColors.primaryDark),
+                      ),
+                      onChanged: (_) => _recalcularTotalUsd(),
+                      validator: (val) => (tryParseAmount(val ?? '', isPrice: false) == null) ? 'Inválido' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    ActionChip(
+                      key: const Key('chip_rate_eur_bcv_only'),
+                      avatar: const Icon(Icons.euro, size: 14, color: AppColors.primaryDark),
+                      label: Text(
+                        'Euro BCV: Bs. ${(_tasaEurFecha ?? settings.tasaCambioVesEur).toStringAsFixed(2)}',
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                      ),
+                      backgroundColor: AppColors.surface,
+                      side: const BorderSide(color: AppColors.border),
+                      onPressed: () {
+                        setState(() {
+                          final valor = _tasaEurFecha ?? settings.tasaCambioVesEur;
+                          _tasaCambioCtrl.text = valor.toStringAsFixed(2);
+                          final today = DateTime.now().toIso8601String().substring(0, 10);
+                          _fuenteTasa = (_selectedFecha == today)
+                              ? 'Euro BCV oficial (Hoy)'
+                              : 'Euro BCV oficial ($_selectedFecha)';
+                          _recalcularTotalUsd();
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _tasaCambioCtrl,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: InputDecoration(
+                        labelText: 'Tasa de Cambio (Bs./EUR)',
                         prefixIcon: const Icon(Icons.currency_exchange, color: AppColors.textSecondary),
                         helperText: _fuenteTasa,
                         helperStyle: const TextStyle(color: AppColors.textPrimary, fontSize: 11),

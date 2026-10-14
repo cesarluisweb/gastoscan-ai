@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/date_formatter.dart';
+import '../../core/utils/currency_formatter.dart';
 import '../../providers/gasto_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/scan_queue_provider.dart';
@@ -104,12 +105,17 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
       final result = GeminiExtractionResult.fromJson(data);
       
       final double totalOrig = result.totalOriginal;
-      final double tasa = (result.tasaCambioDetectada != null && result.tasaCambioDetectada! > 0)
+      final double tasa = (result.moneda == 'VES' && result.tasaCambioDetectada != null && result.tasaCambioDetectada! > 0)
           ? result.tasaCambioDetectada!
           : (settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : 1.0);
-      final double totalUsd = (result.moneda == 'USD')
-          ? totalOrig
-          : (tasa > 0 ? totalOrig / tasa : 0.0);
+      final double totalUsd = CurrencyFormatter.convertAmount(
+        totalOrig,
+        result.moneda,
+        'USD',
+        settings.tasaCambioVesUsd,
+        tasaEur: settings.tasaCambioVesEur,
+        tasaUsdt: settings.tasaCambioVesUsdt,
+      );
 
       final dummyGasto = GastoModel(
         uuid: 'pending_${item['id']}',

@@ -144,10 +144,24 @@ async function buildScreenshots() {
     // Original image: 576 x 1280
     // Crop area: top=46, height=1190
     const rawImage = sharp(item.file);
-    const croppedBuffer = await rawImage
+    let croppedBuffer = await rawImage
       .extract({ left: 0, top: 46, width: 576, height: 1190 })
       .resize(SCREEN_W, SCREEN_H, { fit: 'cover', position: 'top' })
       .toBuffer();
+
+    // GP-07: Anonymize personal email in Screenshot 5
+    if (item.id === 5) {
+      const anonymizeSvg = Buffer.from(`
+        <svg width="${SCREEN_W}" height="${SCREEN_H}" xmlns="http://www.w3.org/2000/svg">
+          <rect x="186" y="284" width="300" height="32" fill="#FFFFFF" />
+          <text x="188" y="307" font-family="Arial, Segoe UI, sans-serif" font-size="20" font-weight="400" fill="#64748B">usuario@ejemplo.com</text>
+        </svg>
+      `);
+      croppedBuffer = await sharp(croppedBuffer)
+        .composite([{ input: anonymizeSvg }])
+        .png()
+        .toBuffer();
+    }
 
     const roundedScreen = await sharp(croppedBuffer)
       .composite([{ input: screenMask, blend: 'dest-in' }])

@@ -336,12 +336,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 final file = File(item['image_path']);
                 
                 final double totalOrig = result.totalOriginal;
-                final double tasa = (result.tasaCambioDetectada != null && result.tasaCambioDetectada! > 0)
+                final double tasa = (result.moneda == 'VES' && result.tasaCambioDetectada != null && result.tasaCambioDetectada! > 0)
                     ? result.tasaCambioDetectada!
                     : (settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : 1.0);
-                final double totalUsd = (result.moneda == 'USD')
-                    ? totalOrig
-                    : (tasa > 0 ? totalOrig / tasa : 0.0);
+                final double totalUsd = CurrencyFormatter.convertAmount(
+                  totalOrig,
+                  result.moneda,
+                  'USD',
+                  settings.tasaCambioVesUsd,
+                  tasaEur: settings.tasaCambioVesEur,
+                  tasaUsdt: settings.tasaCambioVesUsdt,
+                );
 
                 final dummyGasto = GastoModel(
                   uuid: 'pending_${item['id']}',

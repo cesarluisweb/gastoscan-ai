@@ -27,6 +27,7 @@ class GastoProvider with ChangeNotifier {
   Map<String, double> _totalesPorCategoria = {};
   Map<String, double> _totalesPorCategoriaVes = {};
   Map<String, double> _presupuestosPorCategoria = {};
+  bool _presupuestoEsAdoptado = false;
 
   List<GastoModel> get gastos => _gastos;
   bool get isLoading => _isLoading;
@@ -38,6 +39,7 @@ class GastoProvider with ChangeNotifier {
   double get presupuestoGeneral => _presupuestoGeneral;
   double get metaAhorro => _metaAhorro;
   String get monedaPresupuesto => _monedaPresupuesto;
+  bool get presupuestoEsAdoptado => _presupuestoEsAdoptado;
   Map<String, double> get totalesPorCategoria => _totalesPorCategoria;
   Map<String, double> get totalesPorCategoriaVes =>
       _totalesPorCategoriaVes.isNotEmpty ? _totalesPorCategoriaVes : _totalesPorCategoria;
@@ -89,6 +91,7 @@ class GastoProvider with ChangeNotifier {
       _metaAhorro = await _repository.obtenerMetaAhorroMes(_selectedYear, _selectedMonth);
       _monedaPresupuesto = await _repository.obtenerMonedaPresupuestoGeneralMes(_selectedYear, _selectedMonth);
       _presupuestosPorCategoria = await _repository.obtenerPresupuestosCategoriasMes(_selectedYear, _selectedMonth);
+      _presupuestoEsAdoptado = false;
 
       // Si este mes no tiene registros de presupuesto en BD, adoptar en memoria la configuración del mes previo
       // sin escribir filas fantasmas en SQLite que alteren timestamps de sincronización
@@ -105,6 +108,7 @@ class GastoProvider with ChangeNotifier {
           _metaAhorro = prevMeta;
           _monedaPresupuesto = prevMoneda;
           _presupuestosPorCategoria = prevCats;
+          _presupuestoEsAdoptado = true;
         }
       }
     } catch (e) {
@@ -112,6 +116,34 @@ class GastoProvider with ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  Future<void> _consolidarPresupuestoAdoptadoSiAplica() async {
+    if (!_presupuestoEsAdoptado) return;
+    try {
+      if (_presupuestoGeneral > 0) {
+        await _repository.guardarPresupuestoGeneralMes(
+          _selectedYear,
+          _selectedMonth,
+          _presupuestoGeneral,
+          moneda: _monedaPresupuesto,
+          metaAhorro: _metaAhorro,
+        );
+      } else if (_metaAhorro > 0) {
+        await _repository.guardarMetaAhorroMes(_selectedYear, _selectedMonth, _metaAhorro);
+      }
+      if (_presupuestosPorCategoria.isNotEmpty) {
+        await _repository.guardarPresupuestosCategoriasMes(
+          _selectedYear,
+          _selectedMonth,
+          _presupuestosPorCategoria,
+          moneda: _monedaPresupuesto,
+        );
+      }
+      _presupuestoEsAdoptado = false;
+    } catch (e) {
+      debugPrint('Error al consolidar presupuesto adoptado: $e');
     }
   }
 
@@ -137,6 +169,7 @@ class GastoProvider with ChangeNotifier {
   Future<bool> agregarGasto(GastoModel gasto, List<ItemGastoModel> items, {List<int>? shoppingItemIds}) async {
     _errorMessage = null;
     try {
+      await _consolidarPresupuestoAdoptadoSiAplica();
       final newId = await _repository.guardarGasto(gasto, items);
       
       if (shoppingItemIds != null && shoppingItemIds.isNotEmpty) {
@@ -217,10 +250,10 @@ class GastoProvider with ChangeNotifier {
     }
   }
 
-  Future<String?> eliminarCuentaYDatos() async {
+  Future<String?> eliminarCuentaYDatos({String? reauthPassword}) async {
     _errorMessage = null;
     try {
-      final error = await _syncService.eliminarCuentaYDatos();
+      final error = await _syncService.eliminarCuentaYDatos(reauthPassword: reauthPassword);
       if (error != null) {
         _errorMessage = error;
         notifyListeners();
@@ -280,6 +313,7 @@ class GastoProvider with ChangeNotifier {
       await _repository.guardarPresupuestoGeneralMes(_selectedYear, _selectedMonth, monto, moneda: moneda);
       _presupuestoGeneral = monto >= 0 ? monto : 0.0;
       _monedaPresupuesto = moneda;
+      _presupuestoEsAdoptado = false;
       notifyListeners();
       _syncService.syncBidirectional();
       return true;
@@ -303,6 +337,7 @@ class GastoProvider with ChangeNotifier {
       } else {
         _presupuestosPorCategoria[categoria] = presupuesto;
       }
+      _presupuestoEsAdoptado = false;
       notifyListeners();
       _syncService.syncBidirectional();
       return true;
@@ -333,6 +368,7 @@ class GastoProvider with ChangeNotifier {
       _metaAhorro = metaAhorro >= 0 ? metaAhorro : 0.0;
       _monedaPresupuesto = moneda;
       _presupuestosPorCategoria = Map.from(categorias)..removeWhere((key, value) => value <= 0);
+      _presupuestoEsAdoptado = false;
       notifyListeners();
       _syncService.syncBidirectional();
       return true;
@@ -354,6 +390,7 @@ class GastoProvider with ChangeNotifier {
         metaAhorro: meta,
       );
       _metaAhorro = meta >= 0 ? meta : 0.0;
+      _presupuestoEsAdoptado = false;
       notifyListeners();
       _syncService.syncBidirectional();
       return true;

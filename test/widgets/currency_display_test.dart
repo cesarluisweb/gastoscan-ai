@@ -56,6 +56,26 @@ void main() {
       final usdtFormatted = CurrencyFormatter.formatPreferido(10.0, 400.0, 40.0, 'USDT', tasaUsdt: 40.0);
       expect(usdtFormatted, contains('USDT'));
     });
+
+    test('convertAmount correctly converts EUR and USDT to USD', () {
+      final eurToUsd = CurrencyFormatter.convertAmount(
+        100.0,
+        'EUR',
+        'USD',
+        40.0,
+        tasaEur: 44.0,
+      );
+      expect(eurToUsd, 110.0);
+
+      final usdtToUsd = CurrencyFormatter.convertAmount(
+        100.0,
+        'USDT',
+        'USD',
+        40.0,
+        tasaUsdt: 40.0,
+      );
+      expect(usdtToUsd, 100.0);
+    });
   });
 
   group('SummaryCard Currency Preference Tests', () {

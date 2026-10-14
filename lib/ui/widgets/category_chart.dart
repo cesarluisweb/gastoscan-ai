@@ -93,10 +93,10 @@ class _CategoryChartState extends State<CategoryChart> {
             value: monto,
             title: porcentaje >= 8 ? '${porcentaje.toStringAsFixed(0)}%' : '',
             radius: 40,
-            titleStyle: const TextStyle(
+            titleStyle: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: color.computeLuminance() > 0.45 ? Colors.black : Colors.white,
             ),
           ),
         );
