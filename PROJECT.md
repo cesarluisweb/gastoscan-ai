@@ -61,10 +61,19 @@ La navegación principal (`MainScreen`) se basa en un patrón ergonómico de 4 p
 4. **Despliegue Dinámico (Remote Config):** Arquitectura preparada para modificar cuotas, textos de paywall y parámetros de IA desde la nube sin depender de revisiones demoradas en tiendas de aplicaciones.
 5. **Infraestructura como Activo Permanente:** Los módulos centrales (autenticación anónima/Google, base de datos SQLite con migraciones, cola offline resiliente, orquestación de Gemini y sincronización en Firestore) se diseñan como piezas desacopladas y reutilizables para futuros productos del mismo ecosistema financiero.
 
+## Monetización y Políticas de Plataforma
+- **Cuotas de IA y Subvención Cruzada:** El escaneo con cámara incluye una cuota mensual gratuita generosa (15 a 20 facturas al mes). El registro manual y el dictado por voz son siempre 100% ilimitados y gratuitos. Con una conversión estimada del 1% al plan Pro ($1,99/mes), el costo de API de 1.000 usuarios queda cubierto.
+- **Publicidad en Tiempos de Espera (Better Ads Standards):** Los anuncios se muestran exclusivamente en puntos de transición naturales (ej. tras guardar exitosamente una factura o durante la pantalla de análisis). Prohibido disparar anuncios al abrir la app o interrumpiendo la captura de fotos.
+- **Cumplimiento de Google Play Billing:** Toda compra digital o suscripción ofrecida dentro de la app Android distribuida en Play Store debe procesarse obligatoriamente mediante Google Play Billing para evitar sanciones o suspensión de cuenta.
+
+## Mejoras de Infraestructura Futuras
+- **Desacoplamiento de Workflows en GitHub Actions:** Separar el pipeline de compilación de Android (`build_apk.yml`) del despliegue de la web (`landing/`), de modo que cambios exclusivos en la web no disparen la compilación de APK ni consuman cuota de CI móvil.
+
 ---
 
 ## 📌 Documentación Externa en Obsidian
 Existe una ficha técnica extendida y mapa de componentes en la bóveda de Obsidian en:
 `H:\My Drive\Documentos\Notas\Trabajo\Rinde Más - Control de Gastos.md`
 *(Nota: Sirve como documento de referencia y consulta conceptual; no requiere actualización continua obligatoria en cada tarea).*
+
 
