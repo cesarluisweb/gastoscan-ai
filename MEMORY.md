@@ -5,12 +5,13 @@
 - **Rama:** `main`.
 - **Fase activa:** Validación manual de Fase 7.1 (Auditoría Integral y Blindaje para Google Play) y preparación de Fase 2 pendiente.
 - **Últimos hitos:** 
-  1. **CI en Verde (Build 427):** GitHub Actions completó compilación de APK, AAB oficial, pruebas unitarias y despliegue web exitosamente.
-  2. **Chat IA Seguro:** Eliminada mutación silenciosa; los gastos en conversación muestran botón interactivo que abre `ReviewExpenseScreen`.
-  3. **Seguridad en Vinculación:** `sync_service.dart` valida primero la autenticación antes de borrar la base de datos local SQLite.
-  4. **Multimoneda Dinámica en Galería:** `receipt_gallery_screen.dart` usa `CurrencyFormatter.formatPreferido`.
-  5. **Cumplimiento Google Play:** Eliminados `READ_MEDIA_IMAGES` de `AndroidManifest.xml` y fallback de descarga de APK en `update_service.dart`. `exactAllowWhileIdle` cambiado a `inexactAllowWhileIdle`.
-  6. **Gráfico de Funciones Cumple Políticas:** Eliminado botón «Descargar gratis» y reemplazado por chips de valor.
+  1. **CI en Verde (Build 428):** GitHub Actions completó compilación de APK, AAB oficial firmado, pruebas unitarias y despliegue web.
+  2. **Blindaje de Permisos AAB Verificado:** Confirmada la ausencia total de `READ_MEDIA_IMAGES` y `READ_MEDIA_VIDEO` en el manifiesto binario fusionado del `.aab`.
+  3. **Chat IA Seguro:** Eliminada mutación silenciosa; los gastos en conversación muestran botón interactivo que abre `ReviewExpenseScreen`.
+  4. **Seguridad en Vinculación:** `sync_service.dart` valida primero la autenticación antes de borrar la base de datos local SQLite.
+  5. **Multimoneda Dinámica en Galería:** `receipt_gallery_screen.dart` usa `CurrencyFormatter.formatPreferido`.
+  6. **Cumplimiento Google Play:** Eliminados `READ_MEDIA_IMAGES` con `tools:node="remove"` y fallback de descarga de APK en `update_service.dart`. `exactAllowWhileIdle` cambiado a `inexactAllowWhileIdle`.
+  7. **Gráfico de Funciones Cumple Políticas:** Eliminado botón «Descargar gratis» y reemplazado por chips de valor.
 
 ## Decisiones Técnicas y de Negocio Recientes
 - **Cero Mutación Silenciosa de IA:** Todo gasto en chat exige confirmación humana en `ReviewExpenseScreen`.
