@@ -390,18 +390,20 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
           int? firstQueueId;
           if (extractions.length > 1) {
-            final queueProvider = Provider.of<ScanQueueProvider>(context, listen: false);
-            final insertedIds = await queueProvider.enqueueReadyExtractionResults(extractions);
-            if (insertedIds.isNotEmpty) {
-              firstQueueId = insertedIds.first;
-            }
+            try {
+              final queueProvider = Provider.of<ScanQueueProvider>(context, listen: false);
+              final insertedIds = await queueProvider.enqueueReadyExtractionResults(extractions);
+              if (insertedIds.isNotEmpty) {
+                firstQueueId = insertedIds.first;
+              }
+            } catch (_) {}
           }
 
           final firstExtraction = extractions.first;
           final montoFormateado = CurrencyFormatter.formatAmount(firstExtraction.totalOriginal, firstExtraction.moneda);
           final count = extractions.length;
           final msgText = count > 1
-              ? 'He preparado $count compras para tu revisión (comenzando por "${firstExtraction.comercio}" por $montoFormateado). Confírmalas a continuación para guardarlas.'
+              ? 'He preparado $count compras para tu revisión: ${extractions.map((e) => '"${e.comercio}" (${CurrencyFormatter.formatAmount(e.totalOriginal, e.moneda)})').join(', ')}. Confírmalas a continuación para guardarlas.'
               : 'He preparado tu compra en "${firstExtraction.comercio}" por $montoFormateado. Revísala y confírmala para guardarla.';
 
           if (!mounted) return;
@@ -413,17 +415,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               'queueItemId': firstQueueId,
             });
           });
-
-          // Navegar a la pantalla de revisión para confirmación humana antes de persistir
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ReviewExpenseScreen(
-                extractedData: firstExtraction,
-                queueItemId: firstQueueId,
-              ),
-            ),
-          );
           return;
         } else if (callName == 'agregar_items_lista_compras') {
           final args = call['args'] as Map;
