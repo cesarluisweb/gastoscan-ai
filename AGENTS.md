@@ -19,6 +19,7 @@
 - **Idioma y Localización:** Mantener textos de interfaz y respuestas en español neutro/venezolano.
 - **Contraste y Paleta (`DESIGN.md`):** Fondo amarillo $\rightarrow$ texto SIEMPRE negro (`Colors.black` o `AppColors.textPrimary`). Fondo blanco/claro $\rightarrow$ texto negro o gris, NUNCA amarillo. El amarillo queda reservado exclusivamente para iconos, contenedores con texto negro y bordes de acento activo.
 - **Protocolo de Memoria:** Consultar `MEMORY.md` al iniciar una tarea y actualizarlo al finalizarla.
+- **Auditoría de Reglas (`scripts/check_rules.ps1`):** Al crear o modificar archivos en `.agents/rules/`, `.agents/skills/` o `AGENTS.md`, ejecutar obligatoriamente `powershell -ExecutionPolicy Bypass -File scripts/check_rules.ps1` y confirmar que no existan errores antes de commitear o cerrar la tarea.
 - **Iteración Rápida:** Romper el análisis e iterar hacia la acción (editar/probar) en un máximo de 2 lecturas por bloque de código.
 
 ### ⚠️ Pregunta antes (Consultar a César):

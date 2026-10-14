@@ -1,0 +1,22 @@
+#!/bin/sh
+# Hook de pre-commit para Rinde Mas
+# Valida automaticamente limites de bytes UTF-8 y frontmatter de reglas Antigravity
+
+# Solo valida si el commit incluye cambios en reglas, habilidades o AGENTS.md
+STAGED_RULES=$(git diff --cached --name-only | grep -E '^(AGENTS\.md|\.agents/rules/|\.agents/skills/|scripts/check_rules\.ps1)')
+
+if [ -n "$STAGED_RULES" ]; then
+    echo "==========================================================="
+    echo "  Validando reglas y habilidades de Antigravity...         "
+    echo "==========================================================="
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "scripts/check_rules.ps1"
+    EXIT_CODE=$?
+    if [ $EXIT_CODE -ne 0 ]; then
+        echo ""
+        echo "[ERROR] El commit fue abortado porque una regla o habilidad no cumple los limites o el formato."
+        echo "Corrige el problema reportado antes de commitear."
+        exit 1
+    fi
+fi
+
+exit 0
