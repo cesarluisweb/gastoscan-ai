@@ -122,7 +122,7 @@ class GastoProvider with ChangeNotifier {
   Future<void> _consolidarPresupuestoAdoptadoSiAplica() async {
     if (!_presupuestoEsAdoptado) return;
     try {
-      if (_presupuestoGeneral > 0) {
+      if (_presupuestoGeneral > 0 || _metaAhorro > 0) {
         await _repository.guardarPresupuestoGeneralMes(
           _selectedYear,
           _selectedMonth,
@@ -130,8 +130,6 @@ class GastoProvider with ChangeNotifier {
           moneda: _monedaPresupuesto,
           metaAhorro: _metaAhorro,
         );
-      } else if (_metaAhorro > 0) {
-        await _repository.guardarMetaAhorroMes(_selectedYear, _selectedMonth, _metaAhorro);
       }
       if (_presupuestosPorCategoria.isNotEmpty) {
         await _repository.guardarPresupuestosCategoriasMes(

@@ -72,7 +72,7 @@ class FakeGastoProvider extends GastoProvider {
   String? errorEliminarCuenta;
 
   @override
-  Future<String?> eliminarCuentaYDatos() async => errorEliminarCuenta;
+  Future<String?> eliminarCuentaYDatos({String? reauthPassword}) async => errorEliminarCuenta;
 }
 
 class FakeSettingsProvider extends SettingsProvider {

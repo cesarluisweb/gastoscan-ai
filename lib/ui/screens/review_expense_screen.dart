@@ -1411,7 +1411,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                       ),
                       validator: (val) => (tryParseAmount(val ?? '', isPrice: false) == null) ? 'Inválido' : null,
                     ),
-                  } else if (_selectedMoneda == 'EUR') ...[
+                  ] else if (_selectedMoneda == 'EUR') ...[
                     TextFormField(
                       controller: _totalOriginalCtrl,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),

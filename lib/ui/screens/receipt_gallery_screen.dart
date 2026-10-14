@@ -10,7 +10,7 @@ import '../../providers/gasto_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../widgets/receipt_viewer_dialog.dart';
 
-class ReceiptGalleryScreen extends StatelessWidget {
+class ReceiptGalleryScreen extends StatefulWidget {
   final bool showBackButton;
   final VoidCallback? onBack;
 
