@@ -417,7 +417,7 @@ La app **no está lista para envío a producción** en su estado actual. Se iden
 
 | # | Acción | IDs | Esfuerzo |
 |:--|:---|:---|:---:|
-| 1 | Diseñar onboarding de 3 pantallas | UX-02 | Mediano |
+| 1 | Diseñar onboarding de 3 pantallas | UX-02 | Mediano | Excluido (Uso directo sin tutoriales) 🚫 |
 | 2 | Búsqueda global cross-month en historial | UX-03 | Mediano |
 | 3 | Unificar navegación del chat (siempre `Navigator.push`) | UX-05 | Mediano |
 | 4 | `SummaryCard`: usar mes/año seleccionado para días | FIN-07 | Pequeño |

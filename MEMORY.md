@@ -13,6 +13,7 @@
 - **Fotos Locales Preservadas:** No se eliminan fotos físicas del teléfono al cerrar sesión si el usuario las guardó.
 - **Historial Keystore:** No se reescribe el historial Git; el repositorio pasará a Privado tras finalizar.
 - **Soporte EUR Real:** `ReviewExpenseScreen` persiste la tasa oficial del euro y calcula equivalentes exactos en Bs. y USD.
+- **Sin Onboarding (UX-02 descartado):** Filosofía de uso directo inmediato sin tutoriales ni pantallas intermedias.
 
 ## Errores y Fricciones a Evitar
 - `targetSdk` debe mantenerse en 36 o superior para Google Play.
@@ -20,8 +21,9 @@
 
 ## Próximo Paso Inmediato
 - Iniciar la Fase 3 de la Auditoría Integral (mejoras de calidad y pulido):
-  - UX-02: Diseño de onboarding de bienvenida (3 pantallas sencillas).
   - FIN-07: Corregir cálculo de días restantes en meses históricos en `SummaryCard`.
   - FIN-08: Validación de montos > 0 en formularios de registro.
   - UX-03: Búsqueda global cross-month en historial.
+  - UX-05: Unificar navegación del chat IA.
   - SEC-12: Versionado del Cloudflare Worker en el repositorio.
+  - OCR-01: Deduplicación SHA-256 en cola de escaneo.
