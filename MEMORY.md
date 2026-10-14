@@ -12,6 +12,7 @@
   5. **CI y Release en Verde:** Run `38498202032` completado con éxito (`conclusion: success`). Tests unitarios pasados, APK y AAB de producción generados y distribuidos.
 
 ## Decisiones Técnicas y de Negocio Recientes
+- **Graduación de Reglas de Entrada Multigasto y Voz:** Incorporadas permanentemente a `AGENTS.md` (secciones 6 y 14): flujo 1 gasto directo vs 2+ encolados en `ready`, respeto estricto de moneda detectada, getter `totalOriginalDisplay`, despliegue de Cloudflare Worker y disambiguación de comercios.
 - **Cumplimiento Google Play Data Safety:** Se declara recogida de fotos y texto para IA (procesamiento efímero). Se mantiene "No compartir con terceros" al estar Cloudflare y Google amparados como encargados de tratamiento (modo gestionado de pago) y excepción de transferencia dirigida por el usuario (modo BYOK informado).
 - **Transparencia en BYOK:** Notificar explícitamente al usuario en la UI que al aportar su clave gratuita de Google AI Studio, Google puede usar datos para entrenamiento según sus términos de servicio.
 
@@ -22,3 +23,4 @@
 
 ## Próximo Paso Inmediato
 - Completar la sección de Seguridad de los Datos en Google Play Console con las respuestas acordadas.
+
