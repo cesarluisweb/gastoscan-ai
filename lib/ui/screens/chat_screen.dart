@@ -12,7 +12,6 @@ import '../../data/models/item_gasto_model.dart';
 import '../../data/datasources/remote/gemini_service.dart';
 import '../../data/datasources/local/database_helper.dart';
 import '../../data/models/shopping_item_model.dart';
-import '../../core/utils/uuid_generator.dart';
 import '../../data/models/gemini_extraction_result.dart';
 import '../../providers/scan_queue_provider.dart';
 import 'review_expense_screen.dart';
@@ -137,18 +136,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         setState(() => _isListening = false);
       }
     }
-  }
-
-  String _normalizeText(String text) {
-    return text
-        .toLowerCase()
-        .replaceAll('á', 'a')
-        .replaceAll('é', 'e')
-        .replaceAll('í', 'i')
-        .replaceAll('ó', 'o')
-        .replaceAll('ú', 'u')
-        .replaceAll('ü', 'u')
-        .trim();
   }
 
   Future<void> _initSpeech() async {
