@@ -269,7 +269,7 @@ void main() {
     });
 
     testWidgets('multiple expenses in chat are registered and display correct currencies', (tester) async {
-      fakeGemini.customResponse = {
+      fakeGeminiService.customResponse = {
         'functionCall': {
           'name': 'registrar_gasto',
           'args': {
