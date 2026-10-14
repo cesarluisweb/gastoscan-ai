@@ -9,6 +9,7 @@
   2. **Aviso de Privacidad BYOK en la App:** Modal en `more_screen.dart` incluye contenedor informativo de advertencia sobre términos de Google AI Studio y cuentas gratuitas antes de ingresar la clave.
   3. **Ficha de Google Play (Seguridad de los Datos):** `FICHA_GOOGLE_PLAY.md` actualizada con desglose exacto de datos recogidos (cuenta, fotos de recibos efímeras, historial de gastos) y justificación rigurosa de "No se comparten datos con terceros" basada en proveedores de infraestructura y transferencias dirigidas por el usuario.
   4. **Compilación y Despliegue Web Verificados:** Build estático de Astro y release en Firebase Hosting finalizados con éxito (HTTP 200 verificado).
+  5. **CI y Release en Verde:** Run `38498202032` completado con éxito (`conclusion: success`). Tests unitarios pasados, APK y AAB de producción generados y distribuidos.
 
 ## Decisiones Técnicas y de Negocio Recientes
 - **Cumplimiento Google Play Data Safety:** Se declara recogida de fotos y texto para IA (procesamiento efímero). Se mantiene "No compartir con terceros" al estar Cloudflare y Google amparados como encargados de tratamiento (modo gestionado de pago) y excepción de transferencia dirigida por el usuario (modo BYOK informado).
@@ -20,4 +21,4 @@
 - Contraste estricto en UI (`DESIGN.md`): Texto sobre amarillo SIEMPRE negro; texto sobre blanco SIEMPRE negro o gris, NUNCA amarillo.
 
 ## Próximo Paso Inmediato
-- Realizar git push y verificar que el CI de GitHub Actions compile y pase los tests exitosamente.
+- Completar la sección de Seguridad de los Datos en Google Play Console con las respuestas acordadas.
