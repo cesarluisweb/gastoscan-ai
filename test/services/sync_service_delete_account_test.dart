@@ -260,8 +260,7 @@ void main() {
 
       final error = await syncService.eliminarCuentaYDatos();
 
-      expect(error, isNotNull);
-      expect(error, contains('Por seguridad, debes volver a iniciar sesión antes de eliminar tu cuenta.'));
+      expect(error, equals('REQUIRES_PASSWORD_REAUTH'));
       expect(fakeRepo.limpiarDatosLocalesCalled, isFalse);
     });
 
