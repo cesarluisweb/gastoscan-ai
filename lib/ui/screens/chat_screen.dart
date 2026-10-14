@@ -407,7 +407,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   gastoProvider: gastoProvider,
                 );
                 if (savedGasto != null) {
-                  final montoFormateado = CurrencyFormatter.formatAmount(savedGasto.totalOriginalDouble, savedGasto.moneda);
+                  final montoFormateado = CurrencyFormatter.formatAmount(savedGasto.totalOriginalDisplay, savedGasto.moneda);
                   newAssistantMsgs.add({
                     'role': 'assistant',
                     'text': '¡Listo! He registrado tu compra en "${savedGasto.comercio}" por $montoFormateado.',
@@ -455,7 +455,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           if (!mounted) return;
           setState(() {
             if (savedGasto != null) {
-              final montoFormateado = CurrencyFormatter.formatAmount(savedGasto.totalOriginalDouble, savedGasto.moneda);
+              final montoFormateado = CurrencyFormatter.formatAmount(savedGasto.totalOriginalDisplay, savedGasto.moneda);
               _messages.add({
                 'role': 'assistant',
                 'text': '¡Listo! He registrado tu compra en "${savedGasto.comercio}" por $montoFormateado.',

@@ -476,6 +476,9 @@ void main() {
         ),
       ];
 
+      final fakeDb = FakeDatabaseHelper();
+      final provider = ScanQueueProvider(dbHelper: fakeDb, autoProcess: false);
+
       final ids = await provider.enqueueReadyExtractionResults(results);
       expect(ids.length, equals(2));
       expect(provider.readyItems.length, equals(2));
