@@ -394,24 +394,24 @@ La app **no está lista para envío a producción** en su estado actual. Se iden
 | 2 | Eliminar `READ_MEDIA_IMAGES` del Manifest | GP-04 | Pequeño | `image_picker` funciona sin el permiso en Android 13+ | Completado ✅ |
 | 3 | Agregar botón de reporte en burbujas del chat IA | GP-05 | Pequeño | Cada respuesta IA tiene opción de reportar | Completado ✅ |
 | 4 | Cambiar `exactAllowWhileIdle` → `inexactAllowWhileIdle` en notifications | GP-06 | Pequeño | Recordatorios funcionan en Android 12+ | Completado ✅ |
-| 5 | Anonimizar captura 5 (reemplazar correo real) | GP-07 | Pequeño | PII no visible en ficha Play Store | Implementado 🔧 |
-| 6 | Fijar `compileSdk = 35`, `targetSdk = 35` explícitos en Gradle | GP-08 | Pequeño | Build siempre cumple requisito API 35 | Implementado 🔧 |
-| 7 | Corregir cola de escaneo para EUR/USDT | FIN-04 | Pequeño | Facturas en EUR muestran monto correcto | Implementado 🔧 |
-| 8 | Mostrar y persistir tasa EUR al guardar gasto | FIN-05 | Mediano | Equivalente Bs. correcto para gastos en EUR | Implementado 🔧 |
-| 9 | Persistir presupuesto adoptado en SQLite al iniciar mes nuevo | FIN-06 | Mediano | Panel web y otros dispositivos ven el presupuesto | Implementado 🔧 |
-| 10 | Implementar reauth por contraseña en eliminación de cuenta | SEC-03 | Mediano | Eliminación real confirmada para cuentas email | Implementado 🔧 |
-| 11 | Eliminar `--dart-define=GEMINI_API_KEY`; todo via gateway | SEC-04 | Mediano | `strings libapp.so` no revela API key | Implementado 🔧 |
-| 12 | Limpiar `FlutterSecureStorage` al cerrar sesión y eliminar cuenta | SEC-06 | Pequeño | API key no sobrevive entre sesiones | Implementado 🔧 |
-| 13 | Agregar `if (!mounted) return;` tras todos los `await` en UI | TEC-04 | Mediano | Sin excepciones al descartar pantallas | Implementado 🔧 |
-| 14 | Mover `File.existsSync()` fuera de `build()` | TEC-03 | Mediano | Sin jank en listas largas | Implementado 🔧 |
-| 15 | Migrar UUID a `Random.secure()` | TEC-06 | Pequeño | Cumple RFC 4122 | Implementado 🔧 |
-| 16 | Corregir contraste texto dona (blanco→negro en colores claros) | UX-01 | Pequeño | Ratio ≥ 4.5:1 en todas las rebanadas | Implementado 🔧 |
-| 17 | Ajustar borde de foco a `AppColors.primaryDark` | UX-04 | Pequeño | Campo activo visible | Implementado 🔧 |
+| 5 | Anonimizar captura 5 (reemplazar correo real) | GP-07 | Pequeño | PII no visible en ficha Play Store | Completado ✅ |
+| 6 | Fijar `targetSdk = 35` explícito en Gradle | GP-08 | Pequeño | Build siempre cumple requisito API 35 | Completado ✅ |
+| 7 | Corregir cola de escaneo para EUR/USDT | FIN-04 | Pequeño | Facturas en EUR muestran monto correcto | Pendiente de validación 🧪 |
+| 8 | Mostrar y persistir tasa EUR al guardar gasto | FIN-05 | Mediano | Equivalente Bs. correcto para gastos en EUR | Pendiente de validación 🧪 |
+| 9 | Persistir presupuesto adoptado en SQLite al iniciar mes nuevo | FIN-06 | Mediano | Panel web y otros dispositivos ven el presupuesto | Pendiente de validación 🧪 |
+| 10 | Implementar reauth por contraseña en eliminación de cuenta | SEC-03 | Mediano | Eliminación real confirmada para cuentas email | Pendiente de validación 🧪 |
+| 11 | Eliminar `--dart-define=GEMINI_API_KEY`; todo via gateway | SEC-04 | Mediano | `strings libapp.so` no revela API key | Completado ✅ |
+| 12 | Limpiar `FlutterSecureStorage` al cerrar sesión y eliminar cuenta | SEC-06 | Pequeño | API key no sobrevive entre sesiones | Pendiente de validación 🧪 |
+| 13 | Agregar `if (!mounted) return;` tras todos los `await` en UI | TEC-04 | Mediano | Sin excepciones al descartar pantallas | Completado ✅ |
+| 14 | Mover `File.existsSync()` fuera de `build()` | TEC-03 | Mediano | Sin jank en listas largas | Completado ✅ |
+| 15 | Migrar UUID a `Random.secure()` | TEC-06 | Pequeño | Cumple RFC 4122 | Completado ✅ |
+| 16 | Corregir contraste texto dona (blanco→negro en colores claros) | UX-01 | Pequeño | Ratio ≥ 4.5:1 en todas las rebanadas | Pendiente de validación 🧪 |
+| 17 | Ajustar borde de foco a `AppColors.primaryDark` | UX-04 | Pequeño | Campo activo visible | Pendiente de validación 🧪 |
 | 18 | Migrar FTP a SFTP/FTPS | SEC-08 | Pequeño | Credenciales cifradas en tránsito | Excluido (Baja prioridad) 🚫 |
 | 19 | Borrar fotos físicas al cerrar sesión/eliminar cuenta | SEC-09 | Mediano | Directorio de documentos limpio | Excluido (Preservar fotos locales) 🚫 |
 
 **Dependencias:** Validadas. Exclusiones de SEC-01, SEC-08 y SEC-09 confirmadas explícitamente por César.  
-**Estado:** Cambios de código y assets implementados localmente en fase de verificación CI.
+**Estado:** Compilación 429 exitosa en GitHub Actions (223 tests pasados en verde, AAB y APK generados, landing desplegada). Tareas críticas en `Pendiente de validación 🧪` para verificación en dispositivo físico.
 
 ### Fase 3: Después del lanzamiento inicial (mejoras de calidad)
 
