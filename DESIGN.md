@@ -142,6 +142,31 @@ Row(
 )
 ```
 
+### 3.6 Diálogos de Confirmación (`AlertDialog`)
+En cualquier modal de decisión o confirmación sobre fondo blanco/claro:
+- **Acción Neutral / Cancelar ("Cancelar", "Volver", "Más tarde"):** Texto gris obligatorio (`AppColors.textSecondary`). Prohibido usar amarillo o dejarlo sin estilo.
+- **Acción Destructiva ("Eliminar", "Descartar"):** Texto rojo explícito (`AppColors.error`).
+- **Acción Principal Afirmativa ("Guardar", "Confirmar"):** `ElevatedButton` amarillo (`AppColors.primary`) con texto negro (`AppColors.textPrimary` o `Colors.black`).
+
+```dart
+AlertDialog(
+  backgroundColor: AppColors.card,
+  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+  title: const Text('Descartar cambios', style: TextStyle(color: AppColors.textPrimary)),
+  content: const Text('¿Deseas descartar el formulario?', style: TextStyle(color: AppColors.textSecondary)),
+  actions: [
+    TextButton(
+      onPressed: () => Navigator.pop(ctx, false),
+      child: const Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
+    ),
+    TextButton(
+      onPressed: () => Navigator.pop(ctx, true),
+      child: const Text('Descartar', style: TextStyle(color: AppColors.error)),
+    ),
+  ],
+)
+```
+
 ---
 
 ## 4. Reglas de Maquetación y Componentes UI
