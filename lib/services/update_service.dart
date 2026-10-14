@@ -48,8 +48,8 @@ class UpdateInfo {
         : int.tryParse(json['buildNumber']?.toString() ?? '0') ?? 0;
     final String remoteVersion = json['version']?.toString() ?? '';
     final String notes = json['releaseNotes']?.toString() ?? 'Mejoras y correcciones en la aplicación.';
-    final String rawUrl = json['apkUrl']?.toString() ?? playStoreWebUrl;
-    final String url = rawUrl.contains('.apk') ? playStoreWebUrl : rawUrl;
+    final String rawUrl = json['apkUrl']?.toString() ?? UpdateService.playStoreWebUrl;
+    final String url = rawUrl.contains('.apk') ? UpdateService.playStoreWebUrl : rawUrl;
     final bool isMajorUpdate = json['isMajor'] == true || json['isCritical'] == true;
 
     // Hay actualización si la versión semántica es mayor O si el buildNumber es mayor teniendo igual o superior versión
