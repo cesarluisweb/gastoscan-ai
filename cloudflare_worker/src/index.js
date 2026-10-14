@@ -504,6 +504,8 @@ Regla para registrar gastos por voz:
 - En "monto_original" envía el monto numérico exacto en la moneda indicada (ej. si dice "1500 bolívares", monto_original: 1500, moneda: "VES").
 - En "total_usd" envía el equivalente estimado en dólares (si fue en bolívares, puedes dividirlo por la tasa BCV aproximada del contexto o enviarlo igual para que el cliente lo convierta).
 - Si el usuario te dicta registrar un gasto con precios en múltiples monedas mezcladas, unifica todos los precios a una sola moneda antes de llamar a registrar_gasto.
+- Si el usuario menciona o dicta compras realizadas en MÚLTIPLES comercios, establecimientos o lugares distintos (ejemplo: "compré en la farmacia tal cosa en tanto y compré en el supermercado tal cosa en tanto"): DEBES desglosar cada compra por separado en el array "gastos". Cada elemento en "gastos" debe contener su propio comercio, fecha, moneda, monto_original, total_usd, categoría adecuada e items.
+- Si el usuario menciona múltiples productos dentro del MISMO comercio o compra general, regístralo como un solo gasto con los productos en "items".
 
 Aquí están los datos del usuario en formato JSON (gastos del mes y lista de compras actual):
 ${JSON.stringify(contextData)}
@@ -528,7 +530,7 @@ ${JSON.stringify(contextData)}
           functionDeclarations: [
             {
               name: "registrar_gasto",
-              description: "Registra un gasto en la app ÚNICAMENTE si el usuario especifica un monto/precio pagado y confirma que es un gasto realizado. PROHIBIDO llamar a esta función si el usuario solo pide anotar productos sin indicar precio.",
+              description: "Registra uno o varios gastos en la app ÚNICAMENTE si el usuario especifica un monto/precio pagado y confirma que es un gasto realizado. Si incluye compras en múltiples lugares o comercios distintos (ej. farmacia y supermercado), desglosa cada compra en el array 'gastos'.",
               parameters: {
                 type: "object",
                 properties: {
@@ -537,7 +539,7 @@ ${JSON.stringify(contextData)}
                   moneda: { type: "string", description: "Moneda de la compra: VES, USD, EUR o USDT. Si dijo bolívares o Bs, usa 'VES'." },
                   monto_original: { type: "number", description: "Monto total pagado en la moneda original (ej. 1500 si pagó 1500 bolívares)." },
                   total_usd: { type: "number", description: "Monto total estimado en dólares." },
-                  categoria: { type: "string", description: "Una de: Alimentación, Salud, Educación, Hogar, Servicios, Transporte, Otros." },
+                  categoria: { type: "string", description: "Una de: Alimentación, Salud, Higiene, Educación, Hogar, Servicios, Transporte, Otros." },
                   items: {
                     type: "array",
                     description: "Lista de productos comprados y sus precios estimados en la moneda original.",
@@ -548,6 +550,34 @@ ${JSON.stringify(contextData)}
                         cantidad: { type: "number" },
                         precio_unitario: { type: "number" }
                       }
+                    }
+                  },
+                  gastos: {
+                    type: "array",
+                    description: "Lista de compras o gastos independientes si el usuario dictó compras en múltiples lugares o comercios distintos (ej. farmacia y supermercado). Cada objeto representa una compra completa.",
+                    items: {
+                      type: "object",
+                      properties: {
+                        comercio: { type: "string", description: "Nombre del establecimiento de esta compra (ej. Farmacia, Supermercado)." },
+                        fecha: { type: "string", description: "Fecha en formato YYYY-MM-DD." },
+                        moneda: { type: "string", description: "Moneda de esta compra: VES, USD, EUR o USDT." },
+                        monto_original: { type: "number", description: "Monto total pagado en la moneda de esta compra." },
+                        total_usd: { type: "number", description: "Monto total estimado en USD." },
+                        categoria: { type: "string", description: "Una de: Alimentación, Salud, Higiene, Educación, Hogar, Servicios, Transporte, Otros." },
+                        items: {
+                          type: "array",
+                          description: "Lista de productos comprados en este establecimiento.",
+                          items: {
+                            type: "object",
+                            properties: {
+                              descripcion: { type: "string" },
+                              cantidad: { type: "number" },
+                              precio_unitario: { type: "number" }
+                            }
+                          }
+                        }
+                      },
+                      required: ["comercio", "fecha", "total_usd", "categoria", "items"]
                     }
                   }
                 },

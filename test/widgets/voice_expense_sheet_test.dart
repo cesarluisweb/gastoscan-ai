@@ -12,25 +12,49 @@ import 'package:gastoscan_ai/ui/widgets/voice_expense_sheet.dart';
 class FakeGeminiVoiceService extends GeminiService {
   String? parsedText;
   int parseCount = 0;
+  List<GeminiExtractionResult>? customResults;
 
   @override
-  Future<GeminiExtractionResult> parseVoiceExpense(String spokenText) async {
+  Future<List<GeminiExtractionResult>> parseVoiceExpense(String spokenText) async {
     parseCount++;
     parsedText = spokenText;
-    return GeminiExtractionResult(
-      comercio: 'Automercado',
-      fecha: '2026-09-30',
-      moneda: 'USD',
-      totalOriginal: 25.0,
-      tasaCambioDetectada: null,
-      impuestoIva: 0.0,
-      items: [],
-    );
+    if (customResults != null) return customResults!;
+    return [
+      GeminiExtractionResult(
+        comercio: 'Automercado',
+        fecha: '2026-09-30',
+        moneda: 'USD',
+        totalOriginal: 25.0,
+        tasaCambioDetectada: null,
+        impuestoIva: 0.0,
+        items: [],
+      ),
+    ];
   }
 }
 
 class FakeDatabaseHelper extends DatabaseHelper {
+  final List<Map<String, dynamic>> readyDb = [];
+  int _nextId = 1;
   FakeDatabaseHelper() : super.test();
+
+  @override
+  Future<int> insertReadyScanQueueItem(String imagePath, String extractedData, {String? ocrText}) async {
+    final id = _nextId++;
+    readyDb.add({
+      'id': id,
+      'image_path': imagePath,
+      'status': 'ready',
+      'extracted_data': extractedData,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+    return id;
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getReadyScanQueueItems() async {
+    return List.from(readyDb);
+  }
 }
 
 class FakeGastoProvider extends GastoProvider {
@@ -153,6 +177,44 @@ void main() {
 
       expect(fakeGeminiService.parseCount, 1);
       expect(fakeGeminiService.parsedText, 'Almuerzo ejecutivo 8 dolares');
+    });
+
+    testWidgets('multiple voice expenses enqueue into ScanQueueProvider and navigate to ReviewExpenseScreen', (tester) async {
+      fakeGeminiService.customResults = [
+        GeminiExtractionResult(
+          comercio: 'Farmacia',
+          fecha: '2026-09-30',
+          moneda: 'USD',
+          totalOriginal: 5.0,
+          tasaCambioDetectada: null,
+          impuestoIva: 0.0,
+          items: [],
+        ),
+        GeminiExtractionResult(
+          comercio: 'Supermercado',
+          fecha: '2026-09-30',
+          moneda: 'USD',
+          totalOriginal: 20.0,
+          tasaCambioDetectada: null,
+          impuestoIva: 0.0,
+          items: [],
+        ),
+      ];
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      final inputFinder = find.byKey(const Key('voice_expense_input_field'));
+      await tester.enterText(inputFinder, 'Farmacia 5 y Supermercado 20');
+      await tester.pumpAndSettle();
+
+      final processButtonFinder = find.byKey(const Key('voice_expense_process_button'));
+      await tester.tap(processButtonFinder);
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(fakeGeminiService.parseCount, 1);
+      expect(scanQueueProvider.readyItems.length, 2);
     });
   });
 }

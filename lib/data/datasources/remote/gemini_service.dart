@@ -252,13 +252,68 @@ class GeminiService {
     }
   }
 
-  Future<GeminiExtractionResult> parseVoiceExpense(String spokenText) async {
+  GeminiExtractionResult _mapArgsToExtractionResult(Map args, String spokenText) {
+    final double totalUsd = (args['total_usd'] as num?)?.toDouble() ?? 0.0;
+    final double montoOriginalArg = (args['monto_original'] as num?)?.toDouble() ?? totalUsd;
+    final String comercio = args['comercio']?.toString().trim().isNotEmpty == true
+        ? args['comercio'].toString().trim()
+        : 'Varios';
+    final String fecha = args['fecha']?.toString().trim().isNotEmpty == true
+        ? args['fecha'].toString().trim()
+        : DateTime.now().toIso8601String().substring(0, 10);
+    final String categoriaRaw = args['categoria']?.toString().trim() ?? 'Otros';
+    final String categoria = AppConstants.normalizarCategoria(categoriaRaw);
+    final String monedaArg = args['moneda']?.toString() ?? '';
+    final String moneda = AppConstants.normalizarMoneda(
+      monedaArg.isNotEmpty ? monedaArg : null,
+      fallback: AppConstants.detectarMonedaDeTexto(spokenText, fallback: 'USD'),
+    );
+    final double totalOriginal = montoOriginalArg > 0 ? montoOriginalArg : totalUsd;
+    final List itemsList = args['items'] as List? ?? [];
+
+    List<ItemGastoModel> itemsGasto = itemsList.whereType<Map>().map((item) {
+      final double cant = (item['cantidad'] as num?)?.toDouble() ?? 1.0;
+      final double precioUnit = (item['precio_unitario'] as num?)?.toDouble() ?? (cant > 0 ? totalOriginal / cant : totalOriginal);
+      final String catItemRaw = item['categoria']?.toString().trim() ?? categoria;
+      return ItemGastoModel(
+        descripcion: item['descripcion']?.toString() ?? 'Artículo',
+        cantidad: cant,
+        precioUnitario: (precioUnit * 100).round(),
+        total: (precioUnit * cant * 100).round(),
+        categoria: AppConstants.normalizarCategoria(catItemRaw),
+      );
+    }).toList();
+
+    if (itemsGasto.isEmpty) {
+      itemsGasto = [
+        ItemGastoModel(
+          descripcion: comercio != 'Varios' ? 'Compra en $comercio' : spokenText,
+          cantidad: 1.0,
+          precioUnitario: (totalOriginal * 100).round(),
+          total: (totalOriginal * 100).round(),
+          categoria: categoria,
+        ),
+      ];
+    }
+
+    return GeminiExtractionResult(
+      comercio: comercio,
+      fecha: fecha,
+      moneda: moneda,
+      totalOriginal: totalOriginal,
+      tasaCambioDetectada: null,
+      impuestoIva: 0.0,
+      items: itemsGasto,
+    );
+  }
+
+  Future<List<GeminiExtractionResult>> parseVoiceExpense(String spokenText) async {
     try {
       final responseMap = await chatWithAnalyst(
         messages: [
           {
             'role': 'user',
-            'text': 'Registra este gasto: "$spokenText". Asume que la fecha es hoy si no la menciono. Extrae los productos, precios y la categoría adecuada para cada uno.',
+            'text': 'Registra este gasto o compras: "$spokenText". Asume que la fecha es hoy si no la menciono. Si menciono compras en múltiples lugares o comercios distintos, extrae cada una por separado en la lista "gastos". Extrae los productos, precios y la categoría adecuada para cada uno.',
           }
         ],
         contextData: {
@@ -270,52 +325,21 @@ class GeminiService {
         final call = responseMap['functionCall'] as Map;
         if (call['name'] == 'registrar_gasto') {
           final args = call['args'] as Map;
-          final double totalUsd = (args['total_usd'] as num?)?.toDouble() ?? 0.0;
-          final double montoOriginalArg = (args['monto_original'] as num?)?.toDouble() ?? totalUsd;
-          final String comercio = args['comercio'] ?? 'Varios';
-          final String fecha = args['fecha'] ?? DateTime.now().toIso8601String().substring(0, 10);
-          final String categoria = args['categoria'] ?? 'Otros';
-          final String monedaArg = args['moneda']?.toString() ?? '';
-          final String moneda = AppConstants.normalizarMoneda(
-            monedaArg.isNotEmpty ? monedaArg : null,
-            fallback: AppConstants.detectarMonedaDeTexto(spokenText, fallback: 'USD'),
-          );
-          final double totalOriginal = montoOriginalArg > 0 ? montoOriginalArg : totalUsd;
-          final List itemsList = args['items'] ?? [];
+          final List gastosList = args['gastos'] as List? ?? [];
 
-          List<ItemGastoModel> itemsGasto = itemsList.map((item) {
-            final double cant = (item['cantidad'] as num?)?.toDouble() ?? 1.0;
-            final double precioUnit = (item['precio_unitario'] as num?)?.toDouble() ?? totalOriginal;
-            return ItemGastoModel(
-              descripcion: item['descripcion'] ?? 'Artículo',
-              cantidad: cant,
-              precioUnitario: (precioUnit * 100).round(),
-              total: (precioUnit * cant * 100).round(),
-              categoria: item['categoria'] ?? categoria,
-            );
-          }).toList();
-
-          if (itemsGasto.isEmpty) {
-            itemsGasto = [
-              ItemGastoModel(
-                descripcion: spokenText,
-                cantidad: 1.0,
-                precioUnitario: (totalOriginal * 100).round(),
-                total: (totalOriginal * 100).round(),
-                categoria: categoria,
-              ),
-            ];
+          if (gastosList.isNotEmpty) {
+            final List<GeminiExtractionResult> results = [];
+            for (final g in gastosList) {
+              if (g is Map) {
+                results.add(_mapArgsToExtractionResult(g, spokenText));
+              }
+            }
+            if (results.isNotEmpty) {
+              return results;
+            }
           }
 
-          return GeminiExtractionResult(
-            comercio: comercio,
-            fecha: fecha,
-            moneda: moneda,
-            totalOriginal: totalOriginal,
-            tasaCambioDetectada: null,
-            impuestoIva: 0.0,
-            items: itemsGasto,
-          );
+          return [_mapArgsToExtractionResult(args, spokenText)];
         }
       }
     } catch (e) {
@@ -338,22 +362,24 @@ class GeminiService {
 
     final String monedaFallback = AppConstants.detectarMonedaDeTexto(spokenText, fallback: 'USD');
 
-    return GeminiExtractionResult(
-      comercio: 'Gasto por voz',
-      fecha: DateTime.now().toIso8601String().substring(0, 10),
-      moneda: monedaFallback,
-      totalOriginal: montoFallback,
-      tasaCambioDetectada: null,
-      impuestoIva: 0.0,
-      items: [
-        ItemGastoModel(
-          descripcion: spokenText,
-          cantidad: 1.0,
-          precioUnitario: (montoFallback * 100).round(),
-          total: (montoFallback * 100).round(),
-          categoria: 'Alimentación',
-        ),
-      ],
-    );
+    return [
+      GeminiExtractionResult(
+        comercio: 'Gasto por voz',
+        fecha: DateTime.now().toIso8601String().substring(0, 10),
+        moneda: monedaFallback,
+        totalOriginal: montoFallback,
+        tasaCambioDetectada: null,
+        impuestoIva: 0.0,
+        items: [
+          ItemGastoModel(
+            descripcion: spokenText,
+            cantidad: 1.0,
+            precioUnitario: (montoFallback * 100).round(),
+            total: (montoFallback * 100).round(),
+            categoria: 'Otros',
+          ),
+        ],
+      ),
+    ];
   }
 }

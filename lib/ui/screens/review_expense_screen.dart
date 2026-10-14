@@ -833,16 +833,18 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       appBar: AppBar(
         title: Text(
           isQueueItem && readyCount > 1
-              ? 'Revisar Factura ($readyCount en cola)'
+              ? (widget.imageFile != null
+                  ? 'Revisar Factura ($readyCount en cola)'
+                  : 'Revisar Gasto ($readyCount en cola)')
               : (widget.queueItemId != null || widget.imageFile != null
-                  ? 'Revisar Factura'
+                  ? (widget.imageFile != null ? 'Revisar Factura' : 'Revisar Gasto')
                   : 'Registrar gasto'),
         ),
         actions: [
           if (widget.queueItemId != null)
             IconButton(
               icon: const Icon(Icons.delete_outline, color: AppColors.error),
-              tooltip: 'Descartar Factura',
+              tooltip: widget.imageFile != null ? 'Descartar Factura' : 'Descartar Gasto',
               onPressed: () async {
                 final confirm = await showDialog<bool>(
                   context: context,

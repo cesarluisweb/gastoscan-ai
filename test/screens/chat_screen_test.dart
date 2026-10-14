@@ -267,5 +267,60 @@ void main() {
       expect(find.byIcon(Icons.mic_none), findsOneWidget);
       expect(fakeSpeech.stopCallCount, greaterThanOrEqualTo(1));
     });
+
+    testWidgets('multiple expenses in chat are registered and display correct currencies', (tester) async {
+      fakeGemini.customResponse = {
+        'functionCall': {
+          'name': 'registrar_gasto',
+          'args': {
+            'gastos': [
+              {
+                'comercio': 'Farmacia Central',
+                'fecha': '2026-10-13',
+                'moneda': 'VES',
+                'monto_original': 500.0,
+                'total_usd': 10.0,
+                'categoria': 'Salud',
+                'items': [
+                  {'descripcion': 'Medicinas', 'cantidad': 1.0, 'precio_unitario': 500.0}
+                ]
+              },
+              {
+                'comercio': 'Supermercado Sol',
+                'fecha': '2026-10-13',
+                'moneda': 'USD',
+                'monto_original': 20.0,
+                'total_usd': 20.0,
+                'categoria': 'Alimentación',
+                'items': [
+                  {'descripcion': 'Víveres', 'cantidad': 1.0, 'precio_unitario': 20.0}
+                ]
+              }
+            ]
+          }
+        }
+      };
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      final inputFinder = find.byType(TextField);
+      await tester.enterText(inputFinder, 'Gaste 500 bs en la farmacia y 20 dolares en el supermercado');
+      await tester.pumpAndSettle();
+
+      final sendButtonFinder = find.byIcon(Icons.send);
+      await tester.tap(sendButtonFinder);
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(fakeGastoProvider.gastos.length, equals(2));
+      expect(fakeGastoProvider.gastos[0].comercio, equals('Farmacia Central'));
+      expect(fakeGastoProvider.gastos[0].moneda, equals('VES'));
+      expect(fakeGastoProvider.gastos[1].comercio, equals('Supermercado Sol'));
+      expect(fakeGastoProvider.gastos[1].moneda, equals('USD'));
+
+      expect(find.textContaining('Farmacia Central'), findsOneWidget);
+      expect(find.textContaining('Supermercado Sol'), findsOneWidget);
+    });
   });
 }

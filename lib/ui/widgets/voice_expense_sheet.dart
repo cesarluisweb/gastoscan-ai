@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../../core/constants/app_colors.dart';
 import '../../data/datasources/remote/gemini_service.dart';
+import '../../providers/scan_queue_provider.dart';
 import '../screens/review_expense_screen.dart';
 
 class VoiceExpenseSheet extends StatefulWidget {
@@ -171,18 +173,34 @@ class _VoiceExpenseSheetState extends State<VoiceExpenseSheet> {
     });
 
     try {
-      final extractionResult = await _geminiService.parseVoiceExpense(text);
+      final extractionResults = await _geminiService.parseVoiceExpense(text);
 
       if (mounted) {
-        Navigator.pop(context);
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ReviewExpenseScreen(
-              extractedData: extractionResult,
+        if (extractionResults.length > 1) {
+          final queueProvider = Provider.of<ScanQueueProvider>(context, listen: false);
+          final insertedIds = await queueProvider.enqueueReadyExtractionResults(extractionResults);
+
+          Navigator.pop(context);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ReviewExpenseScreen(
+                extractedData: extractionResults.first,
+                queueItemId: insertedIds.first,
+              ),
             ),
-          ),
-        );
+          );
+        } else if (extractionResults.isNotEmpty) {
+          Navigator.pop(context);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ReviewExpenseScreen(
+                extractedData: extractionResults.first,
+              ),
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {

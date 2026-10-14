@@ -453,5 +453,35 @@ void main() {
       expect(items.any((it) => it.descripcion.contains('Harina de Maiz (E)')), isTrue);
       expect(items.any((it) => it.descripcion.contains('Detergente Liquido (G)')), isTrue);
     });
+
+    test('enqueueReadyExtractionResults stores items as ready and updates readyItems', () async {
+      final results = [
+        GeminiExtractionResult(
+          comercio: 'Farmacia',
+          fecha: '2026-09-30',
+          moneda: 'USD',
+          totalOriginal: 5.0,
+          tasaCambioDetectada: null,
+          impuestoIva: 0.0,
+          items: [],
+        ),
+        GeminiExtractionResult(
+          comercio: 'Supermercado',
+          fecha: '2026-09-30',
+          moneda: 'USD',
+          totalOriginal: 20.0,
+          tasaCambioDetectada: null,
+          impuestoIva: 0.0,
+          items: [],
+        ),
+      ];
+
+      final ids = await provider.enqueueReadyExtractionResults(results);
+      expect(ids.length, equals(2));
+      expect(provider.readyItems.length, equals(2));
+      expect(fakeDb.readyDb.length, equals(2));
+      expect(fakeDb.readyDb.first['status'], equals('ready'));
+      expect(fakeDb.readyDb.first['image_path'], equals(''));
+    });
   });
 }

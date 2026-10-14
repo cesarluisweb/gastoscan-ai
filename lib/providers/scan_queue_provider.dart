@@ -177,6 +177,19 @@ class ScanQueueProvider with ChangeNotifier {
     await enqueue(imagePath);
   }
 
+  /// Encola directamente resultados ya procesados (p. ej. compras múltiples dictadas por voz)
+  /// en estado 'ready' en SQLite y actualiza la cola de revisión.
+  Future<List<int>> enqueueReadyExtractionResults(List<GeminiExtractionResult> results) async {
+    final List<int> ids = [];
+    for (final result in results) {
+      final jsonStr = jsonEncode(result.toMap());
+      final id = await _dbHelper.insertReadyScanQueueItem('', jsonStr);
+      ids.add(id);
+    }
+    await loadReadyItems();
+    return ids;
+  }
+
   void setProcessing(bool value) {
     _isProcessing = value;
     notifyListeners();

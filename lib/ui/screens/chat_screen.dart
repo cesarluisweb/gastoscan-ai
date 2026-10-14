@@ -232,6 +232,111 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     });
   }
 
+  Future<GastoModel?> _registrarGastoIndividual({
+    required Map gastoData,
+    required String rawUserText,
+    required double tasaChat,
+    required GastoProvider gastoProvider,
+  }) async {
+    final double totalUsd = (gastoData['total_usd'] as num?)?.toDouble() ?? 0.0;
+    final double montoOriginalArg = (gastoData['monto_original'] as num?)?.toDouble() ?? 0.0;
+    final String comercio = gastoData['comercio']?.toString().trim().isNotEmpty == true
+        ? gastoData['comercio'].toString().trim()
+        : 'General';
+    final String fecha = gastoData['fecha']?.toString().trim().isNotEmpty == true
+        ? gastoData['fecha'].toString().trim()
+        : DateTime.now().toIso8601String().substring(0, 10);
+    final String categoria = AppConstants.normalizarCategoria(gastoData['categoria']?.toString().trim() ?? 'Otros');
+    final String monedaArg = gastoData['moneda']?.toString() ?? '';
+    final String monedaGasto = AppConstants.normalizarMoneda(
+      monedaArg.isNotEmpty ? monedaArg : null,
+      fallback: AppConstants.detectarMonedaDeTexto(rawUserText, fallback: 'USD'),
+    );
+
+    double totalOrigVal;
+    double totalUsdVal;
+
+    if (monedaGasto == 'VES') {
+      totalOrigVal = montoOriginalArg > 0 ? montoOriginalArg : (totalUsd > 0 && totalUsd != montoOriginalArg ? totalUsd : (totalUsd * tasaChat));
+      totalUsdVal = tasaChat > 0 ? (totalOrigVal / tasaChat) : totalOrigVal;
+    } else {
+      totalOrigVal = montoOriginalArg > 0 ? montoOriginalArg : totalUsd;
+      totalUsdVal = totalOrigVal;
+    }
+
+    final List itemsList = gastoData['items'] as List? ?? [];
+    final List<ItemGastoModel> itemsGasto = itemsList.whereType<Map>().map((item) {
+      final double cant = (item['cantidad'] as num?)?.toDouble() ?? 1.0;
+      final double precioUnit = (item['precio_unitario'] as num?)?.toDouble() ?? (cant > 0 ? totalOrigVal / cant : totalOrigVal);
+      final String catItemRaw = item['categoria']?.toString().trim() ?? categoria;
+      return ItemGastoModel(
+        descripcion: item['descripcion']?.toString() ?? 'Artículo',
+        cantidad: cant,
+        precioUnitario: (precioUnit * 100).round(),
+        total: (precioUnit * cant * 100).round(),
+        categoria: AppConstants.normalizarCategoria(catItemRaw),
+      );
+    }).toList();
+
+    if (itemsGasto.isEmpty) {
+      itemsGasto.add(ItemGastoModel(
+        descripcion: 'Compra en $comercio',
+        cantidad: 1.0,
+        precioUnitario: (totalOrigVal * 100).round(),
+        total: (totalOrigVal * 100).round(),
+        categoria: categoria,
+      ));
+    }
+
+    final nuevoGasto = GastoModel(
+      uuid: UuidGenerator.generate(),
+      fecha: fecha,
+      comercio: comercio,
+      moneda: monedaGasto,
+      totalOriginal: (totalOrigVal * 100).round(),
+      totalUsd: (totalUsdVal * 100).round(),
+      tasaCambio: tasaChat,
+      fuenteTasaCambio: 'Tasa BCV del día',
+      fechaTasaCambio: fecha,
+      categoria: categoria,
+      creadoEn: DateTime.now().toIso8601String(),
+    );
+
+    // Auto-detectar coincidencias con la lista de compras pendiente
+    final List<int> matchedShoppingIds = [];
+    try {
+      final pendingShopping = await _dbHelper.getPendingShoppingItems();
+      for (final item in itemsGasto) {
+        final descNorm = _normalizeText(item.descripcion);
+        if (descNorm.length >= 2) {
+          for (final shopItem in pendingShopping) {
+            final shopNorm = _normalizeText(shopItem.name);
+            if (shopNorm.isNotEmpty && (descNorm == shopNorm || descNorm.contains(shopNorm) || shopNorm.contains(descNorm))) {
+              if (shopItem.id != null && !matchedShoppingIds.contains(shopItem.id!)) {
+                matchedShoppingIds.add(shopItem.id!);
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error al cotejar compras en chat: $e');
+    }
+
+    final success = await gastoProvider.agregarGasto(nuevoGasto, itemsGasto, shoppingItemIds: matchedShoppingIds);
+    if (!success) return null;
+
+    GastoModel gastoGuardado = nuevoGasto;
+    try {
+      gastoGuardado = gastoProvider.gastos.firstWhere(
+        (g) => g.uuid == nuevoGasto.uuid,
+        orElse: () => nuevoGasto,
+      );
+    } catch (_) {}
+
+    return gastoGuardado;
+  }
+
   Future<void> _sendMessage([String? textOverride]) async {
     if (_isListening) {
       await _stopListening();
@@ -287,6 +392,41 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
         if (callName == 'registrar_gasto') {
           final args = call['args'] as Map;
+          final List gastosList = args['gastos'] as List? ?? [];
+          final settings = Provider.of<SettingsProvider>(context, listen: false);
+          final double tasaChat = settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : 1.0;
+
+          if (gastosList.isNotEmpty) {
+            final List<Map<String, dynamic>> newAssistantMsgs = [];
+            for (final g in gastosList) {
+              if (g is Map) {
+                final savedGasto = await _registrarGastoIndividual(
+                  gastoData: g,
+                  rawUserText: text,
+                  tasaChat: tasaChat,
+                  gastoProvider: gastoProvider,
+                );
+                if (savedGasto != null) {
+                  final montoFormateado = CurrencyFormatter.formatAmount(savedGasto.totalOriginalDouble, savedGasto.moneda);
+                  newAssistantMsgs.add({
+                    'role': 'assistant',
+                    'text': '¡Listo! He registrado tu compra en "${savedGasto.comercio}" por $montoFormateado.',
+                    'gasto': savedGasto,
+                  });
+                }
+              }
+            }
+            if (!mounted) return;
+            setState(() {
+              if (newAssistantMsgs.isNotEmpty) {
+                _messages.addAll(newAssistantMsgs);
+              } else {
+                _messages.add({'role': 'assistant', 'text': 'Hubo un error al intentar guardar los gastos.'});
+              }
+            });
+            return;
+          }
+
           final double totalUsd = (args['total_usd'] as num?)?.toDouble() ?? 0.0;
 
           // Red de seguridad de desambiguación en cliente
@@ -305,99 +445,21 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             return;
           }
 
-          final String comercio = args['comercio'] ?? 'General';
-          final String fecha = args['fecha'] ?? DateTime.now().toIso8601String().substring(0, 10);
-          final String categoria = args['categoria'] ?? 'Otros';
-          final String monedaArg = args['moneda']?.toString() ?? '';
-          final String monedaGasto = AppConstants.normalizarMoneda(
-            monedaArg.isNotEmpty ? monedaArg : null,
-            fallback: AppConstants.detectarMonedaDeTexto(text, fallback: 'USD'),
+          final savedGasto = await _registrarGastoIndividual(
+            gastoData: args,
+            rawUserText: text,
+            tasaChat: tasaChat,
+            gastoProvider: gastoProvider,
           );
-
-          final settings = Provider.of<SettingsProvider>(context, listen: false);
-          final double tasaChat = settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : 1.0;
-          final double montoOriginalArg = (args['monto_original'] as num?)?.toDouble() ?? 0.0;
-
-          double totalOrigVal;
-          double totalUsdVal;
-
-          if (monedaGasto == 'VES') {
-            totalOrigVal = montoOriginalArg > 0 ? montoOriginalArg : (totalUsd > 0 && totalUsd != montoOriginalArg ? totalUsd : (totalUsd * tasaChat));
-            totalUsdVal = tasaChat > 0 ? (totalOrigVal / tasaChat) : totalOrigVal;
-          } else {
-            totalOrigVal = montoOriginalArg > 0 ? montoOriginalArg : totalUsd;
-            totalUsdVal = totalOrigVal;
-          }
-
-          final List itemsList = args['items'] ?? [];
-          final List<ItemGastoModel> itemsGasto = itemsList.map((item) {
-            final double cant = (item['cantidad'] as num?)?.toDouble() ?? 1.0;
-            final double precioUnit = (item['precio_unitario'] as num?)?.toDouble() ?? (cant > 0 ? totalOrigVal / cant : totalOrigVal);
-            return ItemGastoModel(
-              descripcion: item['descripcion'] ?? 'Artículo',
-              cantidad: cant,
-              precioUnitario: (precioUnit * 100).round(),
-              total: (precioUnit * cant * 100).round(),
-            );
-          }).toList();
-
-          final nuevoGasto = GastoModel(
-            uuid: UuidGenerator.generate(),
-            fecha: fecha,
-            comercio: comercio,
-            moneda: monedaGasto,
-            totalOriginal: (totalOrigVal * 100).round(),
-            totalUsd: (totalUsdVal * 100).round(),
-            tasaCambio: tasaChat,
-            fuenteTasaCambio: 'Tasa BCV del día',
-            fechaTasaCambio: fecha,
-            categoria: categoria,
-            creadoEn: DateTime.now().toIso8601String(),
-          );
-
-          // Auto-detectar coincidencias con la lista de compras pendiente
-          final List<int> matchedShoppingIds = [];
-          try {
-            final pendingShopping = await _dbHelper.getPendingShoppingItems();
-            for (final item in itemsGasto) {
-              final descNorm = _normalizeText(item.descripcion);
-              if (descNorm.length >= 2) {
-                for (final shopItem in pendingShopping) {
-                  final shopNorm = _normalizeText(shopItem.name);
-                  if (shopNorm.isNotEmpty && (descNorm == shopNorm || descNorm.contains(shopNorm) || shopNorm.contains(descNorm))) {
-                    if (shopItem.id != null && !matchedShoppingIds.contains(shopItem.id!)) {
-                      matchedShoppingIds.add(shopItem.id!);
-                    }
-                  }
-                }
-              }
-            }
-          } catch (e) {
-            debugPrint('Error al cotejar compras en chat: $e');
-          }
-
-          final success = await gastoProvider.agregarGasto(nuevoGasto, itemsGasto, shoppingItemIds: matchedShoppingIds);
 
           if (!mounted) return;
           setState(() {
-            if (success) {
-              final montoFormateado = CurrencyFormatter.formatAmount(totalOrigVal, monedaGasto);
-              String msg = '¡Listo! He registrado tu compra en "$comercio" por $montoFormateado.';
-              if (matchedShoppingIds.isNotEmpty) {
-                msg += ' Se tacharon ${matchedShoppingIds.length} producto(s) de tu lista de compras.';
-              }
-              GastoModel gastoGuardado = nuevoGasto;
-              try {
-                gastoGuardado = gastoProvider.gastos.firstWhere(
-                  (g) => g.uuid == nuevoGasto.uuid,
-                  orElse: () => nuevoGasto,
-                );
-              } catch (_) {}
-
+            if (savedGasto != null) {
+              final montoFormateado = CurrencyFormatter.formatAmount(savedGasto.totalOriginalDouble, savedGasto.moneda);
               _messages.add({
                 'role': 'assistant',
-                'text': msg,
-                'gasto': gastoGuardado,
+                'text': '¡Listo! He registrado tu compra en "${savedGasto.comercio}" por $montoFormateado.',
+                'gasto': savedGasto,
               });
             } else {
               _messages.add({'role': 'assistant', 'text': 'Hubo un error al intentar guardar el gasto.'});
