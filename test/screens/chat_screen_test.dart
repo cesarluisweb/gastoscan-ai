@@ -188,7 +188,7 @@ void main() {
       expect(find.text('Respuesta simulada para: ¿Qué tengo en mi lista de compras?', skipOffstage: false), findsOneWidget);
     });
 
-    testWidgets('renders edit expense button when assistant registers an expense', (tester) async {
+    testWidgets('renders review expense button when assistant extracts an expense', (tester) async {
       fakeGeminiService.customResponse = {
         'functionCall': {
           'name': 'registrar_gasto',
@@ -220,8 +220,9 @@ void main() {
       await tester.pump();
       await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('chat_edit_expense_button'), skipOffstage: false), findsOneWidget);
-      expect(find.text('Ver / Editar gasto', skipOffstage: false), findsOneWidget);
+      expect(find.byKey(const Key('chat_review_expense_button'), skipOffstage: false), findsOneWidget);
+      expect(find.text('Revisar y Guardar compra', skipOffstage: false), findsOneWidget);
+      expect(fakeGastoProvider.gastos.isEmpty, isTrue);
     });
 
     testWidgets('tapping textfield while listening stops microphone', (tester) async {
@@ -313,14 +314,10 @@ void main() {
       await tester.pump();
       await tester.pumpAndSettle();
 
-      expect(fakeGastoProvider.gastos.length, equals(2));
-      expect(fakeGastoProvider.gastos[0].comercio, equals('Farmacia Central'));
-      expect(fakeGastoProvider.gastos[0].moneda, equals('VES'));
-      expect(fakeGastoProvider.gastos[1].comercio, equals('Supermercado Sol'));
-      expect(fakeGastoProvider.gastos[1].moneda, equals('USD'));
-
+      expect(fakeGastoProvider.gastos.isEmpty, isTrue);
       expect(find.textContaining('Farmacia Central'), findsOneWidget);
       expect(find.textContaining('Supermercado Sol'), findsOneWidget);
+      expect(find.text('Revisar y Guardar compra'), findsWidgets);
     });
   });
 }
