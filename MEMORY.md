@@ -3,27 +3,27 @@
 
 ## Estado Actual Inmediato
 - **Rama:** `main`.
-- **Fase activa:** Finalizada corrección integral del flujo de eliminación de datos y cuenta.
+- **Fase activa:** Múltiples registros de gastos independientes por voz y en chat con revisión continua completados.
 - **Últimos hitos:** 
-  1. **Eliminación Segura de Cuenta y Datos (Remota y Local):** `eliminarCuentaYDatos()` en `SyncService` no silencia fallos remotos de Firestore ni Firebase Auth. Si la operación remota crítica falla (red o reautenticación), se preserva la base local y se notifica el error.
-  2. **Inclusión de Usuarios Anónimos:** Limpieza remota en Firestore y eliminación de usuario Auth aplicada por igual a anónimos y registrados.
-  3. **Limpieza Selectiva de Storage y Archivos:** Borrado específico de claves de Rinde Más en `FlutterSecureStorage` (`AppConstants.prefApiKey`) sin usar `deleteAll()`. `ImageService.limpiarArchivosApp()` purga comprobantes y temporales propios (`recibo_*.jpg`, directorios internos) protegiendo fotos y exportaciones del usuario.
-  4. **Exclusión de `ruta_foto_local` en Firestore:** `GastoModel.toFirestoreMap()` excluye la ruta física del teléfono enviando solo datos semánticos, mientras `toMap()` preserva el campo para SQLite.
-  5. **Manejo de UI y Reautenticación en `more_screen.dart`:** Éxito mostrado únicamente si la operación concluyó sin fallos; gestión de `requires-recent-login` con flujo de reautenticación Google.
-  6. **Pruebas Automatizadas y CI 100% Verde:** Suite unitaria `sync_service_delete_account_test.dart` y widget tests en `more_screen_test.dart` validados exitosamente en GitHub Actions (run 38465349237, conclusión `success`).
+  1. **Gateway Cloudflare Actualizado:** Prompt de `handleChatAnalyst` y esquema de tool `registrar_gasto` ampliados con array `gastos` para compras en comercios distintos. Desplegado a producción en Cloudflare Workers (`fbf1636a`).
+  2. **Servicio Gemini Multigasto:** `parseVoiceExpense` retorna `Future<List<GeminiExtractionResult>>` parseando compras individuales o gasto único retrocompatible con normalización de moneda.
+  3. **Encolamiento en ScanQueueProvider:** Nuevo método `enqueueReadyExtractionResults` para persistir compras múltiples en SQLite como `ready` (`image_path: ''`).
+  4. **Flujo de Voz Adaptativo en VoiceExpenseSheet:**
+     - 1 gasto: abre directo `ReviewExpenseScreen(queueItemId: null)`.
+     - 2+ gastos: encola en `ScanQueueProvider` y abre el primer gasto con `queueItemId: id1`.
+  5. **Revisión Continua en ReviewExpenseScreen:** Botones "Guardar y revisar siguiente (N más)" y "Guardar y salir al inicio", con título adaptativo "Revisar Gasto (N en cola)" cuando no hay imagen.
+  6. **Soporte de Múltiples Gastos en Chat:** `chat_screen.dart` registra cada compra del array `gastos` respetando la moneda de cada una y genera tarjetas con botón de edición individual.
+  7. **Suite de Tests y CI en Verde:** Tests unitarios y de widgets actualizados en `voice_expense_sheet_test.dart`, `scan_queue_provider_test.dart` y `chat_screen_test.dart`. Build y release verificados en GitHub Actions (run `38495516616`, conclusión `success`).
 
 ## Decisiones Técnicas y de Negocio Recientes
-- **Orden de Eliminación Transaccional:** 1. Purgar Firestore (colección gastos y presupuestos), 2. Eliminar cuenta en Firebase Auth (o reautenticar si expira token), 3. Limpiar SQLite local y archivos de comprobantes, 4. Limpiar credenciales específicas en secure storage, 5. Reiniciar sesión anónima fresca. Si paso 1 o 2 falla, la base local queda intacta.
-- **Exclusión de Rutas Locales en Firestore:** Firestore nunca debe almacenar rutas del sistema de archivos local (`/data/user/0/...`). Usar `toFirestoreMap()` para la nube y `toMap()` para SQLite.
-- **Limpieza Específica de Claves Seguras:** Solo borrar `AppConstants.prefApiKey` en `FlutterSecureStorage` para no colisionar con otros plugins.
-- **Aislamiento de Tests con Inyección de Usuario:** `MoreScreen` soporta `customUser` y `customUserStream` para pruebas deterministas sin backend simulado.
+- **Flujo Diferenciado de Dictado:** Si el dictado contiene 1 compra, no se inserta en `scan_queue` (flujo rápido de 1 toque). Si contiene 2+ compras, se encola en `ready` para permitir revisión continua secuencial y persistencia segura en Dashboard si el usuario sale antes.
+- **Distinción Semántica en IA:** Varios productos en un mismo comercio van en `items` de un solo gasto; compras en comercios distintos se desglosan en el array `gastos`.
+- **Respeto de Moneda por Compra:** En chat y voz, cada gasto respeta su propia moneda extraída (`VES`, `USD`, etc.) formateándose individualmente.
 
 ## Errores y Fricciones a Evitar
-- No borrar datos locales antes de asegurar que la purga remota crítica fue exitosa.
-- Prohibido `deleteAll()` ciego en `FlutterSecureStorage`.
-- En UI, no asumir éxito de `eliminarCuentaYDatos()` sin evaluar el valor devuelto.
+- `GastoModel` usa `totalOriginalDisplay` para el valor decimal (`totalOriginal / 100.0`), no `totalOriginalDouble`.
 - No usar `>` en PowerShell ni `&&` en PowerShell 5.1.
 - Contraste estricto en UI (`DESIGN.md`): Texto sobre amarillo SIEMPRE negro; texto sobre blanco SIEMPRE negro o gris, NUNCA amarillo.
 
 ## Próximo Paso Inmediato
-- Esperar retroalimentación de César tras la revisión de los cambios de eliminación de cuenta.
+- Notificar a César con la guía paso a paso para pruebas de dictado múltiple por voz y en chat.
