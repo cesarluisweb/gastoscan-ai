@@ -395,7 +395,7 @@ La app **no está lista para envío a producción** en su estado actual. Se iden
 | 3 | Agregar botón de reporte en burbujas del chat IA | GP-05 | Pequeño | Cada respuesta IA tiene opción de reportar | Completado ✅ |
 | 4 | Cambiar `exactAllowWhileIdle` → `inexactAllowWhileIdle` en notifications | GP-06 | Pequeño | Recordatorios funcionan en Android 12+ | Completado ✅ |
 | 5 | Anonimizar captura 5 (reemplazar correo real) | GP-07 | Pequeño | PII no visible en ficha Play Store | Completado ✅ |
-| 6 | Fijar `targetSdk = 35` explícito en Gradle | GP-08 | Pequeño | Build siempre cumple requisito API 35 | Completado ✅ |
+| 6 | Fijar `targetSdk = 36` explícito en Gradle | GP-08 | Pequeño | Build siempre cumple requisito API 36 de Google Play | Completado ✅ |
 | 7 | Corregir cola de escaneo para EUR/USDT | FIN-04 | Pequeño | Facturas en EUR muestran monto correcto | Pendiente de validación 🧪 |
 | 8 | Mostrar y persistir tasa EUR al guardar gasto | FIN-05 | Mediano | Equivalente Bs. correcto para gastos en EUR | Pendiente de validación 🧪 |
 | 9 | Persistir presupuesto adoptado en SQLite al iniciar mes nuevo | FIN-06 | Mediano | Panel web y otros dispositivos ven el presupuesto | Pendiente de validación 🧪 |

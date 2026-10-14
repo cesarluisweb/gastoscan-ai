@@ -9,7 +9,7 @@
   2. **Multimoneda e Integridad (FIN-04, FIN-05, FIN-06, TEC-06):** Conversión dinámica EUR/USDT en colas de escaneo e historial; soporte completo EUR en `ReviewExpenseScreen`; adopción perezosa de presupuesto consolidada en BD; UUIDs con `Random.secure()`.
   3. **Seguridad y Sesión (SEC-03, SEC-04, SEC-06):** Reautenticación por contraseña en borrado de cuenta; purga de API key de SecureStorage en logout; eliminación de `--dart-define=GEMINI_API_KEY` en CI.
   4. **Calidad Visual y Rendimiento (UX-01, UX-04, TEC-03, TEC-04):** Contraste dinámico blanco/negro en dona por luminancia; borde de foco en `primaryDark`; verificación asíncrona de archivos en galería; guardas `mounted` tras awaits.
-  5. **Activos Google Play y SDK (GP-07, GP-08):** Captura 5 anonimizada (`usuario@ejemplo.com`); `targetSdk = 35` fijado en build de producción.
+  5. **Activos Google Play y SDK (GP-07, GP-08):** Captura 5 anonimizada (`usuario@ejemplo.com`); `targetSdk = 36` fijado en build de producción para Play Store.
 
 ## Decisiones Técnicas y de Negocio Recientes
 - **Fotos Locales Preservadas:** No se eliminan fotos físicas del teléfono al cerrar sesión si el usuario las guardó.
@@ -17,9 +17,8 @@
 - **Soporte EUR Real:** `ReviewExpenseScreen` persiste la tasa oficial del euro y calcula equivalentes exactos en Bs. y USD.
 
 ## Errores y Fricciones a Evitar
-- No forzar `compileSdk = 35` si librerías AndroidX requieren 36+. Mantener `compileSdk` de Flutter y fijar `targetSdk = 35` para Google Play.
+- `targetSdk` debe ser al menos 36 según el requisito vigente de Google Play Console.
 - Toda conversión de divisas debe pasar por `CurrencyFormatter` y las tasas dinámicas de `settings`.
 
 ## Próximo Paso Inmediato
-- Validar en dispositivo físico los recorridos de Fase 2 (EUR, presupuesto adoptado, contraste y reauth).
-- Subir AAB del Build 429 y nueva captura 5 a Google Play Console (prueba cerrada).
+- Monitorear build 430 en GitHub Actions hasta confirmar éxito y subir AAB a Play Store.

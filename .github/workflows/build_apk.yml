@@ -94,7 +94,7 @@ jobs:
           -keep class com.google_mlkit_text_recognition.** { *; }
           EOF
           
-          # Inyectar configuracion de proguard-rules.pro y fijar targetSdk 35 en android/app/build.gradle.kts
+          # Inyectar configuracion de proguard-rules.pro y fijar targetSdk 36 en android/app/build.gradle.kts
           python3 -c '
           with open("android/app/build.gradle.kts", "r") as f:
               content = f.read()
@@ -102,7 +102,7 @@ jobs:
               target = "signingConfig = signingConfigs.getByName(\"debug\")"
               replacement = target + "\n            proguardFiles(getDefaultProguardFile(\"proguard-android-optimize.txt\"), \"proguard-rules.pro\")"
               content = content.replace(target, replacement)
-          content = content.replace("targetSdk = flutter.targetSdkVersion", "targetSdk = 35")
+          content = content.replace("targetSdk = flutter.targetSdkVersion", "targetSdk = 36")
           with open("android/app/build.gradle.kts", "w") as f:
               f.write(content)
           '
