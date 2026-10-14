@@ -366,7 +366,7 @@ La app **no está lista para envío a producción** en su estado actual. Se iden
 
 ## G. Hoja de Ruta
 
-### Fase 1: Inmediatas (Implementada 🔧)
+### Fase 1: Inmediatas (Completada ✅)
 
 > **Objetivo:** Resolver defectos que producen datos financieros incorrectos, riesgo de pérdida de datos y rechazo seguro por Google Play.
 
@@ -374,26 +374,26 @@ La app **no está lista para envío a producción** en su estado actual. Se iden
 |:--|:---|:---|:---:|:---|:---:|
 | 1 | Convertir presupuestos a VES en Dashboard antes de pasar a `CategoryChart` | FIN-01 | Pequeño | Barras de presupuesto muestran % correcto en VES | Completado ✅ |
 | 2 | Parametrizar moneda en `getSpentForCategory()` e `isCategoryOverBudget()` | FIN-02 | Pequeño | Alertas de sobregiro se disparan en VES | Completado ✅ |
-| 3 | Chat IA: redirigir `registrar_gasto` a `ReviewExpenseScreen` en vez de insertar directamente | FIN-03 | Mediano | Ningún gasto se guarda sin confirmación explícita | Implementado 🔧 |
-| 4 | Regenerar gráfico de funciones sin botón "Descargar gratis" | GP-01 | Pequeño | Imagen 1024x500 sin CTA falso | Implementado 🔧 |
-| 5 | Eliminar fallback de descarga APK externa en `update_service.dart` | GP-02 | Pequeño | Solo redirige a `market://` | Implementado 🔧 |
+| 3 | Chat IA: redirigir `registrar_gasto` a `ReviewExpenseScreen` en vez de insertar directamente | FIN-03 | Mediano | Ningún gasto se guarda sin confirmación explícita | Completado ✅ |
+| 4 | Regenerar gráfico de funciones sin botón "Descargar gratis" | GP-01 | Pequeño | Imagen 1024x500 sin CTA falso | Completado ✅ |
+| 5 | Eliminar fallback de descarga APK externa en `update_service.dart` | GP-02 | Pequeño | Solo redirige a `market://` | Completado ✅ |
 | 6 | Registrar SHA-1 de Play App Signing en Firebase y actualizar `google-services.json` | GP-03 | Pequeño | Google Sign-In funciona desde instalación Play Store | Configurado en Firebase ✅ |
-| 7 | Mover `limpiarDatosLocales()` DESPUÉS de `linkWithCredential()` exitoso | SEC-02 | Pequeño | Si auth falla, los datos locales permanecen intactos | Implementado 🔧 |
-| 8 | Reemplazar tasa EUR hardcodeada en `receipt_gallery_screen.dart` | TEC-02 | Pequeño | Galería usa `settings.tasaEur` y `settings.tasaUsdt` | Implementado 🔧 |
-| 9 | Añadir `.whenComplete()` para dispose de controladores en `auth_modal_sheet.dart` | TEC-01 | Pequeño | Sin leaks de `TextEditingController` | Implementado 🔧 |
+| 7 | Mover `limpiarDatosLocales()` DESPUÉS de `linkWithCredential()` exitoso | SEC-02 | Pequeño | Si auth falla, los datos locales permanecen intactos | Completado ✅ |
+| 8 | Reemplazar tasa EUR hardcodeada en `receipt_gallery_screen.dart` | TEC-02 | Pequeño | Galería usa `settings.tasaEur` y `settings.tasaUsdt` | Completado ✅ |
+| 9 | Añadir `.whenComplete()` para dispose de controladores en `auth_modal_sheet.dart` | TEC-01 | Pequeño | Sin leaks de `TextEditingController` | Completado ✅ |
 | 10 | Cambiar fallback de voz de 'Alimentación' a 'Otros' | TEC-05 | Pequeño | Regla 110 cumplida | Completado ✅ |
 
-**Dependencias:** Ninguna entre sí. Pueden trabajarse en paralelo.  
-**Estado:** 100% Implementada en el código.
+**Dependencias:** Ninguna entre sí.  
+**Estado:** 100% Completada y validada en dispositivo físico y Play Store ✅.
 
 ### Fase 2: Antes de solicitar acceso a producción (P1 y requisitos Play Store)
 
 | # | Acción | IDs | Esfuerzo | Criterio de Aceptación | Estado |
 |:--|:---|:---|:---:|:---|:---:|
 | 1 | Eliminar keystore del historial Git (BFG/filter-repo), rotar, mover a GitHub Secrets | SEC-01 | Mediano | `.jks` no aparece en `git log`, passwords solo en Secrets | Pendiente |
-| 2 | Eliminar `READ_MEDIA_IMAGES` del Manifest | GP-04 | Pequeño | `image_picker` funciona sin el permiso en Android 13+ | Implementado 🔧 |
-| 3 | Agregar botón de reporte en burbujas del chat IA | GP-05 | Pequeño | Cada respuesta IA tiene opción de reportar | Implementado 🔧 |
-| 4 | Cambiar `exactAllowWhileIdle` → `inexactAllowWhileIdle` en notifications | GP-06 | Pequeño | Recordatorios funcionan en Android 12+ | Implementado 🔧 |
+| 2 | Eliminar `READ_MEDIA_IMAGES` del Manifest | GP-04 | Pequeño | `image_picker` funciona sin el permiso en Android 13+ | Completado ✅ |
+| 3 | Agregar botón de reporte en burbujas del chat IA | GP-05 | Pequeño | Cada respuesta IA tiene opción de reportar | Completado ✅ |
+| 4 | Cambiar `exactAllowWhileIdle` → `inexactAllowWhileIdle` en notifications | GP-06 | Pequeño | Recordatorios funcionan en Android 12+ | Completado ✅ |
 | 5 | Anonimizar captura 5 (reemplazar correo real) | GP-07 | Pequeño | PII no visible en ficha Play Store | Pendiente |
 | 6 | Fijar `compileSdk = 35`, `targetSdk = 35` explícitos en Gradle | GP-08 | Pequeño | Build siempre cumple requisito API 35 | Pendiente |
 | 7 | Corregir cola de escaneo para EUR/USDT | FIN-04 | Pequeño | Facturas en EUR muestran monto correcto | Pendiente |

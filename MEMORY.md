@@ -25,3 +25,4 @@
 ## Próximo Paso Inmediato
 - Probar en dispositivo físico los 5 recorridos críticos de la compilación 427.
 - Continuar con las tareas pendientes de Fase 2 (anonimizar captura 5, fijar compileSdk=35, soporte EUR/USDT en cola de escaneo).
+- Tarea registrada en ROADMAP (Fase 6.1): Revisión y expansión de categorías por defecto (ej. Vestimenta/Ropa).

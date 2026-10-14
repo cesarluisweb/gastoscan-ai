@@ -64,7 +64,7 @@ Todos los recursos listos para subir a Google Play Console se encuentran central
 | **Captura 4: Asistente con IA** | `Google Play Assets/screenshots/screenshot_4_asistente_con_ia.png` | 1080 × 2280 px | PNG (684 KB) | Subido a Play Console ✅ |
 | **Captura 5: Seguridad y Privacidad** | `Google Play Assets/screenshots/screenshot_5_seguridad_y_privacidad.png` | 1080 × 2280 px | PNG (532 KB) | Subido a Play Console ✅ |
 
-> **Fecha de subida a Google Play Console:** 13 de octubre de 2026.
+> **Fecha de subida a Google Play Console:** 13 de octubre de 2026 (Capturas iniciales); 14 de octubre de 2026 (AAB de producción compilación 427 a Prueba Cerrada y nuevo Gráfico de funciones sin CTA).
 
 ---
 
