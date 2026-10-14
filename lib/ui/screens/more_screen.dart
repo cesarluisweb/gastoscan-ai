@@ -1329,7 +1329,7 @@ class MoreScreenState extends State<MoreScreen> {
                                   style: TextStyle(
                                     fontSize: 12,
                                     height: 1.35,
-                                    color: Colors.blue.shade950,
+                                    color: const Color(0xFF1E3A8A),
                                   ),
                                 ),
                               ),
