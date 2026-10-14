@@ -2,17 +2,15 @@ Analyzing gastoscan-ai...
 
    info • The import of 'package:flutter/foundation.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart'. Try removing the import directive • lib/main.dart:1:8 • unnecessary_import
    info • Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter • lib/main.dart:50:9 • use_super_parameters
-  error • Undefined name 'playStoreWebUrl'. Try correcting the name to one that is defined, or defining the name • lib/services/update_service.dart:51:57 • undefined_identifier
-  error • Undefined name 'playStoreWebUrl'. Try correcting the name to one that is defined, or defining the name • lib/services/update_service.dart:52:50 • undefined_identifier
    info • Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter • lib/ui/screens/analysis_screen.dart:13:9 • use_super_parameters
-   info • Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter • lib/ui/screens/chat_screen.dart:55:9 • use_super_parameters
-  error • Undefined name 'DateFormatter'. Try correcting the name to one that is defined, or defining the name • lib/ui/screens/chat_screen.dart:90:23 • undefined_identifier
-warning • The declaration '_normalizeText' isn't referenced. Try removing the declaration of '_normalizeText' • lib/ui/screens/chat_screen.dart:141:10 • unused_element
-   info • 'localeId' is deprecated and shouldn't be used. Use SpeechListenOptions.localeId instead. Try replacing the use of the deprecated member with the replacement • lib/ui/screens/chat_screen.dart:196:11 • deprecated_member_use
-   info • 'listenFor' is deprecated and shouldn't be used. Use SpeechListenOptions.listenFor instead. Try replacing the use of the deprecated member with the replacement • lib/ui/screens/chat_screen.dart:207:11 • deprecated_member_use
-   info • 'pauseFor' is deprecated and shouldn't be used. Use SpeechListenOptions.pauseFor instead. Try replacing the use of the deprecated member with the replacement • lib/ui/screens/chat_screen.dart:208:11 • deprecated_member_use
-   info • Don't use 'BuildContext's across async gaps. Try rewriting the code to not use the 'BuildContext', or guard the use with a 'mounted' check • lib/ui/screens/chat_screen.dart:354:58 • use_build_context_synchronously
-   info • Don't use 'BuildContext's across async gaps. Try rewriting the code to not use the 'BuildContext', or guard the use with a 'mounted' check • lib/ui/screens/chat_screen.dart:405:66 • use_build_context_synchronously
+warning • Unused import: '../../core/utils/uuid_generator.dart'. Try removing the import directive • lib/ui/screens/chat_screen.dart:15:8 • unused_import
+   info • Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter • lib/ui/screens/chat_screen.dart:56:9 • use_super_parameters
+warning • The declaration '_normalizeText' isn't referenced. Try removing the declaration of '_normalizeText' • lib/ui/screens/chat_screen.dart:142:10 • unused_element
+   info • 'localeId' is deprecated and shouldn't be used. Use SpeechListenOptions.localeId instead. Try replacing the use of the deprecated member with the replacement • lib/ui/screens/chat_screen.dart:197:11 • deprecated_member_use
+   info • 'listenFor' is deprecated and shouldn't be used. Use SpeechListenOptions.listenFor instead. Try replacing the use of the deprecated member with the replacement • lib/ui/screens/chat_screen.dart:208:11 • deprecated_member_use
+   info • 'pauseFor' is deprecated and shouldn't be used. Use SpeechListenOptions.pauseFor instead. Try replacing the use of the deprecated member with the replacement • lib/ui/screens/chat_screen.dart:209:11 • deprecated_member_use
+   info • Don't use 'BuildContext's across async gaps. Try rewriting the code to not use the 'BuildContext', or guard the use with a 'mounted' check • lib/ui/screens/chat_screen.dart:355:58 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps. Try rewriting the code to not use the 'BuildContext', or guard the use with a 'mounted' check • lib/ui/screens/chat_screen.dart:406:66 • use_build_context_synchronously
    info • Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter • lib/ui/screens/dashboard_screen.dart:32:9 • use_super_parameters
    info • Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation • lib/ui/screens/dashboard_screen.dart:77:16 • prefer_const_constructors
    info • Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation • lib/ui/screens/dashboard_screen.dart:92:19 • prefer_const_constructors
