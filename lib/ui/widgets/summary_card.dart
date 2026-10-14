@@ -69,10 +69,16 @@ class SummaryCard extends StatelessWidget {
     final isOverBudget = hasBudget && (effectiveSpent > targetBudget);
 
     final now = DateTime.now();
+    final targetYear = anio ?? now.year;
+    final targetMonth = mes ?? now.month;
     final isCurrentMonth = (mes == null || anio == null) ||
-        (now.month == mes && now.year == anio);
-    final totalDaysInMonth = DateTime(now.year, now.month + 1, 0).day;
-    final daysRemaining = (totalDaysInMonth - now.day).clamp(0, 31);
+        (now.month == targetMonth && now.year == targetYear);
+    final isPastMonth = targetYear < now.year ||
+        (targetYear == now.year && targetMonth < now.month);
+    final totalDaysInMonth = DateTime(targetYear, targetMonth + 1, 0).day;
+    final daysRemaining = isCurrentMonth
+        ? (totalDaysInMonth - now.day).clamp(0, 31)
+        : (isPastMonth ? 0 : totalDaysInMonth);
     final daysForCalculation = daysRemaining > 0 ? daysRemaining : 1;
 
     // Métricas para la fila inferior compacta
@@ -114,7 +120,7 @@ class SummaryCard extends StatelessWidget {
             presupuestoGeneral: presupuestoGeneral,
             metaAhorro: metaAhorro,
             gastoAcumulado: effectiveSpent,
-            diaActual: isCurrentMonth ? now.day : totalDaysInMonth,
+            diaActual: isCurrentMonth ? now.day : (isPastMonth ? totalDaysInMonth : 1),
             diasTotalesMes: totalDaysInMonth,
             moneda: monedaPresupuesto,
           )

@@ -652,13 +652,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Asistente IA'),
-        automaticallyImplyLeading: widget.showBackButton && widget.onBack == null,
-        leading: (widget.showBackButton && widget.onBack != null)
+        leading: widget.showBackButton
             ? IconButton(
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () {
                   _stopListening();
-                  widget.onBack!();
+                  if (widget.onBack != null) {
+                    widget.onBack!();
+                  } else {
+                    Navigator.of(context).maybePop();
+                  }
                 },
               )
             : null,

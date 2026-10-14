@@ -301,6 +301,15 @@ class GastoProvider with ChangeNotifier {
     return await _repository.obtenerGastos();
   }
 
+  /// Retorna todos los gastos sin filtrar por mes para búsqueda global
+  Future<List<GastoModel>> obtenerTodosLosGastos() async {
+    try {
+      return await _repository.obtenerGastos();
+    } catch (_) {
+      return _gastos;
+    }
+  }
+
   Future<Map<String, dynamic>?> buscarPrecioAnterior(String descripcion, {int? excludeGastoId}) async {
     return await _repository.buscarPrecioAnterior(descripcion, excludeGastoId: excludeGastoId);
   }

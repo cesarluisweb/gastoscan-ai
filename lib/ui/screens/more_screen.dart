@@ -98,10 +98,12 @@ class MoreScreenState extends State<MoreScreen> {
   }
 
   void openChat({bool fromHome = false}) {
-    setState(() {
-      _openedFromHome = fromHome;
-      _currentSubView = MoreSubView.chat;
-    });
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const ChatScreen(showBackButton: true),
+      ),
+    );
   }
 
   void openShoppingList() {
@@ -255,31 +257,6 @@ class MoreScreenState extends State<MoreScreen> {
         child: ShoppingListScreen(
           showBackButton: true,
           onBack: () => setState(() => _currentSubView = MoreSubView.hub),
-        ),
-      );
-    }
-
-    if (_currentSubView == MoreSubView.chat) {
-      void handleBack() {
-        final wasFromHome = _openedFromHome;
-        setState(() {
-          _currentSubView = MoreSubView.hub;
-          _openedFromHome = false;
-        });
-        if (wasFromHome) {
-          widget.onNavigateToHome?.call();
-        }
-      }
-
-      return PopScope(
-        canPop: false,
-        onPopInvokedWithResult: (didPop, result) {
-          if (didPop) return;
-          handleBack();
-        },
-        child: ChatScreen(
-          showBackButton: true,
-          onBack: handleBack,
         ),
       );
     }

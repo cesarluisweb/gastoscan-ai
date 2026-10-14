@@ -452,6 +452,17 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     final totalUsd = tryParseAmount(_totalUsdCtrl.text, isPrice: false) ?? 0.0;
     final tasa = tryParseAmount(_tasaCambioCtrl.text, isPrice: false) ?? 1.0;
 
+    if (totalOrig <= 0 || totalUsd <= 0) {
+      setState(() => _isSaving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('El monto del gasto debe ser mayor a 0.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
     double tasaParaGasto = tasa;
     String fuenteFinal = _fuenteTasa;
     if (_selectedMoneda == 'EUR') {
@@ -1313,7 +1324,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                         prefixIcon: Icon(Icons.payments_outlined, color: AppColors.textSecondary),
                       ),
                       onChanged: (_) => _recalcularTotalUsd(),
-                      validator: (val) => (tryParseAmount(val ?? '', isPrice: false) == null) ? 'Inválido' : null,
+                      validator: (val) => validatePositiveAmount(val),
                     ),
                     const SizedBox(height: 12),
                     // Chips rápidos de tasa para Bolívares
@@ -1409,7 +1420,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                         labelText: 'Total Equivalente (USD)',
                         prefixIcon: Icon(Icons.attach_money, color: AppColors.primaryDark),
                       ),
-                      validator: (val) => (tryParseAmount(val ?? '', isPrice: false) == null) ? 'Inválido' : null,
+                      validator: (val) => validatePositiveAmount(val),
                     ),
                   ] else if (_selectedMoneda == 'EUR') ...[
                     TextFormField(
@@ -1420,7 +1431,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                         prefixIcon: Icon(Icons.euro, color: AppColors.primaryDark),
                       ),
                       onChanged: (_) => _recalcularTotalUsd(),
-                      validator: (val) => (tryParseAmount(val ?? '', isPrice: false) == null) ? 'Inválido' : null,
+                      validator: (val) => validatePositiveAmount(val),
                     ),
                     const SizedBox(height: 12),
                     ActionChip(
@@ -1464,7 +1475,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                         labelText: 'Total Equivalente (USD)',
                         prefixIcon: Icon(Icons.attach_money, color: AppColors.primaryDark),
                       ),
-                      validator: (val) => (tryParseAmount(val ?? '', isPrice: false) == null) ? 'Inválido' : null,
+                      validator: (val) => validatePositiveAmount(val),
                     ),
                   ] else ...[
                     TextFormField(
@@ -1478,7 +1489,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                         _totalUsdCtrl.text = val;
                         _recalcularTotalUsd();
                       },
-                      validator: (val) => (tryParseAmount(val ?? '', isPrice: false) == null) ? 'Inválido' : null,
+                      validator: (val) => validatePositiveAmount(val),
                     ),
                   ],
                 ],

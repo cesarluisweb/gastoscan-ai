@@ -55,3 +55,27 @@ double? tryParseAmount(dynamic value, {bool isPrice = false}) {
   if (parsed == null) return null;
   return negative ? -parsed : parsed;
 }
+
+/// Parsea montos que deben ser estrictamente mayores a cero (> 0).
+/// Devuelve `null` si no es un número válido o si es menor o igual a cero.
+double? tryParsePositiveAmount(dynamic value, {bool isPrice = false}) {
+  final parsed = tryParseAmount(value, isPrice: isPrice);
+  if (parsed == null || parsed <= 0) return null;
+  return parsed;
+}
+
+/// Valida campos de texto en formularios exigiendo un valor mayor a cero (> 0).
+/// Retorna `null` si es válido, o un mensaje descriptivo de error en español.
+String? validatePositiveAmount(
+  String? value, {
+  String emptyMessage = 'Requerido',
+  String invalidMessage = 'Monto inválido',
+  String nonPositiveMessage = 'Debe ser mayor a 0',
+}) {
+  if (value == null || value.trim().isEmpty) return emptyMessage;
+  final parsed = tryParseAmount(value, isPrice: false);
+  if (parsed == null) return invalidMessage;
+  if (parsed <= 0) return nonPositiveMessage;
+  return null;
+}
+

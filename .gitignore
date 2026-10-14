@@ -46,3 +46,5 @@ update_function.js
 *.aab
 build_artifacts/
 Capturas para Google Play/
+.wrangler/
+**/node_modules/

@@ -1,6 +1,6 @@
 ---
 trigger: glob
-globs: "cloudflare_worker/**"
+globs: "{cloudflare_worker/**,workers/**}"
 description: "Estándares de seguridad, validación de JWT, observabilidad y cuotas en Cloudflare Workers (rindemas-gateway)."
 ---
 
@@ -26,4 +26,4 @@ description: "Estándares de seguridad, validación de JWT, observabilidad y cuo
   Esto garantiza la captura de métricas, errores y latencias automáticamente en cada despliegue.
 - **Blindaje del Endpoint `/health`:** El endpoint `/health` debe ser estrictamente pasivo (retornando solo estado estático y modelos). Prohibido exponer prefijos de claves (`key_prefix`) o permitir parámetros de consulta no autenticados (`?test=...`) que ejecuten llamadas reales a Google consumiendo cuota.
 - **Telemetría y Cabeceras de Respuesta:** El Worker debe registrar en telemetría el modo de escaneo (`texto` vs `vision`), tokens y latencia, y exponer las cabeceras HTTP `x-receipt-mode` y `x-receipt-image-kb`.
-- **Contexto de Ejecución de Wrangler:** Al desplegar el worker (`npx wrangler deploy`), el comando DEBE ejecutarse con directorio de trabajo en `cloudflare_worker/` o especificar explícitamente el flag `--config cloudflare_worker/wrangler.toml`.
+- **Contexto de Ejecución de Wrangler:** Al desplegar el worker (`npx wrangler deploy`), el comando DEBE ejecutarse con directorio de trabajo en `workers/` (o `cloudflare_worker/`) o especificar explícitamente el flag `--config workers/wrangler.toml`.

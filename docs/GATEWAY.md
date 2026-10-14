@@ -28,7 +28,7 @@
 
 - **Nombre del Worker:** `rindemas-gateway`
 - **Compatibilidad Runtime:** `2024-09-23`
-- **Archivo Principal:** `cloudflare_worker/src/index.js`
+- **Archivo Principal:** `workers/src/index.js` (y `cloudflare_worker/src/index.js`)
 - **Configuración (`wrangler.toml`):**
   - Variable de entorno pública: `FIREBASE_PROJECT_ID = "gastoscan-ai"`
   - Observabilidad: `[observability] enabled = true`, `head_sampling_rate = 1`

@@ -16,10 +16,15 @@ class FakeDatabaseHelper extends DatabaseHelper {
   FakeDatabaseHelper() : super.test();
 
   @override
-  Future<int> insertScanQueueItem(String imagePath, {String? ocrText}) async {
+  Future<int> insertScanQueueItem(String imagePath, {String? ocrText, String? imageHash}) async {
     final id = _id++;
-    items.add({'id': id, 'image_path': imagePath, 'status': 'pending', 'ocr_text': ocrText});
+    items.add({'id': id, 'image_path': imagePath, 'status': 'pending', 'ocr_text': ocrText, 'image_hash': imageHash});
     return id;
+  }
+
+  @override
+  Future<bool> isImageHashInScanQueue(String imageHash) async {
+    return items.any((it) => it['image_hash'] == imageHash && it['status'] != 'error');
   }
 
   @override

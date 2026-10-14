@@ -3,27 +3,21 @@
 
 ## Estado Actual Inmediato
 - **Rama:** `main`.
-- **Fase activa:** Fases 1 y 2 de la Auditoría Integral 100% completadas y validadas por César ✅. Versión 433 (Build 430) con `targetSdk = 36` enviada a revisión en Google Play Console (Prueba Cerrada).
+- **Fase activa:** Fase 3 de Auditoría Integral implementada (FIN-07, FIN-08, UX-03, UX-05, SEC-12, OCR-01). En proceso de validación por CI y pruebas.
 - **Últimos hitos:** 
-  1. **Auditoría Fase 2 Validada:** Verificación exitosa en dispositivo físico de multimoneda EUR/USDT, adopción perezosa de presupuesto, reauth en borrado de cuenta, purga de SecureStorage, contraste dinámico y captura 5 anonimizada.
-  2. **Play Store en Revisión:** Los 14 cambios y el paquete AAB versión 433 (`targetSdk = 36`) fueron enviados formalmente a revisión en Google Play Console.
-  3. **Despliegue Web Verificado:** Landing page y panel activos en producción vía Firebase Hosting (HTTP 200).
+  1. **Auditoría Fase 3 Implementada:** Días históricos en SummaryCard (FIN-07), montos > 0 (FIN-08), búsqueda cross-month (UX-03), navegación unificada chat (UX-05), versionado worker en workers/ (SEC-12), deduplicación SHA-256 en cola (OCR-01).
+  2. **Play Store en Revisión:** Versión 433 (Build 430, targetSdk=36) en revisión por Google Play Console.
+  3. **Despliegue Web Verificado:** Landing y panel activos en producción (HTTP 200).
 
 ## Decisiones Técnicas y de Negocio Recientes
-- **Fotos Locales Preservadas:** No se eliminan fotos físicas del teléfono al cerrar sesión si el usuario las guardó.
-- **Historial Keystore:** No se reescribe el historial Git; el repositorio pasará a Privado tras finalizar.
-- **Soporte EUR Real:** `ReviewExpenseScreen` persiste la tasa oficial del euro y calcula equivalentes exactos en Bs. y USD.
-- **Sin Onboarding (UX-02 descartado):** Filosofía de uso directo inmediato sin tutoriales ni pantallas intermedias.
+- **SHA-256 Nativo:** Implementación sin dependencias externas para deduplicación de imágenes.
+- **Búsqueda Global:** `ExpenseHistoryScreen` consulta todos los meses si hay término de búsqueda activo.
+- **Navegación Chat:** Exclusivamente `Navigator.push` para mantener el árbol de navegación determinista.
 
 ## Errores y Fricciones a Evitar
 - `targetSdk` debe mantenerse en 36 o superior para Google Play.
 - Toda conversión de divisas debe pasar por `CurrencyFormatter` y las tasas dinámicas de `settings`.
 
 ## Próximo Paso Inmediato
-- Iniciar la Fase 3 de la Auditoría Integral (mejoras de calidad y pulido):
-  - FIN-07: Corregir cálculo de días restantes en meses históricos en `SummaryCard`.
-  - FIN-08: Validación de montos > 0 en formularios de registro.
-  - UX-03: Búsqueda global cross-month en historial.
-  - UX-05: Unificar navegación del chat IA.
-  - SEC-12: Versionado del Cloudflare Worker en el repositorio.
-  - OCR-01: Deduplicación SHA-256 en cola de escaneo.
+- Monitorear GitHub Actions CI tras git push hasta confirmar `conclusion: success`.
+- Entregar guía de pruebas a César para validación en dispositivo.

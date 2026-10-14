@@ -9,6 +9,7 @@ import '../services/image_service.dart';
 import '../services/notification_service.dart';
 import '../services/local_ocr_service.dart';
 import '../services/semantic_validator.dart';
+import '../core/utils/image_hash_service.dart';
 import 'dart:io';
 
 class ScanQueueProvider with ChangeNotifier {
@@ -118,59 +119,102 @@ class ScanQueueProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Persistencia temprana: Extrae el OCR local y guarda el comprobante en SQLite
-  /// ANTES de cualquier llamada a la red.
-  Future<void> enqueue(String imagePath) async {
-    String? initialOcr;
+  /// Persistencia temprana con deduplicación: Extrae el hash SHA-256, comprueba
+  /// duplicados en cola, extrae el OCR local y guarda el comprobante en SQLite.
+  Future<bool> enqueue(String imagePath) async {
     final file = File(imagePath);
-    if (await file.exists()) {
+    if (!await file.exists()) return false;
+
+    String? hash;
+    try {
+      hash = await ImageHashService.computeFileSha256(file);
+      final isDup = await _dbHelper.isImageHashInScanQueue(hash);
+      if (isDup) {
+        debugPrint('[ScanQueue] Comprobante duplicado ignorado (hash: $hash)');
+        _lastError = 'Comprobante duplicado ignorado.';
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      debugPrint('Aviso calculando hash en enqueue: $e');
+    }
+
+    String? initialOcr;
+    try {
+      final ocrResult = await _localOcrService.processImage(file);
+      initialOcr = ocrResult.structuredText;
+    } catch (e) {
+      debugPrint('Fallo silencioso en OCR previo: $e');
+    }
+
+    await _dbHelper.insertScanQueueItem(imagePath, ocrText: initialOcr, imageHash: hash);
+    await loadPendingItems();
+    if (autoProcess) {
+      final isOnline = await _connectivityService.isConnected();
+      if (isOnline) {
+        processPendingItems();
+      } else {
+        _isWaitingForConnection = true;
+        _lastError = 'Guardada sin conexión. Se procesará al reconectar.';
+        notifyListeners();
+      }
+    }
+    return true;
+  }
+
+  Future<int> enqueueMultiple(List<String> imagePaths) async {
+    int enqueuedCount = 0;
+    final Set<String> seenHashesInBatch = {};
+
+    for (final path in imagePaths) {
+      final file = File(path);
+      if (!await file.exists()) continue;
+
+      String? hash;
+      try {
+        hash = await ImageHashService.computeFileSha256(file);
+        if (hash.isNotEmpty) {
+          if (seenHashesInBatch.contains(hash)) {
+            debugPrint('[ScanQueue] Comprobante duplicado en el mismo lote ignorado: $path');
+            continue;
+          }
+          final isDup = await _dbHelper.isImageHashInScanQueue(hash);
+          if (isDup) {
+            debugPrint('[ScanQueue] Comprobante duplicado en cola ignorado: $path');
+            continue;
+          }
+          seenHashesInBatch.add(hash);
+        }
+      } catch (e) {
+        debugPrint('Aviso calculando hash en enqueueMultiple: $e');
+      }
+
+      String? initialOcr;
       try {
         final ocrResult = await _localOcrService.processImage(file);
         initialOcr = ocrResult.structuredText;
       } catch (e) {
         debugPrint('Fallo silencioso en OCR previo: $e');
       }
+
+      await _dbHelper.insertScanQueueItem(path, ocrText: initialOcr, imageHash: hash);
+      enqueuedCount++;
     }
 
-    await _dbHelper.insertScanQueueItem(imagePath, ocrText: initialOcr);
-    await loadPendingItems();
-    if (autoProcess) {
-      final isOnline = await _connectivityService.isConnected();
-      if (isOnline) {
-        processPendingItems();
-      } else {
-        _isWaitingForConnection = true;
-        _lastError = 'Guardada sin conexión. Se procesará al reconectar.';
-        notifyListeners();
-      }
-    }
-  }
-
-  Future<void> enqueueMultiple(List<String> imagePaths) async {
-    for (final path in imagePaths) {
-      String? initialOcr;
-      final file = File(path);
-      if (await file.exists()) {
-        try {
-          final ocrResult = await _localOcrService.processImage(file);
-          initialOcr = ocrResult.structuredText;
-        } catch (e) {
-          debugPrint('Fallo silencioso en OCR previo: $e');
+    if (enqueuedCount > 0) {
+      await loadPendingItems();
+      if (autoProcess) {
+        final isOnline = await _connectivityService.isConnected();
+        if (isOnline) {
+          processPendingItems();
+        } else {
+          _isWaitingForConnection = true;
+          _lastError = 'Guardada sin conexión. Se procesará al reconectar.';
+          notifyListeners();
         }
       }
-      await _dbHelper.insertScanQueueItem(path, ocrText: initialOcr);
     }
-    await loadPendingItems();
-    if (autoProcess) {
-      final isOnline = await _connectivityService.isConnected();
-      if (isOnline) {
-        processPendingItems();
-      } else {
-        _isWaitingForConnection = true;
-        _lastError = 'Guardada sin conexión. Se procesará al reconectar.';
-        notifyListeners();
-      }
-    }
+    return enqueuedCount;
   }
 
   Future<void> addPendingItem(String imagePath) async {

@@ -25,7 +25,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 15,
+      version: 16,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
       onConfigure: _onConfigure,
@@ -215,6 +215,14 @@ class DatabaseHelper {
         await db.execute('CREATE INDEX IF NOT EXISTS idx_gastos_synced ON gastos (synced);');
       } catch (_) {}
     }
+    if (oldVersion < 16) {
+      try {
+        await db.execute("ALTER TABLE scan_queue ADD COLUMN image_hash TEXT");
+      } catch (_) {}
+      try {
+        await db.execute('CREATE INDEX IF NOT EXISTS idx_scan_queue_image_hash ON scan_queue (image_hash);');
+      } catch (_) {}
+    }
   }
 
   Future<void> _onConfigure(Database db) async {
@@ -282,6 +290,7 @@ class DatabaseHelper {
         status TEXT NOT NULL,
         extracted_data TEXT,
         ocr_text TEXT,
+        image_hash TEXT,
         attempt_count INTEGER DEFAULT 0,
         last_error TEXT,
         created_at TEXT NOT NULL
@@ -329,6 +338,7 @@ class DatabaseHelper {
     await db.execute('CREATE INDEX idx_gastos_categoria ON gastos (categoria);');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_items_gasto_gasto_id ON items_gasto (gasto_id);');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_scan_queue_status ON scan_queue (status);');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_scan_queue_image_hash ON scan_queue (image_hash);');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_gastos_synced ON gastos (synced);');
 
     // Tabla virtual FTS5 independiente para búsqueda profunda
@@ -771,7 +781,7 @@ class DatabaseHelper {
   // OPERACIONES PARA SCAN_QUEUE
   // ==========================================
 
-  Future<int> insertScanQueueItem(String imagePath, {String? ocrText}) async {
+  Future<int> insertScanQueueItem(String imagePath, {String? ocrText, String? imageHash}) async {
     final db = await instance.database;
     final data = <String, dynamic>{
       'image_path': imagePath,
@@ -782,7 +792,24 @@ class DatabaseHelper {
     if (ocrText != null) {
       data['ocr_text'] = ocrText;
     }
+    if (imageHash != null) {
+      data['image_hash'] = imageHash;
+    }
     return await db.insert('scan_queue', data);
+  }
+
+  /// Verifica si un hash SHA-256 ya existe en la cola de escaneo activa (pending, processing o ready).
+  Future<bool> isImageHashInScanQueue(String imageHash) async {
+    if (imageHash.isEmpty) return false;
+    final db = await instance.database;
+    final res = await db.query(
+      'scan_queue',
+      columns: ['id'],
+      where: 'image_hash = ? AND status != ?',
+      whereArgs: [imageHash, 'error'],
+      limit: 1,
+    );
+    return res.isNotEmpty;
   }
 
   Future<List<Map<String, dynamic>>> getPendingScanQueueItems() async {

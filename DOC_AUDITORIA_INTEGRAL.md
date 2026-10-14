@@ -415,20 +415,20 @@ La app **no está lista para envío a producción** en su estado actual. Se iden
 
 ### Fase 3: Después del lanzamiento inicial (mejoras de calidad)
 
-| # | Acción | IDs | Esfuerzo |
-|:--|:---|:---|:---:|
+| # | Acción | IDs | Esfuerzo | Estado |
+|:--|:---|:---|:---:|:---:|
 | 1 | Diseñar onboarding de 3 pantallas | UX-02 | Mediano | Excluido (Uso directo sin tutoriales) 🚫 |
-| 2 | Búsqueda global cross-month en historial | UX-03 | Mediano |
-| 3 | Unificar navegación del chat (siempre `Navigator.push`) | UX-05 | Mediano |
-| 4 | `SummaryCard`: usar mes/año seleccionado para días | FIN-07 | Pequeño |
-| 5 | Validar montos > 0 en formularios | FIN-08 | Pequeño |
-| 6 | Versionado del Cloudflare Worker en el repo | SEC-12 | Mediano |
-| 7 | Implementar tombstones (soft-delete) en Firestore | SEC-05 | Grande |
-| 8 | Validación de esquema en Firestore rules | SEC-13 | Mediano |
-| 9 | Limitar payload de contexto enviado a Gemini (resúmenes vs historial completo) | SEC-11 | Mediano |
-| 10 | Deduplicación SHA-256 en cola de escaneo | OCR-01 | Mediano |
-| 11 | Centralizar hidratación de facturas en `ScanQueueProvider` | TEC-08 | Pequeño |
-| 12 | Escribir tests para `GastoProvider`, `SyncService` | TEC-09 | Grande |
+| 2 | Búsqueda global cross-month en historial | UX-03 | Mediano | Implementado 🔧 |
+| 3 | Unificar navegación del chat (siempre `Navigator.push`) | UX-05 | Mediano | Implementado 🔧 |
+| 4 | `SummaryCard`: usar mes/año seleccionado para días | FIN-07 | Pequeño | Implementado 🔧 |
+| 5 | Validar montos > 0 en formularios | FIN-08 | Pequeño | Implementado 🔧 |
+| 6 | Versionado del Cloudflare Worker en el repo | SEC-12 | Mediano | Implementado 🔧 |
+| 7 | Implementar tombstones (soft-delete) en Firestore | SEC-05 | Grande | Pendiente |
+| 8 | Validación de esquema en Firestore rules | SEC-13 | Mediano | Pendiente |
+| 9 | Limitar payload de contexto enviado a Gemini (resúmenes vs historial completo) | SEC-11 | Mediano | Pendiente |
+| 10 | Deduplicación SHA-256 en cola de escaneo | OCR-01 | Mediano | Implementado 🔧 |
+| 11 | Centralizar hidratación de facturas en `ScanQueueProvider` | TEC-08 | Pequeño | Pendiente |
+| 12 | Escribir tests para `GastoProvider`, `SyncService` | TEC-09 | Grande | Pendiente |
 
 ### Fase 4: Mejoras futuras no esenciales
 

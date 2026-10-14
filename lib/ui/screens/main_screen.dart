@@ -14,6 +14,7 @@ import 'dashboard_screen.dart';
 import 'expense_history_screen.dart';
 import 'analysis_screen.dart';
 import 'more_screen.dart';
+import 'chat_screen.dart';
 import 'review_expense_screen.dart'; // Para agregar manual
 import '../../data/models/item_gasto_model.dart';
 import '../../services/update_service.dart';
@@ -200,10 +201,12 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       onNavigateToGastos: () => _onTabTapped(1),
       onNavigateToAnalysis: () => _onTabTapped(2),
       onNavigateToChat: () {
-        _onTabTapped(3);
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _moreScreenKey.currentState?.openChat(fromHome: true);
-        });
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const ChatScreen(showBackButton: true),
+          ),
+        );
       },
       onAddExpense: () => _showAddMenu(context),
     ),

@@ -15,16 +15,24 @@ class FakeDatabaseHelper extends DatabaseHelper {
   FakeDatabaseHelper() : super.test();
 
   @override
-  Future<int> insertScanQueueItem(String imagePath, {String? ocrText}) async {
+  Future<int> insertScanQueueItem(String imagePath, {String? ocrText, String? imageHash}) async {
     final id = _nextId++;
     pendingDb.add({
       'id': id,
       'image_path': imagePath,
       'status': 'pending',
       'ocr_text': ocrText,
+      'image_hash': imageHash,
       'created_at': DateTime.now().toIso8601String(),
     });
     return id;
+  }
+
+  @override
+  Future<bool> isImageHashInScanQueue(String imageHash) async {
+    if (imageHash.isEmpty) return false;
+    final all = [...pendingDb, ...readyDb];
+    return all.any((item) => item['image_hash'] == imageHash && item['status'] != 'error');
   }
 
   @override
@@ -485,6 +493,52 @@ void main() {
       expect(fakeDb.readyDb.length, equals(2));
       expect(fakeDb.readyDb.first['status'], equals('ready'));
       expect(fakeDb.readyDb.first['image_path'], equals(''));
+    });
+
+    test('enqueue deduplicates identical images via SHA-256 (OCR-01)', () async {
+      final fakeDb = FakeDatabaseHelper();
+      final provider = ScanQueueProvider(dbHelper: fakeDb, autoProcess: false);
+
+      final tempDir = Directory.systemTemp.createTempSync();
+      final file1 = File('${tempDir.path}/recibo_1.jpg');
+      final file2 = File('${tempDir.path}/recibo_1_copia.jpg');
+      final bytes = utf8.encode('COMPROBANTE_FISCAL_IDENTICO_12345');
+
+      await file1.writeAsBytes(bytes);
+      await file2.writeAsBytes(bytes);
+
+      // Primer encolado: debe tener éxito
+      final success1 = await provider.enqueue(file1.path);
+      expect(success1, isTrue);
+      expect(provider.pendingCount, equals(1));
+
+      // Segundo encolado con misma imagen (distinto path pero mismo SHA-256): debe ser rechazado
+      final success2 = await provider.enqueue(file2.path);
+      expect(success2, isFalse);
+      expect(provider.pendingCount, equals(1));
+      expect(provider.lastError, equals('Comprobante duplicado ignorado.'));
+
+      tempDir.deleteSync(recursive: true);
+    });
+
+    test('enqueueMultiple drops duplicate receipts within same batch (OCR-01)', () async {
+      final fakeDb = FakeDatabaseHelper();
+      final provider = ScanQueueProvider(dbHelper: fakeDb, autoProcess: false);
+
+      final tempDir = Directory.systemTemp.createTempSync();
+      final fileA = File('${tempDir.path}/recibo_a.jpg');
+      final fileADup = File('${tempDir.path}/recibo_a_dup.jpg');
+      final fileB = File('${tempDir.path}/recibo_b.jpg');
+
+      await fileA.writeAsBytes(utf8.encode('RECIBO_A'));
+      await fileADup.writeAsBytes(utf8.encode('RECIBO_A'));
+      await fileB.writeAsBytes(utf8.encode('RECIBO_B'));
+
+      final count = await provider.enqueueMultiple([fileA.path, fileADup.path, fileB.path]);
+      expect(count, equals(2));
+      expect(provider.pendingCount, equals(2));
+
+      tempDir.deleteSync(recursive: true);
     });
   });
 }

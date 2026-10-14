@@ -21,8 +21,9 @@ class FakeDatabaseHelper extends DatabaseHelper {
 
 class FakeGastoProvider extends GastoProvider {
   List<GastoModel> _customGastos;
+  List<GastoModel>? allCustomGastos;
 
-  FakeGastoProvider({List<GastoModel>? initialGastos})
+  FakeGastoProvider({List<GastoModel>? initialGastos, this.allCustomGastos})
       : _customGastos = initialGastos ?? [];
 
   void setGastos(List<GastoModel> gastos) {
@@ -32,6 +33,10 @@ class FakeGastoProvider extends GastoProvider {
 
   @override
   List<GastoModel> get gastos => _customGastos;
+
+  @override
+  Future<List<GastoModel>> obtenerTodosLosGastos() async =>
+      allCustomGastos ?? _customGastos;
 
   @override
   Future<void> cargarDatos() async {}
@@ -384,6 +389,66 @@ void main() {
       // Both are displayed again
       expect(find.text('Comercio Con Foto'), findsOneWidget);
       expect(find.text('Comercio Sin Foto'), findsOneWidget);
+    });
+
+    testWidgets('cross-month global search finds expenses from other months (UX-03)', (tester) async {
+      final gastoMesActual = GastoModel(
+        id: 201,
+        uuid: 'uuid-oct-1',
+        fecha: '2026-10-10',
+        comercio: 'Panadería Octubre',
+        moneda: 'USD',
+        totalOriginal: 500,
+        totalUsd: 500,
+        categoria: 'Alimentación',
+        creadoEn: '2026-10-10T10:00:00',
+        items: [],
+      );
+
+      final gastoMesAnterior = GastoModel(
+        id: 202,
+        uuid: 'uuid-feb-1',
+        fecha: '2026-02-15',
+        comercio: 'Ferretería Febrero Histórico',
+        moneda: 'USD',
+        totalOriginal: 2500,
+        totalUsd: 2500,
+        categoria: 'Hogar',
+        creadoEn: '2026-02-15T10:00:00',
+        items: [
+          ItemGastoModel(
+            id: 10,
+            gastoId: 202,
+            descripcion: 'Taladro Percutor',
+            cantidad: 1,
+            precioUnitario: 2500,
+            total: 2500,
+          ),
+        ],
+      );
+
+      // gastoProvider.gastos solo tiene mes actual, pero allCustomGastos tiene ambos
+      gastoProvider.setGastos([gastoMesActual]);
+      gastoProvider.allCustomGastos = [gastoMesActual, gastoMesAnterior];
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      // Inicialmente solo se ve el mes actual
+      expect(find.text('Panadería Octubre'), findsOneWidget);
+      expect(find.text('Ferretería Febrero Histórico'), findsNothing);
+
+      // Abrir buscador y escribir término de gasto histórico
+      await tester.tap(find.byKey(const Key('expense_history_search_toggle')));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byKey(const Key('expense_history_search_field')), 'Taladro');
+      await tester.pumpAndSettle();
+
+      // Debe encontrar el gasto del mes histórico y mostrar indicador global
+      expect(find.text('Ferretería Febrero Histórico'), findsOneWidget);
+      expect(find.text('Panadería Octubre'), findsNothing);
+      expect(find.textContaining('Búsqueda en todo el historial'), findsOneWidget);
     });
   });
 }

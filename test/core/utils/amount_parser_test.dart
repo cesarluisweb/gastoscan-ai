@@ -46,4 +46,51 @@ void main() {
       expect(tryParseAmount('Bs. 1.234,56', isPrice: false), equals(1234.56));
     });
   });
+
+  group('tryParsePositiveAmount - FIN-08', () {
+    test('acepta valores estrictamente mayores a 0', () {
+      expect(tryParsePositiveAmount('10.5'), equals(10.5));
+      expect(tryParsePositiveAmount('1.500', isPrice: false), equals(1500.0));
+      expect(tryParsePositiveAmount('0.01'), equals(0.01));
+    });
+
+    test('rechaza cero y negativos', () {
+      expect(tryParsePositiveAmount('0'), isNull);
+      expect(tryParsePositiveAmount('0,00'), isNull);
+      expect(tryParsePositiveAmount('-50'), isNull);
+      expect(tryParsePositiveAmount('-1.234,56'), isNull);
+    });
+
+    test('rechaza texto no numérico o vacío', () {
+      expect(tryParsePositiveAmount(''), isNull);
+      expect(tryParsePositiveAmount('abc'), isNull);
+      expect(tryParsePositiveAmount(null), isNull);
+    });
+  });
+
+  group('validatePositiveAmount - FIN-08', () {
+    test('retorna null para montos validos mayores a 0', () {
+      expect(validatePositiveAmount('100'), isNull);
+      expect(validatePositiveAmount('1.234,56'), isNull);
+      expect(validatePositiveAmount('0.50'), isNull);
+    });
+
+    test('retorna mensaje de error para valores vacios', () {
+      expect(validatePositiveAmount(''), equals('Requerido'));
+      expect(validatePositiveAmount('   '), equals('Requerido'));
+      expect(validatePositiveAmount(null), equals('Requerido'));
+    });
+
+    test('retorna mensaje de error para texto no numerico', () {
+      expect(validatePositiveAmount('invalido'), equals('Monto inválido'));
+      expect(validatePositiveAmount('abc'), equals('Monto inválido'));
+    });
+
+    test('retorna mensaje de error para 0 y negativos', () {
+      expect(validatePositiveAmount('0'), equals('Debe ser mayor a 0'));
+      expect(validatePositiveAmount('0,00'), equals('Debe ser mayor a 0'));
+      expect(validatePositiveAmount('-10'), equals('Debe ser mayor a 0'));
+      expect(validatePositiveAmount('-100.50'), equals('Debe ser mayor a 0'));
+    });
+  });
 }

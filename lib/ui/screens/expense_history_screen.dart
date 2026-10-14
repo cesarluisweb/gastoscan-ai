@@ -28,11 +28,26 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
   bool _onlyWithReceipt = false;
   final TextEditingController _searchCtrl = TextEditingController();
   String _searchQuery = '';
+  List<GastoModel>? _allGastos;
+  bool _isLoadingAll = false;
 
   @override
   void dispose() {
     _searchCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _cargarTodosLosGastos() async {
+    if (_allGastos != null || _isLoadingAll) return;
+    setState(() => _isLoadingAll = true);
+    final provider = Provider.of<GastoProvider>(context, listen: false);
+    final results = await provider.obtenerTodosLosGastos();
+    if (mounted) {
+      setState(() {
+        _allGastos = results;
+        _isLoadingAll = false;
+      });
+    }
   }
 
   String _normalizeText(String text) {
@@ -78,9 +93,14 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
 
     final scanQueue = Provider.of<ScanQueueProvider>(context);
 
-    // Filtrar gastos por búsqueda y comprobante
+    // Filtrar gastos por búsqueda (global cross-month si busca, o mensual) y comprobante
     final query = _normalizeText(_searchQuery.trim());
-    final filteredGastos = gastoProvider.gastos.where((gasto) {
+    final isSearchingGlobal = _isSearching && query.isNotEmpty;
+    final baseGastos = (isSearchingGlobal && _allGastos != null)
+        ? _allGastos!
+        : gastoProvider.gastos;
+
+    final filteredGastos = baseGastos.where((gasto) {
       if (_onlyWithReceipt && (gasto.rutaFotoLocal == null || gasto.rutaFotoLocal!.isEmpty)) {
         return false;
       }
@@ -165,6 +185,9 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
                   border: InputBorder.none,
                 ),
                 onChanged: (val) {
+                  if (_allGastos == null) {
+                    _cargarTodosLosGastos();
+                  }
                   setState(() {
                     _searchQuery = val;
                   });
@@ -192,8 +215,10 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
                   _isSearching = false;
                   _searchCtrl.clear();
                   _searchQuery = '';
+                  _allGastos = null;
                 } else {
                   _isSearching = true;
+                  _cargarTodosLosGastos();
                 }
               });
             },
@@ -203,11 +228,30 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
       body: Column(
         children: [
           const GlobalScanQueueBanner(),
-          // Selector de Mes
-          const MonthSelectorBar(
-            keyPrefix: 'expense_history_',
-            padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
-          ),
+          // Selector de Mes o indicador de búsqueda global
+          if (!isSearchingGlobal)
+            const MonthSelectorBar(
+              keyPrefix: 'expense_history_',
+              padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Row(
+                children: [
+                  const Icon(Icons.travel_explore, size: 16, color: AppColors.textSecondary),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Búsqueda en todo el historial (${filteredGastos.length} ${filteredGastos.length == 1 ? 'resultado' : 'resultados'})',
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
           // Lista de Gastos agrupada por fecha
           Expanded(
@@ -290,7 +334,12 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
                                           existingGasto: gasto,
                                         ),
                                       ),
-                                    );
+                                    ).then((_) {
+                                      if (_isSearching) {
+                                        _allGastos = null;
+                                        _cargarTodosLosGastos();
+                                      }
+                                    });
                                   },
                                   onDelete: () async {
                                     final confirm = await showDialog<bool>(
@@ -318,7 +367,11 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
                                       ),
                                     );
                                     if (confirm == true && gasto.id != null) {
-                                      gastoProvider.eliminarGasto(gasto.id!);
+                                      await gastoProvider.eliminarGasto(gasto.id!);
+                                      if (_isSearching) {
+                                        _allGastos = null;
+                                        _cargarTodosLosGastos();
+                                      }
                                     }
                                   },
                                 ),
