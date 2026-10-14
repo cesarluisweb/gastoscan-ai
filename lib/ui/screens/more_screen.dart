@@ -1310,7 +1310,33 @@ class MoreScreenState extends State<MoreScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.blue.shade200),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(Icons.info_outline, size: 18, color: Colors.blue.shade900),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Aviso de privacidad: Al usar tu clave personal, tus consultas y comprobantes se procesan bajo las condiciones de tu propia cuenta de Google AI Studio. En el nivel gratuito de Google, las solicitudes pueden estar sujetas a revisión humana o entrenamiento según las políticas de Google.',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    height: 1.35,
+                                    color: Colors.blue.shade950,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 14),
                         TextField(
                           controller: controller,
                           obscureText: obscure,

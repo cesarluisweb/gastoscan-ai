@@ -72,17 +72,16 @@ Haz rendir tu dinero hoy mismo. Descarga Rinde Más gratis y toma el control de 
 * **URL de la Política de Privacidad:** `https://rindemas.cesarluis.com/privacidad`
 * **URL de Solicitud de Eliminación de Cuenta y Datos:** `https://rindemas.cesarluis.com/eliminar-cuenta`
 
-### Respuestas directas para completar el cuestionario obligatorio en Play Console:
+### Respuestas directas para completar el cuestionario obligatorio en Play Console (Seguridad de los Datos):
 
-| Pregunta en Consola | Respuesta | Explicación técnica |
+| Pregunta en Consola | Respuesta | Explicación y Justificación Técnica |
 | :--- | :--- | :--- |
-| **¿La app recopila o comparte datos de usuario?** | **Sí (Solo recopilación)** | Para respaldo opcional en la cuenta personal del usuario y autenticación. |
-| **¿Los datos se comparten con terceros?** | **No** | Ningún dato se comercializa ni se transfiere a redes de publicidad o corredores de datos. El procesamiento técnico se realiza exclusivamente con proveedores de infraestructura (Google Cloud y Cloudflare). |
-| **¿Los datos se transmiten mediante conexión segura (HTTPS/TLS)?** | **Sí** | Todo tráfico con Firebase, Cloudflare Gateway y la API de tasas viaja por HTTPS cifrado TLS. |
-| **¿Proporcionas una forma para que los usuarios soliciten que se eliminen sus datos?** | **Sí** | La app incluye botón directo (*Más > Eliminar cuenta y datos*) y existe URL pública externa para solicitarlo sin la app (`https://rindemas.cesarluis.com/eliminar-cuenta`). |
-| **¿Qué datos personales se recopilan?** | **Información de la cuenta (Nombre y correo)** | Obtenidos exclusivamente a través de Google Sign-In o email para identificar el espacio privado del usuario. No se usan con fines comerciales. |
-| **¿Recopila información financiera o bancaria?** | **No** | No se solicitan números de cuenta, tarjetas, saldos bancarios ni credenciales. Los gastos ingresados son registros manuales o extraídos de comprobantes. |
-| **¿Los datos son necesarios o el usuario puede elegir si se recopilan?** | **Opcional** | La app es 100% funcional en modo local sin crear cuenta ni sincronizar datos. |
+| **¿La app recopila o comparte datos de usuario?** | **Sí (Solo recopilación)** | Se recopilan datos exclusivamente para las funciones solicitadas por el usuario (respaldo en la nube opcional y procesamiento de comprobantes/chat con IA). |
+| **¿Los datos se comparten con terceros?** | **No** | Cumple con las excepciones de Google Play: 1) Proveedores de servicios (Cloudflare y Google Gemini en modo gestionado de pago procesan datos en tránsito exclusivamente por cuenta del desarrollador sin fines comerciales ni publicitarios). 2) Excepción de transferencia dirigida por el usuario (en modo BYOK el usuario inicia y autoriza expresamente la conexión con su propia cuenta de Google AI Studio con advertencia previa). Ningún dato se vende ni comparte con redes de publicidad ni intermediarios. |
+| **¿Los datos se transmiten mediante conexión segura (HTTPS/TLS)?** | **Sí** | Todo el tráfico entre la aplicación, Firebase, Cloudflare Gateway y las APIs viaja cifrado bajo HTTPS/TLS. |
+| **¿Proporcionas una forma para que los usuarios soliciten que se eliminen sus datos?** | **Sí** | La app incluye botón directo (*Más > Eliminar cuenta y datos*) y existe URL pública externa para solicitarlo sin instalar la app (`https://rindemas.cesarluis.com/eliminar-cuenta`). |
+| **¿Qué tipos de datos se recopilan?** | **1. Información personal (Nombre y correo)**<br>**2. Fotos y vídeos (Fotos de recibos)**<br>**3. Datos financieros/compras (Registros de gastos)** | • **Nombre y correo:** Opcional (solo si vincula Google Sign-In o email para respaldar).<br>• **Fotos:** Opcional (solo si usa la cámara/galería para escanear facturas con IA; procesadas efímeramente sin retención persistente en el servidor).<br>• **Historial de gastos:** Opcional (se guardan localmente en SQLite y se sincronizan cifrados en Firestore solo si el usuario activa respaldo). |
+| **¿Los datos son necesarios o el usuario puede elegir si se recopilan?** | **Opcional en todos los casos** | La app es 100% funcional de forma local y offline sin crear cuenta, sin escanear con IA y sin sincronizar en la nube. |
 
 ---
 

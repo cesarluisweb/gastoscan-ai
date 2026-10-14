@@ -32,7 +32,7 @@ import '../styles/global.css';
             <div>
                 <span class="text-xs font-bold uppercase tracking-wider text-slate-900 bg-[#FEF08A] px-3 py-1 rounded-full">Legal</span>
                 <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-4">Política de Privacidad</h1>
-                <p class="text-slate-500 text-sm mt-2">Última actualización: 9 de octubre de 2026</p>
+                <p class="text-slate-500 text-sm mt-2">Última actualización: 13 de octubre de 2026</p>
             </div>
 
             <section class="space-y-3">
@@ -47,7 +47,13 @@ import '../styles/global.css';
                 <div class="space-y-2 text-sm text-slate-700">
                     <p><strong>A. Datos de Registro y Cuenta (Opcional):</strong> Si decides vincular tu cuenta con Google Sign-In o correo electrónico, recopilamos tu nombre, dirección de correo y foto de perfil provistos por el proveedor de autenticación únicamente para identificar tu acceso y sincronizar tu respaldo privado en la nube.</p>
                     <p><strong>B. Datos de Gastos y Presupuestos:</strong> Los montos, categorías, nombres de comercios, fechas y notas que registras se almacenan primordialmente en tu dispositivo en una base de datos local (SQLite) ubicada en el almacenamiento interno privado de la aplicación, protegido por el aislamiento de procesos del sistema operativo Android. Si activas la sincronización con tu cuenta, estos datos se respaldan de forma privada en Google Cloud Firestore con cifrado en reposo.</p>
-                    <p><strong>C. Extracción Inteligente de Facturas y Asistente (IA):</strong> Las capturas de comprobantes procesadas para extracción de datos se analizan inicialmente de forma local en tu dispositivo mediante Google ML Kit. Cuando se requiere interpretación avanzada o consultas con el asistente, los textos o imágenes se transmiten de forma cifrada mediante HTTPS/TLS a través de nuestro gateway seguro en Cloudflare hacia la API de Google Gemini exclusivamente para procesar la respuesta solicitada. No vendemos ni comercializamos tus datos con anunciantes ni terceros.</p>
+                    <p><strong>C. Extracción Inteligente de Facturas y Asistente (IA):</strong> Las capturas de comprobantes procesadas para extracción de datos se analizan prioritariamente de forma local en tu dispositivo mediante Google ML Kit. Cuando se requiere interpretación avanzada de comprobantes o consultas con el asistente financiero, los textos extraídos o las imágenes se transmiten de forma cifrada mediante HTTPS/TLS a través de nuestro gateway seguro en Cloudflare Workers hacia la API de Google Gemini exclusivamente para procesar la respuesta solicitada:</p>
+                    <ul class="list-disc list-inside space-y-1.5 ml-2 text-xs sm:text-sm text-slate-600">
+                        <li><strong>Procesamiento en tránsito sin retención persistente:</strong> Nuestro gateway en Cloudflare actúa exclusivamente como conducto de tránsito en memoria para autenticar solicitudes y aplicar límites de tasa. No almacena imágenes, textos de facturas, respuestas ni conversaciones en bases de datos ni registros persistentes.</li>
+                        <li><strong>Modalidad gestionada por Rinde Más:</strong> Opera bajo una cuenta comercial de pago (Pay-as-you-go en Google Cloud). Bajo los términos comerciales de Google para servicios de pago, Google no utiliza las entradas (textos, imágenes) ni las respuestas generadas para entrenar sus modelos de inteligencia artificial.</li>
+                        <li><strong>Modalidad con clave propia (BYOK - Opcional):</strong> Si decides vincular voluntariamente tu propia clave de API de Google AI Studio, las solicitudes se despachan a Google utilizando tu proyecto y credenciales. En esta modalidad, las condiciones de tratamiento de datos dependen del tipo de cuenta que mantengas en Google AI Studio: en el nivel gratuito (Free of charge), los términos de Google establecen que los datos pueden ser revisados por evaluadores humanos y empleados para entrenar sus modelos; si tu proyecto en Google Cloud cuenta con facturación activa de pago, aplican las condiciones de privacidad de no entrenamiento.</li>
+                    </ul>
+                    <p class="text-xs text-slate-500 mt-1">No vendemos, alquilamos ni comercializamos tus datos con anunciantes ni corredores de información.</p>
                 </div>
             </section>
 
@@ -67,9 +73,9 @@ import '../styles/global.css';
                     No vendemos, alquilamos ni transferimos tus datos personales o financieros a redes publicitarias ni corredores de datos. La transmisión de información se limita estrictamente a proveedores de infraestructura tecnológica necesarios para operar el servicio:
                 </p>
                 <ul class="list-disc list-inside space-y-1 text-sm text-slate-700">
-                    <li><strong>Google Firebase & Google Cloud:</strong> Autenticación de usuarios y base de datos en la nube (Firestore).</li>
-                    <li><strong>Cloudflare:</strong> Enrutamiento seguro y protección perimetral del servicio de procesamiento.</li>
-                    <li><strong>Google Gemini API:</strong> Procesamiento de lenguaje natural y extracción estructurada de comprobantes.</li>
+                    <li><strong>Google Firebase & Google Cloud:</strong> Autenticación de usuarios y base de datos en la nube (Firestore) con cifrado en reposo.</li>
+                    <li><strong>Cloudflare (Cloudflare Workers):</strong> Enrutamiento seguro, validación criptográfica de tokens y rate limiting perimetral en tránsito sin almacenamiento persistente.</li>
+                    <li><strong>Google Gemini API:</strong> Procesamiento de lenguaje natural y visión artificial para la extracción de comprobantes y respuestas del asistente.</li>
                 </ul>
             </section>
 

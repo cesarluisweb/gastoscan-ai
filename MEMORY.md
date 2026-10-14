@@ -3,27 +3,21 @@
 
 ## Estado Actual Inmediato
 - **Rama:** `main`.
-- **Fase activa:** Múltiples registros de gastos independientes por voz y en chat con revisión continua completados.
+- **Fase activa:** Adecuación integral de Política de Privacidad, aviso BYOK y Seguridad de Datos para Google Play.
 - **Últimos hitos:** 
-  1. **Gateway Cloudflare Actualizado:** Prompt de `handleChatAnalyst` y esquema de tool `registrar_gasto` ampliados con array `gastos` para compras en comercios distintos. Desplegado a producción en Cloudflare Workers (`fbf1636a`).
-  2. **Servicio Gemini Multigasto:** `parseVoiceExpense` retorna `Future<List<GeminiExtractionResult>>` parseando compras individuales o gasto único retrocompatible con normalización de moneda.
-  3. **Encolamiento en ScanQueueProvider:** Nuevo método `enqueueReadyExtractionResults` para persistir compras múltiples en SQLite como `ready` (`image_path: ''`).
-  4. **Flujo de Voz Adaptativo en VoiceExpenseSheet:**
-     - 1 gasto: abre directo `ReviewExpenseScreen(queueItemId: null)`.
-     - 2+ gastos: encola en `ScanQueueProvider` y abre el primer gasto con `queueItemId: id1`.
-  5. **Revisión Continua en ReviewExpenseScreen:** Botones "Guardar y revisar siguiente (N más)" y "Guardar y salir al inicio", con título adaptativo "Revisar Gasto (N en cola)" cuando no hay imagen.
-  6. **Soporte de Múltiples Gastos en Chat:** `chat_screen.dart` registra cada compra del array `gastos` respetando la moneda de cada una y genera tarjetas con botón de edición individual.
-  7. **Suite de Tests y CI en Verde:** Tests unitarios y de widgets actualizados en `voice_expense_sheet_test.dart`, `scan_queue_provider_test.dart` y `chat_screen_test.dart`. Build y release verificados en GitHub Actions (run `38495516616`, conclusión `success`).
+  1. **Política de Privacidad en Producción:** `landing/src/pages/privacidad.astro` actualizada con distinción explícita de IA gestionada (Tier 1 de pago sin entrenamiento) vs BYOK (términos del usuario en Google AI Studio), y tránsito efímero en Cloudflare Workers sin persistencia. Desplegada a Firebase Hosting y validada en `rindemas.cesarluis.com/privacidad`.
+  2. **Aviso de Privacidad BYOK en la App:** Modal en `more_screen.dart` incluye contenedor informativo de advertencia sobre términos de Google AI Studio y cuentas gratuitas antes de ingresar la clave.
+  3. **Ficha de Google Play (Seguridad de los Datos):** `FICHA_GOOGLE_PLAY.md` actualizada con desglose exacto de datos recogidos (cuenta, fotos de recibos efímeras, historial de gastos) y justificación rigurosa de "No se comparten datos con terceros" basada en proveedores de infraestructura y transferencias dirigidas por el usuario.
+  4. **Compilación y Despliegue Web Verificados:** Build estático de Astro y release en Firebase Hosting finalizados con éxito (HTTP 200 verificado).
 
 ## Decisiones Técnicas y de Negocio Recientes
-- **Flujo Diferenciado de Dictado:** Si el dictado contiene 1 compra, no se inserta en `scan_queue` (flujo rápido de 1 toque). Si contiene 2+ compras, se encola en `ready` para permitir revisión continua secuencial y persistencia segura en Dashboard si el usuario sale antes.
-- **Distinción Semántica en IA:** Varios productos en un mismo comercio van en `items` de un solo gasto; compras en comercios distintos se desglosan en el array `gastos`.
-- **Respeto de Moneda por Compra:** En chat y voz, cada gasto respeta su propia moneda extraída (`VES`, `USD`, etc.) formateándose individualmente.
+- **Cumplimiento Google Play Data Safety:** Se declara recogida de fotos y texto para IA (procesamiento efímero). Se mantiene "No compartir con terceros" al estar Cloudflare y Google amparados como encargados de tratamiento (modo gestionado de pago) y excepción de transferencia dirigida por el usuario (modo BYOK informado).
+- **Transparencia en BYOK:** Notificar explícitamente al usuario en la UI que al aportar su clave gratuita de Google AI Studio, Google puede usar datos para entrenamiento según sus términos de servicio.
 
 ## Errores y Fricciones a Evitar
-- `GastoModel` usa `totalOriginalDisplay` para el valor decimal (`totalOriginal / 100.0`), no `totalOriginalDouble`.
+- No asumir que BYOK no envía datos fuera del dispositivo; las solicitudes pasan por el gateway y llegan a Gemini.
 - No usar `>` en PowerShell ni `&&` en PowerShell 5.1.
 - Contraste estricto en UI (`DESIGN.md`): Texto sobre amarillo SIEMPRE negro; texto sobre blanco SIEMPRE negro o gris, NUNCA amarillo.
 
 ## Próximo Paso Inmediato
-- Notificar a César con la guía paso a paso para pruebas de dictado múltiple por voz y en chat.
+- Realizar git push y verificar que el CI de GitHub Actions compile y pase los tests exitosamente.
