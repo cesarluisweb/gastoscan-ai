@@ -68,6 +68,7 @@ La navegación principal (`MainScreen`) se basa en un patrón ergonómico de 4 p
 
 ## Mejoras de Infraestructura Futuras
 - **Desacoplamiento de Workflows en GitHub Actions:** Separar el pipeline de compilación de Android (`build_apk.yml`) del despliegue de la web (`landing/`), de modo que cambios exclusivos en la web no disparen la compilación de APK ni consuman cuota de CI móvil.
+  *Advertencia crítica:* El archivo `version.json` con el número de compilación dinámico lo genera el flujo del APK y se publica en Firebase Hosting. Un flujo web independiente no debe subir el `landing/public/version.json` estático del repositorio (que tiene números de compilación desactualizados), sino descargar o preservar el `version.json` activo en producción antes de compilar y desplegar la landing para no alterar el aviso de actualización de la app móvil.
 
 ---
 

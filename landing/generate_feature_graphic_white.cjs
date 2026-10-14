@@ -12,7 +12,7 @@ if (!fs.existsSync(outDir)) {
 // Top: Logo image + "Rinde Más" brand name
 // Main Title: "Control de gastos inteligente en Bs. y $" (with yellow curved stroke right under "inteligente")
 // Subtitle: "Haz rendir tu dinero sin esfuerzo. Nuestra IA organiza tus finanzas personales en Venezuela por ti."
-// CTA Button: "Descargar gratis" (Yellow background with black text)
+// Feature Badges: Local-First, Tasas BCV, Escaneo con IA (Cumple políticas de Play Store)
 // Right: Clean smartphone mockup
 
 const svgBase = `
@@ -30,8 +30,8 @@ const svgBase = `
       <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
     </radialGradient>
 
-    <filter id="btnShadow" x="-10%" y="-20%" width="130%" height="160%">
-      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#CA8A04" flood-opacity="0.25" />
+    <filter id="badgeShadow" x="-10%" y="-20%" width="130%" height="160%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0F172A" flood-opacity="0.06" />
     </filter>
 
     <filter id="logoShadow" x="-10%" y="-10%" width="125%" height="125%">
@@ -76,11 +76,27 @@ const svgBase = `
     </text>
   </g>
 
-  <!-- 4. CTA Pill Button: 'Descargar gratis' (DESIGN.md: Amarillo con texto NEGRO) -->
-  <g transform="translate(58, 384)" filter="url(#btnShadow)">
-    <rect width="186" height="46" rx="23" fill="#FACC15" />
-    <text x="93" y="28" font-family="system-ui, -apple-system, sans-serif" font-size="15.5" font-weight="800" fill="#000000" text-anchor="middle">
-      Descargar gratis
+  <!-- 4. Feature Badges (Cumple políticas de Play Store sin botones falsos de descarga) -->
+  <g transform="translate(58, 388)" filter="url(#badgeShadow)">
+    <!-- Badge 1: Local-First y Privado -->
+    <rect x="0" y="0" width="170" height="34" rx="17" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5" />
+    <circle cx="16" cy="17" r="4" fill="#10B981" />
+    <text x="28" y="22" font-family="system-ui, -apple-system, sans-serif" font-size="12.5" font-weight="700" fill="#1E293B">
+      Local-First y Privado
+    </text>
+
+    <!-- Badge 2: Tasas BCV en Vivo -->
+    <rect x="182" y="0" width="156" height="34" rx="17" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5" />
+    <circle cx="198" cy="17" r="4" fill="#F59E0B" />
+    <text x="210" y="22" font-family="system-ui, -apple-system, sans-serif" font-size="12.5" font-weight="700" fill="#1E293B">
+      Tasas BCV en Vivo
+    </text>
+
+    <!-- Badge 3: Escaneo con IA -->
+    <rect x="350" y="0" width="142" height="34" rx="17" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5" />
+    <circle cx="366" cy="17" r="4" fill="#6366F1" />
+    <text x="378" y="22" font-family="system-ui, -apple-system, sans-serif" font-size="12.5" font-weight="700" fill="#1E293B">
+      Escaneo con IA
     </text>
   </g>
 </svg>
@@ -157,7 +173,7 @@ async function buildFeatureGraphic() {
   const baseSvgBuffer = Buffer.from(svgBase);
   const finalOutput = path.join(outDir, 'grafico_funciones_1024x500.png');
 
-  await sharp(baseSvgBuffer)
+  const finalBuffer = await sharp(baseSvgBuffer)
     .composite([
       {
         input: logoRounded,
@@ -171,7 +187,9 @@ async function buildFeatureGraphic() {
       }
     ])
     .png()
-    .toFile(finalOutput);
+    .toBuffer();
+
+  fs.writeFileSync(finalOutput, finalBuffer);
 
   console.log('SUCCESS: Clean Minimalist Feature Graphic generated at:', finalOutput);
 }

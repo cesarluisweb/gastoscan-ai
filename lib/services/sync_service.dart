@@ -543,10 +543,10 @@ class SyncService {
 
       final user = auth.currentUser;
       if (user == null) {
+        final userCred = await auth.signInWithCredential(credential);
         if (descartarDatosLocales) {
           await _repository.limpiarDatosLocales();
         }
-        final userCred = await auth.signInWithCredential(credential);
         if (userCred.user != null) {
           await userCred.user?.updateProfile(
             displayName: googleUser.displayName,
@@ -560,10 +560,10 @@ class SyncService {
 
       if (user.isAnonymous) {
         try {
+          final userCred = await user.linkWithCredential(credential);
           if (descartarDatosLocales) {
             await _repository.limpiarDatosLocales();
           }
-          final userCred = await user.linkWithCredential(credential);
           final activeUser = userCred.user ?? auth.currentUser ?? user;
           await activeUser.updateProfile(displayName: googleUser.displayName, photoURL: googleUser.photoUrl);
           await activeUser.reload();
@@ -572,10 +572,10 @@ class SyncService {
           if (e.code == 'credential-already-in-use' ||
               e.code == 'email-already-in-use' ||
               e.code == 'account-exists-with-different-credential') {
+            final userCred = await auth.signInWithCredential(credential);
             if (descartarDatosLocales) {
               await _repository.limpiarDatosLocales();
             }
-            final userCred = await auth.signInWithCredential(credential);
             final activeUser = userCred.user ?? auth.currentUser;
             if (activeUser != null) {
               await activeUser.updateProfile(displayName: googleUser.displayName, photoURL: googleUser.photoUrl);
@@ -662,9 +662,6 @@ class SyncService {
 
       final user = auth.currentUser;
       if (user == null) {
-        if (descartarDatosLocales) {
-          await _repository.limpiarDatosLocales();
-        }
         try {
           await auth.signInWithCredential(credential);
         } on FirebaseAuthException catch (e) {
@@ -677,16 +674,19 @@ class SyncService {
             return _mapearErrorFirebaseAuth(e);
           }
         }
+        if (descartarDatosLocales) {
+          await _repository.limpiarDatosLocales();
+        }
         await syncBidirectional();
         return null;
       }
 
       if (user.isAnonymous) {
         try {
+          final userCred = await user.linkWithCredential(credential);
           if (descartarDatosLocales) {
             await _repository.limpiarDatosLocales();
           }
-          final userCred = await user.linkWithCredential(credential);
           final activeUser = userCred.user ?? auth.currentUser ?? user;
           await activeUser.reload();
           await syncBidirectional();
@@ -695,10 +695,10 @@ class SyncService {
           if (e.code == 'credential-already-in-use' ||
               e.code == 'email-already-in-use' ||
               e.code == 'account-exists-with-different-credential') {
+            final userCred = await auth.signInWithCredential(credential);
             if (descartarDatosLocales) {
               await _repository.limpiarDatosLocales();
             }
-            final userCred = await auth.signInWithCredential(credential);
             final activeUser = userCred.user ?? auth.currentUser;
             if (activeUser != null) {
               await activeUser.reload();

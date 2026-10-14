@@ -12,7 +12,8 @@ import '../../data/datasources/remote/gemini_service.dart';
 import '../../data/datasources/local/database_helper.dart';
 import '../../data/models/shopping_item_model.dart';
 import '../../core/utils/uuid_generator.dart';
-import '../../core/utils/date_formatter.dart';
+import '../../data/models/gemini_extraction_result.dart';
+import '../../providers/scan_queue_provider.dart';
 import 'review_expense_screen.dart';
 
 class ChatSuggestion {
@@ -232,12 +233,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     });
   }
 
-  Future<GastoModel?> _registrarGastoIndividual({
+  GeminiExtractionResult _prepararExtractionResult({
     required Map gastoData,
     required String rawUserText,
     required double tasaChat,
-    required GastoProvider gastoProvider,
-  }) async {
+  }) {
     final double totalUsd = (gastoData['total_usd'] as num?)?.toDouble() ?? 0.0;
     final double montoOriginalArg = (gastoData['monto_original'] as num?)?.toDouble() ?? 0.0;
     final String comercio = gastoData['comercio']?.toString().trim().isNotEmpty == true
@@ -254,14 +254,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
 
     double totalOrigVal;
-    double totalUsdVal;
-
     if (monedaGasto == 'VES') {
       totalOrigVal = montoOriginalArg > 0 ? montoOriginalArg : (totalUsd > 0 && totalUsd != montoOriginalArg ? totalUsd : (totalUsd * tasaChat));
-      totalUsdVal = tasaChat > 0 ? (totalOrigVal / tasaChat) : totalOrigVal;
     } else {
       totalOrigVal = montoOriginalArg > 0 ? montoOriginalArg : totalUsd;
-      totalUsdVal = totalOrigVal;
     }
 
     final List itemsList = gastoData['items'] as List? ?? [];
@@ -288,53 +284,15 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       ));
     }
 
-    final nuevoGasto = GastoModel(
-      uuid: UuidGenerator.generate(),
-      fecha: fecha,
+    return GeminiExtractionResult(
       comercio: comercio,
+      fecha: fecha,
       moneda: monedaGasto,
-      totalOriginal: (totalOrigVal * 100).round(),
-      totalUsd: (totalUsdVal * 100).round(),
-      tasaCambio: tasaChat,
-      fuenteTasaCambio: 'Tasa BCV del día',
-      fechaTasaCambio: fecha,
-      categoria: categoria,
-      creadoEn: DateTime.now().toIso8601String(),
+      totalOriginal: totalOrigVal,
+      tasaCambioDetectada: tasaChat > 0 ? tasaChat : null,
+      impuestoIva: 0.0,
+      items: itemsGasto,
     );
-
-    // Auto-detectar coincidencias con la lista de compras pendiente
-    final List<int> matchedShoppingIds = [];
-    try {
-      final pendingShopping = await _dbHelper.getPendingShoppingItems();
-      for (final item in itemsGasto) {
-        final descNorm = _normalizeText(item.descripcion);
-        if (descNorm.length >= 2) {
-          for (final shopItem in pendingShopping) {
-            final shopNorm = _normalizeText(shopItem.name);
-            if (shopNorm.isNotEmpty && (descNorm == shopNorm || descNorm.contains(shopNorm) || shopNorm.contains(descNorm))) {
-              if (shopItem.id != null && !matchedShoppingIds.contains(shopItem.id!)) {
-                matchedShoppingIds.add(shopItem.id!);
-              }
-            }
-          }
-        }
-      }
-    } catch (e) {
-      debugPrint('Error al cotejar compras en chat: $e');
-    }
-
-    final success = await gastoProvider.agregarGasto(nuevoGasto, itemsGasto, shoppingItemIds: matchedShoppingIds);
-    if (!success) return null;
-
-    GastoModel gastoGuardado = nuevoGasto;
-    try {
-      gastoGuardado = gastoProvider.gastos.firstWhere(
-        (g) => g.uuid == nuevoGasto.uuid,
-        orElse: () => nuevoGasto,
-      );
-    } catch (_) {}
-
-    return gastoGuardado;
   }
 
   Future<void> _sendMessage([String? textOverride]) async {
@@ -396,75 +354,89 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           final settings = Provider.of<SettingsProvider>(context, listen: false);
           final double tasaChat = settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : 1.0;
 
+          final List<GeminiExtractionResult> extractions = [];
           if (gastosList.isNotEmpty) {
-            final List<Map<String, dynamic>> newAssistantMsgs = [];
             for (final g in gastosList) {
               if (g is Map) {
-                final savedGasto = await _registrarGastoIndividual(
+                extractions.add(_prepararExtractionResult(
                   gastoData: g,
                   rawUserText: text,
                   tasaChat: tasaChat,
-                  gastoProvider: gastoProvider,
-                );
-                if (savedGasto != null) {
-                  final montoFormateado = CurrencyFormatter.formatAmount(savedGasto.totalOriginalDisplay, savedGasto.moneda);
-                  newAssistantMsgs.add({
-                    'role': 'assistant',
-                    'text': '¡Listo! He registrado tu compra en "${savedGasto.comercio}" por $montoFormateado.',
-                    'gasto': savedGasto,
-                  });
-                }
+                ));
               }
             }
-            if (!mounted) return;
-            setState(() {
-              if (newAssistantMsgs.isNotEmpty) {
-                _messages.addAll(newAssistantMsgs);
-              } else {
-                _messages.add({'role': 'assistant', 'text': 'Hubo un error al intentar guardar los gastos.'});
-              }
-            });
-            return;
+          } else {
+            final double totalUsd = (args['total_usd'] as num?)?.toDouble() ?? 0.0;
+            final userText = text.toLowerCase();
+            final bool hasExplicitNumber = RegExp(r'\d+').hasMatch(userText);
+            final bool hasExpenseKeyword = userText.contains('gast') || userText.contains('compr') || userText.contains('pagu') || userText.contains('cost');
+
+            if (totalUsd <= 0 || (!hasExplicitNumber && !hasExpenseKeyword)) {
+              if (!mounted) return;
+              setState(() {
+                _messages.add({
+                  'role': 'assistant',
+                  'text': '¿Deseas agregarlo a tu lista de compras o registrarlo como un gasto realizado?',
+                });
+              });
+              return;
+            }
+
+            extractions.add(_prepararExtractionResult(
+              gastoData: args,
+              rawUserText: text,
+              tasaChat: tasaChat,
+            ));
           }
 
-          final double totalUsd = (args['total_usd'] as num?)?.toDouble() ?? 0.0;
-
-          // Red de seguridad de desambiguación en cliente
-          final userText = text.toLowerCase();
-          final bool hasExplicitNumber = RegExp(r'\d+').hasMatch(userText);
-          final bool hasExpenseKeyword = userText.contains('gast') || userText.contains('compr') || userText.contains('pagu') || userText.contains('cost');
-
-          if (totalUsd <= 0 || (!hasExplicitNumber && !hasExpenseKeyword)) {
+          if (extractions.isEmpty) {
             if (!mounted) return;
             setState(() {
               _messages.add({
                 'role': 'assistant',
-                'text': '¿Deseas agregarlo a tu lista de compras o registrarlo como un gasto realizado?',
+                'text': 'No se pudieron extraer los datos del gasto. Intenta indicando monto y comercio.',
               });
             });
             return;
           }
 
-          final savedGasto = await _registrarGastoIndividual(
-            gastoData: args,
-            rawUserText: text,
-            tasaChat: tasaChat,
-            gastoProvider: gastoProvider,
-          );
+          int? firstQueueId;
+          if (extractions.length > 1) {
+            final queueProvider = Provider.of<ScanQueueProvider>(context, listen: false);
+            final insertedIds = await queueProvider.enqueueReadyExtractionResults(extractions);
+            if (insertedIds.isNotEmpty) {
+              firstQueueId = insertedIds.first;
+            }
+          }
+
+          final firstExtraction = extractions.first;
+          final montoFormateado = CurrencyFormatter.formatAmount(firstExtraction.totalOriginal, firstExtraction.moneda);
+          final count = extractions.length;
+          final msgText = count > 1
+              ? 'He preparado $count compras para tu revisión (comenzando por "${firstExtraction.comercio}" por $montoFormateado). Confírmalas a continuación para guardarlas.'
+              : 'He preparado tu compra en "${firstExtraction.comercio}" por $montoFormateado. Revísala y confírmala para guardarla.';
 
           if (!mounted) return;
           setState(() {
-            if (savedGasto != null) {
-              final montoFormateado = CurrencyFormatter.formatAmount(savedGasto.totalOriginalDisplay, savedGasto.moneda);
-              _messages.add({
-                'role': 'assistant',
-                'text': '¡Listo! He registrado tu compra en "${savedGasto.comercio}" por $montoFormateado.',
-                'gasto': savedGasto,
-              });
-            } else {
-              _messages.add({'role': 'assistant', 'text': 'Hubo un error al intentar guardar el gasto.'});
-            }
+            _messages.add({
+              'role': 'assistant',
+              'text': msgText,
+              'extractionResult': firstExtraction,
+              'queueItemId': firstQueueId,
+            });
           });
+
+          // Navegar a la pantalla de revisión para confirmación humana antes de persistir
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ReviewExpenseScreen(
+                extractedData: firstExtraction,
+                queueItemId: firstQueueId,
+              ),
+            ),
+          );
+          return;
         } else if (callName == 'agregar_items_lista_compras') {
           final args = call['args'] as Map;
           final List nombres = args['nombres'] ?? (args['nombre'] != null ? [args['nombre']] : []);
@@ -650,6 +622,50 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
+  void _mostrarDialogoReporteIA(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.flag_outlined, color: AppColors.textPrimary, size: 22),
+            SizedBox(width: 8),
+            Text('Reportar respuesta', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: const Text(
+          '¿Consideras que esta respuesta generada por la IA es inexacta, inapropiada o contiene información errónea? Tu reporte nos ayuda a mejorar la precisión y calidad del asistente.',
+          style: TextStyle(fontSize: 14, color: AppColors.textPrimary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Gracias por tu reporte. Lo tendremos en cuenta para futuras mejoras.', style: TextStyle(color: Colors.black)),
+                  backgroundColor: AppColors.primary,
+                  duration: Duration(seconds: 3),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.textPrimary,
+              elevation: 0,
+            ),
+            child: const Text('Reportar'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -713,7 +729,42 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                               msg['text'] ?? '',
                               AppColors.textPrimary,
                             ),
-                            if (msg['gasto'] != null && msg['gasto'] is GastoModel) ...[
+                            if (msg['extractionResult'] != null && msg['extractionResult'] is GeminiExtractionResult) ...[
+                              const SizedBox(height: 8),
+                              ElevatedButton.icon(
+                                key: const Key('chat_review_expense_button'),
+                                onPressed: () {
+                                  _stopListening();
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ReviewExpenseScreen(
+                                        extractedData: msg['extractionResult'] as GeminiExtractionResult,
+                                        queueItemId: msg['queueItemId'] as int?,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                icon: const Icon(Icons.rate_review_outlined, size: 18, color: Colors.black),
+                                label: const Text(
+                                  'Revisar y Guardar compra',
+                                  style: TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  foregroundColor: Colors.black,
+                                  elevation: 0,
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                              ),
+                            ] else if (msg['gasto'] != null && msg['gasto'] is GastoModel) ...[
                               const SizedBox(height: 8),
                               OutlinedButton.icon(
                                 key: const Key('chat_edit_expense_button'),
@@ -743,6 +794,30 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                              ),
+                            ],
+                            if (!isUser) ...[
+                              const SizedBox(height: 4),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: InkWell(
+                                  onTap: () => _mostrarDialogoReporteIA(context),
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: const Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.outlined_flag, size: 12, color: AppColors.textSecondary),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          'Reportar respuesta',
+                                          style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),

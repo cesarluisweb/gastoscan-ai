@@ -43,3 +43,6 @@ update_function.js
 .env*
 *.env
 .firebase/
+*.aab
+build_artifacts/
+Capturas para Google Play/

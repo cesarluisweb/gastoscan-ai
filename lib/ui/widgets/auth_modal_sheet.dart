@@ -273,5 +273,8 @@ Future<void> mostrarModalAutenticacionEmail(
         },
       );
     },
-  );
+  ).whenComplete(() {
+    emailController.dispose();
+    passwordController.dispose();
+  });
 }

@@ -48,9 +48,8 @@ class UpdateInfo {
         : int.tryParse(json['buildNumber']?.toString() ?? '0') ?? 0;
     final String remoteVersion = json['version']?.toString() ?? '';
     final String notes = json['releaseNotes']?.toString() ?? 'Mejoras y correcciones en la aplicación.';
-    final String rawUrl = json['apkUrl']?.toString() ?? 'https://rindemas.cesarluis.com/rindemas.apk';
-    // Anti-caché de CDN (Cloudflare): agregar parámetro del build si no lo tiene
-    final String url = rawUrl.contains('?') ? '$rawUrl&b=$remoteBuildNumber' : '$rawUrl?b=$remoteBuildNumber';
+    final String rawUrl = json['apkUrl']?.toString() ?? playStoreWebUrl;
+    final String url = rawUrl.contains('.apk') ? playStoreWebUrl : rawUrl;
     final bool isMajorUpdate = json['isMajor'] == true || json['isCritical'] == true;
 
     // Hay actualización si la versión semántica es mayor O si el buildNumber es mayor teniendo igual o superior versión
@@ -135,7 +134,7 @@ class UpdateService {
   static const String playStoreWebUrl = 'https://play.google.com/store/apps/details?id=com.cesarluis.rindemas';
 
   /// Abre la tienda oficial de Google Play Store para actualizar de forma segura y autorizada.
-  /// Si falla la app nativa de la tienda, abre la URL web oficial.
+  /// Si falla la app nativa de la tienda, abre la URL web oficial en Google Play.
   static Future<bool> openDownloadUrl([String? fallbackUrl]) async {
     try {
       final marketUri = Uri.parse(playStoreMarketUrl);
@@ -150,13 +149,9 @@ class UpdateService {
         if (launchedWeb) return true;
       } catch (_) {}
 
-      if (fallbackUrl != null && fallbackUrl.isNotEmpty) {
-        final fallbackUri = Uri.parse(fallbackUrl);
-        return await launchUrl(fallbackUri, mode: LaunchMode.externalApplication);
-      }
       return false;
     } catch (e) {
-      debugPrint('Error abriendo enlace de actualizacion: $e');
+      debugPrint('Error abriendo enlace oficial de actualización en Google Play: $e');
       return false;
     }
   }

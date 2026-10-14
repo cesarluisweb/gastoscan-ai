@@ -332,7 +332,7 @@ class NotificationService {
         scheduledTzDate,
         notificationDetails,
         payload: 'pending_reviews',
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
       );

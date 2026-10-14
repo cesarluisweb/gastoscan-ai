@@ -74,5 +74,5 @@ Todos los recursos listos para subir a Google Play Console se encuentran central
   - Cabecera con logo oficial cuadrado redondeado + texto de marca `Rinde Más`.
   - Título principal en azul pizarra profundo `#0F172A`.
   - Trazo curvo amarillo `#FACC15` inmediatamente debajo de *«inteligente»*.
-  - Botón CTA *«Descargar gratis»* en amarillo `#FACC15` con texto estrictamente negro `#000000`.
+  - Insignias de características (chips): *«Local-First y Privado»*, *«Tasas BCV en Vivo»* y *«Escaneo con IA»* (cumple políticas de Play Store al no incluir botones falsos de descarga).
 - **Mockup:** Smartphone estilizado con bordes redondeados y Dynamic Island mostrando la pantalla principal real de Rinde Más.

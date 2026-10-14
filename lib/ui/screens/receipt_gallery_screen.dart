@@ -119,22 +119,14 @@ class ReceiptGalleryScreen extends StatelessWidget {
 
                       final formattedAmount = () {
                         final tasa = gasto.tasaCambio > 0 ? gasto.tasaCambio : 1.0;
-                        final double ves = gasto.moneda == 'VES'
-                            ? gasto.totalOriginalDisplay
-                            : gasto.totalUsdDisplay * tasa;
-                        final double usd = gasto.totalUsdDisplay;
-
-                        switch (settings.monedaPrincipal) {
-                          case 'VES':
-                            return CurrencyFormatter.formatVes(ves);
-                          case 'EUR':
-                            return CurrencyFormatter.formatEur(usd / 1.08);
-                          case 'USDT':
-                            return CurrencyFormatter.formatUsdt(usd);
-                          case 'USD':
-                          default:
-                            return CurrencyFormatter.formatUsd(usd);
-                        }
+                        return CurrencyFormatter.formatPreferido(
+                          gasto.totalUsdDisplay,
+                          gasto.moneda == 'VES' ? gasto.totalOriginalDisplay : null,
+                          tasa,
+                          settings.monedaPrincipal,
+                          tasaEur: settings.tasaCambioVesEur,
+                          tasaUsdt: settings.tasaCambioVesUsdt,
+                        );
                       }();
 
                       return Material(
