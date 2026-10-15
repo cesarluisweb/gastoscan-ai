@@ -27,11 +27,11 @@ void main() {
     });
   });
 
-  group('ExpenseCard Widget Tests (UX-07)', () {
+  group('ExpenseCard Widget Tests (UX-07 & Refinements)', () {
     final baseGastoConItems = GastoModel(
       id: 1,
       uuid: 'test-uuid-plaza-1',
-      comercio: 'Automercado Plaza',
+      comercio: 'AUTOMERCADO PLAZA',
       fecha: '2026-10-14',
       moneda: 'USD',
       totalOriginal: 2500, // $25.00
@@ -40,11 +40,11 @@ void main() {
       categoria: 'Alimentación',
       creadoEn: '2026-10-14T10:00:00',
       items: [
-        ItemGastoModel(descripcion: 'Arroz', cantidad: 2.0, precioUnitario: 150, total: 300, categoria: 'Alimentación'),
+        ItemGastoModel(descripcion: 'Arroz (G)', cantidad: 2.0, precioUnitario: 150, total: 300, categoria: 'Alimentación'),
         ItemGastoModel(descripcion: 'Jabón', cantidad: 1.0, precioUnitario: 200, total: 200, categoria: 'Higiene'),
         ItemGastoModel(descripcion: 'Leche', cantidad: 2.0, precioUnitario: 250, total: 500, categoria: 'Alimentación'),
         ItemGastoModel(descripcion: 'Pan', cantidad: 1.0, precioUnitario: 100, total: 100, categoria: 'Alimentación'),
-        ItemGastoModel(descripcion: 'Café', cantidad: 1.0, precioUnitario: 400, total: 400, categoria: 'Alimentación'),
+        ItemGastoModel(descripcion: 'Café (E)', cantidad: 1.0, precioUnitario: 400, total: 400, categoria: 'Alimentación'),
         ItemGastoModel(descripcion: 'Pasta', cantidad: 2.0, precioUnitario: 200, total: 400, categoria: 'Alimentación'),
       ],
     );
@@ -64,6 +64,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      // Normalizes to Title Case
       expect(find.text('Automercado Plaza'), findsOneWidget);
       expect(find.textContaining('6 artículos'), findsOneWidget);
       // Items not visible initially in compact mode
@@ -77,7 +78,7 @@ void main() {
       expect(find.text('2x Arroz'), findsOneWidget);
     });
 
-    testWidgets('direct breakdown mode (showDirectItemBreakdown=true) displays top 4 items and expander button', (tester) async {
+    testWidgets('direct breakdown mode (showDirectItemBreakdown=true) displays top 4 items, cleans (G) suffixes and shows unit price', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -92,8 +93,16 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Items 1 to 4 are directly visible without tapping header
+      // Title Case applied
+      expect(find.text('Automercado Plaza'), findsOneWidget);
+
+      // Fiscal suffix (G) is cleaned from 'Arroz (G)' -> '2x Arroz'
       expect(find.text('2x Arroz'), findsOneWidget);
+      expect(find.textContaining('Arroz (G)'), findsNothing);
+
+      // Unit price subtitle shown for multi-quantity item
+      expect(find.textContaining('2x a \$ 1,50 c/u'), findsOneWidget);
+
       expect(find.text('1x Jabón'), findsOneWidget);
       expect(find.text('2x Leche'), findsOneWidget);
       expect(find.text('1x Pan'), findsOneWidget);
@@ -108,7 +117,7 @@ void main() {
       await tester.tap(find.text('Ver 2 artículos más'));
       await tester.pumpAndSettle();
 
-      // Now all items are visible
+      // Fiscal suffix (E) is cleaned from 'Café (E)' -> '1x Café'
       expect(find.text('1x Café'), findsOneWidget);
       expect(find.text('2x Pasta'), findsOneWidget);
       expect(find.text('Ver menos'), findsOneWidget);
@@ -121,11 +130,11 @@ void main() {
       expect(find.text('Ver 2 artículos más'), findsOneWidget);
     });
 
-    testWidgets('single item breakdown shows divider and item without expander or Desglose label', (tester) async {
+    testWidgets('single item purchase integrates cleanly into header without divider or duplicate bottom row', (tester) async {
       final singleItemGasto = GastoModel(
         id: 2,
         uuid: 'test-uuid-farmatodo-1',
-        comercio: 'Farmatodo',
+        comercio: 'FARMATODO SAAS C.A.',
         fecha: '2026-10-14',
         moneda: 'USD',
         totalOriginal: 500,
@@ -134,7 +143,7 @@ void main() {
         categoria: 'Salud',
         creadoEn: '2026-10-14T11:00:00',
         items: [
-          ItemGastoModel(descripcion: 'Acetaminofén', cantidad: 1.0, precioUnitario: 500, total: 500, categoria: 'Salud'),
+          ItemGastoModel(descripcion: 'Acetaminofén (G)', cantidad: 1.0, precioUnitario: 500, total: 500, categoria: 'Salud'),
         ],
       );
 
@@ -152,11 +161,51 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Farmatodo'), findsOneWidget);
-      expect(find.text('1x Acetaminofén'), findsOneWidget);
-      expect(find.byType(Divider), findsOneWidget);
+      // Title Case preserves C.A.
+      expect(find.text('Farmatodo Saas C.A.'), findsOneWidget);
+      // Item name and rate in header subtitle
+      expect(find.textContaining('Acetaminofén • Tasa 45,00'), findsOneWidget);
+      // No divider or repeated item row
+      expect(find.byType(Divider), findsNothing);
       expect(find.text('Desglose de Ítems:'), findsNothing);
       expect(find.textContaining('artículos más'), findsNothing);
+    });
+
+    testWidgets('proportional currency calculation aligns EUR expense items with USD header', (tester) async {
+      // 7.00 EUR totalOriginal, 7.84 USD totalUsd (tasa 45)
+      final eurGasto = GastoModel(
+        id: 3,
+        uuid: 'test-uuid-eur-1',
+        comercio: 'Pescadería',
+        fecha: '2026-10-14',
+        moneda: 'EUR',
+        totalOriginal: 700, // 7.00 EUR
+        totalUsd: 784, // $7.84 USD
+        tasaCambio: 45.0,
+        categoria: 'Alimentación',
+        creadoEn: '2026-10-14T12:00:00',
+        items: [
+          ItemGastoModel(descripcion: 'Camarones', cantidad: 1.0, precioUnitario: 700, total: 700, categoria: 'Alimentación'),
+        ],
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ExpenseCard(
+              gasto: eurGasto,
+              onDelete: () {},
+              onEdit: () {},
+              showDirectItemBreakdown: true,
+              monedaPrincipal: 'USD',
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Card displays $ 7,84 in header
+      expect(find.text('\$ 7,84'), findsOneWidget);
     });
   });
 }

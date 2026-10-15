@@ -7,6 +7,28 @@ import '../../data/models/gasto_model.dart';
 import '../../data/models/item_gasto_model.dart';
 import 'receipt_viewer_dialog.dart';
 
+String toTitleCase(String text) {
+  if (text.isEmpty) return text;
+  final isAllUpper = text == text.toUpperCase() && text.contains(RegExp(r'[A-Za-z]'));
+  if (!isAllUpper) return text;
+
+  return text.split(' ').map((word) {
+    if (word.isEmpty) return word;
+    final lower = word.toLowerCase();
+    if (lower == 'c.a.' || lower == 's.a.' || lower == 's.r.l.' || lower == 'c.a' || lower == 's.a') {
+      return word.toUpperCase();
+    }
+    return lower[0].toUpperCase() + lower.substring(1);
+  }).join(' ');
+}
+
+String cleanItemDescription(String desc) {
+  return desc
+      .replaceAll(RegExp(r'\s*\([GERgerExX]+\)\s*$', caseSensitive: false), '')
+      .replaceAll(RegExp(r'\s*-(G|E|R)\s*$', caseSensitive: false), '')
+      .trim();
+}
+
 class ExpenseCard extends StatefulWidget {
   final GastoModel gasto;
   final VoidCallback onDelete;
@@ -36,7 +58,7 @@ class ExpenseCard extends StatefulWidget {
 }
 
 class _ExpenseCardState extends State<ExpenseCard> {
-  late bool _expanded;
+  bool _expanded = false;
   bool _showAllItems = false;
 
   @override
@@ -63,6 +85,57 @@ class _ExpenseCardState extends State<ExpenseCard> {
   Widget build(BuildContext context) {
     final catColor = AppColors.categoryColors[widget.gasto.categoria] ?? AppColors.textSecondary;
 
+    final tasa = widget.gasto.tasaCambio > 0
+        ? widget.gasto.tasaCambio
+        : (widget.tasaCambio > 0 ? widget.tasaCambio : 1.0);
+    final double ves = widget.gasto.moneda == 'VES'
+        ? widget.gasto.totalOriginalDisplay
+        : widget.gasto.totalUsdDisplay * tasa;
+    final double usd = widget.gasto.totalUsdDisplay;
+
+    final primaryFormatted = CurrencyFormatter.formatPreferido(
+      usd,
+      ves,
+      tasa,
+      widget.monedaPrincipal,
+      tasaEur: widget.tasaEur,
+      tasaUsdt: widget.tasaUsdt,
+    );
+
+    final secondaryFormatted = CurrencyFormatter.formatSecundario(
+      usd,
+      ves,
+      tasa,
+      widget.monedaPrincipal,
+    );
+
+    final String tasaStr = CurrencyFormatter.formatVes(tasa).replaceAll('Bs. ', '');
+
+    final String subtitleText;
+    if (!widget.showDirectItemBreakdown) {
+      final fechaStr = DateFormatter.formatDate(widget.gasto.fecha);
+      if (widget.gasto.items.isNotEmpty) {
+        final count = widget.gasto.items.length;
+        final artStr = count == 1 ? '1 artículo' : '$count artículos';
+        subtitleText = '$fechaStr • $artStr';
+      } else {
+        subtitleText = fechaStr;
+      }
+    } else {
+      if (widget.gasto.items.length == 1) {
+        final singleItem = widget.gasto.items.first;
+        final cleanDesc = cleanItemDescription(singleItem.descripcion);
+        final countPrefix = singleItem.cantidad > 1
+            ? '${singleItem.cantidad.toStringAsFixed(singleItem.cantidad % 1 == 0 ? 0 : 2)}x '
+            : '';
+        subtitleText = '$countPrefix$cleanDesc • Tasa $tasaStr';
+      } else if (widget.gasto.items.length > 1) {
+        subtitleText = '${widget.gasto.items.length} artículos • Tasa $tasaStr';
+      } else {
+        subtitleText = 'Tasa $tasaStr';
+      }
+    }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -74,7 +147,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
         children: [
           InkWell(
             onTap: () {
-              if (widget.gasto.items.isNotEmpty) {
+              if (widget.gasto.items.length > 1) {
                 if (widget.showDirectItemBreakdown) {
                   if (widget.gasto.items.length > 4) {
                     setState(() => _showAllItems = !_showAllItems);
@@ -89,50 +162,49 @@ class _ExpenseCardState extends State<ExpenseCard> {
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: catColor.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(12),
+                  if (!widget.showDirectItemBreakdown) ...[
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: catColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        AppConstants.getCategoryIcon(widget.gasto.categoria),
+                        color: catColor,
+                        size: 22,
+                      ),
                     ),
-                    child: Icon(
-                      AppConstants.getCategoryIcon(widget.gasto.categoria),
-                      color: catColor,
-                      size: 22,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
+                    const SizedBox(width: 14),
+                  ],
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          widget.gasto.comercio,
+                          toTitleCase(widget.gasto.comercio),
                           style: const TextStyle(
                             color: AppColors.textPrimary,
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
                           ),
-                          maxLines: 1,
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            Text(
-                              () {
-                                final fechaStr = DateFormatter.formatDate(widget.gasto.fecha);
-                                if (widget.gasto.items.isNotEmpty) {
-                                  final count = widget.gasto.items.length;
-                                  final artStr = count == 1 ? '1 artículo' : '$count artículos';
-                                  return '$fechaStr • $artStr';
-                                }
-                                return fechaStr;
-                              }(),
-                              style: const TextStyle(
-                                color: AppColors.textMuted,
-                                fontSize: 12,
+                            Flexible(
+                              child: Text(
+                                subtitleText,
+                                style: const TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             if (widget.gasto.rutaFotoLocal != null && widget.gasto.rutaFotoLocal!.isNotEmpty) ...[
@@ -153,24 +225,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        () {
-                          final tasa = widget.gasto.tasaCambio > 0
-                              ? widget.gasto.tasaCambio
-                              : (widget.tasaCambio > 0 ? widget.tasaCambio : 1.0);
-                          final double ves = widget.gasto.moneda == 'VES'
-                              ? widget.gasto.totalOriginalDisplay
-                              : widget.gasto.totalUsdDisplay * tasa;
-                          final double usd = widget.gasto.totalUsdDisplay;
-
-                          return CurrencyFormatter.formatPreferido(
-                            usd,
-                            ves,
-                            tasa,
-                            widget.monedaPrincipal,
-                            tasaEur: widget.tasaEur,
-                            tasaUsdt: widget.tasaUsdt,
-                          );
-                        }(),
+                        primaryFormatted,
                         style: const TextStyle(
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.bold,
@@ -178,25 +233,11 @@ class _ExpenseCardState extends State<ExpenseCard> {
                         ),
                       ),
                       Text(
-                        () {
-                          final tasa = widget.gasto.tasaCambio > 0
-                              ? widget.gasto.tasaCambio
-                              : (widget.tasaCambio > 0 ? widget.tasaCambio : 1.0);
-                          final double ves = widget.gasto.moneda == 'VES'
-                              ? widget.gasto.totalOriginalDisplay
-                              : widget.gasto.totalUsdDisplay * tasa;
-                          final double usd = widget.gasto.totalUsdDisplay;
-
-                          return CurrencyFormatter.formatSecundario(
-                            usd,
-                            ves,
-                            tasa,
-                            widget.monedaPrincipal,
-                          );
-                        }(),
+                        secondaryFormatted,
                         style: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 12,
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
                         ),
                       ),
                     ],
@@ -256,7 +297,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
               ),
             ),
           ),
-          if ((widget.showDirectItemBreakdown || _expanded) && widget.gasto.items.isNotEmpty) ...[
+          if ((widget.showDirectItemBreakdown || _expanded) && widget.gasto.items.length > 1) ...[
             const Divider(height: 1, thickness: 1, color: AppColors.border),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
@@ -274,26 +315,24 @@ class _ExpenseCardState extends State<ExpenseCard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       ...itemsToShow.map((it) {
-                        double itemOriginal = it.totalDisplay;
-                        double itemUsd;
-                        double itemVes;
+                        final double itemRatio = (widget.gasto.totalOriginalDisplay > 0)
+                            ? (it.totalDisplay / widget.gasto.totalOriginalDisplay)
+                            : (widget.gasto.items.isNotEmpty ? (1.0 / widget.gasto.items.length) : 0.0);
 
-                        double sumItems = widget.gasto.items.fold(0.0, (prev, i) => prev + i.totalDisplay);
-                        double tasa = widget.gasto.tasaCambio > 0 ? widget.gasto.tasaCambio : 1.0;
+                        final double itemUsd = itemRatio > 0
+                            ? (widget.gasto.totalUsdDisplay * itemRatio)
+                            : CurrencyFormatter.convertAmount(
+                                it.totalDisplay,
+                                widget.gasto.moneda,
+                                'USD',
+                                tasa,
+                                tasaEur: widget.tasaEur,
+                                tasaUsdt: widget.tasaUsdt,
+                              );
 
-                        if (widget.gasto.moneda == 'VES') {
-                          itemVes = itemOriginal;
-                          itemUsd = itemOriginal / tasa;
-                        } else {
-                          // Si la factura está en USD pero los ítems suman mucho más, es porque están en VES
-                          if (widget.gasto.totalOriginalDisplay > 0 && sumItems > widget.gasto.totalOriginalDisplay * 5) {
-                            itemVes = itemOriginal;
-                            itemUsd = itemOriginal / tasa;
-                          } else {
-                            itemUsd = itemOriginal;
-                            itemVes = itemOriginal * tasa;
-                          }
-                        }
+                        final double itemVes = (widget.gasto.moneda == 'VES')
+                            ? it.totalDisplay
+                            : (itemUsd * tasa);
 
                         final double itemDisplay;
                         switch (widget.monedaPrincipal.toUpperCase()) {
@@ -323,13 +362,16 @@ class _ExpenseCardState extends State<ExpenseCard> {
                             itemDisplay = itemUsd;
                             break;
                         }
+
                         final String itemText = CurrencyFormatter.formatAmount(itemDisplay, widget.monedaPrincipal);
                         final itCatColor = AppColors.categoryColors[it.categoria] ?? AppColors.textSecondary;
                         final itCatIcon = AppConstants.getCategoryIcon(it.categoria);
+                        final cleanDesc = cleanItemDescription(it.descripcion);
 
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 4),
                           child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Container(
                                 width: 20,
@@ -342,19 +384,39 @@ class _ExpenseCardState extends State<ExpenseCard> {
                               ),
                               const SizedBox(width: 8),
                               Expanded(
-                                child: Text(
-                                  '${it.cantidad.toStringAsFixed(it.cantidad % 1 == 0 ? 0 : 2)}x ${it.descripcion}',
-                                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
-                                  overflow: TextOverflow.ellipsis,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${it.cantidad.toStringAsFixed(it.cantidad % 1 == 0 ? 0 : 2)}x $cleanDesc',
+                                      style: const TextStyle(
+                                        color: AppColors.textPrimary,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    if (it.cantidad > 1) ...[
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        '${it.cantidad.toStringAsFixed(it.cantidad % 1 == 0 ? 0 : 2)}x a ${CurrencyFormatter.formatAmount(itemDisplay / it.cantidad, widget.monedaPrincipal)} c/u',
+                                        style: const TextStyle(
+                                          color: AppColors.textSecondary,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
                                 ),
                               ),
                               const SizedBox(width: 8),
                               Text(
                                 itemText,
                                 style: const TextStyle(
-                                  color: AppColors.textSecondary,
+                                  color: AppColors.textPrimary,
                                   fontSize: 13,
-                                  fontWeight: FontWeight.w500,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ],

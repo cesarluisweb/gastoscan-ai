@@ -21,12 +21,16 @@ En esta fase se abordaron 5 tareas clave de consistencia visual, experiencia de 
 3. **UX-06 (Etiqueta de Agrupación en Gráfico de Inicio):**
    - En la vista compacta del Dashboard (`showBudgetBars: false`), las categorías fuera del Top 4 se consolidan bajo la etiqueta `+X categorías` (ej. `+2 categorías`), evitando colisiones con la categoría real *Otros*.
 
-4. **UX-07 (Desglose Directo de Productos en Pestaña "Gastos"):**
-   - Las tarjetas de gasto en `ExpenseHistoryScreen` muestran directamente los productos (`showDirectItemBreakdown: true`) en una superficie blanca continua integrada en la misma tarjeta, delimitada por un divisor sutil `Divider(height: 1, color: AppColors.border)`.
-   - Se eliminó el contenedor gris inferior y la etiqueta redundante "Desglose de Ítems:".
-   - Cada producto cuenta con mini-ícono temático de su categoría y subtotal formateado.
-   - Si una compra contiene más de 4 ítems, muestra un botón interactivo tipo cápsula/pill con fondo tenue y texto en negro carbón `AppColors.textPrimary` (`Ver X artículos más ▾` / `Ver menos ▴`), erradicando cualquier texto amarillo sobre fondo claro.
-   - En el Dashboard (`Inicio`), las tarjetas permanecen compactas con conteo resumido (`14 Oct • 4 artículos`).
+4. **UX-07 (Desglose Directo y Refinamiento Integral en "Gastos"):**
+   - **Corrección Proporcional Multimoneda:** Los ítems calculan su monto proporcional respecto a `totalOriginalDisplay` y `totalUsdDisplay`. Si una compra fue registrada en EUR, sus ítems se convierten proporcionalmente a USD (o a la `monedaPrincipal` elegida), eliminando discrepancias matemáticas entre la suma de productos y el total de la tarjeta.
+   - **Tira de Resumen Mensual Fija:** Barra compacta bajo el selector de mes con el total gastado (`$ 46,62 • Bs. 40.838,04 (X compras)`), formateada según la moneda preferida del usuario en **Más**.
+   - **Carrusel de Chips de Filtro Rápido:** Reemplazó el ícono ambiguo de galería del AppBar por chips horizontales interactivos (`[Todos]`, `[🧾 Con comprobante]`, y las 8 categorías canónicas con sus mini-íconos).
+   - **Jerarquía y Precio Unitario vs. Total:** Los ítems muestran a la derecha el total de la fila. Si la cantidad es mayor a 1, un subtítulo detalla `${cantidad}x a ${unitario} c/u`.
+   - **Compras de 1 Ítem Optimizadas:** Se integran directamente en el subtítulo de la tarjeta (`${descripción} • Tasa ${tasa}`), omitiendo el divisor inferior y la fila repetida, ahorrando ~40% de espacio vertical.
+   - **Eliminación del Ícono Grande:** En el historial de gastos se suprime el contenedor de 44x44 px para dar amplitud al nombre del comercio.
+   - **Normalización a Title Case y 2 Líneas:** Nombres de comercios en mayúsculas de impresoras fiscales se formatean a Title Case (`Importadora Hong Kong C.A.`) con hasta 2 líneas sin truncados prematuros.
+   - **Limpieza de Sufijos Fiscales de OCR:** Filtrado automático de marcas fiscales como `(G)`, `(E)`, `(R)` en las descripciones de los artículos.
+   - **Contraste WCAG AA y Tasa Visible:** El monto en bolívares se presenta en texto oscuro nítido (`AppColors.textPrimary`, 13 px, semibold) y la tasa de cambio de la transacción es visible en la cabecera.
 
 5. **FIN-09 (Calculadora Cambiaria Rápida en Pestaña "Más"):**
    - Creada `CurrencyCalculatorScreen` con subvista en `MoreScreen` (`MoreSubView.calculator`) y acceso directo desde la tarjeta de tasas.

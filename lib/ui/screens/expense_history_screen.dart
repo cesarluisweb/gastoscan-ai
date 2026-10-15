@@ -1,9 +1,9 @@
-import '../widgets/month_selector_bar.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_constants.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../providers/gasto_provider.dart';
@@ -11,6 +11,7 @@ import '../../providers/settings_provider.dart';
 import '../../providers/scan_queue_provider.dart';
 import '../../data/models/gasto_model.dart';
 import '../../data/models/gemini_extraction_result.dart';
+import '../widgets/month_selector_bar.dart';
 import '../widgets/expense_card.dart';
 import '../widgets/pending_expense_card.dart';
 import '../widgets/global_scan_queue_banner.dart';
@@ -26,6 +27,7 @@ class ExpenseHistoryScreen extends StatefulWidget {
 class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
   bool _isSearching = false;
   bool _onlyWithReceipt = false;
+  String? _selectedCategory;
   final TextEditingController _searchCtrl = TextEditingController();
   String _searchQuery = '';
   List<GastoModel>? _allGastos;
@@ -90,10 +92,9 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
   Widget build(BuildContext context) {
     final gastoProvider = Provider.of<GastoProvider>(context);
     final settings = Provider.of<SettingsProvider>(context);
-
     final scanQueue = Provider.of<ScanQueueProvider>(context);
 
-    // Filtrar gastos por búsqueda (global cross-month si busca, o mensual) y comprobante
+    // Filtrar gastos por búsqueda, comprobante y categoría seleccionada
     final query = _normalizeText(_searchQuery.trim());
     final isSearchingGlobal = _isSearching && query.isNotEmpty;
     final baseGastos = (isSearchingGlobal && _allGastos != null)
@@ -104,13 +105,16 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
       if (_onlyWithReceipt && (gasto.rutaFotoLocal == null || gasto.rutaFotoLocal!.isEmpty)) {
         return false;
       }
+      if (_selectedCategory != null && gasto.categoria != _selectedCategory) {
+        return false;
+      }
       if (query.isEmpty) return true;
       final matchComercio = _normalizeText(gasto.comercio).contains(query);
       final matchItems = gasto.items.any((item) => _normalizeText(item.descripcion).contains(query));
       return matchComercio || matchItems;
     }).toList();
-    
-    // Crear borradores pendientes si no hay búsqueda activa (o si deciden buscar en pendientes)
+
+    // Crear borradores pendientes si no hay búsqueda activa (o si coinciden con los filtros)
     final List<GastoModel> pendingGastos = [];
     for (final item in scanQueue.readyItems) {
       final imagePath = item['image_path'] as String?;
@@ -123,7 +127,11 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
         data = Map<String, dynamic>.from(jsonDecode(item['extracted_data']));
       }
       final result = GeminiExtractionResult.fromJson(data);
-      
+
+      if (_selectedCategory != null && result.categoria != _selectedCategory) {
+        continue;
+      }
+
       final double totalOrig = result.totalOriginal;
       final double tasa = (result.moneda == 'VES' && result.tasaCambioDetectada != null && result.tasaCambioDetectada! > 0)
           ? result.tasaCambioDetectada!
@@ -196,17 +204,6 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
             : const Text('Gastos'),
         actions: [
           IconButton(
-            key: const Key('expense_history_receipt_filter_toggle'),
-            icon: Icon(_onlyWithReceipt ? Icons.photo_library : Icons.photo_library_outlined),
-            tooltip: _onlyWithReceipt ? 'Ver todos los gastos' : 'Ver solo comprobantes',
-            color: _onlyWithReceipt ? AppColors.primaryDark : null,
-            onPressed: () {
-              setState(() {
-                _onlyWithReceipt = !_onlyWithReceipt;
-              });
-            },
-          ),
-          IconButton(
             key: const Key('expense_history_search_toggle'),
             icon: Icon(_isSearching ? Icons.close : Icons.search),
             onPressed: () {
@@ -229,12 +226,15 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
         children: [
           const GlobalScanQueueBanner(),
           // Selector de Mes o indicador de búsqueda global
-          if (!isSearchingGlobal)
+          if (!isSearchingGlobal) ...[
             const MonthSelectorBar(
               keyPrefix: 'expense_history_',
               padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
-            )
-          else
+            ),
+            _buildMonthlySummaryStrip(gastoProvider, settings, filteredGastos),
+            _buildFilterChipsRow(),
+            const SizedBox(height: 6),
+          ] else ...[
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
               child: Row(
@@ -252,6 +252,9 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
                 ],
               ),
             ),
+            _buildFilterChipsRow(),
+            const SizedBox(height: 6),
+          ],
 
           // Lista de Gastos agrupada por fecha
           Expanded(
@@ -260,7 +263,7 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
                     child: CircularProgressIndicator(color: AppColors.primary),
                   )
                 : sortedGastos.isEmpty
-                    ? _buildEmptyState(query.isNotEmpty)
+                    ? _buildEmptyState(query.isNotEmpty || _onlyWithReceipt || _selectedCategory != null)
                     : ListView(
                         padding: const EdgeInsets.only(left: 16, right: 16, top: 4, bottom: 80),
                         children: [
@@ -284,7 +287,7 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
                                     (e) => e['id'] == queueItemId,
                                     orElse: () => <String, dynamic>{},
                                   );
-                                  
+
                                   if (item.isEmpty) return const SizedBox.shrink();
 
                                   Map<String, dynamic> data = {};
@@ -293,7 +296,7 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
                                   }
                                   final result = GeminiExtractionResult.fromJson(data);
                                   final file = File(item['image_path']);
-                                  
+
                                   return PendingExpenseCard(
                                     key: ValueKey('history_${gasto.uuid}'),
                                     gasto: gasto,
@@ -385,6 +388,189 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
     );
   }
 
+  Widget _buildMonthlySummaryStrip(GastoProvider gastoProvider, SettingsProvider settings, List<GastoModel> currentGastos) {
+    final double tasa = settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : 1.0;
+
+    final double sumUsd;
+    final double sumVes;
+    if (_selectedCategory == null && !_onlyWithReceipt) {
+      sumUsd = gastoProvider.totalMesUsd;
+      sumVes = gastoProvider.totalMesVes;
+    } else {
+      sumUsd = currentGastos.fold(0.0, (acc, g) => acc + g.totalUsdDisplay);
+      sumVes = currentGastos.fold(0.0, (acc, g) {
+        final double t = g.tasaCambio > 0 ? g.tasaCambio : tasa;
+        return acc + (g.moneda == 'VES' ? g.totalOriginalDisplay : g.totalUsdDisplay * t);
+      });
+    }
+
+    final String primaryFormatted = CurrencyFormatter.formatPreferido(
+      sumUsd,
+      sumVes,
+      tasa,
+      settings.monedaPrincipal,
+      tasaEur: settings.tasaCambioVesEur,
+      tasaUsdt: settings.tasaCambioVesUsdt,
+    );
+
+    final String secondaryFormatted = CurrencyFormatter.formatSecundario(
+      sumUsd,
+      sumVes,
+      tasa,
+      settings.monedaPrincipal,
+    );
+
+    final int count = currentGastos.length;
+    final String countStr = count == 1 ? '1 compra' : '$count compras';
+
+    return Container(
+      key: const Key('expense_history_monthly_summary_strip'),
+      margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.cardLighter,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.receipt_long_outlined, size: 16, color: AppColors.textSecondary),
+              const SizedBox(width: 6),
+              Text(
+                'Total gastado ($countStr):',
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: primaryFormatted,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                TextSpan(
+                  text: ' • $secondaryFormatted',
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChipsRow() {
+    return SizedBox(
+      height: 34,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        children: [
+          _buildChipItem(
+            key: const Key('expense_filter_chip_all'),
+            label: 'Todos',
+            isSelected: _selectedCategory == null && !_onlyWithReceipt,
+            onTap: () {
+              setState(() {
+                _selectedCategory = null;
+                _onlyWithReceipt = false;
+              });
+            },
+          ),
+          const SizedBox(width: 8),
+          _buildChipItem(
+            key: const Key('expense_filter_chip_receipt'),
+            label: '🧾 Con comprobante',
+            isSelected: _onlyWithReceipt,
+            onTap: () {
+              setState(() {
+                _onlyWithReceipt = !_onlyWithReceipt;
+              });
+            },
+          ),
+          const SizedBox(width: 8),
+          for (final cat in AppConstants.categorias) ...[
+            _buildChipItem(
+              key: Key('expense_filter_chip_${cat.toLowerCase()}'),
+              label: cat,
+              icon: AppConstants.getCategoryIcon(cat),
+              isSelected: _selectedCategory == cat,
+              onTap: () {
+                setState(() {
+                  _selectedCategory = (_selectedCategory == cat) ? null : cat;
+                });
+              },
+            ),
+            const SizedBox(width: 8),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChipItem({
+    required Key key,
+    required String label,
+    IconData? icon,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      key: key,
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : AppColors.card,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? AppColors.primaryDark : AppColors.border,
+            width: isSelected ? 1.5 : 1.0,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(
+                icon,
+                size: 13,
+                color: isSelected ? Colors.black : AppColors.textSecondary,
+              ),
+              const SizedBox(width: 5),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                color: isSelected ? Colors.black : AppColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildEmptyState(bool isFiltered) {
     return Center(
       child: Container(
@@ -415,7 +601,7 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
             const SizedBox(height: 4),
             Text(
               isFiltered
-                  ? 'Intenta con otro término de búsqueda.'
+                  ? 'Intenta con otro término o filtro de categoría.'
                   : 'Presiona "+" para registrar tu primera compra.',
               textAlign: TextAlign.center,
               style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
