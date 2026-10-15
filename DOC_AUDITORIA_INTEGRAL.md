@@ -418,18 +418,18 @@ La app **no está lista para envío a producción** en su estado actual. Se iden
 | # | Acción | IDs | Esfuerzo | Estado |
 |:--|:---|:---|:---:|:---:|
 | 1 | Diseñar onboarding de 3 pantallas | UX-02 | Mediano | Excluido (Uso directo sin tutoriales) 🚫 |
-| 2 | Búsqueda global cross-month en historial | UX-03 | Mediano | Pendiente de validación 🧪 |
-| 3 | Unificar navegación del chat (siempre `Navigator.push`) | UX-05 | Mediano | Pendiente de validación 🧪 |
-| 4 | `SummaryCard`: usar mes/año seleccionado para días | FIN-07 | Pequeño | Pendiente de validación 🧪 |
-| 5 | Validar montos > 0 en formularios | FIN-08 | Pequeño | Pendiente de validación 🧪 |
-| 6 | Versionado del Cloudflare Worker en el repo | SEC-12 | Mediano | Pendiente de validación 🧪 |
+| 2 | Búsqueda global cross-month en historial | UX-03 | Mediano | Completado ✅ |
+| 3 | Unificar navegación del chat (siempre `Navigator.push`) | UX-05 | Mediano | Completado ✅ |
+| 4 | `SummaryCard`: usar mes/año seleccionado para días | FIN-07 | Pequeño | Completado ✅ |
+| 5 | Validar montos > 0 en formularios | FIN-08 | Pequeño | Completado ✅ |
+| 6 | Versionado del Cloudflare Worker en el repo | SEC-12 | Mediano | Completado ✅ |
 | 7 | Implementar tombstones (soft-delete) en Firestore | SEC-05 | Grande | Pendiente |
 | 8 | Validación de esquema en Firestore rules | SEC-13 | Mediano | Pendiente |
 | 9 | Limitar payload de contexto enviado a Gemini (resúmenes vs historial completo) | SEC-11 | Mediano | Pendiente |
-| 10 | Deduplicación SHA-256 en cola de escaneo | OCR-01 | Mediano | Pendiente de validación 🧪 |
+| 10 | Deduplicación SHA-256 en cola de escaneo | OCR-01 | Mediano | Completado ✅ |
 | 11 | Centralizar hidratación de facturas en `ScanQueueProvider` | TEC-08 | Pequeño | Pendiente |
 | 12 | Escribir tests para `GastoProvider`, `SyncService` | TEC-09 | Grande | Pendiente |
-| 13 | Chat IA analítico, tasa USDT y saludo guiado | AI-01 | Pequeño | Pendiente de validación 🧪 |
+| 13 | Chat IA analítico, tasa USDT y saludo guiado | AI-01 | Pequeño | Completado ✅ |
 
 ### Fase 4: Mejoras futuras no esenciales
 

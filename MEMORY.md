@@ -3,8 +3,7 @@
 
 ## Estado Actual Inmediato
 - **Rama:** `main`.
-- **Fase activa:** Fase 6.2 (UI-01, UI-05, UX-06, UX-07, FIN-09) `Implementada 🔧` y Fase 3 en `Pendiente de validación 🧪`.
-- **Roadmap Actualizado:** [ROADMAP.md](ROADMAP.md) refleja tareas de Fase 6.2 en implementación y pruebas completas.
+- **Fase activa:** Fase 6.2 (UI-01, UI-05, UX-06, UX-07, FIN-09) `Implementada 🔧`. Fase 3 de Auditoría Integral `Completada ✅`.
 
 ## Decisiones Técnicas y de Negocio Recientes
 - **UI-01 Iconografía Canónica:** Centralizada en `AppConstants.getCategoryIcon(cat)` para Inicio, Gastos, Análisis y Revisión.
@@ -18,4 +17,4 @@
 - `SettingsProvider` expone `tasaCambioVesEur`, no `tasaCambioEurUsd`.
 
 ## Próximo Paso Inmediato
-- Validar CI en verde tras commit/push de Fase 6.2 y habilitar prueba en dispositivo.
+- Monitorear CI en verde y proceder con validación de Fase 6.2 en dispositivo físico.
