@@ -444,13 +444,6 @@ class ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
       tasaUsdt: settings.tasaCambioVesUsdt,
     );
 
-    final String secondaryFormatted = CurrencyFormatter.formatSecundario(
-      sumUsd,
-      sumVes,
-      tasa,
-      settings.monedaPrincipal,
-    );
-
     final int count = currentGastos.length;
     final String countStr = count == 1 ? '1 compra' : '$count compras';
 
@@ -480,26 +473,12 @@ class ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
               ),
             ],
           ),
-          RichText(
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: primaryFormatted,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                TextSpan(
-                  text: ' • $secondaryFormatted',
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
+          Text(
+            primaryFormatted,
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ],

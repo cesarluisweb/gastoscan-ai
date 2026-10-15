@@ -122,15 +122,10 @@ class _ExpenseCardState extends State<ExpenseCard> {
         subtitleText = fechaStr;
       }
     } else {
-      if (widget.gasto.items.length == 1) {
-        final singleItem = widget.gasto.items.first;
-        final cleanDesc = cleanItemDescription(singleItem.descripcion);
-        final countPrefix = singleItem.cantidad > 1
-            ? '${singleItem.cantidad.toStringAsFixed(singleItem.cantidad % 1 == 0 ? 0 : 2)}x '
-            : '';
-        subtitleText = '$countPrefix$cleanDesc • Tasa $tasaStr';
-      } else if (widget.gasto.items.length > 1) {
+      if (widget.gasto.items.length > 1) {
         subtitleText = '${widget.gasto.items.length} artículos • Tasa $tasaStr';
+      } else if (widget.gasto.items.length == 1) {
+        subtitleText = '1 artículo • Tasa $tasaStr';
       } else {
         subtitleText = 'Tasa $tasaStr';
       }
@@ -147,7 +142,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
         children: [
           InkWell(
             onTap: () {
-              if (widget.gasto.items.length > 1) {
+              if (widget.gasto.items.isNotEmpty) {
                 if (widget.showDirectItemBreakdown) {
                   if (widget.gasto.items.length > 4) {
                     setState(() => _showAllItems = !_showAllItems);
@@ -159,7 +154,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
             },
             borderRadius: BorderRadius.circular(16),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 12, 4, 12),
               child: Row(
                 children: [
                   if (!widget.showDirectItemBreakdown) ...[
@@ -244,6 +239,8 @@ class _ExpenseCardState extends State<ExpenseCard> {
                   ),
                   const SizedBox(width: 4),
                   PopupMenuButton<String>(
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
                     icon: const Icon(Icons.more_vert, color: AppColors.textSecondary, size: 20),
                     color: AppColors.surface,
                     onSelected: (val) {
@@ -297,7 +294,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
               ),
             ),
           ),
-          if ((widget.showDirectItemBreakdown || _expanded) && widget.gasto.items.length > 1) ...[
+          if ((widget.showDirectItemBreakdown || _expanded) && widget.gasto.items.isNotEmpty) ...[
             const Divider(height: 1, thickness: 1, color: AppColors.border),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),

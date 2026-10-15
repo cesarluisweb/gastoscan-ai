@@ -130,7 +130,7 @@ void main() {
       expect(find.text('Ver 2 artículos más'), findsOneWidget);
     });
 
-    testWidgets('single item purchase integrates cleanly into header without divider or duplicate bottom row', (tester) async {
+    testWidgets('single item purchase shows item row with category icon, quantity and price consistently', (tester) async {
       final singleItemGasto = GastoModel(
         id: 2,
         uuid: 'test-uuid-farmatodo-1',
@@ -163,12 +163,55 @@ void main() {
 
       // Title Case preserves C.A.
       expect(find.text('Farmatodo Saas C.A.'), findsOneWidget);
-      // Item name and rate in header subtitle
-      expect(find.textContaining('Acetaminofén • Tasa 45,00'), findsOneWidget);
-      // No divider or repeated item row
-      expect(find.byType(Divider), findsNothing);
-      expect(find.text('Desglose de Ítems:'), findsNothing);
-      expect(find.textContaining('artículos más'), findsNothing);
+      // Header subtitle displays item count and rate
+      expect(find.textContaining('1 artículo • Tasa 45,00'), findsOneWidget);
+      // Divider and item row are present
+      expect(find.byType(Divider), findsOneWidget);
+      expect(find.text('1x Acetaminofén'), findsOneWidget);
+      // Category mini-icon is present
+      expect(find.byIcon(Icons.favorite_border), findsOneWidget);
+    });
+
+    testWidgets('compact mode allows expanding 1-item purchase on tap', (tester) async {
+      final singleItemGasto = GastoModel(
+        id: 2,
+        uuid: 'test-uuid-farmatodo-compact',
+        comercio: 'FARMATODO SAAS C.A.',
+        fecha: '2026-10-14',
+        moneda: 'USD',
+        totalOriginal: 500,
+        totalUsd: 500,
+        tasaCambio: 45.0,
+        categoria: 'Salud',
+        creadoEn: '2026-10-14T11:00:00',
+        items: [
+          ItemGastoModel(descripcion: 'Acetaminofén', cantidad: 1.0, precioUnitario: 500, total: 500, categoria: 'Salud'),
+        ],
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ExpenseCard(
+              gasto: singleItemGasto,
+              onDelete: () {},
+              onEdit: () {},
+              showDirectItemBreakdown: false,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Initially collapsed in compact mode
+      expect(find.text('1x Acetaminofén'), findsNothing);
+
+      // Tap card to expand
+      await tester.tap(find.text('Farmatodo Saas C.A.'));
+      await tester.pumpAndSettle();
+
+      // Now item is visible
+      expect(find.text('1x Acetaminofén'), findsOneWidget);
     });
 
     testWidgets('proportional currency calculation aligns EUR expense items with USD header', (tester) async {
