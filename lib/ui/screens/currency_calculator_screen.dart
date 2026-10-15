@@ -161,6 +161,7 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
             comercio: '',
             fecha: DateTime.now().toIso8601String().substring(0, 10),
             totalOriginal: totalFinal,
+            impuestoIva: 0.0,
             moneda: monedaFinal,
             tasaCambioDetectada: activeRate,
             items: [
