@@ -8,6 +8,7 @@ import 'core/theme/app_theme.dart';
 import 'providers/gasto_provider.dart';
 import 'providers/settings_provider.dart';
 import 'providers/scan_queue_provider.dart';
+import 'providers/chat_provider.dart';
 import 'services/notification_service.dart';
 import 'ui/screens/main_screen.dart';
 
@@ -56,6 +57,7 @@ class GastoScanApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => GastoProvider()),
         ChangeNotifierProvider(create: (_) => ScanQueueProvider()),
+        ChangeNotifierProvider(create: (_) => ChatProvider()),
       ],
       child: MaterialApp(
         title: 'Rinde Más',

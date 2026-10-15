@@ -8,6 +8,7 @@ import 'package:gastoscan_ai/data/models/gasto_model.dart';
 import 'package:gastoscan_ai/data/models/item_gasto_model.dart';
 import 'package:gastoscan_ai/providers/gasto_provider.dart';
 import 'package:gastoscan_ai/providers/settings_provider.dart';
+import 'package:gastoscan_ai/providers/chat_provider.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:gastoscan_ai/ui/screens/chat_screen.dart';
 
@@ -128,17 +129,22 @@ void main() {
       binding.window.clearDevicePixelRatioTestValue();
     });
 
-    Widget createWidgetUnderTest() {
+    Widget createWidgetUnderTest({ChatProvider? chatProvider}) {
       return MultiProvider(
         providers: [
           ChangeNotifierProvider<GastoProvider>.value(value: fakeGastoProvider),
           ChangeNotifierProvider<SettingsProvider>.value(value: fakeSettingsProvider),
+          if (chatProvider != null)
+            ChangeNotifierProvider<ChatProvider>.value(value: chatProvider)
+          else
+            ChangeNotifierProvider<ChatProvider>(create: (_) => ChatProvider()),
         ],
         child: MaterialApp(
           home: ChatScreen(
             geminiService: fakeGeminiService,
             dbHelper: fakeDb,
             speechToText: fakeSpeech,
+            chatProvider: chatProvider,
           ),
         ),
       );
@@ -389,6 +395,122 @@ void main() {
 
       // Comprobar ventana deslizante de mensajes <= 5
       expect(fakeGeminiService.lastMessages!.length, lessThanOrEqualTo(5));
+    });
+
+    testWidgets('preserves chat conversation in ChatProvider across screen rebuilds', (tester) async {
+      final sharedChatProvider = ChatProvider();
+
+      // Montar ChatScreen por primera vez
+      await tester.pumpWidget(createWidgetUnderTest(chatProvider: sharedChatProvider));
+      await tester.pumpAndSettle();
+
+      final inputFinder = find.byType(TextField);
+      await tester.enterText(inputFinder, '¿Cómo voy este mes?');
+      await tester.pumpAndSettle();
+
+      final sendButtonFinder = find.byIcon(Icons.send);
+      await tester.tap(sendButtonFinder);
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(find.text('¿Cómo voy este mes?'), findsOneWidget);
+      expect(find.text('Respuesta simulada para: ¿Cómo voy este mes?'), findsOneWidget);
+
+      // Simular que el usuario sale de la pantalla desmontando ChatScreen
+      await tester.pumpWidget(const MaterialApp(home: Scaffold(body: Text('Pantalla Inicio'))));
+      await tester.pumpAndSettle();
+      expect(find.text('Pantalla Inicio'), findsOneWidget);
+      expect(find.text('¿Cómo voy este mes?'), findsNothing);
+
+      // Simular que el usuario vuelve a entrar a ChatScreen con el mismo ChatProvider
+      await tester.pumpWidget(createWidgetUnderTest(chatProvider: sharedChatProvider));
+      await tester.pumpAndSettle();
+
+      // Comprobar que la conversación previa se conservó intacta en memoria
+      expect(find.text('¿Cómo voy este mes?'), findsOneWidget);
+      expect(find.text('Respuesta simulada para: ¿Cómo voy este mes?'), findsOneWidget);
+    });
+
+    testWidgets('reset conversation dialog cancels without clearing or confirms and clears', (tester) async {
+      final sharedChatProvider = ChatProvider();
+      await tester.pumpWidget(createWidgetUnderTest(chatProvider: sharedChatProvider));
+      await tester.pumpAndSettle();
+
+      // Enviar un mensaje
+      final inputFinder = find.byType(TextField);
+      await tester.enterText(inputFinder, 'Hola asistente');
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.send));
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(find.text('Hola asistente'), findsOneWidget);
+
+      // Tocar botón de reiniciar conversación en el AppBar
+      final resetBtnFinder = find.byKey(const Key('chat_reset_conversation_button'));
+      expect(resetBtnFinder, findsOneWidget);
+      await tester.tap(resetBtnFinder);
+      await tester.pumpAndSettle();
+
+      // Verificar textos del diálogo acordados con César
+      expect(find.text('¿Reiniciar conversación?'), findsOneWidget);
+      expect(find.text('Se borrará el historial actual del chat y no podrás recuperar la conversación anterior. ¿Deseas empezar de nuevo?'), findsOneWidget);
+
+      // Caso 1: Cancelar
+      await tester.tap(find.text('Cancelar'));
+      await tester.pumpAndSettle();
+      expect(find.text('Hola asistente'), findsOneWidget);
+
+      // Caso 2: Confirmar reinicio
+      await tester.tap(resetBtnFinder);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('chat_confirm_reset_button')));
+      await tester.pumpAndSettle();
+
+      // La conversación vuelve al estado inicial
+      expect(find.text('Hola asistente'), findsNothing);
+      expect(find.text(ChatProvider.initialGreeting), findsOneWidget);
+    });
+
+    testWidgets('excludes tax and IVA items from top_productos_mes in semantic context', (tester) async {
+      fakeGastoProvider.gastos.add(
+        GastoModel(
+          id: 1,
+          uuid: 'uuid-tax-1',
+          fecha: '2026-10-14',
+          comercio: 'Supermercado Central',
+          moneda: 'USD',
+          totalOriginal: 3500,
+          totalUsd: 3500,
+          categoria: 'Alimentación',
+          creadoEn: '2026-10-14T10:00:00Z',
+          items: [
+            ItemGastoModel(descripcion: 'Arroz Superior', cantidad: 2, precioUnitario: 100, total: 200, categoria: 'Alimentación'),
+            ItemGastoModel(descripcion: 'Impuesto IVA', cantidad: 1, precioUnitario: 32, total: 32, categoria: 'Otros'),
+            ItemGastoModel(descripcion: 'IVA 16%', cantidad: 1, precioUnitario: 32, total: 32, categoria: 'Otros'),
+          ],
+        ),
+      );
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      final inputFinder = find.byType(TextField);
+      await tester.enterText(inputFinder, '¿Qué gastos pequeños tengo?');
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.send));
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      final contextData = fakeGeminiService.lastContextData;
+      expect(contextData, isNotNull);
+      final topProducts = contextData!['top_productos_mes'] as List;
+
+      // Debe incluir Arroz Superior pero excluir Impuesto IVA y IVA 16%
+      final productNames = topProducts.map((p) => p['producto']).toList();
+      expect(productNames, contains('Arroz Superior'));
+      expect(productNames, isNot(contains('Impuesto IVA')));
+      expect(productNames, isNot(contains('IVA 16%')));
     });
   });
 }

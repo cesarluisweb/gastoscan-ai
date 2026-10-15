@@ -13,6 +13,7 @@ import '../../data/datasources/local/database_helper.dart';
 import '../../data/models/shopping_item_model.dart';
 import '../../data/models/gemini_extraction_result.dart';
 import '../../providers/scan_queue_provider.dart';
+import '../../providers/chat_provider.dart';
 import 'review_expense_screen.dart';
 
 class ChatSuggestion {
@@ -50,6 +51,7 @@ class ChatScreen extends StatefulWidget {
   final GeminiService? geminiService;
   final DatabaseHelper? dbHelper;
   final stt.SpeechToText? speechToText;
+  final ChatProvider? chatProvider;
 
   const ChatScreen({
     Key? key,
@@ -58,6 +60,7 @@ class ChatScreen extends StatefulWidget {
     this.geminiService,
     this.dbHelper,
     this.speechToText,
+    this.chatProvider,
   }) : super(key: key);
 
   @override
@@ -65,17 +68,25 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
-  final List<Map<String, dynamic>> _messages = [];
+  ChatProvider? _localChatProvider;
   final TextEditingController _textCtrl = TextEditingController();
   final FocusNode _focusNode = FocusNode();
   final ScrollController _scrollController = ScrollController();
   late final GeminiService _geminiService;
   late final DatabaseHelper _dbHelper;
   late final stt.SpeechToText _speech;
-  bool _isLoading = false;
   bool _isListening = false;
   bool _speechAvailable = false;
   String? _spanishLocaleId;
+
+  ChatProvider _getChatProvider(BuildContext context) {
+    if (widget.chatProvider != null) return widget.chatProvider!;
+    try {
+      return Provider.of<ChatProvider>(context, listen: false);
+    } catch (_) {
+      return _localChatProvider ??= ChatProvider();
+    }
+  }
 
   @override
   void initState() {
@@ -85,13 +96,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _dbHelper = widget.dbHelper ?? DatabaseHelper.instance;
     _speech = widget.speechToText ?? stt.SpeechToText();
     _focusNode.addListener(_onFocusChange);
-    const initialGreeting =
-        '¡Hola! Puedo analizar tus finanzas, darte consejos para ahorrar, registrar gastos o agregar productos a tu lista de compras. ¿Por dónde empezamos?';
-    _messages.add({
-      'role': 'assistant',
-      'text': initialGreeting,
-    });
     _initSpeech();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _scrollToBottom();
+      }
+    });
   }
 
   void _onFocusChange() {
@@ -297,6 +307,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       for (final item in g.items) {
         final name = item.descripcion.trim();
         if (name.isEmpty) continue;
+        if (DatabaseHelper.isTaxItem(name)) continue;
         final key = name.toLowerCase();
         final existing = productMap[key] ?? {
           'producto': name,
@@ -365,14 +376,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final text = (textOverride ?? _textCtrl.text).trim();
     if (text.isEmpty) return;
 
-    if (!mounted) return;
-    setState(() {
-      _messages.add({'role': 'user', 'text': text});
-      if (textOverride == null) {
-        _textCtrl.clear();
-      }
-      _isLoading = true;
-    });
+    final chatProvider = _getChatProvider(context);
+    chatProvider.addMessage({'role': 'user', 'text': text});
+    if (textOverride == null) {
+      _textCtrl.clear();
+    }
+    chatProvider.setLoading(true);
     _scrollToBottom();
 
     try {
@@ -386,9 +395,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       );
 
       // Ventana deslizante: enviar a la API solo los últimos 5 mensajes para proteger tokens
-      final recentMessages = _messages.length > 5
-          ? _messages.sublist(_messages.length - 5)
-          : _messages;
+      final allMsgs = chatProvider.messages;
+      final recentMessages = allMsgs.length > 5
+          ? allMsgs.sublist(allMsgs.length - 5)
+          : allMsgs;
       final chatMessages = recentMessages.map((m) => {
         'role': m['role']?.toString() ?? 'user',
         'text': m['text']?.toString() ?? '',
@@ -430,11 +440,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
             if (totalUsd <= 0 || (!hasExplicitNumber && !hasExpenseKeyword)) {
               if (!mounted) return;
-              setState(() {
-                _messages.add({
-                  'role': 'assistant',
-                  'text': '¿Deseas agregarlo a tu lista de compras o registrarlo como un gasto realizado?',
-                });
+              chatProvider.addMessage({
+                'role': 'assistant',
+                'text': '¿Deseas agregarlo a tu lista de compras o registrarlo como un gasto realizado?',
               });
               return;
             }
@@ -448,11 +456,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
           if (extractions.isEmpty) {
             if (!mounted) return;
-            setState(() {
-              _messages.add({
-                'role': 'assistant',
-                'text': 'No se pudieron extraer los datos del gasto. Intenta indicando monto y comercio.',
-              });
+            chatProvider.addMessage({
+              'role': 'assistant',
+              'text': 'No se pudieron extraer los datos del gasto. Intenta indicando monto y comercio.',
             });
             return;
           }
@@ -476,13 +482,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               : 'He preparado tu compra en "${firstExtraction.comercio}" por $montoFormateado. Revísala y confírmala para guardarla.';
 
           if (!mounted) return;
-          setState(() {
-            _messages.add({
-              'role': 'assistant',
-              'text': msgText,
-              'extractionResult': firstExtraction,
-              'queueItemId': firstQueueId,
-            });
+          chatProvider.addMessage({
+            'role': 'assistant',
+            'text': msgText,
+            'extractionResult': firstExtraction,
+            'queueItemId': firstQueueId,
           });
           return;
         } else if (callName == 'agregar_items_lista_compras') {
@@ -502,20 +506,18 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             }
           }
           if (!mounted) return;
-          setState(() {
-            if (agregados.isNotEmpty) {
-              final plural = agregados.length == 1 ? 'producto' : 'productos';
-              _messages.add({
-                'role': 'assistant',
-                'text': 'Anoté $plural en tu lista de compras: ${agregados.join(", ")}.',
-              });
-            } else {
-              _messages.add({
-                'role': 'assistant',
-                'text': 'No se especificaron productos para agregar a la lista.',
-              });
-            }
-          });
+          if (agregados.isNotEmpty) {
+            final plural = agregados.length == 1 ? 'producto' : 'productos';
+            chatProvider.addMessage({
+              'role': 'assistant',
+              'text': 'Anoté $plural en tu lista de compras: ${agregados.join(", ")}.',
+            });
+          } else {
+            chatProvider.addMessage({
+              'role': 'assistant',
+              'text': 'No se especificaron productos para agregar a la lista.',
+            });
+          }
         } else if (callName == 'modificar_item_lista_compras') {
           final args = call['args'] as Map;
           final String nombreActual = (args['nombre_actual'] ?? args['nombre'] ?? '').toString().trim().toLowerCase();
@@ -531,20 +533,18 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           }
 
           if (!mounted) return;
-          setState(() {
-            if (match != null && match.id != null && nuevoNombre.isNotEmpty) {
-              _dbHelper.updateShoppingItemName(match.id!, nuevoNombre);
-              _messages.add({
-                'role': 'assistant',
-                'text': 'Cambié "${match.name}" por "$nuevoNombre" en tu lista de compras.',
-              });
-            } else {
-              _messages.add({
-                'role': 'assistant',
-                'text': 'No encontré ningún producto que coincida con "$nombreActual" en tu lista de compras.',
-              });
-            }
-          });
+          if (match != null && match.id != null && nuevoNombre.isNotEmpty) {
+            _dbHelper.updateShoppingItemName(match.id!, nuevoNombre);
+            chatProvider.addMessage({
+              'role': 'assistant',
+              'text': 'Cambié "${match.name}" por "$nuevoNombre" en tu lista de compras.',
+            });
+          } else {
+            chatProvider.addMessage({
+              'role': 'assistant',
+              'text': 'No encontré ningún producto que coincida con "$nombreActual" en tu lista de compras.',
+            });
+          }
         } else if (callName == 'eliminar_items_lista_compras') {
           final args = call['args'] as Map;
           final List nombres = args['nombres'] ?? (args['nombre'] != null ? [args['nombre']] : []);
@@ -564,19 +564,17 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             }
           }
           if (!mounted) return;
-          setState(() {
-            if (eliminados.isNotEmpty) {
-              _messages.add({
-                'role': 'assistant',
-                'text': 'Eliminé de tu lista de compras: ${eliminados.join(", ")}.',
-              });
-            } else {
-              _messages.add({
-                'role': 'assistant',
-                'text': 'No encontré los productos solicitados en tu lista de compras.',
-              });
-            }
-          });
+          if (eliminados.isNotEmpty) {
+            chatProvider.addMessage({
+              'role': 'assistant',
+              'text': 'Eliminé de tu lista de compras: ${eliminados.join(", ")}.',
+            });
+          } else {
+            chatProvider.addMessage({
+              'role': 'assistant',
+              'text': 'No encontré los productos solicitados en tu lista de compras.',
+            });
+          }
         } else if (callName == 'marcar_items_lista_compras') {
           final args = call['args'] as Map;
           final List nombres = args['nombres'] ?? (args['nombre'] != null ? [args['nombre']] : []);
@@ -597,39 +595,31 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             }
           }
           if (!mounted) return;
-          setState(() {
-            final estado = comprado ? 'comprado(s)' : 'pendiente(s)';
-            if (modificados.isNotEmpty) {
-              _messages.add({
-                'role': 'assistant',
-                'text': 'Marqué como $estado: ${modificados.join(", ")}.',
-              });
-            } else {
-              _messages.add({
-                'role': 'assistant',
-                'text': 'No encontré los productos solicitados en tu lista de compras.',
-              });
-            }
-          });
+          final estado = comprado ? 'comprado(s)' : 'pendiente(s)';
+          if (modificados.isNotEmpty) {
+            chatProvider.addMessage({
+              'role': 'assistant',
+              'text': 'Marqué como $estado: ${modificados.join(", ")}.',
+            });
+          } else {
+            chatProvider.addMessage({
+              'role': 'assistant',
+              'text': 'No encontré los productos solicitados en tu lista de compras.',
+            });
+          }
         }
       } else {
         final String textResponse = responseMap['text'] ?? '';
         if (!mounted) return;
-        setState(() {
-          _messages.add({'role': 'assistant', 'text': textResponse});
-        });
+        chatProvider.addMessage({'role': 'assistant', 'text': textResponse});
       }
     } catch (e) {
       if (!mounted) return;
-      setState(() {
-        final cleanError = e.toString().replaceFirst('Exception: ', '').trim();
-        _messages.add({'role': 'assistant', 'text': cleanError});
-      });
+      final cleanError = e.toString().replaceFirst('Exception: ', '').trim();
+      chatProvider.addMessage({'role': 'assistant', 'text': cleanError});
     } finally {
+      chatProvider.setLoading(false);
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
         _scrollToBottom();
       }
     }
@@ -714,51 +704,113 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
+  void _mostrarDialogoReiniciar(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.restart_alt, color: AppColors.textPrimary, size: 22),
+            SizedBox(width: 8),
+            Text('¿Reiniciar conversación?', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: const Text(
+          'Se borrará el historial actual del chat y no podrás recuperar la conversación anterior. ¿Deseas empezar de nuevo?',
+          style: TextStyle(fontSize: 14, color: AppColors.textPrimary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          ElevatedButton(
+            key: const Key('chat_confirm_reset_button'),
+            onPressed: () {
+              Navigator.pop(ctx);
+              _getChatProvider(context).clearConversation();
+              _scrollToBottom();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.textPrimary,
+              elevation: 0,
+            ),
+            child: const Text('Reiniciar', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Asistente IA'),
-        leading: widget.showBackButton
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () {
-                  _stopListening();
-                  if (widget.onBack != null) {
-                    widget.onBack!();
-                  } else {
-                    Navigator.of(context).maybePop();
-                  }
-                },
-              )
-            : null,
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: NotificationListener<ScrollNotification>(
-              onNotification: (notification) {
-                if (notification is ScrollStartNotification || notification is ScrollUpdateNotification) {
-                  if (_isListening) {
-                    _stopListening();
-                  }
-                }
-                return false;
-              },
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () {
-                  _focusNode.unfocus();
-                  if (_isListening) {
-                    _stopListening();
-                  }
-                },
-                child: ListView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _messages.length,
-                  itemBuilder: (context, index) {
-                    final msg = _messages[index];
+    final chatProvider = widget.chatProvider ?? () {
+      try {
+        return Provider.of<ChatProvider>(context);
+      } catch (_) {
+        return _localChatProvider ??= ChatProvider();
+      }
+    }();
+
+    return AnimatedBuilder(
+      animation: chatProvider,
+      builder: (context, _) {
+        final messages = chatProvider.messages;
+        final isLoading = chatProvider.isLoading;
+
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Asistente IA'),
+            leading: widget.showBackButton
+                ? IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () {
+                      _stopListening();
+                      if (widget.onBack != null) {
+                        widget.onBack!();
+                      } else {
+                        Navigator.of(context).maybePop();
+                      }
+                    },
+                  )
+                : null,
+            actions: [
+              IconButton(
+                key: const Key('chat_reset_conversation_button'),
+                icon: const Icon(Icons.restart_alt, size: 24),
+                tooltip: 'Reiniciar conversación',
+                onPressed: () => _mostrarDialogoReiniciar(context),
+              ),
+            ],
+          ),
+          body: Column(
+            children: [
+              Expanded(
+                child: NotificationListener<ScrollNotification>(
+                  onNotification: (notification) {
+                    if (notification is ScrollStartNotification || notification is ScrollUpdateNotification) {
+                      if (_isListening) {
+                        _stopListening();
+                      }
+                    }
+                    return false;
+                  },
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {
+                      _focusNode.unfocus();
+                      if (_isListening) {
+                        _stopListening();
+                      }
+                    },
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.all(16),
+                      itemCount: messages.length,
+                      itemBuilder: (context, index) {
+                        final msg = messages[index];
                     final isUser = msg['role'] == 'user';
                     return Align(
                       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
@@ -882,7 +934,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               ),
             ),
           ),
-          if (_isLoading)
+          if (isLoading)
             const Padding(
               padding: EdgeInsets.all(8.0),
               child: CircularProgressIndicator(),
@@ -902,24 +954,24 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   avatar: Icon(
                     suggestion.icon,
                     size: 16,
-                    color: _isLoading ? AppColors.textMuted : AppColors.secondary,
+                    color: isLoading ? AppColors.textMuted : AppColors.secondary,
                   ),
                   label: Text(
                     suggestion.label,
                     style: TextStyle(
-                      color: _isLoading ? AppColors.textMuted : AppColors.textPrimary,
+                      color: isLoading ? AppColors.textMuted : AppColors.textPrimary,
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   backgroundColor: AppColors.surface,
                   side: BorderSide(
-                    color: _isLoading ? AppColors.divider : AppColors.border,
+                    color: isLoading ? AppColors.divider : AppColors.border,
                   ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  onPressed: _isLoading ? null : () => _sendMessage(suggestion.label),
+                  onPressed: isLoading ? null : () => _sendMessage(suggestion.label),
                 );
               },
             ),
@@ -963,17 +1015,19 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     color: _isListening ? AppColors.error : AppColors.primaryDark,
                   ),
                   tooltip: _isListening ? 'Detener micrófono' : 'Hablar por micrófono',
-                  onPressed: _isLoading ? null : _toggleListening,
+                  onPressed: isLoading ? null : _toggleListening,
                 ),
                 IconButton(
                   icon: const Icon(Icons.send, color: AppColors.primaryDark),
-                  onPressed: _isLoading ? null : _sendMessage,
+                  onPressed: isLoading ? null : _sendMessage,
                 ),
               ],
             ),
           ),
         ],
       ),
+    );
+      },
     );
   }
 }
