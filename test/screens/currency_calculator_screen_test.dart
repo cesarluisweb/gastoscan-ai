@@ -173,6 +173,42 @@ void main() {
       expect(find.textContaining('Monto en Bs. copiado:'), findsOneWidget);
     });
 
+    testWidgets('tapping swap pill button swaps fields, changes copy button to divisa, and recalculates properly', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('calc_swap_button')), findsOneWidget);
+      expect(find.byKey(const Key('calc_copy_ves_button')), findsOneWidget);
+      expect(find.text('Copiar Bs.'), findsOneWidget);
+
+      // Tap swap button
+      await tester.tap(find.byKey(const Key('calc_swap_button')));
+      await tester.pumpAndSettle();
+
+      // Copy button switched to divisa
+      expect(find.byKey(const Key('calc_copy_divisa_button')), findsOneWidget);
+      expect(find.text('Copiar USD'), findsOneWidget);
+
+      // Enter 180 in VES field (at rate 45.0 -> 4.00 USD)
+      await tester.enterText(find.byKey(const Key('calc_ves_input')), '180');
+      await tester.pumpAndSettle();
+
+      final divisaField = tester.widget<TextField>(find.byKey(const Key('calc_divisa_input')));
+      expect(divisaField.controller?.text, '4.00');
+
+      // Tap copy divisa button
+      await tester.tap(find.byKey(const Key('calc_copy_divisa_button')));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Monto en USD copiado:'), findsOneWidget);
+
+      // Swap back
+      await tester.tap(find.byKey(const Key('calc_swap_button')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('calc_copy_ves_button')), findsOneWidget);
+      expect(find.text('Copiar Bs.'), findsOneWidget);
+    });
+
     testWidgets('registrar gasto button is present and enabled with valid input', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();

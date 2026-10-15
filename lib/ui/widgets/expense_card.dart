@@ -256,160 +256,158 @@ class _ExpenseCardState extends State<ExpenseCard> {
               ),
             ),
           ),
-          if ((widget.showDirectItemBreakdown || _expanded) && widget.gasto.items.isNotEmpty)
-            () {
-              final bool hasMoreThan4 = widget.gasto.items.length > 4;
-              final List<ItemGastoModel> itemsToShow;
-              if (widget.showDirectItemBreakdown && hasMoreThan4 && !_showAllItems) {
-                itemsToShow = widget.gasto.items.take(4).toList();
-              } else {
-                itemsToShow = widget.gasto.items;
-              }
+          if ((widget.showDirectItemBreakdown || _expanded) && widget.gasto.items.isNotEmpty) ...[
+            const Divider(height: 1, thickness: 1, color: AppColors.border),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+              child: Builder(
+                builder: (context) {
+                  final bool hasMoreThan4 = widget.gasto.items.length > 4;
+                  final List<ItemGastoModel> itemsToShow;
+                  if (widget.showDirectItemBreakdown && hasMoreThan4 && !_showAllItems) {
+                    itemsToShow = widget.gasto.items.take(4).toList();
+                  } else {
+                    itemsToShow = widget.gasto.items;
+                  }
 
-              return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: const BoxDecoration(
-                  color: AppColors.cardLighter,
-                  borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Desglose de Ítems:',
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    ...itemsToShow.map((it) {
-                      double itemOriginal = it.totalDisplay;
-                      double itemUsd;
-                      double itemVes;
-                      
-                      double sumItems = widget.gasto.items.fold(0.0, (prev, i) => prev + i.totalDisplay);
-                      double tasa = widget.gasto.tasaCambio > 0 ? widget.gasto.tasaCambio : 1.0;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ...itemsToShow.map((it) {
+                        double itemOriginal = it.totalDisplay;
+                        double itemUsd;
+                        double itemVes;
 
-                      if (widget.gasto.moneda == 'VES') {
-                        itemVes = itemOriginal;
-                        itemUsd = itemOriginal / tasa;
-                      } else {
-                        // Si la factura está en USD pero los ítems suman mucho más, es porque están en VES
-                        if (widget.gasto.totalOriginalDisplay > 0 && sumItems > widget.gasto.totalOriginalDisplay * 5) {
+                        double sumItems = widget.gasto.items.fold(0.0, (prev, i) => prev + i.totalDisplay);
+                        double tasa = widget.gasto.tasaCambio > 0 ? widget.gasto.tasaCambio : 1.0;
+
+                        if (widget.gasto.moneda == 'VES') {
                           itemVes = itemOriginal;
                           itemUsd = itemOriginal / tasa;
                         } else {
-                          itemUsd = itemOriginal;
-                          itemVes = itemOriginal * tasa;
+                          // Si la factura está en USD pero los ítems suman mucho más, es porque están en VES
+                          if (widget.gasto.totalOriginalDisplay > 0 && sumItems > widget.gasto.totalOriginalDisplay * 5) {
+                            itemVes = itemOriginal;
+                            itemUsd = itemOriginal / tasa;
+                          } else {
+                            itemUsd = itemOriginal;
+                            itemVes = itemOriginal * tasa;
+                          }
                         }
-                      }
 
-                      final double itemDisplay;
-                      switch (widget.monedaPrincipal.toUpperCase()) {
-                        case 'VES':
-                          itemDisplay = itemVes;
-                          break;
-                        case 'EUR':
-                          itemDisplay = CurrencyFormatter.convertFromUsd(
-                            itemUsd,
-                            'EUR',
-                            tasa,
-                            tasaEur: widget.tasaEur,
-                            tasaUsdt: widget.tasaUsdt,
-                          );
-                          break;
-                        case 'USDT':
-                          itemDisplay = CurrencyFormatter.convertFromUsd(
-                            itemUsd,
-                            'USDT',
-                            tasa,
-                            tasaEur: widget.tasaEur,
-                            tasaUsdt: widget.tasaUsdt,
-                          );
-                          break;
-                        case 'USD':
-                        default:
-                          itemDisplay = itemUsd;
-                          break;
-                      }
-                      final String itemText = CurrencyFormatter.formatAmount(itemDisplay, widget.monedaPrincipal);
-                      final itCatColor = AppColors.categoryColors[it.categoria] ?? AppColors.textSecondary;
-                      final itCatIcon = AppConstants.getCategoryIcon(it.categoria);
+                        final double itemDisplay;
+                        switch (widget.monedaPrincipal.toUpperCase()) {
+                          case 'VES':
+                            itemDisplay = itemVes;
+                            break;
+                          case 'EUR':
+                            itemDisplay = CurrencyFormatter.convertFromUsd(
+                              itemUsd,
+                              'EUR',
+                              tasa,
+                              tasaEur: widget.tasaEur,
+                              tasaUsdt: widget.tasaUsdt,
+                            );
+                            break;
+                          case 'USDT':
+                            itemDisplay = CurrencyFormatter.convertFromUsd(
+                              itemUsd,
+                              'USDT',
+                              tasa,
+                              tasaEur: widget.tasaEur,
+                              tasaUsdt: widget.tasaUsdt,
+                            );
+                            break;
+                          case 'USD':
+                          default:
+                            itemDisplay = itemUsd;
+                            break;
+                        }
+                        final String itemText = CurrencyFormatter.formatAmount(itemDisplay, widget.monedaPrincipal);
+                        final itCatColor = AppColors.categoryColors[it.categoria] ?? AppColors.textSecondary;
+                        final itCatIcon = AppConstants.getCategoryIcon(it.categoria);
 
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 20,
-                              height: 20,
-                              decoration: BoxDecoration(
-                                color: itCatColor.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Icon(itCatIcon, size: 12, color: itCatColor),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                '${it.cantidad.toStringAsFixed(it.cantidad % 1 == 0 ? 0 : 2)}x ${it.descripcion}',
-                                style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              itemText,
-                              style: const TextStyle(
-                                color: AppColors.textSecondary,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }),
-                    if (widget.showDirectItemBreakdown && hasMoreThan4) ...[
-                      const SizedBox(height: 6),
-                      InkWell(
-                        key: Key('expense_card_toggle_more_${widget.gasto.uuid}'),
-                        onTap: () {
-                          setState(() => _showAllItems = !_showAllItems);
-                        },
-                        borderRadius: BorderRadius.circular(8),
-                        child: Padding(
+                        return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 4),
                           child: Row(
-                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(
-                                _showAllItems
-                                    ? 'Ver menos'
-                                    : 'Ver ${widget.gasto.items.length - 4} artículos más',
-                                style: const TextStyle(
-                                  color: AppColors.primaryDark,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
+                              Container(
+                                width: 20,
+                                height: 20,
+                                decoration: BoxDecoration(
+                                  color: itCatColor.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Icon(itCatIcon, size: 12, color: itCatColor),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  '${it.cantidad.toStringAsFixed(it.cantidad % 1 == 0 ? 0 : 2)}x ${it.descripcion}',
+                                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                              const SizedBox(width: 4),
-                              Icon(
-                                _showAllItems ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                                size: 16,
-                                color: AppColors.primaryDark,
+                              const SizedBox(width: 8),
+                              Text(
+                                itemText,
+                                style: const TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                             ],
                           ),
+                        );
+                      }),
+                      if (widget.showDirectItemBreakdown && hasMoreThan4) ...[
+                        const SizedBox(height: 8),
+                        Center(
+                          child: InkWell(
+                            key: Key('expense_card_toggle_more_${widget.gasto.uuid}'),
+                            onTap: () {
+                              setState(() => _showAllItems = !_showAllItems);
+                            },
+                            borderRadius: BorderRadius.circular(20),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: AppColors.cardLighter,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: AppColors.border),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    _showAllItems
+                                        ? 'Ver menos'
+                                        : 'Ver ${widget.gasto.items.length - 4} artículos más',
+                                    style: const TextStyle(
+                                      color: AppColors.textPrimary,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Icon(
+                                    _showAllItems ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                                    size: 16,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ],
-                  ],
-                ),
-              );
-            }(),
+                  );
+                },
+              ),
+            ),
+          ],
         ],
       ),
     );

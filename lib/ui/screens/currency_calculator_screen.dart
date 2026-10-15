@@ -35,6 +35,7 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
   TipoTasaCalculadora _selectedTipoTasa = TipoTasaCalculadora.dolarBcv;
   double _customRate = 0.0;
   bool _isSyncing = false;
+  bool _isVesOnTop = false;
 
   @override
   void initState() {
@@ -112,32 +113,62 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
         _selectedCurrency = 'USD';
       }
     });
-    _recalcularDesdeDivisa();
-  }
-
-  void _copiarMontoVes() {
-    final double? montoVes = tryParseAmount(_vesCtrl.text, isPrice: false);
-    if (montoVes == null || montoVes <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ingresa un monto para copiar.')),
-      );
-      return;
+    if (_isVesOnTop) {
+      _recalcularDesdeVes();
+    } else {
+      _recalcularDesdeDivisa();
     }
-
-    final String textoCopiar = montoVes.toStringAsFixed(2);
-    Clipboard.setData(ClipboardData(text: textoCopiar));
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Monto en Bs. copiado: Bs. ${CurrencyFormatter.formatVes(montoVes)}',
-          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: AppColors.primary,
-        duration: const Duration(seconds: 2),
-      ),
-    );
   }
+
+  void _copiarMonto() {
+    if (_isVesOnTop) {
+      final double? montoDivisa = tryParseAmount(_divisaCtrl.text, isPrice: false);
+      if (montoDivisa == null || montoDivisa <= 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Ingresa un monto para copiar.')),
+        );
+        return;
+      }
+
+      final String textoCopiar = montoDivisa.toStringAsFixed(2);
+      Clipboard.setData(ClipboardData(text: textoCopiar));
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Monto en $_selectedCurrency copiado: $_selectedCurrency $textoCopiar',
+            style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          ),
+          backgroundColor: AppColors.primary,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } else {
+      final double? montoVes = tryParseAmount(_vesCtrl.text, isPrice: false);
+      if (montoVes == null || montoVes <= 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Ingresa un monto para copiar.')),
+        );
+        return;
+      }
+
+      final String textoCopiar = montoVes.toStringAsFixed(2);
+      Clipboard.setData(ClipboardData(text: textoCopiar));
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Monto en Bs. copiado: Bs. ${CurrencyFormatter.formatVes(montoVes)}',
+            style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          ),
+          backgroundColor: AppColors.primary,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  void _copiarMontoVes() => _copiarMonto();
 
   void _registrarComoGasto(double activeRate) {
     final double? montoVes = tryParseAmount(_vesCtrl.text, isPrice: false);
@@ -150,8 +181,15 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
       return;
     }
 
-    final double totalFinal = (montoVes != null && montoVes > 0) ? montoVes : montoDivisa!;
-    final String monedaFinal = (montoVes != null && montoVes > 0) ? 'VES' : _selectedCurrency;
+    final double totalFinal;
+    final String monedaFinal;
+    if (_isVesOnTop) {
+      totalFinal = (montoVes != null && montoVes > 0) ? montoVes : (montoDivisa! * activeRate);
+      monedaFinal = 'VES';
+    } else {
+      totalFinal = (montoDivisa != null && montoDivisa > 0) ? montoDivisa : (montoVes! / activeRate);
+      monedaFinal = _selectedCurrency;
+    }
 
     Navigator.push(
       context,
@@ -299,7 +337,11 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
                       setState(() {
                         _customRate = parsed ?? 0.0;
                       });
-                      _recalcularDesdeDivisa();
+                      if (_isVesOnTop) {
+                        _recalcularDesdeVes();
+                      } else {
+                        _recalcularDesdeDivisa();
+                      }
                     },
                   ),
                 ],
@@ -319,137 +361,19 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Fila Divisa
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Monto en $_selectedCurrency',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: _selectedCurrency,
-                        icon: const Icon(Icons.arrow_drop_down, color: AppColors.textPrimary),
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                        items: const [
-                          DropdownMenuItem(value: 'USD', child: Text('\$ USD')),
-                          DropdownMenuItem(value: 'EUR', child: Text('€ EUR')),
-                          DropdownMenuItem(value: 'USDT', child: Text('₮ USDT')),
-                        ],
-                        onChanged: (val) {
-                          if (val != null) {
-                            setState(() => _selectedCurrency = val);
-                            _recalcularDesdeDivisa();
-                          }
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                TextField(
-                  key: const Key('calc_divisa_input'),
-                  controller: _divisaCtrl,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(
-                      _selectedCurrency == 'EUR'
-                          ? Icons.euro
-                          : (_selectedCurrency == 'USDT' ? Icons.currency_bitcoin : Icons.attach_money),
-                      color: AppColors.primaryDark,
-                    ),
-                    hintText: '0.00',
-                    filled: true,
-                    fillColor: AppColors.surface,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.border),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  ),
-                  onChanged: (_) => _recalcularDesdeDivisa(),
-                ),
-                const SizedBox(height: 14),
-
-                // Indicador de Dirección / Tasa Activa
-                Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.cardLighter,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.swap_vert, size: 14, color: AppColors.textSecondary),
-                        const SizedBox(width: 4),
-                        Text(
-                          '1 $_selectedCurrency = Bs. ${tasaActiva.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 14),
-
-                // Fila Bolívares (VES)
-                const Text(
-                  'Monto en Bolívares (VES)',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                TextField(
-                  key: const Key('calc_ves_input'),
-                  controller: _vesCtrl,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                  decoration: InputDecoration(
-                    prefixText: 'Bs. ',
-                    prefixStyle: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                    hintText: '0.00',
-                    filled: true,
-                    fillColor: AppColors.surface,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.border),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  ),
-                  onChanged: (_) => _recalcularDesdeVes(),
-                ),
+                if (!_isVesOnTop) ...[
+                  _buildDivisaField(tasaActiva),
+                  const SizedBox(height: 12),
+                  Center(child: _buildSwapPill(tasaActiva)),
+                  const SizedBox(height: 12),
+                  _buildVesField(),
+                ] else ...[
+                  _buildVesField(),
+                  const SizedBox(height: 12),
+                  Center(child: _buildSwapPill(tasaActiva)),
+                  const SizedBox(height: 12),
+                  _buildDivisaField(tasaActiva),
+                ],
               ],
             ),
           ),
@@ -460,12 +384,12 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  key: const Key('calc_copy_ves_button'),
-                  onPressed: _copiarMontoVes,
+                  key: Key(_isVesOnTop ? 'calc_copy_divisa_button' : 'calc_copy_ves_button'),
+                  onPressed: _copiarMonto,
                   icon: const Icon(Icons.copy, size: 18, color: AppColors.textPrimary),
-                  label: const Text(
-                    'Copiar Bs.',
-                    style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                  label: Text(
+                    _isVesOnTop ? 'Copiar $_selectedCurrency' : 'Copiar Bs.',
+                    style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
                   ),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 13),
@@ -632,41 +556,192 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
     );
   }
 
+  Widget _buildDivisaField(double tasaActiva) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Monto en $_selectedCurrency',
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: AppColors.cardLighter,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Text(
+                _selectedCurrency,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 11,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        TextField(
+          key: const Key('calc_divisa_input'),
+          controller: _divisaCtrl,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          style: const TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+          decoration: InputDecoration(
+            prefixIcon: Icon(
+              _selectedCurrency == 'EUR'
+                  ? Icons.euro
+                  : (_selectedCurrency == 'USDT' ? Icons.currency_bitcoin : Icons.attach_money),
+              color: AppColors.primaryDark,
+            ),
+            hintText: '0.00',
+            filled: true,
+            fillColor: AppColors.surface,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          ),
+          onChanged: (_) => _recalcularDesdeDivisa(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVesField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Monto en Bolívares (VES)',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        const SizedBox(height: 6),
+        TextField(
+          key: const Key('calc_ves_input'),
+          controller: _vesCtrl,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          style: const TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+          decoration: InputDecoration(
+            prefixText: 'Bs. ',
+            prefixStyle: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+            hintText: '0.00',
+            filled: true,
+            fillColor: AppColors.surface,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          ),
+          onChanged: (_) => _recalcularDesdeVes(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSwapPill(double tasaActiva) {
+    return InkWell(
+      key: const Key('calc_swap_button'),
+      onTap: () {
+        setState(() {
+          _isVesOnTop = !_isVesOnTop;
+        });
+      },
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: AppColors.cardLighter,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.swap_vert, size: 16, color: AppColors.textPrimary),
+            const SizedBox(width: 4),
+            Text(
+              '1 $_selectedCurrency = Bs. ${tasaActiva.toStringAsFixed(2)}',
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildComparisonRow({
     required String title,
     required String rate,
     required String total,
     required bool isHighlighted,
   }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: isHighlighted ? FontWeight.bold : FontWeight.w500,
-                color: AppColors.textPrimary,
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+      decoration: BoxDecoration(
+        color: isHighlighted ? AppColors.cardLighter : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: isHighlighted ? FontWeight.bold : FontWeight.w500,
+                  color: AppColors.textPrimary,
+                ),
               ),
-            ),
-            Text(
-              rate,
-              style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
-            ),
-          ],
-        ),
-        Text(
-          total,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: isHighlighted ? AppColors.primaryDark : AppColors.textPrimary,
+              Text(
+                rate,
+                style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+              ),
+            ],
           ),
-        ),
-      ],
+          Text(
+            total,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

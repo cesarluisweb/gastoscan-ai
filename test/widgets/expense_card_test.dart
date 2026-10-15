@@ -120,5 +120,43 @@ void main() {
       expect(find.text('1x Café'), findsNothing);
       expect(find.text('Ver 2 artículos más'), findsOneWidget);
     });
+
+    testWidgets('single item breakdown shows divider and item without expander or Desglose label', (tester) async {
+      final singleItemGasto = GastoModel(
+        id: 2,
+        uuid: 'test-uuid-farmatodo-1',
+        comercio: 'Farmatodo',
+        fecha: '2026-10-14',
+        moneda: 'USD',
+        totalOriginal: 500,
+        totalUsd: 500,
+        tasaCambio: 45.0,
+        categoria: 'Salud',
+        creadoEn: '2026-10-14T11:00:00',
+        items: [
+          ItemGastoModel(descripcion: 'Acetaminofén', cantidad: 1.0, precioUnitario: 500, total: 500, categoria: 'Salud'),
+        ],
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ExpenseCard(
+              gasto: singleItemGasto,
+              onDelete: () {},
+              onEdit: () {},
+              showDirectItemBreakdown: true,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Farmatodo'), findsOneWidget);
+      expect(find.text('1x Acetaminofén'), findsOneWidget);
+      expect(find.byType(Divider), findsOneWidget);
+      expect(find.text('Desglose de Ítems:'), findsNothing);
+      expect(find.textContaining('artículos más'), findsNothing);
+    });
   });
 }
