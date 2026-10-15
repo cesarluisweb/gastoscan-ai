@@ -307,7 +307,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       final savingsSnapshot = gastoProvider.savingsSnapshot;
       final contextData = {
         'tasa_bcv_usd': settings.tasaCambioVesUsd,
-        'tasa_bcv_eur': settings.tasaCambioEurUsd,
+        'tasa_bcv_eur': settings.tasaCambioVesEur,
         'gastos_mes': gastoProvider.gastos.map((g) => g.toMap()).toList(),
         'total_usd': gastoProvider.totalMesUsd,
         'total_ves': gastoProvider.totalMesVes,
