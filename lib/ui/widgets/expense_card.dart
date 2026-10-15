@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_constants.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../data/models/gasto_model.dart';
+import '../../data/models/item_gasto_model.dart';
 import 'receipt_viewer_dialog.dart';
 
 class ExpenseCard extends StatefulWidget {
@@ -11,6 +13,7 @@ class ExpenseCard extends StatefulWidget {
   final VoidCallback onEdit;
   final String monedaPrincipal;
   final bool initiallyExpanded;
+  final bool showDirectItemBreakdown;
   final double tasaCambio;
   final double tasaEur;
   final double tasaUsdt;
@@ -22,6 +25,7 @@ class ExpenseCard extends StatefulWidget {
     required this.onEdit,
     this.monedaPrincipal = 'USD',
     this.initiallyExpanded = false,
+    this.showDirectItemBreakdown = false,
     this.tasaCambio = 1.0,
     this.tasaEur = 0.0,
     this.tasaUsdt = 0.0,
@@ -33,11 +37,15 @@ class ExpenseCard extends StatefulWidget {
 
 class _ExpenseCardState extends State<ExpenseCard> {
   late bool _expanded;
+  bool _showAllItems = false;
 
   @override
   void initState() {
     super.initState();
     _expanded = widget.initiallyExpanded;
+    if (widget.initiallyExpanded) {
+      _showAllItems = true;
+    }
   }
 
   @override
@@ -45,27 +53,9 @@ class _ExpenseCardState extends State<ExpenseCard> {
     super.didUpdateWidget(oldWidget);
     if (widget.initiallyExpanded != oldWidget.initiallyExpanded) {
       _expanded = widget.initiallyExpanded;
-    }
-  }
-
-  IconData _getCategoryIcon(String categoria) {
-    switch (categoria) {
-      case 'Alimentación':
-        return Icons.shopping_cart_outlined;
-      case 'Salud':
-        return Icons.medical_services_outlined;
-      case 'Higiene':
-        return Icons.cleaning_services_outlined;
-      case 'Educación':
-        return Icons.school_outlined;
-      case 'Hogar':
-        return Icons.home_outlined;
-      case 'Servicios':
-        return Icons.receipt_long_outlined;
-      case 'Transporte':
-        return Icons.directions_car_outlined;
-      default:
-        return Icons.attach_money_outlined;
+      if (widget.initiallyExpanded) {
+        _showAllItems = true;
+      }
     }
   }
 
@@ -85,7 +75,13 @@ class _ExpenseCardState extends State<ExpenseCard> {
           InkWell(
             onTap: () {
               if (widget.gasto.items.isNotEmpty) {
-                setState(() => _expanded = !_expanded);
+                if (widget.showDirectItemBreakdown) {
+                  if (widget.gasto.items.length > 4) {
+                    setState(() => _showAllItems = !_showAllItems);
+                  }
+                } else {
+                  setState(() => _expanded = !_expanded);
+                }
               }
             },
             borderRadius: BorderRadius.circular(16),
@@ -101,7 +97,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
-                      _getCategoryIcon(widget.gasto.categoria),
+                      AppConstants.getCategoryIcon(widget.gasto.categoria),
                       color: catColor,
                       size: 22,
                     ),
@@ -125,7 +121,15 @@ class _ExpenseCardState extends State<ExpenseCard> {
                         Row(
                           children: [
                             Text(
-                              DateFormatter.formatDate(widget.gasto.fecha),
+                              () {
+                                final fechaStr = DateFormatter.formatDate(widget.gasto.fecha);
+                                if (widget.gasto.items.isNotEmpty) {
+                                  final count = widget.gasto.items.length;
+                                  final artStr = count == 1 ? '1 artículo' : '$count artículos';
+                                  return '$fechaStr • $artStr';
+                                }
+                                return fechaStr;
+                              }(),
                               style: const TextStyle(
                                 color: AppColors.textMuted,
                                 fontSize: 12,
@@ -252,108 +256,160 @@ class _ExpenseCardState extends State<ExpenseCard> {
               ),
             ),
           ),
-          if (_expanded && widget.gasto.items.isNotEmpty)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: const BoxDecoration(
-                color: AppColors.cardLighter,
-                borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Desglose de Ítems:',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  ...widget.gasto.items.map((it) {
-                    double itemOriginal = it.totalDisplay;
-                    double itemUsd;
-                    double itemVes;
-                    
-                    double sumItems = widget.gasto.items.fold(0.0, (prev, i) => prev + i.totalDisplay);
-                    double tasa = widget.gasto.tasaCambio > 0 ? widget.gasto.tasaCambio : 1.0;
+          if ((widget.showDirectItemBreakdown || _expanded) && widget.gasto.items.isNotEmpty)
+            () {
+              final bool hasMoreThan4 = widget.gasto.items.length > 4;
+              final List<ItemGastoModel> itemsToShow;
+              if (widget.showDirectItemBreakdown && hasMoreThan4 && !_showAllItems) {
+                itemsToShow = widget.gasto.items.take(4).toList();
+              } else {
+                itemsToShow = widget.gasto.items;
+              }
 
-                    if (widget.gasto.moneda == 'VES') {
-                      itemVes = itemOriginal;
-                      itemUsd = itemOriginal / tasa;
-                    } else {
-                      // Si la factura está en USD pero los ítems suman mucho más, es porque están en VES
-                      if (widget.gasto.totalOriginalDisplay > 0 && sumItems > widget.gasto.totalOriginalDisplay * 5) {
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: const BoxDecoration(
+                  color: AppColors.cardLighter,
+                  borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Desglose de Ítems:',
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ...itemsToShow.map((it) {
+                      double itemOriginal = it.totalDisplay;
+                      double itemUsd;
+                      double itemVes;
+                      
+                      double sumItems = widget.gasto.items.fold(0.0, (prev, i) => prev + i.totalDisplay);
+                      double tasa = widget.gasto.tasaCambio > 0 ? widget.gasto.tasaCambio : 1.0;
+
+                      if (widget.gasto.moneda == 'VES') {
                         itemVes = itemOriginal;
                         itemUsd = itemOriginal / tasa;
                       } else {
-                        itemUsd = itemOriginal;
-                        itemVes = itemOriginal * tasa;
+                        // Si la factura está en USD pero los ítems suman mucho más, es porque están en VES
+                        if (widget.gasto.totalOriginalDisplay > 0 && sumItems > widget.gasto.totalOriginalDisplay * 5) {
+                          itemVes = itemOriginal;
+                          itemUsd = itemOriginal / tasa;
+                        } else {
+                          itemUsd = itemOriginal;
+                          itemVes = itemOriginal * tasa;
+                        }
                       }
-                    }
 
-                    final double itemDisplay;
-                    switch (widget.monedaPrincipal.toUpperCase()) {
-                      case 'VES':
-                        itemDisplay = itemVes;
-                        break;
-                      case 'EUR':
-                        itemDisplay = CurrencyFormatter.convertFromUsd(
-                          itemUsd,
-                          'EUR',
-                          tasa,
-                          tasaEur: widget.tasaEur,
-                          tasaUsdt: widget.tasaUsdt,
-                        );
-                        break;
-                      case 'USDT':
-                        itemDisplay = CurrencyFormatter.convertFromUsd(
-                          itemUsd,
-                          'USDT',
-                          tasa,
-                          tasaEur: widget.tasaEur,
-                          tasaUsdt: widget.tasaUsdt,
-                        );
-                        break;
-                      case 'USD':
-                      default:
-                        itemDisplay = itemUsd;
-                        break;
-                    }
-                    final String itemText = CurrencyFormatter.formatAmount(itemDisplay, widget.monedaPrincipal);
+                      final double itemDisplay;
+                      switch (widget.monedaPrincipal.toUpperCase()) {
+                        case 'VES':
+                          itemDisplay = itemVes;
+                          break;
+                        case 'EUR':
+                          itemDisplay = CurrencyFormatter.convertFromUsd(
+                            itemUsd,
+                            'EUR',
+                            tasa,
+                            tasaEur: widget.tasaEur,
+                            tasaUsdt: widget.tasaUsdt,
+                          );
+                          break;
+                        case 'USDT':
+                          itemDisplay = CurrencyFormatter.convertFromUsd(
+                            itemUsd,
+                            'USDT',
+                            tasa,
+                            tasaEur: widget.tasaEur,
+                            tasaUsdt: widget.tasaUsdt,
+                          );
+                          break;
+                        case 'USD':
+                        default:
+                          itemDisplay = itemUsd;
+                          break;
+                      }
+                      final String itemText = CurrencyFormatter.formatAmount(itemDisplay, widget.monedaPrincipal);
+                      final itCatColor = AppColors.categoryColors[it.categoria] ?? AppColors.textSecondary;
+                      final itCatIcon = AppConstants.getCategoryIcon(it.categoria);
 
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            flex: 3,
-                            child: Text(
-                              '${it.cantidad.toStringAsFixed(it.cantidad % 1 == 0 ? 0 : 2)}x ${it.descripcion}',
-                              style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
-                              overflow: TextOverflow.ellipsis,
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 20,
+                              height: 20,
+                              decoration: BoxDecoration(
+                                color: itCatColor.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Icon(itCatIcon, size: 12, color: itCatColor),
                             ),
-                          ),
-                          Expanded(
-                            flex: 2,
-                            child: Text(
-                              it.categoria,
-                              style: const TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.w600),
-                              overflow: TextOverflow.ellipsis,
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                '${it.cantidad.toStringAsFixed(it.cantidad % 1 == 0 ? 0 : 2)}x ${it.descripcion}',
+                                style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
+                            const SizedBox(width: 8),
+                            Text(
+                              itemText,
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                    if (widget.showDirectItemBreakdown && hasMoreThan4) ...[
+                      const SizedBox(height: 6),
+                      InkWell(
+                        key: Key('expense_card_toggle_more_${widget.gasto.id ?? widget.gasto.uuid ?? widget.gasto.comercio}'),
+                        onTap: () {
+                          setState(() => _showAllItems = !_showAllItems);
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                _showAllItems
+                                    ? 'Ver menos'
+                                    : 'Ver ${widget.gasto.items.length - 4} artículos más',
+                                style: const TextStyle(
+                                  color: AppColors.primaryDark,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(
+                                _showAllItems ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                                size: 16,
+                                color: AppColors.primaryDark,
+                              ),
+                            ],
                           ),
-                          Text(
-                            itemText,
-                            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
-                          ),
-                        ],
+                        ),
                       ),
-                    );
-                  }).toList(),
-                ],
-              ),
-            ),
+                    ],
+                  ],
+                ),
+              );
+            }(),
         ],
       ),
     );

@@ -246,26 +246,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     }
   }
 
-  IconData _getCategoryIcon(String categoria) {
-    switch (categoria) {
-      case 'Alimentación':
-        return Icons.shopping_cart_outlined;
-      case 'Salud':
-        return Icons.medical_services_outlined;
-      case 'Higiene':
-        return Icons.cleaning_services_outlined;
-      case 'Educación':
-        return Icons.school_outlined;
-      case 'Hogar':
-        return Icons.home_outlined;
-      case 'Servicios':
-        return Icons.receipt_long_outlined;
-      case 'Transporte':
-        return Icons.directions_car_outlined;
-      default:
-        return Icons.category_outlined;
-    }
-  }
+  IconData _getCategoryIcon(String categoria) => AppConstants.getCategoryIcon(categoria);
 
   @override
   void dispose() {

@@ -37,26 +37,7 @@ class CategoryChart extends StatefulWidget {
     this.tasaUsdt = 0.0,
   }) : super(key: key);
 
-  static IconData getCategoryIcon(String cat) {
-    switch (cat) {
-      case 'Alimentación':
-        return Icons.restaurant;
-      case 'Educación':
-        return Icons.school_outlined;
-      case 'Salud':
-        return Icons.favorite_border;
-      case 'Hogar':
-        return Icons.home_outlined;
-      case 'Higiene':
-        return Icons.clean_hands_outlined;
-      case 'Servicios':
-        return Icons.bolt;
-      case 'Transporte':
-        return Icons.directions_car_outlined;
-      default:
-        return Icons.more_horiz;
-    }
-  }
+  static IconData getCategoryIcon(String cat) => AppConstants.getCategoryIcon(cat);
 
   @override
   State<CategoryChart> createState() => _CategoryChartState();
@@ -78,30 +59,6 @@ class _CategoryChartState extends State<CategoryChart> {
 
     final double totalSuma =
         widget.categoryTotals.values.fold(0.0, (prev, elem) => prev + elem);
-
-    // Preparar secciones del gráfico circular
-    final List<PieChartSectionData> sections = [];
-    if (totalSuma > 0) {
-      widget.categoryTotals.forEach((cat, monto) {
-        if (monto <= 0) return;
-        final color = AppColors.categoryColors[cat] ?? AppColors.textSecondary;
-        final porcentaje = (monto / totalSuma) * 100;
-
-        sections.add(
-          PieChartSectionData(
-            color: color,
-            value: monto,
-            title: porcentaje >= 8 ? '${porcentaje.toStringAsFixed(0)}%' : '',
-            radius: 40,
-            titleStyle: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: color.computeLuminance() > 0.45 ? Colors.black : Colors.white,
-            ),
-          ),
-        );
-      });
-    }
 
     // Obtener lista consolidada y ordenada de TODAS las categorías estándar
     final Set<String> allCategoryKeys = {
@@ -127,7 +84,7 @@ class _CategoryChartState extends State<CategoryChart> {
         .toList()
       ..sort((a, b) => b.value.compareTo(a.value));
 
-    // Si estamos en la vista de Dashboard (!showBudgetBars), mostrar top 5 y consolidar 'Otros'
+    // Si estamos en la vista de Dashboard (!showBudgetBars), mostrar top 4 y consolidar '+X categorías'
     final List<MapEntry<String, double>> displayedEntries = [];
     if (!widget.showBudgetBars && entriesWithSpend.length > 5) {
       final nonOtherEntries = entriesWithSpend.where((e) => e.key != 'Otros').toList();
@@ -142,11 +99,41 @@ class _CategoryChartState extends State<CategoryChart> {
       final remainderSum = nonOtherEntries.skip(4).fold(0.0, (sum, e) => sum + e.value);
       final totalOtros = otherOriginal.value + remainderSum;
 
+      final extraCount = entriesWithSpend.length - top4NonOther.length;
       if (totalOtros > 0) {
-        displayedEntries.add(MapEntry('Otros', totalOtros));
+        final label = extraCount == 1 ? '+1 categoría' : '+$extraCount categorías';
+        displayedEntries.add(MapEntry(label, totalOtros));
       }
     } else {
       displayedEntries.addAll(entriesWithSpend);
+    }
+
+    // Preparar secciones del gráfico circular (alineadas con la leyenda)
+    final List<PieChartSectionData> sections = [];
+    if (totalSuma > 0) {
+      final entriesForChart = (!widget.showBudgetBars && entriesWithSpend.length > 5)
+          ? displayedEntries
+          : entriesWithSpend;
+
+      for (final entry in entriesForChart) {
+        if (entry.value <= 0) continue;
+        final color = AppColors.categoryColors[entry.key] ?? AppColors.textSecondary;
+        final porcentaje = (entry.value / totalSuma) * 100;
+
+        sections.add(
+          PieChartSectionData(
+            color: color,
+            value: entry.value,
+            title: porcentaje >= 8 ? '${porcentaje.toStringAsFixed(0)}%' : '',
+            radius: 40,
+            titleStyle: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: color.computeLuminance() > 0.45 ? Colors.black : Colors.white,
+            ),
+          ),
+        );
+      }
     }
 
     final totalDisplayMonto = widget.totalGastadoMes > 0 ? widget.totalGastadoMes : totalSuma;

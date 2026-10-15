@@ -89,26 +89,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         actions: [
           IconButton(
             key: const Key('dashboard_ai_chat_button'),
-            icon: SizedBox(
-              width: 24,
-              height: 24,
-              child: Stack(
-                alignment: Alignment.center,
-                children: const [
-                  Icon(Icons.chat_bubble_outline, size: 22, color: AppColors.textPrimary),
-                  Padding(
-                    padding: EdgeInsets.only(bottom: 2),
-                    child: Text(
-                      '?',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            icon: const Icon(
+              Icons.auto_awesome,
+              size: 22,
+              color: AppColors.textPrimary,
             ),
             tooltip: 'Asistente IA',
             onPressed: () {

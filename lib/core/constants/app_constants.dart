@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 class AppConstants {
   static const String appName = 'Rinde Más';
 
@@ -54,6 +56,30 @@ class AppConstants {
           if (c.toLowerCase() == lower) return c;
         }
         return 'Otros';
+    }
+  }
+
+  /// Retorna el icono canónico oficial para una categoría dada.
+  static IconData getCategoryIcon(String? cat) {
+    final norm = normalizarCategoria(cat);
+    switch (norm) {
+      case 'Alimentación':
+        return Icons.restaurant;
+      case 'Educación':
+        return Icons.school_outlined;
+      case 'Salud':
+        return Icons.favorite_border;
+      case 'Hogar':
+        return Icons.home_outlined;
+      case 'Higiene':
+        return Icons.clean_hands_outlined;
+      case 'Servicios':
+        return Icons.bolt;
+      case 'Transporte':
+        return Icons.directions_car_outlined;
+      case 'Otros':
+      default:
+        return Icons.more_horiz;
     }
   }
 
