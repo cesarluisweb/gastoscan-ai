@@ -15,6 +15,12 @@ description: "Consultar al modificar montos, monedas (VES/USD/EUR/USDT), tasas d
 ## 2. Precisión Numérica y Centavos
 - **Almacenamiento en Centavos:** En `GastoModel`, los valores monetarios se almacenan como enteros (`int`) representando centavos. El getter oficial para obtener el valor decimal (`double`) es `totalOriginalDisplay` (`totalOriginal / 100.0`). Prohibido utilizar identificadores inventados como `totalOriginalDouble`.
 - **Red de Seguridad Matemática en Extracción:** La aplicación debe sumar programáticamente los montos de los ítems extraídos y contrastarlos con el total reportado en la factura, aplicando autocorrección local si la IA omitió un punto decimal.
+- **Proporcionalidad Matemática en Desglose de Compras Multimoneda:** Al desglosar artículos de una compra registrada en una divisa distinta a la moneda preferida del usuario (ej. compra en EUR o VES visualizada en USD), el monto convertido de cada ítem no debe calcularse aisladamente con redondeos independientes, sino de forma proporcional al total de la tarjeta:
+  ```dart
+  final double itemRatio = (itemTotalOriginal / totalOriginal);
+  final double itemConverted = totalConverted * itemRatio;
+  ```
+  Esto garantiza que la suma de los ítems coincida exactamente al céntimo con el total mostrado en el encabezado de la tarjeta.
 
 ## 3. Catálogo Canónico e Invariante de Categorías
 - **Catálogo Oficial Único (8 Categorías):** Móvil y web deben utilizar estrictamente las 8 categorías canónicas de `AppConstants.categorias`:

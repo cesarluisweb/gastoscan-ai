@@ -20,6 +20,8 @@ description: "Convenciones para pruebas unitarias y de widgets, configuración d
 
 ## 3. Mocks y Fakes de Arquitectura
 - **Firmas Exactas en Fakes:** Al implementar clases simuladas (`FakeGastoProvider`, `FakeSettingsProvider`), replicar con exactitud la firma de los métodos reales, respetando si los parámetros son posicionales o nombrados.
+- **`ScanQueueProvider` en Tests de Widgets:** Debe instanciarse siempre con `autoProcess: false` para evitar que `loadQueue()` acceda a la base de datos real (`DatabaseHelper`), programe notificaciones o mantenga timers activos que bloqueen `pumpAndSettle()`. En el bloque `tearDown()`, invocar siempre `scanQueueProvider.dispose()`.
+- **Sobrescritura en Fakes de `DatabaseHelper`:** Si un fake extiende `DatabaseHelper.test()`, sobrescribir `resetStaleProcessingScanQueueItems()` devolviendo `Future<int>` (no `void`), evitando invocar la base de datos física.
 - **Mocks con `noSuchMethod` para APIs Externas:** Al simular plugins de terceros con firmas cambiantes o complejas (`speech_to_text`, clientes HTTP), extender `Fake implements InterfazExterna` y manejar las llamadas mediante:
   ```dart
   @override
@@ -32,5 +34,10 @@ description: "Convenciones para pruebas unitarias y de widgets, configuración d
 
 ## 4. Aserciones Robustas y Determinismo
 - **Aserciones de Moneda y Formato:** Evitar evaluar cadenas literales completas que combinen texto y montos formateados (ej. evitar `find.textContaining('de $100.00 está')`). Validar por separado las frases clave con `contains` independientes (ej. `find.textContaining('Tu meta de ahorro')` y `find.textContaining('comprometida')`), evitando falsos negativos por diferencias de separadores decimales (`.` vs `,`) o espacios de `NumberFormat`.
+- **Aserciones sobre `RichText`:** Las funciones `find.text()` y `find.textContaining()` no inspeccionan widgets `RichText` a menos que se indique explícitamente `findRichText: true`. Cuando el componente a verificar use `RichText` o `TextSpan` (ej. montos en moneda compuesta), usar:
+  ```dart
+  expect(find.textContaining(r'$ 30,00', findRichText: true), findsOneWidget);
+  ```
 - **Determinismo Temporal Obligatorio:** En pruebas cuya lógica dependa del día del mes o cierres de ciclo, inyectar siempre una fecha determinista a través del parámetro `currentDate`. Prohibido evaluar lógica temporal dependiendo de `DateTime.now()`.
 - **Sincronización ante Refactors de UI:** Al modificar o sustituir componentes visuales (ej. banners globales por tarjetas individuales), actualizar inmediatamente las `Key` y selectores esperados en los tests asociados antes de enviar cambios al CI.
+- **Cero Advertencias en Archivos de Test:** El pipeline de CI corre con `--fatal-warnings`. Prohibido dejar importaciones huérfanas (`unused_import`) o advertencias en los archivos dentro de `test/`.
