@@ -224,8 +224,8 @@ void main() {
     });
 
     testWidgets('renders BCV legal disclaimer card and official source link', (tester) async {
-      tester.binding.setSurfaceSize(const Size(800, 1600));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.binding.setSurfaceSize(const Size(800, 1600));
+      addTearDown(() async => await tester.binding.setSurfaceSize(null));
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
