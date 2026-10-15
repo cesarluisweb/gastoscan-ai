@@ -23,13 +23,24 @@ class ImageHashService {
     0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
   ];
 
-  static int _rotr(int x, int n) => ((x >>> n) | (x << (32 - n))) & 0xFFFFFFFF;
-  static int _ch(int x, int y, int z) => ((x & y) ^ (~x & z)) & 0xFFFFFFFF;
-  static int _maj(int x, int y, int z) => ((x & y) ^ (x & z) ^ (y & z)) & 0xFFFFFFFF;
+  static int _rotr(int x, int n) {
+    final u = x & 0xFFFFFFFF;
+    return ((u >> n) | (u << (32 - n))) & 0xFFFFFFFF;
+  }
+  static int _ch(int x, int y, int z) =>
+      (((x & y) ^ ((0xFFFFFFFF ^ (x & 0xFFFFFFFF)) & z))) & 0xFFFFFFFF;
+  static int _maj(int x, int y, int z) =>
+      (((x & y) ^ (x & z) ^ (y & z))) & 0xFFFFFFFF;
   static int _sigma0(int x) => (_rotr(x, 2) ^ _rotr(x, 13) ^ _rotr(x, 22)) & 0xFFFFFFFF;
   static int _sigma1(int x) => (_rotr(x, 6) ^ _rotr(x, 11) ^ _rotr(x, 25)) & 0xFFFFFFFF;
-  static int _gamma0(int x) => (_rotr(x, 7) ^ _rotr(x, 18) ^ (x >>> 3)) & 0xFFFFFFFF;
-  static int _gamma1(int x) => (_rotr(x, 17) ^ _rotr(x, 19) ^ (x >>> 10)) & 0xFFFFFFFF;
+  static int _gamma0(int x) {
+    final u = x & 0xFFFFFFFF;
+    return (_rotr(u, 7) ^ _rotr(u, 18) ^ (u >> 3)) & 0xFFFFFFFF;
+  }
+  static int _gamma1(int x) {
+    final u = x & 0xFFFFFFFF;
+    return (_rotr(u, 17) ^ _rotr(u, 19) ^ (u >> 10)) & 0xFFFFFFFF;
+  }
 
   /// Calcula el hash SHA-256 de una secuencia de bytes en formato hexadecimal minúscula.
   static String computeSha256(List<int> data) {
@@ -56,7 +67,7 @@ class ImageHashService {
     final byteData = ByteData.sublistView(padded);
     byteData.setUint64(totalLength - 8, bitLength, Endian.big);
 
-    final w = Int32List(64);
+    final w = Uint32List(64);
     for (int offset = 0; offset < totalLength; offset += 64) {
       for (int t = 0; t < 16; t++) {
         w[t] = byteData.getUint32(offset + (t * 4), Endian.big);
@@ -64,7 +75,7 @@ class ImageHashService {
       for (int t = 16; t < 64; t++) {
         final s0 = _gamma0(w[t - 15]);
         final s1 = _gamma1(w[t - 2]);
-        w[t] = ((w[t - 16] + s0) + (w[t - 7] + s1)) & 0xFFFFFFFF;
+        w[t] = ((w[t - 16] + s0 + w[t - 7] + s1)) & 0xFFFFFFFF;
       }
 
       int a = h0;

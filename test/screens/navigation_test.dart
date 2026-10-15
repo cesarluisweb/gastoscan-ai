@@ -109,18 +109,12 @@ void main() {
       expect(find.text('Dictar gasto (Voz)'), findsOneWidget);
     });
 
-    testWidgets('tapping AI chat button on Inicio navigates to Chat keeping bottom navigation and back returns to Inicio', (tester) async {
+    testWidgets('tapping AI chat button on Inicio navigates to Chat and back returns to Inicio (UX-05)', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
       await tester.tap(find.byKey(const Key('dashboard_ai_chat_button')));
       await tester.pumpAndSettle();
-
-      // Bottom bar is still visible
-      expect(find.text('Inicio'), findsOneWidget);
-      expect(find.text('Gastos'), findsOneWidget);
-      expect(find.text('Análisis'), findsOneWidget);
-      expect(find.text('Más'), findsOneWidget);
 
       // We are in ChatScreen with placeholder
       expect(find.text('Pregunta o pídeme algo...'), findsOneWidget);
@@ -131,6 +125,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Rinde Más'), findsOneWidget);
+      expect(find.text('Inicio'), findsOneWidget);
     });
 
     testWidgets('tapping Asistente IA in Mas and pressing back returns to Mas hub', (tester) async {

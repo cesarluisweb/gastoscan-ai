@@ -123,28 +123,29 @@ class ScanQueueProvider with ChangeNotifier {
   /// duplicados en cola, extrae el OCR local y guarda el comprobante en SQLite.
   Future<bool> enqueue(String imagePath) async {
     final file = File(imagePath);
-    if (!await file.exists()) return false;
-
     String? hash;
-    try {
-      hash = await ImageHashService.computeFileSha256(file);
-      final isDup = await _dbHelper.isImageHashInScanQueue(hash);
-      if (isDup) {
-        debugPrint('[ScanQueue] Comprobante duplicado ignorado (hash: $hash)');
-        _lastError = 'Comprobante duplicado ignorado.';
-        notifyListeners();
-        return false;
-      }
-    } catch (e) {
-      debugPrint('Aviso calculando hash en enqueue: $e');
-    }
-
     String? initialOcr;
-    try {
-      final ocrResult = await _localOcrService.processImage(file);
-      initialOcr = ocrResult.structuredText;
-    } catch (e) {
-      debugPrint('Fallo silencioso en OCR previo: $e');
+
+    if (await file.exists()) {
+      try {
+        hash = await ImageHashService.computeFileSha256(file);
+        final isDup = await _dbHelper.isImageHashInScanQueue(hash);
+        if (isDup) {
+          debugPrint('[ScanQueue] Comprobante duplicado ignorado (hash: $hash)');
+          _lastError = 'Comprobante duplicado ignorado.';
+          notifyListeners();
+          return false;
+        }
+      } catch (e) {
+        debugPrint('Aviso calculando hash en enqueue: $e');
+      }
+
+      try {
+        final ocrResult = await _localOcrService.processImage(file);
+        initialOcr = ocrResult.structuredText;
+      } catch (e) {
+        debugPrint('Fallo silencioso en OCR previo: $e');
+      }
     }
 
     await _dbHelper.insertScanQueueItem(imagePath, ocrText: initialOcr, imageHash: hash);
@@ -168,33 +169,34 @@ class ScanQueueProvider with ChangeNotifier {
 
     for (final path in imagePaths) {
       final file = File(path);
-      if (!await file.exists()) continue;
-
       String? hash;
-      try {
-        hash = await ImageHashService.computeFileSha256(file);
-        if (hash.isNotEmpty) {
-          if (seenHashesInBatch.contains(hash)) {
-            debugPrint('[ScanQueue] Comprobante duplicado en el mismo lote ignorado: $path');
-            continue;
-          }
-          final isDup = await _dbHelper.isImageHashInScanQueue(hash);
-          if (isDup) {
-            debugPrint('[ScanQueue] Comprobante duplicado en cola ignorado: $path');
-            continue;
-          }
-          seenHashesInBatch.add(hash);
-        }
-      } catch (e) {
-        debugPrint('Aviso calculando hash en enqueueMultiple: $e');
-      }
-
       String? initialOcr;
-      try {
-        final ocrResult = await _localOcrService.processImage(file);
-        initialOcr = ocrResult.structuredText;
-      } catch (e) {
-        debugPrint('Fallo silencioso en OCR previo: $e');
+
+      if (await file.exists()) {
+        try {
+          hash = await ImageHashService.computeFileSha256(file);
+          if (hash.isNotEmpty) {
+            if (seenHashesInBatch.contains(hash)) {
+              debugPrint('[ScanQueue] Comprobante duplicado en el mismo lote ignorado: $path');
+              continue;
+            }
+            final isDup = await _dbHelper.isImageHashInScanQueue(hash);
+            if (isDup) {
+              debugPrint('[ScanQueue] Comprobante duplicado en cola ignorado: $path');
+              continue;
+            }
+            seenHashesInBatch.add(hash);
+          }
+        } catch (e) {
+          debugPrint('Aviso calculando hash en enqueueMultiple: $e');
+        }
+
+        try {
+          final ocrResult = await _localOcrService.processImage(file);
+          initialOcr = ocrResult.structuredText;
+        } catch (e) {
+          debugPrint('Fallo silencioso en OCR previo: $e');
+        }
       }
 
       await _dbHelper.insertScanQueueItem(path, ocrText: initialOcr, imageHash: hash);

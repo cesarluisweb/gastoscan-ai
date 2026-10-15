@@ -50,7 +50,8 @@ void main() {
   group('tryParsePositiveAmount - FIN-08', () {
     test('acepta valores estrictamente mayores a 0', () {
       expect(tryParsePositiveAmount('10.5'), equals(10.5));
-      expect(tryParsePositiveAmount('1.500', isPrice: false), equals(1500.0));
+      expect(tryParsePositiveAmount('1500', isPrice: false), equals(1500.0));
+      expect(tryParsePositiveAmount('1.234,56', isPrice: false), equals(1234.56));
       expect(tryParsePositiveAmount('0.01'), equals(0.01));
     });
 
