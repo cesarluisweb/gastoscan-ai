@@ -18,11 +18,19 @@ class FakeDatabaseHelper extends DatabaseHelper {
 }
 
 class FakeGastoProvider extends GastoProvider {
+  final List<GastoModel> _gastos = [];
+
+  @override
+  List<GastoModel> get gastos => _gastos;
+
   @override
   Future<void> cargarDatos() async {}
 
   @override
   Future<void> sincronizarConFirestore() async {}
+
+  @override
+  Future<Map<String, dynamic>?> buscarPrecioAnterior(String descripcion, {int? excludeGastoId}) async => null;
 }
 
 class FakeSettingsProvider extends SettingsProvider {
