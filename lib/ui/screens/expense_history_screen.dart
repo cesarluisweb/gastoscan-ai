@@ -128,7 +128,7 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
       }
       final result = GeminiExtractionResult.fromJson(data);
 
-      if (_selectedCategory != null && result.categoria != _selectedCategory) {
+      if (_selectedCategory != null && !result.items.any((it) => it.categoria == _selectedCategory)) {
         continue;
       }
 
