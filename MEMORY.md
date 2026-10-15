@@ -3,7 +3,7 @@
 
 ## Estado Actual Inmediato
 - **Rama:** `main`.
-- **Fase activa:** Fase 6.2. UI-01, UI-05, UX-06, UX-07 `Completada ✅`, FIN-09 en `Pendiente de validación 🧪`, UX-11 `Implementada 🔧`.
+- **Fase activa:** Fase 6.2. UI-01, UI-05, UX-06, UX-07 `Completada ✅`, FIN-09 y UX-11 en `Pendiente de validación 🧪`.
 - **Documentación Técnica:** [DOC_FASE_6_2.md](DOC_FASE_6_2.md) y [ROADMAP.md](ROADMAP.md) actualizados.
 
 ## Decisiones Técnicas y de Negocio Recientes
@@ -25,5 +25,5 @@
 - Para widgets que usan `RichText` en tests: especificar `find.textContaining(..., findRichText: true)`.
 
 ## Próximo Paso Inmediato
-- CI en verde confirmado (`conclusion: success`, Run `38779339683`). APK publicado en BanaHosting y Landing actualizada en Firebase Hosting. Esperar validación de César en dispositivo para marcar FIN-09 `Completada ✅`.
+- CI en verde confirmado (`conclusion: success`, Run `38785948485`). APK publicado en BanaHosting y Landing actualizada en Firebase Hosting. Esperar validación de César en dispositivo para marcar FIN-09 y UX-11 `Completada ✅`.
 
