@@ -23,14 +23,15 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 
 ---
 
-## Fase Inmediata: Validación de Auditoría Fase 3 (Pendiente de validación 🧪)
-*Verificación en dispositivo físico siguiendo la guía técnica en `DOC_AUDITORIA_FASE_3.md`:*
-- `FIN-07`: Sincronización exacta de tasas y montos en bolívares en historial y chat.
-- `FIN-08`: Alerta semafórica de ritmo diario y protección de meta de ahorro en dashboard.
-- `UX-03`: Preservación de la barra de navegación inferior en Chat IA con auto-ocultamiento al abrir teclado.
-- `UX-05`: Depuración de preguntas frecuentes de IA eliminando redundancias con la pantalla de Inicio.
-- `SEC-12`: Implementación de SHA-256 determinista nativo de 32 bits para hashes de imágenes sin dependencias externas.
-- `OCR-01`: Detección refinada de tasas oficiales BCV (USD y EUR) inyectadas en contexto de inferencia.
+## Fase 3: Mejoras de Calidad de Auditoría (Completada ✅)
+*Verificada y aprobada en dispositivo físico por César (Detallado en `DOC_AUDITORIA_FASE_3.md`):*
+- `FIN-07`: Cálculo exacto de días y proyección en meses históricos basándose en la fecha seleccionada.
+- `FIN-08`: Validación de montos estrictamente positivos (`> 0`) en formularios y desglose de ítems.
+- `UX-03`: Búsqueda global a lo largo de todo el historial financiero (cross-month).
+- `UX-05`: Navegación unificada del Asistente IA (`Navigator.push`) manteniendo barra inferior visible.
+- `SEC-12`: Versionado formal del Cloudflare Worker en la carpeta `workers/` del repositorio.
+- `OCR-01`: Deduplicación SHA-256 nativa en cola de escaneo para evitar duplicar comprobantes.
+- `AI-01`: 5 chips analíticos diferenciados sin acciones destructivas, inyección de `tasa_usdt` en contexto y saludo guiado.
 
 ---
 
