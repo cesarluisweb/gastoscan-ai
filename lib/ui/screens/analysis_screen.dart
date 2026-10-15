@@ -10,7 +10,14 @@ import '../widgets/budget_bottom_sheet.dart';
 import '../widgets/global_scan_queue_banner.dart';
 
 class AnalysisScreen extends StatelessWidget {
-  const AnalysisScreen({Key? key}) : super(key: key);
+  final VoidCallback? onNavigateToSearch;
+  final VoidCallback? onNavigateToChat;
+
+  const AnalysisScreen({
+    Key? key,
+    this.onNavigateToSearch,
+    this.onNavigateToChat,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -27,12 +34,24 @@ class AnalysisScreen extends StatelessWidget {
         title: const Text('Análisis'),
         actions: [
           IconButton(
-            key: const Key('analysis_edit_budget_button'),
-            icon: const Icon(Icons.tune),
-            tooltip: 'Configurar Presupuestos',
-            onPressed: () {
-              BudgetBottomSheet.show(context);
-            },
+            key: const Key('analysis_search_button'),
+            icon: const Icon(
+              Icons.search,
+              size: 22,
+              color: AppColors.textPrimary,
+            ),
+            tooltip: 'Buscar',
+            onPressed: onNavigateToSearch,
+          ),
+          IconButton(
+            key: const Key('analysis_ai_chat_button'),
+            icon: const Icon(
+              Icons.auto_awesome,
+              size: 22,
+              color: AppColors.textPrimary,
+            ),
+            tooltip: 'Asistente IA',
+            onPressed: onNavigateToChat,
           ),
         ],
       ),
@@ -263,6 +282,7 @@ class AnalysisScreen extends StatelessWidget {
                 ],
               ),
               IconButton(
+                key: const Key('analysis_edit_budget_button'),
                 icon: const Icon(Icons.edit_outlined, size: 18, color: AppColors.secondary),
                 tooltip: 'Editar Presupuesto',
                 onPressed: () => BudgetBottomSheet.show(context),

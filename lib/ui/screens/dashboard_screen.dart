@@ -27,6 +27,7 @@ class DashboardScreen extends StatefulWidget {
   final VoidCallback? onNavigateToGastos;
   final VoidCallback? onNavigateToAnalysis;
   final VoidCallback? onNavigateToChat;
+  final VoidCallback? onNavigateToSearch;
   final VoidCallback? onAddExpense;
 
   const DashboardScreen({
@@ -34,6 +35,7 @@ class DashboardScreen extends StatefulWidget {
     this.onNavigateToGastos,
     this.onNavigateToAnalysis,
     this.onNavigateToChat,
+    this.onNavigateToSearch,
     this.onAddExpense,
   }) : super(key: key);
 
@@ -87,6 +89,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            key: const Key('dashboard_search_button'),
+            icon: const Icon(
+              Icons.search,
+              size: 22,
+              color: AppColors.textPrimary,
+            ),
+            tooltip: 'Buscar',
+            onPressed: widget.onNavigateToSearch,
+          ),
           IconButton(
             key: const Key('dashboard_ai_chat_button'),
             icon: const Icon(

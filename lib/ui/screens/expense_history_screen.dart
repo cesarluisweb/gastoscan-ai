@@ -18,14 +18,40 @@ import '../widgets/global_scan_queue_banner.dart';
 import 'review_expense_screen.dart';
 
 class ExpenseHistoryScreen extends StatefulWidget {
-  const ExpenseHistoryScreen({Key? key}) : super(key: key);
+  final VoidCallback? onNavigateToChat;
+
+  const ExpenseHistoryScreen({
+    Key? key,
+    this.onNavigateToChat,
+  }) : super(key: key);
 
   @override
-  State<ExpenseHistoryScreen> createState() => _ExpenseHistoryScreenState();
+  State<ExpenseHistoryScreen> createState() => ExpenseHistoryScreenState();
 }
 
-class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
+class ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
   bool _isSearching = false;
+  bool get isSearching => _isSearching;
+
+  void activateSearch() {
+    if (!_isSearching) {
+      setState(() {
+        _isSearching = true;
+        _cargarTodosLosGastos();
+      });
+    }
+  }
+
+  void closeSearch() {
+    if (_isSearching) {
+      setState(() {
+        _isSearching = false;
+        _searchCtrl.clear();
+        _searchQuery = '';
+        _allGastos = null;
+      });
+    }
+  }
   bool _onlyWithReceipt = false;
   String? _selectedCategory;
   final TextEditingController _searchCtrl = TextEditingController();
@@ -206,19 +232,24 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
           IconButton(
             key: const Key('expense_history_search_toggle'),
             icon: Icon(_isSearching ? Icons.close : Icons.search),
+            tooltip: _isSearching ? 'Cerrar búsqueda' : 'Buscar',
             onPressed: () {
-              setState(() {
-                if (_isSearching) {
-                  _isSearching = false;
-                  _searchCtrl.clear();
-                  _searchQuery = '';
-                  _allGastos = null;
-                } else {
-                  _isSearching = true;
-                  _cargarTodosLosGastos();
-                }
-              });
+              if (_isSearching) {
+                closeSearch();
+              } else {
+                activateSearch();
+              }
             },
+          ),
+          IconButton(
+            key: const Key('expense_history_ai_chat_button'),
+            icon: const Icon(
+              Icons.auto_awesome,
+              size: 22,
+              color: AppColors.textPrimary,
+            ),
+            tooltip: 'Asistente IA',
+            onPressed: widget.onNavigateToChat,
           ),
         ],
       ),

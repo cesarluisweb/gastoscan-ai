@@ -185,5 +185,76 @@ void main() {
       // Expect snackbar
       expect(find.text('Presiona de nuevo para salir'), findsOneWidget);
     });
+
+    testWidgets('tapping search button on Inicio navigates to Gastos and activates search', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('dashboard_search_button')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('dashboard_search_button')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('expense_history_search_field')), findsOneWidget);
+    });
+
+    testWidgets('tapping search button on Analisis navigates to Gastos and activates search', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Análisis'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('analysis_search_button')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('analysis_search_button')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('expense_history_search_field')), findsOneWidget);
+    });
+
+    testWidgets('system back while searching on Gastos cancels search and stays on Gastos', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Gastos'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('expense_history_search_toggle')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('expense_history_search_field')), findsOneWidget);
+
+      final dynamic widgetsAppState = tester.state(find.byType(WidgetsApp));
+      await widgetsAppState.didPopRoute();
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('expense_history_search_field')), findsNothing);
+      expect(find.text('Gastos'), findsWidgets);
+    });
+
+    testWidgets('all 4 screens render persistent AI chat button and search button', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      // Inicio
+      expect(find.byKey(const Key('dashboard_search_button')), findsOneWidget);
+      expect(find.byKey(const Key('dashboard_ai_chat_button')), findsOneWidget);
+
+      // Gastos
+      await tester.tap(find.text('Gastos'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('expense_history_search_toggle')), findsOneWidget);
+      expect(find.byKey(const Key('expense_history_ai_chat_button')), findsOneWidget);
+
+      // Análisis
+      await tester.tap(find.text('Análisis'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('analysis_search_button')), findsOneWidget);
+      expect(find.byKey(const Key('analysis_ai_chat_button')), findsOneWidget);
+
+      // Más
+      await tester.tap(find.text('Más'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('more_search_button')), findsOneWidget);
+      expect(find.byKey(const Key('more_ai_chat_button')), findsOneWidget);
+    });
   });
 }

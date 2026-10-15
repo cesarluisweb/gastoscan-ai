@@ -26,6 +26,7 @@ enum MoreSubView { hub, shoppingList, chat, receiptGallery, calculator }
 class MoreScreen extends StatefulWidget {
   final VoidCallback? onNavigateToHome;
   final VoidCallback? onNavigateToChat;
+  final VoidCallback? onNavigateToSearch;
   final User? customUser;
   final Stream<User?>? customUserStream;
 
@@ -33,6 +34,7 @@ class MoreScreen extends StatefulWidget {
     Key? key,
     this.onNavigateToHome,
     this.onNavigateToChat,
+    this.onNavigateToSearch,
     this.customUser,
     this.customUserStream,
   }) : super(key: key);
@@ -308,6 +310,28 @@ class MoreScreenState extends State<MoreScreen> {
       appBar: AppBar(
         title: const Text('Más'),
         automaticallyImplyLeading: false,
+        actions: [
+          IconButton(
+            key: const Key('more_search_button'),
+            icon: const Icon(
+              Icons.search,
+              size: 22,
+              color: AppColors.textPrimary,
+            ),
+            tooltip: 'Buscar',
+            onPressed: widget.onNavigateToSearch,
+          ),
+          IconButton(
+            key: const Key('more_ai_chat_button'),
+            icon: const Icon(
+              Icons.auto_awesome,
+              size: 22,
+              color: AppColors.textPrimary,
+            ),
+            tooltip: 'Asistente IA',
+            onPressed: () => openChat(),
+          ),
+        ],
       ),
       body: Column(
         children: [

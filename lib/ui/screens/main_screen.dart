@@ -106,6 +106,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   bool _showingChat = false;
   int _chatOriginIndex = 0;
   final GlobalKey<MoreScreenState> _moreScreenKey = GlobalKey<MoreScreenState>();
+  final GlobalKey<ExpenseHistoryScreenState> _expenseHistoryKey = GlobalKey<ExpenseHistoryScreenState>();
   DateTime? _lastBackPressTime;
 
   void _openChat({int fromIndex = 0}) {
@@ -212,20 +213,38 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     }
   }
 
+  void _openSearchFromAnywhere() {
+    if (_showingChat) {
+      _showingChat = false;
+    }
+    _onTabTapped(1);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _expenseHistoryKey.currentState?.activateSearch();
+    });
+  }
+
   // 4 pantallas principales
   late final List<Widget> _pages = [
     DashboardScreen(
       onNavigateToGastos: () => _onTabTapped(1),
       onNavigateToAnalysis: () => _onTabTapped(2),
       onNavigateToChat: () => _openChat(fromIndex: 0),
+      onNavigateToSearch: _openSearchFromAnywhere,
       onAddExpense: () => _showAddMenu(context),
     ),
-    const ExpenseHistoryScreen(),
-    const AnalysisScreen(),
+    ExpenseHistoryScreen(
+      key: _expenseHistoryKey,
+      onNavigateToChat: () => _openChat(fromIndex: 1),
+    ),
+    AnalysisScreen(
+      onNavigateToSearch: _openSearchFromAnywhere,
+      onNavigateToChat: () => _openChat(fromIndex: 2),
+    ),
     MoreScreen(
       key: _moreScreenKey,
       onNavigateToHome: () => _onTabTapped(0),
       onNavigateToChat: () => _openChat(fromIndex: 3),
+      onNavigateToSearch: _openSearchFromAnywhere,
     ),
   ];
 
@@ -388,6 +407,10 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         if (didPop) return;
         if (_showingChat) {
           _closeChat();
+          return;
+        }
+        if (_currentIndex == 1 && (_expenseHistoryKey.currentState?.isSearching ?? false)) {
+          _expenseHistoryKey.currentState?.closeSearch();
           return;
         }
         if (_currentIndex == 3 && (_moreScreenKey.currentState?.isSubViewOpen ?? false)) {
