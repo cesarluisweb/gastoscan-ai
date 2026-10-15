@@ -47,6 +47,7 @@ class MoreScreenState extends State<MoreScreen> {
   MoreSubView _currentSubView = MoreSubView.hub;
   bool get isSubViewOpen => _currentSubView != MoreSubView.hub;
   bool _isCheckingUpdate = false;
+  bool _isLinkingGoogle = false;
   String _currentAppVersion = '1.0.1';
 
   @override
@@ -981,42 +982,86 @@ class MoreScreenState extends State<MoreScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    icon: const Icon(Icons.login),
-                    label: const Text('Vincular con Google'),
-                    onPressed: () async {
-                      final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
-                      bool descartarLocales = false;
+                    key: const Key('btn_vincular_google'),
+                    icon: _isLinkingGoogle
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.black,
+                            ),
+                          )
+                        : const Icon(Icons.login),
+                    label: Text(
+                      _isLinkingGoogle ? 'Conectando con Google...' : 'Vincular con Google',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.black,
+                      disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.8),
+                      disabledForegroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: _isLinkingGoogle
+                        ? null
+                        : () async {
+                            final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
+                            bool descartarLocales = false;
 
-                      if (gastoProvider.gastos.isNotEmpty) {
-                        final decision = await mostrarDialogoFusionarOReemplazar(context);
-                        if (decision == null) return;
-                        descartarLocales = decision;
-                      }
+                            if (gastoProvider.gastos.isNotEmpty) {
+                              final decision = await mostrarDialogoFusionarOReemplazar(context);
+                              if (decision == null) return;
+                              descartarLocales = decision;
+                            }
 
-                      final error = await gastoProvider
-                          .vincularCuentaGoogle(descartarDatosLocales: descartarLocales);
-                      if (!mounted) return;
-                      if (error != null && error != 'CANCELLED') {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(error, style: const TextStyle(color: Colors.white)),
-                            backgroundColor: AppColors.error,
-                          ),
-                        );
-                      } else if (error == null) {
-                        await Provider.of<SettingsProvider>(context, listen: false).loadSettings();
-                        if (!mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Cuenta vinculada con éxito',
-                                style: TextStyle(color: Colors.black)),
-                            backgroundColor: AppColors.primary,
-                          ),
-                        );
-                      }
-                    },
+                            setState(() {
+                              _isLinkingGoogle = true;
+                            });
+
+                            try {
+                              final error = await gastoProvider
+                                  .vincularCuentaGoogle(descartarDatosLocales: descartarLocales);
+                              if (!mounted) return;
+                              if (error != null && error != 'CANCELLED') {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(error, style: const TextStyle(color: Colors.white)),
+                                    backgroundColor: AppColors.error,
+                                  ),
+                                );
+                              } else if (error == null) {
+                                await Provider.of<SettingsProvider>(context, listen: false).loadSettings();
+                                if (!mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Cuenta vinculada con éxito',
+                                        style: TextStyle(color: Colors.black)),
+                                    backgroundColor: AppColors.primary,
+                                  ),
+                                );
+                              }
+                            } finally {
+                              if (mounted) {
+                                setState(() {
+                                  _isLinkingGoogle = false;
+                                });
+                              }
+                            }
+                          },
                   ),
                 ),
+                if (_isLinkingGoogle) ...[
+                  const SizedBox(height: 8),
+                  const Center(
+                    child: Text(
+                      'Conectando y respaldando tus datos en la nube...',
+                      style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 10),
                 SizedBox(
                   width: double.infinity,
@@ -1027,7 +1072,7 @@ class MoreScreenState extends State<MoreScreen> {
                       'Vincular con correo',
                       style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600),
                     ),
-                    onPressed: () => mostrarModalAutenticacionEmail(context),
+                    onPressed: _isLinkingGoogle ? null : () => mostrarModalAutenticacionEmail(context),
                   ),
                 ),
               ],

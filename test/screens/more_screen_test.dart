@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -63,8 +64,15 @@ class FakeGastoProvider extends GastoProvider {
   @override
   Future<String?> iniciarSesionConEmail(String email, String password, {bool descartarDatosLocales = true}) async => null;
 
+  Completer<String?>? vincularGoogleCompleter;
+
   @override
-  Future<String?> vincularCuentaGoogle({bool descartarDatosLocales = false}) async => null;
+  Future<String?> vincularCuentaGoogle({bool descartarDatosLocales = false}) async {
+    if (vincularGoogleCompleter != null) {
+      return await vincularGoogleCompleter!.future;
+    }
+    return null;
+  }
 
   @override
   Future<void> cerrarSesion() async {}
@@ -267,6 +275,36 @@ void main() {
 
       expect(find.text('Iniciar Sesión con Correo'), findsOneWidget);
       expect(find.text('Iniciar Sesión'), findsWidgets);
+    });
+
+    testWidgets('tapping vincular con google shows loading state and disables buttons while in progress', (tester) async {
+      final completer = Completer<String?>();
+      gastoProvider.vincularGoogleCompleter = completer;
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      final googleBtn = find.byKey(const Key('btn_vincular_google'));
+      final emailBtn = find.byKey(const Key('btn_vincular_email'));
+
+      expect(googleBtn, findsOneWidget);
+      expect(emailBtn, findsOneWidget);
+      expect(find.text('Vincular con Google'), findsOneWidget);
+
+      await tester.tap(googleBtn);
+      await tester.pump();
+
+      // En progreso: botón muestra "Conectando con Google...", texto de respaldo visible, y ambos botones deshabilitados
+      expect(find.text('Conectando con Google...'), findsOneWidget);
+      expect(find.text('Conectando y respaldando tus datos en la nube...'), findsOneWidget);
+      expect(tester.widget<ElevatedButton>(find.byKey(const Key('btn_vincular_google'))).onPressed, isNull);
+      expect(tester.widget<OutlinedButton>(find.byKey(const Key('btn_vincular_email'))).onPressed, isNull);
+
+      // Completar vinculación
+      completer.complete(null);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Cuenta vinculada con éxito'), findsOneWidget);
     });
 
     testWidgets('tapping eliminar cuenta and confirming shows success snackbar on success', (tester) async {

@@ -3,10 +3,11 @@
 
 ## Estado Actual Inmediato
 - **Rama:** `main`.
-- **Fase activa:** Fase 6.2. Refinamiento tras feedback de César en UX-07 y FIN-09. UI-01, UI-05, UX-06, UX-07 `Completada ✅`, FIN-09 en `Pendiente de validación 🧪`.
+- **Fase activa:** Fase 6.2. UI-01, UI-05, UX-06, UX-07 `Completada ✅`, FIN-09 en `Pendiente de validación 🧪`, UX-11 `Implementada 🔧`.
 - **Documentación Técnica:** [DOC_FASE_6_2.md](DOC_FASE_6_2.md) y [ROADMAP.md](ROADMAP.md) actualizados.
 
 ## Decisiones Técnicas y de Negocio Recientes
+- **UX-11 (Feedback Vinculación/Sincronización):** Estado de carga integrado en botón de Google (*"Conectando con Google..."* + spinner negro), leyenda descriptiva, deshabilitación de botones interactivos para prevenir toques concurrentes, PopScope en hoja modal de correo y diálogo de compras con microcopy de respaldo explícito.
 - **UX-07 (Refinamiento Integral):** Tira de resumen mensual fija de moneda única según `monedaPrincipal`, carrusel de chips de filtros rápidos (`[Todos]`, `[🧾 Con comprobante]`, categorías), cálculo proporcional de ítems multimoneda, desglose consistente con fila y mini-ícono incluso en compras de 1 artículo, reducción de padding derecho en 3 puntos a ~12px, y despliegue interactivo en Inicio (`onTap`) para compras con artículos.
 - **FIN-09 (Refinado):** Pastilla de tasa swap interactiva (`calc_swap_button`) para invertir orden Divisa/Bolívares, botón de copia dinámico (`Copiar Bs.` / `Copiar USD/EUR/USDT`), comparativa con texto negro carbón y eliminación de dropdown innecesario.
 - **Navegación Atrás (MainScreen):** PopScope inteligente: desde tabs secundarias regresa a Inicio; en Más regresa al Hub; en Inicio requiere doble toque ('Presiona de nuevo para salir') en <= 2s para invocar `SystemNavigator.pop()`.

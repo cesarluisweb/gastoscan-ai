@@ -571,42 +571,44 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
 
             return StatefulBuilder(
               builder: (context, setDialogState) {
-                return AlertDialog(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  backgroundColor: AppColors.card,
-                  title: const Row(
-                    children: [
-                      Icon(Icons.check_circle_outline, color: Colors.green),
-                      SizedBox(width: 8),
-                      Text(
-                        'Compra registrada',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                      ),
-                    ],
-                  ),
-                  content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Tu compra se guardó en tu teléfono.\n\nSi lo deseas, puedes vincular con Google para respaldar y sincronizar tus gastos entre dispositivos.',
-                        style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
-                      ),
-                      if (isLinking) ...[
-                        const SizedBox(height: 20),
-                        const Center(
-                          child: Column(
-                            children: [
-                              CircularProgressIndicator(color: Colors.black),
-                              SizedBox(height: 12),
-                              Text(
-                                'Conectando con Google...',
-                                style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
-                              ),
-                            ],
-                          ),
+                return PopScope(
+                  canPop: !isLinking,
+                  child: AlertDialog(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    backgroundColor: AppColors.card,
+                    title: const Row(
+                      children: [
+                        Icon(Icons.check_circle_outline, color: Colors.green),
+                        SizedBox(width: 8),
+                        Text(
+                          'Compra registrada',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                         ),
                       ],
+                    ),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Tu compra se guardó en tu teléfono.\n\nSi lo deseas, puedes vincular con Google para respaldar y sincronizar tus gastos entre dispositivos.',
+                          style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                        ),
+                        if (isLinking) ...[
+                          const SizedBox(height: 20),
+                          const Center(
+                            child: Column(
+                              children: [
+                                CircularProgressIndicator(color: Colors.black),
+                                SizedBox(height: 12),
+                                Text(
+                                  'Conectando con Google y respaldando...',
+                                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       if (errorMessage != null) ...[
                         const SizedBox(height: 16),
                         Container(
@@ -713,6 +715,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                             ],
                           ),
                         ],
+                  ),
                 );
               },
             );

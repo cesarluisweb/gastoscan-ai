@@ -57,41 +57,43 @@ Future<void> mostrarModalAutenticacionEmail(
       return StatefulBuilder(
         builder: (context, setModalState) {
           final mediaQuery = MediaQuery.of(context);
-          return Padding(
-            padding: EdgeInsets.only(
-              bottom: mediaQuery.viewInsets.bottom + 20,
-              left: 20,
-              right: 20,
-              top: 20,
-            ),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.alternate_email, color: AppColors.primaryDark, size: 24),
-                          const SizedBox(width: 8),
-                          Text(
-                            esRegistro ? 'Vincular con Correo' : 'Iniciar Sesión con Correo',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimary,
+          return PopScope(
+            canPop: !isLoading,
+            child: Padding(
+              padding: EdgeInsets.only(
+                bottom: mediaQuery.viewInsets.bottom + 20,
+                left: 20,
+                right: 20,
+                top: 20,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.alternate_email, color: AppColors.primaryDark, size: 24),
+                            const SizedBox(width: 8),
+                            Text(
+                              esRegistro ? 'Vincular con Correo' : 'Iniciar Sesión con Correo',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close, color: AppColors.textSecondary),
-                        onPressed: () => Navigator.pop(modalContext),
-                      ),
-                    ],
-                  ),
+                          ],
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, color: AppColors.textSecondary),
+                          onPressed: isLoading ? null : () => Navigator.pop(modalContext),
+                        ),
+                      ],
+                    ),
                   const SizedBox(height: 8),
                   Text(
                     esRegistro
@@ -166,6 +168,8 @@ Future<void> mostrarModalAutenticacionEmail(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.black,
+                        disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.8),
+                        disabledForegroundColor: Colors.black,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                       onPressed: isLoading
@@ -187,59 +191,71 @@ Future<void> mostrarModalAutenticacionEmail(
                                 return;
                               }
 
-                              setModalState(() {
-                                isLoading = true;
-                                localError = null;
-                              });
-
                               final provider = Provider.of<GastoProvider>(context, listen: false);
                               bool descartarLocales = false;
 
                               if (provider.gastos.isNotEmpty) {
                                 final decision = await mostrarDialogoFusionarOReemplazar(context);
-                                if (decision == null) {
-                                  if (modalContext.mounted) {
-                                    setModalState(() {
-                                      isLoading = false;
-                                    });
-                                  }
-                                  return;
-                                }
+                                if (decision == null) return;
                                 descartarLocales = decision;
                               }
 
-                              final error = esRegistro
-                                  ? await provider.vincularConEmail(email, password, descartarDatosLocales: descartarLocales)
-                                  : await provider.iniciarSesionConEmail(email, password, descartarDatosLocales: descartarLocales);
+                              setModalState(() {
+                                isLoading = true;
+                                localError = null;
+                              });
 
-                              if (!modalContext.mounted) return;
+                              try {
+                                final error = esRegistro
+                                    ? await provider.vincularConEmail(email, password, descartarDatosLocales: descartarLocales)
+                                    : await provider.iniciarSesionConEmail(email, password, descartarDatosLocales: descartarLocales);
 
-                              if (error != null) {
-                                setModalState(() {
-                                  isLoading = false;
-                                  localError = error;
-                                });
-                              } else {
-                                Navigator.pop(modalContext);
-                                await Provider.of<SettingsProvider>(context, listen: false).loadSettings();
-                                if (!context.mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      esRegistro ? 'Cuenta vinculada con éxito' : 'Sesión iniciada con éxito',
-                                      style: const TextStyle(color: Colors.black),
+                                if (!modalContext.mounted) return;
+
+                                if (error != null) {
+                                  setModalState(() {
+                                    isLoading = false;
+                                    localError = error;
+                                  });
+                                } else {
+                                  Navigator.pop(modalContext);
+                                  await Provider.of<SettingsProvider>(context, listen: false).loadSettings();
+                                  if (!context.mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        esRegistro ? 'Cuenta vinculada con éxito' : 'Sesión iniciada con éxito',
+                                        style: const TextStyle(color: Colors.black),
+                                      ),
+                                      backgroundColor: AppColors.primary,
                                     ),
-                                    backgroundColor: AppColors.primary,
-                                  ),
-                                );
-                                onSuccess?.call();
+                                  );
+                                  onSuccess?.call();
+                                }
+                              } catch (e) {
+                                if (modalContext.mounted) {
+                                  setModalState(() {
+                                    isLoading = false;
+                                    localError = e.toString();
+                                  });
+                                }
                               }
                             },
                       child: isLoading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                                ),
+                                const SizedBox(width: 10),
+                                Text(
+                                  esRegistro ? 'Vinculando y sincronizando...' : 'Iniciando sesión...',
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.black),
+                                ),
+                              ],
                             )
                           : Text(
                               esRegistro ? 'Vincular y Respaldar' : 'Iniciar Sesión',
@@ -269,7 +285,8 @@ Future<void> mostrarModalAutenticacionEmail(
                 ],
               ),
             ),
-          );
+          ),
+        );
         },
       );
     },
