@@ -19,10 +19,10 @@ class FakeDatabaseHelper extends DatabaseHelper {
   Future<List<Map<String, dynamic>>> getReadyScanQueueItems() async => [];
 
   @override
-  Future<void> resetStaleProcessingScanQueueItems() async {}
+  Future<int> resetStaleProcessingScanQueueItems() async => 0;
 
   @override
-  Future<void> resetProcessingScanQueueItems() async {}
+  Future<int> resetFailedScanQueueItems() async => 0;
 }
 
 class FakeGastoProvider extends GastoProvider {
