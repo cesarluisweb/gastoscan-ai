@@ -106,6 +106,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   bool _showingChat = false;
   int _chatOriginIndex = 0;
   final GlobalKey<MoreScreenState> _moreScreenKey = GlobalKey<MoreScreenState>();
+  DateTime? _lastBackPressTime;
 
   void _openChat({int fromIndex = 0}) {
     setState(() {
@@ -382,12 +383,37 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
 
     return PopScope(
-      canPop: !_showingChat,
-      onPopInvoked: (didPop) {
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
         if (_showingChat) {
           _closeChat();
+          return;
         }
+        if (_currentIndex == 3 && (_moreScreenKey.currentState?.isSubViewOpen ?? false)) {
+          _moreScreenKey.currentState?.returnToHub();
+          return;
+        }
+        if (_currentIndex != 0) {
+          setState(() {
+            _currentIndex = 0;
+          });
+          return;
+        }
+        final now = DateTime.now();
+        if (_lastBackPressTime == null || now.difference(_lastBackPressTime!) > const Duration(seconds: 2)) {
+          _lastBackPressTime = now;
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Presiona de nuevo para salir'),
+              duration: Duration(seconds: 2),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          return;
+        }
+        SystemNavigator.pop();
       },
       child: Scaffold(
         body: _showingChat

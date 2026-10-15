@@ -155,5 +155,35 @@ void main() {
       expect(find.text('Más'), findsWidgets);
       expect(find.text('Respaldo en la Nube'), findsOneWidget);
     });
+
+    testWidgets('system back on non-home tab returns to Inicio', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      // Navigate to Gastos tab
+      await tester.tap(find.text('Gastos'));
+      await tester.pumpAndSettle();
+
+      // Press system back
+      final dynamic widgetsAppState = tester.state(find.byType(WidgetsApp));
+      await widgetsAppState.didPopRoute();
+      await tester.pumpAndSettle();
+
+      // Should return to Inicio
+      expect(find.text('Rinde Más'), findsOneWidget);
+    });
+
+    testWidgets('system back on Inicio tab shows exit confirmation snackbar', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      // Press system back on Inicio
+      final dynamic widgetsAppState = tester.state(find.byType(WidgetsApp));
+      await widgetsAppState.didPopRoute();
+      await tester.pump();
+
+      // Expect snackbar
+      expect(find.text('Presiona de nuevo para salir'), findsOneWidget);
+    });
   });
 }

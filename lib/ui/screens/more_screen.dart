@@ -43,6 +43,7 @@ class MoreScreen extends StatefulWidget {
 
 class MoreScreenState extends State<MoreScreen> {
   MoreSubView _currentSubView = MoreSubView.hub;
+  bool get isSubViewOpen => _currentSubView != MoreSubView.hub;
   bool _isCheckingUpdate = false;
   String _currentAppVersion = '1.0.1';
 
