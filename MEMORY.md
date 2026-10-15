@@ -27,6 +27,6 @@
 - Para widgets que usan `RichText` en tests: especificar `find.textContaining(..., findRichText: true)`.
 
 ## Próximo Paso Inmediato
-- Commitear y pushear cambios a `main`. Monitorear CI hasta confirmar `conclusion: success` (generación de AAB v1.0.4). César actualiza ficha en Play Console y reenvía a revisión junto con el nuevo AAB.
+- CI en verde confirmado (`conclusion: success`, Run `38800883233`). AAB v1.0.4 y APK generados y desplegados. César debe: 1) Descargar `app-release.aab` desde GitHub Releases/Actions y subirlo a Pruebas Cerradas en Play Console, 2) Pegar la descripción completa con el descargo y enlace oficial, 3) Confirmar el cuestionario de app no gubernamental y 4) Enviar a revisión.
 
 
