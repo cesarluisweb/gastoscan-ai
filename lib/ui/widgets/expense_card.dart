@@ -375,7 +375,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
                     if (widget.showDirectItemBreakdown && hasMoreThan4) ...[
                       const SizedBox(height: 6),
                       InkWell(
-                        key: Key('expense_card_toggle_more_${widget.gasto.id ?? widget.gasto.uuid}'),
+                        key: Key('expense_card_toggle_more_${widget.gasto.uuid}'),
                         onTap: () {
                           setState(() => _showAllItems = !_showAllItems);
                         },

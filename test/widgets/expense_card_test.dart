@@ -30,6 +30,7 @@ void main() {
   group('ExpenseCard Widget Tests (UX-07)', () {
     final baseGastoConItems = GastoModel(
       id: 1,
+      uuid: 'test-uuid-plaza-1',
       comercio: 'Automercado Plaza',
       fecha: '2026-10-14',
       moneda: 'USD',

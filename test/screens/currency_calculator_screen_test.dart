@@ -1,9 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:gastoscan_ai/data/datasources/local/database_helper.dart';
+import 'package:gastoscan_ai/providers/gasto_provider.dart';
+import 'package:gastoscan_ai/providers/scan_queue_provider.dart';
 import 'package:gastoscan_ai/providers/settings_provider.dart';
 import 'package:gastoscan_ai/ui/screens/currency_calculator_screen.dart';
 import 'package:gastoscan_ai/ui/screens/review_expense_screen.dart';
+
+class FakeDatabaseHelper extends DatabaseHelper {
+  FakeDatabaseHelper() : super.test();
+
+  @override
+  Future<List<Map<String, dynamic>>> getPendingScanQueueItems() async => [];
+
+  @override
+  Future<List<Map<String, dynamic>>> getReadyScanQueueItems() async => [];
+}
+
+class FakeGastoProvider extends GastoProvider {
+  @override
+  Future<void> cargarDatos() async {}
+
+  @override
+  Future<void> sincronizarConFirestore() async {}
+}
 
 class FakeSettingsProvider extends SettingsProvider {
   @override
@@ -23,15 +44,25 @@ class FakeSettingsProvider extends SettingsProvider {
 }
 
 void main() {
+  late FakeDatabaseHelper fakeDb;
+  late ScanQueueProvider scanQueueProvider;
+  late FakeGastoProvider gastoProvider;
   late FakeSettingsProvider settingsProvider;
 
   setUp(() {
+    fakeDb = FakeDatabaseHelper();
+    scanQueueProvider = ScanQueueProvider(dbHelper: fakeDb);
+    gastoProvider = FakeGastoProvider();
     settingsProvider = FakeSettingsProvider();
   });
 
   Widget createWidgetUnderTest() {
-    return ChangeNotifierProvider<SettingsProvider>.value(
-      value: settingsProvider,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<GastoProvider>.value(value: gastoProvider),
+        ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+        ChangeNotifierProvider<ScanQueueProvider>.value(value: scanQueueProvider),
+      ],
       child: const MaterialApp(
         home: CurrencyCalculatorScreen(showBackButton: true),
       ),
