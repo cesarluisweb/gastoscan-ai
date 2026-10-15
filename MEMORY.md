@@ -18,7 +18,9 @@
 - Íconos de categorías deben consultarse exclusivamente vía `AppConstants.getCategoryIcon(cat)`.
 - En `currency_calculator_screen_test.dart`: Si se usa `GastoModel`, importar explícitamente `gasto_model.dart`.
 - Evitar navegación real a pantallas que requieran SQLite no mockeado (`DatabaseHelper.instance`) en tests de widgets.
+- `ScanQueueProvider` en tests de widgets: instanciar siempre con `autoProcess: false` y llamar `dispose()` en `tearDown` para evitar timeouts de `pumpAndSettle`.
+- Para widgets que usan `RichText` en tests: especificar `find.textContaining(..., findRichText: true)`.
 
 ## Próximo Paso Inmediato
-- Validar CI en verde tras push de refinamientos de Fase 6.2 y esperar validación de César en dispositivo.
+- CI en verde confirmado (`conclusion: success`, Run `38767731848`). APK publicado en BanaHosting y Landing actualizada en Firebase Hosting. Esperar validación de César en dispositivo para marcar FIN-09 `Completada ✅`.
 
