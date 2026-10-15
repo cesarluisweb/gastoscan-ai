@@ -17,6 +17,12 @@ class FakeDatabaseHelper extends DatabaseHelper {
 
   @override
   Future<List<Map<String, dynamic>>> getReadyScanQueueItems() async => [];
+
+  @override
+  Future<void> resetStaleProcessingScanQueueItems() async {}
+
+  @override
+  Future<void> resetProcessingScanQueueItems() async {}
 }
 
 class FakeGastoProvider extends GastoProvider {
@@ -113,9 +119,13 @@ void main() {
 
   setUp(() {
     fakeDb = FakeDatabaseHelper();
-    scanQueueProvider = ScanQueueProvider(dbHelper: fakeDb);
+    scanQueueProvider = ScanQueueProvider(dbHelper: fakeDb, autoProcess: false);
     gastoProvider = FakeGastoProvider(mockGastos);
     settingsProvider = FakeSettingsProvider();
+  });
+
+  tearDown(() {
+    scanQueueProvider.dispose();
   });
 
   Widget createWidgetUnderTest() {
@@ -133,6 +143,11 @@ void main() {
 
   group('ExpenseHistoryScreen Tests', () {
     testWidgets('renders monthly summary strip and filter chips', (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
@@ -144,18 +159,20 @@ void main() {
 
       // Filter chips are present
       expect(find.byKey(const Key('expense_filter_chip_all')), findsOneWidget);
-      expect(find.byKey(const Key('expense_filter_chip_receipt')), findsOneWidget);
+      expect(find.byKey(const Key('expense_history_receipt_filter_toggle')), findsOneWidget);
       expect(find.byKey(const Key('expense_filter_chip_alimentación')), findsOneWidget);
       expect(find.byKey(const Key('expense_filter_chip_salud')), findsOneWidget);
-
-      // Old gallery AppBar button is gone
-      expect(find.byKey(const Key('expense_history_receipt_filter_toggle')), findsNothing);
 
       // Search toggle button is present
       expect(find.byKey(const Key('expense_history_search_toggle')), findsOneWidget);
     });
 
     testWidgets('tapping receipt filter chip filters only expenses with photo', (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
@@ -163,7 +180,7 @@ void main() {
       expect(find.text('Farmacia Express'), findsOneWidget);
 
       // Tap receipt chip
-      await tester.tap(find.byKey(const Key('expense_filter_chip_receipt')));
+      await tester.tap(find.byKey(const Key('expense_history_receipt_filter_toggle')));
       await tester.pumpAndSettle();
 
       // Only Supermercado Dia has receipt photo
@@ -182,6 +199,11 @@ void main() {
     });
 
     testWidgets('tapping category chip filters only expenses in that category', (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 

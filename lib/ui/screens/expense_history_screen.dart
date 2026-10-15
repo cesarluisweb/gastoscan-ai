@@ -496,7 +496,7 @@ class _ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
           ),
           const SizedBox(width: 8),
           _buildChipItem(
-            key: const Key('expense_filter_chip_receipt'),
+            key: const Key('expense_history_receipt_filter_toggle'),
             label: '🧾 Con comprobante',
             isSelected: _onlyWithReceipt,
             onTap: () {
