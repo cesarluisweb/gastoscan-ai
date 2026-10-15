@@ -24,24 +24,24 @@ class ChatSuggestion {
 
 const List<ChatSuggestion> kDefaultChatSuggestions = [
   ChatSuggestion(
-    label: '¿Cuánto he gastado este mes?',
+    label: '¿Cómo voy con mi presupuesto?',
     icon: Icons.account_balance_wallet_outlined,
+  ),
+  ChatSuggestion(
+    label: '¿Cómo va mi meta de ahorro?',
+    icon: Icons.savings_outlined,
   ),
   ChatSuggestion(
     label: '¿En qué categoría he gastado más?',
     icon: Icons.pie_chart_outline,
   ),
   ChatSuggestion(
+    label: '¿A cuánto está la tasa del BCV hoy?',
+    icon: Icons.currency_exchange,
+  ),
+  ChatSuggestion(
     label: '¿Qué tengo en mi lista de compras?',
     icon: Icons.checklist_rounded,
-  ),
-  ChatSuggestion(
-    label: '¿Cómo voy con mi presupuesto?',
-    icon: Icons.savings_outlined,
-  ),
-  ChatSuggestion(
-    label: 'Dame un resumen de mis gastos',
-    icon: Icons.analytics_outlined,
   ),
 ];
 
@@ -302,9 +302,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
     try {
       final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
+      final settings = Provider.of<SettingsProvider>(context, listen: false);
       final shoppingItems = await _dbHelper.getAllShoppingItems();
       final savingsSnapshot = gastoProvider.savingsSnapshot;
       final contextData = {
+        'tasa_bcv_usd': settings.tasaCambioVesUsd,
+        'tasa_bcv_eur': settings.tasaCambioEurUsd,
         'gastos_mes': gastoProvider.gastos.map((g) => g.toMap()).toList(),
         'total_usd': gastoProvider.totalMesUsd,
         'total_ves': gastoProvider.totalMesVes,
@@ -858,7 +861,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             ),
           ),
           Container(
-            padding: const EdgeInsets.only(left: 8, right: 8, top: 8, bottom: 40),
+            padding: EdgeInsets.only(
+              left: 8,
+              right: 8,
+              top: 8,
+              bottom: MediaQuery.of(context).viewInsets.bottom > 0 ? 8 : 12,
+            ),
             color: AppColors.surface,
             child: Row(
               children: [

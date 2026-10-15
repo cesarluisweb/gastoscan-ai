@@ -148,11 +148,11 @@ void main() {
         expect(find.byKey(Key('chat_suggestion_chip_$i'), skipOffstage: false), findsOneWidget);
       }
 
-      expect(find.text('¿Cuánto he gastado este mes?', skipOffstage: false), findsOneWidget);
-      expect(find.text('¿En qué categoría he gastado más?', skipOffstage: false), findsOneWidget);
-      expect(find.text('¿Qué tengo en mi lista de compras?', skipOffstage: false), findsOneWidget);
       expect(find.text('¿Cómo voy con mi presupuesto?', skipOffstage: false), findsOneWidget);
-      expect(find.text('Dame un resumen de mis gastos', skipOffstage: false), findsOneWidget);
+      expect(find.text('¿Cómo va mi meta de ahorro?', skipOffstage: false), findsOneWidget);
+      expect(find.text('¿En qué categoría he gastado más?', skipOffstage: false), findsOneWidget);
+      expect(find.text('¿A cuánto está la tasa del BCV hoy?', skipOffstage: false), findsOneWidget);
+      expect(find.text('¿Qué tengo en mi lista de compras?', skipOffstage: false), findsOneWidget);
     });
 
     testWidgets('tapping a suggestion chip sends it immediately as a user message', (tester) async {
@@ -167,16 +167,16 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(fakeGeminiService.callCount, 1);
-      expect(fakeGeminiService.lastUserMessage, '¿Cuánto he gastado este mes?');
+      expect(fakeGeminiService.lastUserMessage, '¿Cómo voy con mi presupuesto?');
 
-      expect(find.text('Respuesta simulada para: ¿Cuánto he gastado este mes?', skipOffstage: false), findsOneWidget);
+      expect(find.text('Respuesta simulada para: ¿Cómo voy con mi presupuesto?', skipOffstage: false), findsOneWidget);
     });
 
     testWidgets('tapping shopping list suggestion chip sends request directly', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      final shoppingSuggestionFinder = find.byKey(const Key('chat_suggestion_chip_2'), skipOffstage: false);
+      final shoppingSuggestionFinder = find.byKey(const Key('chat_suggestion_chip_4'), skipOffstage: false);
       expect(shoppingSuggestionFinder, findsOneWidget);
 
       await tester.tap(shoppingSuggestionFinder);

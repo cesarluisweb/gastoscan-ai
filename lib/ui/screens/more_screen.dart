@@ -24,12 +24,14 @@ enum MoreSubView { hub, shoppingList, chat, receiptGallery }
 
 class MoreScreen extends StatefulWidget {
   final VoidCallback? onNavigateToHome;
+  final VoidCallback? onNavigateToChat;
   final User? customUser;
   final Stream<User?>? customUserStream;
 
   const MoreScreen({
     Key? key,
     this.onNavigateToHome,
+    this.onNavigateToChat,
     this.customUser,
     this.customUserStream,
   }) : super(key: key);
@@ -97,12 +99,16 @@ class MoreScreenState extends State<MoreScreen> {
   }
 
   void openChat({bool fromHome = false}) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const ChatScreen(showBackButton: true),
-      ),
-    );
+    if (widget.onNavigateToChat != null) {
+      widget.onNavigateToChat!();
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const ChatScreen(showBackButton: true),
+        ),
+      );
+    }
   }
 
   void openShoppingList() {

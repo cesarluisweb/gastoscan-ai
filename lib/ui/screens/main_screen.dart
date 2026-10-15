@@ -103,7 +103,23 @@ class _FadeIndexedStackState extends State<_FadeIndexedStack> with SingleTickerP
 
 class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   int _currentIndex = 0;
+  bool _showingChat = false;
+  int _chatOriginIndex = 0;
   final GlobalKey<MoreScreenState> _moreScreenKey = GlobalKey<MoreScreenState>();
+
+  void _openChat({int fromIndex = 0}) {
+    setState(() {
+      _chatOriginIndex = fromIndex;
+      _showingChat = true;
+    });
+  }
+
+  void _closeChat() {
+    setState(() {
+      _showingChat = false;
+      _currentIndex = _chatOriginIndex;
+    });
+  }
 
   @override
   void initState() {
@@ -200,14 +216,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     DashboardScreen(
       onNavigateToGastos: () => _onTabTapped(1),
       onNavigateToAnalysis: () => _onTabTapped(2),
-      onNavigateToChat: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const ChatScreen(showBackButton: true),
-          ),
-        );
-      },
+      onNavigateToChat: () => _openChat(fromIndex: 0),
       onAddExpense: () => _showAddMenu(context),
     ),
     const ExpenseHistoryScreen(),
@@ -215,10 +224,14 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     MoreScreen(
       key: _moreScreenKey,
       onNavigateToHome: () => _onTabTapped(0),
+      onNavigateToChat: () => _openChat(fromIndex: 3),
     ),
   ];
 
   void _onTabTapped(int index) {
+    if (_showingChat) {
+      _showingChat = false;
+    }
     if (index != 3 && _currentIndex == 3) {
       _moreScreenKey.currentState?.returnToHub();
     }
@@ -366,57 +379,76 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final scanQueue = Provider.of<ScanQueueProvider>(context);
+    final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
 
-    return Scaffold(
-      body: _FadeIndexedStack(
-        index: _currentIndex,
-        children: _pages,
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddMenu(context),
-        backgroundColor: AppColors.primary,
-        elevation: 3,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add, color: AppColors.textPrimary, size: 32),
-      ),
-      floatingActionButtonLocation: const _CustomCenterDockedFabLocation(),
-      bottomNavigationBar: BottomAppBar(
-        color: AppColors.surface,
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 6.0,
-        padding: EdgeInsets.zero,
-        height: 65, // Reducir altura
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildTabItem(
-              icon: Icons.home_outlined,
-              activeIcon: Icons.home,
-              label: 'Inicio',
-              index: 0,
-              badgeCount: scanQueue.readyItems.length,
-            ),
-            _buildTabItem(
-              icon: Icons.receipt_long_outlined,
-              activeIcon: Icons.receipt_long,
-              label: 'Gastos',
-              index: 1,
-            ),
-            const SizedBox(width: 48), // Espacio para el FAB
-            _buildTabItem(
-              icon: Icons.analytics_outlined,
-              activeIcon: Icons.analytics,
-              label: 'Análisis',
-              index: 2,
-            ),
-            _buildTabItem(
-              icon: Icons.more_horiz,
-              activeIcon: Icons.more_horiz,
-              label: 'Más',
-              index: 3,
-            ),
-          ],
-        ),
+    return PopScope(
+      canPop: !_showingChat,
+      onPopInvoked: (didPop) {
+        if (didPop) return;
+        if (_showingChat) {
+          _closeChat();
+        }
+      },
+      child: Scaffold(
+        body: _showingChat
+            ? ChatScreen(
+                showBackButton: true,
+                onBack: _closeChat,
+              )
+            : _FadeIndexedStack(
+                index: _currentIndex,
+                children: _pages,
+              ),
+        floatingActionButton: isKeyboardOpen
+            ? null
+            : FloatingActionButton(
+                onPressed: () => _showAddMenu(context),
+                backgroundColor: AppColors.primary,
+                elevation: 3,
+                shape: const CircleBorder(),
+                child: const Icon(Icons.add, color: AppColors.textPrimary, size: 32),
+              ),
+        floatingActionButtonLocation: const _CustomCenterDockedFabLocation(),
+        bottomNavigationBar: isKeyboardOpen
+            ? null
+            : BottomAppBar(
+                color: AppColors.surface,
+                shape: const CircularNotchedRectangle(),
+                notchMargin: 6.0,
+                padding: EdgeInsets.zero,
+                height: 65, // Reducir altura
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildTabItem(
+                      icon: Icons.home_outlined,
+                      activeIcon: Icons.home,
+                      label: 'Inicio',
+                      index: 0,
+                      badgeCount: scanQueue.readyItems.length,
+                    ),
+                    _buildTabItem(
+                      icon: Icons.receipt_long_outlined,
+                      activeIcon: Icons.receipt_long,
+                      label: 'Gastos',
+                      index: 1,
+                    ),
+                    const SizedBox(width: 48), // Espacio para el FAB
+                    _buildTabItem(
+                      icon: Icons.analytics_outlined,
+                      activeIcon: Icons.analytics,
+                      label: 'Análisis',
+                      index: 2,
+                    ),
+                    _buildTabItem(
+                      icon: Icons.more_horiz,
+                      activeIcon: Icons.more_horiz,
+                      label: 'Más',
+                      index: 3,
+                    ),
+                  ],
+                ),
+              ),
       ),
     );
   }
@@ -428,7 +460,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     required int index,
     int badgeCount = 0,
   }) {
-    final isSelected = _currentIndex == index;
+    final isSelected = !_showingChat && _currentIndex == index;
 
     Widget iconWidget = Icon(
       isSelected ? activeIcon : icon,
