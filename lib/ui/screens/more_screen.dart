@@ -40,7 +40,6 @@ class MoreScreen extends StatefulWidget {
 
 class MoreScreenState extends State<MoreScreen> {
   MoreSubView _currentSubView = MoreSubView.hub;
-  bool _openedFromHome = false;
   bool _isCheckingUpdate = false;
   String _currentAppVersion = '1.0.1';
 
@@ -114,7 +113,6 @@ class MoreScreenState extends State<MoreScreen> {
 
   void returnToHub() {
     setState(() {
-      _openedFromHome = false;
       _currentSubView = MoreSubView.hub;
     });
   }
