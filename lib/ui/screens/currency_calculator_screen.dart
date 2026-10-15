@@ -168,8 +168,6 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
     }
   }
 
-  void _copiarMontoVes() => _copiarMonto();
-
   void _registrarComoGasto(double activeRate) {
     final double? montoVes = tryParseAmount(_vesCtrl.text, isPrice: false);
     final double? montoDivisa = tryParseAmount(_divisaCtrl.text, isPrice: false);
