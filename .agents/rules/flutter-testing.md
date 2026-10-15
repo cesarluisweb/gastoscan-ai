@@ -6,7 +6,11 @@ description: "Convenciones para pruebas unitarias y de widgets, configuración d
 
 # Convenciones de Pruebas en Flutter (test/)
 
-## 1. Configuración de Viewport y Renderizado en Pruebas
+## 1. Importaciones y Sintaxis en Pruebas
+- **Tolerancia Cero a Imports Huérfanos (`unused_import`):** En CI, `flutter analyze` se ejecuta con la bandera `--fatal-warnings`. Todo import no utilizado en archivos de prueba (`test/**/*.dart`) romperá el build. Verificar y remover imports antes de commitear.
+- **Búsqueda de Texto en Widgets Enriquecidos:** Cuando se use `find.textContaining` para evaluar montos o textos renderizados mediante `RichText` o `Text.rich`, especificar obligatoriamente `findRichText: true` para evitar falsos negativos por renderizado compuesto.
+
+## 2. Configuración de Viewport y Renderizado en Pruebas
 - **Pantallas con Scroll (Vertical y Horizontal):** En widget tests de pantallas con `ListView`, carruseles o chips desplazables (`Axis.horizontal`), definir siempre en `setUp()` un viewport amplio:
   ```dart
   binding.window.physicalSizeTestValue = const Size(2500, 4000);
@@ -15,10 +19,10 @@ description: "Convenciones para pruebas unitarias y de widgets, configuración d
   Limpiar el valor en `tearDown()` con `binding.window.clearPhysicalSizeTestValue()`.
 - **Renderizado Fuera de Pantalla:** Usar `skipOffstage: false` en los `find.text(...)` o `find.byKey(...)` para evitar falsos negativos ocasionados por renderizado perezoso fuera del viewport.
 
-## 2. Resiliencia y Aislamiento de Firebase
+## 3. Resiliencia y Aislamiento de Firebase
 - **Validación de Instancia Activa:** Todo widget o servicio que interactúe con `FirebaseAuth` o Firestore debe validar `Firebase.apps.isNotEmpty` antes de instanciar streams o métodos, garantizando que los tests de widgets se ejecuten limpiamente sin requerir un backend simulado.
 
-## 3. Mocks y Fakes de Arquitectura
+## 4. Mocks y Fakes de Arquitectura
 - **Firmas Exactas en Fakes:** Al implementar clases simuladas (`FakeGastoProvider`, `FakeSettingsProvider`), replicar con exactitud la firma de los métodos reales, respetando si los parámetros son posicionales o nombrados.
 - **`ScanQueueProvider` en Tests de Widgets:** Debe instanciarse siempre con `autoProcess: false` para evitar que `loadQueue()` acceda a la base de datos real (`DatabaseHelper`), programe notificaciones o mantenga timers activos que bloqueen `pumpAndSettle()`. En el bloque `tearDown()`, invocar siempre `scanQueueProvider.dispose()`.
 - **Sobrescritura en Fakes de `DatabaseHelper`:** Si un fake extiende `DatabaseHelper.test()`, sobrescribir `resetStaleProcessingScanQueueItems()` devolviendo `Future<int>` (no `void`), evitando invocar la base de datos física.
@@ -32,7 +36,7 @@ description: "Convenciones para pruebas unitarias y de widgets, configuración d
   ```
   Evitar overrides manuales con parámetros `dynamic` que rompan tipado estricto.
 
-## 4. Aserciones Robustas y Determinismo
+## 5. Aserciones Robustas y Determinismo
 - **Aserciones de Moneda y Formato:** Evitar evaluar cadenas literales completas que combinen texto y montos formateados (ej. evitar `find.textContaining('de $100.00 está')`). Validar por separado las frases clave con `contains` independientes (ej. `find.textContaining('Tu meta de ahorro')` y `find.textContaining('comprometida')`), evitando falsos negativos por diferencias de separadores decimales (`.` vs `,`) o espacios de `NumberFormat`.
 - **Aserciones sobre `RichText`:** Las funciones `find.text()` y `find.textContaining()` no inspeccionan widgets `RichText` a menos que se indique explícitamente `findRichText: true`. Cuando el componente a verificar use `RichText` o `TextSpan` (ej. montos en moneda compuesta), usar:
   ```dart
