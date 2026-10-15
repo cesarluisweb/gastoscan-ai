@@ -290,7 +290,8 @@ void main() {
       expect(realFile.existsSync(), isTrue);
 
       await provider.enqueue(realFile.path);
-      await provider.enqueue(realFile.path);
+      await fakeDb.insertScanQueueItem(realFile.path);
+      await provider.loadPendingItems();
       expect(provider.pendingCount, equals(2));
 
       final firstId = provider.pendingItems.first['id'] as int;
