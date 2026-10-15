@@ -3,18 +3,19 @@
 
 ## Estado Actual Inmediato
 - **Rama:** `main`.
-- **Fase activa:** Fase 6.2 (UI-01, UI-05, UX-06, UX-07, FIN-09) `Implementada 🔧`. Fase 3 de Auditoría Integral `Completada ✅`.
+- **Fase activa:** Optimización de Tokens de Chat / Blindaje de Cuota IA (SEC-13 / AI-03) y Fase 6.2 en `Implementada 🔧`.
+- **Roadmap Actualizado:** [ROADMAP.md](ROADMAP.md) refleja tareas y optimizaciones en curso.
 
 ## Decisiones Técnicas y de Negocio Recientes
-- **UI-01 Iconografía Canónica:** Centralizada en `AppConstants.getCategoryIcon(cat)` para Inicio, Gastos, Análisis y Revisión.
-- **UI-05 & UX-06 AppBar y Gráfico Inicio:** Destellos `Icons.auto_awesome` en AppBar y etiqueta `+X categorías` en consolidación de categorías secundarias.
-- **UX-07 Desglose Gastos:** Mini-íconos por ítem y expansor interactivo `Ver X artículos más` para compras de más de 4 productos.
-- **FIN-09 Calculadora Cambiaria:** Conversor bidireccional en tiempo real, chips directos de tasa (Dólar BCV, Euro BCV, USDT, Personalizada), tabla comparativa de brecha, copiado rápido a portapapeles y pre-llenado de gasto.
+- **Optimización de Tokens de Chat:** Resumen semántico precalculado en SQLite (totales por categoría, top 10 productos del mes, últimas 5 compras) y ventana deslizante de 5 mensajes en `ChatScreen`, reduciendo >80% de tokens de entrada.
+- **Blindaje en Cloudflare Gateway:** Límite diario invisible de seguridad de 50 peticiones/día por UID con mensaje amigable invitando a apoyar el proyecto (`Más > Apoyar el proyecto ☕`) y bypass para API Keys propias.
+- **Fase 6.2 (UI/UX & Calculadora):** Iconografía canónica centralizada (`AppConstants.getCategoryIcon`), Calculadora Cambiaria en Más y desglose directo interactivo en tarjetas de gasto.
 
 ## Errores y Fricciones a Evitar
 - `AppConstants.categorias`: El catálogo canónico son 8 categorías fijas.
 - Íconos de categorías deben consultarse exclusivamente vía `AppConstants.getCategoryIcon(cat)`.
-- `SettingsProvider` expone `tasaCambioVesEur`, no `tasaCambioEurUsd`.
+- `GeminiExtractionResult` requiere obligatoriamente `impuestoIva`.
+- En `GastoModel`, `uuid` es `final String uuid` no nulo (`??` posterior causa `dead_null_aware_expression`).
 
 ## Próximo Paso Inmediato
-- Monitorear CI en verde y proceder con validación de Fase 6.2 en dispositivo físico.
+- Confirmar CI en verde tras push a `main`.
