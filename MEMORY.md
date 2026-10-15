@@ -10,6 +10,7 @@
 - **UX-07 (Refinamiento Integral):** Tira de resumen mensual fija según `monedaPrincipal`, carrusel de chips de filtros rápidos (`[Todos]`, `[🧾 Con comprobante]`, categorías), cálculo proporcional de ítems multimoneda (resuelve EUR vs USD), unitario vs total (`3x a $ 0,52 c/u`), Title Case en comercios a 2 líneas, integración de 1 solo ítem en cabecera sin divisor y limpieza de sufijos fiscales `(G)/(E)`.
 - **FIN-09 (Refinado):** Pastilla de tasa swap interactiva (`calc_swap_button`) para invertir orden Divisa/Bolívares, botón de copia dinámico (`Copiar Bs.` / `Copiar USD/EUR/USDT`), comparativa con texto negro carbón y eliminación de dropdown innecesario.
 - **Navegación Atrás (MainScreen):** PopScope inteligente: desde tabs secundarias regresa a Inicio; en Más regresa al Hub; en Inicio requiere doble toque ('Presiona de nuevo para salir') en <= 2s para invocar `SystemNavigator.pop()`.
+- **Consistencia de AppBars (Opción A):** Las 4 pantallas principales (`Inicio`, `Gastos`, `Análisis`, `Más`) muestran de forma idéntica `[🔍 Buscar, ✨ Asistente IA]`. La lupa redirige directamente a Gastos activando la búsqueda con teclado desplegado. Se retiró el botón redundante de presupuestos en Análisis y al presionar atrás mientras se busca se cancela la búsqueda sin cambiar de pestaña.
 - **Iconografía e IA:** `AppConstants.getCategoryIcon`, `Icons.auto_awesome` en AppBar de Inicio y agrupación `+X categorías`.
 
 ## Errores y Fricciones a Evitar
