@@ -1,3 +1,4 @@
+import 'package:gastoscan_ai/core/utils/currency_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -155,7 +156,7 @@ void main() {
       expect(find.byKey(const Key('expense_history_monthly_summary_strip')), findsOneWidget);
       expect(find.textContaining('Total gastado'), findsOneWidget);
       expect(find.textContaining('2 compras'), findsOneWidget);
-      expect(find.textContaining('\$ 30,00'), findsOneWidget);
+      expect(find.textContaining(r'$ 30,00', findRichText: true), findsOneWidget);
 
       // Filter chips are present
       expect(find.byKey(const Key('expense_filter_chip_all')), findsOneWidget);
