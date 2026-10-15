@@ -247,8 +247,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Card displays $ 7,84 in header
-      expect(find.text('\$ 7,84'), findsOneWidget);
+      // Both card header and item row display $ 7,84 proportionally
+      expect(find.text(r'$ 7,84'), findsNWidgets(2));
     });
   });
 }
