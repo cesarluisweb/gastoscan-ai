@@ -429,6 +429,7 @@ La app **no está lista para envío a producción** en su estado actual. Se iden
 | 10 | Deduplicación SHA-256 en cola de escaneo | OCR-01 | Mediano | Pendiente de validación 🧪 |
 | 11 | Centralizar hidratación de facturas en `ScanQueueProvider` | TEC-08 | Pequeño | Pendiente |
 | 12 | Escribir tests para `GastoProvider`, `SyncService` | TEC-09 | Grande | Pendiente |
+| 13 | Chat IA analítico, tasa USDT y saludo guiado | AI-01 | Pequeño | Pendiente de validación 🧪 |
 
 ### Fase 4: Mejoras futuras no esenciales
 
