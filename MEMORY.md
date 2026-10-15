@@ -9,6 +9,7 @@
 ## Decisiones Técnicas y de Negocio Recientes
 - **UX-07 (Refinado):** Superficie blanca continua sin recuadro gris ni label 'Desglose de Ítems:', delimitada por `Divider` sutil. Expansor en pastilla sutil con texto negro carbón `AppColors.textPrimary`.
 - **FIN-09 (Refinado):** Pastilla de tasa swap interactiva (`calc_swap_button`) para invertir orden Divisa/Bolívares, botón de copia dinámico (`Copiar Bs.` / `Copiar USD/EUR/USDT`), comparativa con texto negro carbón y eliminación de dropdown innecesario.
+- **Navegación Atrás (MainScreen):** PopScope inteligente: desde tabs secundarias regresa a Inicio; en Más regresa al Hub; en Inicio requiere doble toque ('Presiona de nuevo para salir') en <= 2s para invocar `SystemNavigator.pop()`.
 - **Iconografía e IA:** `AppConstants.getCategoryIcon`, `Icons.auto_awesome` en AppBar de Inicio y agrupación `+X categorías`.
 
 ## Errores y Fricciones a Evitar
