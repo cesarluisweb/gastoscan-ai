@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:gastoscan_ai/data/models/gasto_model.dart';
 import 'package:gastoscan_ai/data/datasources/local/database_helper.dart';
 import 'package:gastoscan_ai/providers/gasto_provider.dart';
 import 'package:gastoscan_ai/providers/scan_queue_provider.dart';
