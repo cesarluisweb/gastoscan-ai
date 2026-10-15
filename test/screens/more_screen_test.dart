@@ -343,5 +343,34 @@ void main() {
       expect(find.text('Sin conexión a internet. Verifica tu red.'), findsOneWidget);
       expect(find.text('Cuenta y datos eliminados. Sesión cerrada.'), findsNothing);
     });
+
+    testWidgets('renders rates legal disclaimer and legal disclaimer menu item in MoreScreen', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      final ratesDisclaimer = find.byKey(const Key('more_rates_bcv_disclaimer'));
+      await tester.ensureVisible(ratesDisclaimer);
+      await tester.pumpAndSettle();
+      expect(ratesDisclaimer, findsOneWidget);
+      expect(find.byKey(const Key('more_rates_bcv_source_link')), findsOneWidget);
+
+      final legalItem = find.byKey(const Key('more_menu_legal_disclaimer'));
+      await tester.ensureVisible(legalItem);
+      await tester.pumpAndSettle();
+      expect(legalItem, findsOneWidget);
+
+      // Tap on legal disclaimer item to open dialog
+      await tester.tap(legalItem);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Aviso Legal y Tasas'), findsOneWidget);
+      expect(find.textContaining('Rinde Más es una aplicación independiente'), findsOneWidget);
+
+      // Close dialog
+      await tester.tap(find.text('Entendido'));
+      await tester.pumpAndSettle();
+      expect(find.text('Aviso Legal y Tasas'), findsNothing);
+    });
   });
 }
+

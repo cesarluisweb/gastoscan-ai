@@ -62,6 +62,12 @@ A diferencia de otras aplicaciones, en Rinde Más tu seguridad no es negociable:
 • Revisa tus presupuestos y registra gastos desde tu computadora o tablet ingresando a rindemas.cesarluis.com/panel con tu misma cuenta de Google.
 
 Haz rendir tu dinero hoy mismo. Descarga Rinde Más gratis y toma el control de tus finanzas personales en Venezuela.
+ 
+---
+Fuente de información y aviso importante:
+Las tasas de cambio denominadas "Dólar BCV" y "Euro BCV" corresponden a información pública publicada por el Banco Central de Venezuela (BCV). Puedes consultar la fuente original en: https://www.bcv.org.ve/
+
+Rinde Más es una aplicación independiente de finanzas personales. No representa, no está afiliada, respaldada ni patrocinada por el Banco Central de Venezuela (BCV) ni por ninguna otra entidad gubernamental o política. Las tasas mostradas son de carácter informativo y referencial para tus registros de gastos personales.
 ```
 
 ---

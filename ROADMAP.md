@@ -37,7 +37,7 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 
 ## Fase 5: Marketing, Lanzamiento y Tracción (En Progreso 🔄)
 *Hitos para validar el producto con usuarios reales en Venezuela:*
-- **Subida a Google Play Store (Closed Testing):** (En progreso 🔄) Ficha técnica y capturas preparadas (`DOC_FICHA_PLAY_STORE.md`). Pendiente: completar cuestionarios de política en Play Console y coordinar la pista cerrada de 20 testers durante 14 días continuos.
+- **Subida a Google Play Store (Closed Testing):** (En progreso 🔄) Ficha técnica y capturas preparadas (`DOC_FICHA_PLAY_STORE.md`). Adaptación de políticas de información gubernamental completada: descargos de no representación y enlaces funcionales a `https://www.bcv.org.ve/` integrados en la ficha de tienda, Calculadora de divisas y pantalla Más. AAB v1.0.4 compilado y listo para reenvío conjunto con la ficha. Pendiente: completar cuestionarios de política en Play Console y coordinar la pista cerrada de 20 testers durante 14 días continuos.
 - **Código QR de Descarga en Landing (Desktop):** (Pendiente) Incorporar tarjeta con código QR dinámico en `rindemas.cesarluis.com` para escanear e instalar directamente desde una PC.
 - **Correo de Bienvenida Automatizado:** (Pendiente) Disparar correo de bienvenida y guía de primeros pasos cuando el usuario vincule su cuenta de Google (vía trigger de Cloud Functions o Firestore).
 - **Ejecución del Plan de Crecimiento (Primeros 100 Usuarios):** (Pendiente) Despliegue de tácticas comunitarias y orgánicas en grupos venezolanos según `marketing_plan.md` y `.agents/skills/growth-first-100-users/SKILL.md`.

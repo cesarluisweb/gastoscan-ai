@@ -45,6 +45,12 @@ Menos complicaciones, más claridad.
 Rinde Más te ayuda a entender en qué gastas, cuánto puedes gastar y cuánto puedes reservar para tus objetivos financieros.
 
 Empieza hoy a tomar decisiones más conscientes con tu dinero.
+
+---
+Fuente de información y aviso importante:
+Las tasas de cambio denominadas "Dólar BCV" y "Euro BCV" corresponden a información pública publicada por el Banco Central de Venezuela (BCV). Puedes consultar la fuente original en: https://www.bcv.org.ve/
+
+Rinde Más es una aplicación independiente de finanzas personales. No representa, no está afiliada, respaldada ni patrocinada por el Banco Central de Venezuela (BCV) ni por ninguna otra entidad gubernamental o política. Las tasas mostradas son informativas y de referencia para la organización de tus compras personales.
 ```
 
 ---

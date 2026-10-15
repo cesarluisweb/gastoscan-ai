@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/utils/amount_parser.dart';
@@ -500,6 +501,71 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
               ],
             ),
           ),
+          const SizedBox(height: 16),
+
+          // Descargo oficial de fuentes públicas
+          Container(
+            key: const Key('calc_bcv_disclaimer_card'),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppColors.card,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  children: [
+                    Icon(Icons.info_outline_rounded, size: 16, color: AppColors.textSecondary),
+                    SizedBox(width: 8),
+                    Text(
+                      'Aviso legal sobre tasas oficiales',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Las tasas «Dólar BCV» y «Euro BCV» corresponden a información pública publicada por el Banco Central de Venezuela (BCV). Rinde Más es una aplicación independiente y no representa, no está afiliada ni cuenta con respaldo del BCV ni de ninguna entidad gubernamental.',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: AppColors.textSecondary,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                InkWell(
+                  key: const Key('calc_bcv_source_link'),
+                  onTap: _abrirFuenteBcv,
+                  borderRadius: BorderRadius.circular(6),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 2),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Fuente oficial: www.bcv.org.ve',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: AppColors.primaryDark,
+                            fontWeight: FontWeight.bold,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                        SizedBox(width: 4),
+                        Icon(Icons.open_in_new, size: 12, color: AppColors.primaryDark),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 30),
         ],
       ),
@@ -742,4 +808,15 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
       ),
     );
   }
+
+  Future<void> _abrirFuenteBcv() async {
+    final uri = Uri.parse('https://www.bcv.org.ve/');
+    try {
+      bool launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched) {
+        await launchUrl(uri, mode: LaunchMode.platformDefault);
+      }
+    } catch (_) {}
+  }
 }
+

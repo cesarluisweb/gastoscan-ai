@@ -260,6 +260,67 @@ class MoreScreenState extends State<MoreScreen> {
     );
   }
 
+  void _mostrarAvisoLegalBcv() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: const Row(
+          children: [
+            Icon(Icons.gavel_outlined, color: AppColors.primaryDark),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Aviso Legal y Tasas',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Rinde Más es una aplicación independiente de finanzas personales desarrollada por César Luis.\n\n'
+              'No representa, no está afiliada, respaldada ni patrocinada por el Banco Central de Venezuela (BCV) ni por ninguna otra entidad gubernamental o política.\n\n'
+              'Las tasas de cambio «Dólar BCV» y «Euro BCV» se consultan exclusivamente con propósitos informativos de referencia pública desde el portal oficial del BCV.',
+              style: TextStyle(fontSize: 13, color: AppColors.textPrimary, height: 1.4),
+            ),
+            const SizedBox(height: 14),
+            InkWell(
+              onTap: () {
+                Navigator.of(ctx).pop();
+                _abrirUrl('https://www.bcv.org.ve/', 'No se pudo abrir el sitio web del BCV');
+              },
+              child: const Row(
+                children: [
+                  Icon(Icons.open_in_new, size: 16, color: AppColors.primaryDark),
+                  SizedBox(width: 6),
+                  Text(
+                    'Visitar www.bcv.org.ve',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.primaryDark,
+                      fontWeight: FontWeight.bold,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Entendido', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_currentSubView == MoreSubView.shoppingList) {
@@ -608,6 +669,51 @@ class MoreScreenState extends State<MoreScreen> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 10),
+                // Nota legal de tasas BCV
+                Container(
+                  key: const Key('more_rates_bcv_disclaimer'),
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.cardLighter,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Tasas de referencia tomadas de fuentes públicas oficiales (BCV). Rinde Más no representa al BCV ni a ninguna entidad gubernamental.',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textSecondary,
+                          height: 1.35,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      InkWell(
+                        key: const Key('more_rates_bcv_source_link'),
+                        onTap: () => _abrirUrl('https://www.bcv.org.ve/', 'No se pudo abrir la página del BCV'),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Fuente oficial: www.bcv.org.ve',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: AppColors.primaryDark,
+                                fontWeight: FontWeight.bold,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                            SizedBox(width: 4),
+                            Icon(Icons.open_in_new, size: 12, color: AppColors.primaryDark),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
                   value: AppConstants.monedas.contains(settings.monedaPrincipal) ? settings.monedaPrincipal : 'USD',
@@ -790,6 +896,21 @@ class MoreScreenState extends State<MoreScreen> {
                   ),
                   trailing: const Icon(Icons.open_in_new, size: 18, color: AppColors.textSecondary),
                   onTap: _abrirDonaciones,
+                ),
+                const Divider(height: 1, color: AppColors.border),
+                ListTile(
+                  key: const Key('more_menu_legal_disclaimer'),
+                  leading: const Icon(Icons.gavel_outlined, color: AppColors.primaryDark),
+                  title: const Text(
+                    'Aviso legal y tasas oficiales',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                  ),
+                  subtitle: const Text(
+                    'Información pública del BCV y descargo de no representación',
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                  ),
+                  trailing: const Icon(Icons.info_outline, size: 18, color: AppColors.textSecondary),
+                  onTap: _mostrarAvisoLegalBcv,
                 ),
               ],
             ),

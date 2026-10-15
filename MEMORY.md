@@ -15,6 +15,8 @@
 - **Consistencia de AppBars (Opción A):** Las 4 pantallas principales (`Inicio`, `Gastos`, `Análisis`, `Más`) muestran de forma idéntica `[🔍 Buscar, ✨ Asistente IA]`. La lupa redirige directamente a Gastos activando la búsqueda con teclado desplegado. Se retiró el botón redundante de presupuestos en Análisis y al presionar atrás mientras se busca se cancela la búsqueda sin cambiar de pestaña.
 - **Iconografía e IA:** `AppConstants.getCategoryIcon`, `Icons.auto_awesome` en AppBar de Inicio y agrupación `+X categorías`.
 
+- **POL-01 (Blindaje Política Gubernamental Google Play):** Para subsanar el rechazo por "Información gubernamental / Afirmaciones engañosas", se agregó descargo explícito de no representación y enlace funcional a `https://www.bcv.org.ve/` tanto en la Ficha de Play Store (`DOC_FICHA_PLAY_STORE.md` / `FICHA_GOOGLE_PLAY.md`) como en la app (`currency_calculator_screen.dart` y `more_screen.dart`), con tests automatizados. Versión incrementada a `1.0.4+4`.
+
 ## Errores y Fricciones a Evitar
 - **Regla Estricta DESIGN.md §2.2:** Prohibido texto amarillo sobre fondo blanco/claro. El amarillo (`AppColors.primaryDark` / `primary`) solo se permite en iconos, bordes activos o fondos cuyo texto sea estrictamente negro.
 - `AppConstants.categorias`: El catálogo canónico son 8 categorías fijas.
@@ -25,5 +27,6 @@
 - Para widgets que usan `RichText` en tests: especificar `find.textContaining(..., findRichText: true)`.
 
 ## Próximo Paso Inmediato
-- CI en verde confirmado (`conclusion: success`, Run `38787056019`). APK publicado en BanaHosting y Landing actualizada en Firebase Hosting. Esperar validación de César en dispositivo para marcar FIN-09, UX-11 y AI-04 `Completada ✅`.
+- Commitear y pushear cambios a `main`. Monitorear CI hasta confirmar `conclusion: success` (generación de AAB v1.0.4). César actualiza ficha en Play Console y reenvía a revisión junto con el nuevo AAB.
+
 
