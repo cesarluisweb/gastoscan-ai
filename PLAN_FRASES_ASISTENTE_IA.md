@@ -5,19 +5,19 @@ Añadir a la pantalla del **Asistente IA** (`ChatScreen`) 5 frases predeterminad
 
 ---
 
-## 2. Frases Predeterminadas Propuestas
-Alineadas con los datos del contexto financiero (`gastos_mes`, totales, presupuestos y lista de compras):
+## 2. Frases Predeterminadas Implementadas
+Cada chip representa una habilidad analítica distinta de la IA sin botones de acción directa para no contaminar datos accidentales al explorar por curiosidad:
 
-1. **"¿Cuánto he gastado este mes?"** (Icono: billetera)
-   - Consulta el balance y total acumulado del mes en USD y VES.
-2. **"¿En qué categoría he gastado más?"** (Icono: gráfico de torta)
-   - Identifica la categoría de mayor impacto en los gastos del mes.
-3. **"¿Qué tengo en mi lista de compras?"** (Icono: checklist)
-   - Revisa rápidamente los artículos pendientes en la lista de compras.
-4. **"¿Cómo voy con mi presupuesto?"** (Icono: ahorro / alcancía)
-   - Evalúa el consumo actual respecto al límite presupuestario configurado.
-5. **"Dame un resumen de mis gastos"** (Icono: analítica)
-   - Genera una síntesis ejecutiva del comportamiento de gastos reciente.
+1. **"¿Qué gastos pequeños están sumando más de lo que parece?"** (Icono: lupa - `Icons.search_rounded`)
+   - Habilidad: Detección de fugas y gastos hormiga.
+2. **"¿Qué gastos podría reducir sin afectar lo esencial?"** (Icono: tijeras - `Icons.content_cut_rounded`)
+   - Habilidad: Recorte inteligente y optimización de presupuesto.
+3. **"¿Qué productos o gastos me han subido de precio?"** (Icono: tendencia - `Icons.trending_up_rounded`)
+   - Habilidad: Comparativa de precios e inflación histórica.
+4. **"¿En qué días o momentos del mes suelo gastar más?"** (Icono: calendario - `Icons.calendar_month_rounded`)
+   - Habilidad: Detección de patrones temporales y estacionalidad.
+5. **"¿Qué suelo comprar cada mes que aún no he comprado?"** (Icono: checklist - `Icons.checklist_rounded`)
+   - Habilidad: Planificación y compras recurrentes pendientes.
 
 ---
 

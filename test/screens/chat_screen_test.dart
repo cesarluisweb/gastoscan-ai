@@ -79,6 +79,7 @@ class FakeSettingsProvider extends SettingsProvider {
 class FakeGeminiService extends GeminiService {
   int callCount = 0;
   String? lastUserMessage;
+  Map<String, dynamic>? lastContextData;
   Map<String, dynamic>? customResponse;
 
   @override
@@ -87,6 +88,7 @@ class FakeGeminiService extends GeminiService {
     required Map<String, dynamic> contextData,
   }) async {
     callCount++;
+    lastContextData = contextData;
     if (messages.isNotEmpty) {
       lastUserMessage = messages.last['text'];
     }
@@ -140,6 +142,19 @@ void main() {
       );
     }
 
+    testWidgets('renders welcoming initial greeting from assistant', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(
+          '¡Hola! Puedo analizar tus finanzas, darte consejos para ahorrar, registrar gastos o agregar productos a tu lista de compras. ¿Por dónde empezamos?',
+          skipOffstage: false,
+        ),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('renders all 5 predefined chat suggestions in horizontal bar', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
@@ -148,11 +163,11 @@ void main() {
         expect(find.byKey(Key('chat_suggestion_chip_$i'), skipOffstage: false), findsOneWidget);
       }
 
-      expect(find.text('¿Cómo voy con mi presupuesto?', skipOffstage: false), findsOneWidget);
-      expect(find.text('¿Cómo va mi meta de ahorro?', skipOffstage: false), findsOneWidget);
-      expect(find.text('¿En qué categoría he gastado más?', skipOffstage: false), findsOneWidget);
-      expect(find.text('¿A cuánto está la tasa del BCV hoy?', skipOffstage: false), findsOneWidget);
-      expect(find.text('¿Qué tengo en mi lista de compras?', skipOffstage: false), findsOneWidget);
+      expect(find.text('¿Qué gastos pequeños están sumando más de lo que parece?', skipOffstage: false), findsOneWidget);
+      expect(find.text('¿Qué gastos podría reducir sin afectar lo esencial?', skipOffstage: false), findsOneWidget);
+      expect(find.text('¿Qué productos o gastos me han subido de precio?', skipOffstage: false), findsOneWidget);
+      expect(find.text('¿En qué días o momentos del mes suelo gastar más?', skipOffstage: false), findsOneWidget);
+      expect(find.text('¿Qué suelo comprar cada mes que aún no he comprado?', skipOffstage: false), findsOneWidget);
     });
 
     testWidgets('tapping a suggestion chip sends it immediately as a user message', (tester) async {
@@ -167,9 +182,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(fakeGeminiService.callCount, 1);
-      expect(fakeGeminiService.lastUserMessage, '¿Cómo voy con mi presupuesto?');
+      expect(fakeGeminiService.lastUserMessage, '¿Qué gastos pequeños están sumando más de lo que parece?');
+      expect(fakeGeminiService.lastContextData?['tasa_usdt'], fakeSettingsProvider.tasaCambioVesUsdt);
 
-      expect(find.text('Respuesta simulada para: ¿Cómo voy con mi presupuesto?', skipOffstage: false), findsOneWidget);
+      expect(find.text('Respuesta simulada para: ¿Qué gastos pequeños están sumando más de lo que parece?', skipOffstage: false), findsOneWidget);
     });
 
     testWidgets('tapping shopping list suggestion chip sends request directly', (tester) async {
@@ -184,8 +200,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(fakeGeminiService.callCount, 1);
-      expect(fakeGeminiService.lastUserMessage, '¿Qué tengo en mi lista de compras?');
-      expect(find.text('Respuesta simulada para: ¿Qué tengo en mi lista de compras?', skipOffstage: false), findsOneWidget);
+      expect(fakeGeminiService.lastUserMessage, '¿Qué suelo comprar cada mes que aún no he comprado?');
+      expect(find.text('Respuesta simulada para: ¿Qué suelo comprar cada mes que aún no he comprado?', skipOffstage: false), findsOneWidget);
     });
 
     testWidgets('renders review expense button when assistant extracts an expense', (tester) async {

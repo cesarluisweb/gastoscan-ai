@@ -1,140 +1,150 @@
-# Roadmap y Fases de Desarrollo: Rinde Más
+# Roadmap de Desarrollo: Rinde Más
 
-Este documento centraliza las ideas y mejoras pendientes, ordenadas estratégicamente por prioridad, impacto de valor (especialmente B2C) y viabilidad técnica.
+Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, ordenadas estratégicamente por prioridad, impacto de valor para el usuario venezolano y viabilidad técnica.
 
-## Principios de Ejecución y Entrega de Valor (Metodología de Validación Rápida)
-1. **Impacto de Negocio sobre Complejidad Técnica:** Priorizar funciones con alto impacto comercial y retención sobre desarrollos técnicamente complejos pero poco valorados por el usuario.
-2. **MVP Estricto:** Descartar funcionalidades que no resuelvan la necesidad central validada de los usuarios (cero conciliaciones complejas ni múltiples cuentas bancarias).
-3. **Los Datos son el Producto:** La captura precisa, normalización y cálculo exacto de datos de compras (precios, productos, IVA, tasa BCV) es la pieza más crítica del sistema.
-4. **Monetizar es un Producto Independiente:** La monetización requiere su propio diseño de experiencia, embudo de conversión y optimización continua; no se reduce a poner un botón de pago.
-5. **Fracasa Rápido, Ajusta Barato:** Validar hipótesis rápido, medir con analíticas y descartar o pivotar sin apego emocional.
-6. **Infraestructura como Activo Reutilizable:** Diseñar módulos desacoplados para que sirvan de base para futuras aplicaciones del mismo ecosistema financiero.
+> 📜 **Histórico de Hitos Completados:** Para consultar el detalle técnico y la bitácora de todas las fases y tareas ya finalizadas, consulta [ROADMAP_HISTORICO.md](ROADMAP_HISTORICO.md).
 
+---
 
-## Fase 1: Correcciones Críticas (Completada ✅)
-*Estas tareas eran de bajo esfuerzo pero indispensables.*
-- Edición de gastos guardados.
-- Exportar por mes.
-- Precio unitario editable.
+## Principios de Ejecución y Entrega de Valor
+1. **Impacto de Negocio sobre Complejidad:** Priorizar funciones con alto impacto cotidiano y retención sobre desarrollos complejos de bajo uso.
+2. **Filosofía Local-First y Anti-Microgestión:** Cero conciliaciones bancarias complejas ni gestión de múltiples cuentas; enfoque en presupuestos bimonetarios (VES/USD) y tasas oficiales en vivo.
+3. **Los Datos son el Producto:** Captura precisa, normalización y cálculo exacto de compras (precios, productos, IVA, tasa BCV) como base del sistema.
+4. **Monetización como Producto Independiente:** La monetización requiere su propio embudo de conversión y propuesta de valor, sin degradar la experiencia base gratuita.
+5. **Regla de Oro de IA:** La inteligencia artificial interpreta; el código determinista calcula.
 
-## Fase 2: Usabilidad y Diseño (Completada ✅)
-*Mejoras para retener al usuario común.*
-- **Rediseño a "Rinde Más":** Tema claro estilo billetera digital (amarillo/blanco), Bottom Navigation Bar y botón central flotante (FAB) para agregar gastos (Escáner o Manual).
-- **Lista de Compras Inteligente:** Check-list que se tacha automáticamente al escanear facturas.
-- **Empty state y confirmaciones.**
+---
 
-## Fase 3: Infraestructura SaaS y Asistente IA (Completada ✅)
-*Las funciones clave para retener usuarios.*
-- **Registro de Usuarios y Autenticación:** Inicio de sesión silencioso (Anónimo) al abrir, y opción de vinculación con cuenta de Google.
-- **Sincronización en la Nube:** Base de datos respaldada en Firestore.
-- **Analista Financiero IA (Chatbot Básico):** Chat que analiza tus gastos mensuales.
+## Estados Oficiales de Tareas
+- `Pendiente`: Tarea planificada no iniciada.
+- `Implementada 🔧`: Código commiteado en `main` y CI en curso o pendiente de verificación.
+- `Pendiente de validación 🧪`: CI en verde (`conclusion: success`); pendiente de validación en dispositivo físico por César.
+- `Completada ✅`: Verificada y aprobada (las tareas críticas requieren aprobación explícita de César).
 
-## Fase 4: Asistente IA Proactivo y UX Avanzada (Completada ✅)
-*Darle superpoderes a la app.*
-- ~~**Cola Offline de Escaneo y UX Unificada:** (Completada ✅)~~ Persistencia temprana local (SQLite), banner global reactivo único sin duplicidad visual, mensajes empáticos ("Guardada sin conexión" en lugar de errores falsos de servidor), auto-reanudación transparente mediante `connectivity_plus` y observador del ciclo de vida de la app (`AppLifecycleState.resumed`).
+---
 
-## Fase 5: Marketing y Lanzamiento (En Progreso 🔄)
-*El paso para empezar a captar usuarios reales en Venezuela.*
-- ~~**Landing Page (rindemas.cesarluis.com):** (Completada ✅)~~ Creada en Astro + Tailwind y desplegada en Firebase Hosting con mockup de smartphone, propuesta de valor y guía de instalación directa de APK.
-- **Código QR de Descarga en Landing (Desktop):** Incorporar tarjeta con código QR en la sección de descarga para facilitar la instalación directa en el teléfono al navegar desde computadoras.
-- **Subida a Google Play Store:** (En proceso 🔄) Textos oficiales, icono, gráfico de funciones y 5 capturas en alta resolución subidos a Play Console (`DOC_FICHA_PLAY_STORE.md`). Pendiente: completar cuestionarios de política de la tienda y configurar pista de Closed Testing (12 testers por 14 días).
-- **Plan de Crecimiento Inicial (100 Usuarios):** (Documentado ✅) Playbook táctico definido en `marketing_plan.md` y `.agents/skills/growth-first-100-users/SKILL.md`.
-- **Correo de bienvenida automatizado:** Disparar un correo de bienvenida y primeros pasos cuando el usuario vincule su cuenta de Google (mediante Cloud Functions / trigger de autenticación o Firestore).
-- ~~**Canal directo de soporte y contacto en "Más":** (Completada ✅)~~ Tarjeta con acción "Escribir a soporte" para abrir chat directo por WhatsApp al número de soporte oficial.
-  - *Nota futura:* Evaluar la transición del canal de soporte a una dirección de correo electrónico dedicada en lugar de WhatsApp a medida que crezca el volumen de usuarios o para mayor formalidad.
+## Fase Inmediata: Validación de Auditoría Fase 3 (Pendiente de validación 🧪)
+*Verificación en dispositivo físico siguiendo la guía técnica en `DOC_AUDITORIA_FASE_3.md`:*
+- `FIN-07`: Sincronización exacta de tasas y montos en bolívares en historial y chat.
+- `FIN-08`: Alerta semafórica de ritmo diario y protección de meta de ahorro en dashboard.
+- `UX-03`: Preservación de la barra de navegación inferior en Chat IA con auto-ocultamiento al abrir teclado.
+- `UX-05`: Depuración de preguntas frecuentes de IA eliminando redundancias con la pantalla de Inicio.
+- `SEC-12`: Implementación de SHA-256 determinista nativo de 32 bits para hashes de imágenes sin dependencias externas.
+- `OCR-01`: Detección refinada de tasas oficiales BCV (USD y EUR) inyectadas en contexto de inferencia.
 
-## Fase 6: Pulido, Navegación y UX Avanzada (Completada ✅)
-*Funciones complementarias para usuarios recurrentes.*
-- **Subida múltiple de facturas (Batch Upload):** Seleccionar varias fotos a la vez y procesarlas en cola.
-- **Búsqueda de gastos:** Filtrar en tiempo real por comercio o producto.
-- **Presupuestos bimonetarios y por categoría:** Límites mensuales en USD o VES con aislamiento por mes y alerta semáforo.
-- ~~**Recordatorios locales y auditoría de notificaciones:** (Completada ✅)~~ Notificaciones push sobrias a 7 días, soporte cold start/deep-link a facturas listas, feedback háptico sin solapamiento con AppBar y control en Ajustes.
-- **Navegación fluida de 4 destinos:** Transiciones sutiles (Inicio, Gastos, Análisis, Más) y barra flotante global de escaneo.
-- **Asistente IA con Gestión de Compras y Frases:** Chat con Function Calling para modificar lista de compras, desambiguación obligatoria y 5 botones de consultas frecuentes.
+---
 
-## Fase 6.1: Mejoras Derivadas de Feedback de Comunidad (En Progreso 🔄)
-*Optimizaciones directas sugeridas por los primeros evaluadores y desarrolladores:*
-- ~~**Estado de Facturas Pendientes en UI:** (Completada ✅)~~ Ocultar el monto o mostrar badge "Por revisar" en vez de "$ 0.00" mientras la factura está en cola o en proceso de escaneo.
-- ~~**Detección de IVA y Alícuotas Fiscales en OCR:** (Completada ✅)~~ Incorporar en el prompt de extracción de Cloud Functions la detección de marcadores fiscales venezolanos (`(E)` Exento, `(G)` Gravado, alícuota 16%) para desglosar el impuesto con precisión legal por ítem.
-- ~~**Meta Mensual de Ahorro / Inversión y Proyección de Gastos:** (Completada ✅)~~ Configuración de meta mensual de ahorro/inversión en el presupuesto, cálculo de límite para gastar (`Presupuesto - Meta`), validación de categorías, motor de proyección determinista (`SavingsHealthCalculator`), estado semafórico (Protegida, En riesgo, Comprometida) y alertas inteligentes en Inicio y Chat.
-- ~~**Consistencia Matemática y Totales en Bolívares:** (Completada ✅)~~ Montos en Bolívares fijos por fecha de compra sin distorsión por fluctuación de tasa diaria. Sincronización exacta de Total Gastado del mes y Distribución por Categoría (incluyendo compras sin desglose de ítems), corrección de tasa en chat y auto-reparación transparente de tasas históricas.
-- ~~**Sistema Multimoneda y Selector de Tasas (BCV, Euro, USDT):** (Completada ✅)~~ Soporte multimoneda (VES, USD, EUR, USDT) en toda la aplicación: selector de moneda en presupuesto con conversión automática en vivo, selector de moneda y chips de tasa rápida en revisión de gastos, tarjeta de 3 tasas con timestamp en "Más" e integración de APIs (DolarAPI oficial USD/EUR y Binance/Yadio USDT).
-  - *Recurso útil para histórico de precios USDT:* [usdt.com.ve/historico](https://www.usdt.com.ve/historico) (referencia para consulta/histórico de tasas).
-- ~~**Monitoreo de Consumo de Tokens:** (Completada ✅)~~ Capturar la metadata de tokens consumidos devuelta por Gemini en Cloud Functions y registrar métricas de costo por escaneo.
-- ~~**Robustez de Cola de Escaneo y Ciclo de Vida (Puntos 4, 5 y 6 de auditoría - Bloques 1 y 1b):** (Completada ✅)~~ Protección contra carreras en el loop de escaneo con guarda síncrona, confirmación modal para descartar/cancelar (con descarte individual por ID), protección de fotos compartidas en escaneos por lote para evitar borrado huérfano, retención de fotos ante respuestas vacías de IA con transición directa a `error`, conteo estricto de reintentos, recuperación de ítems atascados en `processing`, eliminación de doble catch silenciador, paso de `flutter analyze` en CI y tests unitarios de comportamiento de cola.
-- ~~**Base de Datos y Asincronía (Puntos 8, 9 y 10 de auditoría - Bloque 2):** (Completada ✅)~~ Eliminación de consultas N+1 mediante hidratación en lotes, creación de índices en SQLite v15 (`items_gasto.gasto_id`, `scan_queue.status`, `gastos.synced`), borrado lógico directo en O(1), adopción de presupuestos en memoria sin escrituras fantasmas, mutadores con estado `Future<bool>` y mapeo de errores amigables para el usuario.
-- ~~**Adjuntar y Gestionar Comprobantes en Registro Manual:** (Completada ✅)~~ Permitir añadir (cámara/galería), ver a pantalla completa, cambiar y eliminar fotos de comprobantes desde el formulario de registro manual y edición de gastos existentes (`DOC_RESILIENCIA_IA_Y_COMPROBANTES.md`).
-- ~~**Resiliencia de IA y Recuperación en Cola de Escaneo:** (Completada ✅)~~ Mensajes empáticos y claros ante fallos de cuota o red de Gemini, prevención de descarte accidental con botón de reintento en el banner de la cola y respuestas limpias en Chat sin trazas técnicas (`DOC_RESILIENCIA_IA_Y_COMPROBANTES.md`).
-- ~~**Estudio de Viabilidad de Cuota Individual de Gemini:** (Completada ✅)~~ Documentado en `DOC_INFORME_VIABILIDAD_GEMINI.md`. Descartada la delegación transparente de cuentas por restricciones de Google; aprobada la solución BYOK opcional.
-- ~~**Exploración de Respaldo y Privacidad (Estudio de Viabilidad):** (Completada ✅)~~ Documentado en `DOC_INFORME_BACKUP_PRIVACIDAD.md`. Descartado Google Drive directo por permisos invasivos; definida la adopción de exportación de archivo comprimido (.zip) portable.
-- ~~**Opción de API Key Propia para IA (BYOK Gemini):** (Completada ✅)~~ Ajuste en pantalla de configuración (sección Más) para que usuarios avanzados ingresen su propia clave de Google AI Studio con enrutamiento vía cabecera al Worker, almacenamiento seguro en Keystore (`FlutterSecureStorage`), sincronización automática con la cuenta de Google en Firestore y enlace de apertura directa en navegador (`DOC_BYOK_GEMINI.md`).
-- ~~**Autenticación Agnóstica de Correo (Soporte de Alias / Addy.io):** (Completada ✅)~~ Registro e inicio de sesión con cualquier correo electrónico o servicio de alias (Addy.io, Proton, dominios propios) y contraseña en Firebase Auth, con vinculación transparente desde cuentas anónimas sin pérdida de datos locales ni exposición del correo personal principal de Android.
-- ~~**Múltiples Compras Independientes por Voz y en Chat:** (Completada ✅)~~ Soporte para dictar compras en comercios distintos en una sola frase o mensaje ("compré en la farmacia tal cosa y en el supermercado tal otra"). La IA desglosa cada compra como un gasto independiente con su propia moneda, categoría e ítems, encolándolos en `ScanQueueProvider` y habilitando el flujo de revisión continua secuencial ("Guardar y revisar siguiente").
-- **Revisión y Expansión de Categorías por Defecto:** (Pendiente) Auditar el catálogo canónico actual (`AppConstants.categorias`: 8 categorías) para evaluar la incorporación de nuevas categorías predeterminadas de uso habitual (ej. 'Vestimenta' / 'Ropa' o afines) para evitar la sobreutilización de 'Otros'. Requiere coordinar: asignación de color e icono en UI, ampliación de sinónimos en `AppConstants.normalizarCategoria`, actualización de prompts de categorización en IA (Cloudflare Worker), y paridad matemática/visual en el panel web (`landing/src/pages/panel.astro`).
+## Fase 5: Marketing, Lanzamiento y Tracción (En Progreso 🔄)
+*Hitos para validar el producto con usuarios reales en Venezuela:*
+- **Subida a Google Play Store (Closed Testing):** (En progreso 🔄) Ficha técnica y capturas preparadas (`DOC_FICHA_PLAY_STORE.md`). Pendiente: completar cuestionarios de política en Play Console y coordinar la pista cerrada de 20 testers durante 14 días continuos.
+- **Código QR de Descarga en Landing (Desktop):** (Pendiente) Incorporar tarjeta con código QR dinámico en `rindemas.cesarluis.com` para escanear e instalar directamente desde una PC.
+- **Correo de Bienvenida Automatizado:** (Pendiente) Disparar correo de bienvenida y guía de primeros pasos cuando el usuario vincule su cuenta de Google (vía trigger de Cloud Functions o Firestore).
+- **Ejecución del Plan de Crecimiento (Primeros 100 Usuarios):** (Pendiente) Despliegue de tácticas comunitarias y orgánicas en grupos venezolanos según `marketing_plan.md` y `.agents/skills/growth-first-100-users/SKILL.md`.
 
-## Fase 7.1: Auditoría Integral y Blindaje para Google Play (Completada ✅)
-- ~~**Confirmación Humana en Chat IA (H-05, GP-05):** (Completada ✅)~~ Eliminada la inserción silenciosa directa en base de datos. Los gastos dictados o extraídos en conversación se presentan como tarjeta estructurada con botón de confirmación que abre `ReviewExpenseScreen` para validación por parte del usuario. Se incorporó diálogo de reporte de respuestas erróneas.
-- ~~**Sincronización y Vinculación Segura (SEC-02):** (Completada ✅)~~ El vaciado de datos locales en `vincularCuentaGoogle` y `vincularConEmail` ahora se ejecuta de forma estrictamente secuencial tras confirmar la vinculación y descarga exitosa de credenciales en Firestore, eliminando el riesgo de pérdida de datos ante cancelaciones o fallos de red.
-- ~~**Tasa Dinámica en Galería de Comprobantes (TEC-02):** (Completada ✅)~~ Eliminado el cálculo con tasa fija cableada (`/ 1.08`). Los montos se formatean con `CurrencyFormatter.formatPreferido` respetando la moneda y la tasa de cambio real del momento.
-- ~~**Depuración de Permisos en Android (GP-04, GP-06):** (Completada ✅)~~ Eliminado el permiso `READ_MEDIA_IMAGES` de `AndroidManifest.xml` (reemplazado por Google Photo Picker y cámara del sistema para evitar rechazos en revisión de Play Store) y convertidas las notificaciones a `inexactAllowWhileIdle` eliminando la necesidad de `SCHEDULE_EXACT_ALARM`.
-- ~~**Canal Oficial de Actualizaciones (TEC-03):** (Completada ✅)~~ Eliminada la redirección directa a archivos `.apk` externos desde el diálogo de nueva versión; ahora enruta exclusivamente a la ficha en Google Play Store (`market://`).
-- ~~**Gráfico de Funciones Cumpliendo Políticas de Play Store:** (Completada ✅)~~ Eliminado el botón falso de descarga («Descargar gratis») y reemplazado por insignias de propuesta de valor (*Local-First y Privado*, *Tasas BCV en Vivo*, *Escaneo con IA*), conservando el archivo previo como respaldo.
-- ~~**Integridad Multimoneda y Datos (FIN-04, FIN-05, FIN-06, TEC-06):** (Completada ✅)~~ Soporte nativo para EUR/USDT en colas de escaneo e historial; registro y persistencia de tasa Euro BCV en `ReviewExpenseScreen`; consolidación perezosa de presupuesto adoptado en SQLite; UUIDs criptográficamente seguros con `Random.secure()`.
-- ~~**Blindaje de Sesión y Eliminación Segura (SEC-03, SEC-04, SEC-06):** (Completada ✅)~~ Reautenticación por contraseña ante `requires-recent-login` en eliminación de cuenta; purga de llaves de API en `FlutterSecureStorage` al cerrar sesión; eliminación de llaves de API en línea de comandos en CI.
-- ~~**Rendimiento y Accesibilidad UI (UX-01, UX-04, TEC-03, TEC-04):** (Completada ✅)~~ Contraste dinámico blanco/negro en gráfico de dona según luminancia; borde de foco visible en `AppColors.primaryDark`; verificación asíncrona de archivos en galería sin jank; guardas `mounted` tras operaciones asíncronas.
-- ~~**Cumplimiento de Google Play (GP-07, GP-08):** (Completada ✅)~~ Captura 5 anonimizada (`usuario@ejemplo.com`); `targetSdk = 36` fijado en Gradle cumpliendo el requisito vigente de la Play Store (versión 433 enviada a revisión).
+---
 
-## Fase 7: Arquitectura de Producción y Confiabilidad (En Progreso 🔄)
-*Transformar el excelente MVP actual en un producto de grado financiero ("Bank-grade").*
-- ~~**Motor de Sincronización Real (Sync Engine):** (Completada ✅)~~ Abandonar `synced = 0/1`. Implementar UUIDs locales, marcas de tiempo (`created_at`, `updated_at`, `deleted_at` para borrado lógico/tombstones) y control de versiones para resolver conflictos entre dispositivos.
-- ~~**Precisión Financiera Determinística:** (Completada ✅)~~ Cambiar almacenamiento de dinero de coma flotante (`double`) a números enteros (centavos/minor units). Separar estrictamente el "Monto Original" del "Monto Convertido" auditando la fuente y fecha de la tasa de cambio. **Regla de oro: La IA interpreta, el código calcula.**
-- ~~**Seguridad y Separación de Capas (Repository / SyncService):** (Completada ✅)~~ Blindar las Cloud Functions con Firebase App Check. Separar el mastodóntico `GastoProvider` en `Repository`, `SyncService` y gestores de estado más limpios (arquitectura por features).
-- ~~**Sistema Híbrido de Document Scanner, OCR Local y Búsqueda FTS5:** (Completada ✅)~~ Separación de percepción determinista local (Google Document Scanner con auto-recorte y fallback a cámara estándar, ML Kit Text Recognition v2 Bundled con ordenamiento espacial) e interpretación semántica en la nube (Gemini Texto con fallback a Gemini Visión ante baja calidad o discrepancia). Persistencia temprana de imagen y texto en SQLite (`scan_queue`) e indexación no intrusiva en `gastos_fts` (FTS5) con fallback a `LIKE`.
-- **Evaluación de Firebase AI Logic (`firebase_vertexai`):** Evaluar migración de llamadas REST directas al SDK de Firebase Vertex AI en Flutter (`firebase_vertexai`), integrando Firebase App Check (protección de cuotas) y Remote Config (actualización dinámica de prompts y modelos sin publicar APK).
-- **Despliegue Dinámico y Configuración Remota (Firebase Remote Config):** Configurar dinámicamente desde el servidor las cuotas mensuales de IA, textos del paywall, precios y parámetros de modelos sin requerir nueva compilación ni aprobación en Google Play.
-- **Manejo de Casos Borde en Facturas Locales (Corner Cases):** El 90% del esfuerzo de refinamiento en IA se enfoca en resolver excepciones venezolanas (facturas térmicas dobladas o borrosas, comprobantes mixtos con ítems en Bs y total en USD/"Ref", y marcadores de IVA exento/gravado).
+## Fase 6.2: Consistencia Visual, Refinamiento UX y Nuevas Herramientas (Planificada 📋)
+*Mejoras derivadas de auditoría de interfaz, legibilidad y optimización de flujos:*
+
+### Bloque A: Consistencia Visual y Semántica (UI)
+- `UI-01` **Unificación Canónica de Íconos de Categorías:**
+  - *Problema:* Discrepancia entre Inicio/Análisis y Gastos (Higiene: jabón vs escoba; Salud: corazón vs botiquín; Servicios: rayo vs recibo; Alimentación: cubiertos vs carrito).
+  - *Solución:* Centralizar la definición canónica en `AppConstants.getCategoryIcon(cat)` para que todas las vistas móviles y el panel web compartan exactamente los mismos íconos (adoptando manos con jabón para Higiene).
+- `UI-02` **Contraste de Íconos y Controles en Pestaña "Más":**
+  - *Problema:* Íconos y toggles amarillos sobre fondo blanco pierden definición visual.
+  - *Solución:* Aplicar el patrón del modal `+` con contenedores circulares en tono suave (`AppColors.primaryContainer`) y trazos en carbón/negro (`AppColors.textPrimary`), o elevar el contraste hacia tonos ámbar/mostaza.
+- `UI-03` **Semántica de Color Unificada en Progreso de Presupuesto:**
+  - *Problema:* El mismo porcentaje (ej. 29%) se muestra verde en Inicio pero amarillo en Análisis.
+  - *Solución:* Unificar la escala semafórica en toda la app: Verde (saludable / meta protegida), Amarillo/Ámbar (advertencia $\ge 80-85\%$ o ritmo elevado) y Rojo (límite superado).
+- `UI-04` **Rediseño de Enlaces en Presupuesto por Categoría:**
+  - *Problema:* El texto `+ Asignar presupuesto mensual` con subrayado web clásico desentona con el diseño móvil.
+  - *Solución:* Transformar la acción en botón tipo *pill* sutil o hacer la tarjeta completa pulsable con indicador de acento.
+- `UI-05` **Ícono Superior de Asistente IA en Inicio:**
+  - *Problema:* La burbuja con interrogación `[?]` en el AppBar de Inicio se confunde universalmente con "Soporte / Ayuda".
+  - *Solución:* Reemplazar por ícono de destellos (`✨` / `Icons.auto_awesome`), coherente con las tarjetas del Asistente IA.
+
+### Bloque B: Claridad de Datos y Vistas Principales (UX)
+- `UX-06` **Corrección de Etiqueta de Agrupación en Gráfico de Inicio:**
+  - *Comportamiento:* Se mantiene la lógica de consolidar las categorías secundarias después del Top 4 para no saturar el espacio vertical de la tarjeta.
+  - *Ajuste:* Cambiar únicamente el texto de esa fila consolidada (reemplazar la palabra "Otros" por `+X categorías` o `Resto de categorías`) para que no se confunda con la categoría individual canónica *Otros*.
+- `UX-07` **Desglose Directo de Productos en Pestaña "Gastos":**
+  - *Problema:* Tanto Inicio como Gastos muestran tarjetas cerradas que obligan a tocar cada compra para saber qué se compró, repitiendo fechas redundantemente.
+  - *Solución:* 
+    - En **Inicio**: mantener tarjetas compactas con resumen limpio (`14 Oct • 4 artículos`).
+    - En **Gastos**: mostrar directamente los productos con mini-ícono de categoría y subtotal. Para facturas largas, limitar a los primeros 4 ítems con botón expansor `Ver X artículos más ▾`. Mantener formato limpio de una línea para compras sin desglose.
+- `UX-08` **Visibilidad de Tasa Cambiaria y Conmutador Rápido de Moneda:**
+  - *Solución:* Mostrar la etiqueta de tasa de la transacción en el historial (`Bs. 4.389,50 • BCV` o `• USDT`) y permitir alternar o seleccionar la moneda de visualización tocando el monto total en la tarjeta de Inicio.
+- `UX-09` **Rediseño del Filtro de Comprobantes en "Gastos":**
+  - *Solución:* Incorporar un distintivo de recibo/clip (`🧾`) en las tarjetas que tienen fotografía adjunta y reemplazar el botón confuso de galería por un chip activo `[🧾 Con comprobante]` o ícono de filtro con estado evidente.
+- `UX-10` **Jerarquía y Claridad de la Acción "Eliminar Cuenta":**
+  - *Solución:* Separar visualmente la acción de eliminar cuenta de la tarjeta "Respaldo en la Nube" o ubicarla en una sección sutil de "Zona de Peligro" para evitar dudas entre sincronización y borrado total.
+
+### Bloque C: Percepción con IA y Pagos Digitales
+- `AI-02` **Detección Automática y Transparente de Pagos Digitales (Pago Móvil / Zelle / Binance):**
+  - *Premisa:* No es una opción nueva ni un botón aparte. El usuario usa el mismo flujo unificado de escaneo / subida de comprobante.
+  - *Solución:* El backend de IA interpreta automáticamente si la imagen es una factura impresa o una captura de transferencia bancaria digital. Si es pago digital, extrae beneficiario (lo monta como Comercio), banco, referencia, fecha y monto exacto en Bs o USD, presentándolo directamente en `ReviewExpenseScreen` como un gasto de un ítem listo para que el usuario lo revise, edite y apruebe.
+
+### Bloque D: Nueva Herramienta Financiera
+- `FIN-09` **Calculadora Cambiaria Rápida (Conversor Bs. / $):**
+  - *Ubicación:* Exclusivamente en la pestaña **Más** (el botón central `+` se preserva intacto y 100% exclusivo para ingresar gastos).
+  - *Propósito:* Resolver el cálculo instantáneo antes de pagar en caja o emitir un Pago Móvil, reteniendo usuarios en la app varias veces al día.
+  - *Características Clave:*
+    1. **Doble campo bidireccional en tiempo real:** Escribir en divisa calcula bolívares al instante y viceversa, sin botón de cálculo intermedio.
+    2. **Chips de tasa en un toque:** Selector directo entre `[Dólar BCV]`, `[Euro BCV]`, `[USDT]` y `[Personalizada ✏️]` usando las tasas ya cacheadas en la app.
+    3. **Comparativa simultánea y brecha cambiaria:** Cuadro comparativo mostrando equivalencias en las otras tasas de referencia.
+    4. **Acción rápida `📋 Copiar monto en Bs.`:** Copia el número limpio al portapapeles para pegarlo directamente en la app del banco.
+    5. **Acción rápida `➕ Registrar como gasto`:** Pre-llena el formulario de nuevo gasto con el monto, moneda y tasa recién calculados.
+
+---
+
+## Fase 6.1 (Remanente): Catálogo de Categorías
+- **Revisión y Expansión de Categorías por Defecto:** (Pendiente) Evaluar la incorporación de nuevas categorías predeterminadas de uso habitual (ej. 'Vestimenta' / 'Ropa' o afines) para evitar la sobreutilización de 'Otros'. Requiere coordinar: asignación de color e icono en UI, ampliación de sinónimos en `AppConstants.normalizarCategoria`, actualización de prompts de categorización en IA (Cloudflare Worker), y paridad matemática/visual en el panel web.
+
+---
+
+## Fase 7: Arquitectura de Producción y Confiabilidad (Pendientes Técnicos)
+*Evolución hacia grado de confiabilidad bancaria ("Bank-grade"):*
+- **Evaluación de Firebase AI Logic (`firebase_vertexai`):** Evaluar migración de llamadas REST al SDK de Firebase Vertex AI en Flutter, integrando Firebase App Check y Remote Config.
+- **Despliegue Dinámico y Configuración Remota (Firebase Remote Config):** Configurar cuotas mensuales de IA, textos y parámetros de modelos desde el servidor sin requerir nuevo APK.
+- **Manejo de Casos Borde en Facturas Locales (Corner Cases):** Refinamiento para facturas térmicas dobladas, comprobantes mixtos con ítems en Bs y total en USD/"Ref", y marcadores de IVA exento/gravado.
 - **Procesamiento Background Nativo:** Migrar la cola local en Dart a un Background Worker real del sistema operativo (Firebase Cloud Tasks / WorkManager) para asegurar subidas e IA incluso con la app cerrada.
-- **Extracción Asistida por Confianza (Confidence Scores):** Gemini debe devolver qué tan seguro está de un dato extraído. La UI alertará "⚠️ Revisar" si la confianza es baja. Implementar un "Diccionario Personal" local para que la app aprenda de las correcciones del usuario sin reentrenar IA.
-- ~~**UX en Lote y Privacidad:** (Completada ✅)~~ Pantalla de "3 facturas listas para revisar" en vez de forzar revisión individual inmediata. Incorporar eliminación total de cuenta/datos y políticas claras sobre fotos locales vs nube.
-- **Cifrado de Extremo a Extremo en Nube (E2EE / Zero-Knowledge Sync):** Cifrado local con AES-256 de gastos y comprobantes antes de persistir en Firestore utilizando clave derivada de la contraseña del usuario. Permite sincronización multidispositivo y web sin que el servidor conozca montos ni comercios. La IA conversacional sigue funcionando sin fricción al nutrirse de la base de datos SQLite ya descifrada en memoria local del teléfono.
-- **Copia de Seguridad y Restauración Portable (.zip):** Generación de archivo comprimido con SQLite e imágenes de comprobantes para resguardo bajo demanda en el Google Drive personal del usuario (o almacenamiento local) sin intermediación de servidores de Rinde Más.
-- ~~**Gateway Serverless en Cloudflare Workers y Distribución Automática de APK:** (Completada ✅)~~ Desacoplamiento del proxy de IA a Cloudflare Workers con validación nativa de Firebase JWT, Rate Limiting y secretos cifrados. Distribución automatizada de APK a BanaHosting vía FTP para descargas directas sin 404 ni restricciones de cuota Spark.
-- ~~**Testing y CI Estricto:** Eliminar la regeneración de la carpeta `android` (`flutter create .`) del pipeline CI/CD en favor de versionamiento estricto. Requisito de Unit Tests y Sync Tests antes de nuevas integraciones.~~
+- **Extracción Asistida por Confianza (Confidence Scores):** Retorno de nivel de confianza por dato extraído con alerta "⚠️ Revisar" y diccionario personal local de aprendizaje.
+- **Cifrado de Extremo a Extremo en Nube (E2EE / Zero-Knowledge Sync):** Cifrado local con AES-256 de gastos y comprobantes antes de persistir en Firestore utilizando clave derivada de la contraseña del usuario.
+- **Copia de Seguridad y Restauración Portable (.zip):** Generación de archivo comprimido con SQLite e imágenes para resguardo bajo demanda en Google Drive personal o almacenamiento local.
 
-## Fase 8: Ecosistema Web y Red Colaborativa (Visión a Largo Plazo)
-*El salto de app personal a plataforma comunitaria y reutilización de infraestructura.*
-- **Versión Web (Dashboard de Escritorio):** Compilar el proyecto Flutter a web para ver estadísticas globales y subir facturas cómodamente.
-- **Crowdsourcing de Precios (El Waze de las compras):** Base de datos global alimentada anónimamente por los escaneos de los usuarios.
-- **Comparativa por Unidad de Medida:** Comparar precios de forma inteligente (ej. Arroz $2.00/kg vs $1.60/kg) en lugar del precio total bruto.
-- **Buscador de Ofertas Locales:** Ver en qué comercio cercano se escaneó más barato un producto específico en las últimas 48 horas.
-- **Historial de Tasas BCV:** Gráfico interactivo para ver la evolución de la tasa de cambio a lo largo del tiempo.
-- **Cross-Selling de Ecosistema:** Reutilizar la infraestructura base (Auth, Sync, SQLite, IA OCR y Facturación) para lanzar rápidamente productos complementarios sin empezar de cero.
+---
 
 ## Fase 8.1: Modernización y Paridad del Panel Web (En Progreso 🔄)
-*Actualización progresiva del panel web (`landing/src/pages/panel.astro`) para reflejar las nuevas capacidades de la app móvil (Detallado en `DOC_MODERNIZACION_PANEL_WEB.md`):*
-- **Fase 1 (Web): Presupuesto y Meta de Ahorro en Modal y Firestore:** (En Progreso 🔄) Integración de `meta_ahorro` en lectura/escritura de Firestore, cálculo de límite para gastar (`presupuesto - meta_ahorro`) y validación estricta de asignación de categorías para evitar sobrescrituras de datos configurados en el móvil.
-- **Fase 2 (Web): Semáforo de Salud de Ahorro y Ritmo Diario en Métricas:** (En Progreso 🔄) Replicación determinista de `SavingsHealthCalculator` en frontend web, chips de estatus (Protegida, En riesgo, Comprometida), cálculo de ritmo diario restante y consumo relativo al límite para gastar.
-- **Fase 3 (Web): Soporte Multi-moneda (USD, VES, EUR, USDT) y Tasas en Vivo:** (En Progreso 🔄 En Verificación) Integración de endpoints paralelos (USD BCV, EUR BCV, USDT Binance/Yadio), ticker de tasas de referencia en cabecera, selector de 4 divisas en presupuestos y gastos, y paridad matemática exacta con SQLite.
-- **Fase 4 (Web): Autenticación con Correo y Contraseña:** (Pendiente) Soporte para inicio de sesión con email/password en el panel web para usuarios registrados con alias (Addy.io) o credenciales directas.
-- **Fase 5 (Web): Edición y Detalle Ampliado de Facturas:** (Pendiente) Edición completa de compras existentes desde el navegador y visualización de adjuntos.
+*Actualización progresiva del panel web (`landing/src/pages/panel.astro`) con paridad respecto a la app móvil:*
+- **Fase 1 (Web): Presupuesto y Meta de Ahorro en Modal y Firestore:** (En verificación 🔄)
+- **Fase 2 (Web): Semáforo de Salud de Ahorro y Ritmo Diario:** (En verificación 🔄)
+- **Fase 3 (Web): Soporte Multimoneda (USD, VES, EUR, USDT) y Tasas en Vivo:** (En verificación 🔄)
+- **Fase 4 (Web): Autenticación con Correo y Contraseña:** (Pendiente) Soporte para usuarios registrados con alias (Addy.io) o credenciales directas.
+- **Fase 5 (Web): Edición y Detalle Ampliado de Facturas:** (Pendiente) Edición completa de compras y comprobantes desde el navegador.
+
+---
+
+## Fase 8: Ecosistema Web y Red Colaborativa (Largo Plazo 🔭)
+- **Dashboard Web de Escritorio en Flutter Web:** Estadísticas avanzadas y subida masiva de facturas desde PC.
+- **Crowdsourcing de Precios (El Waze de las compras):** Base de datos anónima de precios recopilada colaborativamente en Venezuela.
+- **Comparativa por Unidad de Medida:** Comparación inteligente de precios normalizados (ej. Arroz $2.00/kg vs $1.60/kg).
+- **Buscador de Ofertas Locales:** Consulta de comercios cercanos con mejores precios en las últimas 48 horas.
+- **Historial Interactivo de Tasas BCV:** Gráfico histórico de la evolución de tasas oficiales y brecha cambiaria.
+- **Cross-Selling de Ecosistema:** Reutilización de módulos (Auth, Sync, SQLite, IA OCR) para nuevas herramientas financieras.
+
+---
 
 ## Fase 9: Modelo de Monetización y Suscripción Premium (Rinde Más Pro)
-*Monetizar es un producto independiente: experiencia de pago, embudo de conversión y subvención cruzada.*
-- **Cuota Gratuita Base:** 15 a 20 facturas escaneadas por cámara al mes (registro manual y dictado por voz siempre 100% ilimitado).
-- **Publicidad en Transiciones Naturales:** Anuncios discretos tras guardar gastos para cubrir el costo de tokens de Gemini de los usuarios gratuitos, respetando Better Ads Standards.
+*Diseño de experiencia de pago, embudo de conversión y monetización:*
+- **Cuota Gratuita Base:** 15 a 20 facturas escaneadas por cámara al mes (registro manual y voz siempre ilimitados).
+- **Publicidad en Transiciones Naturales:** Anuncios discretos tras guardar gastos para cubrir el costo de tokens de usuarios gratuitos, cumpliendo Better Ads Standards.
 - **Rinde Más Pro ($1,99/mes o $19,99/año):**
-  - **Cuotas de IA y OCR Ilimitadas:** Procesamiento ilimitado de comprobantes físicos para uso intensivo o pequeños negocios.
-  - **Experiencia Cero Publicidad (Zero Ads):** Supresión total de anuncios promocionales en toda la interfaz.
-  - **Categorías Personalizadas Ilimitadas:** Posibilidad de crear, editar y archivar categorías propias con selección de icono y color representativo (el plan gratuito mantiene las 10 categorías base).
-  - **Exportación Contable Avanzada:**
-    - Generación de reportes mensuales en PDF con diseño limpio, gráficos de distribución y balance listos para imprimir o compartir.
-    - Exportación en formato Excel/CSV detallado con el desglose ítem por ítem para contabilidad personal o negocios.
-  - **Sincronización de Comprobantes en la Nube:** Respaldo y sincronización automática de las fotos de facturas y comprobantes en la nube (Cloud Storage), permitiendo visualizarlos desde cualquier dispositivo o el panel web sin depender exclusivamente del almacenamiento local del teléfono.
-  - **Consultas Profundas al Asistente IA:** Análisis financiero con comparativas de meses previos y proyecciones de gasto.
-- **Optimización del Embudo de Conversión (Funnel):**
-  - Medición de fugas en cada paso con Firebase Analytics: Impresión → Ficha → Descarga → Onboarding → Activación (primer escaneo) → Retención → Pago.
-  - Paywalls contextuales activados en momentos de alto valor percibido (límite de cuota alcanzado, exportación avanzada).
-  - A/B testing de ofertas y pruebas gratuitas (trials).
-- **Métrica de Validación Financiera:** Meta de generar los primeros $50 USD en 30-60 días con 500-1.000 usuarios activos (validando la disposición de pago en subperfiles clave).
-- **Alertas Proactivas de Inflación y Desvío:** Notificaciones inteligentes cuando un producto frecuente incremente su precio por encima del promedio o cuando el ritmo de gasto proyecte superar el presupuesto antes de fin de mes.
-
+  - Cuotas de IA y OCR ilimitadas.
+  - Experiencia Cero Publicidad (Zero Ads).
+  - Categorías personalizadas ilimitadas (icono y color propio).
+  - Exportación contable avanzada (PDF mensual con balance y diseño limpio; Excel/CSV con desglose completo ítem por ítem).
+  - Sincronización de comprobantes en la nube (Cloud Storage).
+  - Consultas analíticas profundas al Asistente IA con comparativa de meses previos.
+- **Optimización del Embudo de Conversión (Funnel):** Medición de fugas con Firebase Analytics (Impresión → Descarga → Onboarding → Activación → Retención → Pago) y Paywalls contextuales.
+- **Métrica de Validación Financiera:** Meta de generar los primeros $50 USD en 30-60 días con 500-1.000 usuarios activos.
+- **Alertas Proactivas de Inflación y Desvío:** Notificaciones inteligentes cuando productos frecuentes suban de precio o el ritmo de gasto comprometa el mes.

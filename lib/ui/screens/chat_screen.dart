@@ -24,23 +24,23 @@ class ChatSuggestion {
 
 const List<ChatSuggestion> kDefaultChatSuggestions = [
   ChatSuggestion(
-    label: '¿Cómo voy con mi presupuesto?',
-    icon: Icons.account_balance_wallet_outlined,
+    label: '¿Qué gastos pequeños están sumando más de lo que parece?',
+    icon: Icons.search_rounded,
   ),
   ChatSuggestion(
-    label: '¿Cómo va mi meta de ahorro?',
-    icon: Icons.savings_outlined,
+    label: '¿Qué gastos podría reducir sin afectar lo esencial?',
+    icon: Icons.content_cut_rounded,
   ),
   ChatSuggestion(
-    label: '¿En qué categoría he gastado más?',
-    icon: Icons.pie_chart_outline,
+    label: '¿Qué productos o gastos me han subido de precio?',
+    icon: Icons.trending_up_rounded,
   ),
   ChatSuggestion(
-    label: '¿A cuánto está la tasa del BCV hoy?',
-    icon: Icons.currency_exchange,
+    label: '¿En qué días o momentos del mes suelo gastar más?',
+    icon: Icons.calendar_month_rounded,
   ),
   ChatSuggestion(
-    label: '¿Qué tengo en mi lista de compras?',
+    label: '¿Qué suelo comprar cada mes que aún no he comprado?',
     icon: Icons.checklist_rounded,
   ),
 ];
@@ -86,14 +86,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _dbHelper = widget.dbHelper ?? DatabaseHelper.instance;
     _speech = widget.speechToText ?? stt.SpeechToText();
     _focusNode.addListener(_onFocusChange);
-    final now = DateTime.now();
-    final mesNombre = DateFormatter.getMonthName(now.month);
-    final String initialGreeting;
-    if (now.day <= 5) {
-      initialGreeting = '¡Nuevo mes! Hoy es un buen día para determinarte a aplicar lo aprendido el mes pasado. Tu presupuesto de $mesNombre ya está listo. ¿Qué deseas consultar o registrar hoy?';
-    } else {
-      initialGreeting = 'Puedo ayudarte con lo que necesites dentro de Rinde Más: responder preguntas sobre tus gastos del mes o registrar compras directamente. ¿Qué deseas consultar?';
-    }
+    const initialGreeting =
+        '¡Hola! Puedo analizar tus finanzas, darte consejos para ahorrar, registrar gastos o agregar productos a tu lista de compras. ¿Por dónde empezamos?';
     _messages.add({
       'role': 'assistant',
       'text': initialGreeting,
@@ -308,6 +302,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       final contextData = {
         'tasa_bcv_usd': settings.tasaCambioVesUsd,
         'tasa_bcv_eur': settings.tasaCambioVesEur,
+        'tasa_usdt': settings.tasaCambioVesUsdt,
         'gastos_mes': gastoProvider.gastos.map((g) => g.toMap()).toList(),
         'total_usd': gastoProvider.totalMesUsd,
         'total_ves': gastoProvider.totalMesVes,
