@@ -23,6 +23,7 @@ description: "Consultar al modificar extracción OCR con Gemini, prompts de IA, 
   > *"¿Deseas agregarlo a tu lista de compras o registrarlo como un gasto realizado?"*
 - **Doble Capa de Protección en Código:** En `chat_screen.dart`, cualquier ejecución de la herramienta `registrar_gasto` con monto cero o sin números en el mensaje del usuario debe ser interceptada localmente para formular la pregunta antes de guardar.
 - **Cotejo Universal con Lista de Compras:** Todo gasto registrado en la app (vía formulario manual, escáner, voz o chat) DEBE contrastar sus productos contra los pendientes en `getPendingShoppingItems()`, marcando automáticamente como comprados los ítems coincidentes.
+- **Optimización de Contexto de Chat (Protección de Tokens):** Prohibido volcar toda la base de datos de gastos crudos (`toMap()`) o todo el historial ilimitado al llamar a Gemini. Debe construirse siempre un resumen semántico precalculado (`_buildSemanticChatContext` con totales por categoría, top 10 productos del mes, últimas 5 compras y presupuesto) y limitar el historial enviado a la API a una ventana deslizante de los últimos 5 mensajes.
 
 ## 4. Entrada por Voz y Ciclo de Micrófono
 - **Buffer Acumulativo de Reconocimiento:** Dado que `SpeechToText.listen` reinicia su búfer de palabras, la interfaz debe acumular el texto previo (`previousText + val.recognizedWords`), impidiendo pérdidas de información al pausar o retomar.

@@ -8,7 +8,7 @@ description: "Estándares de seguridad, validación de JWT, observabilidad y cuo
 
 ## 1. Arquitectura de Seguridad y Autenticación
 - **Validación Criptográfica de Tokens (JWT):** Todo endpoint privado (`/analyze-receipt`, `/chat-analyst`) debe validar la firma del Firebase ID Token usando Web Crypto nativo (`crypto.subtle`) contra las claves públicas JWKS de Google (`https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com`).
-- **Control de Tasa (Rate Limiting por UID):** Limitar las peticiones a un máximo de 30 solicitudes por minuto por identificador de usuario (`uid`) para la clave del sistema (y 60 solicitudes por minuto para claves personalizadas BYOK), mitigando abusos y ataques DoS.
+- **Control de Tasa y Cuota Diaria (Rate Limiting por UID):** Limitar las peticiones a un máximo de 30 solicitudes por minuto y un tope de seguridad diario invisible de 50 solicitudes/día por `uid` para la clave compartida (con bypass para claves personalizadas BYOK), mitigando abusos y ataques DoS sin fricción para el usuario común. Retornar HTTP 429 con `dailyLimitReached: true` al superar el límite diario.
 - **Gestión de Secretos:** La clave `GEMINI_API_KEY` reside exclusivamente en los secretos de Cloudflare Workers (`npx wrangler secret put GEMINI_API_KEY`). Prohibido escribir claves literales en código, repositorios o variables no cifradas.
 
 ## 2. Integración con Google Gemini API

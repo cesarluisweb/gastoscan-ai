@@ -29,6 +29,11 @@
 - **Nombre del Worker:** `rindemas-gateway`
 - **Compatibilidad Runtime:** `2024-09-23`
 - **Archivo Principal:** `workers/src/index.js` (y `cloudflare_worker/src/index.js`)
+- **Políticas de Cuota y Rate Limiting:**
+  - *Ráfaga por Minuto:* 30 req/min por UID para cuota compartida (60 req/min para clave propia BYOK).
+  - *Límite Diario Invisible (Anti-Abuso):* 50 solicitudes por día por UID de Firebase (`payload.sub`) en cuota compartida.
+  - *Bypass BYOK:* Los usuarios con su propia API Key (`x-custom-gemini-key`) no consumen cuota compartida ni están sujetos al tope diario de 50 peticiones.
+  - *Respuesta 429 Estructurada:* Al superar 50 peticiones/día, retorna HTTP 429 con `dailyLimitReached: true` y mensaje amigable invitando a apoyar el proyecto en `Más > Apoyar el proyecto ☕`.
 - **Configuración (`wrangler.toml`):**
   - Variable de entorno pública: `FIREBASE_PROJECT_ID = "gastoscan-ai"`
   - Observabilidad: `[observability] enabled = true`, `head_sampling_rate = 1`

@@ -80,10 +80,16 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 - `UX-10` **Jerarquía y Claridad de la Acción "Eliminar Cuenta":**
   - *Solución:* Separar visualmente la acción de eliminar cuenta de la tarjeta "Respaldo en la Nube" o ubicarla en una sección sutil de "Zona de Peligro" para evitar dudas entre sincronización y borrado total.
 
-### Bloque C: Percepción con IA y Pagos Digitales
+### Bloque C: Percepción con IA, Optimización y Seguridad
 - `AI-02` **Detección Automática y Transparente de Pagos Digitales (Pago Móvil / Zelle / Binance):**
   - *Premisa:* No es una opción nueva ni un botón aparte. El usuario usa el mismo flujo unificado de escaneo / subida de comprobante.
   - *Solución:* El backend de IA interpreta automáticamente si la imagen es una factura impresa o una captura de transferencia bancaria digital. Si es pago digital, extrae beneficiario (lo monta como Comercio), banco, referencia, fecha y monto exacto en Bs o USD, presentándolo directamente en `ReviewExpenseScreen` como un gasto de un ítem listo para que el usuario lo revise, edite y apruebe.
+- `AI-03` **Resumen Semántico y Ventana Deslizante en Chat IA:** `Completada ✅`
+  - *Problema:* Volcado completo de la base de datos de gastos crudos (`toMap()`) y todo el historial de conversación disparaba picos de hasta >60.000 tokens en pocas consultas.
+  - *Solución:* Construcción local en SQLite de un resumen semántico precalculado (`totales_categoria`, `top_productos_mes`, `ultimas_compras`, presupuesto y ritmo de ahorro) y ventana deslizante que envía solo los últimos 5 mensajes a Gemini, reduciendo el consumo de tokens en >80% preservando la capacidad analítica para preguntas frecuentes de productos.
+- `SEC-13` **Blindaje de Cuota Diaria y Límite Anti-Abuso en Gateway:** `Completada ✅`
+  - *Problema:* Riesgo de agotamiento de saldo en Google AI Studio por bucles, ataques o scripts de scraping automatizados.
+  - *Solución:* Implementación de rate limiting en Cloudflare Worker con límite de seguridad invisible de 50 peticiones/día por UID en cuota compartida, bypass automático para usuarios con API Key propia (BYOK) y respuesta amigable HTTP 429 invitando a apoyar el proyecto en `Más > Apoyar el proyecto ☕`.
 
 ### Bloque D: Nueva Herramienta Financiera
 - `FIN-09` **Calculadora Cambiaria Rápida (Conversor Bs. / $):** `Pendiente de validación 🧪`
