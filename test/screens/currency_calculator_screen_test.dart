@@ -227,7 +227,11 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('calc_bcv_disclaimer_card')), findsOneWidget);
+      final disclaimerCard = find.byKey(const Key('calc_bcv_disclaimer_card'));
+      await tester.scrollUntilVisible(disclaimerCard, 200, scrollable: find.byType(Scrollable));
+      await tester.pumpAndSettle();
+
+      expect(disclaimerCard, findsOneWidget);
       expect(find.byKey(const Key('calc_bcv_source_link')), findsOneWidget);
       expect(find.textContaining('Aviso legal sobre tasas oficiales'), findsOneWidget);
       expect(find.textContaining('www.bcv.org.ve'), findsOneWidget);
