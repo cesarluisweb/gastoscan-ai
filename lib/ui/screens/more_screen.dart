@@ -18,9 +18,10 @@ import '../widgets/auth_modal_sheet.dart';
 import 'shopping_list_screen.dart';
 import 'chat_screen.dart';
 import 'receipt_gallery_screen.dart';
+import 'currency_calculator_screen.dart';
 import '../../data/datasources/remote/gemini_service.dart';
 
-enum MoreSubView { hub, shoppingList, chat, receiptGallery }
+enum MoreSubView { hub, shoppingList, chat, receiptGallery, calculator }
 
 class MoreScreen extends StatefulWidget {
   final VoidCallback? onNavigateToHome;
@@ -114,6 +115,12 @@ class MoreScreenState extends State<MoreScreen> {
   void openShoppingList() {
     setState(() {
       _currentSubView = MoreSubView.shoppingList;
+    });
+  }
+
+  void openCurrencyCalculator() {
+    setState(() {
+      _currentSubView = MoreSubView.calculator;
     });
   }
 
@@ -279,6 +286,20 @@ class MoreScreenState extends State<MoreScreen> {
       );
     }
 
+    if (_currentSubView == MoreSubView.calculator) {
+      return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop) return;
+          setState(() => _currentSubView = MoreSubView.hub);
+        },
+        child: CurrencyCalculatorScreen(
+          showBackButton: true,
+          onBack: () => setState(() => _currentSubView = MoreSubView.hub),
+        ),
+      );
+    }
+
     final settings = Provider.of<SettingsProvider>(context);
     final gastoProvider = Provider.of<GastoProvider>(context);
 
@@ -333,6 +354,19 @@ class MoreScreenState extends State<MoreScreen> {
                   trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
                   onTap: () {
                     openChat(fromHome: false);
+                  },
+                ),
+                const Divider(height: 1, color: AppColors.border),
+                ListTile(
+                  key: const Key('more_menu_currency_calculator'),
+                  leading: const Icon(Icons.calculate_outlined, color: AppColors.primaryDark, size: 24),
+                  title: const Text('Calculadora Cambiaria',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  subtitle: const Text('Conversión rápida Bs. / Divisas y tasas en vivo',
+                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                  trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+                  onTap: () {
+                    openCurrencyCalculator();
                   },
                 ),
               ],
@@ -524,6 +558,28 @@ class MoreScreenState extends State<MoreScreen> {
                         ],
                       ),
                     ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    key: const Key('more_rates_open_calculator_btn'),
+                    onPressed: openCurrencyCalculator,
+                    icon: const Icon(Icons.calculate_outlined, size: 18, color: AppColors.textPrimary),
+                    label: const Text(
+                      'Abrir calculadora cambiaria',
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      side: const BorderSide(color: AppColors.border),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),

@@ -224,6 +224,28 @@ void main() {
       expect(find.text('Almacenamiento y Fotos', skipOffstage: false), findsOneWidget);
     });
 
+    testWidgets('tapping currency calculator navigates internally and back button returns to hub', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      // Tap currency calculator
+      await tester.tap(find.byKey(const Key('more_menu_currency_calculator'), skipOffstage: false));
+      await tester.pumpAndSettle();
+
+      // We should be in CurrencyCalculatorScreen
+      expect(find.byIcon(Icons.arrow_back), findsOneWidget);
+      expect(find.text('Calculadora Cambiaria'), findsOneWidget);
+      expect(find.byKey(const Key('calc_divisa_input')), findsOneWidget);
+      expect(find.byKey(const Key('calc_ves_input')), findsOneWidget);
+
+      // Tap back button
+      await tester.tap(find.byIcon(Icons.arrow_back));
+      await tester.pumpAndSettle();
+
+      // We should be back in MoreScreen hub
+      expect(find.text('Más'), findsOneWidget);
+    });
+
     testWidgets('renders email auth button and opens email auth modal', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();

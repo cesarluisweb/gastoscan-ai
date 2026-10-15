@@ -3,18 +3,19 @@
 
 ## Estado Actual Inmediato
 - **Rama:** `main`.
-- **Fase activa:** Fase 3 de Auditoría Integral en `Pendiente de validación 🧪` (en dispositivo por César).
-- **Roadmap Actualizado:** Dividido en [ROADMAP.md](ROADMAP.md) (activo, con nueva Fase 6.2 de UI/UX y Calculadora Cambiaria) y [ROADMAP_HISTORICO.md](ROADMAP_HISTORICO.md) (memoria técnica y de marketing de hitos completados).
+- **Fase activa:** Fase 6.2 (UI-01, UI-05, UX-06, UX-07, FIN-09) `Implementada 🔧` y Fase 3 en `Pendiente de validación 🧪`.
+- **Roadmap Actualizado:** [ROADMAP.md](ROADMAP.md) refleja tareas de Fase 6.2 en implementación y pruebas completas.
 
 ## Decisiones Técnicas y de Negocio Recientes
-- **Roadmap Desacoplado:** `ROADMAP_HISTORICO.md` preserva todas las fases 1 a 4, 6, 7.1 y tareas completadas. `ROADMAP.md` mantiene solo tareas activas, métricas y fases futuras.
-- **Fase 6.2 (UI/UX & Calculadora):** Códigos `UI-01` a `UI-05`, `UX-06` a `UX-10`, `AI-02` (Pago Móvil/Zelle transparente al flujo de escáner) y `FIN-09` (Calculadora Cambiaria exclusiva en Más; modal `+` solo para gastos).
-- **Chat IA Analítico y USDT:** 5 chips analíticos diferenciados (fugas, recorte, precios, patrones y compras pendientes), saludo inicial que guía sobre capacidades (sin chips de acción directa para no ensuciar datos) e inyección de `tasa_usdt` en el contexto de Gemini.
+- **UI-01 Iconografía Canónica:** Centralizada en `AppConstants.getCategoryIcon(cat)` para Inicio, Gastos, Análisis y Revisión.
+- **UI-05 & UX-06 AppBar y Gráfico Inicio:** Destellos `Icons.auto_awesome` en AppBar y etiqueta `+X categorías` en consolidación de categorías secundarias.
+- **UX-07 Desglose Gastos:** Mini-íconos por ítem y expansor interactivo `Ver X artículos más` para compras de más de 4 productos.
+- **FIN-09 Calculadora Cambiaria:** Conversor bidireccional en tiempo real, chips directos de tasa (Dólar BCV, Euro BCV, USDT, Personalizada), tabla comparativa de brecha, copiado rápido a portapapeles y pre-llenado de gasto.
 
 ## Errores y Fricciones a Evitar
 - `AppConstants.categorias`: El catálogo canónico son 8 categorías fijas.
-- Íconos de categorías deben centralizarse en un solo método (`AppConstants.getCategoryIcon`), evitando discrepancias entre pantallas.
+- Íconos de categorías deben consultarse exclusivamente vía `AppConstants.getCategoryIcon(cat)`.
 - `SettingsProvider` expone `tasaCambioVesEur`, no `tasaCambioEurUsd`.
 
 ## Próximo Paso Inmediato
-- César valida en dispositivo físico las mejoras de Fase 3 y los chips analíticos del chat.
+- Validar CI en verde tras commit/push de Fase 6.2 y habilitar prueba en dispositivo.

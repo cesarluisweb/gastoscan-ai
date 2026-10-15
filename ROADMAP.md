@@ -47,7 +47,7 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 *Mejoras derivadas de auditoría de interfaz, legibilidad y optimización de flujos:*
 
 ### Bloque A: Consistencia Visual y Semántica (UI)
-- `UI-01` **Unificación Canónica de Íconos de Categorías:**
+- `UI-01` **Unificación Canónica de Íconos de Categorías:** `Implementada 🔧`
   - *Problema:* Discrepancia entre Inicio/Análisis y Gastos (Higiene: jabón vs escoba; Salud: corazón vs botiquín; Servicios: rayo vs recibo; Alimentación: cubiertos vs carrito).
   - *Solución:* Centralizar la definición canónica en `AppConstants.getCategoryIcon(cat)` para que todas las vistas móviles y el panel web compartan exactamente los mismos íconos (adoptando manos con jabón para Higiene).
 - `UI-02` **Contraste de Íconos y Controles en Pestaña "Más":**
@@ -59,15 +59,15 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 - `UI-04` **Rediseño de Enlaces en Presupuesto por Categoría:**
   - *Problema:* El texto `+ Asignar presupuesto mensual` con subrayado web clásico desentona con el diseño móvil.
   - *Solución:* Transformar la acción en botón tipo *pill* sutil o hacer la tarjeta completa pulsable con indicador de acento.
-- `UI-05` **Ícono Superior de Asistente IA en Inicio:**
+- `UI-05` **Ícono Superior de Asistente IA en Inicio:** `Implementada 🔧`
   - *Problema:* La burbuja con interrogación `[?]` en el AppBar de Inicio se confunde universalmente con "Soporte / Ayuda".
   - *Solución:* Reemplazar por ícono de destellos (`✨` / `Icons.auto_awesome`), coherente con las tarjetas del Asistente IA.
 
 ### Bloque B: Claridad de Datos y Vistas Principales (UX)
-- `UX-06` **Corrección de Etiqueta de Agrupación en Gráfico de Inicio:**
+- `UX-06` **Corrección de Etiqueta de Agrupación en Gráfico de Inicio:** `Implementada 🔧`
   - *Comportamiento:* Se mantiene la lógica de consolidar las categorías secundarias después del Top 4 para no saturar el espacio vertical de la tarjeta.
   - *Ajuste:* Cambiar únicamente el texto de esa fila consolidada (reemplazar la palabra "Otros" por `+X categorías` o `Resto de categorías`) para que no se confunda con la categoría individual canónica *Otros*.
-- `UX-07` **Desglose Directo de Productos en Pestaña "Gastos":**
+- `UX-07` **Desglose Directo de Productos en Pestaña "Gastos":** `Implementada 🔧`
   - *Problema:* Tanto Inicio como Gastos muestran tarjetas cerradas que obligan a tocar cada compra para saber qué se compró, repitiendo fechas redundantemente.
   - *Solución:* 
     - En **Inicio**: mantener tarjetas compactas con resumen limpio (`14 Oct • 4 artículos`).
@@ -85,7 +85,7 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
   - *Solución:* El backend de IA interpreta automáticamente si la imagen es una factura impresa o una captura de transferencia bancaria digital. Si es pago digital, extrae beneficiario (lo monta como Comercio), banco, referencia, fecha y monto exacto en Bs o USD, presentándolo directamente en `ReviewExpenseScreen` como un gasto de un ítem listo para que el usuario lo revise, edite y apruebe.
 
 ### Bloque D: Nueva Herramienta Financiera
-- `FIN-09` **Calculadora Cambiaria Rápida (Conversor Bs. / $):**
+- `FIN-09` **Calculadora Cambiaria Rápida (Conversor Bs. / $):** `Implementada 🔧`
   - *Ubicación:* Exclusivamente en la pestaña **Más** (el botón central `+` se preserva intacto y 100% exclusivo para ingresar gastos).
   - *Propósito:* Resolver el cálculo instantáneo antes de pagar en caja o emitir un Pago Móvil, reteniendo usuarios en la app varias veces al día.
   - *Características Clave:*

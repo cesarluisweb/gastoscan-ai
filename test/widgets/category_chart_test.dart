@@ -70,4 +70,36 @@ void main() {
       );
     });
   });
+
+  group('CategoryChart UX-06 Grouping Tests', () {
+    testWidgets('consolidates categories after top 4 with +X categorias in Dashboard view', (tester) async {
+      await pumpChart(
+        tester,
+        const CategoryChart(
+          categoryTotals: {
+            'Alimentación': 100.0,
+            'Transporte': 80.0,
+            'Servicios': 60.0,
+            'Salud': 40.0,
+            'Higiene': 20.0,
+            'Hogar': 10.0,
+          },
+          showBudgetBars: false,
+          monedaPrincipal: 'USD',
+        ),
+      );
+
+      // Top 4 categories are visible
+      expect(find.text('Alimentación'), findsOneWidget);
+      expect(find.text('Transporte'), findsOneWidget);
+      expect(find.text('Servicios'), findsOneWidget);
+      expect(find.text('Salud'), findsOneWidget);
+
+      // The remaining 2 categories are consolidated as '+2 categorías'
+      expect(find.text('+2 categorías'), findsOneWidget);
+      // Individual remaining categories are not in the list
+      expect(find.text('Higiene'), findsNothing);
+      expect(find.text('Hogar'), findsNothing);
+    });
+  });
 }
