@@ -111,7 +111,7 @@ void main() {
 
     setUp(() {
       final TestWidgetsFlutterBinding binding = TestWidgetsFlutterBinding.ensureInitialized();
-      binding.window.physicalSizeTestValue = const Size(2500, 4000);
+      binding.window.physicalSizeTestValue = const Size(4500, 4000);
       binding.window.devicePixelRatioTestValue = 1.0;
       fakeDb = FakeDatabaseHelper();
       fakeGastoProvider = FakeGastoProvider();
@@ -194,6 +194,9 @@ void main() {
 
       final shoppingSuggestionFinder = find.byKey(const Key('chat_suggestion_chip_4'), skipOffstage: false);
       expect(shoppingSuggestionFinder, findsOneWidget);
+
+      await tester.ensureVisible(shoppingSuggestionFinder);
+      await tester.pumpAndSettle();
 
       await tester.tap(shoppingSuggestionFinder);
       await tester.pump();
