@@ -164,11 +164,13 @@ class GeminiService {
       try {
         final errorBody = jsonDecode(response.body);
         if (errorBody is Map) {
-          final retry = errorBody['retryAfter'];
-          if (retry != null && retry.toString().isNotEmpty) {
-            msg = 'Límite de solicitudes alcanzado (esperar ${retry}s). Tu comprobante está seguro y pendiente de procesamiento.';
-          } else if (errorBody['error'] != null) {
-            // Se mantiene el genérico de indisponibilidad para no mostrar el error crudo del Worker
+          if (errorBody['dailyLimitReached'] == true && errorBody['error'] != null) {
+            msg = errorBody['error'].toString();
+          } else {
+            final retry = errorBody['retryAfter'];
+            if (retry != null && retry.toString().isNotEmpty) {
+              msg = 'Límite de solicitudes alcanzado (esperar ${retry}s). Tu comprobante está seguro y pendiente de procesamiento.';
+            }
           }
         }
       } catch (_) {}
@@ -229,7 +231,9 @@ class GeminiService {
         try {
           final errorBody = jsonDecode(response.body);
           if (errorBody is Map && errorBody['error'] != null) {
-            // Keep generic to avoid raw errors
+            if (errorBody['dailyLimitReached'] == true) {
+              msg = errorBody['error'].toString();
+            }
           }
         } catch (_) {}
         throw Exception(msg);

@@ -46,6 +46,27 @@ function isRateLimited(uid, limit = 30, windowMs = 60000) {
   return userData.count > limit;
 }
 
+// Rate limiting diario en memoria por UID (50 peticiones/día por usuario en cuota compartida)
+const dailyRateLimitMap = new Map();
+
+function isDailyLimitExceeded(uid, limit = 50) {
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const userKey = `${uid}:${todayKey}`;
+  const count = (dailyRateLimitMap.get(userKey) || 0) + 1;
+  dailyRateLimitMap.set(userKey, count);
+
+  // Limpieza periódica de días anteriores si el mapa crece
+  if (dailyRateLimitMap.size > 5000) {
+    for (const key of dailyRateLimitMap.keys()) {
+      if (!key.endsWith(todayKey)) {
+        dailyRateLimitMap.delete(key);
+      }
+    }
+  }
+
+  return count > limit;
+}
+
 // Obtener y cachear claves públicas de Google
 async function getGooglePublicKeys() {
   const now = Date.now();
@@ -205,6 +226,18 @@ export default {
     const rateLimitCap = isCustomKey ? 60 : 30;
     if (isRateLimited(uid, rateLimitCap)) {
       return new Response(JSON.stringify({ error: "Límite de solicitudes alcanzado. Espera un momento." }), {
+        status: 429,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    // 2.1 Límite diario de seguridad invisible (50 peticiones/día para cuota compartida)
+    if (!isCustomKey && isDailyLimitExceeded(uid, 50)) {
+      return new Response(JSON.stringify({
+        error: "¡Le sacaste el jugo a Rinde Más hoy! 🚀 Has alcanzado el límite diario de seguridad en nuestros servidores compartidos. Tus consultas se renovarán automáticamente mañana. Si la app te ayuda a rendir tu dinero, puedes apoyarnos en Más > Apoyar el proyecto ☕.",
+        statusCode: 429,
+        dailyLimitReached: true
+      }), {
         status: 429,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
@@ -507,7 +540,7 @@ Regla para registrar gastos por voz:
 - Si el usuario menciona o dicta compras realizadas en MÚLTIPLES comercios, establecimientos o lugares distintos (ejemplo: "compré en la farmacia tal cosa en tanto y compré en el supermercado tal cosa en tanto"): DEBES desglosar cada compra por separado en el array "gastos". Cada elemento en "gastos" debe contener su propio comercio, fecha, moneda, monto_original, total_usd, categoría adecuada e items.
 - Si el usuario menciona múltiples productos dentro del MISMO comercio o compra general, regístralo como un solo gasto con los productos en "items".
 
-Aquí están los datos del usuario en formato JSON (gastos del mes y lista de compras actual):
+Aquí están los datos financieros del usuario en formato JSON (resumen mensual compacto, totales por categoría en 'totales_categoria', productos más comprados en 'top_productos_mes', compras recientes en 'ultimas_compras', presupuesto y lista de compras):
 ${JSON.stringify(contextData)}
 `;
 

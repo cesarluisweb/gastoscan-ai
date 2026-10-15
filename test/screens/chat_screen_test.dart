@@ -81,6 +81,7 @@ class FakeGeminiService extends GeminiService {
   String? lastUserMessage;
   Map<String, dynamic>? lastContextData;
   Map<String, dynamic>? customResponse;
+  List<Map<String, String>>? lastMessages;
 
   @override
   Future<Map<String, dynamic>> chatWithAnalyst({
@@ -89,6 +90,7 @@ class FakeGeminiService extends GeminiService {
   }) async {
     callCount++;
     lastContextData = contextData;
+    lastMessages = messages;
     if (messages.isNotEmpty) {
       lastUserMessage = messages.last['text'];
     }
@@ -337,6 +339,56 @@ void main() {
       expect(find.textContaining('Farmacia Central'), findsOneWidget);
       expect(find.textContaining('Supermercado Sol'), findsOneWidget);
       expect(find.text('Revisar y Guardar compra'), findsWidgets);
+    });
+
+    testWidgets('sends precalculated semantic context and trims messages to sliding window', (tester) async {
+      fakeGastoProvider.gastos.add(
+        GastoModel(
+          id: 1,
+          uuid: 'uuid-1',
+          fecha: '2026-10-14',
+          comercio: 'Automercado',
+          moneda: 'USD',
+          totalOriginal: 2500,
+          totalUsd: 2500,
+          categoria: 'Alimentación',
+          creadoEn: '2026-10-14T10:00:00Z',
+          items: [
+            ItemGastoModel(descripcion: 'Harina PAN', cantidad: 3, precioUnitario: 100, total: 300, categoria: 'Alimentación'),
+            ItemGastoModel(descripcion: 'Café', cantidad: 1, precioUnitario: 500, total: 500, categoria: 'Alimentación'),
+          ],
+        ),
+      );
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      final inputFinder = find.byType(TextField);
+      await tester.enterText(inputFinder, '¿Cuál es el producto que más compré?');
+      await tester.pumpAndSettle();
+
+      final sendButtonFinder = find.byIcon(Icons.send);
+      await tester.tap(sendButtonFinder);
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(fakeGeminiService.callCount, 1);
+      final contextData = fakeGeminiService.lastContextData;
+      expect(contextData, isNotNull);
+      expect(contextData!.containsKey('totales_categoria'), isTrue);
+      expect(contextData.containsKey('top_productos_mes'), isTrue);
+      expect(contextData.containsKey('ultimas_compras'), isTrue);
+
+      final topProducts = contextData['top_productos_mes'] as List;
+      expect(topProducts.isNotEmpty, isTrue);
+      expect(topProducts.first['producto'], 'Harina PAN');
+      expect(topProducts.first['cantidad'], 3.0);
+
+      // Comprobar que no se envió gastos_mes (que consumía miles de tokens redundantes)
+      expect(contextData.containsKey('gastos_mes'), isFalse);
+
+      // Comprobar ventana deslizante de mensajes <= 5
+      expect(fakeGeminiService.lastMessages!.length, lessThanOrEqualTo(5));
     });
   });
 }

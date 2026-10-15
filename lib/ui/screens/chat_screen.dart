@@ -276,6 +276,88 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
+  Map<String, dynamic> _buildSemanticChatContext({
+    required GastoProvider gastoProvider,
+    required SettingsProvider settings,
+    required List<ShoppingItemModel> shoppingItems,
+  }) {
+    final savingsSnapshot = gastoProvider.savingsSnapshot;
+
+    // 1. Totales acumulados por categoría en USD
+    final Map<String, double> totalesCategoria = {};
+    for (final g in gastoProvider.gastos) {
+      final cat = g.categoria;
+      final usd = g.totalUsd / 100.0;
+      totalesCategoria[cat] = (totalesCategoria[cat] ?? 0.0) + usd;
+    }
+
+    // 2. Top 10 productos más comprados del mes (cantidad y total USD)
+    final Map<String, Map<String, dynamic>> productMap = {};
+    for (final g in gastoProvider.gastos) {
+      for (final item in g.items) {
+        final name = item.descripcion.trim();
+        if (name.isEmpty) continue;
+        final key = name.toLowerCase();
+        final existing = productMap[key] ?? {
+          'producto': name,
+          'cantidad': 0.0,
+          'total_usd': 0.0,
+          'veces_comprado': 0,
+        };
+        existing['cantidad'] = (existing['cantidad'] as double) + item.cantidad;
+        final double itemUsd = (g.totalOriginal > 0)
+            ? (item.total / g.totalOriginal) * (g.totalUsd / 100.0)
+            : (item.total / 100.0);
+        existing['total_usd'] = (existing['total_usd'] as double) + itemUsd;
+        existing['veces_comprado'] = (existing['veces_comprado'] as int) + 1;
+        productMap[key] = existing;
+      }
+    }
+    final sortedProducts = productMap.values.toList()
+      ..sort((a, b) => (b['cantidad'] as double).compareTo(a['cantidad'] as double));
+    final top10Productos = sortedProducts.take(10).map((p) => {
+      'producto': p['producto'],
+      'cantidad': double.parse((p['cantidad'] as double).toStringAsFixed(1)),
+      'total_usd': double.parse((p['total_usd'] as double).toStringAsFixed(2)),
+      'veces_comprado': p['veces_comprado'],
+    }).toList();
+
+    // 3. Últimas 5 compras del mes para contexto temporal
+    final sortedGastos = List<GastoModel>.from(gastoProvider.gastos)
+      ..sort((a, b) => b.fecha.compareTo(a.fecha));
+    final ultimasCompras = sortedGastos.take(5).map((g) => {
+      'fecha': g.fecha,
+      'comercio': g.comercio,
+      'categoria': g.categoria,
+      'moneda': g.moneda,
+      'monto_original': double.parse((g.totalOriginal / 100.0).toStringAsFixed(2)),
+      'total_usd': double.parse((g.totalUsd / 100.0).toStringAsFixed(2)),
+    }).toList();
+
+    return {
+      'tasa_bcv_usd': settings.tasaCambioVesUsd,
+      'tasa_bcv_eur': settings.tasaCambioVesEur,
+      'tasa_usdt': settings.tasaCambioVesUsdt,
+      'totales_categoria': totalesCategoria.map((k, v) => MapEntry(k, double.parse(v.toStringAsFixed(2)))),
+      'top_productos_mes': top10Productos,
+      'ultimas_compras': ultimasCompras,
+      'total_usd': gastoProvider.totalMesUsd,
+      'total_ves': gastoProvider.totalMesVes,
+      'presupuesto_general': gastoProvider.presupuestoGeneral,
+      'meta_ahorro': gastoProvider.metaAhorro,
+      'limite_para_gastar': savingsSnapshot.limiteParaGastar,
+      'gasto_proyectado_fin_mes': savingsSnapshot.gastoProyectadoFinDeMes,
+      'estado_meta_ahorro': savingsSnapshot.status.name,
+      'moneda_presupuesto': gastoProvider.monedaPresupuesto,
+      'presupuestos_categoria': gastoProvider.presupuestosPorCategoria,
+      'lista_compras': shoppingItems.map((e) => {
+        'id': e.id,
+        'nombre': e.name,
+        'comprado': e.isPurchased == 1,
+      }).toList(),
+    };
+  }
+
   Future<void> _sendMessage([String? textOverride]) async {
     if (_isListening) {
       await _stopListening();
@@ -297,29 +379,17 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
       final settings = Provider.of<SettingsProvider>(context, listen: false);
       final shoppingItems = await _dbHelper.getAllShoppingItems();
-      final savingsSnapshot = gastoProvider.savingsSnapshot;
-      final contextData = {
-        'tasa_bcv_usd': settings.tasaCambioVesUsd,
-        'tasa_bcv_eur': settings.tasaCambioVesEur,
-        'tasa_usdt': settings.tasaCambioVesUsdt,
-        'gastos_mes': gastoProvider.gastos.map((g) => g.toMap()).toList(),
-        'total_usd': gastoProvider.totalMesUsd,
-        'total_ves': gastoProvider.totalMesVes,
-        'presupuesto_general': gastoProvider.presupuestoGeneral,
-        'meta_ahorro': gastoProvider.metaAhorro,
-        'limite_para_gastar': savingsSnapshot.limiteParaGastar,
-        'gasto_proyectado_fin_mes': savingsSnapshot.gastoProyectadoFinDeMes,
-        'estado_meta_ahorro': savingsSnapshot.status.name,
-        'moneda_presupuesto': gastoProvider.monedaPresupuesto,
-        'presupuestos_categoria': gastoProvider.presupuestosPorCategoria,
-        'lista_compras': shoppingItems.map((e) => {
-          'id': e.id,
-          'nombre': e.name,
-          'comprado': e.isPurchased == 1,
-        }).toList(),
-      };
+      final contextData = _buildSemanticChatContext(
+        gastoProvider: gastoProvider,
+        settings: settings,
+        shoppingItems: shoppingItems,
+      );
 
-      final chatMessages = _messages.map((m) => {
+      // Ventana deslizante: enviar a la API solo los últimos 5 mensajes para proteger tokens
+      final recentMessages = _messages.length > 5
+          ? _messages.sublist(_messages.length - 5)
+          : _messages;
+      final chatMessages = recentMessages.map((m) => {
         'role': m['role']?.toString() ?? 'user',
         'text': m['text']?.toString() ?? '',
       }).toList();
