@@ -224,13 +224,13 @@ void main() {
     });
 
     testWidgets('renders BCV legal disclaimer card and official source link', (tester) async {
+      tester.binding.setSurfaceSize(const Size(800, 1600));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
       final disclaimerCard = find.byKey(const Key('calc_bcv_disclaimer_card'));
-      await tester.scrollUntilVisible(disclaimerCard, 200, scrollable: find.byType(Scrollable));
-      await tester.pumpAndSettle();
-
       expect(disclaimerCard, findsOneWidget);
       expect(find.byKey(const Key('calc_bcv_source_link')), findsOneWidget);
       expect(find.textContaining('Aviso legal sobre tasas oficiales'), findsOneWidget);
