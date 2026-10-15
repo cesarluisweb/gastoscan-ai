@@ -25,5 +25,5 @@
 - Para widgets que usan `RichText` en tests: especificar `find.textContaining(..., findRichText: true)`.
 
 ## Próximo Paso Inmediato
-- CI en verde confirmado (`conclusion: success`, Run `38785948485`). APK publicado en BanaHosting y Landing actualizada en Firebase Hosting. Esperar validación de César en dispositivo para marcar FIN-09 y UX-11 `Completada ✅`.
+- CI en verde confirmado (`conclusion: success`, Run `38787056019`). APK publicado en BanaHosting y Landing actualizada en Firebase Hosting. Esperar validación de César en dispositivo para marcar FIN-09, UX-11 y AI-04 `Completada ✅`.
 
