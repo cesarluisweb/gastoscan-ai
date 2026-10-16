@@ -58,6 +58,17 @@ Google Play exige para cuentas personales nuevas creadas después de noviembre d
    * Amigos directos, familiares, compañeros de trabajo y comunidades afines (`r/vzla`, grupos de Telegram de testers).
    * Pedirles explícitamente: *"Descarga la app desde el enlace oficial y ábrela al menos 2 a 3 veces por semana para que Google registre actividad continua"*.
 
+### Protocolo de Activación de Evaluadores (Fricción Cero)
+1. **Alta Inmediata en Google Groups:**
+   * Al añadir el correo del tester en el grupo de Google (`rinde-mas-evaluadores@googlegroups.com`), marcar obligatoriamente la casilla **"Añadir miembros directamente"** para evitar que quede esperando una confirmación por correo.
+2. **Opt-in Obligatorio en Google Play:**
+   * Google NO envía un correo automático de activación. El evaluador debe ingresar obligatoriamente al enlace web de opt-in:
+     `https://play.google.com/apps/testing/com.cesarluis.rindemas`
+   * Debe pulsar el botón azul **"Convertirse en evaluador"**.
+   * *Importante:* Si el usuario no realiza este opt-in, el botón "Actualizar" de la app o el enlace canónico de la tienda (`play.google.com/store/apps/details?...`) arrojará error *"No se ha encontrado el elemento"*.
+3. **Plantilla de Mensaje de Activación Directa:**
+   > *"Listo, ya te agregué al grupo. Para activar tu acceso de evaluador y que la Play Store te deje actualizar, abre este enlace con esa cuenta de Gmail: https://play.google.com/apps/testing/com.cesarluis.rindemas y pulsa el botón azul 'Convertirse en evaluador'. Con ese paso ya te aparecerá la opción de actualizar directo en la Play Store."*
+
 ### Bitácora Obligatoria para Solicitud de Producción (Apply for Production)
 Al finalizar los 14 días, Google evaluará la solicitud mediante un formulario obligatorio. Se debe llevar registro activo de:
 1. Método de reclutamiento de los evaluadores.

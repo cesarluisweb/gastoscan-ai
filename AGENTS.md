@@ -27,7 +27,7 @@
 - Modificar esquemas de datos (tablas SQLite, índices, colecciones o reglas de Firestore).
 - Cambiar la arquitectura de navegación principal o flujos de autenticación.
 - Eliminar archivos existentes de código o documentación.
-- Alternar la visibilidad del repositorio a Público ante emergencias de cuota agotada de GitHub Actions.
+- Alternar la visibilidad del repositorio (actualmente Privado) a Público ante emergencias de cuota agotada de GitHub Actions.
 
 ### 🚫 Nunca (Prohibiciones estrictas en una línea):
 - Modificar archivos en `android/` de forma manual o local (CI los regenera).
@@ -37,7 +37,7 @@
 - Alojar archivos binarios `.apk` en `landing/public/` o `landing/dist/` (Firebase Spark los bloquea con HTTP 400).
 - Usar dominios con proxy naranja de Cloudflare como `FTP_SERVER` en CI/CD (bloquea el puerto 21 de FTP).
 - Introducir conciliación bancaria o microgestión de múltiples cuentas (anti-filosofía de Rinde Más).
-- Utilizar ratios de cambio cableados o asumir paridad 1:1 entre divisas (multimoneda determinista obligatoria).
+- Utilizar ratios de cambio cableados o asumir paridad 1:1 entre divisas (salvo la paridad directa USD/USDT según `dinero-datos.md`).
 - Inventar categorías fuera de las 8 canónicas oficiales de `AppConstants.categorias`.
 - Implementar cobros digitales dentro de la app Android fuera de Google Play Billing (riesgo de suspensión de cuenta).
 - Prometer paquetes de IA vitalicia ilimitada en planes o microcopy.
