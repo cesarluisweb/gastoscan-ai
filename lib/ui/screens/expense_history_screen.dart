@@ -447,41 +447,39 @@ class ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
     final int count = currentGastos.length;
     final String countStr = count == 1 ? '1 compra' : '$count compras';
 
-    return Container(
-      key: const Key('expense_history_monthly_summary_strip'),
-      margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppColors.cardLighter,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.receipt_long_outlined, size: 16, color: AppColors.textSecondary),
-              const SizedBox(width: 6),
-              Text(
-                'Total gastado ($countStr):',
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
+    return Center(
+      child: Container(
+        key: const Key('expense_history_monthly_summary_strip'),
+        margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+        decoration: BoxDecoration(
+          color: AppColors.cardLighter,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.receipt_long_outlined, size: 16, color: AppColors.textSecondary),
+            const SizedBox(width: 6),
+            Text(
+              'Total gastado ($countStr): ',
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
               ),
-            ],
-          ),
-          Text(
-            primaryFormatted,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
             ),
-          ),
-        ],
+            Text(
+              primaryFormatted,
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

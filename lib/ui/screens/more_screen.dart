@@ -295,15 +295,14 @@ class MoreScreenState extends State<MoreScreen> {
               },
               child: const Row(
                 children: [
-                  Icon(Icons.open_in_new, size: 16, color: AppColors.primaryDark),
+                  Icon(Icons.open_in_new, size: 16, color: AppColors.textPrimary),
                   SizedBox(width: 6),
                   Text(
                     'Visitar www.bcv.org.ve',
                     style: TextStyle(
                       fontSize: 13,
-                      color: AppColors.primaryDark,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.bold,
-                      decoration: TextDecoration.underline,
                     ),
                   ),
                 ],
@@ -701,13 +700,12 @@ class MoreScreenState extends State<MoreScreen> {
                               'Fuente oficial: www.bcv.org.ve',
                               style: TextStyle(
                                 fontSize: 11,
-                                color: AppColors.primaryDark,
+                                color: AppColors.textPrimary,
                                 fontWeight: FontWeight.bold,
-                                decoration: TextDecoration.underline,
                               ),
                             ),
                             SizedBox(width: 4),
-                            Icon(Icons.open_in_new, size: 12, color: AppColors.primaryDark),
+                            Icon(Icons.open_in_new, size: 12, color: AppColors.textPrimary),
                           ],
                         ),
                       ),
