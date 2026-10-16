@@ -236,6 +236,20 @@ void main() {
       expect(find.textContaining('Aviso legal sobre tasas oficiales'), findsOneWidget);
       expect(find.textContaining('www.bcv.org.ve'), findsOneWidget);
     });
+
+    testWidgets('tapping clear icon clears divisa input field', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      final clearIconFinder = find.byIcon(Icons.clear);
+      expect(clearIconFinder, findsWidgets);
+
+      await tester.tap(clearIconFinder.first);
+      await tester.pumpAndSettle();
+
+      final divisaField = tester.widget<TextField>(find.byKey(const Key('calc_divisa_input')));
+      expect(divisaField.controller?.text, isEmpty);
+    });
   });
 }
 

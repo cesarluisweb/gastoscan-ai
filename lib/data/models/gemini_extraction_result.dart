@@ -22,9 +22,9 @@ class GeminiExtractionResult {
     this.matchedShoppingItemIds = const [],
   });
 
-    static double _parseAmount(dynamic value, {bool isPrice = true}) {
+    static double _parseAmount(dynamic value, {bool isPrice = false}) {
       // Lógica centralizada en amount_parser.dart; aquí se conserva la firma
-      // y la semántica histórica (0.0 ante dato ausente/inválido de la IA).
+      // y la semántica de fallback (0.0 ante dato ausente/inválido de la IA).
       return tryParseAmount(value, isPrice: isPrice) ?? 0.0;
     }
 

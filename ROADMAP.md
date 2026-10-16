@@ -37,7 +37,7 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 
 ## Fase 5: Marketing, Lanzamiento y Tracción (En Progreso 🔄)
 *Hitos para validar el producto con usuarios reales en Venezuela:*
-- **Subida a Google Play Store (Closed Testing):** (En progreso 🔄) Ficha técnica y capturas preparadas (`DOC_FICHA_PLAY_STORE.md`). Adaptación de políticas de información gubernamental completada: descargos de no representación y enlaces funcionales a `https://www.bcv.org.ve/` integrados en la ficha de tienda, Calculadora de divisas y pantalla Más. AAB v1.0.4 compilado y listo para reenvío conjunto con la ficha. Pendiente: completar cuestionarios de política en Play Console y coordinar la pista cerrada de 20 testers durante 14 días continuos.
+- **Subida a Google Play Store (Closed Testing):** (En progreso 🔄) Ficha técnica y capturas preparadas (`DOC_FICHA_PLAY_STORE.md`). Adaptación de políticas de información gubernamental completada: descargos de no representación y enlaces funcionales a `https://www.bcv.org.ve/` integrados en la ficha de tienda, Calculadora de divisas y pantalla Más. AAB v1.0.4 compilado y listo para reenvío conjunto con la ficha. Prueba cerrada activa en Play Console; coordinando los 12 evaluadores requeridos durante el período de prueba.
 - **Código QR de Descarga en Landing (Desktop):** (Pendiente) Incorporar tarjeta con código QR dinámico en `rindemas.cesarluis.com` para escanear e instalar directamente desde una PC.
 - **Correo de Bienvenida Automatizado:** (Pendiente) Disparar correo de bienvenida y guía de primeros pasos cuando el usuario vincule su cuenta de Google (vía trigger de Cloud Functions o Firestore).
 - **Ejecución del Plan de Crecimiento (Primeros 100 Usuarios):** (Pendiente) Despliegue de tácticas comunitarias y orgánicas en grupos venezolanos según `marketing_plan.md` y `.agents/skills/growth-first-100-users/SKILL.md`.
@@ -79,18 +79,17 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
   - *Solución:* Incorporar un distintivo de recibo/clip (`🧾`) en las tarjetas que tienen fotografía adjunta y reemplazar el botón confuso de galería por un chip activo `[🧾 Con comprobante]` o ícono de filtro con estado evidente.
 - `UX-10` **Jerarquía y Claridad de la Acción "Eliminar Cuenta":**
   - *Solución:* Separar visualmente la acción de eliminar cuenta de la tarjeta "Respaldo en la Nube" o ubicarla en una sección sutil de "Zona de Peligro" para evitar dudas entre sincronización y borrado total.
-- `UX-11` **Feedback Visual e Indicador de Estado en Vinculación / Sincronización de Cuenta:** `Pendiente de validación 🧪`
+- `UX-11` **Feedback Visual e Indicador de Estado en Vinculación / Sincronización de Cuenta:** `Completada ✅`
   - *Problema:* Al pulsar "Vincular con Google" o autenticar con correo, la app carecía de indicadores durante la comunicación con Google Play Services y la sincronización con Firestore, generando sensación de bloqueo y permitiendo toques concurrentes.
   - *Solución:* Spinner negro de alto contraste con texto de estado (*"Conectando con Google..."*, *"Vinculando y sincronizando..."*), leyenda informativa, bloqueo de interacción cruzada y protección con `PopScope` en modales y diálogos.
 
 ### Bloque C: Percepción con IA, Optimización y Seguridad
-- `AI-02` **Detección Automática y Transparente de Pagos Digitales (Pago Móvil / Zelle / Binance):**
-  - *Premisa:* No es una opción nueva ni un botón aparte. El usuario usa el mismo flujo unificado de escaneo / subida de comprobante.
-  - *Solución:* El backend de IA interpreta automáticamente si la imagen es una factura impresa o una captura de transferencia bancaria digital. Si es pago digital, extrae beneficiario (lo monta como Comercio), banco, referencia, fecha y monto exacto en Bs o USD, presentándolo directamente en `ReviewExpenseScreen` como un gasto de un ítem listo para que el usuario lo revise, edite y apruebe.
+- `AI-02` **Detección Automática y Transparente de Pagos Digitales (Pago Móvil / Zelle / Binance / PayPal):** `Completada ✅`
+  - *Premisa:* Funcionalidad integrada por defecto en el pipeline unificado de escaneo OCR. Resuelta la anomalía de lectura donde montos enteros (ej. $25 en PayPal o 50 Bs en Pago Móvil) se convertían a 0.25 o 0.50 debido al flag de precio de centavos en el parser.
 - `AI-03` **Resumen Semántico y Ventana Deslizante en Chat IA:** `Completada ✅`
   - *Problema:* Volcado completo de la base de datos de gastos crudos (`toMap()`) y todo el historial de conversación disparaba picos de hasta >60.000 tokens en pocas consultas.
   - *Solución:* Construcción local en SQLite de un resumen semántico precalculado (`totales_categoria`, `top_productos_mes`, `ultimas_compras`, presupuesto y ritmo de ahorro) y ventana deslizante que envía solo los últimos 5 mensajes a Gemini, reduciendo el consumo de tokens en >80% preservando la capacidad analítica para preguntas frecuentes de productos.
-- `AI-04` **Persistencia de Conversación en Sesión y Exclusión Fiscal de IVA en Asistente IA:** `Pendiente de validación 🧪`
+- `AI-04` **Persistencia de Conversación en Sesión y Exclusión Fiscal de IVA en Asistente IA:** `Completada ✅`
   - *Problema:* El Asistente IA señalaba al IVA como un gasto pequeño a recortar al analizar gastos hormiga (debido a renglones fiscales `Impuesto IVA` no filtrados en `top_productos_mes`). Además, al salir del chat hacia cualquier otra pantalla de la app, toda la conversación se destruía.
   - *Solución:* Creación de `ChatProvider` en memoria (`MultiProvider`) que preserva la conversación durante toda la sesión activa de la app, botón de reinicio en el `AppBar` (`Icons.restart_alt`) con diálogo de confirmación que advierte la pérdida del historial previo, filtro estricto con `DatabaseHelper.isTaxItem` en `_buildSemanticChatContext` y regla de negocio en Cloudflare Worker instruyendo al modelo que el IVA es un tributo obligatorio legal no prescindible.
 - `SEC-13` **Blindaje de Cuota Diaria y Límite Anti-Abuso en Gateway:** `Completada ✅`
@@ -102,7 +101,7 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
   - *Ubicación:* Exclusivamente en la pestaña **Más** (el botón central `+` se preserva intacto y 100% exclusivo para ingresar gastos).
   - *Propósito:* Resolver el cálculo instantáneo antes de pagar en caja o emitir un Pago Móvil, reteniendo usuarios en la app varias veces al día.
   - *Características Clave:*
-    1. **Doble campo bidireccional en tiempo real:** Escribir en divisa calcula bolívares al instante y viceversa, sin botón de cálculo intermedio.
+    1. **Doble campo bidireccional en tiempo real con selección y borrado rápido:** Escribir en divisa calcula bolívares al instante y viceversa; al pulsar o enfocar el campo se selecciona todo el texto para sobreescribir sin borrar manualmente, e incluye botón rápido `X` para vaciar el campo.
     2. **Chips de tasa en un toque:** Selector directo entre `[Dólar BCV]`, `[Euro BCV]`, `[USDT]` y `[Personalizada ✏️]` usando las tasas ya cacheadas en la app.
     3. **Comparativa simultánea y brecha cambiaria:** Cuadro comparativo mostrando equivalencias en las otras tasas de referencia.
     4. **Acción rápida `📋 Copiar monto en Bs.`:** Copia el número limpio al portapapeles para pegarlo directamente en la app del banco.

@@ -12,6 +12,12 @@
 double? tryParseAmount(dynamic value, {bool isPrice = false}) {
   if (value == null) return null;
 
+  // Si el valor ya es un número (int o double de jsonDecode), retornarlo directamente
+  if (value is num) {
+    if (value.isNaN || value.isInfinite) return null;
+    return value.toDouble();
+  }
+
   String s = value.toString().trim();
   if (s.isEmpty) return null;
 

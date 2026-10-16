@@ -21,6 +21,19 @@ void main() {
 
     test('entero sin separadores NO aplica regla de precio en formularios', () {
       expect(tryParseAmount('1500', isPrice: false), equals(1500.0));
+      expect(tryParseAmount('25', isPrice: false), equals(25.0));
+    });
+
+    test('valores numéricos (int y double) se preservan directamente sin alterar decimales', () {
+      expect(tryParseAmount(25), equals(25.0));
+      expect(tryParseAmount(25.0), equals(25.0));
+      expect(tryParseAmount(100), equals(100.0));
+      expect(tryParseAmount(0.25), equals(0.25));
+    });
+
+    test('monto con coma decimal en formato español (\$25,00)', () {
+      expect(tryParseAmount('25,00', isPrice: false), equals(25.0));
+      expect(tryParseAmount('\$25,00 USD', isPrice: false), equals(25.0));
     });
 
     test('modo precio OCR conserva regla historica', () {

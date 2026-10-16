@@ -3,30 +3,27 @@
 
 ## Estado Actual Inmediato
 - **Rama:** `main`.
-- **Fase activa:** Fase 6.2. UI-01, UI-05, UX-06, UX-07 `Completada ✅`, FIN-09 y UX-11 en `Pendiente de validación 🧪`.
-- **Documentación Técnica:** [DOC_FASE_6_2.md](DOC_FASE_6_2.md) y [ROADMAP.md](ROADMAP.md) actualizados.
+- **Fase activa:** Fase 6.2 y Fase 5 (Closed Testing activa con 12 evaluadores).
+- **Tareas recientes:** `UI-01`, `UI-05`, `UX-06`, `UX-07`, `UX-11`, `AI-02`, `AI-03`, `AI-04`, `SEC-13` `Completada ✅`. `FIN-09` `Pendiente de validación 🧪`.
+- **Documentación Técnica:** [ROADMAP.md](ROADMAP.md) y [DOC_FASE_6_2.md](DOC_FASE_6_2.md) actualizados.
 
 ## Decisiones Técnicas y de Negocio Recientes
-- **IA-05 (Persistencia de Chat y Regla Fiscal IVA):** `ChatProvider` en memoria (`MultiProvider`) mantiene la conversación activa al salir o navegar en la app. Botón de reinicio en AppBar (`Icons.restart_alt`) con modal de confirmación antes de borrar. Se excluye el renglón impositivo (`DatabaseHelper.isTaxItem`) de `_buildSemanticChatContext` y se instruye al modelo en Cloudflare Worker que el IVA en Venezuela es costo obligatorio legal no modificable, prohibiendo clasificarlo como producto o gasto hormiga.
-- **UX-11 (Feedback Vinculación/Sincronización):** Estado de carga integrado en botón de Google (*"Conectando con Google..."* + spinner negro), leyenda descriptiva, deshabilitación de botones interactivos para prevenir toques concurrentes, PopScope en hoja modal de correo y diálogo de compras con microcopy de respaldo explícito.
-- **UX-07 (Refinamiento Integral):** Tira de resumen mensual fija de moneda única según `monedaPrincipal`, carrusel de chips de filtros rápidos (`[Todos]`, `[🧾 Con comprobante]`, categorías), cálculo proporcional de ítems multimoneda, desglose consistente con fila y mini-ícono incluso en compras de 1 artículo, reducción de padding derecho en 3 puntos a ~12px, y despliegue interactivo en Inicio (`onTap`) para compras con artículos.
-- **FIN-09 (Refinado):** Pastilla de tasa swap interactiva (`calc_swap_button`) para invertir orden Divisa/Bolívares, botón de copia dinámico (`Copiar Bs.` / `Copiar USD/EUR/USDT`), comparativa con texto negro carbón y eliminación de dropdown innecesario.
-- **Navegación Atrás (MainScreen):** PopScope inteligente: desde tabs secundarias regresa a Inicio; en Más regresa al Hub; en Inicio requiere doble toque ('Presiona de nuevo para salir') en <= 2s para invocar `SystemNavigator.pop()`.
-- **Consistencia de AppBars (Opción A):** Las 4 pantallas principales (`Inicio`, `Gastos`, `Análisis`, `Más`) muestran de forma idéntica `[🔍 Buscar, ✨ Asistente IA]`. La lupa redirige directamente a Gastos activando la búsqueda con teclado desplegado. Se retiró el botón redundante de presupuestos en Análisis y al presionar atrás mientras se busca se cancela la búsqueda sin cambiar de pestaña.
-- **Iconografía e IA:** `AppConstants.getCategoryIcon`, `Icons.auto_awesome` en AppBar de Inicio y agrupación `+X categorías`.
-
-- **POL-01 (Blindaje Política Gubernamental Google Play y Refinamiento UX):** Descargos oficiales y enlaces al BCV en negro carbón sin subrayar con icono discreto (en app móvil y landing page). Recuadro de total mensual en Gastos centrado como pastilla compacta en vez de ancho completo. Versión `1.0.4+4`.
+- **Bug Fix OCR (Montos Enteros IA a Céntimos):** `_parseAmount` en `GeminiExtractionResult` tenía `isPrice = true` por defecto. En capturas de PayPal o Pago Móvil donde Gemini devolvía un entero (ej. `$25`), el parser lo trataba como dígitos de céntimos convirtiéndolo en `0.25`. Solución: `value is num` se retorna directamente en `amount_parser.dart` y `isPrice = false` por defecto en extracción IA.
+- **FIN-09 (UX Ingreso de Monto en Calculadora):** Texto inicial cambiado a `'1'`. Al pulsar o enfocar los campos de divisa o Bs., se selecciona automáticamente todo el texto (`TextSelection(0, length)`) para sobreescribir al instante sin borrar. Añadido botón rápido de borrado `X` (`suffixIcon: IconButton(Icons.clear)`).
+- **UX-11 (Feedback Vinculación/Sincronización):** Completada y aprobada por César.
+- **AI-04 (Persistencia de Chat y Exclusión Fiscal IVA):** Completada y aprobada por César.
+- **AI-02 (Detección de Pagos Digitales):** Funciona por defecto en el pipeline unificado de escaneo OCR; bug de montos enteros resuelto.
+- **Google Play (Closed Testing):** Pista cerrada activa en Play Console con 12 evaluadores requeridos.
 
 ## Errores y Fricciones a Evitar
 - **Regla Estricta DESIGN.md §2.2:** Prohibido texto amarillo sobre fondo blanco/claro. El amarillo (`AppColors.primaryDark` / `primary`) solo se permite en iconos, bordes activos o fondos cuyo texto sea estrictamente negro.
 - `AppConstants.categorias`: El catálogo canónico son 8 categorías fijas.
 - Íconos de categorías deben consultarse exclusivamente vía `AppConstants.getCategoryIcon(cat)`.
-- En `currency_calculator_screen_test.dart`: Si se usa `GastoModel`, importar explícitamente `gasto_model.dart`.
-- Evitar navegación real a pantallas que requieran SQLite no mockeado (`DatabaseHelper.instance`) en tests de widgets.
 - `ScanQueueProvider` en tests de widgets: instanciar siempre con `autoProcess: false` y llamar `dispose()` en `tearDown` para evitar timeouts de `pumpAndSettle`.
-- Para widgets que usan `RichText` en tests: especificar `find.textContaining(..., findRichText: true)`.
+- En `amount_parser.dart`: Nunca asumir que cadenas sin punto ni coma son céntimos cuando provienen de extracción IA o campos de formulario (`isPrice` debe ser `false`).
 
 ## Próximo Paso Inmediato
-- CI en verde confirmado (`conclusion: success`, Run `38800883233`). AAB v1.0.4 y APK generados y desplegados. César debe: 1) Descargar `app-release.aab` desde GitHub Releases/Actions y subirlo a Pruebas Cerradas en Play Console, 2) Pegar la descripción completa con el descargo y enlace oficial, 3) Confirmar el cuestionario de app no gubernamental y 4) Enviar a revisión.
+- Confirmar CI en verde tras push con corrección de OCR y UX de calculadora cambiaria.
+- Prueba manual en dispositivo por César para validar selección rápida de monto en calculadora y escaneo de capturas PayPal/Pago Móvil.
 
 

@@ -31,6 +31,8 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
   late TextEditingController _divisaCtrl;
   late TextEditingController _vesCtrl;
   late TextEditingController _customRateCtrl;
+  late FocusNode _divisaFocusNode;
+  late FocusNode _vesFocusNode;
 
   String _selectedCurrency = 'USD';
   TipoTasaCalculadora _selectedTipoTasa = TipoTasaCalculadora.dolarBcv;
@@ -41,9 +43,23 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
   @override
   void initState() {
     super.initState();
-    _divisaCtrl = TextEditingController(text: '1.00');
+    _divisaCtrl = TextEditingController(text: '1');
     _vesCtrl = TextEditingController();
     _customRateCtrl = TextEditingController();
+    _divisaFocusNode = FocusNode();
+    _vesFocusNode = FocusNode();
+
+    _divisaFocusNode.addListener(() {
+      if (_divisaFocusNode.hasFocus && _divisaCtrl.text.isNotEmpty) {
+        _divisaCtrl.selection = TextSelection(baseOffset: 0, extentOffset: _divisaCtrl.text.length);
+      }
+    });
+
+    _vesFocusNode.addListener(() {
+      if (_vesFocusNode.hasFocus && _vesCtrl.text.isNotEmpty) {
+        _vesCtrl.selection = TextSelection(baseOffset: 0, extentOffset: _vesCtrl.text.length);
+      }
+    });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _recalcularDesdeDivisa();
@@ -55,6 +71,8 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
     _divisaCtrl.dispose();
     _vesCtrl.dispose();
     _customRateCtrl.dispose();
+    _divisaFocusNode.dispose();
+    _vesFocusNode.dispose();
     super.dispose();
   }
 
@@ -656,6 +674,7 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
         TextField(
           key: const Key('calc_divisa_input'),
           controller: _divisaCtrl,
+          focusNode: _divisaFocusNode,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           style: const TextStyle(
             fontSize: 22,
@@ -669,6 +688,16 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
                   : (_selectedCurrency == 'USDT' ? Icons.currency_bitcoin : Icons.attach_money),
               color: AppColors.primaryDark,
             ),
+            suffixIcon: _divisaCtrl.text.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.clear, size: 18, color: AppColors.textSecondary),
+                    onPressed: () {
+                      _divisaCtrl.clear();
+                      _recalcularDesdeDivisa();
+                      setState(() {});
+                    },
+                  )
+                : null,
             hintText: '0.00',
             filled: true,
             fillColor: AppColors.surface,
@@ -678,7 +707,15 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
             ),
             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           ),
-          onChanged: (_) => _recalcularDesdeDivisa(),
+          onTap: () {
+            if (_divisaCtrl.text.isNotEmpty) {
+              _divisaCtrl.selection = TextSelection(baseOffset: 0, extentOffset: _divisaCtrl.text.length);
+            }
+          },
+          onChanged: (_) {
+            _recalcularDesdeDivisa();
+            setState(() {});
+          },
         ),
       ],
     );
@@ -700,6 +737,7 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
         TextField(
           key: const Key('calc_ves_input'),
           controller: _vesCtrl,
+          focusNode: _vesFocusNode,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           style: const TextStyle(
             fontSize: 22,
@@ -713,6 +751,16 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
             ),
+            suffixIcon: _vesCtrl.text.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.clear, size: 18, color: AppColors.textSecondary),
+                    onPressed: () {
+                      _vesCtrl.clear();
+                      _recalcularDesdeVes();
+                      setState(() {});
+                    },
+                  )
+                : null,
             hintText: '0.00',
             filled: true,
             fillColor: AppColors.surface,
@@ -722,7 +770,15 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
             ),
             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           ),
-          onChanged: (_) => _recalcularDesdeVes(),
+          onTap: () {
+            if (_vesCtrl.text.isNotEmpty) {
+              _vesCtrl.selection = TextSelection(baseOffset: 0, extentOffset: _vesCtrl.text.length);
+            }
+          },
+          onChanged: (_) {
+            _recalcularDesdeVes();
+            setState(() {});
+          },
         ),
       ],
     );
