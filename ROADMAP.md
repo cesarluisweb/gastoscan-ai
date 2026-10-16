@@ -95,6 +95,10 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 - `SEC-13` **Blindaje de Cuota Diaria y Límite Anti-Abuso en Gateway:** `Completada ✅`
   - *Problema:* Riesgo de agotamiento de saldo en Google AI Studio por bucles, ataques o scripts de scraping automatizados.
   - *Solución:* Implementación de rate limiting en Cloudflare Worker con límite de seguridad invisible de 50 peticiones/día por UID en cuota compartida, bypass automático para usuarios con API Key propia (BYOK) y respuesta amigable HTTP 429 invitando a apoyar el proyecto en `Más > Apoyar el proyecto ☕`.
+- `AI-06` **Imputación de IVA en Precios de Anaquel y Algoritmo del Centavo Residual:** `Pendiente`
+  - *Problema:* Las facturas fiscales del SENIAT imprimen bases imponibles (sin IVA) para productos gravados `(G)`. Al extraer el ticket, la app crea un renglón artificial "Impuesto IVA" en categoría 'Otros', distorsionando los presupuestos por categoría y descalzando el comparador histórico de precios con las entradas manuales y por voz.
+  - *Solución:* Imputar el 16% de IVA directamente en los productos gravados para reflejar el precio de anaquel que el usuario pagó en caja, preservar intactos los alimentos exentos `(E)`, resolver la discrepancia de $\pm 0,01$ mediante ajuste determinista en el producto gravado de mayor valor y mostrar la base fiscal como microcopy informativo en `ReviewExpenseScreen`.
+  - *Especificación técnica completa:* Ver [DOC_PRECIOS_ANAQUEL_IVA.md](DOC_PRECIOS_ANAQUEL_IVA.md).
 
 ### Bloque D: Nueva Herramienta Financiera
 - `FIN-09` **Calculadora Cambiaria Rápida (Conversor Bs. / $):** `Pendiente de validación 🧪`
@@ -161,6 +165,7 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
   - Exportación contable avanzada (PDF mensual con balance y diseño limpio; Excel/CSV con desglose completo ítem por ítem).
   - Sincronización de comprobantes en la nube (Cloud Storage).
   - Consultas analíticas profundas al Asistente IA con comparativa de meses previos.
+  - Modo Contable y Desglose Tributario Formal: Selector en Más para alternar entre Modo Anaquel (con IVA) y Modo Fiscal (base imponible desglosada), con exportación de libro fiscal de compras en Excel/PDF.
 - **Optimización del Embudo de Conversión (Funnel):** Medición de fugas con Firebase Analytics (Impresión → Descarga → Onboarding → Activación → Retención → Pago) y Paywalls contextuales.
 - **Métrica de Validación Financiera:** Meta de generar los primeros $50 USD en 30-60 días con 500-1.000 usuarios activos.
 - **Alertas Proactivas de Inflación y Desvío:** Notificaciones inteligentes cuando productos frecuentes suban de precio o el ritmo de gasto comprometa el mes.
