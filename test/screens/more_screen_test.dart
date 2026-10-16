@@ -391,6 +391,19 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Aviso Legal y Tasas'), findsNothing);
     });
+
+    testWidgets('renders version card with Google Play button in MoreScreen', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      final googlePlayBtn = find.byKey(const Key('btn_ver_google_play'));
+      await tester.ensureVisible(googlePlayBtn);
+      await tester.pumpAndSettle();
+
+      expect(googlePlayBtn, findsOneWidget);
+      expect(find.text('Google Play'), findsOneWidget);
+      expect(find.text('Versión de la App'), findsOneWidget);
+    });
   });
 }
 

@@ -4,19 +4,14 @@
 ## Estado Actual Inmediato
 - **Rama:** `main`.
 - **Fase activa:** Fase 6.2 y Fase 5 (Closed Testing activa con 12 evaluadores).
-- **Tareas recientes:** `FIN-10` (Paridad 1:1 USD/USDT e Inmutabilidad de Totales) `Implementada 🔧`. `UI-01`, `UI-05`, `UX-06`, `UX-07`, `UX-11`, `AI-02`, `AI-03`, `AI-04`, `SEC-13` `Completada ✅`. `FIN-09` `Pendiente de validación 🧪`. `UI-03` y `UX-10` `Implementada 🔧`.
+- **Tareas recientes:** `REL-01` (Transición a Google Play y Silenciamiento de Actualizaciones Fantasma) `Implementada 🔧`. `FIN-10` `Implementada 🔧`. `UI-01`, `UI-05`, `UX-06`, `UX-07`, `UX-11`, `AI-02`, `AI-03`, `AI-04`, `SEC-13` `Completada ✅`. `FIN-09` `Pendiente de validación 🧪`. `UI-03` y `UX-10` `Implementada 🔧`.
 - **Documentación Técnica:** [ROADMAP.md](ROADMAP.md) y [DOC_FASE_6_2.md](DOC_FASE_6_2.md) actualizados.
 
 ## Decisiones Técnicas y de Negocio Recientes
-- **FIN-10 (Paridad Directa 1:1 USD/USDT e Inmutabilidad de Totales):** Conversión directa 1:1 entre USD y USDT en `CurrencyFormatter` y `panel.astro` sin pasar por VES a tasa BCV. Previene la distorsión artificial de la brecha cambiaria (spread oficial vs P2P) en divisas duras y fija los acumulados mensuales para que no fluctúen con las tasas del mercado de días posteriores.
+- **REL-01 (Transición a Google Play y Fin de Actualizaciones Fantasma):** Se silenciaron los popups automáticos de `checkForUpdate` en `DashboardScreen` y `MainScreen`. En `MoreScreen`, el botón "Buscar" se reemplazó por "Google Play" que abre directamente la ficha de la app en la tienda oficial. La landing mantiene el APK durante los 14 días de prueba cerrada (Fase 1) y migrará a Google Play exclusivo una vez aprobada la versión pública (Fase 2).
+- **FIN-10 (Paridad Directa 1:1 USD/USDT e Inmutabilidad de Totales):** Conversión directa 1:1 entre USD y USDT en `CurrencyFormatter` y `panel.astro` sin pasar por VES a tasa BCV. Previene la distorsión artificial de la brecha cambiaria en divisas duras y fija los acumulados mensuales.
 - **UI-03 (Semántica Presupuesto 85% Unificada):** `AppColors.success` (`#10B981`) centralizado vía `getBudgetProgressColor`: verde $<85\%$, ámbar $\ge 85\%$ y rojo $\ge 100\%$ o sobregiro en Inicio (`SummaryCard`), Análisis (`AnalysisScreen`) y Web (`panel.astro`).
-- **UX-10 (Zona de Peligro Independiente):** "Eliminar cuenta y datos" se aisló en su propia tarjeta al final de "Más" (solo visible con sesión activa). La tarjeta "Respaldo en la Nube" ahora muestra un botón limpio `OutlinedButton` de "Cerrar sesión" sin divider redundante ni opciones destructivas mezcladas.
-- **UI-02:** Pospuesta para después por indicación expresa de César (no implementada).
-- **Bug Fix OCR (Montos Enteros IA a Céntimos):** `_parseAmount` en `GeminiExtractionResult` tenía `isPrice = true` por defecto. En capturas de PayPal o Pago Móvil donde Gemini devolvía un entero (ej. `$25`), el parser lo trataba como dígitos de céntimos convirtiéndolo en `0.25`. Solución: `value is num` se retorna directamente en `amount_parser.dart` y `isPrice = false` por defecto en extracción IA.
-- **FIN-09 (UX Ingreso de Monto en Calculadora):** Texto inicial cambiado a `'1'`. Al pulsar o enfocar los campos de divisa o Bs., se selecciona automáticamente todo el texto (`TextSelection(0, length)`) para sobreescribir al instante sin borrar. Añadido botón rápido de borrado `X` (`suffixIcon: IconButton(Icons.clear)`).
-- **UX-11 (Feedback Vinculación/Sincronización):** Completada y aprobada por César.
-- **AI-04 (Persistencia de Chat y Exclusión Fiscal IVA):** Completada y aprobada por César.
-- **AI-02 (Detección de Pagos Digitales):** Funciona por defecto en el pipeline unificado de escaneo OCR; bug de montos enteros resuelto.
+- **UX-10 (Zona de Peligro Independiente):** "Eliminar cuenta y datos" aislado en su propia tarjeta al final de "Más". "Respaldo en la Nube" muestra botón limpio `OutlinedButton` de "Cerrar sesión".
 - **Google Play (Closed Testing):** Pista cerrada activa en Play Console con 12 evaluadores requeridos.
 
 ## Errores y Fricciones a Evitar
@@ -28,7 +23,7 @@
 - En `CurrencyFormatter`: Nunca triangular conversiones entre USD y USDT por bolívares.
 
 ## Próximo Paso Inmediato
-- Confirmar CI en verde tras push con paridad USD/USDT e inmutabilidad de totales.
-- César envía a revisión el build 469 en Google Play Console una vez terminen las comprobaciones.
+- Confirmar CI en verde tras push con REL-01.
+- César descarga AAB del último CI para actualizar pista cerrada en Google Play Console cuando lo requiera.
 
 

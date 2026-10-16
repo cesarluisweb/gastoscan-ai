@@ -12,7 +12,6 @@ import '../../providers/gasto_provider.dart';
 import '../../providers/scan_queue_provider.dart';
 import '../../services/export_service.dart';
 import '../../services/update_service.dart';
-import '../widgets/update_dialog.dart';
 import '../widgets/global_scan_queue_banner.dart';
 import '../widgets/auth_modal_sheet.dart';
 import 'shopping_list_screen.dart';
@@ -46,7 +45,6 @@ class MoreScreen extends StatefulWidget {
 class MoreScreenState extends State<MoreScreen> {
   MoreSubView _currentSubView = MoreSubView.hub;
   bool get isSubViewOpen => _currentSubView != MoreSubView.hub;
-  bool _isCheckingUpdate = false;
   bool _isLinkingGoogle = false;
   String _currentAppVersion = '1.0.1';
 
@@ -67,37 +65,12 @@ class MoreScreenState extends State<MoreScreen> {
     } catch (_) {}
   }
 
-  Future<void> _comprobarActualizacionManual() async {
-    if (_isCheckingUpdate) return;
-    setState(() => _isCheckingUpdate = true);
-
-    try {
-      final updateService = UpdateService();
-      final updateInfo = await updateService.checkForUpdate(force: true);
-
-      if (!mounted) return;
-      setState(() => _isCheckingUpdate = false);
-
-      if (updateInfo != null && updateInfo.hasUpdate) {
-        UpdateDialog.show(context, updateInfo);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Tienes la versión más reciente instalada.',
-              style: TextStyle(color: Colors.black),
-            ),
-            backgroundColor: AppColors.primary,
-            duration: Duration(seconds: 3),
-          ),
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _isCheckingUpdate = false);
+  Future<void> _abrirGooglePlay() async {
+    final launched = await UpdateService.openDownloadUrl();
+    if (!launched && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('No se pudo verificar actualizaciones en este momento.'),
+          content: Text('No se pudo abrir Google Play Store.'),
         ),
       );
     }
@@ -935,33 +908,28 @@ class MoreScreenState extends State<MoreScreen> {
                     'Rinde Más v$_currentAppVersion',
                     style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
                   ),
-                  trailing: _isCheckingUpdate
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.textPrimary),
-                        )
-                      : TextButton.icon(
-                          onPressed: _comprobarActualizacionManual,
-                          icon: const Icon(Icons.refresh, size: 16, color: AppColors.textPrimary),
-                          label: const Text(
-                            'Buscar',
-                            style: TextStyle(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
-                          style: TextButton.styleFrom(
-                            backgroundColor: AppColors.primaryLight,
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                        ),
+                  trailing: TextButton.icon(
+                    key: const Key('btn_ver_google_play'),
+                    onPressed: _abrirGooglePlay,
+                    icon: const Icon(Icons.shop_outlined, size: 16, color: AppColors.textPrimary),
+                    label: const Text(
+                      'Google Play',
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                    style: TextButton.styleFrom(
+                      backgroundColor: AppColors.primaryLight,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),

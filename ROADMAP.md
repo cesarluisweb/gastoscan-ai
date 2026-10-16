@@ -38,6 +38,9 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 ## Fase 5: Marketing, Lanzamiento y Tracción (En Progreso 🔄)
 *Hitos para validar el producto con usuarios reales en Venezuela:*
 - **Subida a Google Play Store (Closed Testing):** (En progreso 🔄) Ficha técnica y capturas preparadas (`DOC_FICHA_PLAY_STORE.md`). Adaptación de políticas de información gubernamental completada: descargos de no representación y enlaces funcionales a `https://www.bcv.org.ve/` integrados en la ficha de tienda, Calculadora de divisas y pantalla Más. AAB v1.0.4 compilado y listo para reenvío conjunto con la ficha. Prueba cerrada activa en Play Console; coordinando los 12 evaluadores requeridos durante el período de prueba.
+- `REL-01` **Transición a Google Play y Silenciamiento de Actualizaciones Fantasma:** `Implementada 🔧`
+  - *Problema:* Discrepancia entre builds continuos de CI (`version.json` 470) y Google Play (466) causaba alertas falsas de actualización y bucle con "Abrir" en la tienda.
+  - *Solución:* Silenciados popups automáticos en `DashboardScreen` y `MainScreen`. El botón de versión en `MoreScreen` ahora dice *"Google Play"* y abre directamente la ficha de la tienda para que el usuario actualice cuando Google apruebe el build. El APK directo en la landing se mantiene hasta el pase a Producción pública.
 - **Código QR de Descarga en Landing (Desktop):** (Pendiente) Incorporar tarjeta con código QR dinámico en `rindemas.cesarluis.com` para escanear e instalar directamente desde una PC.
 - **Correo de Bienvenida Automatizado:** (Pendiente) Disparar correo de bienvenida y guía de primeros pasos cuando el usuario vincule su cuenta de Google (vía trigger de Cloud Functions o Firestore).
 - **Ejecución del Plan de Crecimiento (Primeros 100 Usuarios):** (Pendiente) Despliegue de tácticas comunitarias y orgánicas en grupos venezolanos según `marketing_plan.md` y `.agents/skills/growth-first-100-users/SKILL.md`.
