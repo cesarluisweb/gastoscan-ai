@@ -54,9 +54,9 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 - `UI-02` **Contraste de Íconos y Controles en Pestaña "Más":**
   - *Problema:* Íconos y toggles amarillos sobre fondo blanco pierden definición visual.
   - *Solución:* Aplicar el patrón del modal `+` con contenedores circulares en tono suave (`AppColors.primaryContainer`) y trazos en carbón/negro (`AppColors.textPrimary`), o elevar el contraste hacia tonos ámbar/mostaza.
-- `UI-03` **Semántica de Color Unificada en Progreso de Presupuesto:**
+- `UI-03` **Semántica de Color Unificada en Progreso de Presupuesto:** `Implementada 🔧`
   - *Problema:* El mismo porcentaje (ej. 29%) se muestra verde en Inicio pero amarillo en Análisis.
-  - *Solución:* Unificar la escala semafórica en toda la app: Verde (saludable / meta protegida), Amarillo/Ámbar (advertencia $\ge 80-85\%$ o ritmo elevado) y Rojo (límite superado).
+  - *Solución:* Unificar la escala semafórica en toda la app: Verde (`AppColors.success` / `#10B981` para $<85\%$), Amarillo/Ámbar (`AppColors.warning` / `#F59E0B` para $\ge 85\%$) y Rojo (`AppColors.error` / `#EF4444` para $\ge 100\%$ o sobregiro), con paridad exacta en Inicio, Análisis y Web.
 - `UI-04` **Rediseño de Enlaces en Presupuesto por Categoría:**
   - *Problema:* El texto `+ Asignar presupuesto mensual` con subrayado web clásico desentona con el diseño móvil.
   - *Solución:* Transformar la acción en botón tipo *pill* sutil o hacer la tarjeta completa pulsable con indicador de acento.
@@ -77,8 +77,8 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
   - *Solución:* Mostrar la etiqueta de tasa de la transacción en el historial (`Bs. 4.389,50 • BCV` o `• USDT`) y permitir alternar o seleccionar la moneda de visualización tocando el monto total en la tarjeta de Inicio.
 - `UX-09` **Rediseño del Filtro de Comprobantes en "Gastos":**
   - *Solución:* Incorporar un distintivo de recibo/clip (`🧾`) en las tarjetas que tienen fotografía adjunta y reemplazar el botón confuso de galería por un chip activo `[🧾 Con comprobante]` o ícono de filtro con estado evidente.
-- `UX-10` **Jerarquía y Claridad de la Acción "Eliminar Cuenta":**
-  - *Solución:* Separar visualmente la acción de eliminar cuenta de la tarjeta "Respaldo en la Nube" o ubicarla en una sección sutil de "Zona de Peligro" para evitar dudas entre sincronización y borrado total.
+- `UX-10` **Jerarquía y Claridad de la Acción "Eliminar Cuenta":** `Implementada 🔧`
+  - *Solución:* Separar visualmente la acción de eliminar cuenta de la tarjeta "Respaldo en la Nube", ubicándola en una sección independiente y sutil de "Zona de Peligro" al final de la pantalla (solo visible con sesión en la nube activa) y modernizando el botón "Cerrar sesión" en la tarjeta de cuenta.
 - `UX-11` **Feedback Visual e Indicador de Estado en Vinculación / Sincronización de Cuenta:** `Completada ✅`
   - *Problema:* Al pulsar "Vincular con Google" o autenticar con correo, la app carecía de indicadores durante la comunicación con Google Play Services y la sincronización con Firestore, generando sensación de bloqueo y permitiendo toques concurrentes.
   - *Solución:* Spinner negro de alto contraste con texto de estado (*"Conectando con Google..."*, *"Vinculando y sincronizando..."*), leyenda informativa, bloqueo de interacción cruzada y protección con `PopScope` en modales y diálogos.

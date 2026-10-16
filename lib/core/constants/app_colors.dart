@@ -14,9 +14,24 @@ class AppColors {
   static const Color secondary = Color(0xFF0F172A);   // Azul oscuro casi negro
   
   // Alertas y Estados
+  static const Color success = Color(0xFF10B981); // Verde esmeralda (Saludable / Meta protegida)
   static const Color error = Color(0xFFEF4444);
   static const Color warning = Color(0xFFF59E0B);
   static const Color info = Color(0xFF3B82F6);
+
+  /// Devuelve el color semafórico unificado para progreso de presupuesto:
+  /// - Rojo (`AppColors.error`): Presupuesto superado (isExceeded o percent >= 1.0)
+  /// - Amarillo / Ámbar (`AppColors.warning`): Advertencia (percent >= 0.85)
+  /// - Verde (`AppColors.success`): Saludable / Dentro del rango seguro (< 0.85)
+  static Color getBudgetProgressColor(double percent, {bool isExceeded = false}) {
+    if (isExceeded || percent >= 1.0) {
+      return AppColors.error;
+    }
+    if (percent >= 0.85) {
+      return AppColors.warning;
+    }
+    return AppColors.success;
+  }
 
   // Textos y Bordes
   static const Color textPrimary = Color(0xFF111827); // Negro/Gris muy oscuro

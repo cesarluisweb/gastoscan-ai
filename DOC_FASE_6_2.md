@@ -43,6 +43,19 @@ En esta fase se abordaron 5 tareas clave de consistencia visual, experiencia de 
    - Comparativa simultánea de montos y cálculo de brecha cambiaria en vivo, utilizando texto negro carbón `AppColors.textPrimary` (cumplimiento estricto de `DESIGN.md`).
    - Acción rápida `Registrar gasto` que navega a `ReviewExpenseScreen` pre-llenando monto, moneda y tasa activa.
 
+6. **UI-03 (Semántica de Color Unificada en Progreso de Presupuesto):**
+   - Se definió el token `AppColors.success = Color(0xFF10B981)` (Verde esmeralda).
+   - Se centralizó la lógica semafórica en `AppColors.getBudgetProgressColor(double percent, {bool isExceeded = false})`:
+     - Verde (`success`): Consumo saludable $< 85\%$.
+     - Ámbar (`warning`): Advertencia $\ge 85\%$ y $< 100\%$.
+     - Rojo (`error`): Límite superado ($\ge 100\%$ o `isExceeded: true`).
+   - Se unificó su aplicación en la barra de progreso de `SummaryCard` (Inicio), `AnalysisScreen` (Análisis) y la versión web en `panel.astro`.
+
+7. **UX-10 (Zona de Peligro Independiente para "Eliminar Cuenta"):**
+   - Se desacopló la acción destructiva de la tarjeta "Respaldo en la Nube", evitando confusión entre sincronización y eliminación definitiva.
+   - En "Respaldo en la Nube" se sustituyó la fila de botones por un `OutlinedButton` de ancho completo para "Cerrar sesión" (`Key('btn_cerrar_sesion')`) con borde sutil y estilo secundario neutro, sin divisor colgante.
+   - Se creó una sección y tarjeta dedicada al final de la pantalla llamada "Zona de Peligro" (`_buildDangerZoneSection`), visible únicamente cuando el usuario posee una cuenta vinculada en la nube (`!isAnon`), con advertencia de irreversibilidad y botón `OutlinedButton` rojo (`Key('btn_eliminar_cuenta')`), preservando intacto el flujo de diálogo de confirmación y reautenticación por contraseña.
+
 ---
 
 ## 2. Guía de Pruebas Paso a Paso para Validación
@@ -77,3 +90,17 @@ En esta fase se abordaron 5 tareas clave de consistencia visual, experiencia de 
 6. En el cuadro inferior de comparativa simultánea, comprobar que los montos se lean en texto negro nítido.
 7. Pulsar `Copiar`: verificar el copiado al portapapeles.
 8. Pulsar `Registrar gasto`: confirmar que abra la pantalla de revisión con el monto y la tasa cargados.
+
+### Prueba 6: Semántica de Color Unificada en Presupuesto (UI-03)
+1. Con un presupuesto configurado (ej. $100):
+   - Con un gasto de $30 (30%): verificar que tanto en **Inicio** como en **Análisis** la barra de progreso sea verde (`AppColors.success`).
+   - Con un gasto de $88 (88%): verificar que ambas barras pasen a amarillo/ámbar (`AppColors.warning`).
+   - Con un gasto de $105 (105%): verificar que ambas barras se muestren en rojo (`AppColors.error`).
+2. Abrir el panel web (`panel.astro`) y verificar idéntico comportamiento semafórico (verde $<85\%$, ámbar $\ge 85\%$, rojo $>100\%$).
+
+### Prueba 7: Zona de Peligro y Cerrar Sesión (UX-10)
+1. En la pestaña **Más** con una cuenta vinculada:
+   - Observar la tarjeta superior de "Respaldo en la Nube": muestra datos del usuario y un botón ordenado de "Cerrar sesión" a lo ancho, sin divisores ni botón destructivo.
+   - Desplazar al final de la pantalla (debajo de Versión de la App): observar la tarjeta "Zona de Peligro" con borde sutil rojo e ícono de advertencia.
+   - Pulsar "Eliminar cuenta y datos": confirmar que se abre el diálogo de confirmación irreversible con las protecciones de reautenticación correspondientes.
+2. Iniciar sesión anónima o cerrar sesión: verificar que la tarjeta "Zona de Peligro" no se renderiza.

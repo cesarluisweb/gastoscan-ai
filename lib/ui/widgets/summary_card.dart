@@ -307,9 +307,7 @@ class SummaryCard extends StatelessWidget {
                       minHeight: 8,
                       backgroundColor: AppColors.cardLighter,
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        isOverBudget
-                            ? AppColors.error
-                            : (percentUsed >= 0.80 ? AppColors.warning : const Color(0xFF10B981)),
+                        AppColors.getBudgetProgressColor(percentUsed, isExceeded: isOverBudget),
                       ),
                     ),
                   ),

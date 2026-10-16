@@ -344,6 +344,26 @@ void main() {
       expect(find.text('Cuenta y datos eliminados. Sesión cerrada.'), findsNothing);
     });
 
+    testWidgets('Danger Zone is hidden for anonymous users and visible for logged in users', (tester) async {
+      // Usuario anónimo por defecto
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Zona de Peligro'), findsNothing);
+      expect(find.byKey(const Key('btn_eliminar_cuenta')), findsNothing);
+
+      // Usuario con cuenta vinculada
+      await tester.pumpWidget(createWidgetUnderTest(customUser: FakeTestUser()));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('btn_cerrar_sesion')), findsOneWidget);
+      final dangerZoneText = find.text('Zona de Peligro');
+      await tester.ensureVisible(dangerZoneText);
+      await tester.pumpAndSettle();
+      expect(dangerZoneText, findsOneWidget);
+      expect(find.byKey(const Key('btn_eliminar_cuenta')), findsOneWidget);
+    });
+
     testWidgets('renders rates legal disclaimer and legal disclaimer menu item in MoreScreen', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();

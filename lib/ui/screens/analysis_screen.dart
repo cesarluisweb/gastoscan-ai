@@ -330,9 +330,7 @@ class AnalysisScreen extends StatelessWidget {
                         minHeight: 10,
                         backgroundColor: AppColors.cardLighter,
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          isExceeded
-                              ? AppColors.error
-                              : (percent >= 0.85 ? AppColors.warning : AppColors.primaryDark),
+                          AppColors.getBudgetProgressColor(percent, isExceeded: isExceeded),
                         ),
                       ),
                     ),

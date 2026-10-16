@@ -966,6 +966,7 @@ class MoreScreenState extends State<MoreScreen> {
               ],
             ),
           ),
+          _buildDangerZoneSection(context),
         ],
       ),
     ),
@@ -1197,53 +1198,131 @@ class MoreScreenState extends State<MoreScreen> {
               ],
             ),
           ] else ...[
-            const SizedBox(height: 12),
-            const Divider(height: 1, color: AppColors.border),
-            const SizedBox(height: 4),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                TextButton.icon(
-                  key: const Key('btn_cerrar_sesion'),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  icon: const Icon(Icons.logout, size: 16, color: AppColors.textSecondary),
-                  label: const Text(
-                    'Cerrar sesión',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  onPressed: () => _confirmarCerrarSesion(context),
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                key: const Key('btn_cerrar_sesion'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.textSecondary,
+                  side: const BorderSide(color: AppColors.border),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
-                TextButton.icon(
-                  key: const Key('btn_eliminar_cuenta'),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                icon: const Icon(Icons.logout, size: 16, color: AppColors.textSecondary),
+                label: const Text(
+                  'Cerrar sesión',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
                   ),
-                  icon: const Icon(Icons.delete_outline, size: 16, color: AppColors.error),
-                  label: const Text(
-                    'Eliminar cuenta',
-                    style: TextStyle(
-                      color: AppColors.error,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  onPressed: () => _confirmarEliminarCuenta(context),
                 ),
-              ],
+                onPressed: () => _confirmarCerrarSesion(context),
+              ),
             ),
           ],
         ],
       ),
+    );
+  }
+
+  Widget _buildDangerZoneSection(BuildContext context) {
+    final stream = _userStream;
+    if (stream != null) {
+      return StreamBuilder<User?>(
+        stream: stream,
+        initialData: _currentUser,
+        builder: (context, snapshot) {
+          final user = snapshot.data ?? _currentUser;
+          final isAnon = user == null || user.isAnonymous;
+          if (isAnon) return const SizedBox.shrink();
+          return _buildDangerZoneCard(context);
+        },
+      );
+    }
+    final isAnon = _currentUser == null || _currentUser!.isAnonymous;
+    if (isAnon) return const SizedBox.shrink();
+    return _buildDangerZoneCard(context);
+  }
+
+  Widget _buildDangerZoneCard(BuildContext context) {
+    return Column(
+      children: [
+        const SizedBox(height: 16),
+        Material(
+          color: AppColors.card,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: AppColors.error.withValues(alpha: 0.35)),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: AppColors.error.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.warning_amber_rounded,
+                        color: AppColors.error,
+                        size: 16,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Zona de Peligro',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.error,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Acciones destructivas e irreversibles sobre tu cuenta y tus datos respaldados en la nube.',
+                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    key: const Key('btn_eliminar_cuenta'),
+                    icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.error),
+                    label: const Text(
+                      'Eliminar cuenta y datos',
+                      style: TextStyle(
+                        color: AppColors.error,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.error,
+                      side: const BorderSide(color: AppColors.error),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    onPressed: () => _confirmarEliminarCuenta(context),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 

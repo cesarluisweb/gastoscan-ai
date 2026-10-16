@@ -4,10 +4,13 @@
 ## Estado Actual Inmediato
 - **Rama:** `main`.
 - **Fase activa:** Fase 6.2 y Fase 5 (Closed Testing activa con 12 evaluadores).
-- **Tareas recientes:** `UI-01`, `UI-05`, `UX-06`, `UX-07`, `UX-11`, `AI-02`, `AI-03`, `AI-04`, `SEC-13` `Completada ✅`. `FIN-09` `Pendiente de validación 🧪`.
+- **Tareas recientes:** `UI-01`, `UI-05`, `UX-06`, `UX-07`, `UX-11`, `AI-02`, `AI-03`, `AI-04`, `SEC-13` `Completada ✅`. `FIN-09` `Pendiente de validación 🧪`. `UI-03` y `UX-10` `Implementada 🔧`.
 - **Documentación Técnica:** [ROADMAP.md](ROADMAP.md) y [DOC_FASE_6_2.md](DOC_FASE_6_2.md) actualizados.
 
 ## Decisiones Técnicas y de Negocio Recientes
+- **UI-03 (Semántica Presupuesto 85% Unificada):** `AppColors.success` (`#10B981`) centralizado vía `getBudgetProgressColor`: verde $<85\%$, ámbar $\ge 85\%$ y rojo $\ge 100\%$ o sobregiro en Inicio (`SummaryCard`), Análisis (`AnalysisScreen`) y Web (`panel.astro`).
+- **UX-10 (Zona de Peligro Independiente):** "Eliminar cuenta y datos" se aisló en su propia tarjeta al final de "Más" (solo visible con sesión activa). La tarjeta "Respaldo en la Nube" ahora muestra un botón limpio `OutlinedButton` de "Cerrar sesión" sin divider redundante ni opciones destructivas mezcladas.
+- **UI-02:** Pospuesta para después por indicación expresa de César (no implementada).
 - **Bug Fix OCR (Montos Enteros IA a Céntimos):** `_parseAmount` en `GeminiExtractionResult` tenía `isPrice = true` por defecto. En capturas de PayPal o Pago Móvil donde Gemini devolvía un entero (ej. `$25`), el parser lo trataba como dígitos de céntimos convirtiéndolo en `0.25`. Solución: `value is num` se retorna directamente en `amount_parser.dart` y `isPrice = false` por defecto en extracción IA.
 - **FIN-09 (UX Ingreso de Monto en Calculadora):** Texto inicial cambiado a `'1'`. Al pulsar o enfocar los campos de divisa o Bs., se selecciona automáticamente todo el texto (`TextSelection(0, length)`) para sobreescribir al instante sin borrar. Añadido botón rápido de borrado `X` (`suffixIcon: IconButton(Icons.clear)`).
 - **UX-11 (Feedback Vinculación/Sincronización):** Completada y aprobada por César.

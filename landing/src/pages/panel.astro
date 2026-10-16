@@ -1092,10 +1092,10 @@ import '../styles/global.css';
                 
                 if (percent > 100) {
                     progressBarFill.className = "bg-rose-500 h-3 rounded-full transition-all duration-500";
-                } else if (percent > 85) {
+                } else if (percent >= 85) {
                     progressBarFill.className = "bg-amber-500 h-3 rounded-full transition-all duration-500";
                 } else {
-                    progressBarFill.className = "bg-[#FACC15] h-3 rounded-full transition-all duration-500";
+                    progressBarFill.className = "bg-emerald-500 h-3 rounded-full transition-all duration-500";
                 }
             } else {
                 if (progressTitleLabel) progressTitleLabel.textContent = "Consumo del presupuesto";
