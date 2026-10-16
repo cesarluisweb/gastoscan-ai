@@ -975,7 +975,8 @@ import '../styles/global.css';
             } else if (budgetCurrency === 'EUR') {
                 effectiveSpent = liveRates.eur > 0 ? (sumVes / liveRates.eur) : sumUsd;
             } else if (budgetCurrency === 'USDT') {
-                effectiveSpent = liveRates.usdt > 0 ? (sumVes / liveRates.usdt) : sumUsd;
+                // Paridad 1:1 directa e inmutable con USD
+                effectiveSpent = sumUsd;
             } else {
                 effectiveSpent = sumUsd;
             }
@@ -1125,8 +1126,8 @@ import '../styles/global.css';
                     const vesEquiv = g.moneda === 'VES' ? totalOrig : (totalUsd * (tasa > 0 ? tasa : 1.0));
                     targetTotal = liveRates.eur > 0 ? (vesEquiv / liveRates.eur) : totalUsd;
                 } else if (budgetCurrency === 'USDT') {
-                    const vesEquiv = g.moneda === 'VES' ? totalOrig : (totalUsd * (tasa > 0 ? tasa : 1.0));
-                    targetTotal = liveRates.usdt > 0 ? (vesEquiv / liveRates.usdt) : totalUsd;
+                    // Paridad 1:1 directa e inmutable con USD
+                    targetTotal = totalUsd;
                 } else {
                     // USD
                     targetTotal = totalUsd;

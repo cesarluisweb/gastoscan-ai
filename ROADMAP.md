@@ -107,6 +107,10 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
     4. **Acción rápida `📋 Copiar monto en Bs.`:** Copia el número limpio al portapapeles para pegarlo directamente en la app del banco.
     5. **Acción rápida `➕ Registrar como gasto`:** Pre-llena el formulario de nuevo gasto con el monto, moneda y tasa recién calculados.
 
+- `FIN-10` **Paridad Directa 1:1 USD/USDT e Inmutabilidad de Totales Históricos:** `Implementada 🔧`
+  - *Problema:* Al mostrar valores en USDT, la app triangulaba USD -> VES -> USDT aplicando la brecha cambiaria (spread oficial BCV vs Binance P2P) a dos monedas que cotizan en dólares ($19.99 USD se transformaban en 17.66 USDT), y recalculaba el total mensual con la tasa USDT en vivo de cada día, provocando que los totales históricos fluctuaran y disminuyeran día a día.
+  - *Solución:* Establecimiento de paridad determinista 1:1 directa entre USD y USDT en `CurrencyFormatter` (Flutter) y `panel.astro` (Web). Fijación del acumulado mensual y categorías en base al valor inmutable de la fecha del registro sin aplicar tasas futuras.
+
 ---
 
 ## Fase 6.1 (Remanente): Catálogo de Categorías

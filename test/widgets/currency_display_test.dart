@@ -41,7 +41,8 @@ void main() {
       expect(CurrencyFormatter.convertFromUsd(10.0, 'VES', 50.0), 500.0);
       expect(CurrencyFormatter.convertFromUsd(10.0, 'USD', 50.0), 10.0);
       expect(CurrencyFormatter.convertFromUsd(10.0, 'EUR', 40.0, tasaEur: 44.0), closeTo(9.09, 0.01));
-      expect(CurrencyFormatter.convertFromUsd(10.0, 'USDT', 40.0, tasaUsdt: 40.0), 10.0);
+      // Paridad 1:1 con USDT inmutable frente a spread cambiario
+      expect(CurrencyFormatter.convertFromUsd(19.99, 'USDT', 40.0, tasaUsdt: 45.0), 19.99);
     });
 
     test('formatAmount and formatPreferido support EUR and USDT', () {
@@ -53,7 +54,9 @@ void main() {
       final eurFormatted = CurrencyFormatter.formatPreferido(10.0, 400.0, 40.0, 'EUR', tasaEur: 44.0);
       expect(eurFormatted, contains('€'));
 
-      final usdtFormatted = CurrencyFormatter.formatPreferido(10.0, 400.0, 40.0, 'USDT', tasaUsdt: 40.0);
+      // 19.99 USD debe mantenerse 19.99 USDT en formatPreferido sin aplicar brecha cambiaria
+      final usdtFormatted = CurrencyFormatter.formatPreferido(19.99, 800.0, 40.0, 'USDT', tasaUsdt: 45.0);
+      expect(usdtFormatted, contains('19,99'));
       expect(usdtFormatted, contains('USDT'));
     });
 
@@ -67,14 +70,24 @@ void main() {
       );
       expect(eurToUsd, 110.0);
 
+      // Paridad 1:1 directa entre USDT y USD
       final usdtToUsd = CurrencyFormatter.convertAmount(
-        100.0,
+        19.99,
         'USDT',
         'USD',
         40.0,
-        tasaUsdt: 40.0,
+        tasaUsdt: 45.0,
       );
-      expect(usdtToUsd, 100.0);
+      expect(usdtToUsd, 19.99);
+
+      final usdToUsdt = CurrencyFormatter.convertAmount(
+        19.99,
+        'USD',
+        'USDT',
+        40.0,
+        tasaUsdt: 45.0,
+      );
+      expect(usdToUsdt, 19.99);
     });
   });
 
@@ -204,8 +217,8 @@ void main() {
       expect(find.text(CurrencyFormatter.formatVes(800.0)), findsOneWidget);
     });
 
-    testWidgets('displays USDT as primary with converted amount when monedaPrincipal is USDT', (tester) async {
-      // 20 USD * 40 VES/USD = 800 VES. 800 VES / 40 VES/USDT = 20.0 USDT
+    testWidgets('displays USDT as primary with 1:1 parity when monedaPrincipal is USDT', (tester) async {
+      // 20 USD se mantiene 20.00 USDT en paridad 1:1 sin distorsión por tasa P2P
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -213,7 +226,7 @@ void main() {
               gasto: gasto,
               monedaPrincipal: 'USDT',
               tasaCambio: 40.0,
-              tasaUsdt: 40.0,
+              tasaUsdt: 45.0, // Spread de mercado no altera la cantidad en USDT
               onDelete: () {},
               onEdit: () {},
             ),

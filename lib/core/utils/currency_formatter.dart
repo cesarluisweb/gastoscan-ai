@@ -62,8 +62,10 @@ class CurrencyFormatter {
         final double eurRate = tasaEur > 0 ? tasaEur : (tasaCambio > 0 ? tasaCambio : 0.0);
         return formatEur(eurRate > 0 ? ves / eurRate : totalUsd);
       case 'USDT':
-        final double usdtRate = tasaUsdt > 0 ? tasaUsdt : (tasaCambio > 0 ? tasaCambio : 1.0);
-        return formatUsdt(usdtRate > 0 ? ves / usdtRate : totalUsd);
+        // Paridad 1:1 directa e inmutable con USD. Evita distorsión por brecha
+        // cambiaria (spread oficial BCV vs Binance P2P) y previene la fluctuación
+        // del acumulado mensual con tasas futuras.
+        return formatUsdt(totalUsd);
       case 'USD':
       default:
         return formatUsd(totalUsd);
@@ -104,9 +106,8 @@ class CurrencyFormatter {
       return eurRate > 0 ? ves / eurRate : amountUsd;
     }
     if (monedaPreferida == 'USDT') {
-      final ves = amountUsd * (tasaCambio > 0 ? tasaCambio : 1.0);
-      final usdtRate = tasaUsdt > 0 ? tasaUsdt : (tasaCambio > 0 ? tasaCambio : 1.0);
-      return usdtRate > 0 ? ves / usdtRate : amountUsd;
+      // Paridad 1:1 directa con USD
+      return amountUsd;
     }
     return amountUsd;
   }
@@ -146,6 +147,11 @@ class CurrencyFormatter {
     final from = fromCurrency.toUpperCase();
     final to = toCurrency.toUpperCase();
     if (from == to) return amount;
+
+    // Paridad 1:1 directa entre USD y USDT
+    if ((from == 'USD' && to == 'USDT') || (from == 'USDT' && to == 'USD')) {
+      return amount;
+    }
 
     double ves;
     if (from == 'VES') {
