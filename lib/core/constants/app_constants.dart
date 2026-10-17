@@ -140,11 +140,6 @@ class AppConstants {
   // Último recurso cuando no hay caché ni red. NUNCA presentarlo como tasa
   // vigente: `SettingsProvider.tasasSonReferencia` lo señala en la UI.
   static const double defaultTasaCambio = 40.0;
-
-  // Piso de verosimilitud de una tasa BCV vigente. Un valor por debajo de esto
-  // es una semilla o un dato corrupto, jamás una tasa real del día: se descarta
-  // para que la app no muestre una cifra falsa como si fuera la vigente.
-  static const double tasaMinimaPlausible = 50.0;
   static const String defaultMoneda = 'USD';
   static const String defaultApiKey = String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
 

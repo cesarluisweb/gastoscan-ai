@@ -131,16 +131,9 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
     8. **Soporte de IA Integral:** Detección de `metodo_liquidacion` (`BS_BCV`, `BS_USDT`, `DIVISA`) en `GeminiService` y Workers Cloudflare, preselección automática en revisión y preservación de los 4 lentes en el contexto de `ChatScreen`.
   - *Documentación:* Ver [DOC_MOTOR_MULTIMONEDA.md](DOC_MOTOR_MULTIMONEDA.md). Tarea crítica: pendiente de prueba y visto bueno de César.
 
-- `FIN-12` **Resiliencia de Tasas de Cambio Multifuente (BCV / Paralelo) y Eliminación de la Semilla 40:** `Pendiente de validación 🧪`
-  - *Problema:* Dispositivos Android mostraban persistentemente la semilla de `40.00 Bs` en lugar de la tasa del BCV (~880 Bs). Causa: punto único de fallo en `ve.dolarapi.com` sin cascada para hoy, éxito parcial de Yadio reportado como vigencia en vivo, y silenciamiento de errores en botón manual.
-  - *Solución:*
-    1. **Endpoint agregado en Gateway Worker (`/tasas`):** Egress desde Cloudflare inmune a bloqueos por IP de operadora venezolana.
-    2. **Cascada por divisa en cliente:** USD (Gateway → DolarAPI → Yadio oficial → jsDelivr espejo BCV), EUR (Gateway → DolarAPI → jsDelivr), USDT (Gateway → Yadio P2P → DolarAPI paralelo).
-    3. **Vigencia desacoplada por divisa:** Nuevas banderas `usdEsReferencia`, `eurEsReferencia`, `usdtEsReferencia`.
-    4. **Purga de valores inverosímiles:** `AppConstants.tasaMinimaPlausible = 50.0` purga semillas de 40 de la caché previa.
-    5. **Desacoplamiento en arranque:** Carga local de tasas antes de Firestore y timeout de 8s en Firestore.
-    6. **Feedback y conectividad:** SnackBar informativo en botón manual y reintento automático al recuperar red.
-  - *Documentación:* Ver [DOC_RESILIENCIA_TASAS_CAMBIO.md](DOC_RESILIENCIA_TASAS_CAMBIO.md). Tarea crítica: pendiente de confirmación en CI y prueba manual por César.
+- `FIN-12` **Resiliencia de Tasas de Cambio Multifuente (BCV / Paralelo):** `Revertida a Build 470 🔄`
+  - *Estado:* A solicitud de César, el código de la app móvil (`lib/` y `test/`) fue restaurado al estado funcional de la Build 470 (`54f8432`). Todo el desarrollo de FIN-12 (cascada multifuente, flags de vigencia y tests) queda salvaguardado en la rama `backup/pre-regreso-build-470` para futura referencia.
+  - *Documentación:* Ver [DOC_RESILIENCIA_TASAS_CAMBIO.md](DOC_RESILIENCIA_TASAS_CAMBIO.md).
 
 ---
 
