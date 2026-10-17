@@ -14,7 +14,7 @@
 ## 2. Semáforo Ejecutivo de Autonomía
 
 ### 🟢 Siempre (Incondicional):
-- **Monitoreo de CI tras Git Push:** Monitorear activamente GitHub Actions vía API tras cada `git push` hasta confirmar `conclusion: success` antes de notificar al usuario.
+- **Monitoreo de CI por Proceso Dormido Único:** Tras cada `git push`, lanzar **una sola** vez `scripts/wait_ci.ps1` en segundo plano (tope 25 min, consulta cada 60 s) y esperar su notificación sin volcar salida intermedia. El script imprime una única línea (`run | conclusion | build | sha`) y solo si falla agrega los steps fallidos y la cola de `test_results.txt`. Prohibido `gh run watch` y prohibido consultar el estado turno tras turno. No notificar al usuario hasta confirmar `success` o hasta reportar el fallo con su guía de corrección.
 - **Canal Único de Publicación Web:** GitHub Actions es el único canal autorizado para desplegar la landing page y el panel a producción en Firebase Hosting. Tras el push a `main`, validar vía HTTP que los cambios estén visibles en `https://rindemas.cesarluis.com`.
 - **Idioma y Localización:** Mantener textos de interfaz y respuestas en español neutro/venezolano.
 - **Contraste y Paleta (`DESIGN.md`):** Fondo amarillo $\rightarrow$ texto SIEMPRE negro (`Colors.black` o `AppColors.textPrimary`). Fondo blanco/claro $\rightarrow$ texto negro o gris, NUNCA amarillo. El amarillo queda reservado exclusivamente para iconos, contenedores con texto negro y bordes de acento activo.
@@ -44,6 +44,7 @@
 - Escribir contraseñas, tokens o API keys en texto plano en archivos versionados por git.
 - Afirmar que los datos se guardan en el "Google Drive personal" o saturar la interfaz con tecnicismos como "Firebase".
 - Ejecutar bucles de relectura redundante (`view_file` más de 2 veces sobre el mismo rango sin cambios intermedios).
+- Descargar el log completo de un job de CI (devuelve HTTP 403 en repositorio privado y es de tamaño enorme) o iterar consultas de estado al API de GitHub. Ante fallo, extraer solo los steps con `conclusion == failure` y el reporte `test_results.txt` vía `git show origin/main:test_results.txt`.
 
 ## 3. Protocolo de Memoria Dinámica (`MEMORY.md`)
 1. **Al iniciar:** Leer `MEMORY.md` para situarse en el estado inmediato de trabajo.

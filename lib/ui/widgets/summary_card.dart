@@ -446,7 +446,6 @@ class SummaryCard extends StatelessWidget {
             return Expanded(
               child: InkWell(
                 key: Key('lens_switch_${id.toLowerCase()}'),
-                behavior: HitTestBehavior.opaque,
                 onTap: () {
                   if (onMonedaChanged != null) {
                     onMonedaChanged!(id);

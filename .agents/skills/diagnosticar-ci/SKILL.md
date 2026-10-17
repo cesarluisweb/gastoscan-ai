@@ -5,22 +5,40 @@ description: "Procedimiento para monitorear GitHub Actions, diagnosticar errores
 
 # Diagnóstico de Integración Continua (GitHub Actions)
 
-## 1. Monitoreo del Workflow y Detección de Errores
+## 1. Monitoreo del Workflow mediante Proceso Dormido Único
 
-### Paso 1: Consultar Estado del Run Activo
 El SDK de Flutter no está instalado en la máquina local. Toda compilación y suite de pruebas se ejecuta exclusivamente en el runner de GitHub Actions (`build_apk.yml`).
 
-Monitorear el último run en `main`:
+**Regla de oro:** el agente NUNCA consulta el estado del CI turno tras turno. Lanza una sola invocación dormida y espera su notificación.
+
+### Paso 1: Lanzar el Proceso Dormido (Única Invocación)
+`gh` CLI NO está instalado en esta máquina. Ejecutar `scripts/wait_ci.ps1` **una sola vez en segundo plano** y no consultar nada más mientras corre:
+
 ```powershell
-gh run list --branch main --limit 1 --json databaseId,status,conclusion,headSha
+powershell -ExecutionPolicy Bypass -File scripts/wait_ci.ps1
 ```
 
-### Paso 2: Identificar el Paso Fallido
-El endpoint `/jobs/{id}/logs` devuelve HTTP 403 en este repositorio privado. En su lugar, consultar los steps del job mediante la API estructurada:
-```powershell
-$runId = (gh run list --branch main --limit 1 --json databaseId | ConvertFrom-Json)[0].databaseId
-gh api "repos/:owner/:repo/actions/runs/$runId/jobs" --jq '.jobs[0].steps[] | select(.conclusion == "failure") | {name: .name, number: .number}'
+El script localiza el run del commit actual, espera internamente (bucle `Start-Sleep` de 60 s, tope 25 min) y solo al terminar imprime el resumen:
+
 ```
+CI 39032330731 | success | build 487 | ecc3760
+```
+
+*Si el script reporta `SIN RUN` significa que el push no disparó CI (típicamente por `paths-ignore` en cambios de solo documentación). No es un fallo.*
+
+### Paso 2: Reporte de Fallo (Solo si `conclusion != success`)
+`wait_ci.ps1` ya imprime automáticamente los steps fallidos y la cola de `test_results.txt`. Recurrir a la API solo si se necesita más detalle, con **una única** llamada a `/actions/runs/{id}/jobs`:
+
+```powershell
+$runId = 39032330731
+$jobs = Invoke-RestMethod "https://api.github.com/repos/cesarluisweb/gastoscan-ai/actions/runs/$runId/jobs"
+$jobs.jobs.steps | Where-Object { $_.conclusion -eq 'failure' } | Select-Object number, name
+```
+
+**Prohibido** solicitar `/actions/runs/{id}/logs`: devuelve HTTP 403 en este repositorio privado y su tamaño es enorme. **Prohibido** usar `gh run watch` (streaming bloqueante que vuelca la salida completa línea por línea).
+
+### Visibilidad del Repositorio y Credenciales
+Mientras el repositorio esté **Público** (etapa de desarrollo) la API REST responde sin credenciales. Si vuelve a **Privado**, exportar `GITHUB_TOKEN` en el entorno; `wait_ci.ps1` lo toma de la variable y aborta de inmediato ante un `404` en lugar de esperar los 25 minutos. Nunca escribir ese token en un archivo versionado.
 
 ---
 
@@ -34,7 +52,8 @@ Cuando los tests unitarios (`flutter test`) o el análisis estático (`flutter a
 git fetch origin main
 
 # 2. Leer directamente el reporte de fallos desde el commit remoto
-git show origin/main:test_results.txt
+#    Limitado a las ultimas 60 lineas para no volcar el reporte completo
+git show origin/main:test_results.txt | Select-Object -Last 60
 ```
 *Ventajas:*
 - No genera conflictos de git.
