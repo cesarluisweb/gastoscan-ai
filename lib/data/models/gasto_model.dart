@@ -9,7 +9,9 @@ class GastoModel {
   final String moneda;
   final int totalOriginal;
   final int totalUsd;
+  final int? totalUsdt;
   final double tasaCambio;
+  final double? tasaUsdt;
   final String? fuenteTasaCambio;
   final String? fechaTasaCambio;
   final String categoria;
@@ -30,7 +32,9 @@ class GastoModel {
     required this.moneda,
     required this.totalOriginal,
     required this.totalUsd,
+    this.totalUsdt,
     this.tasaCambio = 1.0,
+    this.tasaUsdt,
     this.fuenteTasaCambio,
     this.fechaTasaCambio,
     required this.categoria,
@@ -53,7 +57,9 @@ class GastoModel {
       'moneda': moneda,
       'total_original': totalOriginal,
       'total_usd': totalUsd,
+      'total_usdt': totalUsdt,
       'tasa_cambio': tasaCambio,
+      'tasa_usdt': tasaUsdt,
       'fuente_tasa_cambio': fuenteTasaCambio,
       'fecha_tasa_cambio': fechaTasaCambio,
       'categoria': categoria,
@@ -76,6 +82,11 @@ class GastoModel {
   }
 
   factory GastoModel.fromMap(Map<String, dynamic> map, {List<ItemGastoModel> items = const []}) {
+    final int tUsd = (map['total_usd'] as num?)?.toInt() ?? 0;
+    final int? tUsdt = (map['total_usdt'] as num?)?.toInt();
+    final double tCambio = (map['tasa_cambio'] as num?)?.toDouble() ?? 1.0;
+    final double? tUsdtRate = (map['tasa_usdt'] as num?)?.toDouble();
+
     return GastoModel(
       id: map['id'] as int?,
       uuid: map['uuid'] as String? ?? '',
@@ -83,8 +94,10 @@ class GastoModel {
       comercio: map['comercio'] as String? ?? 'Comercio Desconocido',
       moneda: map['moneda'] as String? ?? 'USD',
       totalOriginal: (map['total_original'] as num?)?.toInt() ?? 0,
-      totalUsd: (map['total_usd'] as num?)?.toInt() ?? 0,
-      tasaCambio: (map['tasa_cambio'] as num?)?.toDouble() ?? 1.0,
+      totalUsd: tUsd,
+      totalUsdt: tUsdt ?? tUsd,
+      tasaCambio: tCambio,
+      tasaUsdt: tUsdtRate ?? tCambio,
       fuenteTasaCambio: map['fuente_tasa_cambio'] as String?,
       fechaTasaCambio: map['fecha_tasa_cambio'] as String?,
       categoria: AppConstants.normalizarCategoria(map['categoria'] as String?),
@@ -107,7 +120,9 @@ class GastoModel {
     String? moneda,
     int? totalOriginal,
     int? totalUsd,
+    int? totalUsdt,
     double? tasaCambio,
+    double? tasaUsdt,
     String? fuenteTasaCambio,
     String? fechaTasaCambio,
     String? categoria,
@@ -128,7 +143,9 @@ class GastoModel {
       moneda: moneda ?? this.moneda,
       totalOriginal: totalOriginal ?? this.totalOriginal,
       totalUsd: totalUsd ?? this.totalUsd,
+      totalUsdt: totalUsdt ?? this.totalUsdt,
       tasaCambio: tasaCambio ?? this.tasaCambio,
+      tasaUsdt: tasaUsdt ?? this.tasaUsdt,
       fuenteTasaCambio: fuenteTasaCambio ?? this.fuenteTasaCambio,
       fechaTasaCambio: fechaTasaCambio ?? this.fechaTasaCambio,
       categoria: categoria ?? this.categoria,
@@ -145,4 +162,6 @@ class GastoModel {
 
   double get totalOriginalDisplay => totalOriginal / 100.0;
   double get totalUsdDisplay => totalUsd / 100.0;
+  double get totalUsdtDisplay => (totalUsdt ?? totalUsd) / 100.0;
+  double get tasaUsdtDisplay => (tasaUsdt != null && tasaUsdt! > 0) ? tasaUsdt! : tasaCambio;
 }

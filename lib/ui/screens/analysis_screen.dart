@@ -98,11 +98,30 @@ class AnalysisScreen extends StatelessWidget {
                     : CurrencyFormatter.convertFromUsd(gastoProvider.presupuestoGeneral, 'VES', settings.tasaCambioVesUsd);
               } else if (activeMoneda == 'USD') {
                 categoryTotals = gastoProvider.totalesPorCategoria;
-                categoryBudgets = gastoProvider.presupuestosPorCategoria;
+                categoryBudgets = isBudgetVes
+                    ? gastoProvider.presupuestosPorCategoria.map((k, v) => MapEntry(
+                          k,
+                          settings.tasaCambioVesUsd > 0 ? v / settings.tasaCambioVesUsd : 0.0,
+                        ))
+                    : gastoProvider.presupuestosPorCategoria;
                 totalMes = gastoProvider.totalMesUsd;
-                budgetGeneral = gastoProvider.presupuestoGeneral;
+                budgetGeneral = isBudgetVes
+                    ? (settings.tasaCambioVesUsd > 0 ? gastoProvider.presupuestoGeneral / settings.tasaCambioVesUsd : 0.0)
+                    : gastoProvider.presupuestoGeneral;
+              } else if (activeMoneda == 'USDT') {
+                categoryTotals = gastoProvider.totalesPorCategoriaUsdt;
+                categoryBudgets = isBudgetVes
+                    ? gastoProvider.presupuestosPorCategoria.map((k, v) => MapEntry(
+                          k,
+                          settings.tasaCambioVesUsdt > 0 ? v / settings.tasaCambioVesUsdt : 0.0,
+                        ))
+                    : gastoProvider.presupuestosPorCategoria;
+                totalMes = gastoProvider.totalMesUsdt;
+                budgetGeneral = isBudgetVes
+                    ? (settings.tasaCambioVesUsdt > 0 ? gastoProvider.presupuestoGeneral / settings.tasaCambioVesUsdt : 0.0)
+                    : gastoProvider.presupuestoGeneral;
               } else {
-                // EUR o USDT
+                // EUR
                 categoryTotals = gastoProvider.totalesPorCategoria.map((k, v) => MapEntry(
                       k,
                       CurrencyFormatter.convertFromUsd(
@@ -116,7 +135,7 @@ class AnalysisScreen extends StatelessWidget {
                 categoryBudgets = gastoProvider.presupuestosPorCategoria.map((k, v) => MapEntry(
                       k,
                       CurrencyFormatter.convertFromUsd(
-                        v,
+                        isBudgetVes ? (settings.tasaCambioVesUsd > 0 ? v / settings.tasaCambioVesUsd : 0.0) : v,
                         activeMoneda,
                         settings.tasaCambioVesUsd,
                         tasaEur: settings.tasaCambioVesEur,
@@ -131,7 +150,7 @@ class AnalysisScreen extends StatelessWidget {
                   tasaUsdt: settings.tasaCambioVesUsdt,
                 );
                 budgetGeneral = CurrencyFormatter.convertFromUsd(
-                  gastoProvider.presupuestoGeneral,
+                  isBudgetVes ? (settings.tasaCambioVesUsd > 0 ? gastoProvider.presupuestoGeneral / settings.tasaCambioVesUsd : 0.0) : gastoProvider.presupuestoGeneral,
                   activeMoneda,
                   settings.tasaCambioVesUsd,
                   tasaEur: settings.tasaCambioVesEur,
@@ -196,8 +215,12 @@ class AnalysisScreen extends StatelessWidget {
       budget = isBudgetVes ? (settings.tasaCambioVesUsd > 0 ? rawBudget / settings.tasaCambioVesUsd : 0.0) : rawBudget;
       metaAhorro = isBudgetVes ? (settings.tasaCambioVesUsd > 0 ? rawMetaAhorro / settings.tasaCambioVesUsd : 0.0) : rawMetaAhorro;
       spent = gastoProvider.totalMesUsd;
+    } else if (activeMoneda == 'USDT') {
+      budget = isBudgetVes ? (settings.tasaCambioVesUsdt > 0 ? rawBudget / settings.tasaCambioVesUsdt : 0.0) : rawBudget;
+      metaAhorro = isBudgetVes ? (settings.tasaCambioVesUsdt > 0 ? rawMetaAhorro / settings.tasaCambioVesUsdt : 0.0) : rawMetaAhorro;
+      spent = gastoProvider.totalMesUsdt;
     } else {
-      // EUR o USDT
+      // EUR
       budget = CurrencyFormatter.convertFromUsd(
         rawBudget,
         activeMoneda,

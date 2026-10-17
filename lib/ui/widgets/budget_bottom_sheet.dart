@@ -115,11 +115,20 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
       }
     }
 
+    double convertirMonto(double val, String from, String to) {
+      if (from == to) return val;
+      // Paridad 1:1 directa entre USD y USDT en fijación de límites y presupuestos
+      if ((from == 'USD' && to == 'USDT') || (from == 'USDT' && to == 'USD')) {
+        return val;
+      }
+      final double ves = toVes(val, from);
+      return fromVes(ves, to);
+    }
+
     // Convertir presupuesto general
     final genVal = tryParseAmount(_generalBudgetCtrl.text, isPrice: false) ?? 0.0;
     if (genVal > 0) {
-      final double ves = toVes(genVal, _selectedMoneda);
-      final double nuevoGen = fromVes(ves, nuevaMoneda);
+      final double nuevoGen = convertirMonto(genVal, _selectedMoneda, nuevaMoneda);
       _generalBudgetCtrl.text = nuevoGen >= 100
           ? nuevoGen.round().toString()
           : nuevoGen.toStringAsFixed(2);
@@ -128,8 +137,7 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
     // Convertir meta de ahorro
     final metaVal = tryParseAmount(_savingsGoalCtrl.text, isPrice: false) ?? 0.0;
     if (metaVal > 0) {
-      final double ves = toVes(metaVal, _selectedMoneda);
-      final double nuevoMeta = fromVes(ves, nuevaMoneda);
+      final double nuevoMeta = convertirMonto(metaVal, _selectedMoneda, nuevaMoneda);
       _savingsGoalCtrl.text = nuevoMeta >= 100
           ? nuevoMeta.round().toString()
           : nuevoMeta.toStringAsFixed(2);
@@ -139,8 +147,7 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
     for (final ctrl in _categoryControllers.values) {
       final val = tryParseAmount(ctrl.text, isPrice: false) ?? 0.0;
       if (val > 0) {
-        final double ves = toVes(val, _selectedMoneda);
-        final double nuevoVal = fromVes(ves, nuevaMoneda);
+        final double nuevoVal = convertirMonto(val, _selectedMoneda, nuevaMoneda);
         ctrl.text = nuevoVal >= 100
             ? nuevoVal.round().toString()
             : nuevoVal.toStringAsFixed(2);

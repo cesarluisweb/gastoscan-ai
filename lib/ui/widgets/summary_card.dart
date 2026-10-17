@@ -1,13 +1,16 @@
+import 'package:provider/provider.dart';
 import 'budget_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../domain/finance/savings_health_models.dart';
 import '../../domain/finance/savings_health_calculator.dart';
+import '../../providers/settings_provider.dart';
 
 class SummaryCard extends StatelessWidget {
   final double totalUsd;
   final double totalVes;
+  final double totalUsdt;
   final String periodo;
   final String monedaPrincipal;
   final double tasaCambio;
@@ -23,6 +26,7 @@ class SummaryCard extends StatelessWidget {
     Key? key,
     required this.totalUsd,
     required this.totalVes,
+    this.totalUsdt = 0.0,
     required this.periodo,
     this.monedaPrincipal = 'USD',
     this.tasaCambio = 1.0,
@@ -37,6 +41,7 @@ class SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final double usdtEff = totalUsdt > 0 ? totalUsdt : totalUsd;
     final textoPrincipal = CurrencyFormatter.formatPreferido(
       totalUsd,
       totalVes > 0 ? totalVes : null,
@@ -44,6 +49,7 @@ class SummaryCard extends StatelessWidget {
       monedaPrincipal,
       tasaEur: tasaEur,
       tasaUsdt: tasaUsdt,
+      totalUsdt: totalUsdt > 0 ? totalUsdt : null,
     );
 
     final textoSecundario = CurrencyFormatter.formatSecundario(
@@ -58,7 +64,7 @@ class SummaryCard extends StatelessWidget {
     final isBudgetVes = monedaPresupuesto == 'VES';
     final effectiveSpent = isBudgetVes
         ? (totalVes > 0 ? totalVes : totalUsd * tasaCambio)
-        : totalUsd;
+        : (monedaPresupuesto == 'USDT' ? usdtEff : totalUsd);
 
     final limiteParaGastar = hasSavingsGoal
         ? (presupuestoGeneral - metaAhorro).clamp(0.0, double.infinity)
@@ -215,7 +221,9 @@ class SummaryCard extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 8),
+          _buildLensSwitch(context),
+          const SizedBox(height: 6),
           // Monto Principal
           Text(
             textoPrincipal,
@@ -236,6 +244,32 @@ class SummaryCard extends StatelessWidget {
               fontWeight: FontWeight.w500,
             ),
           ),
+          if (totalUsd > 0 && totalUsdt > 0 && (totalUsd - totalUsdt) > 0.009) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE8F5E9),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFA5D6A7)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.trending_up, size: 14, color: Color(0xFF2E7D32)),
+                  const SizedBox(width: 5),
+                  Text(
+                    'Brecha capturada: +${CurrencyFormatter.formatAmount(totalUsd - totalUsdt, 'USD')} vs BCV',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1B5E20),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           if (hasSavingsGoal && snapshot != null) ...[
             const SizedBox(height: 8),
             Builder(
@@ -383,6 +417,54 @@ class SummaryCard extends StatelessWidget {
               ),
           ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildLensSwitch(BuildContext context) {
+    final settings = Provider.of<SettingsProvider>(context);
+    final current = settings.monedaPrincipal;
+    final lenses = [
+      {'id': 'USD', 'label': 'USD BCV'},
+      {'id': 'USDT', 'label': 'USDT P2P'},
+      {'id': 'VES', 'label': 'Bs.'},
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        color: AppColors.cardLighter,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: lenses.map((l) {
+          final isSelected = current == l['id'];
+          return InkWell(
+            key: Key('lens_switch_${l['id']?.toLowerCase()}'),
+            onTap: () => settings.setMonedaPrincipal(l['id']!),
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: isSelected ? AppColors.surface : Colors.transparent,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: isSelected
+                    ? [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 4)]
+                    : null,
+              ),
+              child: Text(
+                l['label']!,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                  color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
+                ),
+              ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }

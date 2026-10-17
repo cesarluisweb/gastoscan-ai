@@ -623,7 +623,7 @@ import '../styles/global.css';
         const getRateForCurrency = (currency) => {
             switch ((currency || 'USD').toUpperCase()) {
                 case 'EUR':
-                    return liveRates.eur > 0 ? liveRates.eur : (liveRates.usd > 0 ? liveRates.usd * 1.08 : 40.0);
+                    return liveRates.eur > 0 ? liveRates.eur : (liveRates.usd > 0 ? liveRates.usd : 40.0);
                 case 'USDT':
                     return liveRates.usdt > 0 ? liveRates.usdt : (liveRates.usd > 0 ? liveRates.usd : 36.5);
                 case 'VES':
@@ -951,6 +951,7 @@ import '../styles/global.css';
         const renderMetrics = () => {
             let sumUsd = 0;
             let sumVes = 0;
+            let sumUsdt = 0;
 
             currentGastos.forEach(g => {
                 const totalUsd = (Number(g.total_usd || 0)) / 100.0;
@@ -958,6 +959,17 @@ import '../styles/global.css';
                 const tasa = Number(g.tasa_cambio || 0) > 0 ? Number(g.tasa_cambio) : (liveRates.usd || 1.0);
 
                 sumUsd += totalUsd;
+
+                let totalUsdt = 0;
+                if (g.total_usdt !== undefined && g.total_usdt !== null) {
+                    totalUsdt = (Number(g.total_usdt || 0)) / 100.0;
+                } else if (g.moneda !== 'VES') {
+                    totalUsdt = totalUsd;
+                } else {
+                    const tUsdt = Number(g.tasa_usdt || 0) > 0 ? Number(g.tasa_usdt) : (Number(liveRates.usdt || 0) > 0 ? Number(liveRates.usdt) : 0);
+                    totalUsdt = tUsdt > 0 ? (totalOrig / tUsdt) : totalUsd;
+                }
+                sumUsdt += totalUsdt;
 
                 if (g.moneda === 'VES') {
                     // Inmutabilidad del bolívar: los gastos en VES suman su monto original
@@ -975,8 +987,7 @@ import '../styles/global.css';
             } else if (budgetCurrency === 'EUR') {
                 effectiveSpent = liveRates.eur > 0 ? (sumVes / liveRates.eur) : sumUsd;
             } else if (budgetCurrency === 'USDT') {
-                // Paridad 1:1 directa e inmutable con USD
-                effectiveSpent = sumUsd;
+                effectiveSpent = sumUsdt;
             } else {
                 effectiveSpent = sumUsd;
             }
@@ -1017,6 +1028,9 @@ import '../styles/global.css';
             cardSpentUsd.textContent = formatMoney(effectiveSpent, budgetCurrency);
             if (budgetCurrency === 'VES') {
                 cardSpentVes.textContent = sumUsd > 0 ? `≈ ${formatMoney(sumUsd, 'USD')} en dólares` : 'Sin compras en divisas';
+            } else if (budgetCurrency === 'USDT') {
+                const brecha = sumUsd - sumUsdt;
+                cardSpentVes.textContent = brecha > 0.009 ? `Brecha capturada: +$${brecha.toFixed(2)} vs BCV` : (sumVes > 0 ? `≈ ${formatMoney(sumVes, 'VES')} en bolívares` : 'Sin compras en bolívares');
             } else {
                 cardSpentVes.textContent = sumVes > 0 ? `≈ ${formatMoney(sumVes, 'VES')} en bolívares` : 'Sin compras en bolívares';
             }
@@ -1119,6 +1133,16 @@ import '../styles/global.css';
                 const totalOrig = (Number(g.total_original || 0)) / 100.0;
                 const tasa = Number(g.tasa_cambio || 0) > 0 ? Number(g.tasa_cambio) : (liveRates.usd || 1.0);
 
+                let totalUsdt = 0;
+                if (g.total_usdt !== undefined && g.total_usdt !== null) {
+                    totalUsdt = (Number(g.total_usdt || 0)) / 100.0;
+                } else if (g.moneda !== 'VES') {
+                    totalUsdt = totalUsd;
+                } else {
+                    const tUsdt = Number(g.tasa_usdt || 0) > 0 ? Number(g.tasa_usdt) : (Number(liveRates.usdt || 0) > 0 ? Number(liveRates.usdt) : 0);
+                    totalUsdt = tUsdt > 0 ? (totalOrig / tUsdt) : totalUsd;
+                }
+
                 let targetTotal = 0;
                 if (budgetCurrency === 'VES') {
                     targetTotal = g.moneda === 'VES' ? totalOrig : (totalUsd * (tasa > 0 ? tasa : 1.0));
@@ -1126,8 +1150,7 @@ import '../styles/global.css';
                     const vesEquiv = g.moneda === 'VES' ? totalOrig : (totalUsd * (tasa > 0 ? tasa : 1.0));
                     targetTotal = liveRates.eur > 0 ? (vesEquiv / liveRates.eur) : totalUsd;
                 } else if (budgetCurrency === 'USDT') {
-                    // Paridad 1:1 directa e inmutable con USD
-                    targetTotal = totalUsd;
+                    targetTotal = totalUsdt;
                 } else {
                     // USD
                     targetTotal = totalUsd;
@@ -1230,9 +1253,19 @@ import '../styles/global.css';
                 const catNorm = normalizarCategoria(gasto.categoria);
                 const icon = CATEGORIA_ICONS[catNorm] || '🧾';
 
+                let totalUsdt = 0;
+                if (gasto.total_usdt !== undefined && gasto.total_usdt !== null) {
+                    totalUsdt = (Number(gasto.total_usdt || 0)) / 100.0;
+                } else if (moneda !== 'VES') {
+                    totalUsdt = totalUsd;
+                } else {
+                    const tUsdt = Number(gasto.tasa_usdt || 0) > 0 ? Number(gasto.tasa_usdt) : (Number(liveRates.usdt || 0) > 0 ? Number(liveRates.usdt) : 0);
+                    totalUsdt = tUsdt > 0 ? (totalOrig / tUsdt) : totalUsd;
+                }
+
                 let secondarySubtext = '';
                 if (moneda === 'VES') {
-                    secondarySubtext = `≈ ${formatMoney(totalUsd, 'USD')} (Tasa: Bs. ${tasa.toFixed(2)})`;
+                    secondarySubtext = `≈ ${formatMoney(totalUsd, 'USD')} BCV • ${formatMoney(totalUsdt, 'USDT')}`;
                 } else {
                     const equivVes = (totalUsd * tasa);
                     secondarySubtext = `≈ ${formatMoney(equivVes, 'VES')} (Tasa: Bs. ${tasa.toFixed(2)})`;
@@ -1752,19 +1785,25 @@ import '../styles/global.css';
             }
 
             const tasa = Number(modalExpTasa.value) || getRateForCurrency(expMoneda) || 1.0;
+            const tasaUsdt = Number(liveRates.usdt || 0) > 0 ? Number(liveRates.usdt) : tasa;
             const totalOriginalCents = Math.round(monto * 100);
             let totalUsdCents = 0;
+            let totalUsdtCents = 0;
 
             if (expMoneda === 'USD') {
                 totalUsdCents = totalOriginalCents;
+                totalUsdtCents = totalOriginalCents;
             } else if (expMoneda === 'VES') {
                 totalUsdCents = Math.round((monto / tasa) * 100);
+                totalUsdtCents = tasaUsdt > 0 ? Math.round((monto / tasaUsdt) * 100) : totalUsdCents;
             } else if (expMoneda === 'EUR') {
                 const equivVes = monto * tasa;
                 const refUsd = liveRates.usd > 0 ? liveRates.usd : tasa;
                 totalUsdCents = Math.round((equivVes / refUsd) * 100);
+                totalUsdtCents = totalUsdCents;
             } else if (expMoneda === 'USDT') {
                 totalUsdCents = totalOriginalCents;
+                totalUsdtCents = totalOriginalCents;
             }
 
             // Preparar ítems para guardar
@@ -1803,7 +1842,9 @@ import '../styles/global.css';
                     moneda: expMoneda,
                     total_original: totalOriginalCents,
                     total_usd: totalUsdCents,
+                    total_usdt: totalUsdtCents,
                     tasa_cambio: tasa,
+                    tasa_usdt: expMoneda === 'VES' ? tasaUsdt : null,
                     fuente_tasa_cambio: expMoneda === 'USDT' ? 'Binance P2P' : 'BCV',
                     fecha_tasa_cambio: fecha,
                     categoria: primaryCat,

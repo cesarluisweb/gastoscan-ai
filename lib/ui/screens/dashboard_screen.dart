@@ -127,6 +127,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             SummaryCard(
               totalUsd: gastoProvider.totalMesUsd,
               totalVes: gastoProvider.totalMesVes,
+              totalUsdt: gastoProvider.totalMesUsdt,
               periodo: '$mesNombre $anio',
               monedaPrincipal: settings.monedaPrincipal,
               tasaCambio: settings.tasaCambioVesUsd,
@@ -189,8 +190,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   budgetGeneral = isBudgetVes
                       ? (settings.tasaCambioVesUsd > 0 ? gastoProvider.presupuestoGeneral / settings.tasaCambioVesUsd : 0.0)
                       : gastoProvider.presupuestoGeneral;
+                } else if (moneda == 'USDT') {
+                  categoryTotals = gastoProvider.totalesPorCategoriaUsdt;
+                  categoryBudgets = isBudgetVes
+                      ? gastoProvider.presupuestosPorCategoria.map((k, v) => MapEntry(
+                            k,
+                            settings.tasaCambioVesUsdt > 0 ? v / settings.tasaCambioVesUsdt : 0.0,
+                          ))
+                      : gastoProvider.presupuestosPorCategoria;
+                  totalMes = gastoProvider.totalMesUsdt;
+                  budgetGeneral = isBudgetVes
+                      ? (settings.tasaCambioVesUsdt > 0 ? gastoProvider.presupuestoGeneral / settings.tasaCambioVesUsdt : 0.0)
+                      : gastoProvider.presupuestoGeneral;
                 } else {
-                  // EUR o USDT: convertir desde USD usando las tasas activas
+                  // EUR: convertir desde USD usando las tasas activas
                   categoryTotals = gastoProvider.totalesPorCategoria.map((k, v) => MapEntry(
                         k,
                         CurrencyFormatter.convertFromUsd(
