@@ -72,6 +72,13 @@ En la economía venezolana conviven realidades cambiarias y formas de liquidaci�
 - **Preselección Automática en `ReviewExpenseScreen`:** Mapea el campo de IA directamente al enum `MetodoLiquidacionUsd`.
 - **Contexto Semántico del Chat (`ChatScreen`):** Mantiene los 4 lentes (`total_usd_bcv`, `total_usdt_p2p`, `total_eur_bcv`, `total_ves`) con instrucciones claras para responder preguntas sobre rendimiento o ahorro cambiario cuando el usuario lo consulte explícitamente.
 
+### 11. Rendimiento de Tasas en Arranque y Selector Táctil de Lentes
+- **Carga Inmediata y Depuración de Semillas en `SettingsProvider`:** Lectura de tasas de `SharedPreferences` en el primer milisegundo al iniciar la app sin esperar a Firestore, descartando cualquier valor obsoleto `<= 50.0` guardado en caché de pruebas previas.
+- **Respaldo Automático en Cascada para Tasas:** Si `DolarAPI` falla o impone rate limit, el servicio consulta automáticamente `Yadio Oficial` (`api.yadio.io`) y posteriormente `jsDelivr` (`fawazahmed0/currency-api`), garantizando que la app nunca se quede en 40.00 si hay conexión a internet.
+- **Unificación de Consulta en `ReviewExpenseScreen`:** Si la fecha es hoy, se realiza una sola llamada a `ExchangeRateService.getAllTodayRates()` en lugar de 3 llamadas secuenciales independientes, y si es fecha histórica se ejecutan en paralelo con `Future.wait`.
+- **Área Táctil y Callback Directo en `SummaryCard`:** El selector de lentes ahora se envuelve en `Material(color: Colors.transparent)` con botones `Expanded` (`HitTestBehavior.opaque`) y padding táctil cómodo de 8dp, enlazando directamente el callback `onMonedaChanged` desde `DashboardScreen` para respuesta instantánea al toque en cualquier dispositivo Android.
+- **Conversión Unificada de Categorías en `DashboardScreen`:** Unificada la conversión de categorías y presupuesto general por lente mediante `_convertBudgetToLens` idéntica a `AnalysisScreen`.
+
 ---
 
 ## 3. Guía de Pruebas Paso a Paso para César
@@ -87,15 +94,18 @@ En la economía venezolana conviven realidades cambiarias y formas de liquidaci�
      - En **`Pagado en Bs. (a USDT P2P)`**: bolívares calculados a tasa USDT P2P y equivalente en lente BCV revaluado.
      - En **`Pagado en $`**: monto en dólares exacto (20 USD = 20 USDT).
 
-3. **Prueba del Selector de 4 Lentes:**
-   - En la pantalla principal, alternar entre `USD BCV`, `USDT P2P`, `EUR BCV` y `Bs.`.
-   - Confirmar que el total gastado cambia al lente seleccionado y que la insignia visual de "Brecha capturada" ya no aparece.
+3. **Prueba del Selector de 4 Lentes en Inicio:**
+   - En la tarjeta "Total gastado" de Inicio, tocar directamente entre `USD BCV`, `USDT P2P`, `EUR BCV` y `Bs.`.
+   - Confirmar que responde al toque inmediatamente, alternando la moneda principal y las barras de categoría sin tener que ir a "Más".
 
-4. **Prueba de Presupuestos sin Drift:**
+4. **Prueba de Arranque y Tasas en Vivo:**
+   - Abrir la app o entrar a "Registrar gasto" y verificar que la tasa de cambio muestre la cotización real del día (tasa oficial > 800 Bs/USD) y nunca `40.00 Bs/USD`.
+
+5. **Prueba de Presupuestos sin Drift:**
    - Abrir el configurador de presupuestos, ingresar 100 USD.
    - Cambiar a VES, luego a EUR, luego a USDT y volver a USD.
    - Confirmar que regresa exactamente a `100` sin pérdida de decimales.
 
-5. **Prueba de Paridad en Panel Web:**
+6. **Prueba de Paridad en Panel Web:**
    - Ingresar a `https://rindemas.cesarluis.com/panel` tras el despliegue.
    - Verificar la barra de 4 lentes métricos y el modal de registro con las 3 opciones de pago.

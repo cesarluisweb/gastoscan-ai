@@ -21,6 +21,7 @@ class SummaryCard extends StatelessWidget {
   final String monedaPresupuesto;
   final int? mes;
   final int? anio;
+  final ValueChanged<String>? onMonedaChanged;
 
   const SummaryCard({
     Key? key,
@@ -37,6 +38,7 @@ class SummaryCard extends StatelessWidget {
     this.monedaPresupuesto = 'USD',
     this.mes,
     this.anio,
+    this.onMonedaChanged,
   }) : super(key: key);
 
   double _convertBudgetToLens(double amount) {
@@ -434,34 +436,51 @@ class SummaryCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: AppColors.border),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: lenses.map((l) {
-          final isSelected = current == l['id'];
-          return InkWell(
-            key: Key('lens_switch_${l['id']?.toLowerCase()}'),
-            onTap: () => settings?.setMonedaPrincipal(l['id']!),
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.surface : Colors.transparent,
+      child: Material(
+        color: Colors.transparent,
+        child: Row(
+          mainAxisSize: MainAxisSize.max,
+          children: lenses.map((l) {
+            final isSelected = current == l['id'];
+            final id = l['id']!;
+            return Expanded(
+              child: InkWell(
+                key: Key('lens_switch_${id.toLowerCase()}'),
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  if (onMonedaChanged != null) {
+                    onMonedaChanged!(id);
+                  } else {
+                    settings?.setMonedaPrincipal(id);
+                  }
+                },
                 borderRadius: BorderRadius.circular(8),
-                boxShadow: isSelected
-                    ? [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 4)]
-                    : null,
-              ),
-              child: Text(
-                l['label']!,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                  color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: isSelected ? AppColors.surface : Colors.transparent,
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: isSelected
+                        ? [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 4)]
+                        : null,
+                  ),
+                  child: Text(
+                    l['label']!,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                      color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
+                    ),
+                  ),
                 ),
               ),
-            ),
-          );
-        }).toList(),
+            );
+          }).toList(),
+        ),
       ),
     );
   }

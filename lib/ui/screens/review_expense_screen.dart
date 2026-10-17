@@ -138,9 +138,27 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
   }
 
   Future<void> _cargarTasasChips(String fecha) async {
-    final tUsd = await ExchangeRateService.getRateForDate(fecha, moneda: 'USD');
-    final tEur = await ExchangeRateService.getRateForDate(fecha, moneda: 'EUR');
-    final tUsdt = await ExchangeRateService.getRateForDate(fecha, moneda: 'USDT');
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    double tUsd;
+    double tEur;
+    double tUsdt;
+
+    if (fecha.isEmpty || fecha == today) {
+      final allRates = await ExchangeRateService.getAllTodayRates();
+      tUsd = allRates.usd;
+      tEur = allRates.eur;
+      tUsdt = allRates.usdt;
+    } else {
+      final results = await Future.wait([
+        ExchangeRateService.getRateForDate(fecha, moneda: 'USD'),
+        ExchangeRateService.getRateForDate(fecha, moneda: 'EUR'),
+        ExchangeRateService.getRateForDate(fecha, moneda: 'USDT'),
+      ]);
+      tUsd = results[0];
+      tEur = results[1];
+      tUsdt = results[2];
+    }
+
     if (mounted && _selectedFecha == fecha) {
       setState(() {
         _tasaUsdFecha = tUsd;

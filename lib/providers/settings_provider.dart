@@ -48,52 +48,23 @@ class SettingsProvider with ChangeNotifier {
 
   Future<void> loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
-    
-    String? secureKey = await _secureStorage.read(key: AppConstants.prefApiKey);
-    if (secureKey == null) {
-      String oldKey = prefs.getString(AppConstants.prefApiKey) ?? '';
-      if (oldKey.isNotEmpty) {
-        await _secureStorage.write(key: AppConstants.prefApiKey, value: oldKey);
-        await prefs.remove(AppConstants.prefApiKey);
-        _apiKey = oldKey;
-      } else {
-        _apiKey = '';
-      }
-    } else {
-      _apiKey = secureKey;
-    }
 
-    // Sincronizar API Key con Firestore si el usuario está autenticado con Google
-    if (Firebase.apps.isNotEmpty) {
-      try {
-        final user = FirebaseAuth.instance.currentUser;
-        if (user != null && !user.isAnonymous) {
-          if (_apiKey.isEmpty) {
-            final remoteKey = await SyncService().syncSettingsFromFirestore(user);
-            if (remoteKey != null && remoteKey.trim().isNotEmpty) {
-              _apiKey = remoteKey.trim();
-              await _secureStorage.write(key: AppConstants.prefApiKey, value: _apiKey);
-            }
-          } else {
-            final remoteKey = await SyncService().syncSettingsFromFirestore(user);
-            if (remoteKey == null || remoteKey.trim().isEmpty) {
-              await SyncService().syncSettingsToFirestore(user, apiKey: _apiKey);
-            }
-          }
-        }
-      } catch (e) {
-        debugPrint("Error sincronizando API Key con Firestore en loadSettings: $e");
-      }
-    }
-
+    // 1. Lectura inmediata de preferencias y tasas en caché (primer milisegundo)
     _guardarFotos = prefs.getBool(AppConstants.prefGuardarFotos) ?? AppConstants.defaultGuardarFotos;
-    _tasaCambioVesUsd = prefs.getDouble('cached_rate_usd') ??
-        prefs.getDouble(AppConstants.prefTasaCambio) ??
-        AppConstants.defaultTasaCambio;
-    // Sin caché EUR no se inventa ratio (antes: USD * 1.08): queda en 0 y los
-    // formateadores usan sus ramas neutras hasta la primera sincronización.
-    _tasaCambioVesEur = prefs.getDouble('cached_rate_eur') ?? 0.0;
-    _tasaCambioVesUsdt = prefs.getDouble('cached_rate_usdt') ?? _tasaCambioVesUsd;
+
+    // Descartar valores obsoletos <= 50.0 guardados en caché de pruebas previas
+    double? cachedUsd = prefs.getDouble('cached_rate_usd') ??
+        prefs.getDouble(AppConstants.prefTasaCambio);
+    if (cachedUsd != null && cachedUsd <= 50.0) cachedUsd = null;
+    _tasaCambioVesUsd = cachedUsd ?? AppConstants.defaultTasaCambio;
+
+    double? cachedEur = prefs.getDouble('cached_rate_eur');
+    if (cachedEur != null && cachedEur <= 50.0) cachedEur = null;
+    _tasaCambioVesEur = cachedEur ?? 0.0;
+
+    double? cachedUsdt = prefs.getDouble('cached_rate_usdt');
+    if (cachedUsdt != null && cachedUsdt <= 50.0) cachedUsdt = null;
+    _tasaCambioVesUsdt = cachedUsdt ?? _tasaCambioVesUsd;
 
     final timestampStr = prefs.getString('cached_exchange_rates_timestamp');
     if (timestampStr != null) {
@@ -107,8 +78,48 @@ class SettingsProvider with ChangeNotifier {
     _isInitialized = true;
     notifyListeners();
 
-    // Sincroniza las tasas automáticamente en segundo plano
+    // Sincroniza las tasas automáticamente en segundo plano de inmediato
     actualizarTasaAutomatica();
+
+    // 2. Cargar API Key y sincronizar con Firestore en segundo plano sin demorar la inicialización
+    try {
+      String? secureKey = await _secureStorage.read(key: AppConstants.prefApiKey);
+      if (secureKey == null) {
+        String oldKey = prefs.getString(AppConstants.prefApiKey) ?? '';
+        if (oldKey.isNotEmpty) {
+          await _secureStorage.write(key: AppConstants.prefApiKey, value: oldKey);
+          await prefs.remove(AppConstants.prefApiKey);
+          _apiKey = oldKey;
+          notifyListeners();
+        } else {
+          _apiKey = '';
+        }
+      } else {
+        _apiKey = secureKey;
+        notifyListeners();
+      }
+
+      if (Firebase.apps.isNotEmpty) {
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null && !user.isAnonymous) {
+          if (_apiKey.isEmpty) {
+            final remoteKey = await SyncService().syncSettingsFromFirestore(user);
+            if (remoteKey != null && remoteKey.trim().isNotEmpty) {
+              _apiKey = remoteKey.trim();
+              await _secureStorage.write(key: AppConstants.prefApiKey, value: _apiKey);
+              notifyListeners();
+            }
+          } else {
+            final remoteKey = await SyncService().syncSettingsFromFirestore(user);
+            if (remoteKey == null || remoteKey.trim().isEmpty) {
+              await SyncService().syncSettingsToFirestore(user, apiKey: _apiKey);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint("Error sincronizando API Key con Firestore en loadSettings: $e");
+    }
   }
 
   Future<void> actualizarTasaAutomatica({http.Client? client}) async {
@@ -118,17 +129,18 @@ class SettingsProvider with ChangeNotifier {
       final allRates = await ExchangeRateService.getAllTodayRates(client: client);
       if (!allRates.esReferencia) {
         final prefs = await SharedPreferences.getInstance();
-        // Solo se aplica lo que llegó en vivo (> 0); el resto conserva su
-        // valor previo en vez de pisarse con ceros.
-        if (allRates.usd > 0) {
+        // Solo se aplica lo que llegó en vivo válido (> 50.0); el resto conserva su
+        // valor previo en vez de pisarse con ceros o semillas obsoletas.
+        if (allRates.usd > 50.0) {
           _tasaCambioVesUsd = allRates.usd;
           await prefs.setDouble(AppConstants.prefTasaCambio, _tasaCambioVesUsd);
+          await prefs.setDouble('cached_rate_usd', _tasaCambioVesUsd);
         }
-        if (allRates.eur > 0) {
+        if (allRates.eur > 50.0) {
           _tasaCambioVesEur = allRates.eur;
           await prefs.setDouble('cached_rate_eur', _tasaCambioVesEur);
         }
-        if (allRates.usdt > 0) {
+        if (allRates.usdt > 50.0) {
           _tasaCambioVesUsdt = allRates.usdt;
           await prefs.setDouble('cached_rate_usdt', _tasaCambioVesUsdt);
         }
