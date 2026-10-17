@@ -38,7 +38,7 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 ## Fase 5: Marketing, Lanzamiento y Tracción (En Progreso 🔄)
 *Hitos para validar el producto con usuarios reales en Venezuela:*
 - **Subida a Google Play Store (Closed Testing):** (En progreso 🔄) Ficha técnica y capturas preparadas (`DOC_FICHA_PLAY_STORE.md`). Adaptación de políticas de información gubernamental completada: descargos de no representación y enlaces funcionales a `https://www.bcv.org.ve/` integrados en la ficha de tienda, Calculadora de divisas y pantalla Más. AAB v1.0.4 compilado y listo para reenvío conjunto con la ficha. Prueba cerrada activa en Play Console; coordinando los 12 evaluadores requeridos durante el período de prueba.
-- `REL-01` **Transición a Google Play y Silenciamiento de Actualizaciones Fantasma:** `Implementada 🔧`
+- `REL-01` **Transición a Google Play y Silenciamiento de Actualizaciones Fantasma:** `Pendiente de validación 🧪`
   - *Problema:* Discrepancia entre builds continuos de CI (`version.json` 470) y Google Play (466) causaba alertas falsas de actualización y bucle con "Abrir" en la tienda.
   - *Solución:* Silenciados popups automáticos en `DashboardScreen` y `MainScreen`. El botón de versión en `MoreScreen` ahora dice *"Google Play"* y abre directamente la ficha de la tienda para que el usuario actualice cuando Google apruebe el build. El APK directo en la landing se mantiene hasta el pase a Producción pública.
 - **Código QR de Descarga en Landing (Desktop):** (Pendiente) Incorporar tarjeta con código QR dinámico en `rindemas.cesarluis.com` para escanear e instalar directamente desde una PC.
@@ -57,7 +57,7 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 - `UI-02` **Contraste de Íconos y Controles en Pestaña "Más":**
   - *Problema:* Íconos y toggles amarillos sobre fondo blanco pierden definición visual.
   - *Solución:* Aplicar el patrón del modal `+` con contenedores circulares en tono suave (`AppColors.primaryContainer`) y trazos en carbón/negro (`AppColors.textPrimary`), o elevar el contraste hacia tonos ámbar/mostaza.
-- `UI-03` **Semántica de Color Unificada en Progreso de Presupuesto:** `Implementada 🔧`
+- `UI-03` **Semántica de Color Unificada en Progreso de Presupuesto:** `Pendiente de validación 🧪`
   - *Problema:* El mismo porcentaje (ej. 29%) se muestra verde en Inicio pero amarillo en Análisis.
   - *Solución:* Unificar la escala semafórica en toda la app: Verde (`AppColors.success` / `#10B981` para $<85\%$), Amarillo/Ámbar (`AppColors.warning` / `#F59E0B` para $\ge 85\%$) y Rojo (`AppColors.error` / `#EF4444` para $\ge 100\%$ o sobregiro), con paridad exacta en Inicio, Análisis y Web.
 - `UI-04` **Rediseño de Enlaces en Presupuesto por Categoría:**
@@ -118,7 +118,7 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
   - *Problema:* Al mostrar valores en USDT, la app triangulaba USD -> VES -> USDT aplicando la brecha cambiaria (spread oficial BCV vs Binance P2P) a dos monedas que cotizan en dólares ($19.99 USD se transformaban en 17.66 USDT), y recalculaba el total mensual con la tasa USDT en vivo de cada día, provocando que los totales históricos fluctuaran y disminuyeran día a día.
   - *Solución:* Establecimiento de paridad determinista 1:1 directa entre USD y USDT en pagos en divisas sin aplicar tasas futuras.
 
-- `FIN-11` **Motor Multimoneda "Dos Lentes" (USD BCV vs. USDT P2P) y Migración SQLite v17:** `Implementada 🔧`
+- `FIN-11` **Motor Multimoneda "Dos Lentes" (USD BCV vs. USDT P2P) y Migración SQLite v17:** `Pendiente de validación 🧪`
   - *Problema:* La paridad 1:1 global de FIN-10 impedía distinguir gastos cancelados en bolívares de gastos en divisas duras, borrando el ahorro real obtenido al vender USDT en Binance P2P para compras locales (ej. gasolina pagada en Bs a tasa BCV).
   - *Solución:*
     1. **Migración SQLite v17:** Nuevas columnas `total_usdt INTEGER` (en céntimos inmutables) y `tasa_usdt REAL` con backfill determinista.
