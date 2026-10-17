@@ -343,7 +343,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       'moneda': g.moneda,
       'monto_original': double.parse((g.totalOriginal / 100.0).toStringAsFixed(2)),
       'total_usd': double.parse((g.totalUsd / 100.0).toStringAsFixed(2)),
-      'total_usdt': double.parse((g.totalUsdt / 100.0).toStringAsFixed(2)),
+      'total_usdt': double.parse(((g.totalUsdt ?? g.totalUsd) / 100.0).toStringAsFixed(2)),
     }).toList();
 
     final brechaCapturada = double.parse(

@@ -180,7 +180,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text(CurrencyFormatter.formatUsdt(20.0)), findsOneWidget);
-      expect(find.text('Brecha capturada: +$5.00 vs BCV'), findsOneWidget);
+      expect(find.text('Brecha capturada: +${CurrencyFormatter.formatAmount(5.0, 'USD')} vs BCV'), findsOneWidget);
     });
   });
 
