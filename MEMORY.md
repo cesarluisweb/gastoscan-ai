@@ -10,11 +10,11 @@
 
 ## Decisiones Técnicas y de Negocio Recientes
 - La causa de las tasas fijas en 40 Bs era que `SharedPreferences.getInstance()` fallaba por R8/ProGuard en APK release, abortando antes de la llamada HTTP.
-- Se configuró `-keep class io.flutter.plugins.**` y `-keep class dev.flutter.pigeon.**` y se cambió a `proguard-android.txt` en `build_apk.yml`.
+- Se configuró `-keep class io.flutter.plugins.**` y `-keep class dev.flutter.pigeon.**` en `build_apk.yml` preservando los platform channels y `SharedPreferencesApiRegistrar`.
 
 ## Errores y Fricciones a Evitar
 - No encadenar comandos con `&&` ni usar redirección `>` en PowerShell.
 - Monitoreo de CI por proceso dormido único (`scripts/wait_ci.ps1`), prohibido bucle activo turno a turno.
 
 ## Próximo Paso Inmediato
-- Compilar en CI (Build 496+), probar en teléfono de César y confirmar que las tasas cargan en vivo.
+- CI confirmado en verde (`CI 39063480019 | success | build 497 | fa3c473`). César valida en su teléfono que las tasas cargan en vivo.
