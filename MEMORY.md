@@ -4,17 +4,17 @@
 ## Estado Actual Inmediato
 - **Rama:** `main`.
 - **Fase activa:** Fase 5 (Closed Testing activa) y restauración a Build 470 (1.0.4).
-- **Acción Reciente:** Instrumentada observabilidad visual en botón de actualizar tasas (SnackBar con estado HTTP/excepción exacta y botón de copiado).
+- **Acción Reciente:** Identificada causa raíz del fallo en APK (NoSuchMethodError en SharedPreferences por optimización agresiva de R8). Corregidas reglas ProGuard en CI.
 - **Respaldo:** El trabajo y diagnóstico previo de FIN-12 queda salvaguardado en la rama `backup/pre-regreso-build-470`.
 - **Preservación:** Documentación técnica (`DOC_*.md`), scripts operativos (`scripts/wait_ci.ps1`) y reglas se mantienen intactos.
 
 ## Decisiones Técnicas y de Negocio Recientes
-- La restauración del código a Build 470 devolvió la consulta de tasas a su implementación base (DolarAPI + Yadio simple).
-- Se agregó diagnóstico explícito en `ExchangeRateService` y `SettingsProvider` para capturar la causa exacta del fallo de red en APK sideloaded.
+- La causa de las tasas fijas en 40 Bs era que `SharedPreferences.getInstance()` fallaba por R8/ProGuard en APK release, abortando antes de la llamada HTTP.
+- Se configuró `-keep class io.flutter.plugins.**` y `-keep class dev.flutter.pigeon.**` y se cambió a `proguard-android.txt` en `build_apk.yml`.
 
 ## Errores y Fricciones a Evitar
 - No encadenar comandos con `&&` ni usar redirección `>` en PowerShell.
 - Monitoreo de CI por proceso dormido único (`scripts/wait_ci.ps1`), prohibido bucle activo turno a turno.
 
 ## Próximo Paso Inmediato
-- CI confirmado en verde (`CI 39061021055 | success | build 495 | 43c3ffe`). César valida en su teléfono usando el botón de actualizar tasas para ver el diagnóstico.
+- Compilar en CI (Build 496+), probar en teléfono de César y confirmar que las tasas cargan en vivo.
