@@ -24,4 +24,4 @@
 - En `SummaryCard`: Envolver los switches táctiles en `Material` con área accesible para no perder toques en listas Android.
 
 ## Próximo Paso Inmediato
-- Instalar el **build 490** en dispositivo y validar: (1) que el formulario de gasto muestre la tasa BCV en vivo (~880 Bs) y no `40`, (2) que en Inicio se pueda cambiar de lente con el selector táctil, (3) lentes y edición de gastos en el panel web. Cierra `FIN-11` ([DOC_MOTOR_MULTIMONEDA.md](DOC_MOTOR_MULTIMONEDA.md)).
+- Instalar el **build 494** (Run 490) en dispositivo y validar: (1) que las tasas carguen en vivo (~880 Bs BCV) en MoreScreen, ReviewExpenseScreen y CurrencyCalculatorScreen y no en 40, (2) selector táctil de 4 lentes en Inicio, (3) lentes y edición de gastos en el panel web. Cierra `FIN-11` ([DOC_MOTOR_MULTIMONEDA.md](DOC_MOTOR_MULTIMONEDA.md)).

@@ -118,7 +118,7 @@ while ((Get-Date) -lt $discoveryDeadline -and $runId -eq 0) {
 
     $match = $null
     if ($Sha) {
-        $match = @($runs.workflow_runs) | Where-Object { $_.head_sha -eq $Sha } | Select-Object -First 1
+        $match = @($runs.workflow_runs) | Where-Object { $_.head_sha -eq $Sha -or $_.head_sha -like ($Sha + '*') } | Select-Object -First 1
     }
     if ($null -eq $match) {
         Start-Sleep -Seconds (Get-SleepSeconds -Seconds $IntervalSeconds -Deadline $discoveryDeadline)
