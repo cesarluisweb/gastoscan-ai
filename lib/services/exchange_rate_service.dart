@@ -41,51 +41,45 @@ class ExchangeRateService {
   static const String _dolarApiOficial = 'https://ve.dolarapi.com/v1/dolares/oficial';
   static const String _euroApiOficial = 'https://ve.dolarapi.com/v1/euros/oficial';
   static const String _dolarApiParalelo = 'https://ve.dolarapi.com/v1/dolares/paralelo';
-  static const String _yadioJson = 'https://api.yadio.io/json';
-  static const String _jsdelivrUsd = 'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json';
-  static const String _jsdelivrEur = 'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/eur.json';
 
-  /// Obtiene las 3 tasas del día (USD BCV, EUR BCV, USDT Binance / Paralelo) en paralelo
-  /// con respaldo automático (DolarAPI -> Yadio Oficial -> jsDelivr).
-  /// Descarta cualquier valor obsoleto <= 50.0 proveniente de semillas o pruebas previas.
+  /// Obtiene las 3 tasas del día (USD BCV, EUR BCV, USDT Binance / Paralelo) en paralelo.
+  /// Sin dato en vivo NO inventa (antes: 40.0 y USD*1.08) ni toca el timestamp:
+  /// devuelve caché (o ceros) con `esReferencia: true`.
   static Future<ExchangeRatesData> getAllTodayRates({http.Client? client}) async {
     final prefs = await SharedPreferences.getInstance();
     final httpClient = client ?? http.Client();
 
-    // Semillas: solo caché real válida (> 50.0). null = "sin dato".
+    // Semillas: solo caché real. null = "sin dato".
     double? usdRate = prefs.getDouble('cached_rate_usd') ?? prefs.getDouble('cached_exchange_rate');
-    if (usdRate != null && usdRate <= 50.0) usdRate = null;
     double? eurRate = prefs.getDouble('cached_rate_eur');
-    if (eurRate != null && eurRate <= 50.0) eurRate = null;
     double? usdtRate = prefs.getDouble('cached_rate_usdt');
-    if (usdtRate != null && usdtRate <= 50.0) usdtRate = null;
 
     final results = await Future.wait([
-      _fetchUsdLiveRate(client: httpClient),
-      _fetchEurLiveRate(client: httpClient),
+      _fetchUrlDouble(_dolarApiOficial, 'promedio', client: httpClient),
+      _fetchUrlDouble(_euroApiOficial, 'promedio', client: httpClient),
       _fetchUsdtLiveRate(client: httpClient),
     ]);
 
     bool fetchedAny = false;
 
-    if (results[0] != null && results[0]! > 50.0) {
+    if (results[0] != null && results[0]! > 0) {
       usdRate = results[0]!;
       await prefs.setDouble('cached_rate_usd', usdRate);
       await prefs.setDouble('cached_exchange_rate', usdRate);
       fetchedAny = true;
     }
 
-    if (results[1] != null && results[1]! > 50.0) {
+    if (results[1] != null && results[1]! > 0) {
       eurRate = results[1]!;
       await prefs.setDouble('cached_rate_eur', eurRate);
       fetchedAny = true;
     }
 
-    if (results[2] != null && results[2]! > 50.0) {
+    if (results[2] != null && results[2]! > 0) {
       usdtRate = results[2]!;
       await prefs.setDouble('cached_rate_usdt', usdtRate);
       fetchedAny = true;
-    } else if ((usdtRate == null || usdtRate <= 50.0) && (usdRate != null && usdRate > 50.0)) {
+    } else if ((usdtRate == null || usdtRate <= 0) && (usdRate != null && usdRate > 0)) {
       // Último recurso histórico: USDT ≈ USD. Queda señalado vía
       // `esReferencia` cuando nada se obtuvo en vivo.
       usdtRate = usdRate;
@@ -115,84 +109,11 @@ class ExchangeRateService {
     );
   }
 
-  /// Consulta USD Oficial con respaldo en cascada: DolarAPI -> Yadio Oficial -> jsDelivr
-  static Future<double?> _fetchUsdLiveRate({http.Client? client}) async {
-    final httpClient = client ?? http.Client();
-
-    // 1. DolarAPI Oficial
-    final dolarApiVal = await _fetchUrlDouble(_dolarApiOficial, 'promedio', client: httpClient);
-    if (dolarApiVal != null && dolarApiVal > 50.0) return dolarApiVal;
-
-    // 2. Fallback Yadio Oficial
-    try {
-      final yadioUrl = Uri.parse(_yadioJson);
-      final resp = await httpClient.get(yadioUrl).timeout(const Duration(seconds: 4));
-      if (resp.statusCode == 200) {
-        final data = jsonDecode(resp.body);
-        final officialRate = (data['USD']?['other']?['official']?['rate'] as num?)?.toDouble();
-        if (officialRate != null && officialRate > 50.0) return officialRate;
-      }
-    } catch (_) {}
-
-    // 3. Fallback jsDelivr
-    try {
-      final jsdelivrUrl = Uri.parse(_jsdelivrUsd);
-      final resp = await httpClient.get(jsdelivrUrl).timeout(const Duration(seconds: 4));
-      if (resp.statusCode == 200) {
-        final data = jsonDecode(resp.body);
-        final vesRate = (data['usd']?['ves'] as num?)?.toDouble();
-        if (vesRate != null && vesRate > 50.0) return vesRate;
-      }
-    } catch (_) {}
-
-    return null;
-  }
-
-  /// Consulta EUR Oficial con respaldo en cascada: DolarAPI -> jsDelivr -> Yadio
-  static Future<double?> _fetchEurLiveRate({http.Client? client}) async {
-    final httpClient = client ?? http.Client();
-
-    // 1. DolarAPI Euro Oficial
-    final euroApiVal = await _fetchUrlDouble(_euroApiOficial, 'promedio', client: httpClient);
-    if (euroApiVal != null && euroApiVal > 50.0) return euroApiVal;
-
-    // 2. Fallback jsDelivr Euro
-    try {
-      final jsdelivrUrl = Uri.parse(_jsdelivrEur);
-      final resp = await httpClient.get(jsdelivrUrl).timeout(const Duration(seconds: 4));
-      if (resp.statusCode == 200) {
-        final data = jsonDecode(resp.body);
-        final vesRate = (data['eur']?['ves'] as num?)?.toDouble();
-        if (vesRate != null && vesRate > 50.0) return vesRate;
-      }
-    } catch (_) {}
-
-    // 3. Fallback Yadio Official / EUR ratio
-    try {
-      final yadioUrl = Uri.parse(_yadioJson);
-      final resp = await httpClient.get(yadioUrl).timeout(const Duration(seconds: 4));
-      if (resp.statusCode == 200) {
-        final data = jsonDecode(resp.body);
-        final officialRate = (data['USD']?['other']?['official']?['rate'] as num?)?.toDouble();
-        final eurRatio = (data['USD']?['EUR'] as num?)?.toDouble();
-        if (officialRate != null && officialRate > 50.0 && eurRatio != null && eurRatio > 0) {
-          final computedEur = officialRate / eurRatio;
-          if (computedEur > 50.0) return computedEur;
-        }
-      }
-    } catch (_) {}
-
-    return null;
-  }
-
   static Future<double?> _fetchUrlDouble(String urlString, String fieldKey, {http.Client? client}) async {
     try {
       final url = Uri.parse(urlString);
       final httpClient = client ?? http.Client();
-      final response = await httpClient.get(
-        url,
-        headers: {'User-Agent': 'RindeMas/1.0 (Android; Linux)'},
-      ).timeout(const Duration(seconds: 6));
+      final response = await httpClient.get(url).timeout(const Duration(seconds: 6));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final val = (data[fieldKey] as num?)?.toDouble();
@@ -206,21 +127,19 @@ class ExchangeRateService {
   static Future<double?> _fetchUsdtLiveRate({http.Client? client}) async {
     try {
       final httpClient = client ?? http.Client();
-      final yadioUrl = Uri.parse(_yadioJson);
-      final resp = await httpClient.get(yadioUrl).timeout(const Duration(seconds: 4));
+      final yadioUrl = Uri.parse('https://api.yadio.io/json');
+      final resp = await httpClient.get(yadioUrl).timeout(const Duration(seconds: 5));
       if (resp.statusCode == 200) {
         final data = jsonDecode(resp.body);
         final p2pUsdt = (data['USD']?['other']?['p2p_usdt']?['rate'] as num?)?.toDouble();
-        if (p2pUsdt != null && p2pUsdt > 50.0) return p2pUsdt;
+        if (p2pUsdt != null && p2pUsdt > 0) return p2pUsdt;
         final usdRate = (data['USD']?['rate'] as num?)?.toDouble();
-        if (usdRate != null && usdRate > 50.0) return usdRate;
+        if (usdRate != null && usdRate > 0) return usdRate;
       }
     } catch (_) {}
 
     // Fallback directo a DolarAPI paralelo
-    final paraleloVal = await _fetchUrlDouble(_dolarApiParalelo, 'promedio', client: client);
-    if (paraleloVal != null && paraleloVal > 50.0) return paraleloVal;
-    return null;
+    return await _fetchUrlDouble(_dolarApiParalelo, 'promedio', client: client);
   }
 
   /// Obtiene la tasa de cambio para una fecha específica (formato YYYY-MM-DD) y moneda.
@@ -317,28 +236,11 @@ class ExchangeRateService {
       } catch (_) {}
     }
 
-    // 4. Fallback final a tasa del día (o última tasa en caché si no hay conexión)
+    // 4. Fallback final a tasa del día
     final allRates = await getAllTodayRates(client: client);
-    double finalRate = 0.0;
-    if (monedaClean == 'EUR') {
-      finalRate = allRates.eur > 0 ? allRates.eur : allRates.usd;
-    } else if (monedaClean == 'USDT') {
-      finalRate = allRates.usdt > 0 ? allRates.usdt : allRates.usd;
-    } else {
-      finalRate = allRates.usd;
-    }
-
-    if (finalRate <= 50.0) {
-      final cachedVal = prefs.getDouble('cached_rate_usd') ??
-          prefs.getDouble('cached_exchange_rate') ??
-          prefs.getDouble('tasa_cambio_ves_usd');
-      if (cachedVal != null && cachedVal > 50.0) {
-        finalRate = cachedVal;
-      } else {
-        finalRate = 0.0;
-      }
-    }
-    return finalRate > 50.0 ? finalRate : 0.0;
+    if (monedaClean == 'EUR') return allRates.eur;
+    if (monedaClean == 'USDT') return allRates.usdt;
+    return allRates.usd;
   }
 
   /// Obtiene la tasa de cambio de hoy en tiempo real (retrocompatibilidad)

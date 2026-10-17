@@ -3,25 +3,19 @@
 
 ## Estado Actual Inmediato
 - **Rama:** `main`.
-- **Fase activa:** Fase 6.2 y Fase 5 (Closed Testing activa).
-- **Tareas recientes:** `FIN-11` (Motor Multimoneda "Dos Lentes", Pulido Integral 10 Puntos y Soporte de IA) `Pendiente de validación 🧪`. `REL-01` `Pendiente de validación 🧪`. `UI-03` `Pendiente de validación 🧪`. `FIN-10` `Completada ✅`.
-- **Documentación Técnica:** [ROADMAP.md](ROADMAP.md) y [DOC_MOTOR_MULTIMONEDA.md](DOC_MOTOR_MULTIMONEDA.md) actualizados.
-- **Herramientas de Mantenimiento:** `scripts/wait_ci.ps1` monitorea GitHub Actions como proceso dormido único (regla permanente en `AGENTS.md` §2). El repositorio está **Público** durante el desarrollo; vuelve a Privado al terminar.
+- **Fase activa:** Fase 5 (Closed Testing activa) y restauración a estado funcional probado.
+- **Acción Crítica Reciente:** Restauración de `main` al estado funcional exacto de Build 470 (`54f8432`) para garantizar tasas en vivo BCV (~880 Bs). El desarrollo de `FIN-11` queda 100% respaldado en `feature/fin-11-motor-multimoneda-backup` y etiqueta `backup-pre-revert-build-494`.
+- **Documentación Técnica:** [ROADMAP.md](ROADMAP.md) y [DOC_MOTOR_MULTIMONEDA.md](DOC_MOTOR_MULTIMONEDA.md) preservados.
 
 ## Decisiones Técnicas y de Negocio Recientes
-- **FIN-11 (Motor Multimoneda "Dos Lentes", Pulido Integral y Soporte de IA):**
-  1. Tres opciones canónicas de liquidación con campo de Bolívares finales editable para redondeo comercial en caja.
-  2. Desacoplamiento del formulario de nuevo gasto (abre en USD con `En Bs. · precio a tasa BCV`).
-  3. Switch de 4 lentes táctil en `SummaryCard`: envuelto en `Material`, `Expanded`, `HitTestBehavior.opaque` y callback `onMonedaChanged` directo desde `DashboardScreen`.
-  4. Carga inmediata de tasas en `SettingsProvider` (descartando semillas `<= 50.0`) y respaldo en cascada (`DolarAPI` -> `Yadio Oficial` -> `jsDelivr`).
-  5. `_cargarTasasChips`: consulta unificada de tasas en `ReviewExpenseScreen` (evita 9 peticiones en serie) y conversión unificada de categorías por lente en `DashboardScreen`.
-  6. Edición en `panel.astro` con reconstrucción de contexto y paridad multimoneda.
+- **Restauración a Build 470 (Opción A):**
+  1. Rama de respaldo permanente `feature/fin-11-motor-multimoneda-backup` y tag `backup-pre-revert-build-494` creados en origin.
+  2. Árbol de código restaurado a `54f8432` donde las tasas cargaban de forma inmediata sin quedarse en valores semilla (40/850).
+  3. Preservadas las herramientas de CI (`scripts/wait_ci.ps1`), workflows y documentación técnica.
 
 ## Errores y Fricciones a Evitar
-- **Regla Estricta DESIGN.md §2.2:** Prohibido texto amarillo sobre fondo blanco/claro.
-- En `SettingsProvider`: Nunca demorar la carga de SharedPreferences esperando a Firestore en red.
-- En `ExchangeRateService`: Descartar siempre tasas `<= 50.0` para prevenir residuos de caché obsoleta.
-- En `SummaryCard`: Envolver los switches táctiles en `Material` con área accesible para no perder toques en listas Android.
+- No romper la trazabilidad de builds en GitHub Actions; mantener numeración incremental (+4).
+- Al reintroducir componentes de FIN-11 desde la rama de respaldo, hacerlo de forma modular y validando las tasas paso a paso.
 
 ## Próximo Paso Inmediato
-- Instalar el **build 494** (Run 490) en dispositivo y validar: (1) que las tasas carguen en vivo (~880 Bs BCV) en MoreScreen, ReviewExpenseScreen y CurrencyCalculatorScreen y no en 40, (2) selector táctil de 4 lentes en Inicio, (3) lentes y edición de gastos en el panel web. Cierra `FIN-11` ([DOC_MOTOR_MULTIMONEDA.md](DOC_MOTOR_MULTIMONEDA.md)).
+- Monitorear el CI del nuevo build (Build 495), verificar APK publicado y validar en teléfono de César que las tasas cargan en vivo.

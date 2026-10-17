@@ -43,7 +43,7 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
   @override
   void initState() {
     super.initState();
-    _divisaCtrl = TextEditingController();
+    _divisaCtrl = TextEditingController(text: '1');
     _vesCtrl = TextEditingController();
     _customRateCtrl = TextEditingController();
     _divisaFocusNode = FocusNode();
@@ -641,13 +641,34 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Monto en $_selectedCurrency',
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textSecondary,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Monto en $_selectedCurrency',
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: AppColors.cardLighter,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Text(
+                _selectedCurrency,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 11,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 6),
         TextField(

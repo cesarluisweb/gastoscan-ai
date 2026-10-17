@@ -424,14 +424,11 @@ class ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
 
     final double sumUsd;
     final double sumVes;
-    final double sumUsdt;
     if (_selectedCategory == null && !_onlyWithReceipt) {
       sumUsd = gastoProvider.totalMesUsd;
       sumVes = gastoProvider.totalMesVes;
-      sumUsdt = gastoProvider.totalMesUsdt;
     } else {
       sumUsd = currentGastos.fold(0.0, (acc, g) => acc + g.totalUsdDisplay);
-      sumUsdt = currentGastos.fold(0.0, (acc, g) => acc + g.totalUsdtDisplay);
       sumVes = currentGastos.fold(0.0, (acc, g) {
         final double t = g.tasaCambio > 0 ? g.tasaCambio : tasa;
         return acc + (g.moneda == 'VES' ? g.totalOriginalDisplay : g.totalUsdDisplay * t);
@@ -445,7 +442,6 @@ class ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
       settings.monedaPrincipal,
       tasaEur: settings.tasaCambioVesEur,
       tasaUsdt: settings.tasaCambioVesUsdt,
-      totalUsdt: sumUsdt,
     );
 
     final int count = currentGastos.length;

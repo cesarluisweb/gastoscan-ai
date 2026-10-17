@@ -17,6 +17,8 @@ import 'more_screen.dart';
 import 'chat_screen.dart';
 import 'review_expense_screen.dart'; // Para agregar manual
 import '../../data/models/item_gasto_model.dart';
+import '../../services/update_service.dart';
+import '../widgets/update_dialog.dart';
 import '../../providers/settings_provider.dart';
 import '../widgets/voice_expense_sheet.dart';
 
@@ -147,6 +149,17 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       final initial = NotificationService.instance.initialPayload;
       if (initial != null) {
         _handleNotificationPayload();
+      }
+
+      // Verificación de actualización mayor/crítica en segundo plano al iniciar
+      try {
+        final updateService = UpdateService();
+        final updateInfo = await updateService.checkForUpdate(throttleDuration: const Duration(hours: 6));
+        if (mounted && updateInfo != null && updateInfo.hasUpdate && updateInfo.isMajor) {
+          UpdateDialog.show(context, updateInfo);
+        }
+      } catch (e) {
+        debugPrint('Error en verificación de actualización mayor: $e');
       }
     });
   }

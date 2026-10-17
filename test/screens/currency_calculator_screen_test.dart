@@ -93,11 +93,9 @@ void main() {
       expect(find.byKey(const Key('calc_copy_ves_button')), findsOneWidget);
       expect(find.byKey(const Key('calc_register_expense_button')), findsOneWidget);
 
-      // Initial state is clean/empty: no premature clear button or pre-populated 1
-      final divisaField = tester.widget<TextField>(find.byKey(const Key('calc_divisa_input')));
-      expect(divisaField.controller?.text, isEmpty);
+      // Initial calculation: 1.00 USD at 45.0 = Bs. 45.00
       final vesField = tester.widget<TextField>(find.byKey(const Key('calc_ves_input')));
-      expect(vesField.controller?.text, isEmpty);
+      expect(vesField.controller?.text, '45.00');
     });
 
     testWidgets('typing in divisa field updates bolivares field in real time', (tester) async {
@@ -241,9 +239,6 @@ void main() {
 
     testWidgets('tapping clear icon clears divisa input field', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle();
-
-      await tester.enterText(find.byKey(const Key('calc_divisa_input')), '25');
       await tester.pumpAndSettle();
 
       final clearIconFinder = find.byIcon(Icons.clear);

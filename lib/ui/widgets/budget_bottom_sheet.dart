@@ -31,24 +31,12 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
   final Map<String, TextEditingController> _categoryControllers = {};
   String _selectedMoneda = 'USD';
 
-  double? _baseGeneralAmount;
-  String _baseGeneralMoneda = 'USD';
-  double? _baseSavingsAmount;
-  String _baseSavingsMoneda = 'USD';
-  final Map<String, double?> _baseCategoryAmounts = {};
-  final Map<String, String> _baseCategoryMonedas = {};
-  bool _isConverting = false;
-
   @override
   void initState() {
     super.initState();
     final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
     _selectedMoneda = gastoProvider.monedaPresupuesto;
-    _baseGeneralMoneda = _selectedMoneda;
-    _baseSavingsMoneda = _selectedMoneda;
-
     final currentGeneral = gastoProvider.presupuestoGeneral;
-    _baseGeneralAmount = currentGeneral > 0 ? currentGeneral : null;
     _generalBudgetCtrl = TextEditingController(
       text: currentGeneral > 0
           ? (currentGeneral % 1 == 0
@@ -56,10 +44,9 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
               : currentGeneral.toStringAsFixed(2))
           : '',
     );
-    _generalBudgetCtrl.addListener(_onGeneralChanged);
+    _generalBudgetCtrl.addListener(_onFieldChanged);
 
     final currentMeta = gastoProvider.metaAhorro;
-    _baseSavingsAmount = currentMeta > 0 ? currentMeta : null;
     _savingsGoalCtrl = TextEditingController(
       text: currentMeta > 0
           ? (currentMeta % 1 == 0
@@ -67,12 +54,10 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
               : currentMeta.toStringAsFixed(2))
           : '',
     );
-    _savingsGoalCtrl.addListener(_onSavingsChanged);
+    _savingsGoalCtrl.addListener(_onFieldChanged);
 
     for (final cat in AppConstants.categorias) {
       final currentBudget = gastoProvider.getPresupuestoCategoria(cat);
-      _baseCategoryAmounts[cat] = currentBudget > 0 ? currentBudget : null;
-      _baseCategoryMonedas[cat] = _selectedMoneda;
       final ctrl = TextEditingController(
         text: currentBudget > 0
             ? (currentBudget % 1 == 0
@@ -80,32 +65,12 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                 : currentBudget.toStringAsFixed(2))
             : '',
       );
-      ctrl.addListener(() => _onCategoryChanged(cat));
+      ctrl.addListener(_onFieldChanged);
       _categoryControllers[cat] = ctrl;
     }
   }
 
-  void _onGeneralChanged() {
-    if (_isConverting) return;
-    _baseGeneralAmount = tryParseAmount(_generalBudgetCtrl.text, isPrice: false);
-    _baseGeneralMoneda = _selectedMoneda;
-    if (mounted) setState(() {});
-  }
-
-  void _onSavingsChanged() {
-    if (_isConverting) return;
-    _baseSavingsAmount = tryParseAmount(_savingsGoalCtrl.text, isPrice: false);
-    _baseSavingsMoneda = _selectedMoneda;
-    if (mounted) setState(() {});
-  }
-
-  void _onCategoryChanged(String cat) {
-    if (_isConverting) return;
-    final ctrl = _categoryControllers[cat];
-    if (ctrl != null) {
-      _baseCategoryAmounts[cat] = tryParseAmount(ctrl.text, isPrice: false);
-      _baseCategoryMonedas[cat] = _selectedMoneda;
-    }
+  void _onFieldChanged() {
     if (mounted) setState(() {});
   }
 
@@ -117,16 +82,17 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
   }) {
     if (nuevaMoneda == _selectedMoneda) return;
 
-    _isConverting = true;
-
     double toVes(double val, String moneda) {
       switch (moneda) {
         case 'VES':
           return val;
         case 'EUR':
+          // Sin tasa EUR no se inventa ratio (antes: USD * 1.08 / 43.0):
+          // aproximación con tasa USD, o passthrough si no hay dato.
           return val * (tasaEur > 0 ? tasaEur : (tasaUsd > 0 ? tasaUsd : 1.0));
-        case 'USD':
         case 'USDT':
+          return val * (tasaUsdt > 0 ? tasaUsdt : (tasaUsd > 0 ? tasaUsd : 1.0));
+        case 'USD':
         default:
           return val * (tasaUsd > 0 ? tasaUsd : 1.0);
       }
@@ -139,75 +105,47 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
         case 'EUR':
           final r = tasaEur > 0 ? tasaEur : (tasaUsd > 0 ? tasaUsd : 0.0);
           return r > 0 ? ves / r : ves;
-        case 'USD':
         case 'USDT':
+          final r = tasaUsdt > 0 ? tasaUsdt : (tasaUsd > 0 ? tasaUsd : 0.0);
+          return r > 0 ? ves / r : ves;
+        case 'USD':
         default:
           final r = tasaUsd > 0 ? tasaUsd : 0.0;
           return r > 0 ? ves / r : ves;
       }
     }
 
-    double convertirMonto(double val, String from, String to) {
-      if (from == to) return val;
-      // Paridad 1:1 directa entre USD y USDT en fijación de límites y presupuestos
-      if ((from == 'USD' && to == 'USDT') || (from == 'USDT' && to == 'USD')) {
-        return val;
-      }
-      final effFrom = (from == 'USDT') ? 'USD' : from;
-      final effTo = (to == 'USDT') ? 'USD' : to;
-      if (effFrom == effTo) return val;
-
-      final double ves = toVes(val, effFrom);
-      return fromVes(ves, effTo);
+    // Convertir presupuesto general
+    final genVal = tryParseAmount(_generalBudgetCtrl.text, isPrice: false) ?? 0.0;
+    if (genVal > 0) {
+      final double ves = toVes(genVal, _selectedMoneda);
+      final double nuevoGen = fromVes(ves, nuevaMoneda);
+      _generalBudgetCtrl.text = nuevoGen >= 100
+          ? nuevoGen.round().toString()
+          : nuevoGen.toStringAsFixed(2);
     }
 
-    String formatear(double val) {
-      return val >= 100 ? val.round().toString() : val.toStringAsFixed(2);
+    // Convertir meta de ahorro
+    final metaVal = tryParseAmount(_savingsGoalCtrl.text, isPrice: false) ?? 0.0;
+    if (metaVal > 0) {
+      final double ves = toVes(metaVal, _selectedMoneda);
+      final double nuevoMeta = fromVes(ves, nuevaMoneda);
+      _savingsGoalCtrl.text = nuevoMeta >= 100
+          ? nuevoMeta.round().toString()
+          : nuevoMeta.toStringAsFixed(2);
     }
 
-    // Convertir presupuesto general a partir de base
-    if (_baseGeneralAmount != null && _baseGeneralAmount! > 0) {
-      if (nuevaMoneda == _baseGeneralMoneda) {
-        _generalBudgetCtrl.text = _baseGeneralAmount! % 1 == 0
-            ? _baseGeneralAmount!.toInt().toString()
-            : _baseGeneralAmount!.toStringAsFixed(2);
-      } else {
-        final double nuevoGen = convertirMonto(_baseGeneralAmount!, _baseGeneralMoneda, nuevaMoneda);
-        _generalBudgetCtrl.text = formatear(nuevoGen);
-      }
-    }
-
-    // Convertir meta de ahorro a partir de base
-    if (_baseSavingsAmount != null && _baseSavingsAmount! > 0) {
-      if (nuevaMoneda == _baseSavingsMoneda) {
-        _savingsGoalCtrl.text = _baseSavingsAmount! % 1 == 0
-            ? _baseSavingsAmount!.toInt().toString()
-            : _baseSavingsAmount!.toStringAsFixed(2);
-      } else {
-        final double nuevoMeta = convertirMonto(_baseSavingsAmount!, _baseSavingsMoneda, nuevaMoneda);
-        _savingsGoalCtrl.text = formatear(nuevoMeta);
+    // Convertir categorías
+    for (final ctrl in _categoryControllers.values) {
+      final val = tryParseAmount(ctrl.text, isPrice: false) ?? 0.0;
+      if (val > 0) {
+        final double ves = toVes(val, _selectedMoneda);
+        final double nuevoVal = fromVes(ves, nuevaMoneda);
+        ctrl.text = nuevoVal >= 100
+            ? nuevoVal.round().toString()
+            : nuevoVal.toStringAsFixed(2);
       }
     }
-
-    // Convertir categorías a partir de base
-    for (final entry in _categoryControllers.entries) {
-      final cat = entry.key;
-      final ctrl = entry.value;
-      final baseVal = _baseCategoryAmounts[cat];
-      final baseMoneda = _baseCategoryMonedas[cat] ?? _selectedMoneda;
-      if (baseVal != null && baseVal > 0) {
-        if (nuevaMoneda == baseMoneda) {
-          ctrl.text = baseVal % 1 == 0
-              ? baseVal.toInt().toString()
-              : baseVal.toStringAsFixed(2);
-        } else {
-          final double nuevoVal = convertirMonto(baseVal, baseMoneda, nuevaMoneda);
-          ctrl.text = formatear(nuevoVal);
-        }
-      }
-    }
-
-    _isConverting = false;
 
     setState(() {
       _selectedMoneda = nuevaMoneda;
@@ -216,11 +154,12 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
 
   @override
   void dispose() {
-    _generalBudgetCtrl.removeListener(_onGeneralChanged);
+    _generalBudgetCtrl.removeListener(_onFieldChanged);
     _generalBudgetCtrl.dispose();
-    _savingsGoalCtrl.removeListener(_onSavingsChanged);
+    _savingsGoalCtrl.removeListener(_onFieldChanged);
     _savingsGoalCtrl.dispose();
     for (final ctrl in _categoryControllers.values) {
+      ctrl.removeListener(_onFieldChanged);
       ctrl.dispose();
     }
     super.dispose();

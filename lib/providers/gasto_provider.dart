@@ -21,13 +21,11 @@ class GastoProvider with ChangeNotifier {
 
   double _totalMesUsd = 0.0;
   double _totalMesVes = 0.0;
-  double _totalMesUsdt = 0.0;
   double _presupuestoGeneral = 0.0;
   double _metaAhorro = 0.0;
   String _monedaPresupuesto = 'USD';
   Map<String, double> _totalesPorCategoria = {};
   Map<String, double> _totalesPorCategoriaVes = {};
-  Map<String, double> _totalesPorCategoriaUsdt = {};
   Map<String, double> _presupuestosPorCategoria = {};
   bool _presupuestoEsAdoptado = false;
 
@@ -38,7 +36,6 @@ class GastoProvider with ChangeNotifier {
   int get selectedMonth => _selectedMonth;
   double get totalMesUsd => _totalMesUsd;
   double get totalMesVes => _totalMesVes;
-  double get totalMesUsdt => _totalMesUsdt;
   double get presupuestoGeneral => _presupuestoGeneral;
   double get metaAhorro => _metaAhorro;
   String get monedaPresupuesto => _monedaPresupuesto;
@@ -46,15 +43,11 @@ class GastoProvider with ChangeNotifier {
   Map<String, double> get totalesPorCategoria => _totalesPorCategoria;
   Map<String, double> get totalesPorCategoriaVes =>
       _totalesPorCategoriaVes.isNotEmpty ? _totalesPorCategoriaVes : _totalesPorCategoria;
-  Map<String, double> get totalesPorCategoriaUsdt =>
-      _totalesPorCategoriaUsdt.isNotEmpty ? _totalesPorCategoriaUsdt : _totalesPorCategoria;
 
   Map<String, double> get presupuestosPorCategoria => _presupuestosPorCategoria;
 
   SavingsHealthSnapshot get savingsSnapshot {
-    final double gastoAcumulado = _monedaPresupuesto == 'VES'
-        ? _totalMesVes
-        : (_monedaPresupuesto == 'USDT' ? _totalMesUsdt : _totalMesUsd);
+    final double gastoAcumulado = _monedaPresupuesto == 'VES' ? _totalMesVes : _totalMesUsd;
 
     final now = DateTime.now();
     final isCurrentMonth = (now.year == _selectedYear && now.month == _selectedMonth);
@@ -90,11 +83,9 @@ class GastoProvider with ChangeNotifier {
       final totales = await _repository.obtenerTotalesMes(_selectedYear, _selectedMonth);
       _totalMesUsd = totales['USD'] ?? 0.0;
       _totalMesVes = totales['VES'] ?? 0.0;
-      _totalMesUsdt = totales['USDT'] ?? _totalMesUsd;
 
       _totalesPorCategoria = await _repository.obtenerTotalesPorCategoria(_selectedYear, _selectedMonth, moneda: 'USD');
       _totalesPorCategoriaVes = await _repository.obtenerTotalesPorCategoria(_selectedYear, _selectedMonth, moneda: 'VES');
-      _totalesPorCategoriaUsdt = await _repository.obtenerTotalesPorCategoria(_selectedYear, _selectedMonth, moneda: 'USDT');
 
       _presupuestoGeneral = await _repository.obtenerPresupuestoGeneralMes(_selectedYear, _selectedMonth);
       _metaAhorro = await _repository.obtenerMetaAhorroMes(_selectedYear, _selectedMonth);

@@ -20,6 +20,8 @@ import 'review_expense_screen.dart';
 import 'chat_screen.dart';
 import '../../data/models/gasto_model.dart';
 import '../../data/models/gemini_extraction_result.dart';
+import '../../services/update_service.dart';
+import '../widgets/update_dialog.dart';
 
 class DashboardScreen extends StatefulWidget {
   final VoidCallback? onNavigateToGastos;
@@ -42,42 +44,26 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  static double _convertBudgetToLens(
-    double amount,
-    String fromMoneda,
-    String toMoneda,
-    SettingsProvider settings,
-  ) {
-    if (amount <= 0) return 0.0;
-    if (fromMoneda == toMoneda) return amount;
-
-    final double usdRate = settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : 1.0;
-    final double eurRate = settings.tasaCambioVesEur > 0 ? settings.tasaCambioVesEur : usdRate;
-
-    double inUsd = amount;
-    if (fromMoneda == 'VES') {
-      inUsd = amount / usdRate;
-    } else if (fromMoneda == 'EUR') {
-      inUsd = (amount * eurRate) / usdRate;
-    } else if (fromMoneda == 'USDT') {
-      inUsd = amount;
-    }
-
-    if (toMoneda == 'USD' || toMoneda == 'USDT') {
-      return inUsd;
-    } else if (toMoneda == 'VES') {
-      return inUsd * usdRate;
-    } else if (toMoneda == 'EUR') {
-      return eurRate > 0 ? (inUsd * usdRate) / eurRate : inUsd;
-    }
-    return amount;
-  }
-
   @override
   void initState() {
     super.initState();
     // Registrar actividad del usuario y reprogramar recordatorio de inactividad a 7 días
     NotificationService.instance.recordActivityAndReschedule();
+
+    // Verificación silenciosa de actualización con throttling
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _verificarActualizacionSilenciosa();
+    });
+  }
+
+  Future<void> _verificarActualizacionSilenciosa() async {
+    try {
+      final updateService = UpdateService();
+      final updateInfo = await updateService.checkForUpdate(force: false);
+      if (mounted && updateInfo != null && updateInfo.hasUpdate) {
+        UpdateDialog.show(context, updateInfo);
+      }
+    } catch (_) {}
   }
 
   @override
@@ -158,7 +144,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             SummaryCard(
               totalUsd: gastoProvider.totalMesUsd,
               totalVes: gastoProvider.totalMesVes,
-              totalUsdt: gastoProvider.totalMesUsdt,
               periodo: '$mesNombre $anio',
               monedaPrincipal: settings.monedaPrincipal,
               tasaCambio: settings.tasaCambioVesUsd,
@@ -169,7 +154,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               monedaPresupuesto: gastoProvider.monedaPresupuesto,
               mes: gastoProvider.selectedMonth,
               anio: gastoProvider.selectedYear,
-              onMonedaChanged: (moneda) => settings.setMonedaPrincipal(moneda),
             ),
             const SizedBox(height: 16),
             AiInsightCard(
@@ -191,56 +175,73 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 gastoProvider.totalesPorCategoriaVes.isNotEmpty ||
                 gastoProvider.presupuestosPorCategoria.isNotEmpty) ...[
               () {
-                final String budgetMoneda = gastoProvider.monedaPresupuesto;
-                final String activeMoneda = settings.monedaPrincipal;
-
-                final Map<String, double> categoryBudgets = gastoProvider.presupuestosPorCategoria.map(
-                  (k, v) => MapEntry(k, _convertBudgetToLens(v, budgetMoneda, activeMoneda, settings)),
-                );
-                final double budgetGeneral = _convertBudgetToLens(
-                  gastoProvider.presupuestoGeneral,
-                  budgetMoneda,
-                  activeMoneda,
-                  settings,
-                );
+                final bool isBudgetVes = gastoProvider.monedaPresupuesto == 'VES';
+                final moneda = settings.monedaPrincipal;
                 final Map<String, double> categoryTotals;
+                final Map<String, double> categoryBudgets;
                 final double totalMes;
+                final double budgetGeneral;
 
-                if (activeMoneda == 'VES') {
+                if (moneda == 'VES') {
                   categoryTotals = gastoProvider.totalesPorCategoriaVes;
-                  totalMes = gastoProvider.totalMesVes;
-                } else if (activeMoneda == 'USD') {
-                  categoryTotals = gastoProvider.totalesPorCategoria;
-                  totalMes = gastoProvider.totalMesUsd;
-                } else if (activeMoneda == 'USDT') {
-                  categoryTotals = gastoProvider.totalesPorCategoriaUsdt;
-                  totalMes = gastoProvider.totalMesUsdt;
-                } else {
-                  // EUR: convertir desde USD/VES usando las tasas activas
-                  final double eurRate = settings.tasaCambioVesEur > 0
-                      ? settings.tasaCambioVesEur
-                      : (settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : 1.0);
-                  categoryTotals = gastoProvider.totalesPorCategoriaVes.isNotEmpty
-                      ? gastoProvider.totalesPorCategoriaVes.map((k, v) => MapEntry(k, eurRate > 0 ? (v / eurRate) : 0.0))
-                      : gastoProvider.totalesPorCategoria.map((k, v) => MapEntry(
+                  categoryBudgets = isBudgetVes
+                      ? gastoProvider.presupuestosPorCategoria
+                      : gastoProvider.presupuestosPorCategoria.map((k, v) => MapEntry(
                             k,
-                            CurrencyFormatter.convertFromUsd(
-                              v,
-                              activeMoneda,
-                              settings.tasaCambioVesUsd,
-                              tasaEur: settings.tasaCambioVesEur,
-                              tasaUsdt: settings.tasaCambioVesUsdt,
-                            ),
+                            CurrencyFormatter.convertFromUsd(v, 'VES', settings.tasaCambioVesUsd),
                           ));
-                  totalMes = gastoProvider.totalMesVes > 0 && eurRate > 0
-                      ? (gastoProvider.totalMesVes / eurRate)
-                      : CurrencyFormatter.convertFromUsd(
-                          gastoProvider.totalMesUsd,
-                          activeMoneda,
+                  totalMes = gastoProvider.totalMesVes;
+                  budgetGeneral = isBudgetVes
+                      ? gastoProvider.presupuestoGeneral
+                      : CurrencyFormatter.convertFromUsd(gastoProvider.presupuestoGeneral, 'VES', settings.tasaCambioVesUsd);
+                } else if (moneda == 'USD') {
+                  categoryTotals = gastoProvider.totalesPorCategoria;
+                  categoryBudgets = isBudgetVes
+                      ? gastoProvider.presupuestosPorCategoria.map((k, v) => MapEntry(
+                            k,
+                            settings.tasaCambioVesUsd > 0 ? v / settings.tasaCambioVesUsd : 0.0,
+                          ))
+                      : gastoProvider.presupuestosPorCategoria;
+                  totalMes = gastoProvider.totalMesUsd;
+                  budgetGeneral = isBudgetVes
+                      ? (settings.tasaCambioVesUsd > 0 ? gastoProvider.presupuestoGeneral / settings.tasaCambioVesUsd : 0.0)
+                      : gastoProvider.presupuestoGeneral;
+                } else {
+                  // EUR o USDT: convertir desde USD usando las tasas activas
+                  categoryTotals = gastoProvider.totalesPorCategoria.map((k, v) => MapEntry(
+                        k,
+                        CurrencyFormatter.convertFromUsd(
+                          v,
+                          moneda,
                           settings.tasaCambioVesUsd,
                           tasaEur: settings.tasaCambioVesEur,
                           tasaUsdt: settings.tasaCambioVesUsdt,
-                        );
+                        ),
+                      ));
+                  categoryBudgets = gastoProvider.presupuestosPorCategoria.map((k, v) => MapEntry(
+                        k,
+                        CurrencyFormatter.convertFromUsd(
+                          isBudgetVes ? (settings.tasaCambioVesUsd > 0 ? v / settings.tasaCambioVesUsd : 0.0) : v,
+                          moneda,
+                          settings.tasaCambioVesUsd,
+                          tasaEur: settings.tasaCambioVesEur,
+                          tasaUsdt: settings.tasaCambioVesUsdt,
+                        ),
+                      ));
+                  totalMes = CurrencyFormatter.convertFromUsd(
+                    gastoProvider.totalMesUsd,
+                    moneda,
+                    settings.tasaCambioVesUsd,
+                    tasaEur: settings.tasaCambioVesEur,
+                    tasaUsdt: settings.tasaCambioVesUsdt,
+                  );
+                  budgetGeneral = CurrencyFormatter.convertFromUsd(
+                    isBudgetVes ? (settings.tasaCambioVesUsd > 0 ? gastoProvider.presupuestoGeneral / settings.tasaCambioVesUsd : 0.0) : gastoProvider.presupuestoGeneral,
+                    moneda,
+                    settings.tasaCambioVesUsd,
+                    tasaEur: settings.tasaCambioVesEur,
+                    tasaUsdt: settings.tasaCambioVesUsdt,
+                  );
                 }
 
                 return CategoryChart(
@@ -253,10 +254,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     await gastoProvider.setPresupuestoCategoria(
                       categoria,
                       budget,
-                      moneda: activeMoneda,
+                      moneda: moneda,
                     );
                   },
-                  monedaPrincipal: activeMoneda,
+                  monedaPrincipal: moneda,
                   showBudgetBars: false,
                   onNavigateToAnalysis: widget.onNavigateToAnalysis,
                   tasaCambio: settings.tasaCambioVesUsd,

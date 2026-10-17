@@ -293,7 +293,6 @@ Devuelve EXCLUSIVAMENTE un objeto JSON válido con la siguiente estructura, sin 
       "total_original": 0.00,
       "tasa_cambio": 0.00,
       "impuesto_iva": 0.00,
-      "metodo_liquidacion": "BS_BCV" | "BS_USDT" | "DIVISA" | null,
       "items": [
         {
           "descripcion": "Nombre claro y completo del producto",
@@ -539,28 +538,15 @@ REGLAS PARA LISTA DE COMPRAS:
 
 Regla para registrar gastos por voz:
 - Identifica la moneda en que el usuario realizó la compra: "VES" (si menciona bolívares, bs, o montos en moneda nacional), "USD" (si menciona dólares, $, verdes), "EUR" (si menciona euros, €) o "USDT".
-- PRIORIDAD INMUTABLE DEL BOLÍVAR: Si el usuario menciona un monto explícito en Bolívares (ej. "Pagué 4.000 Bs por gasolina; eran unos 20 dólares"), el dato original obligatorio e inmutable es 4.000 VES (moneda = "VES", monto_original = 4000); el monto en USD es solo contexto y NUNCA debe sobreescribir los 4.000 Bs.
 - Si no menciona ninguna moneda, usa "USD" por defecto.
-- Si la compra es en "USD" (o "EUR"), identifica cómo liquidó o pagó el usuario e incluye "metodo_liquidacion":
-  * "BS_BCV": Si pagó en bolívares a tasa oficial BCV, banco central, tasa oficial, pago móvil, tarjeta de débito, biopago, punto de venta, o si menciona un gasto en dólares en Venezuela sin especificar efectivo ni tasa paralela (por defecto "BS_BCV").
-  * "BS_USDT": Si cobraron en bolívares calculados a tasa paralelo, USDT, Binance o P2P.
-  * "DIVISA": Si pagó directamente en dólares/divisas (efectivo, billetes, Zelle, Wally, Zinli, Binance Pay, suscripción digital).
-- Si el usuario dicta directamente en bolívares (ej. "4000 bolívares"), mantén "moneda": "VES".
 - En "monto_original" envía el monto numérico exacto en la moneda indicada (ej. si dice "1500 bolívares", monto_original: 1500, moneda: "VES").
 - En "total_usd" envía el equivalente estimado en dólares (si fue en bolívares, puedes dividirlo por la tasa BCV aproximada del contexto o enviarlo igual para que el cliente lo convierta).
 - Si el usuario te dicta registrar un gasto con precios en múltiples monedas mezcladas, unifica todos los precios a una sola moneda antes de llamar a registrar_gasto.
-- Si el usuario menciona o dicta compras realizadas en MÚLTIPLES comercios, establecimientos o lugares distintos (ejemplo: "compré en la farmacia tal cosa en tanto y compré en el supermercado tal cosa en tanto"): DEBES desglosar cada compra por separado en el array "gastos". Cada elemento en "gastos" debe contener su propio comercio, fecha, moneda, monto_original, total_usd, metodo_liquidacion (si aplica), categoría adecuada e items.
+- Si el usuario menciona o dicta compras realizadas en MÚLTIPLES comercios, establecimientos o lugares distintos (ejemplo: "compré en la farmacia tal cosa en tanto y compré en el supermercado tal cosa en tanto"): DEBES desglosar cada compra por separado en el array "gastos". Cada elemento en "gastos" debe contener su propio comercio, fecha, moneda, monto_original, total_usd, categoría adecuada e items.
 - Si el usuario menciona múltiples productos dentro del MISMO comercio o compra general, regístralo como un solo gasto con los productos en "items".
 
 Aquí están los datos financieros del usuario en formato JSON (resumen mensual compacto, totales por categoría en 'totales_categoria', productos más comprados en 'top_productos_mes', compras recientes en 'ultimas_compras', presupuesto y lista de compras):
 ${JSON.stringify(contextData)}
-
-Contexto de Lentes Financieros del usuario:
-- 'total_usd_bcv': Total gastado del mes evaluado al lente comercial de tasa oficial BCV.
-- 'total_usdt_p2p': Total gastado del mes evaluado al costo de reposición a tasa USDT P2P (Binance).
-- 'total_eur_bcv': Total gastado en euros evaluado a tasa oficial BCV.
-- 'total_ves': Total acumulado en bolívares.
-Nota de análisis cambiario: La diferencia entre total_usd_bcv y total_usdt_p2p en pagos en bolívares refleja cuánto rindió el dinero del usuario pagando a tasa oficial BCV en comparación con la tasa P2P. Explícalo con naturalidad si el usuario consulta sobre comparativas o ahorro entre divisas.
 `;
 
     const geminiMessages = [
@@ -586,16 +572,11 @@ Nota de análisis cambiario: La diferencia entre total_usd_bcv y total_usdt_p2p 
               parameters: {
                 type: "object",
                 properties: {
-                  comercio: { type: "string", description: "Nombre del local o 'Compra general' si no se especifica." },
+                  comercio: { type: "string", description: "Nombre del local o 'General' si no se especifica." },
                   fecha: { type: "string", description: "Fecha en formato YYYY-MM-DD. Usa la fecha actual si no dice otra." },
                   moneda: { type: "string", description: "Moneda de la compra: VES, USD, EUR o USDT. Si dijo bolívares o Bs, usa 'VES'." },
                   monto_original: { type: "number", description: "Monto total pagado en la moneda original (ej. 1500 si pagó 1500 bolívares)." },
                   total_usd: { type: "number", description: "Monto total estimado en dólares." },
-                  metodo_liquidacion: {
-                    type: "string",
-                    enum: ["BS_BCV", "BS_USDT", "DIVISA"],
-                    description: "Para compras en USD o EUR: 'BS_BCV' si pagó en bolívares a tasa oficial/BCV/pago móvil/punto; 'BS_USDT' si cobraron a tasa paralelo/USDT; 'DIVISA' si pagó en efectivo/Zelle/divisa directa."
-                  },
                   categoria: { type: "string", description: "Una de: Alimentación, Salud, Higiene, Educación, Hogar, Servicios, Transporte, Otros." },
                   items: {
                     type: "array",
@@ -620,11 +601,6 @@ Nota de análisis cambiario: La diferencia entre total_usd_bcv y total_usdt_p2p 
                         moneda: { type: "string", description: "Moneda de esta compra: VES, USD, EUR o USDT." },
                         monto_original: { type: "number", description: "Monto total pagado en la moneda de esta compra." },
                         total_usd: { type: "number", description: "Monto total estimado en USD." },
-                        metodo_liquidacion: {
-                          type: "string",
-                          enum: ["BS_BCV", "BS_USDT", "DIVISA"],
-                          description: "Método de liquidación si la compra fue en USD o EUR: 'BS_BCV', 'BS_USDT' o 'DIVISA'."
-                        },
                         categoria: { type: "string", description: "Una de: Alimentación, Salud, Higiene, Educación, Hogar, Servicios, Transporte, Otros." },
                         items: {
                           type: "array",
