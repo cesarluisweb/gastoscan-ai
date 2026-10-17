@@ -448,7 +448,7 @@ class SummaryCard extends StatelessWidget {
           final isSelected = current == l['id'];
           return InkWell(
             key: Key('lens_switch_${l['id']?.toLowerCase()}'),
-            onTap: () => settings.setMonedaPrincipal(l['id']!),
+            onTap: () => settings?.setMonedaPrincipal(l['id']!),
             borderRadius: BorderRadius.circular(8),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
