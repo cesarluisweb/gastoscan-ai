@@ -62,6 +62,13 @@ jobs:
       - name: Instalar paquetes
         run: flutter pub get
 
+      - name: Subir pubspec.lock como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: pubspec-lock
+          path: pubspec.lock
+          if-no-files-found: ignore
+
       - name: Analisis Estatico de Codigo
         run: |
           touch test_results.txt
@@ -87,19 +94,24 @@ jobs:
         run: |
           mkdir -p android/app
           cat << 'EOF' > android/app/proguard-rules.pro
-          # Desactivar ofuscación y optimización de bytecode para preservar firmas JNI exactas
+          # Desactivar ofuscación y optimización para código Java/Kotlin en Flutter
           -dontobfuscate
           -dontoptimize
+          -ignorewarnings
 
-          # Reglas para Google ML Kit Text Recognition
+          # Suprimir advertencias de dependencias opcionales
+          -dontwarn kotlin.**
+          -dontwarn kotlinx.**
           -dontwarn com.google.mlkit.vision.text.chinese.**
           -dontwarn com.google.mlkit.vision.text.devanagari.**
           -dontwarn com.google.mlkit.vision.text.japanese.**
           -dontwarn com.google.mlkit.vision.text.korean.**
+
+          # Google ML Kit Text Recognition
           -keep class com.google.mlkit.vision.text.latin.** { *; }
           -keep class com.google_mlkit_text_recognition.** { *; }
 
-          # Flutter Platform Channels, Pigeon y SharedPreferences
+          # Flutter Platform Channels, Pigeon y Plugins
           -keep class io.flutter.** { *; }
           -keep class dev.flutter.** { *; }
           -keep class dev.fluttercommunity.** { *; }
@@ -112,6 +124,8 @@ jobs:
           # Preservar Kotlin stdlib, corrutinas, JNI y firmas de reflexión
           -keep class kotlin.** { *; }
           -keep class kotlinx.** { *; }
+          -keep interface kotlin.** { *; }
+          -keep interface kotlinx.** { *; }
           -keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod
           EOF
           
@@ -119,9 +133,11 @@ jobs:
           python3 -c '
           with open("android/app/build.gradle.kts", "r") as f:
               content = f.read()
+          # Usar unicamente proguard-rules.pro sin la plantilla agresiva proguard-android-optimize.txt
+          content = content.replace("proguardFiles(getDefaultProguardFile(\"proguard-android-optimize.txt\"), \"proguard-rules.pro\")", "proguardFiles(\"proguard-rules.pro\")")
           if "proguardFiles" not in content:
               target = "signingConfig = signingConfigs.getByName(\"debug\")"
-              replacement = target + "\n            proguardFiles(getDefaultProguardFile(\"proguard-android-optimize.txt\"), \"proguard-rules.pro\")"
+              replacement = target + "\n            proguardFiles(\"proguard-rules.pro\")"
               content = content.replace(target, replacement)
           content = content.replace("targetSdk = flutter.targetSdkVersion", "targetSdk = 36")
           with open("android/app/build.gradle.kts", "w") as f:
@@ -136,7 +152,16 @@ jobs:
           BASE_BUILD=$(grep "^version:" pubspec.yaml | sed -e 's/version:[[:space:]]*//' | cut -d '+' -f 2 | tr -d '[:space:]')
           BUILD_NUM=$(( BASE_BUILD + ${{ github.run_number }} ))
           echo "Compilando Rinde Más v$APP_VERSION (Build $BUILD_NUM)..."
-          flutter build apk --release --no-tree-shake-icons --build-name="$APP_VERSION" --build-number="$BUILD_NUM"
+          flutter build apk --release --no-tree-shake-icons --build-name="$APP_VERSION" --build-number="$BUILD_NUM" 2>&1 | tee build_log.txt || (tail -n 120 build_log.txt > test_results.txt && exit 1)
+
+      - name: Guardar Logs de Error de Compilacion
+        if: failure()
+        run: |
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'actions@github.com'
+          git add test_results.txt
+          git commit -m "chore: ci build failure logs" || true
+          git push || true
         
       - name: Firmar APK con Keystore de Produccion
         run: |
@@ -154,7 +179,16 @@ jobs:
           BASE_BUILD=$(grep "^version:" pubspec.yaml | sed -e 's/version:[[:space:]]*//' | cut -d '+' -f 2 | tr -d '[:space:]')
           BUILD_NUM=$(( BASE_BUILD + ${{ github.run_number }} ))
           echo "Compilando AAB para Google Play v$APP_VERSION (Build $BUILD_NUM)..."
-          flutter build appbundle --release --no-tree-shake-icons --build-name="$APP_VERSION" --build-number="$BUILD_NUM"
+          flutter build appbundle --release --no-tree-shake-icons --build-name="$APP_VERSION" --build-number="$BUILD_NUM" 2>&1 | tee -a build_log.txt || (tail -n 120 build_log.txt > test_results.txt && exit 1)
+
+      - name: Guardar Logs de Error de AAB
+        if: failure()
+        run: |
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'actions@github.com'
+          git add test_results.txt
+          git commit -m "chore: ci aab build failure logs" || true
+          git push || true
 
       - name: Verificar Firma Oficial Unica del AAB
         run: |
