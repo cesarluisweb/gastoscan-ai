@@ -203,7 +203,7 @@ void main() {
 
       // 100 USD * 40 Bs/USD = 4000 Bs de presupuesto y 25% consumido (1000 / 4000)
       expect(find.textContaining('Presupuesto: ${CurrencyFormatter.formatVes(4000.0)}'), findsOneWidget);
-      expect(find.textContaining('25% usado'), findsOneWidget);
+      expect(find.text('25%'), findsOneWidget);
     });
   });
 
