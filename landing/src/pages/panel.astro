@@ -370,7 +370,7 @@ import '../styles/global.css';
             <div class="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-white">
                 <div class="flex items-center gap-2">
                     <span class="text-xl">🧾</span>
-                    <h3 class="font-bold text-lg text-slate-900">Registrar gasto</h3>
+                    <h3 id="modal-expense-title" class="font-bold text-lg text-slate-900">Registrar gasto</h3>
                 </div>
                 <button id="btn-close-expense-modal" class="text-slate-400 hover:text-slate-700 text-xl font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors">✕</button>
             </div>
@@ -486,8 +486,8 @@ import '../styles/global.css';
                                 data-liq="BS_BCV" 
                                 class="btn-liq-opt flex flex-col items-start p-2.5 rounded-xl border-2 border-[#FACC15] bg-amber-50/50 shadow-sm transition-all text-left"
                             >
-                                <span class="text-xs font-bold text-slate-800">Pagado en Bs.</span>
-                                <span class="text-[10px] text-slate-500">A tasa BCV oficial</span>
+                                <span class="text-xs font-bold text-slate-800">En Bs. · precio a tasa BCV</span>
+                                <span class="text-[10px] text-slate-500">Liquida y guarda en Bs. oficiales</span>
                             </button>
                             <button 
                                 type="button" 
@@ -495,8 +495,8 @@ import '../styles/global.css';
                                 data-liq="BS_USDT" 
                                 class="btn-liq-opt flex flex-col items-start p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-all text-left"
                             >
-                                <span class="text-xs font-bold text-slate-800">Pagado en Bs.</span>
-                                <span class="text-[10px] text-slate-500">A tasa USDT P2P</span>
+                                <span class="text-xs font-bold text-slate-800">En Bs. · precio a tasa P2P</span>
+                                <span class="text-[10px] text-slate-500">Liquida y guarda a tasa P2P</span>
                             </button>
                             <button 
                                 type="button" 
@@ -504,8 +504,8 @@ import '../styles/global.css';
                                 data-liq="DIVISA" 
                                 class="btn-liq-opt flex flex-col items-start p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-all text-left"
                             >
-                                <span class="text-xs font-bold text-slate-800">Pagado en $</span>
-                                <span class="text-[10px] text-slate-500">Efectivo / Divisa</span>
+                                <span class="text-xs font-bold text-slate-800">En $ · efectivo o tarjeta</span>
+                                <span class="text-[10px] text-slate-500">Divisa directa sin conversión</span>
                             </button>
                         </div>
                         <div id="liq-preview-card" class="p-2.5 rounded-xl bg-slate-100 text-[11px] text-slate-600">
@@ -655,6 +655,8 @@ import '../styles/global.css';
         let currentPresupuesto = { general: 0, meta_ahorro: 0, moneda: 'USD', categorias: {} };
         let activeLens = null;
         let selectedLiq = 'BS_BCV';
+        let editingGastoId = null;
+        let bolivaresAjustadosManualmente = false;
 
         // Tasas de Referencia en Vivo (USD BCV, EUR BCV, USDT Binance / Paralelo)
         let liveRates = {
@@ -770,6 +772,11 @@ import '../styles/global.css';
 
                 liveRates.timestamp = new Date();
                 updateRatesTicker();
+                if (currentUser) {
+                    renderMetrics();
+                    renderCategories();
+                    renderBills(searchBills?.value || '');
+                }
             } catch (err) {
                 console.warn("Fallo al actualizar tasas en vivo:", err);
             }
@@ -1049,6 +1056,35 @@ import '../styles/global.css';
             };
         };
 
+        // Conversión determinista de presupuestos al lente activo (Paridad con SummaryCard y AnalysisScreen)
+        const convertBudgetToLens = (amount, fromCurrency, toCurrency) => {
+            if (!amount || amount <= 0) return 0;
+            if (fromCurrency === toCurrency) return amount;
+
+            let inUsd = amount;
+            const usdRate = liveRates.usd > 0 ? liveRates.usd : 1.0;
+            const eurRate = liveRates.eur > 0 ? liveRates.eur : usdRate;
+
+            if (fromCurrency === 'VES') {
+                inUsd = amount / usdRate;
+            } else if (fromCurrency === 'EUR') {
+                inUsd = (amount * eurRate) / usdRate;
+            } else if (fromCurrency === 'USDT') {
+                inUsd = amount;
+            }
+
+            if (toCurrency === 'USD' || toCurrency === 'USDT') {
+                return inUsd;
+            }
+            if (toCurrency === 'VES') {
+                return inUsd * usdRate;
+            }
+            if (toCurrency === 'EUR') {
+                return eurRate > 0 ? (inUsd * usdRate) / eurRate : inUsd;
+            }
+            return amount;
+        };
+
         // Renderizado de Métricas Clave (Paridad exacta con DatabaseHelper y SummaryCard)
         const renderMetrics = () => {
             let sumUsd = 0;
@@ -1104,26 +1140,29 @@ import '../styles/global.css';
             const diaActual = isCurrentMonth ? today.getDate() : diasTotalesMes;
             const diasRestantes = isCurrentMonth ? Math.max(0, diasTotalesMes - today.getDate()) : 0;
 
+            const effectiveGeneralBudget = convertBudgetToLens(currentPresupuesto.general, budgetCurrency, displayCurrency);
+            const effectiveMetaAhorro = convertBudgetToLens(currentPresupuesto.meta_ahorro || 0, budgetCurrency, displayCurrency);
+
             // Salud de Ahorro
             const health = calculateSavingsHealth({
-                presupuestoGeneral: currentPresupuesto.general,
-                metaAhorro: currentPresupuesto.meta_ahorro || 0,
+                presupuestoGeneral: effectiveGeneralBudget,
+                metaAhorro: effectiveMetaAhorro,
                 gastoAcumulado: effectiveSpent,
                 diaActual,
                 diasTotalesMes
             });
 
-            const hasBudget = currentPresupuesto.general > 0;
+            const hasBudget = effectiveGeneralBudget > 0;
             const hasSavings = health.metaAhorro > 0;
-            const targetBudget = hasSavings ? health.limiteParaGastar : currentPresupuesto.general;
+            const targetBudget = hasSavings ? health.limiteParaGastar : effectiveGeneralBudget;
 
             // Tarjeta 1: Presupuesto
-            cardBudgetAmount.textContent = formatMoney(currentPresupuesto.general, budgetCurrency);
-            cardCurrencyBadge.textContent = budgetCurrency;
+            cardBudgetAmount.textContent = formatMoney(effectiveGeneralBudget, displayCurrency);
+            cardCurrencyBadge.textContent = displayCurrency;
             if (hasSavings) {
-                cardBudgetStatus.textContent = `Límite: ${formatMoney(health.limiteParaGastar, budgetCurrency)}`;
+                cardBudgetStatus.textContent = `Límite: ${formatMoney(health.limiteParaGastar, displayCurrency)}`;
                 cardBudgetSavingsInfo.classList.remove('hidden');
-                cardBudgetSavingsInfo.textContent = `Meta ahorro: ${formatMoney(health.metaAhorro, budgetCurrency)}`;
+                cardBudgetSavingsInfo.textContent = `Meta ahorro: ${formatMoney(health.metaAhorro, displayCurrency)}`;
             } else {
                 cardBudgetStatus.textContent = 'Límite mensual';
                 cardBudgetSavingsInfo.classList.add('hidden');
@@ -1141,12 +1180,12 @@ import '../styles/global.css';
             if (hasBudget) {
                 const diff = targetBudget - effectiveSpent;
                 if (diff >= 0) {
-                    cardRemainingAmount.textContent = formatMoney(diff, budgetCurrency);
+                    cardRemainingAmount.textContent = formatMoney(diff, displayCurrency);
                     cardRemainingAmount.className = "text-xl sm:text-2xl font-extrabold text-emerald-600";
                     cardRemainingBadge.textContent = hasSavings ? "Disponible para gastar" : "Disponible";
                     cardRemainingBadge.className = "text-[11px] font-semibold text-emerald-600";
                 } else {
-                    cardRemainingAmount.textContent = `-${formatMoney(Math.abs(diff), budgetCurrency)}`;
+                    cardRemainingAmount.textContent = `-${formatMoney(Math.abs(diff), displayCurrency)}`;
                     cardRemainingAmount.className = "text-xl sm:text-2xl font-extrabold text-rose-600";
                     cardRemainingBadge.textContent = hasSavings ? "Límite superado" : "Presupuesto superado";
                     cardRemainingBadge.className = "text-[11px] font-semibold text-rose-600";
@@ -1179,7 +1218,7 @@ import '../styles/global.css';
             // Tarjeta 4: Facturas
             cardBillsCount.textContent = currentGastos.length.toString();
             const avg = currentGastos.length > 0 ? (effectiveSpent / currentGastos.length) : 0;
-            cardBillsAverage.textContent = `Promedio: ${formatMoney(avg, budgetCurrency)}`;
+            cardBillsAverage.textContent = `Promedio: ${formatMoney(avg, displayCurrency)}`;
 
             // Ritmo Diario
             if (hasBudget && targetBudget > 0) {
@@ -1188,11 +1227,11 @@ import '../styles/global.css';
                     const diasCalculo = diasRestantes > 0 ? diasRestantes : 1;
                     const ritmo = rem / diasCalculo;
                     const diasTexto = diasRestantes === 1 ? 'Falta 1 día' : `Faltan ${diasRestantes} días`;
-                    cardDailyPace.textContent = `${diasTexto} • Ritmo sugerido: ${formatMoney(ritmo, budgetCurrency)}/día`;
+                    cardDailyPace.textContent = `${diasTexto} • Ritmo sugerido: ${formatMoney(ritmo, displayCurrency)}/día`;
                 } else {
                     cardDailyPace.textContent = effectiveSpent <= targetBudget
-                        ? `Período cerrado • Ahorraste ${formatMoney(targetBudget - effectiveSpent, budgetCurrency)}`
-                        : `Período cerrado • Superado por ${formatMoney(effectiveSpent - targetBudget, budgetCurrency)}`;
+                        ? `Período cerrado • Ahorraste ${formatMoney(targetBudget - effectiveSpent, displayCurrency)}`
+                        : `Período cerrado • Superado por ${formatMoney(effectiveSpent - targetBudget, displayCurrency)}`;
                 }
             } else {
                 cardDailyPace.textContent = isCurrentMonth ? `Faltan ${diasRestantes} días para el cierre` : 'Período cerrado';
@@ -1283,7 +1322,8 @@ import '../styles/global.css';
 
             allCats.forEach(cat => {
                 const spent = catSpent[cat] || 0;
-                const budget = Number(currentPresupuesto.categorias[cat] || 0);
+                const rawBudget = Number(currentPresupuesto.categorias[cat] || 0);
+                const budget = convertBudgetToLens(rawBudget, budgetCurrency, displayCurrency);
 
                 if (spent === 0 && budget === 0) return; // ocultar vacías no presupuestadas
 
@@ -1301,7 +1341,7 @@ import '../styles/global.css';
                         </div>
                         <div class="text-right">
                             <span class="font-bold text-slate-900">${formatMoney(spent, displayCurrency)}</span>
-                            ${budget > 0 ? `<span class="text-slate-400"> / ${formatMoney(budget, budgetCurrency)}</span>` : ''}
+                            ${budget > 0 ? `<span class="text-slate-400"> / ${formatMoney(budget, displayCurrency)}</span>` : ''}
                         </div>
                     </div>
                     ${budget > 0 ? `
@@ -1311,7 +1351,7 @@ import '../styles/global.css';
                         <div class="flex justify-between items-center text-[10px]">
                             <span class="${isOver ? 'text-rose-600 font-bold' : 'text-slate-500'}">${percent}% consumido</span>
                             <span class="${isOver ? 'text-rose-600 font-semibold' : 'text-slate-400'}">
-                                ${isOver ? 'Excedido' : `Restan ${formatMoney(budget - spent, budgetCurrency)}`}
+                                ${isOver ? 'Excedido' : `Restan ${formatMoney(budget - spent, displayCurrency)}`}
                             </span>
                         </div>
                     ` : ''}
@@ -1420,12 +1460,24 @@ import '../styles/global.css';
                         </div>
                     ` : ''}
 
-                    <div class="mt-3 pt-2 border-t border-slate-100 flex justify-end">
+                    <div class="mt-3 pt-2 border-t border-slate-100 flex justify-end gap-3">
+                        <button class="btn-edit-expense text-[11px] font-semibold text-slate-500 hover:text-slate-900 transition-colors flex items-center gap-1" data-id="${gasto.id}">
+                            ✏️ Editar
+                        </button>
                         <button class="btn-delete-expense text-[11px] font-semibold text-slate-400 hover:text-rose-600 transition-colors" data-id="${gasto.id}">
                             Eliminar factura
                         </button>
                     </div>
                 `;
+
+                // Listener para editar
+                card.querySelector('.btn-edit-expense')?.addEventListener('click', (e) => {
+                    const id = (e.currentTarget).getAttribute('data-id');
+                    const targetGasto = currentGastos.find(g => g.id === id);
+                    if (targetGasto) {
+                        openEditExpenseModal(targetGasto);
+                    }
+                });
 
                 // Listener para eliminar
                 card.querySelector('.btn-delete-expense')?.addEventListener('click', async (e) => {
@@ -1833,6 +1885,7 @@ import '../styles/global.css';
             if (modalExpenseItems.length > 0) {
                 const sum = modalExpenseItems.reduce((acc, it) => acc + (Number(it.total) || 0), 0);
                 if (sum > 0) {
+                    bolivaresAjustadosManualmente = false;
                     modalExpTotal.value = sum.toFixed(2);
                 }
             }
@@ -1873,14 +1926,97 @@ import '../styles/global.css';
             const total = Number(modalExpTotal?.value) || 0;
 
             if (selectedLiq === 'BS_BCV') {
-                const totalBs = total * currentTasa;
-                const totalUsdtEquiv = tasaUsdt > 0 ? totalBs / tasaUsdt : total;
-                preview.textContent = `Calculado a tasa oficial BCV (Bs. ${currentTasa.toFixed(2)}). Total a pagar: Bs. ${formatMoney(totalBs, 'VES').replace('Bs. ', '')} (equivale a ${formatMoney(totalUsdtEquiv, 'USDT')}).`;
+                const autoBs = total * currentTasa;
+                const existingBsInput = document.getElementById('modal-exp-bs-final');
+                const bsVal = (bolivaresAjustadosManualmente && existingBsInput && existingBsInput.value)
+                    ? Number(existingBsInput.value)
+                    : autoBs;
+                const totalUsdtEquiv = tasaUsdt > 0 ? (bsVal / tasaUsdt) : total;
+
+                preview.innerHTML = `
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="font-bold text-slate-800">Liquidación en Bolívares (Tasa BCV: Bs. ${currentTasa.toFixed(2)})</span>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-700 mb-1">Bolívares finales cobrados (editable)</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-500 font-bold text-xs">Bs.</span>
+                                <input 
+                                    id="modal-exp-bs-final" 
+                                    type="number" 
+                                    step="0.01" 
+                                    min="0" 
+                                    value="${bsVal > 0 ? bsVal.toFixed(2) : ''}" 
+                                    class="w-full pl-9 pr-3 py-1.5 text-sm font-bold text-slate-900 rounded-lg border border-slate-300 bg-white focus:ring-2 focus:ring-[#FACC15] focus:outline-none" 
+                                    placeholder="0.00"
+                                />
+                            </div>
+                            <span class="text-[10px] text-slate-400 mt-0.5 block">Ajustable por redondeo comercial en punto de venta</span>
+                        </div>
+                        <div class="text-[10px] text-slate-500">
+                            Equivale a: <strong id="lbl-liq-equiv" class="text-slate-700">${formatMoney(totalUsdtEquiv, 'USDT')}</strong> (a tasa P2P Bs. ${tasaUsdt.toFixed(2)})
+                        </div>
+                    </div>
+                `;
+
+                const bsInput = document.getElementById('modal-exp-bs-final');
+                bsInput?.addEventListener('input', (e) => {
+                    bolivaresAjustadosManualmente = true;
+                    const val = Number(e.target.value) || 0;
+                    const equiv = tasaUsdt > 0 ? (val / tasaUsdt) : 0;
+                    const equivLabel = document.getElementById('lbl-liq-equiv');
+                    if (equivLabel) equivLabel.textContent = formatMoney(equiv, 'USDT');
+                });
             } else if (selectedLiq === 'BS_USDT') {
-                const totalBs = total * tasaUsdt;
-                preview.textContent = `Cobrado en Bs. a tasa USDT P2P (Bs. ${tasaUsdt.toFixed(2)}). Total a pagar: Bs. ${formatMoney(totalBs, 'VES').replace('Bs. ', '')}.`;
+                const autoBs = total * tasaUsdt;
+                const existingBsInput = document.getElementById('modal-exp-bs-final');
+                const bsVal = (bolivaresAjustadosManualmente && existingBsInput && existingBsInput.value)
+                    ? Number(existingBsInput.value)
+                    : autoBs;
+                const totalUsdEquiv = currentTasa > 0 ? (bsVal / currentTasa) : total;
+
+                preview.innerHTML = `
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="font-bold text-slate-800">Liquidación en Bolívares (Tasa P2P: Bs. ${tasaUsdt.toFixed(2)})</span>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-700 mb-1">Bolívares finales cobrados (editable)</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-500 font-bold text-xs">Bs.</span>
+                                <input 
+                                    id="modal-exp-bs-final" 
+                                    type="number" 
+                                    step="0.01" 
+                                    min="0" 
+                                    value="${bsVal > 0 ? bsVal.toFixed(2) : ''}" 
+                                    class="w-full pl-9 pr-3 py-1.5 text-sm font-bold text-slate-900 rounded-lg border border-slate-300 bg-white focus:ring-2 focus:ring-[#FACC15] focus:outline-none" 
+                                    placeholder="0.00"
+                                />
+                            </div>
+                            <span class="text-[10px] text-slate-400 mt-0.5 block">Ajustable por redondeo comercial en punto de venta</span>
+                        </div>
+                        <div class="text-[10px] text-slate-500">
+                            Equivale a: <strong id="lbl-liq-equiv" class="text-slate-700">${formatMoney(totalUsdEquiv, 'USD')}</strong> (a tasa BCV Bs. ${currentTasa.toFixed(2)})
+                        </div>
+                    </div>
+                `;
+
+                const bsInput = document.getElementById('modal-exp-bs-final');
+                bsInput?.addEventListener('input', (e) => {
+                    bolivaresAjustadosManualmente = true;
+                    const val = Number(e.target.value) || 0;
+                    const equiv = currentTasa > 0 ? (val / currentTasa) : 0;
+                    const equivLabel = document.getElementById('lbl-liq-equiv');
+                    if (equivLabel) equivLabel.textContent = formatMoney(equiv, 'USD');
+                });
             } else {
-                preview.textContent = `Monto pagado directamente en divisas (efectivo o saldo digital). Total: ${formatMoney(total, expMoneda)}.`;
+                preview.innerHTML = `
+                    <div class="py-1 text-slate-600">
+                        Monto pagado directamente en divisas (efectivo, tarjeta o saldo digital). Total: <strong class="text-slate-800">${formatMoney(total, expMoneda)}</strong>.
+                    </div>
+                `;
             }
         };
 
@@ -1896,9 +2032,7 @@ import '../styles/global.css';
                 if (containerLiq) containerLiq.classList.remove('hidden');
                 updateLiquidationDisplay();
                 if (labelMontoUsdEquiv) {
-                    labelMontoUsdEquiv.classList.remove('hidden');
-                    const equivVes = total * currentTasa;
-                    labelMontoUsdEquiv.textContent = `≈ ${formatMoney(equivVes, 'VES')}`;
+                    labelMontoUsdEquiv.classList.add('hidden');
                 }
             } else if (expMoneda === 'VES') {
                 setCurrencyButtonActive(btnCurrencyVes);
@@ -1917,11 +2051,7 @@ import '../styles/global.css';
                 if (containerLiq) containerLiq.classList.remove('hidden');
                 updateLiquidationDisplay();
                 if (labelMontoUsdEquiv) {
-                    labelMontoUsdEquiv.classList.remove('hidden');
-                    const equivVes = total * currentTasa;
-                    const refUsdRate = liveRates.usd > 0 ? liveRates.usd : currentTasa;
-                    const equivUsd = refUsdRate > 0 ? (equivVes / refUsdRate) : total;
-                    labelMontoUsdEquiv.textContent = `≈ ${formatMoney(equivVes, 'VES')} (${formatMoney(equivUsd, 'USD')})`;
+                    labelMontoUsdEquiv.classList.add('hidden');
                 }
             } else if (expMoneda === 'USDT') {
                 setCurrencyButtonActive(btnCurrencyUsdt);
@@ -1949,6 +2079,7 @@ import '../styles/global.css';
             if (modalExpTasa) {
                 modalExpTasa.value = rate > 0 ? rate.toFixed(2) : '';
             }
+            bolivaresAjustadosManualmente = false;
             updateCurrencyDisplay();
         };
 
@@ -1960,6 +2091,7 @@ import '../styles/global.css';
         document.querySelectorAll('.btn-liq-opt').forEach(btn => {
             btn.addEventListener('click', () => {
                 selectedLiq = btn.getAttribute('data-liq') || 'BS_BCV';
+                bolivaresAjustadosManualmente = false;
                 updateLiquidationDisplay();
             });
         });
@@ -1970,12 +2102,19 @@ import '../styles/global.css';
             const hist = await fetchHistoricalRate(f, expMoneda);
             if (hist && hist > 0) {
                 if (modalExpTasa) modalExpTasa.value = hist.toFixed(2);
+                bolivaresAjustadosManualmente = false;
                 updateCurrencyDisplay();
             }
         });
 
-        modalExpTasa?.addEventListener('input', updateCurrencyDisplay);
-        modalExpTotal?.addEventListener('input', updateCurrencyDisplay);
+        modalExpTasa?.addEventListener('input', () => {
+            bolivaresAjustadosManualmente = false;
+            updateCurrencyDisplay();
+        });
+        modalExpTotal?.addEventListener('input', () => {
+            bolivaresAjustadosManualmente = false;
+            updateCurrencyDisplay();
+        });
 
         btnAddItem?.addEventListener('click', () => {
             modalExpenseItems.push({
@@ -1989,10 +2128,20 @@ import '../styles/global.css';
         });
 
         const openExpenseModal = () => {
+            editingGastoId = null;
+            const modalTitle = document.getElementById('modal-expense-title');
+            if (modalTitle) modalTitle.textContent = "Registrar gasto";
+            if (btnSaveExpenseModal) {
+                const sp = btnSaveExpenseModal.querySelector('span');
+                if (sp) sp.textContent = "Guardar Gasto";
+            }
+
             modalExpComercio.value = '';
             modalExpTotal.value = '';
             selectedLiq = 'BS_BCV';
-            expMoneda = currentPresupuesto.moneda || 'USD';
+            expMoneda = 'USD';
+            bolivaresAjustadosManualmente = false;
+
             const rate = getRateForCurrency(expMoneda);
             if (modalExpTasa) modalExpTasa.value = rate > 0 ? rate.toFixed(2) : '';
             
@@ -2013,6 +2162,98 @@ import '../styles/global.css';
             modalExpense.classList.add('flex');
         };
 
+        const openEditExpenseModal = (gasto) => {
+            if (!gasto) return;
+            editingGastoId = gasto.id;
+
+            const modalTitle = document.getElementById('modal-expense-title');
+            if (modalTitle) modalTitle.textContent = "Editar gasto";
+            if (btnSaveExpenseModal) {
+                const sp = btnSaveExpenseModal.querySelector('span');
+                if (sp) sp.textContent = "Actualizar Gasto";
+            }
+
+            modalExpComercio.value = gasto.comercio || '';
+            modalExpFecha.value = gasto.fecha || '';
+
+            const fuente = gasto.fuente_tasa_cambio || '';
+            const esIndexadoBcv = (gasto.moneda === 'VES' && (fuente.includes('indexado a USD') || fuente.includes('BCV (Pago en Bs.')));
+            const esIndexadoUsdt = (gasto.moneda === 'VES' && (fuente.includes('indexado a USDT') || fuente.includes('Binance P2P')));
+
+            const totalBsOriginal = (Number(gasto.total_original || 0) / 100.0);
+
+            if (esIndexadoBcv) {
+                expMoneda = 'USD';
+                selectedLiq = 'BS_BCV';
+                const totalUsd = (Number(gasto.total_usd || 0) / 100.0);
+                modalExpTotal.value = totalUsd > 0 ? totalUsd.toFixed(2) : '';
+                const tasaVal = Number(gasto.tasa_cambio || 0) > 0 ? Number(gasto.tasa_cambio) : (liveRates.usd || 1.0);
+                if (modalExpTasa) modalExpTasa.value = tasaVal.toFixed(2);
+                bolivaresAjustadosManualmente = true;
+            } else if (esIndexadoUsdt) {
+                expMoneda = 'USD';
+                selectedLiq = 'BS_USDT';
+                const totalUsdt = (Number(gasto.total_usdt || 0) / 100.0);
+                modalExpTotal.value = totalUsdt > 0 ? totalUsdt.toFixed(2) : '';
+                const tasaVal = Number(gasto.tasa_cambio || 0) > 0 ? Number(gasto.tasa_cambio) : (liveRates.usd || 1.0);
+                if (modalExpTasa) modalExpTasa.value = tasaVal.toFixed(2);
+                bolivaresAjustadosManualmente = true;
+            } else {
+                expMoneda = gasto.moneda || 'USD';
+                selectedLiq = gasto.metodo_liquidacion || (expMoneda === 'USD' || expMoneda === 'EUR' ? 'DIVISA' : 'BS_BCV');
+                const totalOrig = (Number(gasto.total_original || 0) / 100.0);
+                modalExpTotal.value = totalOrig > 0 ? totalOrig.toFixed(2) : '';
+                const tasaVal = Number(gasto.tasa_cambio || 0) > 0 ? Number(gasto.tasa_cambio) : (getRateForCurrency(expMoneda) || 1.0);
+                if (modalExpTasa) modalExpTasa.value = tasaVal.toFixed(2);
+                bolivaresAjustadosManualmente = false;
+            }
+
+            const usdInputVal = Number(modalExpTotal.value) || 0;
+            const rateConversion = (esIndexadoBcv || esIndexadoUsdt)
+                ? (usdInputVal > 0 && totalBsOriginal > 0 ? (totalBsOriginal / usdInputVal) : (Number(modalExpTasa?.value) || 1.0))
+                : 1.0;
+
+            if (gasto.items && gasto.items.length > 0) {
+                modalExpenseItems = gasto.items.map(it => {
+                    const cant = Number(it.cantidad) || 1;
+                    const totRaw = (Number(it.total) || 0) / 100.0;
+                    const prRaw = (Number(it.precio_unitario) || 0) / 100.0;
+
+                    const tot = (esIndexadoBcv || esIndexadoUsdt) && rateConversion > 0
+                        ? (totRaw / rateConversion)
+                        : totRaw;
+                    const pr = (esIndexadoBcv || esIndexadoUsdt) && rateConversion > 0
+                        ? (prRaw / rateConversion)
+                        : (prRaw > 0 ? prRaw : (cant > 0 ? tot / cant : tot));
+
+                    return {
+                        descripcion: it.descripcion || '',
+                        cantidad: cant,
+                        precio: pr > 0 ? pr.toFixed(2) : '',
+                        total: tot > 0 ? tot.toFixed(2) : '',
+                        categoria: it.categoria || 'Otros'
+                    };
+                });
+            } else {
+                modalExpenseItems = [
+                    { descripcion: '', cantidad: 1, precio: '', total: '', categoria: gasto.categoria || 'Otros' }
+                ];
+            }
+
+            renderExpenseItems();
+            updateCurrencyDisplay();
+
+            if (esIndexadoBcv || esIndexadoUsdt) {
+                const bsInput = document.getElementById('modal-exp-bs-final');
+                if (bsInput && totalBsOriginal > 0) {
+                    bsInput.value = totalBsOriginal.toFixed(2);
+                }
+            }
+
+            modalExpense.classList.remove('hidden');
+            modalExpense.classList.add('flex');
+        };
+
         const closeExpenseModal = () => {
             modalExpense.classList.add('hidden');
             modalExpense.classList.remove('flex');
@@ -2026,7 +2267,7 @@ import '../styles/global.css';
 
             const comercio = (modalExpComercio.value || '').trim() || 'Compra general';
             const fecha = modalExpFecha.value;
-            const monto = Number(modalExpTotal.value || 0);
+            let monto = Number(modalExpTotal.value || 0);
 
             if (!fecha) {
                 alert("Por favor selecciona la fecha del gasto.");
@@ -2037,34 +2278,69 @@ import '../styles/global.css';
                 return;
             }
 
+            // Alerta de discrepancia si hay ítems detallados (Punto 5)
+            const sumItems = modalExpenseItems.reduce((acc, it) => acc + (Number(it.total) || 0), 0);
+            if (modalExpenseItems.length > 0 && sumItems > 0 && Math.abs(sumItems - monto) > 0.05) {
+                const ajustar = confirm(
+                    `La suma de los productos (${formatMoney(sumItems, expMoneda)}) no coincide con el Monto Total (${formatMoney(monto, expMoneda)}).\n\n` +
+                    `¿Deseas ajustar el Monto Total a la suma de los productos?\n\n` +
+                    `• Aceptar: Ajusta el Monto Total a ${formatMoney(sumItems, expMoneda)}\n` +
+                    `• Cancelar: Guarda manteniendo el Monto Total actual (${formatMoney(monto, expMoneda)})`
+                );
+                if (ajustar) {
+                    bolivaresAjustadosManualmente = false;
+                    modalExpTotal.value = sumItems.toFixed(2);
+                    monto = sumItems;
+                    updateCurrencyDisplay();
+                }
+            }
+
             const tasa = Number(modalExpTasa.value) || getRateForCurrency(expMoneda) || 1.0;
             const tasaUsdt = Number(liveRates.usdt || 0) > 0 ? Number(liveRates.usdt) : tasa;
-            const totalOriginalCents = Math.round(monto * 100);
+
+            let monedaFinal = expMoneda;
+            let totalOriginalCents = Math.round(monto * 100);
             let totalUsdCents = 0;
             let totalUsdtCents = 0;
+            let fuenteTasa = expMoneda === 'USDT' ? 'Binance P2P' : 'BCV';
+            let metodoLiqFinal = (expMoneda === 'USD' || expMoneda === 'EUR') ? selectedLiq : null;
+            let ratioConversionItems = 1.0;
 
-            if (expMoneda === 'USD') {
-                totalUsdCents = totalOriginalCents;
-                if (selectedLiq === 'BS_BCV') {
-                    totalUsdtCents = tasaUsdt > 0 ? Math.round((monto * tasa / tasaUsdt) * 100) : totalOriginalCents;
-                } else {
-                    totalUsdtCents = totalOriginalCents;
+            if ((expMoneda === 'USD' || expMoneda === 'EUR') && (selectedLiq === 'BS_BCV' || selectedLiq === 'BS_USDT')) {
+                monedaFinal = 'VES';
+                const bsInput = document.getElementById('modal-exp-bs-final');
+                let bsFinal = bsInput ? Number(bsInput.value || 0) : 0;
+                if (bsFinal <= 0) {
+                    bsFinal = selectedLiq === 'BS_BCV' ? (monto * tasa) : (monto * tasaUsdt);
                 }
+
+                totalOriginalCents = Math.round(bsFinal * 100);
+                totalUsdCents = tasa > 0 ? Math.round((bsFinal / tasa) * 100) : Math.round(monto * 100);
+                totalUsdtCents = tasaUsdt > 0 ? Math.round((bsFinal / tasaUsdt) * 100) : totalUsdCents;
+
+                fuenteTasa = selectedLiq === 'BS_BCV'
+                    ? `BCV (Pago en Bs. indexado a ${expMoneda})`
+                    : 'Binance P2P (Pago en Bs. indexado a USDT)';
+
+                ratioConversionItems = monto > 0 ? (bsFinal / monto) : (selectedLiq === 'BS_BCV' ? tasa : tasaUsdt);
             } else if (expMoneda === 'VES') {
-                totalUsdCents = Math.round((monto / tasa) * 100);
+                totalUsdCents = tasa > 0 ? Math.round((monto / tasa) * 100) : 0;
                 totalUsdtCents = tasaUsdt > 0 ? Math.round((monto / tasaUsdt) * 100) : totalUsdCents;
+                fuenteTasa = 'BCV';
+            } else if (expMoneda === 'USD') {
+                totalUsdCents = totalOriginalCents;
+                totalUsdtCents = totalOriginalCents;
+                fuenteTasa = 'Divisa Directa';
             } else if (expMoneda === 'EUR') {
                 const equivVes = monto * tasa;
                 const refUsd = liveRates.usd > 0 ? liveRates.usd : tasa;
-                totalUsdCents = Math.round((equivVes / refUsd) * 100);
-                if (selectedLiq === 'BS_BCV') {
-                    totalUsdtCents = tasaUsdt > 0 ? Math.round((equivVes / tasaUsdt) * 100) : totalUsdCents;
-                } else {
-                    totalUsdtCents = totalUsdCents;
-                }
+                totalUsdCents = Math.round((equivVes / (refUsd > 0 ? refUsd : 1.0)) * 100);
+                totalUsdtCents = totalUsdCents;
+                fuenteTasa = `Euro BCV (Bs. ${tasa.toFixed(2)})`;
             } else if (expMoneda === 'USDT') {
                 totalUsdCents = totalOriginalCents;
                 totalUsdtCents = totalOriginalCents;
+                fuenteTasa = 'Binance P2P';
             }
 
             // Preparar ítems para guardar con fallback Producto 1, Producto 2, etc.
@@ -2074,56 +2350,69 @@ import '../styles/global.css';
                     const cant = Number(it.cantidad) || 1;
                     const totNum = Number(it.total) || 0;
                     const prNum = Number(it.precio) || (cant > 0 ? totNum / cant : totNum);
+
+                    const finalPr = prNum * ratioConversionItems;
+                    const finalTot = totNum * ratioConversionItems;
+
                     return {
                         descripcion: (it.descripcion || '').trim() || `Producto ${idx + 1}`,
                         cantidad: cant,
-                        precio_unitario: Math.round(prNum * 100),
-                        total: Math.round(totNum * 100),
+                        precio_unitario: Math.round(finalPr * 100),
+                        total: Math.round(finalTot * 100),
                         categoria: normalizarCategoria(it.categoria)
                     };
                 });
 
-            // Categoría principal del gasto
+            // Categoría predominante del gasto (paridad con móvil)
             let primaryCat = 'Otros';
             if (validItems.length > 0) {
-                primaryCat = normalizarCategoria(validItems[0].categoria);
+                const catTotals = {};
+                validItems.forEach(it => {
+                    catTotals[it.categoria] = (catTotals[it.categoria] || 0) + (it.total || 0);
+                });
+                primaryCat = Object.entries(catTotals).reduce((a, b) => a[1] >= b[1] ? a : b)[0] || normalizarCategoria(validItems[0].categoria);
             }
 
-            const uuid = crypto.randomUUID ? crypto.randomUUID() : `web_${Date.now()}`;
-            const docRef = doc(db, 'users', currentUser.uid, 'gastos', uuid);
+            const gastoId = editingGastoId || (crypto.randomUUID ? crypto.randomUUID() : `web_${Date.now()}`);
+            const docRef = doc(db, 'users', currentUser.uid, 'gastos', gastoId);
 
             try {
                 btnSaveExpenseModal.disabled = true;
                 btnSaveExpenseModal.innerHTML = `<span>Guardando...</span>`;
 
-                await setDoc(docRef, {
-                    uuid: uuid,
+                const payload = {
+                    uuid: gastoId,
                     comercio: comercio,
                     fecha: fecha,
-                    moneda: expMoneda,
+                    moneda: monedaFinal,
                     total_original: totalOriginalCents,
                     total_usd: totalUsdCents,
                     total_usdt: totalUsdtCents,
                     tasa_cambio: tasa,
                     tasa_usdt: tasaUsdt,
-                    metodo_liquidacion: (expMoneda === 'USD' || expMoneda === 'EUR') ? selectedLiq : null,
-                    fuente_tasa_cambio: expMoneda === 'USDT' ? 'Binance P2P' : 'BCV',
+                    metodo_liquidacion: metodoLiqFinal,
+                    fuente_tasa_cambio: fuenteTasa,
                     fecha_tasa_cambio: fecha,
                     categoria: primaryCat,
                     items: validItems,
-                    creado_en: new Date().toISOString(),
                     actualizado_en: new Date().toISOString(),
                     synced: 1
-                });
+                };
+
+                if (!editingGastoId) {
+                    payload.creado_en = new Date().toISOString();
+                }
+
+                await setDoc(docRef, payload, { merge: true });
 
                 closeExpenseModal();
                 await loadDashboardData();
             } catch (err) {
-                console.error("Error al registrar factura:", err);
-                alert("No se pudo registrar la factura.");
+                console.error("Error al registrar o actualizar factura:", err);
+                alert("No se pudo guardar la factura.");
             } finally {
                 btnSaveExpenseModal.disabled = false;
-                btnSaveExpenseModal.innerHTML = `<span>Guardar Gasto</span>`;
+                btnSaveExpenseModal.innerHTML = `<span>${editingGastoId ? 'Actualizar Gasto' : 'Guardar Gasto'}</span>`;
             }
         });
 

@@ -182,6 +182,29 @@ void main() {
       expect(find.text(CurrencyFormatter.formatUsdt(20.0)), findsOneWidget);
       expect(find.textContaining('Brecha capturada'), findsNothing);
     });
+
+    testWidgets('converts USD budget to VES lens when monedaPrincipal is VES', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: SummaryCard(
+              totalUsd: 25.0,
+              totalVes: 1000.0,
+              periodo: 'Septiembre 2026',
+              monedaPrincipal: 'VES',
+              monedaPresupuesto: 'USD',
+              presupuestoGeneral: 100.0,
+              tasaCambio: 40.0,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // 100 USD * 40 Bs/USD = 4000 Bs de presupuesto y 25% consumido (1000 / 4000)
+      expect(find.textContaining('Presupuesto: ${CurrencyFormatter.formatVes(4000.0)}'), findsOneWidget);
+      expect(find.textContaining('25% usado'), findsOneWidget);
+    });
   });
 
   group('ExpenseCard Currency Preference Tests', () {

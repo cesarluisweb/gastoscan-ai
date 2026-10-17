@@ -12,11 +12,15 @@ En la economía venezolana conviven realidades cambiarias y formas de liquidaci�
 
 ## 2. Los 10 Puntos de Pulido Implementados
 
-### 1. Tres Opciones de Liquidación en USD/EUR (`ReviewExpenseScreen` y `panel.astro`)
+### 1. Tres Opciones de Liquidación y Redondeo Comercial en Bs. (`ReviewExpenseScreen` y `panel.astro`)
 - Al registrar o revisar un gasto en `USD` o `EUR`, se presentan 3 pastillas de selección clara:
-  - **`Pagado en Bs. (a BCV)`** (`BS_BCV`): Compra comercial liquidada en bolívares a tasa oficial BCV. Se calculan bolívares con tasa BCV y se registra su equivalente en USDT.
-  - **`Pagado en Bs. (a USDT P2P)`** (`BS_USDT`): Cobro en bolívares calculado sobre tasa USDT P2P / paralelo. En bolívares equivale a `monto * tasaUsdt`, y su valor en lente USD BCV se revalúa a `(monto * tasaUsdt) / tasaBcv`.
-  - **`Pagado en $ (Divisa directa)`** (`DIVISA`): Pago directo en dólares en efectivo, Zelle, saldo digital o cripto. Paridad 1:1 estricta con USDT.
+  - **`En Bs. · precio a tasa BCV`** (`BS_BCV`): Compra comercial cuyo precio está referenciado en USD pero se liquida en bolívares a tasa oficial BCV.
+  - **`En Bs. · precio a tasa P2P`** (`BS_USDT`): Cobro en bolívares calculado sobre tasa USDT P2P / paralelo.
+  - **`En $ · efectivo o tarjeta`** (`DIVISA`): Pago directo en divisas sin conversión a bolívares.
+- **Campo de Bolívares Editable (Redondeo Comercial):** En las opciones liquidadas en Bs., el total a pagar en Bolívares es un campo editable (`input_total_bs_manual` / `modal-exp-bs-final`). Si el comercio redondea el monto en el punto de venta (ej. de 5.012,40 Bs a 5.000,00 Bs), el usuario puede ajustarlo directamente y ese monto exacto se guarda como `total_original` inmutable en `VES`, recalculando las equivalencias en USD y USDT.
+- **Desacoplamiento del Lente Activo:** El formulario de nuevo gasto abre siempre en `USD` con `En Bs. · precio a tasa BCV` preseleccionado, independientemente del lente activo de reportes.
+- **Reconstrucción de Contexto al Editar y Edición en Web:** Tanto en móvil como en `panel.astro` (botón `✏️ Editar`), abrir un gasto guardado en `VES` pero originado como indexado a USD/USDT reconstruye el formulario en `USD` con la pastilla de liquidación activa, los ítems convertidos visualmente a USD, la tasa histórica congelada y los bolívares pagados en la caja de liquidación.
+- **Alerta de Discrepancia entre Total e Ítems:** Si la suma de los productos detallados difiere del Monto Total por más de `0.05`, se muestra un diálogo que permite ajustar el total a la suma de productos o conservar el monto ingresado.
 
 ### 2. Selector de 4 Lentes en Dashboard, Análisis y Panel Web
 - Expandido a 4 lentes canónicos sincronizados:

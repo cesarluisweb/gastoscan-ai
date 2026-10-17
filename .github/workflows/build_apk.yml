@@ -198,13 +198,13 @@ jobs:
           BUILD_NUM=$(( BASE_BUILD + ${{ github.run_number }} ))
           
           for i in 1 2 3 4 5 6; do
-            REMOTE_SIZE=$(curl -sIL -H "Cache-Control: no-cache" -H "Pragma: no-cache" -A "Mozilla/5.0" "https://cesarluis.com/rindemas/rindemas.apk?b=$BUILD_NUM" | grep -i '^content-length:' | tr -d '\r' | awk '{print $2}' | tail -n 1)
+            REMOTE_SIZE=$(curl -sIL -H "Cache-Control: no-cache" -H "Pragma: no-cache" -A "Mozilla/5.0" "https://cesarluis.com/rindemas/rindemas.apk?b=${BUILD_NUM}_verify_$i" | grep -i '^content-length:' | tr -d '\r' | awk '{print $2}' | tail -n 1)
             if [ "$REMOTE_SIZE" = "$LOCAL_SIZE" ]; then echo "APK verificado: $LOCAL_SIZE bytes"; exit 0; fi
             echo "Intento $i: local=$LOCAL_SIZE remoto=$REMOTE_SIZE. Reintentando en 15s..."
             sleep 15
           done
           echo "ERROR: el APK publicado no coincide con el compilado (local=$LOCAL_SIZE, remoto=$REMOTE_SIZE)"
-          curl -IL -H "Cache-Control: no-cache" -H "Pragma: no-cache" -A "Mozilla/5.0" "https://cesarluis.com/rindemas/rindemas.apk?b=$BUILD_NUM" || true
+          curl -IL -H "Cache-Control: no-cache" -H "Pragma: no-cache" -A "Mozilla/5.0" "https://cesarluis.com/rindemas/rindemas.apk?b=${BUILD_NUM}_verify_err" || true
           exit 1
 
       - name: Configurar Node.js
@@ -231,9 +231,11 @@ jobs:
             "buildNumber": $BUILD_NUM,
             "isMajor": $IS_MAJOR,
             "releaseNotes": "Actualización de Rinde Más con mejoras de rendimiento y nuevas funciones.",
-            "apkUrl": "https://rindemas.cesarluis.com/rindemas.apk?b=$BUILD_NUM"
+            "apkUrl": "https://cesarluis.com/rindemas/rindemas.apk?b=$BUILD_NUM"
           }
           EOF
+          
+          sed -i "s|href=\"/rindemas.apk\"|href=\"https://cesarluis.com/rindemas/rindemas.apk?b=$BUILD_NUM\"|g" landing/src/pages/index.astro
           
           cat landing/public/version.json
           cd landing

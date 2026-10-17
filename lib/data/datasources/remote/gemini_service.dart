@@ -268,10 +268,18 @@ class GeminiService {
     final String categoriaRaw = args['categoria']?.toString().trim() ?? 'Otros';
     final String categoria = AppConstants.normalizarCategoria(categoriaRaw);
     final String monedaArg = args['moneda']?.toString() ?? '';
-    final String moneda = AppConstants.normalizarMoneda(
+    final String monedaDetectadaTexto = AppConstants.detectarMonedaDeTexto(spokenText, fallback: 'USD');
+    String moneda = AppConstants.normalizarMoneda(
       monedaArg.isNotEmpty ? monedaArg : null,
-      fallback: AppConstants.detectarMonedaDeTexto(spokenText, fallback: 'USD'),
+      fallback: monedaDetectadaTexto,
     );
+
+    // Si el usuario mencionó explícitamente un monto en Bolívares (ej. "Pagué 4.000 Bs por gasolina; eran unos 20 dólares")
+    // sin tratarse de un pago en USD liquidado en Bs ("en bolívares a BCV"), prevalece VES e inmutabilidad del bolívar.
+    final regMontoExplicitoBs = RegExp(r'\d+\s*(?:mil\s+)?(?:bol[ií]vares|bol[ií]var|bs\.?|ves)\b', caseSensitive: false);
+    if (regMontoExplicitoBs.hasMatch(spokenText) && montoOriginalArg > totalUsd && totalUsd > 0) {
+      moneda = 'VES';
+    }
     final double totalOriginal = montoOriginalArg > 0 ? montoOriginalArg : totalUsd;
     final List itemsList = args['items'] as List? ?? [];
 
@@ -332,6 +340,9 @@ class GeminiService {
           textLower.contains('zinli') ||
           textLower.contains('divisa')) {
         metodoLiquidacion = 'DIVISA';
+      } else {
+        // Por defecto en Venezuela los precios referenciados en USD sin especificar efectivo/divisa liquidan en Bs a BCV
+        metodoLiquidacion = 'BS_BCV';
       }
     }
 
@@ -353,7 +364,7 @@ class GeminiService {
         messages: [
           {
             'role': 'user',
-            'text': 'Registra este gasto o compras: "$spokenText". Asume que la fecha es hoy si no la menciono. Si menciono compras en múltiples lugares o comercios distintos, extrae cada una por separado en la lista "gastos". Extrae los productos, precios y la categoría adecuada para cada uno. Si el gasto es en USD o EUR e indico pago en bolívares a BCV o pago móvil o punto, especifica metodo_liquidacion: "BS_BCV"; si fue a tasa paralelo/USDT especifica "BS_USDT"; si fue en efectivo/divisa directa especifica "DIVISA".',
+            'text': 'Registra este gasto o compras: "$spokenText". Asume que la fecha es hoy si no la menciono. Si menciono compras en múltiples lugares o comercios distintos, extrae cada una por separado en la lista "gastos". Extrae los productos, precios y la categoría adecuada para cada uno. REGLA CRÍTICA DE MONEDA: Si menciono un monto explícito en Bolívares (ej. "Pagué 4.000 Bs por gasolina; eran unos 20 dólares"), el dato original obligatorio e inmutable es 4000 con moneda: "VES" (el monto en dólares es solo contexto y no debe sobreescribir los bolívares). Si el gasto es en USD o EUR: si fue a tasa paralelo/USDT/Binance especifica metodo_liquidacion: "BS_USDT"; si fue en efectivo/Zelle/Zinli/divisa directa especifica "DIVISA"; en cualquier otro caso (pago móvil, punto, BCV o sin especificar tasa) especifica "BS_BCV".',
           }
         ],
         contextData: {
@@ -429,6 +440,8 @@ class GeminiService {
           textLower.contains('zinli') ||
           textLower.contains('divisa')) {
         metodoFallback = 'DIVISA';
+      } else {
+        metodoFallback = 'BS_BCV';
       }
     }
 

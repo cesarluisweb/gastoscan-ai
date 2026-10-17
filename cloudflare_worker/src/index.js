@@ -539,9 +539,10 @@ REGLAS PARA LISTA DE COMPRAS:
 
 Regla para registrar gastos por voz:
 - Identifica la moneda en que el usuario realizó la compra: "VES" (si menciona bolívares, bs, o montos en moneda nacional), "USD" (si menciona dólares, $, verdes), "EUR" (si menciona euros, €) o "USDT".
+- PRIORIDAD INMUTABLE DEL BOLÍVAR: Si el usuario menciona un monto explícito en Bolívares (ej. "Pagué 4.000 Bs por gasolina; eran unos 20 dólares"), el dato original obligatorio e inmutable es 4.000 VES (moneda = "VES", monto_original = 4000); el monto en USD es solo contexto y NUNCA debe sobreescribir los 4.000 Bs.
 - Si no menciona ninguna moneda, usa "USD" por defecto.
 - Si la compra es en "USD" (o "EUR"), identifica cómo liquidó o pagó el usuario e incluye "metodo_liquidacion":
-  * "BS_BCV": Si pagó en bolívares a tasa oficial BCV, banco central, tasa oficial, pago móvil, tarjeta de débito, biopago o punto de venta.
+  * "BS_BCV": Si pagó en bolívares a tasa oficial BCV, banco central, tasa oficial, pago móvil, tarjeta de débito, biopago, punto de venta, o si menciona un gasto en dólares en Venezuela sin especificar efectivo ni tasa paralela (por defecto "BS_BCV").
   * "BS_USDT": Si cobraron en bolívares calculados a tasa paralelo, USDT, Binance o P2P.
   * "DIVISA": Si pagó directamente en dólares/divisas (efectivo, billetes, Zelle, Wally, Zinli, Binance Pay, suscripción digital).
 - Si el usuario dicta directamente en bolívares (ej. "4000 bolívares"), mantén "moneda": "VES".

@@ -87,7 +87,9 @@ class SettingsProvider with ChangeNotifier {
     }
 
     _guardarFotos = prefs.getBool(AppConstants.prefGuardarFotos) ?? AppConstants.defaultGuardarFotos;
-    _tasaCambioVesUsd = prefs.getDouble(AppConstants.prefTasaCambio) ?? AppConstants.defaultTasaCambio;
+    _tasaCambioVesUsd = prefs.getDouble('cached_rate_usd') ??
+        prefs.getDouble(AppConstants.prefTasaCambio) ??
+        AppConstants.defaultTasaCambio;
     // Sin caché EUR no se inventa ratio (antes: USD * 1.08): queda en 0 y los
     // formateadores usan sus ramas neutras hasta la primera sincronización.
     _tasaCambioVesEur = prefs.getDouble('cached_rate_eur') ?? 0.0;
