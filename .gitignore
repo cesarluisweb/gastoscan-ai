@@ -48,3 +48,4 @@ build_artifacts/
 Capturas para Google Play/
 .wrangler/
 **/node_modules/
+scratch/

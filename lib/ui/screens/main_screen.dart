@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../providers/gasto_provider.dart';
 import '../../providers/scan_queue_provider.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_constants.dart';
 import '../../data/models/gemini_extraction_result.dart';
 import '../../services/notification_service.dart';
 import 'dashboard_screen.dart';
