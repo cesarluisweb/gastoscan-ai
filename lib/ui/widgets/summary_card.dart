@@ -60,7 +60,6 @@ class SummaryCard extends StatelessWidget {
     );
 
     final double tUsd = tasaCambio > 0 ? tasaCambio : 1.0;
-    final double effUsdtRate = tasaUsdt > 0 ? tasaUsdt : tUsd;
     final double effEurRate = tasaEur > 0 ? tasaEur : tUsd;
 
     // Conversión determinística del presupuesto base hacia el lente activo
@@ -296,9 +295,14 @@ class SummaryCard extends StatelessWidget {
                     return const SizedBox.shrink();
                 }
 
-                final metaFormatted = isBudgetVes
-                    ? CurrencyFormatter.formatVes(metaAhorro)
-                    : CurrencyFormatter.formatPreferido(metaAhorro, null, tasaCambio, monedaPrincipal, tasaEur: tasaEur, tasaUsdt: tasaUsdt);
+                final metaFormatted = CurrencyFormatter.formatPreferido(
+                  metaInLens,
+                  null,
+                  tasaCambio,
+                  monedaPrincipal,
+                  tasaEur: tasaEur,
+                  tasaUsdt: tasaUsdt,
+                );
 
                 return Container(
                   key: const Key('summary_card_savings_badge'),

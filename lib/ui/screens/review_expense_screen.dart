@@ -193,7 +193,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
 
         // Reconvertir visualmente items a USD display usando la tasa congelada
         final double rateForItems = isIndexedUsdt
-            ? ((gasto.tasaUsdt != null && gasto.tasaUsdt! > 0) ? gasto.tasaUsdt! : (gasto.totalUsdt > 0 ? (gasto.totalOriginal / gasto.totalUsdt) : tasa))
+            ? ((gasto.tasaUsdt != null && gasto.tasaUsdt! > 0) ? gasto.tasaUsdt! : ((gasto.totalUsdt != null && gasto.totalUsdt! > 0) ? (gasto.totalOriginal / gasto.totalUsdt!) : tasa))
             : (tasa > 0 ? tasa : (gasto.totalUsd > 0 ? (gasto.totalOriginal / gasto.totalUsd) : 1.0));
         _items = gasto.items.map((it) {
           final usdPrice = rateForItems > 0 ? (it.precioUnitarioDisplay / rateForItems) : it.precioUnitarioDisplay;

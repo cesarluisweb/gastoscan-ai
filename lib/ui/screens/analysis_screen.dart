@@ -85,7 +85,6 @@ class AnalysisScreen extends StatelessWidget {
               final bool isBudgetVes = gastoProvider.monedaPresupuesto == 'VES';
               final String activeMoneda = settings.monedaPrincipal;
               final double tUsd = settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : 1.0;
-              final double tUsdt = settings.tasaCambioVesUsdt > 0 ? settings.tasaCambioVesUsdt : tUsd;
               final double tEur = settings.tasaCambioVesEur > 0 ? settings.tasaCambioVesEur : tUsd;
 
               double convertAmountToLens(double amount) {
@@ -180,7 +179,6 @@ class AnalysisScreen extends StatelessWidget {
     final double rawMetaAhorro = gastoProvider.metaAhorro;
 
     final double tUsd = settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : 1.0;
-    final double tUsdt = settings.tasaCambioVesUsdt > 0 ? settings.tasaCambioVesUsdt : tUsd;
     final double tEur = settings.tasaCambioVesEur > 0 ? settings.tasaCambioVesEur : tUsd;
 
     double convertAmountToLens(double amount) {
