@@ -27,5 +27,4 @@
 - En `BudgetBottomSheet`: Usar memoria de valor base ingresado por el usuario para evitar drift al alternar monedas.
 
 ## Próximo Paso Inmediato
-- Monitorear GitHub Actions CI tras el push hasta confirmar `conclusion: success`.
-- Entregar a César el reporte de cambios y guía de pruebas de FIN-11 para su validación en dispositivo físico y panel web.
+- Esperar validación manual de César en dispositivo físico y panel web ([DOC_MOTOR_MULTIMONEDA.md](DOC_MOTOR_MULTIMONEDA.md)) para dar el visto bueno a `FIN-11`.
