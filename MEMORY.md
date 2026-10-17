@@ -28,4 +28,4 @@
 - **En `CurrencyFormatter` y `BudgetBottomSheet`:** Nunca triangular USD/USDT por bolívares ni acumular deriva por redondeo.
 
 ## Próximo Paso Inmediato
-- Validar paso de CI en verde y comprobar tasas en vivo en la app física (~880 BCV / ~1005 USDT).
+- Probar en dispositivo físico con Build 483 la sincronización de tasas en vivo (~880 BCV / ~1005 USDT) y la purga automática de memorias anteriores.
