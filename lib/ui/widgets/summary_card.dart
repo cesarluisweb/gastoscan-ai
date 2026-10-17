@@ -422,8 +422,13 @@ class SummaryCard extends StatelessWidget {
   }
 
   Widget _buildLensSwitch(BuildContext context) {
-    final settings = Provider.of<SettingsProvider>(context);
-    final current = settings.monedaPrincipal;
+    SettingsProvider? settings;
+    try {
+      settings = Provider.of<SettingsProvider>(context);
+    } catch (_) {
+      settings = null;
+    }
+    final current = settings?.monedaPrincipal ?? monedaPrincipal;
     final lenses = [
       {'id': 'USD', 'label': 'USD BCV'},
       {'id': 'USDT', 'label': 'USDT P2P'},
