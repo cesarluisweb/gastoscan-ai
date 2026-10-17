@@ -155,11 +155,6 @@ class ExchangeRateService {
     }
   }
 
-  static Future<double?> _fetchUrlDouble(String urlString, String fieldKey, {http.Client? client}) async {
-    final res = await _fetchUrlDoubleWithDiag(urlString, fieldKey, client: client);
-    return res.value;
-  }
-
   /// Intenta consultar Yadio P2P / DolarAPI paralelo para USDT con diagnóstico
   static Future<_RateFetchResult> _fetchUsdtLiveRateWithDiag({http.Client? client}) async {
     String yadioDiag = '';
@@ -193,12 +188,6 @@ class ExchangeRateService {
       return _RateFetchResult(fallbackRes.value, 'OK DolarAPI (${fallbackRes.value})');
     }
     return _RateFetchResult(null, '$yadioDiag | Paralelo: ${fallbackRes.diag}');
-  }
-
-  /// Intenta consultar Yadio P2P / DolarAPI paralelo para USDT
-  static Future<double?> _fetchUsdtLiveRate({http.Client? client}) async {
-    final res = await _fetchUsdtLiveRateWithDiag(client: client);
-    return res.value;
   }
 
   /// Obtiene la tasa de cambio para una fecha específica (formato YYYY-MM-DD) y moneda.
