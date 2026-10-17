@@ -131,9 +131,9 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
     8. **Soporte de IA Integral:** Detección de `metodo_liquidacion` (`BS_BCV`, `BS_USDT`, `DIVISA`) en `GeminiService` y Workers Cloudflare, preselección automática en revisión y preservación de los 4 lentes en el contexto de `ChatScreen`.
   - *Documentación:* Ver [DOC_MOTOR_MULTIMONEDA.md](DOC_MOTOR_MULTIMONEDA.md). Tarea crítica: pendiente de prueba y visto bueno de César.
 
-- `FIN-12` **Resiliencia de Tasas de Cambio Multifuente (BCV / Paralelo):** `Revertida a Build 470 🔄`
-  - *Estado:* A solicitud de César, el código de la app móvil (`lib/` y `test/`) fue restaurado al estado funcional de la Build 470 (`54f8432`). Todo el desarrollo de FIN-12 (cascada multifuente, flags de vigencia y tests) queda salvaguardado en la rama `backup/pre-regreso-build-470` para futura referencia.
-  - *Documentación:* Ver [DOC_RESILIENCIA_TASAS_CAMBIO.md](DOC_RESILIENCIA_TASAS_CAMBIO.md).
+- `FIN-12` **Resiliencia de Tasas de Cambio Multifuente (BCV / Paralelo):** `Pendiente de validación 🧪`
+  - *Estado:* Resuelta la causa raíz en R8 (`NoSuchMethodError` en JNI) en el Build 500. Se integra la arquitectura de tasas multifuente (Cloudflare Gateway `/tasas`, DolarAPI, Yadio, jsDelivr), la purga automática de semillas `<= 50.0` y la actualización silenciosa sin alertas técnicas invasivas.
+  - *Documentación:* Ver [DOC_RESILIENCIA_TASAS_CAMBIO.md](DOC_RESILIENCIA_TASAS_CAMBIO.md). Tarea crítica: pendiente de prueba y visto bueno de César.
 
 ---
 

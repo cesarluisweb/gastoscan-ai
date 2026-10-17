@@ -12,6 +12,7 @@ Al cambiar temporalmente `defaultTasaCambio = 850.0`, la app pasó a mostrar exa
 2. **Máscara de Éxito Parcial:** Si Yadio respondía entregando el valor de `USDT`, la bandera `fetchedAny` se activaba y `getAllTodayRates` devolvía `esReferencia: false` a pesar de que `usd` era `0.0`. En consecuencia, `SettingsProvider` solo actualizaba USDT, dejaba USD en la semilla `40.00` y desactivaba `_tasasSonReferencia`, mostrando erróneamente un badge de "✓ Actualizada hoy" junto al valor semilla de `40.00 Bs`.
 3. **Silenciamiento de Errores en la Sincronización Manual:** `actualizarTasaAutomatica` no contaba con bloque `catch` (solo `try/finally`), por lo que cualquier excepción asíncrona se perdía silenciosamente sin notificar al usuario.
 4. **Bloqueo Secuencial por Firestore en `loadSettings`:** `loadSettings` esperaba una lectura de Firestore (`syncSettingsFromFirestore`) sin timeout antes de leer las tasas de caché y antes de disparar `actualizarTasaAutomatica`. En redes móviles inestables, esto congelaba el arranque de la sincronización de tasas.
+5. **Causa Raíz Crítica (Bytecode JNI en R8):** El compilador R8 de Android en compilaciones release, al usar la plantilla agresiva de optimización, ofuscaba el tipo `kotlin.coroutines.Continuation` cambiándole el nombre a `Ljj;`. Al inicializar `SharedPreferences.getInstance()`, el plugin `shared_preferences_android` generado por Pigeon buscaba por JNI la firma exacta `getAll(String, List, Continuation)`. Al diferir el descriptor (`Ljj;`), ART arrojaba `java.lang.NoSuchMethodError`, abortando el proceso antes de realizar cualquier llamada HTTP a las APIs de tasas.
 
 ---
 
@@ -47,7 +48,12 @@ En `ExchangeRateService.getAllTodayRates`:
 
 ### F. Observabilidad y Reintento por Conectividad
 - `SettingsProvider` escucha `ConnectivityService.onConnectivityChanged`. Al recuperar conexión tras arrancar offline, reintenta la sincronización automáticamente si la tasa sigue en referencia.
-- El botón de sincronización manual (`refresh_rates_btn`) en `MoreScreen` ejecuta con `forzar: true` (bypasseando la caché en memoria) y muestra un `SnackBar` informativo indicando el éxito o el motivo del fallo.
+- El botón de sincronización manual (`refresh_rates_btn`) en `MoreScreen` ejecuta con `forzar: true` (bypasseando la caché en memoria) mostrando un spinner breve y actualizando las cifras silenciosamente sin modales ni alertas intrusivas en pantalla, manteniendo cualquier error en logs internos (`debugPrint`).
+
+### G. Blindaje de Compilación en ProGuard / R8
+- Remoción de la plantilla `proguard-android-optimize.txt` en `build.gradle.kts`, empleando exclusivamente `proguardFiles("proguard-rules.pro")`.
+- Inclusión fija de `-dontobfuscate`, `-dontoptimize`, `-ignorewarnings`, `-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod` y `-keep class kotlin.Metadata { *; }`.
+- Preservación explícita de `io.flutter.**`, `dev.flutter.**`, `kotlin.**` y `kotlinx.**`, garantizando que firmas nativas como `getAll(..., Continuation)` permanezcan 100% idénticas en el archivo DEX.
 
 ---
 
@@ -63,11 +69,11 @@ En `ExchangeRateService.getAllTodayRates`:
    - **USDT Binance:** Muestra la tasa P2P en vivo (~1005.xx Bs / USDT).
    - En ningún caso debe verse `40.00 Bs`.
 
-### Prueba 2: Sincronización Manual con Feedback
+### Prueba 2: Sincronización Manual Silenciosa
 1. En **Más** > **Tasas de Cambio**, pulsar el botón circular de refresco (icono de flecha circular).
 2. **Resultado Esperado:**
-   - Aparece un spinner de progreso breve (~1-3 segundos).
-   - Al terminar, se despliega un SnackBar en la parte inferior: *"Tasas actualizadas desde las fuentes oficiales."* con fondo amarillo y texto negro de alto contraste.
+   - Aparece un spinner de progreso breve (~1-2 segundos) y se detiene.
+   - Las cifras y la fecha se actualizan en pantalla de forma limpia sin generar popups, banners ni alertas intrusivas.
 
 ### Prueba 3: Comportamiento Offline y Recuperación
 1. Activar el Modo Avión en el teléfono.

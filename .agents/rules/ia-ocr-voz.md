@@ -35,3 +35,8 @@ description: "Consultar al modificar extracción OCR con Gemini, prompts de IA, 
   - *Un solo comercio:* No encolar en SQLite (`queueItemId: null`); navegar directamente a `ReviewExpenseScreen`.
   - *Dos o más comercios distintos en la misma frase:* Encolar todos los registros en `ScanQueueProvider` en estado `ready` con `image_path: ''` y abrir el primero pasando su `queueItemId` para habilitar el flujo continuo secuencial.
 - **Respeto de Divisa Dictada:** Respetar estrictamente la moneda indicada por el usuario (VES, USD, EUR, USDT), prohibiéndose forzar USD por defecto si se especificó otra moneda.
+- **Detección de Método de Liquidación en Dictado:** Al dictar gastos en USD o EUR, el prompt del Worker debe inferir `metodo_liquidacion`:
+  - `"BS_BCV"`: Si pagó en bolívares a tasa oficial BCV, pago móvil, tarjeta de débito, biopago, punto de venta o no especificó divisas en efectivo.
+  - `"BS_USDT"`: Si pagó en bolívares a tasa paralelo, USDT, Binance o P2P.
+  - `"DIVISA"`: Si pagó directamente en dólares o divisas en efectivo, Zelle o Binance Pay.
+  Esta propiedad se transmite a `ReviewExpenseScreen` para preseleccionar la pastilla correspondiente de forma transparente.
