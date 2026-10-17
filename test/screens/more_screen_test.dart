@@ -404,6 +404,21 @@ void main() {
       expect(find.text('Google Play'), findsOneWidget);
       expect(find.text('Versión de la App'), findsOneWidget);
     });
+
+    testWidgets('al tocar refresh_rates_btn ejecuta actualizacion y muestra feedback', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      final refreshBtn = find.byKey(const Key('refresh_rates_btn'));
+      await tester.ensureVisible(refreshBtn);
+      await tester.pumpAndSettle();
+
+      expect(refreshBtn, findsOneWidget);
+      await tester.tap(refreshBtn);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SnackBar), findsOneWidget);
+    });
   });
 }
 

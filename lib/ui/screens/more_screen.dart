@@ -507,7 +507,20 @@ class MoreScreenState extends State<MoreScreen> {
                           onPressed: settings.isSyncingRate
                               ? null
                               : () async {
-                                  await settings.actualizarTasaAutomatica();
+                                  final exito = await settings.actualizarTasaAutomatica();
+                                  if (!mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        exito
+                                            ? 'Tasas oficiales actualizadas: Bs. ${settings.tasaCambioVesUsd.toStringAsFixed(2)} / USD'
+                                            : 'Sin conexión en vivo. Mostrando última tasa disponible.',
+                                        style: const TextStyle(color: Colors.black),
+                                      ),
+                                      backgroundColor: exito ? AppColors.primary : AppColors.warning,
+                                      duration: const Duration(seconds: 3),
+                                    ),
+                                  );
                                 },
                         ),
                       ],

@@ -122,13 +122,15 @@ class SettingsProvider with ChangeNotifier {
     }
   }
 
-  Future<void> actualizarTasaAutomatica({http.Client? client}) async {
+  Future<bool> actualizarTasaAutomatica({http.Client? client}) async {
     _isSyncingRate = true;
     notifyListeners();
+    bool exito = false;
     try {
       final allRates = await ExchangeRateService.getAllTodayRates(client: client);
+      final prefs = await SharedPreferences.getInstance();
+
       if (!allRates.esReferencia) {
-        final prefs = await SharedPreferences.getInstance();
         // Solo se aplica lo que llegó en vivo válido (> 50.0); el resto conserva su
         // valor previo en vez de pisarse con ceros o semillas obsoletas.
         if (allRates.usd > 50.0) {
@@ -147,15 +149,28 @@ class SettingsProvider with ChangeNotifier {
         _ultimaActualizacionTasas = allRates.fecha;
         _tasasSonReferencia = false;
         await prefs.setString('cached_exchange_rates_timestamp', _ultimaActualizacionTasas!.toIso8601String());
+        exito = true;
       } else {
-        // Sin dato en vivo: NO se toca el timestamp. La fecha mostrada sigue
-        // siendo la última actualización real y el badge lo señala.
+        // Modo referencia: si allRates trajo tasas válidas (> 50.0) por caché o fallback, asignarlas
+        if (allRates.usd > 50.0) {
+          _tasaCambioVesUsd = allRates.usd;
+          await prefs.setDouble(AppConstants.prefTasaCambio, _tasaCambioVesUsd);
+        }
+        if (allRates.eur > 50.0) {
+          _tasaCambioVesEur = allRates.eur;
+        }
+        if (allRates.usdt > 50.0) {
+          _tasaCambioVesUsdt = allRates.usdt;
+        }
         _tasasSonReferencia = true;
       }
+    } catch (e) {
+      debugPrint("Error al actualizar tasas automáticas: $e");
     } finally {
       _isSyncingRate = false;
       notifyListeners();
     }
+    return exito;
   }
 
   Future<void> setApiKey(String key) async {

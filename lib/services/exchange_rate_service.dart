@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../core/constants/app_constants.dart';
 
 class ExchangeRatesData {
   final double usd;
@@ -189,7 +190,10 @@ class ExchangeRateService {
     try {
       final url = Uri.parse(urlString);
       final httpClient = client ?? http.Client();
-      final response = await httpClient.get(url).timeout(const Duration(seconds: 6));
+      final response = await httpClient.get(
+        url,
+        headers: {'User-Agent': 'RindeMas/1.0 (Android; Linux)'},
+      ).timeout(const Duration(seconds: 6));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final val = (data[fieldKey] as num?)?.toDouble();

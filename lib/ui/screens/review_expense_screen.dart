@@ -159,11 +159,22 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       tUsdt = results[2];
     }
 
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    if (tUsd <= 50.0 && settings.tasaCambioVesUsd > 50.0) {
+      tUsd = settings.tasaCambioVesUsd;
+    }
+    if (tEur <= 50.0 && settings.tasaCambioVesEur > 50.0) {
+      tEur = settings.tasaCambioVesEur;
+    }
+    if (tUsdt <= 50.0 && settings.tasaCambioVesUsdt > 50.0) {
+      tUsdt = settings.tasaCambioVesUsdt;
+    }
+
     if (mounted && _selectedFecha == fecha) {
       setState(() {
-        _tasaUsdFecha = tUsd;
-        _tasaEurFecha = tEur;
-        _tasaUsdtFecha = tUsdt;
+        _tasaUsdFecha = tUsd > 50.0 ? tUsd : null;
+        _tasaEurFecha = tEur > 50.0 ? tEur : null;
+        _tasaUsdtFecha = tUsdt > 50.0 ? tUsdt : null;
         if (tUsdt > 0) {
           _tasaUsdtCtrl.text = tUsdt.toStringAsFixed(2);
         }
@@ -360,15 +371,17 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
 
   double _effectiveBcvRate(SettingsProvider settings) {
     if (_selectedMoneda == 'EUR') {
-      if (_tasaEurFecha != null && _tasaEurFecha! > 0) return _tasaEurFecha!;
+      if (_tasaEurFecha != null && _tasaEurFecha! > 50.0) return _tasaEurFecha!;
       final parsed = tryParseAmount(_tasaCambioCtrl.text, isPrice: false) ?? 0.0;
-      if (parsed > 0 && settings.tasaCambioVesEur > 0) return parsed;
-      return settings.tasaCambioVesEur > 0 ? settings.tasaCambioVesEur : settings.tasaCambioVesUsd;
+      if (parsed > 50.0) return parsed;
+      return settings.tasaCambioVesEur > 50.0
+          ? settings.tasaCambioVesEur
+          : (settings.tasaCambioVesUsd > 50.0 ? settings.tasaCambioVesUsd : AppConstants.defaultTasaCambio);
     }
-    if (_tasaUsdFecha != null && _tasaUsdFecha! > 0) return _tasaUsdFecha!;
+    if (_tasaUsdFecha != null && _tasaUsdFecha! > 50.0) return _tasaUsdFecha!;
     final parsed = tryParseAmount(_tasaCambioCtrl.text, isPrice: false) ?? 0.0;
-    if (parsed > 0 && parsed != AppConstants.defaultTasaCambio) return parsed;
-    return settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : (parsed > 0 ? parsed : 1.0);
+    if (parsed > 50.0) return parsed;
+    return settings.tasaCambioVesUsd > 50.0 ? settings.tasaCambioVesUsd : (parsed > 0 ? parsed : AppConstants.defaultTasaCambio);
   }
 
   double get _totalUsdtCalculado {
