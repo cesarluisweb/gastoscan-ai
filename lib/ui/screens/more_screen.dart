@@ -534,7 +534,23 @@ class MoreScreenState extends State<MoreScreen> {
                           onPressed: settings.isSyncingRate
                               ? null
                               : () async {
-                                  await settings.actualizarTasaAutomatica();
+                                  // forzar: el usuario pidió un refresco
+                                  // explícito, no vale la caché en memoria.
+                                  await settings.actualizarTasaAutomatica(forzar: true);
+                                  if (!context.mounted) return;
+                                  final messenger = ScaffoldMessenger.of(context);
+                                  messenger.clearSnackBars();
+                                  final fallo = settings.ultimoErrorTasas;
+                                  messenger.showSnackBar(SnackBar(
+                                    content: Text(
+                                      fallo ?? 'Tasas actualizadas desde las fuentes oficiales.',
+                                      // OBLIGATORIO: negro sobre fondo de acento.
+                                      style: const TextStyle(color: Colors.black),
+                                    ),
+                                    backgroundColor:
+                                        fallo == null ? AppColors.primaryDark : AppColors.warning,
+                                    duration: const Duration(seconds: 3),
+                                  ));
                                 },
                         ),
                       ],

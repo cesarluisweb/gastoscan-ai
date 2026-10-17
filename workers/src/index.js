@@ -177,6 +177,103 @@ const corsHeaders = {
   "Access-Control-Expose-Headers": "x-gemini-model, x-gemini-tokens, x-receipt-mode, x-receipt-image-kb",
 };
 
+// --- Endpoint público de tasas de cambio (/tasas) -------------------------
+// Agrega BCV + Yadio + espejo jsDelivr desde la salida de Cloudflare, que no
+// depende del ISP del teléfono. Devuelve null en las monedas que no se pudieron
+// resolver para que el cliente decida fuente por fuente.
+const TASAS_MEMO_TTL_MS = 5 * 60 * 1000;
+let tasasMemo = { at: 0, body: null };
+
+async function fetchJson(url, timeoutMs = 6000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: { Accept: "application/json" },
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (_) {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function positive(value) {
+  const n = typeof value === "number" ? value : parseFloat(value);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+function pick(...candidatos) {
+  for (const c of candidatos) {
+    const n = positive(c);
+    if (n !== null) return n;
+  }
+  return null;
+}
+
+async function agregarTasas() {
+  const [oficial, euros, paralelo, yadio, usdMirror, eurMirror] = await Promise.all([
+    fetchJson("https://ve.dolarapi.com/v1/dolares/oficial"),
+    fetchJson("https://ve.dolarapi.com/v1/euros/oficial"),
+    fetchJson("https://ve.dolarapi.com/v1/dolares/paralelo"),
+    fetchJson("https://api.yadio.io/json"),
+    fetchJson("https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json"),
+    fetchJson("https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/eur.json"),
+  ]);
+
+  const yadioUsd = yadio && yadio.USD && yadio.USD.other ? yadio.USD.other : {};
+
+  return {
+    usd: pick(
+      oficial && oficial.promedio,
+      yadioUsd.official && yadioUsd.official.rate,
+      usdMirror && usdMirror.usd && usdMirror.usd.ves
+    ),
+    eur: pick(
+      euros && euros.promedio,
+      eurMirror && eurMirror.eur && eurMirror.eur.ves
+    ),
+    usdt: pick(
+      yadioUsd.p2p_usdt && yadioUsd.p2p_usdt.rate,
+      paralelo && paralelo.promedio
+    ),
+    fecha: new Date().toISOString(),
+  };
+}
+
+function jsonTasas(body, origen) {
+  return new Response(JSON.stringify({ ...body, origen }), {
+    status: 200,
+    headers: {
+      ...corsHeaders,
+      "Content-Type": "application/json",
+      "Cache-Control": "public, max-age=300",
+    },
+  });
+}
+
+async function handleTasas() {
+  const now = Date.now();
+  if (tasasMemo.body && now - tasasMemo.at < TASAS_MEMO_TTL_MS) {
+    return jsonTasas(tasasMemo.body, "cache");
+  }
+
+  const body = await agregarTasas();
+  if (body.usd == null && body.eur == null && body.usdt == null) {
+    // 503 (no 200 vacío) para que el cliente caiga a sus fuentes directas.
+    return new Response(JSON.stringify({ error: "Sin tasas disponibles." }), {
+      status: 503,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  tasasMemo = { at: now, body };
+  return jsonTasas(body, "directa");
+}
+
 export default {
   async fetch(request, env, ctx) {
     if (request.method === "OPTIONS") {
@@ -184,6 +281,14 @@ export default {
     }
 
     const url = new URL(request.url);
+
+    // Tasas de cambio BCV: dato público y SIN autenticación. Va antes de la
+    // comprobación de GEMINI_API_KEY y del bloqueo de login, porque la app
+    // necesita leer la tasa vigente aunque no haya sesión ni IA configurada.
+    if (url.pathname === "/tasas" && request.method === "GET") {
+      return handleTasas();
+    }
+
     const projectId = env.FIREBASE_PROJECT_ID || "gastoscan-ai";
     const customKeyHeader = request.headers.get("x-custom-gemini-key");
     const isCustomKey = Boolean(customKeyHeader && customKeyHeader.trim().length > 10);
