@@ -290,9 +290,7 @@ class SummaryCard extends StatelessWidget {
                     return const SizedBox.shrink();
                 }
 
-                final metaFormatted = isBudgetVes
-                    ? CurrencyFormatter.formatVes(metaAhorro)
-                    : CurrencyFormatter.formatPreferido(metaAhorro, null, tasaCambio, monedaPrincipal, tasaEur: tasaEur, tasaUsdt: tasaUsdt);
+                final metaFormatted = CurrencyFormatter.formatAmount(metaInLens, monedaPrincipal);
 
                 return Container(
                   key: const Key('summary_card_savings_badge'),
