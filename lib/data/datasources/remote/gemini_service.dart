@@ -298,6 +298,8 @@ class GeminiService {
           categoria: categoria,
         ),
       ];
+    }
+
     final String? metodoArg = args['metodo_liquidacion']?.toString() ?? args['metodoLiquidacion']?.toString();
     String? metodoLiquidacion = (metodoArg != null && ['BS_BCV', 'BS_USDT', 'DIVISA'].contains(metodoArg.toUpperCase()))
         ? metodoArg.toUpperCase()
