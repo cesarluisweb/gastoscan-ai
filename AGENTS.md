@@ -14,7 +14,7 @@
 ## 2. Semáforo Ejecutivo de Autonomía
 
 ### 🟢 Siempre (Incondicional):
-- **Monitoreo de CI por Proceso Dormido Único:** Tras cada `git push`, lanzar **una sola** vez `scripts/wait_ci.ps1` en segundo plano (tope 25 min, consulta cada 60 s) y esperar su notificación sin volcar salida intermedia. El script imprime una única línea (`run | conclusion | build | sha`) y solo si falla agrega los steps fallidos y la cola de `test_results.txt`. Prohibido `gh run watch` y prohibido consultar el estado turno tras turno. No notificar al usuario hasta confirmar `success` o hasta reportar el fallo con su guía de corrección.
+- **Monitoreo de CI por Proceso Dormido Único:** Tras cada `git push`, lanzar **una sola** vez `scripts/wait_ci.ps1` en segundo plano (tope 25 min, consulta cada 180 s) y esperar su notificación sin volcar salida intermedia. El script imprime una única línea (`run | conclusion | build | sha`) y solo si falla agrega los steps fallidos y la cola de `test_results.txt`. Prohibido `gh run watch` y prohibido consultar el estado turno tras turno. **Presupuesto de API:** sin token GitHub limita a 60 peticiones/hora por IP (agotarlo deja el monitoreo ciego); con `GITHUB_TOKEN` en el entorno se dispone de 5.000/hora y puede bajarse el intervalo a 60 s. Nunca escribir ese token en un archivo versionado. No notificar al usuario hasta confirmar `success` o hasta reportar el fallo con su guía de corrección.
 - **Canal Único de Publicación Web:** GitHub Actions es el único canal autorizado para desplegar la landing page y el panel a producción en Firebase Hosting. Tras el push a `main`, validar vía HTTP que los cambios estén visibles en `https://rindemas.cesarluis.com`.
 - **Idioma y Localización:** Mantener textos de interfaz y respuestas en español neutro/venezolano.
 - **Contraste y Paleta (`DESIGN.md`):** Fondo amarillo $\rightarrow$ texto SIEMPRE negro (`Colors.black` o `AppColors.textPrimary`). Fondo blanco/claro $\rightarrow$ texto negro o gris, NUNCA amarillo. El amarillo queda reservado exclusivamente para iconos, contenedores con texto negro y bordes de acento activo.
@@ -27,7 +27,7 @@
 - Modificar esquemas de datos (tablas SQLite, índices, colecciones o reglas de Firestore).
 - Cambiar la arquitectura de navegación principal o flujos de autenticación.
 - Eliminar archivos existentes de código o documentación.
-- Alternar la visibilidad del repositorio (actualmente Privado) a Público ante emergencias de cuota agotada de GitHub Actions.
+- Alternar la visibilidad del repositorio (actualmente **Público** durante el desarrollo; debe volver a **Privado** al terminar) sin autorización explícita de César.
 
 ### 🚫 Nunca (Prohibiciones estrictas en una línea):
 - Modificar archivos en `android/` de forma manual o local (CI los regenera).

@@ -18,7 +18,7 @@ El SDK de Flutter no está instalado en la máquina local. Toda compilación y s
 powershell -ExecutionPolicy Bypass -File scripts/wait_ci.ps1
 ```
 
-El script localiza el run del commit actual, espera internamente (bucle `Start-Sleep` de 60 s, tope 25 min) y solo al terminar imprime el resumen:
+El script localiza el run del commit actual, espera internamente (bucle `Start-Sleep` de 180 s, tope 25 min) y solo al terminar imprime el resumen:
 
 ```
 CI 39032330731 | success | build 487 | ecc3760
@@ -37,8 +37,10 @@ $jobs.jobs.steps | Where-Object { $_.conclusion -eq 'failure' } | Select-Object 
 
 **Prohibido** solicitar `/actions/runs/{id}/logs`: devuelve HTTP 403 en este repositorio privado y su tamaño es enorme. **Prohibido** usar `gh run watch` (streaming bloqueante que vuelca la salida completa línea por línea).
 
-### Visibilidad del Repositorio y Credenciales
-Mientras el repositorio esté **Público** (etapa de desarrollo) la API REST responde sin credenciales. Si vuelve a **Privado**, exportar `GITHUB_TOKEN` en el entorno; `wait_ci.ps1` lo toma de la variable y aborta de inmediato ante un `404` en lugar de esperar los 25 minutos. Nunca escribir ese token en un archivo versionado.
+### Visibilidad del Repositorio y Cuota de API
+Mientras el repositorio esté **Público** (etapa de desarrollo) la API REST responde sin credenciales. Si vuelve a **Privado**, exportar `GITHUB_TOKEN` en el entorno; `wait_ci.ps1` lo toma de la variable y aborta de inmediato ante un `401`/`404` en lugar de esperar los 25 minutos.
+
+**Cuota de API:** sin token el límite es de **60 peticiones por hora** por IP, margen muy corto para un intervalo agresivo (agotarla deja el monitoreo ciego hasta la reposición). Con `GITHUB_TOKEN` el límite sube a 5.000/hora. Ante un `403` el script calcula el momento de reposición y espera en lugar de fallar en silencio. Nunca escribir ese token en un archivo versionado.
 
 ---
 

@@ -6,6 +6,7 @@
 - **Fase activa:** Fase 6.2 y Fase 5 (Closed Testing activa).
 - **Tareas recientes:** `FIN-11` (Motor Multimoneda "Dos Lentes", Pulido Integral 10 Puntos y Soporte de IA) `Pendiente de validación 🧪`. `REL-01` `Pendiente de validación 🧪`. `UI-03` `Pendiente de validación 🧪`. `FIN-10` `Completada ✅`.
 - **Documentación Técnica:** [ROADMAP.md](ROADMAP.md) y [DOC_MOTOR_MULTIMONEDA.md](DOC_MOTOR_MULTIMONEDA.md) actualizados.
+- **Herramientas de Mantenimiento:** `scripts/wait_ci.ps1` monitorea GitHub Actions como proceso dormido único (regla permanente en `AGENTS.md` §2). El repositorio está **Público** durante el desarrollo; vuelve a Privado al terminar.
 
 ## Decisiones Técnicas y de Negocio Recientes
 - **FIN-11 (Motor Multimoneda "Dos Lentes", Pulido Integral y Soporte de IA):**
