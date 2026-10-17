@@ -14,6 +14,8 @@ class MockTotalsDatabaseHelper extends DatabaseHelper {
     required int totalOriginal,
     required int totalUsd,
     required double tasaCambio,
+    int? totalUsdt,
+    double? tasaUsdt,
     String categoria = 'Otros',
     List<Map<String, dynamic>> items = const [],
   }) {
@@ -23,7 +25,9 @@ class MockTotalsDatabaseHelper extends DatabaseHelper {
       'moneda': moneda,
       'total_original': totalOriginal,
       'total_usd': totalUsd,
+      'total_usdt': totalUsdt,
       'tasa_cambio': tasaCambio,
+      'tasa_usdt': tasaUsdt,
       'categoria': categoria,
       'eliminado_en': null,
     });
@@ -39,17 +43,32 @@ class MockTotalsDatabaseHelper extends DatabaseHelper {
 
     double sumUsd = 0.0;
     double sumVes = 0.0;
+    double sumUsdt = 0.0;
 
     for (final r in rows) {
       final moneda = (r['moneda'] as String?) ?? 'VES';
       final totalOrigInt = (r['total_original'] as num?)?.toInt() ?? 0;
       final totalUsdInt = (r['total_usd'] as num?)?.toInt() ?? 0;
+      final totalUsdtInt = (r['total_usdt'] as num?)?.toInt();
       final tasa = (r['tasa_cambio'] as num?)?.toDouble() ?? 1.0;
+      final tasaUsdt = (r['tasa_usdt'] as num?)?.toDouble();
 
       final double totalOrig = totalOrigInt / 100.0;
       final double totalUsd = totalUsdInt / 100.0;
 
+      final double totalUsdt;
+      if (totalUsdtInt != null && totalUsdtInt > 0) {
+        totalUsdt = totalUsdtInt / 100.0;
+      } else if (moneda != 'VES') {
+        totalUsdt = totalUsd;
+      } else if (tasaUsdt != null && tasaUsdt > 0) {
+        totalUsdt = totalOrig / tasaUsdt;
+      } else {
+        totalUsdt = totalUsd;
+      }
+
       sumUsd += totalUsd;
+      sumUsdt += totalUsdt;
 
       if (moneda == 'VES') {
         sumVes += totalOrig;
@@ -61,6 +80,7 @@ class MockTotalsDatabaseHelper extends DatabaseHelper {
     return {
       'USD': sumUsd,
       'VES': sumVes,
+      'USDT': sumUsdt,
     };
   }
 
@@ -77,12 +97,30 @@ class MockTotalsDatabaseHelper extends DatabaseHelper {
       final gastoMoneda = (g['moneda'] as String?) ?? 'VES';
       final totalOrig = ((g['total_original'] as num?)?.toInt() ?? 0) / 100.0;
       final totalUsd = ((g['total_usd'] as num?)?.toInt() ?? 0) / 100.0;
+      final totalUsdtInt = (g['total_usdt'] as num?)?.toInt();
       final tasa = (g['tasa_cambio'] as num?)?.toDouble() ?? 1.0;
+      final tasaUsdt = (g['tasa_usdt'] as num?)?.toDouble();
       final gastoCat = (g['categoria'] as String?) ?? 'Otros';
 
-      final double targetTotal = (moneda == 'VES')
-          ? (gastoMoneda == 'VES' ? totalOrig : totalUsd * (tasa > 0 ? tasa : 1.0))
-          : totalUsd;
+      final double totalUsdt;
+      if (totalUsdtInt != null && totalUsdtInt > 0) {
+        totalUsdt = totalUsdtInt / 100.0;
+      } else if (gastoMoneda != 'VES') {
+        totalUsdt = totalUsd;
+      } else if (tasaUsdt != null && tasaUsdt > 0) {
+        totalUsdt = totalOrig / tasaUsdt;
+      } else {
+        totalUsdt = totalUsd;
+      }
+
+      final double targetTotal;
+      if (moneda == 'VES') {
+        targetTotal = (gastoMoneda == 'VES' ? totalOrig : totalUsd * (tasa > 0 ? tasa : 1.0));
+      } else if (moneda == 'USDT') {
+        targetTotal = totalUsdt;
+      } else {
+        targetTotal = totalUsd;
+      }
 
       final items = _items[gastoId] ?? [];
 
@@ -115,14 +153,16 @@ void main() {
     setUp(() {
       helper = MockTotalsDatabaseHelper();
 
-      // Gasto 1: En Bolívares (Factura de mercado de Bs. 50.000,00 a tasa 800 -> $62.50)
+      // Gasto 1: En Bolívares (Factura de mercado de Bs. 50.000,00 a tasa 800 -> $62.50, a tasa USDT 1000 -> 50.00 USDT)
       helper.seedGasto(
         id: 1,
         fecha: '2026-10-02',
         moneda: 'VES',
         totalOriginal: 5000000, // Bs. 50.000,00
         totalUsd: 6250,        // $62.50
+        totalUsdt: 5000,       // 50.00 USDT
         tasaCambio: 800.0,
+        tasaUsdt: 1000.0,
         categoria: 'Alimentación',
         items: [
           {'categoria': 'Alimentación', 'total': 3000000}, // Bs. 30.000
@@ -130,13 +170,14 @@ void main() {
         ],
       );
 
-      // Gasto 2: En Dólares ($10.00 pagados en efectivo o chat, tasa registrada ese día: 850 -> Bs. 8.500)
+      // Gasto 2: En Dólares ($10.00 pagados en efectivo o chat, tasa registrada ese día: 850 -> Bs. 8.500, paridad 1:1 en USDT)
       helper.seedGasto(
         id: 2,
         fecha: '2026-10-03',
         moneda: 'USD',
         totalOriginal: 1000,   // $10.00
         totalUsd: 1000,        // $10.00
+        totalUsdt: 1000,       // 10.00 USDT
         tasaCambio: 850.0,
         categoria: 'Transporte',
         items: [
@@ -144,7 +185,7 @@ void main() {
         ],
       );
 
-      // Gasto 3: En Bolívares sin desglose de ítems (Pago de servicios Bs. 5.960,47 a tasa 851.49 -> $7.00)
+      // Gasto 3: En Bolívares sin desglose de ítems (Pago de servicios Bs. 5.960,47 a tasa 851.49 -> $7.00, fallback totalUsdt = 700)
       helper.seedGasto(
         id: 3,
         fecha: '2026-10-04',
@@ -165,6 +206,9 @@ void main() {
 
       // Total VES = 50.000 + 8.500 (de los $10 a 850) + 5.960.47 = 64.460.47
       expect(totales['VES'], closeTo(64460.47, 0.01));
+
+      // Total USDT = 50.00 + 10.00 + 7.00 = 67.00
+      expect(totales['USDT'], closeTo(67.00, 0.001));
     });
 
     test('getCategoryTotals en VES suma exactamente lo mismo que el Total Gastado del mes', () async {
@@ -196,6 +240,25 @@ void main() {
 
       expect(sumCategories, closeTo(monthly['USD']!, 0.001));
       expect(sumCategories, closeTo(79.50, 0.001));
+    });
+
+    test('getCategoryTotals en USDT suma exactamente lo mismo que el Total Gastado en USDT y refleja lente P2P', () async {
+      final monthly = await helper.getMonthlyTotals(2026, 10);
+      final categoriesUsdt = await helper.getCategoryTotals(2026, 10, moneda: 'USDT');
+
+      final sumCategories = categoriesUsdt.values.fold(0.0, (sum, val) => sum + val);
+
+      expect(sumCategories, closeTo(monthly['USDT']!, 0.001));
+      expect(sumCategories, closeTo(67.00, 0.001));
+
+      // Alimentación: 60% de 50.00 USDT = 30.00 USDT
+      expect(categoriesUsdt['Alimentación'], closeTo(30.00, 0.01));
+      // Higiene: 40% de 50.00 USDT = 20.00 USDT
+      expect(categoriesUsdt['Higiene'], closeTo(20.00, 0.01));
+      // Transporte: 100% de $10 USD = 10.00 USDT (paridad 1:1)
+      expect(categoriesUsdt['Transporte'], closeTo(10.00, 0.01));
+      // Servicios: 100% de 7.00 USDT = 7.00 USDT
+      expect(categoriesUsdt['Servicios'], closeTo(7.00, 0.01));
     });
   });
 }

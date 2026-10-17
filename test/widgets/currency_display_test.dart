@@ -54,10 +54,40 @@ void main() {
       final eurFormatted = CurrencyFormatter.formatPreferido(10.0, 400.0, 40.0, 'EUR', tasaEur: 44.0);
       expect(eurFormatted, contains('€'));
 
-      // 19.99 USD debe mantenerse 19.99 USDT en formatPreferido sin aplicar brecha cambiaria
-      final usdtFormatted = CurrencyFormatter.formatPreferido(19.99, 800.0, 40.0, 'USDT', tasaUsdt: 45.0);
-      expect(usdtFormatted, contains('19,99'));
-      expect(usdtFormatted, contains('USDT'));
+      // Pagado en divisa (USD): 19.99 USD se mantiene 19.99 USDT en formatPreferido (paridad 1:1)
+      final usdtDivisa = CurrencyFormatter.formatPreferido(
+        19.99,
+        800.0,
+        40.0,
+        'USDT',
+        tasaUsdt: 45.0,
+        monedaOrigen: 'USD',
+      );
+      expect(usdtDivisa, contains('19,99'));
+      expect(usdtDivisa, contains('USDT'));
+
+      // Pagado en bolívares (VES): 800 Bs a tasa BCV 40 = 20 USD, pero a tasa P2P 50 = 16 USDT
+      final usdtBs = CurrencyFormatter.formatPreferido(
+        20.0,
+        800.0,
+        40.0,
+        'USDT',
+        tasaUsdt: 50.0,
+        monedaOrigen: 'VES',
+      );
+      expect(usdtBs, contains('16,00'));
+      expect(usdtBs, contains('USDT'));
+
+      // Con totalUsdt precalculado (inmutabilidad SQLite v17)
+      final usdtPrecalculado = CurrencyFormatter.formatPreferido(
+        20.0,
+        800.0,
+        40.0,
+        'USDT',
+        totalUsdt: 15.50,
+      );
+      expect(usdtPrecalculado, contains('15,50'));
+      expect(usdtPrecalculado, contains('USDT'));
     });
 
     test('convertAmount correctly converts EUR and USDT to USD', () {
@@ -130,6 +160,50 @@ void main() {
 
       expect(find.text(CurrencyFormatter.formatVes(1000.0)), findsOneWidget);
       expect(find.text(CurrencyFormatter.formatUsd(25.0)), findsOneWidget);
+    });
+
+    testWidgets('renders USDT formatted amount when monedaPrincipal is USDT', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: SummaryCard(
+              totalUsd: 25.0,
+              totalVes: 1000.0,
+              totalUsdt: 20.0,
+              periodo: 'Septiembre 2026',
+              monedaPrincipal: 'USDT',
+              tasaCambio: 40.0,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text(CurrencyFormatter.formatUsdt(20.0)), findsOneWidget);
+      expect(find.textContaining('Brecha capturada'), findsNothing);
+    });
+
+    testWidgets('converts USD budget to VES lens when monedaPrincipal is VES', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: SummaryCard(
+              totalUsd: 25.0,
+              totalVes: 1000.0,
+              periodo: 'Septiembre 2026',
+              monedaPrincipal: 'VES',
+              monedaPresupuesto: 'USD',
+              presupuestoGeneral: 100.0,
+              tasaCambio: 40.0,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // 100 USD * 40 Bs/USD = 4000 Bs de presupuesto y 25% consumido (1000 / 4000)
+      expect(find.textContaining('Presupuesto: ${CurrencyFormatter.formatVes(4000.0)}'), findsOneWidget);
+      expect(find.text('25%'), findsOneWidget);
     });
   });
 
@@ -236,6 +310,42 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text(CurrencyFormatter.formatUsdt(20.0)), findsOneWidget);
+      expect(find.text(CurrencyFormatter.formatVes(800.0)), findsOneWidget);
+    });
+
+    testWidgets('displays USDT as primary with P2P rate when gasto is in VES', (tester) async {
+      final gastoVes = GastoModel(
+        id: 2,
+        uuid: 'uuid-2',
+        fecha: '2026-09-20',
+        comercio: 'Bomba Gasolina',
+        moneda: 'VES',
+        totalOriginal: 80000, // Bs. 800.00
+        totalUsd: 2000,       // $20.00 a tasa BCV 40
+        totalUsdt: 1600,      // 16.00 USDT a tasa P2P 50
+        tasaCambio: 40.0,
+        tasaUsdt: 50.0,
+        categoria: 'Transporte',
+        creadoEn: '2026-09-20T10:00:00',
+        items: const [],
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ExpenseCard(
+              gasto: gastoVes,
+              monedaPrincipal: 'USDT',
+              tasaCambio: 40.0,
+              tasaUsdt: 50.0,
+              onDelete: () {},
+              onEdit: () {},
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text(CurrencyFormatter.formatUsdt(16.0)), findsOneWidget);
       expect(find.text(CurrencyFormatter.formatVes(800.0)), findsOneWidget);
     });
   });

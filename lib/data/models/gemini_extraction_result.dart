@@ -10,6 +10,7 @@ class GeminiExtractionResult {
   final double? tasaCambioDetectada;
   final List<ItemGastoModel> items;
   final List<int> matchedShoppingItemIds;
+  final String? metodoLiquidacion;
 
   GeminiExtractionResult({
     required this.comercio,
@@ -20,6 +21,7 @@ class GeminiExtractionResult {
     this.tasaCambioDetectada,
     required this.items,
     this.matchedShoppingItemIds = const [],
+    this.metodoLiquidacion,
   });
 
     static double _parseAmount(dynamic value, {bool isPrice = false}) {
@@ -165,6 +167,12 @@ class GeminiExtractionResult {
       }
     }
 
+    // Método de liquidación opcional (BS_BCV, BS_USDT, DIVISA)
+    final rawMetodo = json['metodo_liquidacion']?.toString() ?? json['metodoLiquidacion']?.toString();
+    final metodoLiquidacion = (rawMetodo != null && ['BS_BCV', 'BS_USDT', 'DIVISA'].contains(rawMetodo.toUpperCase()))
+        ? rawMetodo.toUpperCase()
+        : null;
+
     return GeminiExtractionResult(
       comercio: comercio,
       fecha: fecha,
@@ -174,6 +182,7 @@ class GeminiExtractionResult {
       tasaCambioDetectada: tasaDetectada,
       items: itemsList,
       matchedShoppingItemIds: matchedIds,
+      metodoLiquidacion: metodoLiquidacion,
     );
   }
 
@@ -187,6 +196,7 @@ class GeminiExtractionResult {
       'tasa_cambio': tasaCambioDetectada,
       'items': items.map((i) => i.toMap()).toList(),
       'items_comprados_ids': matchedShoppingItemIds,
+      'metodo_liquidacion': metodoLiquidacion,
     };
   }
 

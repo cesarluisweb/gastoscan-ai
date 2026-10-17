@@ -47,6 +47,8 @@ class CurrencyFormatter {
     String monedaPreferida, {
     double tasaEur = 0.0,
     double tasaUsdt = 0.0,
+    double? totalUsdt,
+    String? monedaOrigen,
   }) {
     final double ves = (totalVes != null && totalVes > 0)
         ? totalVes
@@ -56,15 +58,18 @@ class CurrencyFormatter {
       case 'VES':
         return formatVes(ves);
       case 'EUR':
-        // Sin tasa EUR no se inventa ratio (antes: tasaUsd * 1.08): se usa la
-        // tasa USD como aproximación solo si existe; si no hay dato, la rama
-        // neutra muestra el equivalente en USD.
+        // Sin tasa EUR no se inventa ratio: se usa la tasa USD como aproximación
+        // solo si existe; si no hay dato, la rama neutra muestra el equivalente en USD.
         final double eurRate = tasaEur > 0 ? tasaEur : (tasaCambio > 0 ? tasaCambio : 0.0);
         return formatEur(eurRate > 0 ? ves / eurRate : totalUsd);
       case 'USDT':
-        // Paridad 1:1 directa e inmutable con USD. Evita distorsión por brecha
-        // cambiaria (spread oficial BCV vs Binance P2P) y previene la fluctuación
-        // del acumulado mensual con tasas futuras.
+        if (totalUsdt != null && totalUsdt > 0) {
+          return formatUsdt(totalUsdt);
+        }
+        if (monedaOrigen == 'VES') {
+          final double rate = tasaUsdt > 0 ? tasaUsdt : (tasaCambio > 0 ? tasaCambio : 1.0);
+          return formatUsdt(rate > 0 ? ves / rate : totalUsd);
+        }
         return formatUsdt(totalUsd);
       case 'USD':
       default:

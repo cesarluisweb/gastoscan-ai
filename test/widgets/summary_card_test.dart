@@ -54,5 +54,45 @@ void main() {
       expect(find.textContaining('Te quedan'), findsOneWidget);
       expect(find.textContaining('Ritmo diario:'), findsOneWidget);
     });
+
+    testWidgets('al presionar botones de lente invoca onMonedaChanged con la moneda correcta', (tester) async {
+      String? changedMoneda;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SummaryCard(
+              totalUsd: 100.0,
+              totalVes: 8000.0,
+              periodo: 'Octubre 2026',
+              monedaPrincipal: 'USD',
+              tasaCambio: 80.0,
+              presupuestoGeneral: 500.0,
+              onMonedaChanged: (m) => changedMoneda = m,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Pulsar lente Bs.
+      await tester.tap(find.byKey(const Key('lens_switch_ves')));
+      await tester.pumpAndSettle();
+      expect(changedMoneda, equals('VES'));
+
+      // Pulsar lente USDT P2P
+      await tester.tap(find.byKey(const Key('lens_switch_usdt')));
+      await tester.pumpAndSettle();
+      expect(changedMoneda, equals('USDT'));
+
+      // Pulsar lente EUR BCV
+      await tester.tap(find.byKey(const Key('lens_switch_eur')));
+      await tester.pumpAndSettle();
+      expect(changedMoneda, equals('EUR'));
+
+      // Pulsar lente USD BCV
+      await tester.tap(find.byKey(const Key('lens_switch_usd')));
+      await tester.pumpAndSettle();
+      expect(changedMoneda, equals('USD'));
+    });
   });
 }

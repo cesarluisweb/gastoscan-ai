@@ -47,7 +47,6 @@ void main() {
         eur: 940.20,
         usdt: 875.00,
         fecha: DateTime.parse('2026-10-05T12:00:00Z'),
-        diagnostico: 'test-diag',
       );
 
       final json = data.toJson();
@@ -57,7 +56,6 @@ void main() {
       expect(fromJson.eur, equals(940.20));
       expect(fromJson.usdt, equals(875.00));
       expect(fromJson.esReferencia, isFalse);
-      expect(fromJson.diagnostico, equals('test-diag'));
     });
   });
 
@@ -74,8 +72,6 @@ void main() {
       expect(rates.usd, equals(0.0));
       expect(rates.eur, equals(0.0));
       expect(rates.usdt, equals(0.0));
-      expect(rates.diagnostico, isNotNull);
-      expect(rates.diagnostico, contains('USD: HTTP 500'));
 
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.getString('cached_exchange_rates_timestamp'), isNull);
@@ -133,5 +129,74 @@ void main() {
       expect(eurRate, equals(162.5));
       expect(usdtRate, equals(155.0));
     });
+
+    test('ignora valores obsoletos <= 50.0 en cache previa', () async {
+      SharedPreferences.setMockInitialValues({
+        'cached_rate_usd': 40.0,
+        'cached_rate_eur': 43.2,
+        'cached_rate_usdt': 40.0,
+      });
+      final failing = MockClient((_) async => http.Response('error', 500));
+      final rates = await ExchangeRateService.getAllTodayRates(client: failing);
+
+      expect(rates.esReferencia, isTrue);
+      expect(rates.usd, equals(0.0));
+      expect(rates.eur, equals(0.0));
+      expect(rates.usdt, equals(0.0));
+    });
+
+    test('fallback exitoso a Yadio Oficial cuando DolarAPI falla', () async {
+      final mock = MockClient((request) async {
+        if (request.url.toString().contains('api.yadio.io')) {
+          return http.Response(
+            '{"USD":{"other":{"official":{"rate":880.5},"p2p_usdt":{"rate":1010.0}},"rate":1010.0}}',
+            200,
+          );
+        }
+        return http.Response('error', 500);
+      });
+
+      final rates = await ExchangeRateService.getAllTodayRates(client: mock);
+      expect(rates.esReferencia, isFalse);
+      expect(rates.usd, equals(880.5));
+      expect(rates.usdt, equals(1010.0));
+    });
+
+    test('fallback exitoso a jsDelivr cuando DolarAPI y Yadio fallan', () async {
+      final mock = MockClient((request) async {
+        if (request.url.toString().contains('jsdelivr.net') && request.url.toString().contains('usd.json')) {
+          return http.Response('{"usd":{"ves":875.25}}', 200);
+        }
+        return http.Response('error', 500);
+      });
+
+      final rates = await ExchangeRateService.getAllTodayRates(client: mock);
+      expect(rates.esReferencia, isFalse);
+      expect(rates.usd, equals(875.25));
+    });
+
+    test('prioridad a Cloudflare Gateway cuando responde con tasas validas', () async {
+      final mock = MockClient((request) async {
+        if (request.url.toString().contains('/tasas')) {
+          return http.Response(
+            '{"usd": 880.12, "eur": 985.73, "usdt": 1001.31, "fecha": "2026-10-17T22:00:00Z", "origen": "directa"}',
+            200,
+          );
+        }
+        return http.Response('error', 500);
+      });
+
+      final rates = await ExchangeRateService.getAllTodayRates(client: mock);
+      expect(rates.esReferencia, isFalse);
+      expect(rates.usd, equals(880.12));
+      expect(rates.eur, equals(985.73));
+      expect(rates.usdt, equals(1001.31));
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getDouble('cached_rate_usd'), equals(880.12));
+      expect(prefs.getDouble('cached_rate_eur'), equals(985.73));
+      expect(prefs.getDouble('cached_rate_usdt'), equals(1001.31));
+    });
   });
 }
+

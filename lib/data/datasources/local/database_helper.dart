@@ -25,7 +25,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 16,
+      version: 17,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
       onConfigure: _onConfigure,
@@ -223,11 +223,50 @@ class DatabaseHelper {
         await db.execute('CREATE INDEX IF NOT EXISTS idx_scan_queue_image_hash ON scan_queue (image_hash);');
       } catch (_) {}
     }
+    if (oldVersion < 17) {
+      try {
+        await db.execute('ALTER TABLE gastos ADD COLUMN tasa_usdt REAL');
+      } catch (_) {}
+      try {
+        await db.execute('ALTER TABLE gastos ADD COLUMN total_usdt INTEGER');
+      } catch (_) {}
+
+      // Backfill inmutable para gastos existentes:
+      // 1. Gastos en divisas (USD, EUR, USDT): total_usdt = total_usd (paridad 1:1)
+      await db.execute('''
+        UPDATE gastos 
+        SET total_usdt = total_usd,
+            tasa_usdt = tasa_cambio
+        WHERE moneda != 'VES' AND (total_usdt IS NULL OR total_usdt = 0)
+      ''');
+
+      // 2. Gastos en VES donde la fuente fue USDT: total_usdt = total_usd
+      await db.execute('''
+        UPDATE gastos 
+        SET total_usdt = total_usd,
+            tasa_usdt = tasa_cambio
+        WHERE moneda = 'VES' 
+          AND fuente_tasa_cambio LIKE '%USDT%' 
+          AND (total_usdt IS NULL OR total_usdt = 0)
+      ''');
+
+      // 3. Gastos en VES restantes (fallback seguro para inmutabilidad): total_usdt = total_usd
+      await db.execute('''
+        UPDATE gastos 
+        SET total_usdt = total_usd,
+            tasa_usdt = tasa_cambio
+        WHERE total_usdt IS NULL
+      ''');
+    }
   }
 
   Future<void> _onConfigure(Database db) async {
     // Activa la integridad referencial para borrado en cascada
     await db.execute('PRAGMA foreign_keys = ON;');
+  }
+
+  Future<Database> getDatabaseInstance() async {
+    return await database;
   }
 
   Future<void> _createDB(Database db, int version) async {
@@ -241,7 +280,9 @@ class DatabaseHelper {
         moneda TEXT NOT NULL,
         total_original INTEGER NOT NULL,
         total_usd INTEGER NOT NULL,
+        total_usdt INTEGER,
         tasa_cambio REAL DEFAULT 1.0,
+        tasa_usdt REAL,
         fuente_tasa_cambio TEXT,
         fecha_tasa_cambio TEXT,
         categoria TEXT NOT NULL,
@@ -511,8 +552,7 @@ class DatabaseHelper {
     return _hydrateGastosWithItems(db, result);
   }
 
-  /// Calcula los totales del mes (suma en USD y suma en VES)
-  /// Calcula los totales del mes (suma en USD y suma en VES) de forma determinista y consistente.
+  /// Calcula los totales del mes (suma en USD, VES y USDT) de forma determinista y consistente.
   Future<Map<String, double>> getMonthlyTotals(int year, int month) async {
     final db = await instance.database;
     final monthStr = month.toString().padLeft(2, '0');
@@ -520,24 +560,28 @@ class DatabaseHelper {
 
     final rows = await db.query(
       'gastos',
-      columns: ['moneda', 'total_original', 'total_usd', 'tasa_cambio'],
+      columns: ['moneda', 'total_original', 'total_usd', 'total_usdt', 'tasa_cambio', 'tasa_usdt'],
       where: 'fecha LIKE ? AND eliminado_en IS NULL',
       whereArgs: [pattern],
     );
 
     double sumUsd = 0.0;
     double sumVes = 0.0;
+    double sumUsdt = 0.0;
 
     for (final r in rows) {
       final moneda = (r['moneda'] as String?) ?? 'VES';
       final totalOrigInt = (r['total_original'] as num?)?.toInt() ?? 0;
       final totalUsdInt = (r['total_usd'] as num?)?.toInt() ?? 0;
+      final totalUsdtInt = (r['total_usdt'] as num?)?.toInt() ?? totalUsdInt;
       final tasa = (r['tasa_cambio'] as num?)?.toDouble() ?? 1.0;
 
       final double totalOrig = totalOrigInt / 100.0;
       final double totalUsd = totalUsdInt / 100.0;
+      final double totalUsdt = totalUsdtInt / 100.0;
 
       sumUsd += totalUsd;
+      sumUsdt += totalUsdt;
 
       if (moneda == 'VES') {
         sumVes += totalOrig;
@@ -549,11 +593,13 @@ class DatabaseHelper {
     return {
       'USD': sumUsd,
       'VES': sumVes,
+      'USDT': sumUsdt,
     };
   }
 
   /// Calcula el desglose de gastos agrupado por categoría para el mes.
-  /// Si [moneda] es 'VES', devuelve los montos en Bolívares respetando el valor original o tasa fija del día de compra.
+  /// Si [moneda] es 'VES', devuelve los montos en Bolívares.
+  /// Si es 'USDT', devuelve los montos calculados bajo el lente USDT.
   /// Si es 'USD', devuelve los montos en Dólares.
   Future<Map<String, double>> getCategoryTotals(int year, int month, {String moneda = 'USD'}) async {
     final db = await instance.database;
@@ -562,7 +608,7 @@ class DatabaseHelper {
 
     final gastosRows = await db.query(
       'gastos',
-      columns: ['id', 'moneda', 'total_original', 'total_usd', 'tasa_cambio', 'categoria'],
+      columns: ['id', 'moneda', 'total_original', 'total_usd', 'total_usdt', 'tasa_cambio', 'categoria'],
       where: 'fecha LIKE ? AND eliminado_en IS NULL',
       whereArgs: [pattern],
     );
@@ -595,12 +641,13 @@ class DatabaseHelper {
       final gastoMoneda = (g['moneda'] as String?) ?? 'VES';
       final totalOrig = ((g['total_original'] as num?)?.toInt() ?? 0) / 100.0;
       final totalUsd = ((g['total_usd'] as num?)?.toInt() ?? 0) / 100.0;
+      final totalUsdt = ((g['total_usdt'] as num?)?.toInt() ?? (g['total_usd'] as num?)?.toInt() ?? 0) / 100.0;
       final tasa = (g['tasa_cambio'] as num?)?.toDouble() ?? 1.0;
       final gastoCat = AppConstants.normalizarCategoria(g['categoria'] as String?);
 
       final double targetTotal = (moneda == 'VES')
           ? (gastoMoneda == 'VES' ? totalOrig : totalUsd * (tasa > 0 ? tasa : 1.0))
-          : totalUsd;
+          : (moneda == 'USDT' ? totalUsdt : totalUsd);
 
       final items = itemsMap[gastoId] ?? const [];
 

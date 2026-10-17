@@ -14,6 +14,7 @@ import 'ui/screens/main_screen.dart';
 
 import 'services/sync_service.dart';
 
+/// Punto de entrada oficial de Rinde Más.
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {

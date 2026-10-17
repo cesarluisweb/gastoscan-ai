@@ -99,7 +99,9 @@ class _ExpenseCardState extends State<ExpenseCard> {
       tasa,
       widget.monedaPrincipal,
       tasaEur: widget.tasaEur,
-      tasaUsdt: widget.tasaUsdt,
+      tasaUsdt: widget.gasto.tasaUsdtDisplay > 0 ? widget.gasto.tasaUsdtDisplay : widget.tasaUsdt,
+      totalUsdt: widget.gasto.totalUsdtDisplay,
+      monedaOrigen: widget.gasto.moneda,
     );
 
     final secondaryFormatted = CurrencyFormatter.formatSecundario(
@@ -346,13 +348,9 @@ class _ExpenseCardState extends State<ExpenseCard> {
                             );
                             break;
                           case 'USDT':
-                            itemDisplay = CurrencyFormatter.convertFromUsd(
-                              itemUsd,
-                              'USDT',
-                              tasa,
-                              tasaEur: widget.tasaEur,
-                              tasaUsdt: widget.tasaUsdt,
-                            );
+                            itemDisplay = itemRatio > 0
+                                ? (widget.gasto.totalUsdtDisplay * itemRatio)
+                                : widget.gasto.totalUsdtDisplay;
                             break;
                           case 'USD':
                           default:

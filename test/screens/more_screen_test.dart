@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gastoscan_ai/data/datasources/local/database_helper.dart';
@@ -86,6 +87,9 @@ class FakeGastoProvider extends GastoProvider {
 class FakeSettingsProvider extends SettingsProvider {
   @override
   Future<void> loadSettings() async {}
+
+  @override
+  Future<bool> actualizarTasaAutomatica({http.Client? client}) async => true;
 }
 
 void main() {
@@ -390,6 +394,35 @@ void main() {
       await tester.tap(find.text('Entendido'));
       await tester.pumpAndSettle();
       expect(find.text('Aviso Legal y Tasas'), findsNothing);
+    });
+
+    testWidgets('renders version card with Google Play button in MoreScreen', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      final googlePlayBtn = find.byKey(const Key('btn_ver_google_play'));
+      await tester.ensureVisible(googlePlayBtn);
+      await tester.pumpAndSettle();
+
+      expect(googlePlayBtn, findsOneWidget);
+      expect(find.text('Google Play'), findsOneWidget);
+      expect(find.text('Versión de la App'), findsOneWidget);
+    });
+
+    testWidgets('al tocar refresh_rates_btn ejecuta actualizacion silenciosa', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      final refreshBtn = find.byKey(const Key('refresh_rates_btn'));
+      await tester.ensureVisible(refreshBtn);
+      await tester.pumpAndSettle();
+
+      expect(refreshBtn, findsOneWidget);
+      await tester.tap(refreshBtn);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+
+      expect(find.byType(SnackBar), findsNothing);
     });
   });
 }

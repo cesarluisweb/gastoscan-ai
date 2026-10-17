@@ -19,6 +19,37 @@ class AnalysisScreen extends StatelessWidget {
     this.onNavigateToChat,
   }) : super(key: key);
 
+  double _convertBudgetToLens(
+    double amount,
+    String fromMoneda,
+    String toMoneda,
+    SettingsProvider settings,
+  ) {
+    if (amount <= 0) return 0.0;
+    if (fromMoneda == toMoneda) return amount;
+
+    final double usdRate = settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : 1.0;
+    final double eurRate = settings.tasaCambioVesEur > 0 ? settings.tasaCambioVesEur : usdRate;
+
+    double inUsd = amount;
+    if (fromMoneda == 'VES') {
+      inUsd = amount / usdRate;
+    } else if (fromMoneda == 'EUR') {
+      inUsd = (amount * eurRate) / usdRate;
+    } else if (fromMoneda == 'USDT') {
+      inUsd = amount;
+    }
+
+    if (toMoneda == 'USD' || toMoneda == 'USDT') {
+      return inUsd;
+    } else if (toMoneda == 'VES') {
+      return inUsd * usdRate;
+    } else if (toMoneda == 'EUR') {
+      return eurRate > 0 ? (inUsd * usdRate) / eurRate : inUsd;
+    }
+    return amount;
+  }
+
   @override
   Widget build(BuildContext context) {
     final gastoProvider = Provider.of<GastoProvider>(context);
@@ -66,6 +97,12 @@ class AnalysisScreen extends StatelessWidget {
             keyPrefix: 'analysis_',
             padding: EdgeInsets.only(bottom: 12),
           ),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _buildLensSwitch(context, settings),
+            ),
+          ),
 
           if (gastoProvider.isLoading)
             const Center(
@@ -76,67 +113,56 @@ class AnalysisScreen extends StatelessWidget {
             )
           else if (hasData) ...[
             () {
-              final bool isBudgetVes = gastoProvider.monedaPresupuesto == 'VES';
-              final String activeMoneda = isBudgetVes ? 'VES' : settings.monedaPrincipal;
+              final String budgetMoneda = gastoProvider.monedaPresupuesto;
+              final String activeMoneda = settings.monedaPrincipal;
 
               final Map<String, double> categoryTotals;
-              final Map<String, double> categoryBudgets;
+              final Map<String, double> categoryBudgets = gastoProvider.presupuestosPorCategoria.map(
+                (k, v) => MapEntry(k, _convertBudgetToLens(v, budgetMoneda, activeMoneda, settings)),
+              );
               final double totalMes;
-              final double budgetGeneral;
+              final double budgetGeneral = _convertBudgetToLens(
+                gastoProvider.presupuestoGeneral,
+                budgetMoneda,
+                activeMoneda,
+                settings,
+              );
 
               if (activeMoneda == 'VES') {
                 categoryTotals = gastoProvider.totalesPorCategoriaVes;
-                categoryBudgets = isBudgetVes
-                    ? gastoProvider.presupuestosPorCategoria
-                    : gastoProvider.presupuestosPorCategoria.map((k, v) => MapEntry(
-                          k,
-                          CurrencyFormatter.convertFromUsd(v, 'VES', settings.tasaCambioVesUsd),
-                        ));
                 totalMes = gastoProvider.totalMesVes;
-                budgetGeneral = isBudgetVes
-                    ? gastoProvider.presupuestoGeneral
-                    : CurrencyFormatter.convertFromUsd(gastoProvider.presupuestoGeneral, 'VES', settings.tasaCambioVesUsd);
               } else if (activeMoneda == 'USD') {
                 categoryTotals = gastoProvider.totalesPorCategoria;
-                categoryBudgets = gastoProvider.presupuestosPorCategoria;
                 totalMes = gastoProvider.totalMesUsd;
-                budgetGeneral = gastoProvider.presupuestoGeneral;
+              } else if (activeMoneda == 'USDT') {
+                categoryTotals = gastoProvider.totalesPorCategoriaUsdt;
+                totalMes = gastoProvider.totalMesUsdt;
               } else {
-                // EUR o USDT
-                categoryTotals = gastoProvider.totalesPorCategoria.map((k, v) => MapEntry(
-                      k,
-                      CurrencyFormatter.convertFromUsd(
-                        v,
+                // EUR
+                final double eurRate = settings.tasaCambioVesEur > 0
+                    ? settings.tasaCambioVesEur
+                    : (settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : 1.0);
+                categoryTotals = gastoProvider.totalesPorCategoriaVes.isNotEmpty
+                    ? gastoProvider.totalesPorCategoriaVes.map((k, v) => MapEntry(k, eurRate > 0 ? (v / eurRate) : 0.0))
+                    : gastoProvider.totalesPorCategoria.map((k, v) => MapEntry(
+                          k,
+                          CurrencyFormatter.convertFromUsd(
+                            v,
+                            activeMoneda,
+                            settings.tasaCambioVesUsd,
+                            tasaEur: settings.tasaCambioVesEur,
+                            tasaUsdt: settings.tasaCambioVesUsdt,
+                          ),
+                        ));
+                totalMes = gastoProvider.totalMesVes > 0 && eurRate > 0
+                    ? (gastoProvider.totalMesVes / eurRate)
+                    : CurrencyFormatter.convertFromUsd(
+                        gastoProvider.totalMesUsd,
                         activeMoneda,
                         settings.tasaCambioVesUsd,
                         tasaEur: settings.tasaCambioVesEur,
                         tasaUsdt: settings.tasaCambioVesUsdt,
-                      ),
-                    ));
-                categoryBudgets = gastoProvider.presupuestosPorCategoria.map((k, v) => MapEntry(
-                      k,
-                      CurrencyFormatter.convertFromUsd(
-                        v,
-                        activeMoneda,
-                        settings.tasaCambioVesUsd,
-                        tasaEur: settings.tasaCambioVesEur,
-                        tasaUsdt: settings.tasaCambioVesUsdt,
-                      ),
-                    ));
-                totalMes = CurrencyFormatter.convertFromUsd(
-                  gastoProvider.totalMesUsd,
-                  activeMoneda,
-                  settings.tasaCambioVesUsd,
-                  tasaEur: settings.tasaCambioVesEur,
-                  tasaUsdt: settings.tasaCambioVesUsdt,
-                );
-                budgetGeneral = CurrencyFormatter.convertFromUsd(
-                  gastoProvider.presupuestoGeneral,
-                  activeMoneda,
-                  settings.tasaCambioVesUsd,
-                  tasaEur: settings.tasaCambioVesEur,
-                  tasaUsdt: settings.tasaCambioVesUsdt,
-                );
+                      );
               }
 
               return Column(
@@ -180,45 +206,34 @@ class AnalysisScreen extends StatelessWidget {
     SettingsProvider settings,
     String activeMoneda,
   ) {
-    final bool isBudgetVes = gastoProvider.monedaPresupuesto == 'VES';
+    final String budgetMoneda = gastoProvider.monedaPresupuesto;
     final double rawBudget = gastoProvider.presupuestoGeneral;
     final double rawMetaAhorro = gastoProvider.metaAhorro;
 
-    final double budget;
-    final double metaAhorro;
+    final double budget = _convertBudgetToLens(rawBudget, budgetMoneda, activeMoneda, settings);
+    final double metaAhorro = _convertBudgetToLens(rawMetaAhorro, budgetMoneda, activeMoneda, settings);
     final double spent;
 
     if (activeMoneda == 'VES') {
-      budget = isBudgetVes ? rawBudget : CurrencyFormatter.convertFromUsd(rawBudget, 'VES', settings.tasaCambioVesUsd);
-      metaAhorro = isBudgetVes ? rawMetaAhorro : CurrencyFormatter.convertFromUsd(rawMetaAhorro, 'VES', settings.tasaCambioVesUsd);
       spent = gastoProvider.totalMesVes;
     } else if (activeMoneda == 'USD') {
-      budget = isBudgetVes ? (settings.tasaCambioVesUsd > 0 ? rawBudget / settings.tasaCambioVesUsd : 0.0) : rawBudget;
-      metaAhorro = isBudgetVes ? (settings.tasaCambioVesUsd > 0 ? rawMetaAhorro / settings.tasaCambioVesUsd : 0.0) : rawMetaAhorro;
       spent = gastoProvider.totalMesUsd;
+    } else if (activeMoneda == 'USDT') {
+      spent = gastoProvider.totalMesUsdt;
     } else {
-      // EUR o USDT
-      budget = CurrencyFormatter.convertFromUsd(
-        rawBudget,
-        activeMoneda,
-        settings.tasaCambioVesUsd,
-        tasaEur: settings.tasaCambioVesEur,
-        tasaUsdt: settings.tasaCambioVesUsdt,
-      );
-      metaAhorro = CurrencyFormatter.convertFromUsd(
-        rawMetaAhorro,
-        activeMoneda,
-        settings.tasaCambioVesUsd,
-        tasaEur: settings.tasaCambioVesEur,
-        tasaUsdt: settings.tasaCambioVesUsdt,
-      );
-      spent = CurrencyFormatter.convertFromUsd(
-        gastoProvider.totalMesUsd,
-        activeMoneda,
-        settings.tasaCambioVesUsd,
-        tasaEur: settings.tasaCambioVesEur,
-        tasaUsdt: settings.tasaCambioVesUsdt,
-      );
+      // EUR
+      final double eurRate = settings.tasaCambioVesEur > 0
+          ? settings.tasaCambioVesEur
+          : (settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : 1.0);
+      spent = gastoProvider.totalMesVes > 0 && eurRate > 0
+          ? (gastoProvider.totalMesVes / eurRate)
+          : CurrencyFormatter.convertFromUsd(
+              gastoProvider.totalMesUsd,
+              activeMoneda,
+              settings.tasaCambioVesUsd,
+              tasaEur: settings.tasaCambioVesEur,
+              tasaUsdt: settings.tasaCambioVesUsdt,
+            );
     }
 
     final bool hasSavingsGoal = metaAhorro > 0;
@@ -487,6 +502,54 @@ class AnalysisScreen extends StatelessWidget {
             onPressed: () => BudgetBottomSheet.show(context),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLensSwitch(BuildContext context, SettingsProvider settings) {
+    final current = settings.monedaPrincipal;
+    final lenses = [
+      {'id': 'USD', 'label': 'USD BCV'},
+      {'id': 'USDT', 'label': 'USDT P2P'},
+      {'id': 'EUR', 'label': 'EUR BCV'},
+      {'id': 'VES', 'label': 'Bs.'},
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        color: AppColors.cardLighter,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: lenses.map((l) {
+          final isSelected = current == l['id'];
+          return InkWell(
+            key: Key('analysis_lens_${l['id']?.toLowerCase()}'),
+            onTap: () => settings.setMonedaPrincipal(l['id']!),
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: isSelected ? AppColors.surface : Colors.transparent,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: isSelected
+                    ? [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 4)]
+                    : null,
+              ),
+              child: Text(
+                l['label']!,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                  color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
+                ),
+              ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }

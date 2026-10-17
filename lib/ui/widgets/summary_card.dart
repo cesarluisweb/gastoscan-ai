@@ -1,13 +1,16 @@
+import 'package:provider/provider.dart';
 import 'budget_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../domain/finance/savings_health_models.dart';
 import '../../domain/finance/savings_health_calculator.dart';
+import '../../providers/settings_provider.dart';
 
 class SummaryCard extends StatelessWidget {
   final double totalUsd;
   final double totalVes;
+  final double totalUsdt;
   final String periodo;
   final String monedaPrincipal;
   final double tasaCambio;
@@ -18,11 +21,13 @@ class SummaryCard extends StatelessWidget {
   final String monedaPresupuesto;
   final int? mes;
   final int? anio;
+  final ValueChanged<String>? onMonedaChanged;
 
   const SummaryCard({
     Key? key,
     required this.totalUsd,
     required this.totalVes,
+    this.totalUsdt = 0.0,
     required this.periodo,
     this.monedaPrincipal = 'USD',
     this.tasaCambio = 1.0,
@@ -33,10 +38,38 @@ class SummaryCard extends StatelessWidget {
     this.monedaPresupuesto = 'USD',
     this.mes,
     this.anio,
+    this.onMonedaChanged,
   }) : super(key: key);
+
+  double _convertBudgetToLens(double amount) {
+    if (amount <= 0) return 0.0;
+    if (monedaPresupuesto == monedaPrincipal) return amount;
+
+    final double usdRate = tasaCambio > 0 ? tasaCambio : 1.0;
+    final double eurRate = tasaEur > 0 ? tasaEur : usdRate;
+
+    double inUsd = amount;
+    if (monedaPresupuesto == 'VES') {
+      inUsd = amount / usdRate;
+    } else if (monedaPresupuesto == 'EUR') {
+      inUsd = (amount * eurRate) / usdRate;
+    } else if (monedaPresupuesto == 'USDT') {
+      inUsd = amount;
+    }
+
+    if (monedaPrincipal == 'USD' || monedaPrincipal == 'USDT') {
+      return inUsd;
+    } else if (monedaPrincipal == 'VES') {
+      return inUsd * usdRate;
+    } else if (monedaPrincipal == 'EUR') {
+      return eurRate > 0 ? (inUsd * usdRate) / eurRate : inUsd;
+    }
+    return amount;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final double usdtEff = totalUsdt > 0 ? totalUsdt : totalUsd;
     final textoPrincipal = CurrencyFormatter.formatPreferido(
       totalUsd,
       totalVes > 0 ? totalVes : null,
@@ -44,6 +77,7 @@ class SummaryCard extends StatelessWidget {
       monedaPrincipal,
       tasaEur: tasaEur,
       tasaUsdt: tasaUsdt,
+      totalUsdt: totalUsdt > 0 ? totalUsdt : null,
     );
 
     final textoSecundario = CurrencyFormatter.formatSecundario(
@@ -55,16 +89,30 @@ class SummaryCard extends StatelessWidget {
 
     final hasBudget = presupuestoGeneral > 0;
     final hasSavingsGoal = metaAhorro > 0;
-    final isBudgetVes = monedaPresupuesto == 'VES';
-    final effectiveSpent = isBudgetVes
-        ? (totalVes > 0 ? totalVes : totalUsd * tasaCambio)
-        : totalUsd;
+
+    final double usdRate = tasaCambio > 0 ? tasaCambio : 1.0;
+    final double eurRate = tasaEur > 0 ? tasaEur : usdRate;
+    final double vesEquiv = totalVes > 0 ? totalVes : (totalUsd * usdRate);
+
+    final double effectiveSpent;
+    if (monedaPrincipal == 'VES') {
+      effectiveSpent = vesEquiv;
+    } else if (monedaPrincipal == 'USDT') {
+      effectiveSpent = usdtEff;
+    } else if (monedaPrincipal == 'EUR') {
+      effectiveSpent = eurRate > 0 ? (vesEquiv / eurRate) : totalUsd;
+    } else {
+      effectiveSpent = totalUsd;
+    }
+
+    final double budgetInLens = _convertBudgetToLens(presupuestoGeneral);
+    final double metaInLens = _convertBudgetToLens(metaAhorro);
 
     final limiteParaGastar = hasSavingsGoal
-        ? (presupuestoGeneral - metaAhorro).clamp(0.0, double.infinity)
-        : presupuestoGeneral;
+        ? (budgetInLens - metaInLens).clamp(0.0, double.infinity)
+        : budgetInLens;
 
-    final targetBudget = hasSavingsGoal ? limiteParaGastar : presupuestoGeneral;
+    final targetBudget = hasSavingsGoal ? limiteParaGastar : budgetInLens;
     final percentUsed = (hasBudget && targetBudget > 0) ? (effectiveSpent / targetBudget) : 0.0;
     final isOverBudget = hasBudget && (effectiveSpent > targetBudget);
 
@@ -81,48 +129,27 @@ class SummaryCard extends StatelessWidget {
         : (isPastMonth ? 0 : totalDaysInMonth);
     final daysForCalculation = daysRemaining > 0 ? daysRemaining : 1;
 
-    // Métricas para la fila inferior compacta
+    // Métricas para la fila inferior compacta proyectadas al lente activo
     final rem = (targetBudget - effectiveSpent).clamp(0.0, double.infinity);
     final ritmoDiario = rem / daysForCalculation;
     final diasTexto = daysRemaining == 1 ? 'Falta 1 día' : 'Faltan $daysRemaining días';
-    final remFormatted = isBudgetVes
-        ? CurrencyFormatter.formatVes(rem)
-        : CurrencyFormatter.formatPreferido(
-            rem,
-            null,
-            tasaCambio,
-            monedaPrincipal,
-            tasaEur: tasaEur,
-            tasaUsdt: tasaUsdt,
-          );
-    final ritmoFormatted = isBudgetVes
-        ? CurrencyFormatter.formatVes(ritmoDiario)
-        : CurrencyFormatter.formatPreferido(
-            ritmoDiario,
-            null,
-            tasaCambio,
-            monedaPrincipal,
-            tasaEur: tasaEur,
-            tasaUsdt: tasaUsdt,
-          );
-    final budgetFormatted = isBudgetVes
-        ? CurrencyFormatter.formatVes(presupuestoGeneral)
-        : CurrencyFormatter.formatPreferido(presupuestoGeneral, null, tasaCambio, monedaPrincipal, tasaEur: tasaEur, tasaUsdt: tasaUsdt);
-    final limiteFormatted = isBudgetVes
-        ? CurrencyFormatter.formatVes(limiteParaGastar)
-        : CurrencyFormatter.formatPreferido(limiteParaGastar, null, tasaCambio, monedaPrincipal, tasaEur: tasaEur, tasaUsdt: tasaUsdt);
-    final excessFormatted = isBudgetVes
-        ? CurrencyFormatter.formatVes(effectiveSpent - targetBudget)
-        : CurrencyFormatter.formatPreferido(effectiveSpent - targetBudget, null, tasaCambio, monedaPrincipal, tasaEur: tasaEur, tasaUsdt: tasaUsdt);
+    final remFormatted = CurrencyFormatter.formatAmount(rem, monedaPrincipal);
+    final ritmoFormatted = CurrencyFormatter.formatAmount(ritmoDiario, monedaPrincipal);
+    final budgetFormatted = CurrencyFormatter.formatAmount(budgetInLens, monedaPrincipal);
+    final limiteFormatted = CurrencyFormatter.formatAmount(limiteParaGastar, monedaPrincipal);
+    final excessFormatted = CurrencyFormatter.formatAmount(
+      (effectiveSpent - targetBudget).clamp(0.0, double.infinity),
+      monedaPrincipal,
+    );
 
     final snapshot = hasSavingsGoal
         ? SavingsHealthCalculator.calculate(
-            presupuestoGeneral: presupuestoGeneral,
-            metaAhorro: metaAhorro,
+            presupuestoGeneral: budgetInLens,
+            metaAhorro: metaInLens,
             gastoAcumulado: effectiveSpent,
             diaActual: isCurrentMonth ? now.day : (isPastMonth ? totalDaysInMonth : 1),
             diasTotalesMes: totalDaysInMonth,
-            moneda: monedaPresupuesto,
+            moneda: monedaPrincipal,
           )
         : null;
 
@@ -215,7 +242,9 @@ class SummaryCard extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 8),
+          _buildLensSwitch(context),
+          const SizedBox(height: 6),
           // Monto Principal
           Text(
             textoPrincipal,
@@ -263,9 +292,7 @@ class SummaryCard extends StatelessWidget {
                     return const SizedBox.shrink();
                 }
 
-                final metaFormatted = isBudgetVes
-                    ? CurrencyFormatter.formatVes(metaAhorro)
-                    : CurrencyFormatter.formatPreferido(metaAhorro, null, tasaCambio, monedaPrincipal, tasaEur: tasaEur, tasaUsdt: tasaUsdt);
+                final metaFormatted = CurrencyFormatter.formatAmount(metaInLens, monedaPrincipal);
 
                 return Container(
                   key: const Key('summary_card_savings_badge'),
@@ -383,6 +410,76 @@ class SummaryCard extends StatelessWidget {
               ),
           ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildLensSwitch(BuildContext context) {
+    SettingsProvider? settings;
+    try {
+      settings = Provider.of<SettingsProvider>(context);
+    } catch (_) {
+      settings = null;
+    }
+    final current = settings?.monedaPrincipal ?? monedaPrincipal;
+    final lenses = [
+      {'id': 'USD', 'label': 'USD BCV'},
+      {'id': 'USDT', 'label': 'USDT P2P'},
+      {'id': 'EUR', 'label': 'EUR BCV'},
+      {'id': 'VES', 'label': 'Bs.'},
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        color: AppColors.cardLighter,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: Row(
+          mainAxisSize: MainAxisSize.max,
+          children: lenses.map((l) {
+            final isSelected = current == l['id'];
+            final id = l['id']!;
+            return Expanded(
+              child: InkWell(
+                key: Key('lens_switch_${id.toLowerCase()}'),
+                onTap: () {
+                  if (onMonedaChanged != null) {
+                    onMonedaChanged!(id);
+                  } else {
+                    settings?.setMonedaPrincipal(id);
+                  }
+                },
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: isSelected ? AppColors.surface : Colors.transparent,
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: isSelected
+                        ? [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 4)]
+                        : null,
+                  ),
+                  child: Text(
+                    l['label']!,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                      color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
