@@ -21,6 +21,9 @@
 # Codigos de salida:
 #   0 = CI en verde         1 = CI fallo         2 = repo inaccesible (401/404)
 #   3 = tope de tiempo       4 = el push no disparo CI (paths-ignore?)
+# NOTA: el harness de ejecucion en segundo plano puede normalizar cualquier
+# codigo distinto de 0 a 1. La linea impresa es la senal autoritativa, no el
+# codigo de salida.
 #
 # ASCII puro a proposito: PowerShell 5.1 lee los .ps1 sin BOM como ANSI.
 # ==============================================================================
