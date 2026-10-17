@@ -165,7 +165,7 @@ class GastoProvider with ChangeNotifier {
     return defaultMessage;
   }
 
-  Future<int> repararTasasHistoricas({double tasaFallback = 40.0}) async {
+  Future<int> repararTasasHistoricas({double tasaFallback = 880.0}) async {
     final count = await _repository.repararTasasHistoricasIncompletas(tasaFallback: tasaFallback);
     if (count > 0) {
       await cargarDatos();

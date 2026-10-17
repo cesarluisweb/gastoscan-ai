@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../core/constants/app_constants.dart';
 
 class ExchangeRatesData {
   final double usd;
@@ -42,14 +43,22 @@ class ExchangeRateService {
   static const String _euroApiOficial = 'https://ve.dolarapi.com/v1/euros/oficial';
   static const String _dolarApiParalelo = 'https://ve.dolarapi.com/v1/dolares/paralelo';
 
-  /// Obtiene las 3 tasas del día (USD BCV, EUR BCV, USDT Binance / Paralelo) en paralelo.
-  /// Sin dato en vivo NO inventa (antes: 40.0 y USD*1.08) ni toca el timestamp:
-  /// devuelve caché (o ceros) con `esReferencia: true`.
+  static const Map<String, String> _requestHeaders = {
+    'User-Agent': 'Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36 RindeMas/1.0',
+    'Accept': 'application/json, text/plain, */*',
+  };
+
+  /// Obtiene las 3 tasas del día (USD BCV, EUR BCV, USDT Binance / Paralelo) en cascada multifuente.
+  /// Fuertes mecanismos de contingencia ante bloqueos de ISP venezolanos (CANTV/Digitel):
+  /// 1. DolarAPI oficial (USD/EUR)
+  /// 2. Yadio API oficial y P2P (USD Oficial, EUR, USDT)
+  /// 3. jsDelivr CDN de divisas (USD/EUR)
+  /// 4. Gateway Cloudflare Worker (/tasas)
   static Future<ExchangeRatesData> getAllTodayRates({http.Client? client}) async {
     final prefs = await SharedPreferences.getInstance();
     final httpClient = client ?? http.Client();
 
-    // Semillas: solo caché real. null = "sin dato".
+    // Semillas: solo caché real existente.
     double? usdRate = prefs.getDouble('cached_rate_usd') ?? prefs.getDouble('cached_exchange_rate');
     double? eurRate = prefs.getDouble('cached_rate_eur');
     double? usdtRate = prefs.getDouble('cached_rate_usdt');
@@ -57,42 +66,96 @@ class ExchangeRateService {
     final results = await Future.wait([
       _fetchUrlDouble(_dolarApiOficial, 'promedio', client: httpClient),
       _fetchUrlDouble(_euroApiOficial, 'promedio', client: httpClient),
-      _fetchUsdtLiveRate(client: httpClient),
+      _fetchYadioAllRates(client: httpClient),
     ]);
 
     bool fetchedAny = false;
+    final dUsd = results[0] as double?;
+    final dEur = results[1] as double?;
+    final yadioRates = results[2] as Map<String, double>?;
 
-    if (results[0] != null && results[0]! > 0) {
-      usdRate = results[0]!;
-      await prefs.setDouble('cached_rate_usd', usdRate);
-      await prefs.setDouble('cached_exchange_rate', usdRate);
+    // 1. Dólar BCV: DolarAPI -> Yadio Oficial -> jsDelivr -> Gateway
+    if (dUsd != null && dUsd > 0) {
+      usdRate = dUsd;
       fetchedAny = true;
+    } else if (yadioRates != null && (yadioRates['usd'] ?? 0) > 0) {
+      usdRate = yadioRates['usd']!;
+      fetchedAny = true;
+    } else {
+      final jUsd = await _fetchJsDelivrRate('usd', client: httpClient);
+      if (jUsd != null && jUsd > 0) {
+        usdRate = jUsd;
+        fetchedAny = true;
+      }
     }
 
-    if (results[1] != null && results[1]! > 0) {
-      eurRate = results[1]!;
-      await prefs.setDouble('cached_rate_eur', eurRate);
+    // 2. Euro BCV: DolarAPI -> Yadio -> jsDelivr -> Gateway
+    if (dEur != null && dEur > 0) {
+      eurRate = dEur;
       fetchedAny = true;
+    } else if (yadioRates != null && (yadioRates['eur'] ?? 0) > 0) {
+      eurRate = yadioRates['eur']!;
+      fetchedAny = true;
+    } else {
+      final jEur = await _fetchJsDelivrRate('eur', client: httpClient);
+      if (jEur != null && jEur > 0) {
+        eurRate = jEur;
+        fetchedAny = true;
+      }
     }
 
-    if (results[2] != null && results[2]! > 0) {
-      usdtRate = results[2]!;
-      await prefs.setDouble('cached_rate_usdt', usdtRate);
+    // 3. USDT Binance P2P: Yadio -> DolarAPI paralelo -> Par USD
+    if (yadioRates != null && (yadioRates['usdt'] ?? 0) > 0) {
+      usdtRate = yadioRates['usdt']!;
       fetchedAny = true;
-    } else if ((usdtRate == null || usdtRate <= 0) && (usdRate != null && usdRate > 0)) {
-      // Último recurso histórico: USDT ≈ USD. Queda señalado vía
-      // `esReferencia` cuando nada se obtuvo en vivo.
-      usdtRate = usdRate;
+    } else {
+      final dParalelo = await _fetchUrlDouble(_dolarApiParalelo, 'promedio', client: httpClient);
+      if (dParalelo != null && dParalelo > 0) {
+        usdtRate = dParalelo;
+        fetchedAny = true;
+      } else if ((usdtRate == null || usdtRate <= 0) && (usdRate != null && usdRate > 0)) {
+        usdtRate = usdRate;
+      }
+    }
+
+    // 4. Último recurso en vivo si DolarAPI y Yadio fallaron por completo: Gateway Cloudflare Worker
+    if (usdRate == null || usdRate <= 0) {
+      final gwRates = await _fetchGatewayRates(client: httpClient);
+      if (gwRates != null) {
+        if ((gwRates['usd'] ?? 0) > 0) {
+          usdRate = gwRates['usd']!;
+          fetchedAny = true;
+        }
+        if ((eurRate == null || eurRate <= 0) && (gwRates['eur'] ?? 0) > 0) {
+          eurRate = gwRates['eur']!;
+          fetchedAny = true;
+        }
+        if ((usdtRate == null || usdtRate <= 0) && (gwRates['usdt'] ?? 0) > 0) {
+          usdtRate = gwRates['usdt']!;
+          fetchedAny = true;
+        }
+      }
     }
 
     if (fetchedAny) {
       final now = DateTime.now();
+      if (usdRate != null && usdRate > 0) {
+        await prefs.setDouble('cached_rate_usd', usdRate);
+        await prefs.setDouble('cached_exchange_rate', usdRate);
+      }
+      if (eurRate != null && eurRate > 0) {
+        await prefs.setDouble('cached_rate_eur', eurRate);
+      }
+      if (usdtRate != null && usdtRate > 0) {
+        await prefs.setDouble('cached_rate_usdt', usdtRate);
+      }
       await prefs.setString('cached_exchange_rates_timestamp', now.toIso8601String());
       return ExchangeRatesData(
         usd: usdRate ?? 0.0,
         eur: eurRate ?? 0.0,
         usdt: usdtRate ?? 0.0,
         fecha: now,
+        esReferencia: false,
       );
     }
 
@@ -113,32 +176,87 @@ class ExchangeRateService {
     try {
       final url = Uri.parse(urlString);
       final httpClient = client ?? http.Client();
-      final response = await httpClient.get(url).timeout(const Duration(seconds: 6));
+      final response = await httpClient.get(url, headers: _requestHeaders).timeout(const Duration(seconds: 7));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final val = (data[fieldKey] as num?)?.toDouble();
-        if (val != null && val > 0) return val;
+        if (data is Map<String, dynamic>) {
+          final val = (data[fieldKey] as num?)?.toDouble();
+          if (val != null && val > 0) return val;
+        }
       }
     } catch (_) {}
     return null;
   }
 
-  /// Intenta consultar Yadio P2P / DolarAPI paralelo para USDT
-  static Future<double?> _fetchUsdtLiveRate({http.Client? client}) async {
+  /// Consulta Yadio API que ofrece simultáneamente USD BCV Oficial, EUR y USDT P2P
+  static Future<Map<String, double>?> _fetchYadioAllRates({http.Client? client}) async {
     try {
       final httpClient = client ?? http.Client();
       final yadioUrl = Uri.parse('https://api.yadio.io/json');
-      final resp = await httpClient.get(yadioUrl).timeout(const Duration(seconds: 5));
+      final resp = await httpClient.get(yadioUrl, headers: _requestHeaders).timeout(const Duration(seconds: 6));
       if (resp.statusCode == 200) {
         final data = jsonDecode(resp.body);
-        final p2pUsdt = (data['USD']?['other']?['p2p_usdt']?['rate'] as num?)?.toDouble();
-        if (p2pUsdt != null && p2pUsdt > 0) return p2pUsdt;
-        final usdRate = (data['USD']?['rate'] as num?)?.toDouble();
-        if (usdRate != null && usdRate > 0) return usdRate;
+        final Map<String, double> result = {};
+
+        // P2P USDT
+        final p2pUsdt = (data['USD']?['other']?['p2p_usdt']?['rate'] as num?)?.toDouble() ??
+            (data['USD']?['rate'] as num?)?.toDouble();
+        if (p2pUsdt != null && p2pUsdt > 0) result['usdt'] = p2pUsdt;
+
+        // Dólar Oficial BCV
+        final bcvUsd = (data['USD']?['other']?['official']?['rate'] as num?)?.toDouble();
+        if (bcvUsd != null && bcvUsd > 0) result['usd'] = bcvUsd;
+
+        // Euro Oficial
+        final eur = (data['EUR']?['rate'] as num?)?.toDouble();
+        if (eur != null && eur > 0) result['eur'] = eur;
+
+        if (result.isNotEmpty) return result;
       }
     } catch (_) {}
+    return null;
+  }
 
-    // Fallback directo a DolarAPI paralelo
+  /// Consulta jsDelivr CDN de monedas (proveedor estático inmune a bloqueos de ISP en Venezuela)
+  static Future<double?> _fetchJsDelivrRate(String currency, {http.Client? client}) async {
+    try {
+      final httpClient = client ?? http.Client();
+      final url = Uri.parse('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${currency.toLowerCase()}.json');
+      final resp = await httpClient.get(url, headers: _requestHeaders).timeout(const Duration(seconds: 5));
+      if (resp.statusCode == 200) {
+        final data = jsonDecode(resp.body);
+        final rate = (data[currency.toLowerCase()]?['ves'] as num?)?.toDouble();
+        if (rate != null && rate > 0) return rate;
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  /// Consulta el Gateway Cloudflare Worker en Miami ante emergencias de conectividad local
+  static Future<Map<String, double>?> _fetchGatewayRates({http.Client? client}) async {
+    try {
+      final httpClient = client ?? http.Client();
+      final url = Uri.parse('${AppConstants.defaultGatewayUrl}/tasas');
+      final resp = await httpClient.get(url, headers: _requestHeaders).timeout(const Duration(seconds: 5));
+      if (resp.statusCode == 200) {
+        final data = jsonDecode(resp.body);
+        final Map<String, double> result = {};
+        final u = (data['usd'] as num?)?.toDouble();
+        final e = (data['eur'] as num?)?.toDouble();
+        final us = (data['usdt'] as num?)?.toDouble();
+        if (u != null && u > 0) result['usd'] = u;
+        if (e != null && e > 0) result['eur'] = e;
+        if (us != null && us > 0) result['usdt'] = us;
+        if (result.isNotEmpty) return result;
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  /// Intenta consultar Yadio P2P / DolarAPI paralelo para USDT (retrocompatibilidad)
+  static Future<double?> _fetchUsdtLiveRate({http.Client? client}) async {
+    final yadio = await _fetchYadioAllRates(client: client);
+    if (yadio != null && (yadio['usdt'] ?? 0) > 0) return yadio['usdt'];
     return await _fetchUrlDouble(_dolarApiParalelo, 'promedio', client: client);
   }
 
@@ -182,7 +300,7 @@ class ExchangeRateService {
       }
 
       final url = Uri.parse(endpoint);
-      final response = await httpClient.get(url).timeout(const Duration(seconds: 5));
+      final response = await httpClient.get(url, headers: _requestHeaders).timeout(const Duration(seconds: 6));
       if (response.statusCode == 200) {
         final List<dynamic> list = jsonDecode(response.body);
         
@@ -223,7 +341,7 @@ class ExchangeRateService {
         for (int i = 0; i < 5; i++) {
           final targetIso = parsedDate.subtract(Duration(days: i)).toIso8601String().substring(0, 10);
           final url = Uri.parse('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@$targetIso/v1/currencies/usd.json');
-          final response = await httpClient.get(url).timeout(const Duration(seconds: 4));
+          final response = await httpClient.get(url, headers: _requestHeaders).timeout(const Duration(seconds: 5));
           if (response.statusCode == 200) {
             final data = jsonDecode(response.body);
             final vesRate = (data['usd']?['ves'] as num?)?.toDouble();
@@ -248,9 +366,12 @@ class ExchangeRateService {
     }
 
     if (finalRate <= 0) {
-      finalRate = prefs.getDouble('cached_rate_usd') ?? prefs.getDouble('cached_exchange_rate') ?? 1.0;
+      finalRate = prefs.getDouble('cached_rate_usd') ?? prefs.getDouble('cached_exchange_rate') ?? 0.0;
     }
-    return finalRate > 0 ? finalRate : 1.0;
+    if (finalRate <= 50.0) {
+      finalRate = AppConstants.defaultTasaCambio;
+    }
+    return finalRate;
   }
 
   /// Obtiene la tasa de cambio de hoy en tiempo real (retrocompatibilidad)

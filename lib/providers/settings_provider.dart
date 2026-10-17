@@ -87,11 +87,15 @@ class SettingsProvider with ChangeNotifier {
     }
 
     _guardarFotos = prefs.getBool(AppConstants.prefGuardarFotos) ?? AppConstants.defaultGuardarFotos;
-    _tasaCambioVesUsd = prefs.getDouble(AppConstants.prefTasaCambio) ?? AppConstants.defaultTasaCambio;
-    // Sin caché EUR no se inventa ratio (antes: USD * 1.08): queda en 0 y los
-    // formateadores usan sus ramas neutras hasta la primera sincronización.
-    _tasaCambioVesEur = prefs.getDouble('cached_rate_eur') ?? 0.0;
-    _tasaCambioVesUsdt = prefs.getDouble('cached_rate_usdt') ?? _tasaCambioVesUsd;
+    final double rawSavedTasa = prefs.getDouble(AppConstants.prefTasaCambio) ?? AppConstants.defaultTasaCambio;
+    // Si la tasa guardada es una reliquia obsoleta (<= 50.0 Bs/USD de 2024), purgarla y usar el valor de referencia actual
+    _tasaCambioVesUsd = (rawSavedTasa > 50.0) ? rawSavedTasa : AppConstants.defaultTasaCambio;
+
+    final double rawSavedEur = prefs.getDouble('cached_rate_eur') ?? 0.0;
+    _tasaCambioVesEur = (rawSavedEur > 50.0) ? rawSavedEur : 0.0;
+
+    final double rawSavedUsdt = prefs.getDouble('cached_rate_usdt') ?? _tasaCambioVesUsd;
+    _tasaCambioVesUsdt = (rawSavedUsdt > 50.0) ? rawSavedUsdt : _tasaCambioVesUsd;
 
     final timestampStr = prefs.getString('cached_exchange_rates_timestamp');
     if (timestampStr != null) {
@@ -114,8 +118,8 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
     try {
       final allRates = await ExchangeRateService.getAllTodayRates(client: client);
+      final prefs = await SharedPreferences.getInstance();
       if (!allRates.esReferencia) {
-        final prefs = await SharedPreferences.getInstance();
         // Solo se aplica lo que llegó en vivo (> 0); el resto conserva su
         // valor previo en vez de pisarse con ceros.
         if (allRates.usd > 0) {
@@ -137,6 +141,15 @@ class SettingsProvider with ChangeNotifier {
         // Sin dato en vivo: NO se toca el timestamp. La fecha mostrada sigue
         // siendo la última actualización real y el badge lo señala.
         _tasasSonReferencia = true;
+        // Rescatar si la memoria o caché tenía valor obsoleto (<= 50.0)
+        if (_tasaCambioVesUsd <= 50.0) {
+          _tasaCambioVesUsd = (allRates.usd > 50.0) ? allRates.usd : AppConstants.defaultTasaCambio;
+          await prefs.setDouble(AppConstants.prefTasaCambio, _tasaCambioVesUsd);
+        }
+        if (_tasaCambioVesUsdt <= 50.0) {
+          _tasaCambioVesUsdt = (allRates.usdt > 50.0) ? allRates.usdt : _tasaCambioVesUsd;
+          await prefs.setDouble('cached_rate_usdt', _tasaCambioVesUsdt);
+        }
       }
     } finally {
       _isSyncingRate = false;

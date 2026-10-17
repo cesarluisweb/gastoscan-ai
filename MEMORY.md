@@ -18,11 +18,14 @@
   7. Consistencia matemática absoluta de lentes `Bs.` y `EUR`: presupuestos y categorías se proyectan determinísticamente al lente (`convertBudgetToLens`).
   8. Resiliencia local-first ante tasas ausentes o $\le 0$.
   9. Descarga de APK directa en BanaHosting con cache-buster `?b=$BUILD_NUM` embebido en HTML estático y JS sin enlazar a GitHub privado.
+  10. **Resiliencia Extrema de Tasas en Vivo y Purga de 40.0:** Cascada multifuente (DolarAPI + Yadio Oficial/P2P + jsDelivr CDN + Gateway Worker `/tasas`) inmune a bloqueos de CANTV. Purga automática de valores `<= 50.0` en SharedPreferences, rescate en `SettingsProvider` y ejecución incondicional de `_actualizarTasaPorFecha` en `ReviewExpenseScreen`.
 
 ## Errores y Fricciones a Evitar
+- **Bloqueos de ISP en Venezuela:** Nunca depender de un solo proveedor de tasas (`ve.dolarapi.com`). Mantener siempre Yadio y jsDelivr como respaldos activos.
+- **Reliquias en SharedPreferences:** Purgar cualquier tasa `<= 50.0` para evitar que usuarios con versiones anteriores queden anclados en 40.0.
 - **Repositorio Privado:** `cesarluisweb/gastoscan-ai` es privado; enlaces públicos a GitHub Releases devuelven HTTP 404. Usar siempre BanaHosting.
 - **Regla Estricta DESIGN.md §2.2:** Prohibido texto amarillo sobre fondo blanco/claro.
 - **En `CurrencyFormatter` y `BudgetBottomSheet`:** Nunca triangular USD/USDT por bolívares ni acumular deriva por redondeo.
 
 ## Próximo Paso Inmediato
-- Esperar validación manual de César en dispositivo físico y panel web ([DOC_MOTOR_MULTIMONEDA.md](DOC_MOTOR_MULTIMONEDA.md)) para dar el visto bueno a `FIN-11`.
+- Validar paso de CI en verde y comprobar tasas en vivo en la app física (~880 BCV / ~1005 USDT).

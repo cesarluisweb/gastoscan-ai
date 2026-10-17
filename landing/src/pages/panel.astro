@@ -691,13 +691,13 @@ import '../styles/global.css';
         const getRateForCurrency = (currency) => {
             switch ((currency || 'USD').toUpperCase()) {
                 case 'EUR':
-                    return liveRates.eur > 0 ? liveRates.eur : (liveRates.usd > 0 ? liveRates.usd : 40.0);
+                    return liveRates.eur > 0 ? liveRates.eur : (liveRates.usd > 0 ? liveRates.usd : 880.0);
                 case 'USDT':
-                    return liveRates.usdt > 0 ? liveRates.usdt : (liveRates.usd > 0 ? liveRates.usd : 36.5);
+                    return liveRates.usdt > 0 ? liveRates.usdt : (liveRates.usd > 0 ? liveRates.usd : 880.0);
                 case 'VES':
                 case 'USD':
                 default:
-                    return liveRates.usd > 0 ? liveRates.usd : 36.5;
+                    return liveRates.usd > 0 ? liveRates.usd : 880.0;
             }
         };
 
@@ -751,10 +751,14 @@ import '../styles/global.css';
 
                 if (dolarData && dolarData.promedio > 0) {
                     liveRates.usd = Number(dolarData.promedio);
+                } else if (yadioData?.USD?.other?.official?.rate > 0) {
+                    liveRates.usd = Number(yadioData.USD.other.official.rate);
                 }
 
                 if (euroData && euroData.promedio > 0) {
                     liveRates.eur = Number(euroData.promedio);
+                } else if (yadioData?.EUR?.rate > 0) {
+                    liveRates.eur = Number(yadioData.EUR.rate);
                 }
 
                 if (yadioData && yadioData.USD && yadioData.USD.other && yadioData.USD.other.p2p_usdt && yadioData.USD.other.p2p_usdt.rate > 0) {
@@ -767,6 +771,20 @@ import '../styles/global.css';
                         liveRates.usdt = Number(paraleloData.promedio);
                     } else if (liveRates.usd > 0) {
                         liveRates.usdt = liveRates.usd;
+                    }
+                }
+
+                // Fallback adicional si faltan tasas: jsDelivr CDN
+                if (liveRates.usd <= 0 || liveRates.eur <= 0) {
+                    const [jsdelivrUsd, jsdelivrEur] = await Promise.all([
+                        liveRates.usd <= 0 ? fetchWithTimeout('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json', 4000) : null,
+                        liveRates.eur <= 0 ? fetchWithTimeout('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/eur.json', 4000) : null
+                    ]);
+                    if (liveRates.usd <= 0 && jsdelivrUsd?.usd?.ves > 0) {
+                        liveRates.usd = Number(jsdelivrUsd.usd.ves);
+                    }
+                    if (liveRates.eur <= 0 && jsdelivrEur?.eur?.ves > 0) {
+                        liveRates.eur = Number(jsdelivrEur.eur.ves);
                     }
                 }
 

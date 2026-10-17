@@ -19,6 +19,10 @@ const JWKS_URL = "https://www.googleapis.com/service_accounts/v1/jwk/securetoken
 let cachedKeys = null;
 let keysExpiry = 0;
 
+// Cache de tasas de cambio en memoria del Worker (5 minutos)
+let cachedTasasData = null;
+let cachedTasasExpiry = 0;
+
 // Rate limiting simple en memoria (30 peticiones por minuto por usuario)
 const rateLimitMap = new Map();
 
@@ -207,6 +211,11 @@ export default {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
+    }
+
+    // Endpoint público de tasas de cambio (con caché edge de 5 minutos)
+    if (url.pathname === "/tasas" && request.method === "GET") {
+      return handleTasas(corsHeaders);
     }
 
     // 1. Verificación de Autenticación
@@ -860,4 +869,100 @@ Nota de análisis cambiario: La diferencia entre total_usd_bcv y total_usdt_p2p 
       headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
   }
+}
+
+/**
+ * Consulta y consolida tasas oficiales (BCV) y de mercado en tiempo real.
+ * Cuenta con triple capa de resiliencia:
+ * 1. DolarAPI oficial (USD y EUR)
+ * 2. Yadio API (USD BCV oficial, EUR y USDT P2P)
+ * 3. jsDelivr CDN de divisas (USD y EUR)
+ */
+async function handleTasas(corsHeaders) {
+  const now = Date.now();
+  if (cachedTasasData && now < cachedTasasExpiry) {
+    return new Response(JSON.stringify(cachedTasasData), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
+  }
+
+  let usd = 0;
+  let eur = 0;
+  let usdt = 0;
+
+  // 1. DolarAPI
+  try {
+    const [dolarRes, euroRes] = await Promise.all([
+      fetch("https://ve.dolarapi.com/v1/dolares/oficial", { headers: { "Accept": "application/json" } }),
+      fetch("https://ve.dolarapi.com/v1/euros/oficial", { headers: { "Accept": "application/json" } })
+    ]);
+    if (dolarRes.ok) {
+      const d = await dolarRes.json();
+      if (d.promedio > 0) usd = Number(d.promedio);
+    }
+    if (euroRes.ok) {
+      const e = await euroRes.json();
+      if (e.promedio > 0) eur = Number(e.promedio);
+    }
+  } catch (_) {}
+
+  // 2. Yadio
+  try {
+    const yadioRes = await fetch("https://api.yadio.io/json", { headers: { "Accept": "application/json" } });
+    if (yadioRes.ok) {
+      const y = await yadioRes.json();
+      if (y.USD?.other?.p2p_usdt?.rate > 0) {
+        usdt = Number(y.USD.other.p2p_usdt.rate);
+      } else if (y.USD?.rate > 0) {
+        usdt = Number(y.USD.rate);
+      }
+      if (usd <= 0 && y.USD?.other?.official?.rate > 0) {
+        usd = Number(y.USD.other.official.rate);
+      }
+      if (eur <= 0 && y.EUR?.rate > 0) {
+        eur = Number(y.EUR.rate);
+      }
+    }
+  } catch (_) {}
+
+  // 3. Fallback jsDelivr
+  if (usd <= 0 || eur <= 0) {
+    try {
+      const [uRes, eRes] = await Promise.all([
+        usd <= 0 ? fetch("https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json") : null,
+        eur <= 0 ? fetch("https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/eur.json") : null
+      ]);
+      if (uRes && uRes.ok) {
+        const u = await uRes.json();
+        if (u.usd?.ves > 0) usd = Number(u.usd.ves);
+      }
+      if (eRes && eRes.ok) {
+        const e = await eRes.json();
+        if (e.eur?.ves > 0) eur = Number(e.eur.ves);
+      }
+    } catch (_) {}
+  }
+
+  if (usdt <= 0 && usd > 0) {
+    usdt = usd;
+  }
+
+  const payload = {
+    usd,
+    eur,
+    usdt,
+    fecha: new Date().toISOString(),
+    fuente: usd > 0 ? "live" : "fallback"
+  };
+
+  if (usd > 0) {
+    cachedTasasData = payload;
+    cachedTasasExpiry = now + 5 * 60 * 1000; // 5 minutos
+  }
+
+  return new Response(JSON.stringify(payload), {
+    status: 200,
+    headers: { ...corsHeaders, "Content-Type": "application/json" }
+  });
 }

@@ -55,7 +55,7 @@ class GastoRepository {
     return _dbHelper.getCategoryTotals(year, month, moneda: moneda);
   }
 
-  Future<int> repararTasasHistoricasIncompletas({double tasaFallback = 40.0}) {
+  Future<int> repararTasasHistoricasIncompletas({double tasaFallback = 880.0}) {
     return _dbHelper.repararTasasHistoricasIncompletas(tasaFallback: tasaFallback);
   }
 

@@ -143,12 +143,22 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     final tUsdt = await ExchangeRateService.getRateForDate(fecha, moneda: 'USDT');
     if (mounted && _selectedFecha == fecha) {
       setState(() {
-        _tasaUsdFecha = tUsd;
-        _tasaEurFecha = tEur;
-        _tasaUsdtFecha = tUsdt;
+        if (tUsd > 0) _tasaUsdFecha = tUsd;
+        if (tEur > 0) _tasaEurFecha = tEur;
         if (tUsdt > 0) {
+          _tasaUsdtFecha = tUsdt;
           _tasaUsdtCtrl.text = tUsdt.toStringAsFixed(2);
         }
+        final currentTasa = tryParseAmount(_tasaCambioCtrl.text, isPrice: false) ?? 0.0;
+        if (currentTasa <= 50.0) {
+          final tAplicar = (_selectedMoneda == 'EUR')
+              ? (tEur > 0 ? tEur : tUsd)
+              : tUsd;
+          if (tAplicar > 0) {
+            _tasaCambioCtrl.text = tAplicar.toStringAsFixed(2);
+          }
+        }
+        _recalcularTotalUsd();
       });
     }
   }
@@ -259,15 +269,16 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
           (_selectedMoneda == 'EUR'
               ? (settings.tasaCambioVesEur > 0 ? settings.tasaCambioVesEur : settings.tasaCambioVesUsd)
               : settings.tasaCambioVesUsd);
+      if (tasaInicial <= 50.0 && settings.tasaCambioVesUsd > 50.0) {
+        tasaInicial = settings.tasaCambioVesUsd;
+      }
       _tasaCambioCtrl = TextEditingController(text: tasaInicial.toStringAsFixed(2));
 
       if (data?.tasaCambioDetectada != null && data!.tasaCambioDetectada! > 0) {
         _fuenteTasa = 'Tasa detectada en la factura';
       } else {
         _fuenteTasa = 'Buscando tasa de la fecha...';
-        if (_selectedMoneda == 'VES' || _selectedMoneda == 'EUR') {
-          _actualizarTasaPorFecha(_selectedFecha, esRellenoInicial: true);
-        }
+        _actualizarTasaPorFecha(_selectedFecha, esRellenoInicial: true);
       }
 
       double totalUsdCalculado;
@@ -376,10 +387,18 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
 
     if (_selectedMoneda == 'USD' || _selectedMoneda == 'EUR') {
-      final tasaBcv = tryParseAmount(_tasaCambioCtrl.text, isPrice: false) ??
+      double tasaBcv = tryParseAmount(_tasaCambioCtrl.text, isPrice: false) ??
           (_selectedMoneda == 'EUR' ? (_tasaEurFecha ?? settings.tasaCambioVesEur) : (_tasaUsdFecha ?? settings.tasaCambioVesUsd));
-      final tasaUsdt = tryParseAmount(_tasaUsdtCtrl.text, isPrice: false) ??
+      if (tasaBcv <= 50.0 && settings.tasaCambioVesUsd > 50.0) {
+        tasaBcv = settings.tasaCambioVesUsd;
+        _tasaCambioCtrl.text = tasaBcv.toStringAsFixed(2);
+      }
+      double tasaUsdt = tryParseAmount(_tasaUsdtCtrl.text, isPrice: false) ??
           (_tasaUsdtFecha ?? settings.tasaCambioVesUsdt);
+      if (tasaUsdt <= 50.0 && settings.tasaCambioVesUsdt > 50.0) {
+        tasaUsdt = settings.tasaCambioVesUsdt;
+        _tasaUsdtCtrl.text = tasaUsdt.toStringAsFixed(2);
+      }
 
       if (_metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsBcv) {
         if (!_bolivaresAjustadosManualmente) {
@@ -416,7 +435,11 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         }
       }
     } else if (_selectedMoneda == 'VES') {
-      final tasa = tryParseAmount(_tasaCambioCtrl.text, isPrice: false) ?? 1.0;
+      double tasa = tryParseAmount(_tasaCambioCtrl.text, isPrice: false) ?? 1.0;
+      if (tasa <= 50.0 && settings.tasaCambioVesUsd > 50.0) {
+        tasa = settings.tasaCambioVesUsd;
+        _tasaCambioCtrl.text = tasa.toStringAsFixed(2);
+      }
       final enUsd = tasa > 0 ? (original / tasa) : original;
       _totalUsdCtrl.text = enUsd.toStringAsFixed(2);
     } else if (_selectedMoneda == 'USDT') {
@@ -457,6 +480,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
           if (settings.tipoTasa == 'paralelo') {
             tasaAplicar = _tasaUsdtFecha ?? settings.tasaCambioVesUsdt;
           }
+          if (tasaAplicar <= 50.0 && settings.tasaCambioVesUsd > 50.0) {
+            tasaAplicar = settings.tasaCambioVesUsd;
+          }
           _tasaCambioCtrl.text = tasaAplicar.toStringAsFixed(2);
           final today = DateTime.now().toIso8601String().substring(0, 10);
           _fuenteTasa = (fecha == today)
@@ -464,7 +490,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
               : 'Tasa oficial BCV ($fecha)';
         } else if (_selectedMoneda == 'EUR') {
           double tasaAplicar = _tasaEurFecha ?? settings.tasaCambioVesEur;
-          if (tasaAplicar <= 0) tasaAplicar = settings.tasaCambioVesUsd;
+          if (tasaAplicar <= 50.0) tasaAplicar = settings.tasaCambioVesUsd;
           _tasaCambioCtrl.text = tasaAplicar.toStringAsFixed(2);
           final today = DateTime.now().toIso8601String().substring(0, 10);
           _fuenteTasa = (fecha == today)
@@ -472,6 +498,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
               : 'Euro BCV oficial ($fecha)';
         } else if (_selectedMoneda == 'USD') {
           double tasaAplicar = _tasaUsdFecha ?? settings.tasaCambioVesUsd;
+          if (tasaAplicar <= 50.0 && settings.tasaCambioVesUsd > 50.0) {
+            tasaAplicar = settings.tasaCambioVesUsd;
+          }
           _tasaCambioCtrl.text = tasaAplicar.toStringAsFixed(2);
           final today = DateTime.now().toIso8601String().substring(0, 10);
           _fuenteTasa = (fecha == today)
@@ -1541,7 +1570,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                     _fuenteTasa = (_selectedFecha == today)
                                         ? 'Euro BCV oficial (Hoy)'
                                         : 'Euro BCV oficial ($_selectedFecha)';
-                                  } else if (m == 'VES') {
+                                  } else if (m == 'VES' || m == 'USD') {
                                     final val = _tasaUsdFecha ?? settings.tasaCambioVesUsd;
                                     if (val > 0) _tasaCambioCtrl.text = val.toStringAsFixed(2);
                                     final today = DateTime.now().toIso8601String().substring(0, 10);

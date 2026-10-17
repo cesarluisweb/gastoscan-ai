@@ -1472,7 +1472,7 @@ class DatabaseHelper {
   }
 
   /// Repara gastos históricos que tengan tasa_cambio <= 1.0 para que cuadren en Bolívares
-  Future<int> repararTasasHistoricasIncompletas({double tasaFallback = 40.0}) async {
+  Future<int> repararTasasHistoricasIncompletas({double tasaFallback = 880.0}) async {
     final db = await instance.database;
     final rows = await db.query(
       'gastos',

@@ -136,7 +136,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         if (!(prefs.getBool('pref_fixed_tasas_v1') ?? false)) {
           final settings = Provider.of<SettingsProvider>(context, listen: false);
           await gastoProvider.repararTasasHistoricas(
-            tasaFallback: settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : 40.0,
+            tasaFallback: settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : AppConstants.defaultTasaCambio,
           );
           await prefs.setBool('pref_fixed_tasas_v1', true);
         }
