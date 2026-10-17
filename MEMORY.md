@@ -17,4 +17,4 @@
 - Monitoreo de CI por proceso dormido único (`scripts/wait_ci.ps1`), prohibido bucle activo turno a turno.
 
 ## Próximo Paso Inmediato
-- Compilar en CI, validar en teléfono de César con botón de refresco para obtener el diagnóstico del APK sideloaded.
+- CI confirmado en verde (`CI 39061021055 | success | build 495 | 43c3ffe`). César valida en su teléfono usando el botón de actualizar tasas para ver el diagnóstico.
