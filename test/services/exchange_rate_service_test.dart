@@ -47,6 +47,7 @@ void main() {
         eur: 940.20,
         usdt: 875.00,
         fecha: DateTime.parse('2026-10-05T12:00:00Z'),
+        diagnostico: 'test-diag',
       );
 
       final json = data.toJson();
@@ -56,6 +57,7 @@ void main() {
       expect(fromJson.eur, equals(940.20));
       expect(fromJson.usdt, equals(875.00));
       expect(fromJson.esReferencia, isFalse);
+      expect(fromJson.diagnostico, equals('test-diag'));
     });
   });
 
@@ -72,6 +74,8 @@ void main() {
       expect(rates.usd, equals(0.0));
       expect(rates.eur, equals(0.0));
       expect(rates.usdt, equals(0.0));
+      expect(rates.diagnostico, isNotNull);
+      expect(rates.diagnostico, contains('USD: HTTP 500'));
 
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.getString('cached_exchange_rates_timestamp'), isNull);

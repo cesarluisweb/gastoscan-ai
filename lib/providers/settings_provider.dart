@@ -26,6 +26,7 @@ class SettingsProvider with ChangeNotifier {
   bool _isInitialized = false;
   double _presupuestoMensual = 0.0;
   bool _recordatoriosActivos = true;
+  String? _ultimoDiagnosticoTasas;
 
   String get apiKey => _apiKey;
   String get effectiveApiKey => _apiKey.trim().isNotEmpty ? _apiKey.trim() : AppConstants.defaultApiKey.trim();
@@ -41,6 +42,7 @@ class SettingsProvider with ChangeNotifier {
   bool get isInitialized => _isInitialized;
   double get presupuestoMensual => _presupuestoMensual;
   bool get recordatoriosActivos => _recordatoriosActivos;
+  String? get ultimoDiagnosticoTasas => _ultimoDiagnosticoTasas;
 
   SettingsProvider() {
     loadSettings();
@@ -114,6 +116,7 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
     try {
       final allRates = await ExchangeRateService.getAllTodayRates(client: client);
+      _ultimoDiagnosticoTasas = allRates.diagnostico;
       if (!allRates.esReferencia) {
         final prefs = await SharedPreferences.getInstance();
         // Solo se aplica lo que llegó en vivo (> 0); el resto conserva su
@@ -138,6 +141,8 @@ class SettingsProvider with ChangeNotifier {
         // siendo la última actualización real y el badge lo señala.
         _tasasSonReferencia = true;
       }
+    } catch (e) {
+      _ultimoDiagnosticoTasas = 'Error general: $e';
     } finally {
       _isSyncingRate = false;
       notifyListeners();

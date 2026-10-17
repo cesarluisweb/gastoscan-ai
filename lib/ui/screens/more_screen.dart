@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -535,6 +536,31 @@ class MoreScreenState extends State<MoreScreen> {
                               ? null
                               : () async {
                                   await settings.actualizarTasaAutomatica();
+                                  if (!context.mounted) return;
+                                  final diag = settings.ultimoDiagnosticoTasas ?? 'Sin diagnóstico';
+                                  final ok = !settings.tasasSonReferencia;
+                                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      duration: const Duration(seconds: 12),
+                                      backgroundColor: ok ? const Color(0xFF1B5E20) : const Color(0xFFB71C1C),
+                                      action: SnackBarAction(
+                                        label: 'Copiar',
+                                        textColor: Colors.white,
+                                        onPressed: () {
+                                          Clipboard.setData(ClipboardData(text: diag));
+                                        },
+                                      ),
+                                      content: Text(
+                                        ok ? 'Tasas actualizadas:\n$diag' : 'Tasas en referencia:\n$diag',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontFamily: 'monospace',
+                                        ),
+                                      ),
+                                    ),
+                                  );
                                 },
                         ),
                       ],

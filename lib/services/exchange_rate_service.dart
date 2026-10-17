@@ -11,6 +11,7 @@ class ExchangeRatesData {
   /// previa (o cero si nunca hubo) y `fecha` es la última actualización
   /// real conocida, no "ahora".
   final bool esReferencia;
+  final String? diagnostico;
 
   const ExchangeRatesData({
     required this.usd,
@@ -18,6 +19,7 @@ class ExchangeRatesData {
     required this.usdt,
     required this.fecha,
     this.esReferencia = false,
+    this.diagnostico,
   });
 
   Map<String, dynamic> toJson() => {
@@ -26,6 +28,7 @@ class ExchangeRatesData {
     'usdt': usdt,
     'fecha': fecha.toIso8601String(),
     'esReferencia': esReferencia,
+    if (diagnostico != null) 'diagnostico': diagnostico,
   };
 
   factory ExchangeRatesData.fromJson(Map<String, dynamic> json) => ExchangeRatesData(
@@ -34,7 +37,15 @@ class ExchangeRatesData {
     usdt: (json['usdt'] as num?)?.toDouble() ?? 0.0,
     fecha: DateTime.tryParse(json['fecha'] ?? '') ?? DateTime.now(),
     esReferencia: json['esReferencia'] as bool? ?? true,
+    diagnostico: json['diagnostico'] as String?,
   );
+}
+
+class _RateFetchResult {
+  final double? value;
+  final String diag;
+
+  const _RateFetchResult(this.value, this.diag);
 }
 
 class ExchangeRateService {
@@ -55,28 +66,34 @@ class ExchangeRateService {
     double? usdtRate = prefs.getDouble('cached_rate_usdt');
 
     final results = await Future.wait([
-      _fetchUrlDouble(_dolarApiOficial, 'promedio', client: httpClient),
-      _fetchUrlDouble(_euroApiOficial, 'promedio', client: httpClient),
-      _fetchUsdtLiveRate(client: httpClient),
+      _fetchUrlDoubleWithDiag(_dolarApiOficial, 'promedio', client: httpClient),
+      _fetchUrlDoubleWithDiag(_euroApiOficial, 'promedio', client: httpClient),
+      _fetchUsdtLiveRateWithDiag(client: httpClient),
     ]);
+
+    final resUsd = results[0];
+    final resEur = results[1];
+    final resUsdt = results[2];
+
+    final diag = 'USD: ${resUsd.diag}\nEUR: ${resEur.diag}\nUSDT: ${resUsdt.diag}';
 
     bool fetchedAny = false;
 
-    if (results[0] != null && results[0]! > 0) {
-      usdRate = results[0]!;
+    if (resUsd.value != null && resUsd.value! > 0) {
+      usdRate = resUsd.value!;
       await prefs.setDouble('cached_rate_usd', usdRate);
       await prefs.setDouble('cached_exchange_rate', usdRate);
       fetchedAny = true;
     }
 
-    if (results[1] != null && results[1]! > 0) {
-      eurRate = results[1]!;
+    if (resEur.value != null && resEur.value! > 0) {
+      eurRate = resEur.value!;
       await prefs.setDouble('cached_rate_eur', eurRate);
       fetchedAny = true;
     }
 
-    if (results[2] != null && results[2]! > 0) {
-      usdtRate = results[2]!;
+    if (resUsdt.value != null && resUsdt.value! > 0) {
+      usdtRate = resUsdt.value!;
       await prefs.setDouble('cached_rate_usdt', usdtRate);
       fetchedAny = true;
     } else if ((usdtRate == null || usdtRate <= 0) && (usdRate != null && usdRate > 0)) {
@@ -93,6 +110,7 @@ class ExchangeRateService {
         eur: eurRate ?? 0.0,
         usdt: usdtRate ?? 0.0,
         fecha: now,
+        diagnostico: diag,
       );
     }
 
@@ -106,10 +124,15 @@ class ExchangeRateService {
       usdt: usdtRate ?? 0.0,
       fecha: prevTimestamp ?? DateTime.fromMillisecondsSinceEpoch(0),
       esReferencia: true,
+      diagnostico: diag,
     );
   }
 
-  static Future<double?> _fetchUrlDouble(String urlString, String fieldKey, {http.Client? client}) async {
+  static Future<_RateFetchResult> _fetchUrlDoubleWithDiag(
+    String urlString,
+    String fieldKey, {
+    http.Client? client,
+  }) async {
     try {
       final url = Uri.parse(urlString);
       final httpClient = client ?? http.Client();
@@ -117,14 +140,29 @@ class ExchangeRateService {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final val = (data[fieldKey] as num?)?.toDouble();
-        if (val != null && val > 0) return val;
+        if (val != null && val > 0) {
+          return _RateFetchResult(val, 'OK ($val)');
+        }
+        return _RateFetchResult(null, 'HTTP 200 sin campo $fieldKey');
       }
-    } catch (_) {}
-    return null;
+      final cleanBody = response.body.replaceAll('\n', ' ');
+      final snippet = cleanBody.length > 50 ? cleanBody.substring(0, 50) : cleanBody;
+      return _RateFetchResult(null, 'HTTP ${response.statusCode}: $snippet');
+    } catch (e) {
+      final msg = e.toString().replaceAll('\n', ' ');
+      final snippet = msg.length > 70 ? msg.substring(0, 70) : msg;
+      return _RateFetchResult(null, 'Error: $snippet');
+    }
   }
 
-  /// Intenta consultar Yadio P2P / DolarAPI paralelo para USDT
-  static Future<double?> _fetchUsdtLiveRate({http.Client? client}) async {
+  static Future<double?> _fetchUrlDouble(String urlString, String fieldKey, {http.Client? client}) async {
+    final res = await _fetchUrlDoubleWithDiag(urlString, fieldKey, client: client);
+    return res.value;
+  }
+
+  /// Intenta consultar Yadio P2P / DolarAPI paralelo para USDT con diagnóstico
+  static Future<_RateFetchResult> _fetchUsdtLiveRateWithDiag({http.Client? client}) async {
+    String yadioDiag = '';
     try {
       final httpClient = client ?? http.Client();
       final yadioUrl = Uri.parse('https://api.yadio.io/json');
@@ -132,14 +170,35 @@ class ExchangeRateService {
       if (resp.statusCode == 200) {
         final data = jsonDecode(resp.body);
         final p2pUsdt = (data['USD']?['other']?['p2p_usdt']?['rate'] as num?)?.toDouble();
-        if (p2pUsdt != null && p2pUsdt > 0) return p2pUsdt;
+        if (p2pUsdt != null && p2pUsdt > 0) {
+          return _RateFetchResult(p2pUsdt, 'OK Yadio ($p2pUsdt)');
+        }
         final usdRate = (data['USD']?['rate'] as num?)?.toDouble();
-        if (usdRate != null && usdRate > 0) return usdRate;
+        if (usdRate != null && usdRate > 0) {
+          return _RateFetchResult(usdRate, 'OK Yadio USD ($usdRate)');
+        }
+        yadioDiag = 'Yadio 200 sin tasa';
+      } else {
+        yadioDiag = 'Yadio HTTP ${resp.statusCode}';
       }
-    } catch (_) {}
+    } catch (e) {
+      final msg = e.toString().replaceAll('\n', ' ');
+      final snippet = msg.length > 40 ? msg.substring(0, 40) : msg;
+      yadioDiag = 'Yadio: $snippet';
+    }
 
     // Fallback directo a DolarAPI paralelo
-    return await _fetchUrlDouble(_dolarApiParalelo, 'promedio', client: client);
+    final fallbackRes = await _fetchUrlDoubleWithDiag(_dolarApiParalelo, 'promedio', client: client);
+    if (fallbackRes.value != null && fallbackRes.value! > 0) {
+      return _RateFetchResult(fallbackRes.value, 'OK DolarAPI (${fallbackRes.value})');
+    }
+    return _RateFetchResult(null, '$yadioDiag | Paralelo: ${fallbackRes.diag}');
+  }
+
+  /// Intenta consultar Yadio P2P / DolarAPI paralelo para USDT
+  static Future<double?> _fetchUsdtLiveRate({http.Client? client}) async {
+    final res = await _fetchUsdtLiveRateWithDiag(client: client);
+    return res.value;
   }
 
   /// Obtiene la tasa de cambio para una fecha específica (formato YYYY-MM-DD) y moneda.

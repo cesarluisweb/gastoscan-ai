@@ -4,17 +4,17 @@
 ## Estado Actual Inmediato
 - **Rama:** `main`.
 - **Fase activa:** Fase 5 (Closed Testing activa) y restauración a Build 470 (1.0.4).
-- **Acción Reciente:** Restaurado el código fuente de la app (`lib/` y `test/`) al estado exacto de Build 470 (`54f8432`) a solicitud de César.
+- **Acción Reciente:** Instrumentada observabilidad visual en botón de actualizar tasas (SnackBar con estado HTTP/excepción exacta y botón de copiado).
 - **Respaldo:** El trabajo y diagnóstico previo de FIN-12 queda salvaguardado en la rama `backup/pre-regreso-build-470`.
 - **Preservación:** Documentación técnica (`DOC_*.md`), scripts operativos (`scripts/wait_ci.ps1`) y reglas se mantienen intactos.
 
 ## Decisiones Técnicas y de Negocio Recientes
-- La restauración del código a Build 470 devuelve la consulta de tasas a su implementación base previa (DolarAPI + Yadio simple).
-- Se preserva el historial mediante commit hacia adelante en `main` para permitir despliegue continuo de CI sin romper versiones instalables en Android.
+- La restauración del código a Build 470 devolvió la consulta de tasas a su implementación base (DolarAPI + Yadio simple).
+- Se agregó diagnóstico explícito en `ExchangeRateService` y `SettingsProvider` para capturar la causa exacta del fallo de red en APK sideloaded.
 
 ## Errores y Fricciones a Evitar
 - No encadenar comandos con `&&` ni usar redirección `>` en PowerShell.
 - Monitoreo de CI por proceso dormido único (`scripts/wait_ci.ps1`), prohibido bucle activo turno a turno.
 
 ## Próximo Paso Inmediato
-- CI confirmado en verde (`CI 39054886920 | success | build 493 | 74bae5e`). APK disponible para validación por César en su teléfono.
+- Compilar en CI, validar en teléfono de César con botón de refresco para obtener el diagnóstico del APK sideloaded.
