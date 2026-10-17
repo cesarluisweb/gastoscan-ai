@@ -17,4 +17,4 @@
 - Monitoreo de CI por proceso dormido único (`scripts/wait_ci.ps1`), prohibido bucle activo turno a turno.
 
 ## Próximo Paso Inmediato
-- Monitorear ejecución de CI para compilar el nuevo APK con código de Build 470 y confirmar entrega en verde.
+- CI confirmado en verde (`CI 39054886920 | success | build 493 | 74bae5e`). APK disponible para validación por César en su teléfono.
