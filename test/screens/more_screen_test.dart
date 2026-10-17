@@ -86,6 +86,9 @@ class FakeGastoProvider extends GastoProvider {
 class FakeSettingsProvider extends SettingsProvider {
   @override
   Future<void> loadSettings() async {}
+
+  @override
+  Future<bool> actualizarTasaAutomatica({http.Client? client}) async => true;
 }
 
 void main() {
@@ -415,7 +418,8 @@ void main() {
 
       expect(refreshBtn, findsOneWidget);
       await tester.tap(refreshBtn);
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
 
       expect(find.byType(SnackBar), findsOneWidget);
     });
