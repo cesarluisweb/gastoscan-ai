@@ -231,11 +231,15 @@ jobs:
             "buildNumber": $BUILD_NUM,
             "isMajor": $IS_MAJOR,
             "releaseNotes": "Actualización de Rinde Más con mejoras de rendimiento y nuevas funciones.",
-            "apkUrl": "https://rindemas.cesarluis.com/rindemas.apk?b=$BUILD_NUM"
+            "apkUrl": "https://cesarluis.com/rindemas/rindemas.apk?b=$BUILD_NUM"
           }
           EOF
           
           cat landing/public/version.json
+          
+          # Embeber cache-buster estático con el número de build en index.astro antes de compilar
+          sed -i "s|https://cesarluis.com/rindemas/rindemas.apk|https://cesarluis.com/rindemas/rindemas.apk?b=$BUILD_NUM|g" landing/src/pages/index.astro
+          
           cd landing
           npm install
           npm run build

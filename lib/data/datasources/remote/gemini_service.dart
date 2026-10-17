@@ -268,9 +268,11 @@ class GeminiService {
     final String categoriaRaw = args['categoria']?.toString().trim() ?? 'Otros';
     final String categoria = AppConstants.normalizarCategoria(categoriaRaw);
     final String monedaArg = args['moneda']?.toString() ?? '';
+    final String textLower = spokenText.toLowerCase();
+    final bool mencionaBs = textLower.contains('bolivar') || textLower.contains('bolívares') || textLower.contains('bs');
     final String moneda = AppConstants.normalizarMoneda(
       monedaArg.isNotEmpty ? monedaArg : null,
-      fallback: AppConstants.detectarMonedaDeTexto(spokenText, fallback: 'USD'),
+      fallback: AppConstants.detectarMonedaDeTexto(spokenText, fallback: (mencionaBs && (montoOriginalArg > 0 || totalUsd > 0)) ? 'VES' : 'USD'),
     );
     final double totalOriginal = montoOriginalArg > 0 ? montoOriginalArg : totalUsd;
     final List itemsList = args['items'] as List? ?? [];
@@ -306,21 +308,7 @@ class GeminiService {
         : null;
 
     if (metodoLiquidacion == null && (moneda == 'USD' || moneda == 'EUR')) {
-      final textLower = spokenText.toLowerCase();
-      if (textLower.contains('bcv') ||
-          textLower.contains('banco central') ||
-          textLower.contains('oficial') ||
-          textLower.contains('pago movil') ||
-          textLower.contains('pago móvil') ||
-          textLower.contains('punto') ||
-          textLower.contains('debito') ||
-          textLower.contains('débito') ||
-          textLower.contains('biopago') ||
-          textLower.contains('en bolivares') ||
-          textLower.contains('en bolívares') ||
-          textLower.contains('en bs')) {
-        metodoLiquidacion = 'BS_BCV';
-      } else if (textLower.contains('paralelo') ||
+      if (textLower.contains('paralelo') ||
           textLower.contains('usdt') ||
           textLower.contains('binance') ||
           textLower.contains('p2p')) {
@@ -332,6 +320,9 @@ class GeminiService {
           textLower.contains('zinli') ||
           textLower.contains('divisa')) {
         metodoLiquidacion = 'DIVISA';
+      } else {
+        // En Venezuela el pago móvil / punto liquida en bolívares a tasa oficial BCV por defecto
+        metodoLiquidacion = 'BS_BCV';
       }
     }
 
@@ -353,7 +344,7 @@ class GeminiService {
         messages: [
           {
             'role': 'user',
-            'text': 'Registra este gasto o compras: "$spokenText". Asume que la fecha es hoy si no la menciono. Si menciono compras en múltiples lugares o comercios distintos, extrae cada una por separado en la lista "gastos". Extrae los productos, precios y la categoría adecuada para cada uno. Si el gasto es en USD o EUR e indico pago en bolívares a BCV o pago móvil o punto, especifica metodo_liquidacion: "BS_BCV"; si fue a tasa paralelo/USDT especifica "BS_USDT"; si fue en efectivo/divisa directa especifica "DIVISA".',
+            'text': 'Registra este gasto o compras: "$spokenText". Asume que la fecha es hoy si no la menciono. Si menciono compras en múltiples lugares o comercios distintos, extrae cada una por separado en la lista "gastos". Extrae los productos, precios y la categoría adecuada para cada uno. REGLAS DE DESAMBIGUACIÓN OBLIGATORIAS: 1) Si menciono un monto explícito en Bolívares (ej. "Pagué 4.000 bolívares por gasolina; eran unos 20 dólares"), la moneda mandatoria es "VES" y el monto son los 4.000 Bs (los dólares son solo referencia). 2) Si menciono un gasto en USD o EUR e indico pago en bolívares a BCV, banco central, tasa oficial, pago móvil o punto de venta, especifica metodo_liquidacion: "BS_BCV". 3) Si menciono tasa paralelo, USDT, Binance o P2P, especifica metodo_liquidacion: "BS_USDT". 4) Si menciono efectivo, billetes, Zelle, Wally o Zinli, especifica metodo_liquidacion: "DIVISA". 5) Si solo digo dólares sin especificar divisa directa (ej. "Gasté 20 dólares en gasolina" o "por pago móvil"), asigna metodo_liquidacion: "BS_BCV" por defecto.',
           }
         ],
         contextData: {

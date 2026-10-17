@@ -541,10 +541,10 @@ Regla para registrar gastos por voz:
 - Identifica la moneda en que el usuario realizó la compra: "VES" (si menciona bolívares, bs, o montos en moneda nacional), "USD" (si menciona dólares, $, verdes), "EUR" (si menciona euros, €) o "USDT".
 - Si no menciona ninguna moneda, usa "USD" por defecto.
 - Si la compra es en "USD" (o "EUR"), identifica cómo liquidó o pagó el usuario e incluye "metodo_liquidacion":
-  * "BS_BCV": Si pagó en bolívares a tasa oficial BCV, banco central, tasa oficial, pago móvil, tarjeta de débito, biopago o punto de venta.
+  * "BS_BCV": Si pagó en bolívares a tasa oficial BCV, banco central, tasa oficial, pago móvil, tarjeta de débito, biopago o punto de venta, O si solo mencionó dólares sin especificar divisa en efectivo (ej. "Gasté 20 dólares en gasolina" o "15$ por pago móvil"). En Venezuela el pago móvil y punto liquidan en bolívares oficiales por defecto.
   * "BS_USDT": Si cobraron en bolívares calculados a tasa paralelo, USDT, Binance o P2P.
-  * "DIVISA": Si pagó directamente en dólares/divisas (efectivo, billetes, Zelle, Wally, Zinli, Binance Pay, suscripción digital).
-- Si el usuario dicta directamente en bolívares (ej. "4000 bolívares"), mantén "moneda": "VES".
+  * "DIVISA": Si pagó directamente en divisas físicas o digitales (efectivo, billetes, Zelle, Wally, Zinli, Binance Pay, suscripción digital).
+- REGLA DE PRIORIDAD PARA BOLÍVARES: Si el usuario menciona un monto explícito en bolívares (ej. "Pagué 4.000 bolívares por gasolina; eran unos 20 dólares"), el monto original mandatorio es 4.000 VES ("moneda": "VES", "monto_original": 4000). Los dólares son solo contexto y NO deben reemplazar los bolívares.
 - En "monto_original" envía el monto numérico exacto en la moneda indicada (ej. si dice "1500 bolívares", monto_original: 1500, moneda: "VES").
 - En "total_usd" envía el equivalente estimado en dólares (si fue en bolívares, puedes dividirlo por la tasa BCV aproximada del contexto o enviarlo igual para que el cliente lo convierta).
 - Si el usuario te dicta registrar un gasto con precios en múltiples monedas mezcladas, unifica todos los precios a una sola moneda antes de llamar a registrar_gasto.

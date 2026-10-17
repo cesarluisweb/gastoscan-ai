@@ -13,85 +13,64 @@ En la economía venezolana conviven realidades cambiarias y formas de liquidaci�
 ## 2. Los 10 Puntos de Pulido Implementados
 
 ### 1. Tres Opciones de Liquidación en USD/EUR (`ReviewExpenseScreen` y `panel.astro`)
-- Al registrar o revisar un gasto en `USD` o `EUR`, se presentan 3 pastillas de selección clara:
-  - **`Pagado en Bs. (a BCV)`** (`BS_BCV`): Compra comercial liquidada en bolívares a tasa oficial BCV. Se calculan bolívares con tasa BCV y se registra su equivalente en USDT.
-  - **`Pagado en Bs. (a USDT P2P)`** (`BS_USDT`): Cobro en bolívares calculado sobre tasa USDT P2P / paralelo. En bolívares equivale a `monto * tasaUsdt`, y su valor en lente USD BCV se revalúa a `(monto * tasaUsdt) / tasaBcv`.
-  - **`Pagado en $ (Divisa directa)`** (`DIVISA`): Pago directo en dólares en efectivo, Zelle, saldo digital o cripto. Paridad 1:1 estricta con USDT.
+- Al registrar o revisar un gasto en `USD` o `EUR`, se presentan 3 pastillas de selección clara con sus etiquetas oficiales definitivas:
+  - **`En Bs. · precio a tasa BCV`** (`BS_BCV`): Compra comercial con precio fijado en dólares pero cobrada en bolívares a tasa oficial BCV. Se guardan los bolívares exactos y se calcula su costo equivalente en USDT.
+  - **`En Bs. · precio a tasa P2P`** (`BS_USDT`): Cobro en bolívares calculado sobre tasa USDT P2P / Binance.
+  - **`En $ · efectivo o tarjeta`** (`DIVISA`): Pago directo en divisas en efectivo, Zelle, tarjeta internacional o cripto. Paridad 1:1 estricta con USDT.
+- **Ajuste de Bolívares por Redondeo Comercial:**
+  - La caja de liquidación tanto en móvil como en web incluye un campo editable de **Total a pagar en Bolívares (VES)**.
+  - Si el punto de venta o comercio aplicó un redondeo (ej. de 5.000 Bs a 4.950 Bs o 5.100 Bs), el usuario puede ajustar los bolívares finales directamente. Ese importe exacto se convierte en el `total_original` inmutable en `VES`, recalculando las equivalencias.
 
 ### 2. Selector de 4 Lentes en Dashboard, Análisis y Panel Web
-- Expandido a 4 lentes canónicos sincronizados:
-  - `USD BCV` (Dólar oficial)
-  - `USDT P2P` (Binance / Cripto)
-  - `EUR BCV` (Euro oficial)
-  - `Bs.` (Bolívares)
-- Disponible en `SummaryCard`, `AnalysisScreen` y en la cabecera métrica de `panel.astro`.
+- Expandido a 4 lentes canónicos sincronizados: `USD BCV`, `USDT P2P`, `EUR BCV` y `Bs. (VES)`.
+- **Consistencia Matemática Absoluta:**
+  - El presupuesto general, meta de ahorro y límites por categoría se proyectan determinísticamente al lente activo (`convertBudgetToLens` / `convertToLens`).
+  - Esto elimina de raíz discrepancias visuales donde un presupuesto fijado en USD se comparaba contra gastos acumulados en bolívares, evitando montos restantes negativos erróneos y consumos irreales (ej. 45499%).
 
-### 3. Tarjeta Dedicada para "Moneda Principal de Reportes" (`MoreScreen`)
-- Separada de la tarjeta de tasas de cambio a su propia tarjeta independiente.
-- Nomenclatura unificada en el menú desplegable:
-  - `USD`: `USD BCV (Dólar oficial)`
-  - `USDT`: `USDT P2P (Binance / Cripto)`
-  - `EUR`: `EUR BCV (Euro oficial)`
-  - `VES`: `Bs. (Bolívares)`
+### 3. Desacoplamiento de Moneda Inicial del Formulario vs. Lente Activo
+- El formulario de registro en móvil y panel web inicializa siempre en `USD` con la opción `En Bs. · precio a tasa BCV` preseleccionada, independientemente de que el usuario tenga activo el lente `USDT P2P` o `Bs.`.
+- Los bolívares ingresados directamente al seleccionar `VES` son 100% inmutables y nunca se reconstruyen desde un aproximado.
 
-### 4. Eliminación Visual de "Brecha Capturada"
-- Retirada la insignia visual de "Brecha capturada" en las tarjetas de resumen (`SummaryCard` y `panel.astro`) para mantener una interfaz limpia y libre de sobrecarga cognitiva.
+### 4. Preservación del Contexto al Editar y Edición en Web
+- **En Web (`panel.astro`):** Funcionalidad completa para editar facturas existentes, con actualización en Firestore y recálculo en vivo.
+- **Reconstrucción de Gastos Indexados:** Si un gasto fue originado como indexado a USD y liquidado en Bs., al abrirlo para editar se reconstruye en modo `USD` con su pastilla de liquidación correspondiente activa, su tasa congelada intacta y los ítems convertidos visualmente a USD.
 
-### 5. Corrección de Deriva (Drift) en Presupuestos (`BudgetBottomSheet` y `panel.astro`)
-- Almacenamiento en memoria del valor base original ingresado por el usuario (`_baseGeneralAmount`, `_baseSavingsAmount`, `_baseCategoryAmounts`, `_baseMoneda`).
-- Paridad 1:1 directa entre USD y USDT (`effFrom = (from == 'USDT') ? 'USD' : from`).
-- Conversión determinista que previene la degradación progresiva por redondeo al alternar monedas. Si el usuario vuelve a la moneda base original, se restaura el número exacto.
+### 5. Alerta de Discrepancia entre Monto Total y Suma de Ítems
+- Si el usuario desglosó ítems cuya suma difiere del campo `Monto Total`, el sistema muestra un diálogo de confirmación que permite:
+  1. Ajustar el total al valor de los productos.
+  2. Mantener el monto total actual (respetando propinas, redondeos o impuestos no detallados en los ítems).
 
-### 6. Fallbacks Amigables en Captura
-- Si el comercio se deja en blanco al guardar, el sistema asigna automáticamente `'Compra general'` sin bloquear al usuario con validaciones innecesarias.
-- Si los ítems desglosados no tienen descripción, se nombran automáticamente `'Producto 1'`, `'Producto 2'`, etc.
+### 6. Desambiguación Robusta en IA (Voz, OCR y Chat)
+- Si el usuario menciona un monto explícito en Bolívares (*"Gasté 4.000 Bs en gasolina, eran unos 20 dólares"*), el dato original obligatorio e inmutable es `4.000 VES` (`moneda: "VES"`); el monto en dólares es meramente referencial y nunca sobreescribe los bolívares.
+- Si menciona USD sin especificar divisa ni efectivo (*"20 dólares en gasolina por punto de venta"*), el sistema asigna por defecto `metodo_liquidacion: "BS_BCV"` preseleccionando la opción en bolívares a tasa oficial.
 
-### 7. Restauración de Tasa Histórica por Fecha
-- Al cambiar la fecha del gasto en `ReviewExpenseScreen` o en `panel.astro`, se consultan las tasas oficiales y de mercado para ese día y se actualizan incondicionalmente tanto la tasa oficial (`tasaCambioCtrl`) como la tasa USDT (`tasaUsdtCtrl`).
+### 7. Resiliencia Local-First ante Tasas Ausentes
+- Protección estricta contra tasas $\le 0$ o divisiones por cero en `ExchangeRateService` y `panel.astro`. En ausencia de conexión, se recurre a la última tasa válida en caché.
 
-### 8. Pulido Visual de la Calculadora Cambiaria
-- Apertura en estado limpio y vacío sin botón "X" de borrado prematuro ni `1` precargado que confunda al usuario.
-- Eliminación del badge duplicado de divisa en la cabecera del campo.
-
-### 9. Paridad Total en Panel Web (`panel.astro`)
-- Barra de selección de 4 lentes (`USD BCV`, `USDT P2P`, `EUR BCV`, `Bs.`).
-- Formulario de gasto con las 3 opciones de liquidación y vista previa dinámica.
-- Consulta de tasas históricas vía DolarAPI al modificar la fecha.
-- Memoria de monto base en el modal de presupuestos.
-
-### 10. Soporte Integral de IA (Voz, OCR y Chat)
-- **Extracción de Gastos por Voz / Texto (`GeminiService` y Workers Cloudflare):**
-  - Esquema JSON y prompt actualizados para detectar `metodo_liquidacion`:
-    - `"BS_BCV"`: Pago en bolívares a tasa oficial, tarjeta, punto de venta o pago móvil.
-    - `"BS_USDT"`: Cobro en bolívares a tasa paralelo, USDT, Binance o P2P.
-    - `"DIVISA"`: Pago directo en divisas o efectivo.
-- **Preselección Automática en `ReviewExpenseScreen`:** Mapea el campo de IA directamente al enum `MetodoLiquidacionUsd`.
-- **Contexto Semántico del Chat (`ChatScreen`):** Mantiene los 4 lentes (`total_usd_bcv`, `total_usdt_p2p`, `total_eur_bcv`, `total_ves`) con instrucciones claras para responder preguntas sobre rendimiento o ahorro cambiario cuando el usuario lo consulte explícitamente.
+### 8. Descarga Directa del APK sin Dependencia de GitHub Releases
+- Al ser el repositorio privado en GitHub, el botón de descarga en la landing page (`index.astro`) enlaza directamente a BanaHosting con cache-buster `?b=$BUILD_NUM` inyectado tanto en el HTML estático en tiempo de compilación de CI como dinámicamente vía `/version.json`.
 
 ---
 
 ## 3. Guía de Pruebas Paso a Paso para César
 
-1. **Prueba de Voz / IA con Liquidación:**
-   - Dictar por voz: *"Gasté 20 dólares de gasolina por pago móvil"* o *"15 dólares en farmacia en bolívares a BCV"*.
-   - Verificar que en `ReviewExpenseScreen` la pastilla **`Pagado en Bs. (a BCV)`** ya aparezca seleccionada con los bolívares calculados.
-   - Dictar: *"Pagué 10 dólares en efectivo"*. Verificar que preseleccione **`Pagado en $`**.
+1. **Prueba de Lentes en Panel Web (`panel.astro`):**
+   - Acceder a `https://rindemas.cesarluis.com/panel`.
+   - Seleccionar el lente `Bs. (VES)` y verificar que el presupuesto, dinero restante y categorías se muestren en Bolívares con porcentajes normales y coherentes (~69% o ~51%), sin desbordes negativos ni porcentajes astronómicos.
+   - Probar el lente `EUR BCV` y confirmar coherencia en euros.
 
-2. **Prueba de los 3 Métodos de Liquidación en Revisión:**
-   - Seleccionar moneda USD con monto 20.00:
-     - En **`Pagado en Bs. (a BCV)`**: bolívares calculados a tasa oficial y equivalente USDT menor a 20.
-     - En **`Pagado en Bs. (a USDT P2P)`**: bolívares calculados a tasa USDT P2P y equivalente en lente BCV revaluado.
-     - En **`Pagado en $`**: monto en dólares exacto (20 USD = 20 USDT).
+2. **Prueba de Registro con Ajuste de Bolívares en Web y Móvil:**
+   - Abrir "Registrar gasto" teniendo el lente en `USDT P2P`. Confirmar que el formulario abra en `USD` con la opción `En Bs. · precio a tasa BCV`.
+   - Escribir `20` USD. Observar cómo se calculan los bolívares en la caja inferior.
+   - Modificar manualmente los bolívares a `4950.00`. Guardar y verificar que la factura registre exactamente `4.950,00 Bs.`.
 
-3. **Prueba del Selector de 4 Lentes:**
-   - En la pantalla principal, alternar entre `USD BCV`, `USDT P2P`, `EUR BCV` y `Bs.`.
-   - Confirmar que el total gastado cambia al lente seleccionado y que la insignia visual de "Brecha capturada" ya no aparece.
+3. **Prueba de Edición de Factura en Web:**
+   - En la lista mensual de facturas en el panel web, hacer clic en `✏️ Editar` sobre una factura existente.
+   - Modificar un ítem o el monto, guardar y verificar que se actualice inmediatamente en Firestore y en pantalla.
 
-4. **Prueba de Presupuestos sin Drift:**
-   - Abrir el configurador de presupuestos, ingresar 100 USD.
-   - Cambiar a VES, luego a EUR, luego a USDT y volver a USD.
-   - Confirmar que regresa exactamente a `100` sin pérdida de decimales.
+4. **Prueba de Alerta de Discrepancia:**
+   - Registrar un gasto con total `10.00` y agregar un ítem con precio `8.00`.
+   - Al pulsar Guardar, verificar que aparezca la confirmación para ajustar el total o mantenerlo.
 
-5. **Prueba de Paridad en Panel Web:**
-   - Ingresar a `https://rindemas.cesarluis.com/panel` tras el despliegue.
-   - Verificar la barra de 4 lentes métricos y el modal de registro con las 3 opciones de pago.
+5. **Prueba de Descarga del APK en Landing:**
+   - En `https://rindemas.cesarluis.com`, hacer clic en "Descargar APK Directo" y verificar que descargue la versión más reciente del build.

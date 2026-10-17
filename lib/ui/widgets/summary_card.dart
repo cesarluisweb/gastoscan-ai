@@ -59,18 +59,53 @@ class SummaryCard extends StatelessWidget {
       monedaPrincipal,
     );
 
+    final double tUsd = tasaCambio > 0 ? tasaCambio : 1.0;
+    final double effUsdtRate = tasaUsdt > 0 ? tasaUsdt : tUsd;
+    final double effEurRate = tasaEur > 0 ? tasaEur : tUsd;
+
+    // Conversión determinística del presupuesto base hacia el lente activo
+    double convertToLens(double amount, String fromCur, String toCur) {
+      if (amount <= 0 || fromCur == toCur) return amount;
+      double inUsd;
+      if (fromCur == 'VES') {
+        inUsd = tUsd > 0 ? (amount / tUsd) : amount;
+      } else if (fromCur == 'EUR') {
+        inUsd = (tUsd > 0 && effEurRate > 0) ? (amount * effEurRate / tUsd) : amount;
+      } else {
+        inUsd = amount; // USD o USDT (1:1)
+      }
+
+      if (toCur == 'VES') {
+        return inUsd * tUsd;
+      } else if (toCur == 'EUR') {
+        return effEurRate > 0 ? (inUsd * tUsd / effEurRate) : inUsd;
+      } else {
+        return inUsd; // USD o USDT (1:1)
+      }
+    }
+
+    final double effectiveSpent;
+    if (monedaPrincipal == 'VES') {
+      effectiveSpent = totalVes > 0 ? totalVes : totalUsd * tUsd;
+    } else if (monedaPrincipal == 'USDT') {
+      effectiveSpent = usdtEff;
+    } else if (monedaPrincipal == 'EUR') {
+      final double vesEquiv = totalVes > 0 ? totalVes : totalUsd * tUsd;
+      effectiveSpent = effEurRate > 0 ? (vesEquiv / effEurRate) : totalUsd;
+    } else {
+      effectiveSpent = totalUsd;
+    }
+
     final hasBudget = presupuestoGeneral > 0;
     final hasSavingsGoal = metaAhorro > 0;
-    final isBudgetVes = monedaPresupuesto == 'VES';
-    final effectiveSpent = isBudgetVes
-        ? (totalVes > 0 ? totalVes : totalUsd * tasaCambio)
-        : (monedaPresupuesto == 'USDT' ? usdtEff : totalUsd);
+    final double generalInLens = convertToLens(presupuestoGeneral, monedaPresupuesto, monedaPrincipal);
+    final double metaInLens = convertToLens(metaAhorro, monedaPresupuesto, monedaPrincipal);
 
     final limiteParaGastar = hasSavingsGoal
-        ? (presupuestoGeneral - metaAhorro).clamp(0.0, double.infinity)
-        : presupuestoGeneral;
+        ? (generalInLens - metaInLens).clamp(0.0, double.infinity)
+        : generalInLens;
 
-    final targetBudget = hasSavingsGoal ? limiteParaGastar : presupuestoGeneral;
+    final targetBudget = hasSavingsGoal ? limiteParaGastar : generalInLens;
     final percentUsed = (hasBudget && targetBudget > 0) ? (effectiveSpent / targetBudget) : 0.0;
     final isOverBudget = hasBudget && (effectiveSpent > targetBudget);
 
@@ -91,44 +126,34 @@ class SummaryCard extends StatelessWidget {
     final rem = (targetBudget - effectiveSpent).clamp(0.0, double.infinity);
     final ritmoDiario = rem / daysForCalculation;
     final diasTexto = daysRemaining == 1 ? 'Falta 1 día' : 'Faltan $daysRemaining días';
-    final remFormatted = isBudgetVes
-        ? CurrencyFormatter.formatVes(rem)
-        : CurrencyFormatter.formatPreferido(
-            rem,
-            null,
-            tasaCambio,
-            monedaPrincipal,
-            tasaEur: tasaEur,
-            tasaUsdt: tasaUsdt,
-          );
-    final ritmoFormatted = isBudgetVes
-        ? CurrencyFormatter.formatVes(ritmoDiario)
-        : CurrencyFormatter.formatPreferido(
-            ritmoDiario,
-            null,
-            tasaCambio,
-            monedaPrincipal,
-            tasaEur: tasaEur,
-            tasaUsdt: tasaUsdt,
-          );
-    final budgetFormatted = isBudgetVes
-        ? CurrencyFormatter.formatVes(presupuestoGeneral)
-        : CurrencyFormatter.formatPreferido(presupuestoGeneral, null, tasaCambio, monedaPrincipal, tasaEur: tasaEur, tasaUsdt: tasaUsdt);
-    final limiteFormatted = isBudgetVes
-        ? CurrencyFormatter.formatVes(limiteParaGastar)
-        : CurrencyFormatter.formatPreferido(limiteParaGastar, null, tasaCambio, monedaPrincipal, tasaEur: tasaEur, tasaUsdt: tasaUsdt);
-    final excessFormatted = isBudgetVes
-        ? CurrencyFormatter.formatVes(effectiveSpent - targetBudget)
-        : CurrencyFormatter.formatPreferido(effectiveSpent - targetBudget, null, tasaCambio, monedaPrincipal, tasaEur: tasaEur, tasaUsdt: tasaUsdt);
+    final remFormatted = CurrencyFormatter.formatPreferido(
+      rem,
+      null,
+      tasaCambio,
+      monedaPrincipal,
+      tasaEur: tasaEur,
+      tasaUsdt: tasaUsdt,
+    );
+    final ritmoFormatted = CurrencyFormatter.formatPreferido(
+      ritmoDiario,
+      null,
+      tasaCambio,
+      monedaPrincipal,
+      tasaEur: tasaEur,
+      tasaUsdt: tasaUsdt,
+    );
+    final budgetFormatted = CurrencyFormatter.formatPreferido(generalInLens, null, tasaCambio, monedaPrincipal, tasaEur: tasaEur, tasaUsdt: tasaUsdt);
+    final limiteFormatted = CurrencyFormatter.formatPreferido(limiteParaGastar, null, tasaCambio, monedaPrincipal, tasaEur: tasaEur, tasaUsdt: tasaUsdt);
+    final excessFormatted = CurrencyFormatter.formatPreferido(effectiveSpent - targetBudget, null, tasaCambio, monedaPrincipal, tasaEur: tasaEur, tasaUsdt: tasaUsdt);
 
     final snapshot = hasSavingsGoal
         ? SavingsHealthCalculator.calculate(
-            presupuestoGeneral: presupuestoGeneral,
-            metaAhorro: metaAhorro,
+            presupuestoGeneral: generalInLens,
+            metaAhorro: metaInLens,
             gastoAcumulado: effectiveSpent,
             diaActual: isCurrentMonth ? now.day : (isPastMonth ? totalDaysInMonth : 1),
             diasTotalesMes: totalDaysInMonth,
-            moneda: monedaPresupuesto,
+            moneda: monedaPrincipal,
           )
         : null;
 

@@ -83,85 +83,55 @@ class AnalysisScreen extends StatelessWidget {
           else if (hasData) ...[
             () {
               final bool isBudgetVes = gastoProvider.monedaPresupuesto == 'VES';
-              final String activeMoneda = isBudgetVes ? 'VES' : settings.monedaPrincipal;
+              final String activeMoneda = settings.monedaPrincipal;
+              final double tUsd = settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : 1.0;
+              final double tUsdt = settings.tasaCambioVesUsdt > 0 ? settings.tasaCambioVesUsdt : tUsd;
+              final double tEur = settings.tasaCambioVesEur > 0 ? settings.tasaCambioVesEur : tUsd;
+
+              double convertAmountToLens(double amount) {
+                if (amount <= 0 || gastoProvider.monedaPresupuesto == activeMoneda) return amount;
+                double inUsd;
+                if (isBudgetVes) {
+                  inUsd = tUsd > 0 ? (amount / tUsd) : amount;
+                } else if (gastoProvider.monedaPresupuesto == 'EUR') {
+                  inUsd = (tUsd > 0 && tEur > 0) ? (amount * tEur / tUsd) : amount;
+                } else {
+                  inUsd = amount; // USD o USDT (1:1)
+                }
+
+                if (activeMoneda == 'VES') {
+                  return inUsd * tUsd;
+                } else if (activeMoneda == 'EUR') {
+                  return tEur > 0 ? (inUsd * tUsd / tEur) : inUsd;
+                } else {
+                  return inUsd; // USD o USDT (1:1)
+                }
+              }
 
               final Map<String, double> categoryTotals;
-              final Map<String, double> categoryBudgets;
+              final Map<String, double> categoryBudgets = gastoProvider.presupuestosPorCategoria.map((k, v) => MapEntry(
+                    k,
+                    convertAmountToLens(v),
+                  ));
               final double totalMes;
-              final double budgetGeneral;
+              final double budgetGeneral = convertAmountToLens(gastoProvider.presupuestoGeneral);
 
               if (activeMoneda == 'VES') {
                 categoryTotals = gastoProvider.totalesPorCategoriaVes;
-                categoryBudgets = isBudgetVes
-                    ? gastoProvider.presupuestosPorCategoria
-                    : gastoProvider.presupuestosPorCategoria.map((k, v) => MapEntry(
-                          k,
-                          CurrencyFormatter.convertFromUsd(v, 'VES', settings.tasaCambioVesUsd),
-                        ));
                 totalMes = gastoProvider.totalMesVes;
-                budgetGeneral = isBudgetVes
-                    ? gastoProvider.presupuestoGeneral
-                    : CurrencyFormatter.convertFromUsd(gastoProvider.presupuestoGeneral, 'VES', settings.tasaCambioVesUsd);
               } else if (activeMoneda == 'USD') {
                 categoryTotals = gastoProvider.totalesPorCategoria;
-                categoryBudgets = isBudgetVes
-                    ? gastoProvider.presupuestosPorCategoria.map((k, v) => MapEntry(
-                          k,
-                          settings.tasaCambioVesUsd > 0 ? v / settings.tasaCambioVesUsd : 0.0,
-                        ))
-                    : gastoProvider.presupuestosPorCategoria;
                 totalMes = gastoProvider.totalMesUsd;
-                budgetGeneral = isBudgetVes
-                    ? (settings.tasaCambioVesUsd > 0 ? gastoProvider.presupuestoGeneral / settings.tasaCambioVesUsd : 0.0)
-                    : gastoProvider.presupuestoGeneral;
               } else if (activeMoneda == 'USDT') {
                 categoryTotals = gastoProvider.totalesPorCategoriaUsdt;
-                categoryBudgets = isBudgetVes
-                    ? gastoProvider.presupuestosPorCategoria.map((k, v) => MapEntry(
-                          k,
-                          settings.tasaCambioVesUsdt > 0 ? v / settings.tasaCambioVesUsdt : 0.0,
-                        ))
-                    : gastoProvider.presupuestosPorCategoria;
                 totalMes = gastoProvider.totalMesUsdt;
-                budgetGeneral = isBudgetVes
-                    ? (settings.tasaCambioVesUsdt > 0 ? gastoProvider.presupuestoGeneral / settings.tasaCambioVesUsdt : 0.0)
-                    : gastoProvider.presupuestoGeneral;
               } else {
                 // EUR
-                categoryTotals = gastoProvider.totalesPorCategoria.map((k, v) => MapEntry(
+                categoryTotals = gastoProvider.totalesPorCategoriaVes.map((k, v) => MapEntry(
                       k,
-                      CurrencyFormatter.convertFromUsd(
-                        v,
-                        activeMoneda,
-                        settings.tasaCambioVesUsd,
-                        tasaEur: settings.tasaCambioVesEur,
-                        tasaUsdt: settings.tasaCambioVesUsdt,
-                      ),
+                      tEur > 0 ? v / tEur : 0.0,
                     ));
-                categoryBudgets = gastoProvider.presupuestosPorCategoria.map((k, v) => MapEntry(
-                      k,
-                      CurrencyFormatter.convertFromUsd(
-                        isBudgetVes ? (settings.tasaCambioVesUsd > 0 ? v / settings.tasaCambioVesUsd : 0.0) : v,
-                        activeMoneda,
-                        settings.tasaCambioVesUsd,
-                        tasaEur: settings.tasaCambioVesEur,
-                        tasaUsdt: settings.tasaCambioVesUsdt,
-                      ),
-                    ));
-                totalMes = CurrencyFormatter.convertFromUsd(
-                  gastoProvider.totalMesUsd,
-                  activeMoneda,
-                  settings.tasaCambioVesUsd,
-                  tasaEur: settings.tasaCambioVesEur,
-                  tasaUsdt: settings.tasaCambioVesUsdt,
-                );
-                budgetGeneral = CurrencyFormatter.convertFromUsd(
-                  isBudgetVes ? (settings.tasaCambioVesUsd > 0 ? gastoProvider.presupuestoGeneral / settings.tasaCambioVesUsd : 0.0) : gastoProvider.presupuestoGeneral,
-                  activeMoneda,
-                  settings.tasaCambioVesUsd,
-                  tasaEur: settings.tasaCambioVesEur,
-                  tasaUsdt: settings.tasaCambioVesUsdt,
-                );
+                totalMes = tEur > 0 ? (gastoProvider.totalMesVes / tEur) : gastoProvider.totalMesUsd;
               }
 
               return Column(
@@ -209,45 +179,43 @@ class AnalysisScreen extends StatelessWidget {
     final double rawBudget = gastoProvider.presupuestoGeneral;
     final double rawMetaAhorro = gastoProvider.metaAhorro;
 
-    final double budget;
-    final double metaAhorro;
+    final double tUsd = settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : 1.0;
+    final double tUsdt = settings.tasaCambioVesUsdt > 0 ? settings.tasaCambioVesUsdt : tUsd;
+    final double tEur = settings.tasaCambioVesEur > 0 ? settings.tasaCambioVesEur : tUsd;
+
+    double convertAmountToLens(double amount) {
+      if (amount <= 0 || gastoProvider.monedaPresupuesto == activeMoneda) return amount;
+      double inUsd;
+      if (isBudgetVes) {
+        inUsd = tUsd > 0 ? (amount / tUsd) : amount;
+      } else if (gastoProvider.monedaPresupuesto == 'EUR') {
+        inUsd = (tUsd > 0 && tEur > 0) ? (amount * tEur / tUsd) : amount;
+      } else {
+        inUsd = amount; // USD o USDT (1:1)
+      }
+
+      if (activeMoneda == 'VES') {
+        return inUsd * tUsd;
+      } else if (activeMoneda == 'EUR') {
+        return tEur > 0 ? (inUsd * tUsd / tEur) : inUsd;
+      } else {
+        return inUsd; // USD o USDT (1:1)
+      }
+    }
+
+    final double budget = convertAmountToLens(rawBudget);
+    final double metaAhorro = convertAmountToLens(rawMetaAhorro);
     final double spent;
 
     if (activeMoneda == 'VES') {
-      budget = isBudgetVes ? rawBudget : CurrencyFormatter.convertFromUsd(rawBudget, 'VES', settings.tasaCambioVesUsd);
-      metaAhorro = isBudgetVes ? rawMetaAhorro : CurrencyFormatter.convertFromUsd(rawMetaAhorro, 'VES', settings.tasaCambioVesUsd);
       spent = gastoProvider.totalMesVes;
     } else if (activeMoneda == 'USD') {
-      budget = isBudgetVes ? (settings.tasaCambioVesUsd > 0 ? rawBudget / settings.tasaCambioVesUsd : 0.0) : rawBudget;
-      metaAhorro = isBudgetVes ? (settings.tasaCambioVesUsd > 0 ? rawMetaAhorro / settings.tasaCambioVesUsd : 0.0) : rawMetaAhorro;
       spent = gastoProvider.totalMesUsd;
     } else if (activeMoneda == 'USDT') {
-      budget = isBudgetVes ? (settings.tasaCambioVesUsdt > 0 ? rawBudget / settings.tasaCambioVesUsdt : 0.0) : rawBudget;
-      metaAhorro = isBudgetVes ? (settings.tasaCambioVesUsdt > 0 ? rawMetaAhorro / settings.tasaCambioVesUsdt : 0.0) : rawMetaAhorro;
       spent = gastoProvider.totalMesUsdt;
     } else {
       // EUR
-      budget = CurrencyFormatter.convertFromUsd(
-        rawBudget,
-        activeMoneda,
-        settings.tasaCambioVesUsd,
-        tasaEur: settings.tasaCambioVesEur,
-        tasaUsdt: settings.tasaCambioVesUsdt,
-      );
-      metaAhorro = CurrencyFormatter.convertFromUsd(
-        rawMetaAhorro,
-        activeMoneda,
-        settings.tasaCambioVesUsd,
-        tasaEur: settings.tasaCambioVesEur,
-        tasaUsdt: settings.tasaCambioVesUsdt,
-      );
-      spent = CurrencyFormatter.convertFromUsd(
-        gastoProvider.totalMesUsd,
-        activeMoneda,
-        settings.tasaCambioVesUsd,
-        tasaEur: settings.tasaCambioVesEur,
-        tasaUsdt: settings.tasaCambioVesUsdt,
-      );
+      spent = tEur > 0 ? (gastoProvider.totalMesVes / tEur) : gastoProvider.totalMesUsd;
     }
 
     final bool hasSavingsGoal = metaAhorro > 0;

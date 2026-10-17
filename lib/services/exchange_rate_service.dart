@@ -236,11 +236,21 @@ class ExchangeRateService {
       } catch (_) {}
     }
 
-    // 4. Fallback final a tasa del día
+    // 4. Fallback final a tasa del día (o última conocida en caché)
     final allRates = await getAllTodayRates(client: client);
-    if (monedaClean == 'EUR') return allRates.eur;
-    if (monedaClean == 'USDT') return allRates.usdt;
-    return allRates.usd;
+    double finalRate = 0.0;
+    if (monedaClean == 'EUR') {
+      finalRate = allRates.eur;
+    } else if (monedaClean == 'USDT') {
+      finalRate = allRates.usdt;
+    } else {
+      finalRate = allRates.usd;
+    }
+
+    if (finalRate <= 0) {
+      finalRate = prefs.getDouble('cached_rate_usd') ?? prefs.getDouble('cached_exchange_rate') ?? 1.0;
+    }
+    return finalRate > 0 ? finalRate : 1.0;
   }
 
   /// Obtiene la tasa de cambio de hoy en tiempo real (retrocompatibilidad)
