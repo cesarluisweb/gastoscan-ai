@@ -2,7 +2,6 @@ Analyzing gastoscan-ai...
 
    info • The import of 'package:flutter/foundation.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart'. Try removing the import directive • lib/main.dart:1:8 • unnecessary_import
    info • Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter • lib/main.dart:52:9 • use_super_parameters
-warning • The declaration '_fetchUsdtLiveRate' isn't referenced. Try removing the declaration of '_fetchUsdtLiveRate' • lib/services/exchange_rate_service.dart:257:26 • unused_element
    info • Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter • lib/ui/screens/analysis_screen.dart:16:9 • use_super_parameters
    info • Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter • lib/ui/screens/chat_screen.dart:56:9 • use_super_parameters
    info • 'localeId' is deprecated and shouldn't be used. Use SpeechListenOptions.localeId instead. Try replacing the use of the deprecated member with the replacement • lib/ui/screens/chat_screen.dart:187:11 • deprecated_member_use
