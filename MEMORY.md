@@ -4,17 +4,17 @@
 ## Estado Actual Inmediato
 - **Rama:** `main`.
 - **Fase activa:** Fase 5 (Closed Testing activa) y restauración a Build 470 (1.0.4).
-- **Acción Reciente:** Identificada causa raíz del fallo en APK (NoSuchMethodError en SharedPreferences por optimización agresiva de R8). Corregidas reglas ProGuard en CI.
+- **Acción Reciente:** Inspección forense de DEX reveló que R8 ofuscaba `kotlin.coroutines.Continuation` a `jj`, rompiendo la llamada JNI de Pigeon. Se aplicó `-dontobfuscate`, `-dontoptimize` y keep de Kotlin.
 - **Respaldo:** El trabajo y diagnóstico previo de FIN-12 queda salvaguardado en la rama `backup/pre-regreso-build-470`.
 - **Preservación:** Documentación técnica (`DOC_*.md`), scripts operativos (`scripts/wait_ci.ps1`) y reglas se mantienen intactos.
 
 ## Decisiones Técnicas y de Negocio Recientes
-- La causa de las tasas fijas en 40 Bs era que `SharedPreferences.getInstance()` fallaba por R8/ProGuard en APK release, abortando antes de la llamada HTTP.
-- Se configuró `-keep class io.flutter.plugins.**` y `-keep class dev.flutter.pigeon.**` en `build_apk.yml` preservando los platform channels y `SharedPreferencesApiRegistrar`.
+- La causa de las tasas fijas en 40 Bs era que Dart busca por JNI `getAll(String, List, Continuation)` y R8 renombraba `Continuation` a `jj`.
+- Se configuró `-dontobfuscate`, `-dontoptimize` y `-keep class kotlin.**` en `build_apk.yml` garantizando firmas nativas intactas.
 
 ## Errores y Fricciones a Evitar
 - No encadenar comandos con `&&` ni usar redirección `>` en PowerShell.
 - Monitoreo de CI por proceso dormido único (`scripts/wait_ci.ps1`), prohibido bucle activo turno a turno.
 
 ## Próximo Paso Inmediato
-- CI confirmado en verde (`CI 39063480019 | success | build 497 | fa3c473`). César valida en su teléfono que las tasas cargan en vivo.
+- Compilar en CI (Build 498+), probar en teléfono de César y confirmar que las tasas cargan en vivo.

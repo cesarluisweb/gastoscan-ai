@@ -87,6 +87,11 @@ jobs:
         run: |
           mkdir -p android/app
           cat << 'EOF' > android/app/proguard-rules.pro
+          # Desactivar ofuscación y optimización de bytecode para preservar firmas JNI exactas
+          -dontobfuscate
+          -dontoptimize
+
+          # Reglas para Google ML Kit Text Recognition
           -dontwarn com.google.mlkit.vision.text.chinese.**
           -dontwarn com.google.mlkit.vision.text.devanagari.**
           -dontwarn com.google.mlkit.vision.text.japanese.**
@@ -94,16 +99,20 @@ jobs:
           -keep class com.google.mlkit.vision.text.latin.** { *; }
           -keep class com.google_mlkit_text_recognition.** { *; }
 
-          # Reglas para Flutter Platform Channels, Pigeon y SharedPreferences
-          -keep class io.flutter.plugins.** { *; }
-          -keep class dev.flutter.pigeon.** { *; }
+          # Flutter Platform Channels, Pigeon y SharedPreferences
+          -keep class io.flutter.** { *; }
+          -keep class dev.flutter.** { *; }
           -keep class dev.fluttercommunity.** { *; }
           -keep class com.it_nomads.fluttersecurestorage.** { *; }
           -keep class com.tekartik.sqflite.** { *; }
           -keep class com.dexterous.flutterlocalnotifications.** { *; }
           -keep class * implements io.flutter.plugin.common.MethodChannel$MethodCallHandler { *; }
           -keep class * implements io.flutter.plugin.common.PluginRegistry$PluginRegistrantCallback { *; }
-          -keepattributes *Annotation*,InnerClasses,Signature,EnclosingMethod
+
+          # Preservar Kotlin stdlib, corrutinas, JNI y firmas de reflexión
+          -keep class kotlin.** { *; }
+          -keep class kotlinx.** { *; }
+          -keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod
           EOF
           
           # Inyectar configuracion de proguard-rules.pro y fijar targetSdk 36 en android/app/build.gradle.kts
