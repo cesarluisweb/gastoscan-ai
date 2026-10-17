@@ -507,9 +507,10 @@ class MoreScreenState extends State<MoreScreen> {
                           onPressed: settings.isSyncingRate
                               ? null
                               : () async {
+                                  final messenger = ScaffoldMessenger.of(context);
                                   final exito = await settings.actualizarTasaAutomatica();
                                   if (!mounted) return;
-                                  ScaffoldMessenger.of(context).showSnackBar(
+                                  messenger.showSnackBar(
                                     SnackBar(
                                       content: Text(
                                         exito
