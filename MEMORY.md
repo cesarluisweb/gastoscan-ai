@@ -3,8 +3,8 @@
 
 ## Estado Actual Inmediato
 - **Rama:** `main`.
-- **Fase activa:** Fase 5 (Closed Testing activa) y retorno al motor multimoneda (FIN-11).
-- **Acción Reciente:** Restauración completa de FIN-11 desde `0870133`, preservando blindaje R8 en CI, integración con Cloudflare Gateway `/tasas`, observabilidad limpia en `debugPrint` y UI silenciosa en `MoreScreen`.
+- **Fase activa:** Fase 5 (Closed Testing activa) y validación de motor multimoneda (FIN-11).
+- **Acción Reciente:** Compilación en verde del Build 505 (CI 501, commit `a3c7184`). Verificación forense en DEX confirmó que `Continuation` y `SharedPreferencesApiRegistrar` permanecen íntegros sin ofuscación. La landing y el panel web están desplegados en producción.
 - **Preservación:** Blindaje de R8 en `build_apk.yml` intacto (`-dontobfuscate`, `-dontoptimize`, `-keepattributes`), scripts operativos y reglas intactos.
 
 ## Decisiones Técnicas y de Negocio Recientes
@@ -16,5 +16,5 @@
 - Monitoreo de CI por proceso dormido único (`scripts/wait_ci.ps1`), prohibido bucle activo turno a turno.
 
 ## Próximo Paso Inmediato
-- Monitorear GitHub Actions tras push y verificar que el APK generado mantenga intacta la lógica multimoneda y la firma JNI.
+- Validación manual en dispositivo físico por César de los 4 lentes y las 3 pastillas de liquidación en el APK Build 505.
 
