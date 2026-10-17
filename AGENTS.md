@@ -45,6 +45,10 @@
 - Afirmar que los datos se guardan en el "Google Drive personal" o saturar la interfaz con tecnicismos como "Firebase".
 - Ejecutar bucles de relectura redundante (`view_file` más de 2 veces sobre el mismo rango sin cambios intermedios).
 - Descargar el log completo de un job de CI (devuelve HTTP 403 en repositorio privado y es de tamaño enorme) o iterar consultas de estado al API de GitHub. Ante fallo, extraer solo los steps con `conclusion == failure` y el reporte `test_results.txt` vía `git show origin/main:test_results.txt`.
+- Silenciar excepciones en bloques `catch (_) {}` sin registrar el error en capas críticas (red, base de datos, `SharedPreferences`, autenticación o pasarela de IA).
+- Activar ofuscación o reescritura de bytecode en la capa Java/Kotlin en CI (`-dontobfuscate`, `-dontoptimize` y preservación de `-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod` son obligatorios).
+- Ignorar o eliminar `pubspec.lock` del control de versiones (debe permanecer siempre versionado para garantizar compilaciones idénticas en CI y local).
+- Exponer trazas de error técnicas o `PlatformException` directamente al usuario final en la interfaz gráfica.
 
 ## 3. Protocolo de Memoria Dinámica (`MEMORY.md`)
 1. **Al iniciar:** Leer `MEMORY.md` para situarse en el estado inmediato de trabajo.

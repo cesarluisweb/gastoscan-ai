@@ -84,3 +84,23 @@ Si por alguna razón se requiere sincronizar el commit de logs en la copia de tr
    git stash pop
    ```
 3. Si ocurren conflictos durante el `stash pop`, resolver manualmente o descartar el commit de logs remoto con `git reset --soft HEAD~1`.
+
+---
+
+## 4. Inspección Forense de Binarios (DEX / APK ante Fallos Nativos)
+
+Si una versión release falla en el dispositivo con `NoSuchMethodError`, `ClassNotFoundException` o `PlatformException(channel-error, ...)` que no ocurre en desarrollo:
+
+1. **Descargar el APK de producción a `scratch/`:**
+   ```powershell
+   powershell -Command "Invoke-WebRequest -Uri 'https://rindemas.cesarluis.com/rindemas.apk?b=<build>' -OutFile 'scratch/test_apk.apk'"
+   ```
+2. **Inspeccionar los métodos y tipos en `classes.dex` mediante script Python:**
+   Extraer y parsear la tabla de tipos y métodos del archivo DEX sin necesidad de decompiladores pesados:
+   ```python
+   import zipfile, struct
+   with zipfile.ZipFile("scratch/test_apk.apk") as z:
+       dex = z.read("classes.dex")
+       # Verificar si los nombres de clases nativas o interfaces JNI fueron renombrados por R8
+   ```
+3. **Señal de alarma:** Si una firma de método que espera `kotlin.coroutines.Continuation` contiene tipos ofuscados de una o dos letras (ej. `Ljj;`), R8 ofuscó los tipos de Kotlin. La solución inmediata es asegurar `-dontobfuscate`, `-dontoptimize`, `-keepattributes` y `-keep class kotlin.Metadata` en ProGuard.

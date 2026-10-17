@@ -10,6 +10,14 @@ description: "Pipeline de CI/CD en GitHub Actions, inyección programática en A
 - **Regeneración de `android/` en GitHub Actions:** El workflow `build_apk.yml` ejecuta `flutter create .` al inicio, borrando y regenerando la carpeta `android/` en cada ejecución.
 - **Prohibición de Edición Local en `android/`:** Queda terminantemente prohibido modificar archivos locales dentro de `android/` (como `build.gradle.kts`, `settings.gradle` o manifiestos), ya que cualquier cambio se pierde en el runner de CI.
 - **Inyección Programática por Bash:** Toda configuración nativa requerida (reglas ProGuard, firmas, plugins de Firebase o Google Sign-In) DEBE inyectarse mediante scripts automatizados (`sed`, scripts Python inline) directamente dentro del archivo `.github/workflows/build_apk.yml` después del paso de regeneración.
+- **Integridad de Firmas JNI y Metadatos de Reflexión:** El código Dart ya se compila a binario nativo ARM64 (`libapp.so`). Prohibido ofuscar o aplicar optimizaciones destructivas en la capa Java/Kotlin. El archivo `proguard-rules.pro` inyectado en CI DEBE incluir siempre:
+  - `-dontobfuscate` y `-dontoptimize` (usar únicamente `proguardFiles("proguard-rules.pro")`, sin la plantilla agresiva `proguard-android-optimize.txt`).
+  - `-ignorewarnings`, `-dontwarn kotlin.**` y `-dontwarn kotlinx.**`.
+  - `-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod`.
+  - `-keep class kotlin.Metadata { *; }`.
+  - Preservación explícita de `io.flutter.**`, `dev.flutter.**`, `kotlin.**` y `kotlinx.**`.
+  Omitir estas directivas provoca que R8 renombre tipos como `kotlin.coroutines.Continuation` (ej. a `jj`) o mutile anotaciones de Pigeon y plugins federados, rompiendo las llamadas directas de JNI con `NoSuchMethodError`.
+- **Reproducibilidad Determinista (`pubspec.lock` Obligatorio):** El archivo `pubspec.lock` DEBE estar versionado en git en todo momento. Prohibido añadirlo a `.gitignore`. Esto asegura que `flutter pub get` en GitHub Actions descargue con exactitud las dependencias nativas probadas, previniendo discrepancias entre entornos.
 
 ## 2. Autenticación Nativa y Google Sign-In (Error 10)
 - **Registro Doble de Huellas SHA-1:** Para prevenir el Error 10 de Google Sign-In en Android, deben registrarse obligatoriamente **dos** huellas SHA-1 en el proyecto Firebase (`com.cesarluis.rindemas`):
