@@ -66,6 +66,12 @@ class AnalysisScreen extends StatelessWidget {
             keyPrefix: 'analysis_',
             padding: EdgeInsets.only(bottom: 12),
           ),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _buildLensSwitch(context, settings),
+            ),
+          ),
 
           if (gastoProvider.isLoading)
             const Center(
@@ -510,6 +516,54 @@ class AnalysisScreen extends StatelessWidget {
             onPressed: () => BudgetBottomSheet.show(context),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLensSwitch(BuildContext context, SettingsProvider settings) {
+    final current = settings.monedaPrincipal;
+    final lenses = [
+      {'id': 'USD', 'label': 'USD BCV'},
+      {'id': 'USDT', 'label': 'USDT P2P'},
+      {'id': 'EUR', 'label': 'EUR BCV'},
+      {'id': 'VES', 'label': 'Bs.'},
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        color: AppColors.cardLighter,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: lenses.map((l) {
+          final isSelected = current == l['id'];
+          return InkWell(
+            key: Key('analysis_lens_${l['id']?.toLowerCase()}'),
+            onTap: () => settings.setMonedaPrincipal(l['id']!),
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: isSelected ? AppColors.surface : Colors.transparent,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: isSelected
+                    ? [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 4)]
+                    : null,
+              ),
+              child: Text(
+                l['label']!,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                  color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
+                ),
+              ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }

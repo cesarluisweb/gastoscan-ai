@@ -118,15 +118,18 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
   - *Problema:* Al mostrar valores en USDT, la app triangulaba USD -> VES -> USDT aplicando la brecha cambiaria (spread oficial BCV vs Binance P2P) a dos monedas que cotizan en dólares ($19.99 USD se transformaban en 17.66 USDT), y recalculaba el total mensual con la tasa USDT en vivo de cada día, provocando que los totales históricos fluctuaran y disminuyeran día a día.
   - *Solución:* Establecimiento de paridad determinista 1:1 directa entre USD y USDT en pagos en divisas sin aplicar tasas futuras.
 
-- `FIN-11` **Motor Multimoneda "Dos Lentes" (USD BCV vs. USDT P2P) y Migración SQLite v17:** `Pendiente de validación 🧪`
+- `FIN-11` **Motor Multimoneda "Dos Lentes", Pulido Integral (10 Puntos) y Soporte de IA:** `Pendiente de validación 🧪`
   - *Problema:* La paridad 1:1 global de FIN-10 impedía distinguir gastos cancelados en bolívares de gastos en divisas duras, borrando el ahorro real obtenido al vender USDT en Binance P2P para compras locales (ej. gasolina pagada en Bs a tasa BCV).
   - *Solución:*
-    1. **Migración SQLite v17:** Nuevas columnas `total_usdt INTEGER` (en céntimos inmutables) y `tasa_usdt REAL` con backfill determinista.
-    2. **Verdad física del pago:** Gastos en `VES` sellan ambas tasas (`tasa_bcv` y `tasa_usdt`). Gastos en `USD`/`USDT` mantienen paridad 1:1 directa.
-    3. **UX de Captura:** Vista previa dual en `ReviewExpenseScreen` (`= $X,XX BCV • Y,YY USDT`) y selector `[ Pagado en Bs. a tasa BCV ]` vs `[ Pagado en Divisa ]` que convierte y persiste la verdad física para usuarios que piensan en dólares pero pagan en bolívares.
-    4. **Switch de Lente Rápido:** Selector `[USD BCV | USDT P2P | Bs.]` en `SummaryCard` y `AnalysisScreen`, junto con la insignia de *"Brecha capturada (+$$ vs BCV)"*.
-    5. **Paridad Total:** Sincronizado en `GastoProvider`, `CurrencyFormatter`, contexto semántico de IA en `ChatScreen`, y `panel.astro` (eliminando multiplicador prohibido `* 1.08`).
-  - *Documentación:* Ver [DOC_MOTOR_MULTIMONEDA.md](DOC_MOTOR_MULTIMONEDA.md). Tarea crítica: pendiente de visto bueno de César.
+    1. **Migración SQLite v17:** Columnas `total_usdt INTEGER` (céntimos inmutables) y `tasa_usdt REAL` con backfill determinista.
+    2. **3 Opciones de Liquidación USD/EUR:** Pastillas `[ Pagado en Bs. (a BCV) ]`, `[ Pagado en Bs. (a USDT P2P) ]` y `[ Pagado en $ (Divisa directa) ]` en `ReviewExpenseScreen` y `panel.astro`.
+    3. **Switch de 4 Lentes:** Selector `[USD BCV | USDT P2P | EUR BCV | Bs.]` en `SummaryCard`, `AnalysisScreen` y `panel.astro`, con eliminación visual de la insignia de brecha capturada para mantener limpia la UI.
+    4. **Moneda Principal Dedicada:** Tarjeta independiente en `MoreScreen` con nomenclatura unificada.
+    5. **Presupuestos sin Deriva (Drift):** Memoria de monto base original y paridad 1:1 estricta entre USD y USDT en `BudgetBottomSheet` y `panel.astro`.
+    6. **Fallbacks Amigables y Tasas Históricas:** Fallback automático a `Compra general` y `Producto 1`, `Producto 2`, con actualización incondicional de tasas históricas al cambiar fecha.
+    7. **Calculadora Cambiaria Limpia:** Estado inicial limpio sin borrado prematuro y remoción de badge duplicado.
+    8. **Soporte de IA Integral:** Detección de `metodo_liquidacion` (`BS_BCV`, `BS_USDT`, `DIVISA`) en `GeminiService` y Workers Cloudflare, preselección automática en revisión y preservación de los 4 lentes en el contexto de `ChatScreen`.
+  - *Documentación:* Ver [DOC_MOTOR_MULTIMONEDA.md](DOC_MOTOR_MULTIMONEDA.md). Tarea crítica: pendiente de prueba y visto bueno de César.
 
 ---
 

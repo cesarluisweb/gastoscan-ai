@@ -244,32 +244,6 @@ class SummaryCard extends StatelessWidget {
               fontWeight: FontWeight.w500,
             ),
           ),
-          if (totalUsd > 0 && totalUsdt > 0 && (totalUsd - totalUsdt) > 0.009) ...[
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFFE8F5E9),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFA5D6A7)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.trending_up, size: 14, color: Color(0xFF2E7D32)),
-                  const SizedBox(width: 5),
-                  Text(
-                    'Brecha capturada: +${CurrencyFormatter.formatAmount(totalUsd - totalUsdt, 'USD')} vs BCV',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1B5E20),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
           if (hasSavingsGoal && snapshot != null) ...[
             const SizedBox(height: 8),
             Builder(
@@ -432,6 +406,7 @@ class SummaryCard extends StatelessWidget {
     final lenses = [
       {'id': 'USD', 'label': 'USD BCV'},
       {'id': 'USDT', 'label': 'USDT P2P'},
+      {'id': 'EUR', 'label': 'EUR BCV'},
       {'id': 'VES', 'label': 'Bs.'},
     ];
 

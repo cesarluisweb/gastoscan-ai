@@ -298,6 +298,39 @@ class GeminiService {
           categoria: categoria,
         ),
       ];
+    final String? metodoArg = args['metodo_liquidacion']?.toString() ?? args['metodoLiquidacion']?.toString();
+    String? metodoLiquidacion = (metodoArg != null && ['BS_BCV', 'BS_USDT', 'DIVISA'].contains(metodoArg.toUpperCase()))
+        ? metodoArg.toUpperCase()
+        : null;
+
+    if (metodoLiquidacion == null && (moneda == 'USD' || moneda == 'EUR')) {
+      final textLower = spokenText.toLowerCase();
+      if (textLower.contains('bcv') ||
+          textLower.contains('banco central') ||
+          textLower.contains('oficial') ||
+          textLower.contains('pago movil') ||
+          textLower.contains('pago móvil') ||
+          textLower.contains('punto') ||
+          textLower.contains('debito') ||
+          textLower.contains('débito') ||
+          textLower.contains('biopago') ||
+          textLower.contains('en bolivares') ||
+          textLower.contains('en bolívares') ||
+          textLower.contains('en bs')) {
+        metodoLiquidacion = 'BS_BCV';
+      } else if (textLower.contains('paralelo') ||
+          textLower.contains('usdt') ||
+          textLower.contains('binance') ||
+          textLower.contains('p2p')) {
+        metodoLiquidacion = 'BS_USDT';
+      } else if (textLower.contains('efectivo') ||
+          textLower.contains('billete') ||
+          textLower.contains('zelle') ||
+          textLower.contains('wally') ||
+          textLower.contains('zinli') ||
+          textLower.contains('divisa')) {
+        metodoLiquidacion = 'DIVISA';
+      }
     }
 
     return GeminiExtractionResult(
@@ -308,6 +341,7 @@ class GeminiService {
       tasaCambioDetectada: null,
       impuestoIva: 0.0,
       items: itemsGasto,
+      metodoLiquidacion: metodoLiquidacion,
     );
   }
 
@@ -317,7 +351,7 @@ class GeminiService {
         messages: [
           {
             'role': 'user',
-            'text': 'Registra este gasto o compras: "$spokenText". Asume que la fecha es hoy si no la menciono. Si menciono compras en múltiples lugares o comercios distintos, extrae cada una por separado en la lista "gastos". Extrae los productos, precios y la categoría adecuada para cada uno.',
+            'text': 'Registra este gasto o compras: "$spokenText". Asume que la fecha es hoy si no la menciono. Si menciono compras en múltiples lugares o comercios distintos, extrae cada una por separado en la lista "gastos". Extrae los productos, precios y la categoría adecuada para cada uno. Si el gasto es en USD o EUR e indico pago en bolívares a BCV o pago móvil o punto, especifica metodo_liquidacion: "BS_BCV"; si fue a tasa paralelo/USDT especifica "BS_USDT"; si fue en efectivo/divisa directa especifica "DIVISA".',
           }
         ],
         contextData: {
@@ -365,6 +399,36 @@ class GeminiService {
     }
 
     final String monedaFallback = AppConstants.detectarMonedaDeTexto(spokenText, fallback: 'USD');
+    String? metodoFallback;
+    if (monedaFallback == 'USD' || monedaFallback == 'EUR') {
+      final textLower = spokenText.toLowerCase();
+      if (textLower.contains('bcv') ||
+          textLower.contains('banco central') ||
+          textLower.contains('oficial') ||
+          textLower.contains('pago movil') ||
+          textLower.contains('pago móvil') ||
+          textLower.contains('punto') ||
+          textLower.contains('debito') ||
+          textLower.contains('débito') ||
+          textLower.contains('biopago') ||
+          textLower.contains('en bolivares') ||
+          textLower.contains('en bolívares') ||
+          textLower.contains('en bs')) {
+        metodoFallback = 'BS_BCV';
+      } else if (textLower.contains('paralelo') ||
+          textLower.contains('usdt') ||
+          textLower.contains('binance') ||
+          textLower.contains('p2p')) {
+        metodoFallback = 'BS_USDT';
+      } else if (textLower.contains('efectivo') ||
+          textLower.contains('billete') ||
+          textLower.contains('zelle') ||
+          textLower.contains('wally') ||
+          textLower.contains('zinli') ||
+          textLower.contains('divisa')) {
+        metodoFallback = 'DIVISA';
+      }
+    }
 
     return [
       GeminiExtractionResult(
@@ -374,6 +438,7 @@ class GeminiService {
         totalOriginal: montoFallback,
         tasaCambioDetectada: null,
         impuestoIva: 0.0,
+        metodoLiquidacion: metodoFallback,
         items: [
           ItemGastoModel(
             descripcion: spokenText,

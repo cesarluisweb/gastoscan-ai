@@ -685,25 +685,67 @@ class MoreScreenState extends State<MoreScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value: AppConstants.monedas.contains(settings.monedaPrincipal) ? settings.monedaPrincipal : 'USD',
-                  decoration: const InputDecoration(
-                    labelText: 'Moneda Principal de Reportes',
-                    prefixIcon: Icon(Icons.monetization_on_outlined, color: AppColors.textSecondary),
-                  ),
-                  dropdownColor: AppColors.surface,
-                  items: const [
-                    DropdownMenuItem(value: 'USD', child: Text('Dólares (\$ USD)')),
-                    DropdownMenuItem(value: 'VES', child: Text('Bolívares (Bs. VES)')),
-                    DropdownMenuItem(value: 'EUR', child: Text('Euros (€ EUR)')),
-                    DropdownMenuItem(value: 'USDT', child: Text('USDT (Binance)')),
-                  ],
-                  onChanged: (val) {
-                    if (val != null) settings.setMonedaPrincipal(val);
-                  },
-                ),
               ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Sección Moneda Principal de Reportes
+          Material(
+            color: AppColors.card,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: const BorderSide(color: AppColors.border),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.monetization_on_outlined, color: AppColors.primaryDark, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'Moneda Principal de Reportes',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Define la moneda por defecto para ver tus resúmenes mensuales, presupuestos y gráficos.',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                      height: 1.35,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  DropdownButtonFormField<String>(
+                    value: AppConstants.monedas.contains(settings.monedaPrincipal) ? settings.monedaPrincipal : 'USD',
+                    decoration: const InputDecoration(
+                      labelText: 'Moneda predeterminada',
+                      prefixIcon: Icon(Icons.account_balance_wallet_outlined, color: AppColors.textSecondary),
+                    ),
+                    dropdownColor: AppColors.surface,
+                    items: const [
+                      DropdownMenuItem(value: 'USD', child: Text('USD BCV (Dólar oficial)')),
+                      DropdownMenuItem(value: 'USDT', child: Text('USDT P2P (Binance / Cripto)')),
+                      DropdownMenuItem(value: 'EUR', child: Text('EUR BCV (Euro oficial)')),
+                      DropdownMenuItem(value: 'VES', child: Text('Bs. (Bolívares)')),
+                    ],
+                    onChanged: (val) {
+                      if (val != null) settings.setMonedaPrincipal(val);
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 16),

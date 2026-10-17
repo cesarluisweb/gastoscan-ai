@@ -162,7 +162,7 @@ void main() {
       expect(find.text(CurrencyFormatter.formatUsd(25.0)), findsOneWidget);
     });
 
-    testWidgets('renders USDT and brecha capturada badge when monedaPrincipal is USDT', (tester) async {
+    testWidgets('renders USDT formatted amount when monedaPrincipal is USDT', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -180,7 +180,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text(CurrencyFormatter.formatUsdt(20.0)), findsOneWidget);
-      expect(find.text('Brecha capturada: +${CurrencyFormatter.formatAmount(5.0, 'USD')} vs BCV'), findsOneWidget);
+      expect(find.textContaining('Brecha capturada'), findsNothing);
     });
   });
 

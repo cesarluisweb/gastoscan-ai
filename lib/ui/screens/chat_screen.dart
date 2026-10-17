@@ -275,6 +275,41 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       ));
     }
 
+    final String? metodoArg = gastoData['metodo_liquidacion']?.toString() ?? gastoData['metodoLiquidacion']?.toString();
+    String? metodoLiquidacion = (metodoArg != null && ['BS_BCV', 'BS_USDT', 'DIVISA'].contains(metodoArg.toUpperCase()))
+        ? metodoArg.toUpperCase()
+        : null;
+
+    if (metodoLiquidacion == null && (monedaGasto == 'USD' || monedaGasto == 'EUR')) {
+      final textLower = rawUserText.toLowerCase();
+      if (textLower.contains('bcv') ||
+          textLower.contains('banco central') ||
+          textLower.contains('oficial') ||
+          textLower.contains('pago movil') ||
+          textLower.contains('pago móvil') ||
+          textLower.contains('punto') ||
+          textLower.contains('debito') ||
+          textLower.contains('débito') ||
+          textLower.contains('biopago') ||
+          textLower.contains('en bolivares') ||
+          textLower.contains('en bolívares') ||
+          textLower.contains('en bs')) {
+        metodoLiquidacion = 'BS_BCV';
+      } else if (textLower.contains('paralelo') ||
+          textLower.contains('usdt') ||
+          textLower.contains('binance') ||
+          textLower.contains('p2p')) {
+        metodoLiquidacion = 'BS_USDT';
+      } else if (textLower.contains('efectivo') ||
+          textLower.contains('billete') ||
+          textLower.contains('zelle') ||
+          textLower.contains('wally') ||
+          textLower.contains('zinli') ||
+          textLower.contains('divisa')) {
+        metodoLiquidacion = 'DIVISA';
+      }
+    }
+
     return GeminiExtractionResult(
       comercio: comercio,
       fecha: fecha,
@@ -283,6 +318,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       tasaCambioDetectada: tasaChat > 0 ? tasaChat : null,
       impuestoIva: 0.0,
       items: itemsGasto,
+      metodoLiquidacion: metodoLiquidacion,
     );
   }
 
@@ -350,6 +386,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       (gastoProvider.totalMesUsd - gastoProvider.totalMesUsdt).toStringAsFixed(2),
     );
 
+    final double totalEurBcv = (settings.tasaCambioVesEur > 0 && gastoProvider.totalMesVes > 0)
+        ? double.parse((gastoProvider.totalMesVes / settings.tasaCambioVesEur).toStringAsFixed(2))
+        : (settings.tasaCambioVesEur > 0
+            ? double.parse((gastoProvider.totalMesUsd * settings.tasaCambioVesUsd / settings.tasaCambioVesEur).toStringAsFixed(2))
+            : gastoProvider.totalMesUsd);
+
     return {
       'tasa_bcv_usd': settings.tasaCambioVesUsd,
       'tasa_bcv_eur': settings.tasaCambioVesEur,
@@ -360,6 +402,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       'total_usd': gastoProvider.totalMesUsd,
       'total_usd_bcv': gastoProvider.totalMesUsd,
       'total_usdt_p2p': gastoProvider.totalMesUsdt,
+      'total_eur_bcv': totalEurBcv,
       'total_ves': gastoProvider.totalMesVes,
       'brecha_capturada': brechaCapturada,
       'presupuesto_general': gastoProvider.presupuestoGeneral,
