@@ -253,12 +253,6 @@ class ExchangeRateService {
     return null;
   }
 
-  /// Intenta consultar Yadio P2P / DolarAPI paralelo para USDT (retrocompatibilidad)
-  static Future<double?> _fetchUsdtLiveRate({http.Client? client}) async {
-    final yadio = await _fetchYadioAllRates(client: client);
-    if (yadio != null && (yadio['usdt'] ?? 0) > 0) return yadio['usdt'];
-    return await _fetchUrlDouble(_dolarApiParalelo, 'promedio', client: client);
-  }
 
   /// Obtiene la tasa de cambio para una fecha específica (formato YYYY-MM-DD) y moneda.
   /// Si la fecha es hoy o no hay histórico, consulta en vivo.
