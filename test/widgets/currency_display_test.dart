@@ -139,7 +139,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text(CurrencyFormatter.formatUsd(25.0)), findsOneWidget);
-      expect(find.text(CurrencyFormatter.formatVes(1000.0)), findsOneWidget);
+      expect(find.textContaining(CurrencyFormatter.formatVes(1000.0)), findsOneWidget);
     });
 
     testWidgets('renders VES on top when monedaPrincipal is VES', (tester) async {
@@ -158,8 +158,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text(CurrencyFormatter.formatVes(1000.0)), findsOneWidget);
-      expect(find.text(CurrencyFormatter.formatUsd(25.0)), findsOneWidget);
+      // En lente VES, el monto principal no repite "Bs." pues el selector indica [ Bs. ▾ ]
+      expect(find.text('1.000,00'), findsOneWidget);
+      expect(find.textContaining(CurrencyFormatter.formatUsd(25.0)), findsOneWidget);
     });
 
     testWidgets('renders USDT formatted amount when monedaPrincipal is USDT', (tester) async {

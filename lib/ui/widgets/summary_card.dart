@@ -1,6 +1,7 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'budget_bottom_sheet.dart';
-import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../domain/finance/savings_health_models.dart';
@@ -242,104 +243,88 @@ class SummaryCard extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 8),
-          _buildLensSwitch(context),
-          const SizedBox(height: 6),
-          // Monto Principal
+          const SizedBox(height: 12),
+          // Fila Monto Principal + Selector Desplegable Flotante (Estilo Binance)
+          () {
+            final lenses = [
+              {'id': 'USD', 'label': 'USD BCV'},
+              {'id': 'VES', 'label': 'Bs.'},
+              {'id': 'USDT', 'label': 'USDT P2P'},
+              {'id': 'EUR', 'label': 'EUR BCV'},
+            ];
+            final displayMainAmount = monedaPrincipal == 'VES'
+                ? textoPrincipal.replaceFirst('Bs. ', '')
+                : textoPrincipal;
+
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      displayMainAmount,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 34,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -1,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                _buildCurrencyDropdown(context, lenses),
+              ],
+            );
+          }(),
+          const SizedBox(height: 2),
+          // Monto Secundario (Bs. / USD) limpio con ≈
           Text(
-            textoPrincipal,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 34,
-              fontWeight: FontWeight.bold,
-              letterSpacing: -1,
-            ),
-          ),
-          const SizedBox(height: 1),
-          // Monto Secundario (Bs.) limpio sin chip de tasa
-          Text(
-            textoSecundario,
+            '≈ $textoSecundario',
             style: const TextStyle(
               color: AppColors.textSecondary,
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
           ),
-          if (hasSavingsGoal && snapshot != null) ...[
-            const SizedBox(height: 8),
-            Builder(
-              builder: (context) {
-                Color badgeColor;
-                Color badgeTextColor;
-                String statusText;
-                switch (snapshot.status) {
-                  case SavingsGoalStatus.protegida:
-                    badgeColor = const Color(0xFFE8F5E9);
-                    badgeTextColor = const Color(0xFF2E7D32);
-                    statusText = 'Protegida';
-                    break;
-                  case SavingsGoalStatus.enRiesgo:
-                    badgeColor = const Color(0xFFFFF8E1);
-                    badgeTextColor = const Color(0xFFB45309);
-                    statusText = 'En riesgo';
-                    break;
-                  case SavingsGoalStatus.comprometida:
-                    badgeColor = const Color(0xFFFFEBEE);
-                    badgeTextColor = const Color(0xFFC62828);
-                    statusText = 'Comprometida';
-                    break;
-                  case SavingsGoalStatus.sinMeta:
-                    return const SizedBox.shrink();
-                }
-
-                final metaFormatted = CurrencyFormatter.formatAmount(metaInLens, monedaPrincipal);
-
-                return Container(
-                  key: const Key('summary_card_savings_badge'),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: badgeColor,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: badgeTextColor.withValues(alpha: 0.25)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.savings_outlined, size: 14, color: AppColors.primaryDark),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Meta ahorro: $metaFormatted ($statusText)',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: badgeTextColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ],
           if (hasBudget) ...[
-            const SizedBox(height: 10),
-            // Barra de progreso con porcentaje a la derecha
+            const SizedBox(height: 16),
+            // Fila informativa: Disponible / Excedido a la izquierda, Porcentaje a la derecha
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
               children: [
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
-                    child: LinearProgressIndicator(
-                      value: percentUsed.clamp(0.0, 1.0),
-                      minHeight: 8,
-                      backgroundColor: AppColors.cardLighter,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        AppColors.getBudgetProgressColor(percentUsed, isExceeded: isOverBudget),
-                      ),
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          isOverBudget ? 'Excedido: ' : 'Disponible: ',
+                          style: TextStyle(
+                            color: isOverBudget ? AppColors.error : AppColors.textSecondary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        Text(
+                          isOverBudget ? excessFormatted : remFormatted,
+                          style: TextStyle(
+                            color: isOverBudget ? AppColors.error : AppColors.textPrimary,
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Text(
                   '${(percentUsed * 100).toStringAsFixed(0)}%',
                   style: TextStyle(
@@ -351,134 +336,212 @@ class SummaryCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            // Fila de resumen de ritmo diario y saldo disponible
-            if (isOverBudget)
-              Text(
-                hasSavingsGoal
-                    ? 'Has superado tu límite para gastar por $excessFormatted'
-                    : 'Has superado tu presupuesto por $excessFormatted',
-                style: const TextStyle(
-                  color: AppColors.error,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+            // Barra de progreso a todo el ancho de la tarjeta
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                value: percentUsed.clamp(0.0, 1.0),
+                minHeight: 8,
+                backgroundColor: AppColors.cardLighter,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  AppColors.getBudgetProgressColor(percentUsed, isExceeded: isOverBudget),
                 ),
-              )
-            else if (isCurrentMonth)
-              Wrap(
-                crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: 6,
-                runSpacing: 4,
-                children: [
-                  Text(
-                    hasSavingsGoal
-                        ? 'Te quedan $remFormatted para gastar'
-                        : 'Te quedan $remFormatted',
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            // Fila inferior de datos secundarios (Ritmo a la izquierda, Meta/Días a la derecha)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Lado izquierdo: Ritmo sugerido corto y seguro
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      isOverBudget
+                          ? (hasSavingsGoal ? 'Límite superado' : 'Presupuesto superado')
+                          : (isPastMonth ? 'Mes finalizado' : 'Ritmo: $ritmoFormatted/día'),
+                      style: TextStyle(
+                        color: isOverBudget ? AppColors.error : AppColors.textSecondary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
-                  const Text('•', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                  Text(
-                    diasTexto,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
+                ),
+                const SizedBox(width: 8),
+                // Lado derecho: Meta con cochinito coloreado o días restantes
+                if (hasSavingsGoal && snapshot != null) ...[
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerRight,
+                      child: Builder(
+                        builder: (context) {
+                          Color iconColor;
+                          switch (snapshot.status) {
+                            case SavingsGoalStatus.protegida:
+                              iconColor = const Color(0xFF2E7D32);
+                              break;
+                            case SavingsGoalStatus.enRiesgo:
+                              iconColor = const Color(0xFFB45309);
+                              break;
+                            case SavingsGoalStatus.comprometida:
+                              iconColor = const Color(0xFFC62828);
+                              break;
+                            case SavingsGoalStatus.sinMeta:
+                              iconColor = AppColors.textSecondary;
+                              break;
+                          }
+                          final metaFormatted = CurrencyFormatter.formatAmount(metaInLens, monedaPrincipal);
+
+                          return Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.savings_outlined,
+                                size: 14,
+                                color: iconColor,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Meta: $metaFormatted',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
                     ),
                   ),
-                  const Text('•', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                  Text(
-                    'Ritmo diario: $ritmoFormatted',
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
+                ] else if (isCurrentMonth) ...[
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        diasTexto,
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ),
                   ),
                 ],
-              )
-            else
-              Text(
-                'Te sobraron $remFormatted en este período',
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+              ],
+            ),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildLensSwitch(BuildContext context) {
+  Widget _buildCurrencyDropdown(
+    BuildContext context,
+    List<Map<String, String>> lenses,
+  ) {
     SettingsProvider? settings;
     try {
-      settings = Provider.of<SettingsProvider>(context);
+      settings = Provider.of<SettingsProvider>(context, listen: false);
     } catch (_) {
       settings = null;
     }
     final current = settings?.monedaPrincipal ?? monedaPrincipal;
-    final lenses = [
-      {'id': 'USD', 'label': 'USD BCV'},
-      {'id': 'USDT', 'label': 'USDT P2P'},
-      {'id': 'EUR', 'label': 'EUR BCV'},
-      {'id': 'VES', 'label': 'Bs.'},
-    ];
+    final activeLens = lenses.firstWhere(
+      (l) => l['id'] == current,
+      orElse: () => {'id': 'USD', 'label': 'USD BCV'},
+    );
 
-    return Container(
-      padding: const EdgeInsets.all(2),
-      decoration: BoxDecoration(
-        color: AppColors.cardLighter,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.border),
+    return Theme(
+      data: Theme.of(context).copyWith(
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: Row(
-          mainAxisSize: MainAxisSize.max,
-          children: lenses.map((l) {
-            final isSelected = current == l['id'];
+      child: PopupMenuButton<String>(
+        key: const Key('summary_card_lens_dropdown'),
+        tooltip: 'Cambiar moneda',
+        elevation: 4,
+        shadowColor: Colors.black.withValues(alpha: 0.15),
+        color: AppColors.surface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: const BorderSide(color: AppColors.border),
+        ),
+        offset: const Offset(0, 36),
+        onSelected: (id) {
+          HapticFeedback.selectionClick();
+          if (onMonedaChanged != null) {
+            onMonedaChanged!(id);
+          } else {
+            settings?.setMonedaPrincipal(id);
+          }
+        },
+        itemBuilder: (BuildContext ctx) {
+          return lenses.map((l) {
             final id = l['id']!;
-            return Expanded(
-              child: InkWell(
-                key: Key('lens_switch_${id.toLowerCase()}'),
-                onTap: () {
-                  if (onMonedaChanged != null) {
-                    onMonedaChanged!(id);
-                  } else {
-                    settings?.setMonedaPrincipal(id);
-                  }
-                },
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: isSelected ? AppColors.surface : Colors.transparent,
-                    borderRadius: BorderRadius.circular(8),
-                    boxShadow: isSelected
-                        ? [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 4)]
-                        : null,
-                  ),
-                  child: Text(
-                    l['label']!,
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+            final label = l['label']!;
+            final isSelected = current == id;
+            return PopupMenuItem<String>(
+              key: Key('lens_switch_${id.toLowerCase()}'),
+              value: id,
+              height: 40,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    label,
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: 13,
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                       color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
                     ),
                   ),
-                ),
+                  if (isSelected)
+                    const Icon(
+                      Icons.check,
+                      size: 16,
+                      color: AppColors.primaryDark,
+                    ),
+                ],
               ),
             );
-          }).toList(),
+          }).toList();
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: AppColors.cardLighter,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                activeLens['label'] ?? 'USD BCV',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(width: 4),
+              const Icon(
+                Icons.keyboard_arrow_down,
+                size: 16,
+                color: AppColors.textSecondary,
+              ),
+            ],
+          ),
         ),
       ),
     );

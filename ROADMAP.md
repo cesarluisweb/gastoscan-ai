@@ -76,8 +76,13 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
   - *Solución:* 
     - En **Inicio**: mantener tarjetas compactas con resumen limpio (`14 Oct • 4 artículos`).
     - En **Gastos**: mostrar directamente los productos con mini-ícono de categoría y subtotal. Para facturas largas, limitar a los primeros 4 ítems con botón expansor `Ver X artículos más ▾`. Mantener formato limpio de una línea para compras sin desglose.
-- `UX-08` **Visibilidad de Tasa Cambiaria y Conmutador Rápido de Moneda:**
-  - *Solución:* Mostrar la etiqueta de tasa de la transacción en el historial (`Bs. 4.389,50 • BCV` o `• USDT`) y permitir alternar o seleccionar la moneda de visualización tocando el monto total en la tarjeta de Inicio.
+- `UX-08` **Rediseño de Tarjeta 'Total gastado' y Selector Flotante de Moneda:** `Implementada 🔧`
+  - *Problema:* El control segmentado de 4 pestañas saturaba verticalmente la tarjeta de inicio, la píldora de meta ahorro competía con la barra de progreso, y el orden de monedas difería entre pantallas y web.
+  - *Solución:* 
+    - Eliminado el control segmentado de 4 pestañas; integrado selector desplegable compacto flotante estilo Binance (`USD BCV ▾`) junto al monto principal, protegido contra overflow con escala responsiva para cifras largas en Bolívares y sin duplicar la sigla "Bs.".
+    - Jerarquía clara de protagonistas: Gastado arriba y "Disponible: $ X" destacado sobre la barra de progreso verde de ancho completo, con porcentaje a la derecha.
+    - Fila inferior equilibrada y segura para pantallas estrechas: "Ritmo: $ X/día" a la izquierda y meta de ahorro a la derecha con ícono de alcancía coloreado por estado semafórico (verde/ámbar/rojo) sin textos extensos.
+    - Unificación del orden canónico de las 4 monedas (`USD`, `VES`, `USDT`, `EUR`) en constantes móviles, registro de gastos, presupuesto y panel web.
 - `UX-09` **Rediseño del Filtro de Comprobantes en "Gastos":**
   - *Solución:* Incorporar un distintivo de recibo/clip (`🧾`) en las tarjetas que tienen fotografía adjunta y reemplazar el botón confuso de galería por un chip activo `[🧾 Con comprobante]` o ícono de filtro con estado evidente.
 - `UX-10` **Jerarquía y Claridad de la Acción "Eliminar Cuenta":** `Implementada 🔧`

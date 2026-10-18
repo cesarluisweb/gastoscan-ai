@@ -469,7 +469,7 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      for (final m in ['USD', 'VES', 'EUR', 'USDT'])
+                      for (final m in AppConstants.monedas)
                         InkWell(
                           key: Key('budget_currency_${m.toLowerCase()}_btn'),
                           onTap: () => _cambiarMoneda(

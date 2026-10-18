@@ -84,7 +84,7 @@ class AppConstants {
   }
 
   // Monedas soportadas
-  static const List<String> monedas = ['USD', 'VES', 'EUR', 'USDT'];
+  static const List<String> monedas = ['USD', 'VES', 'USDT', 'EUR'];
 
   /// Normaliza representaciones y sinónimos de moneda al catálogo estándar ('USD', 'VES', 'EUR', 'USDT').
   static String normalizarMoneda(String? moneda, {String fallback = 'USD'}) {

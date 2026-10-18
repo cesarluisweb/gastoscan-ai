@@ -50,9 +50,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Para el mes actual sí debe calcular días restantes
-      expect(find.textContaining('Te quedan'), findsOneWidget);
-      expect(find.textContaining('Ritmo diario:'), findsOneWidget);
+      // Para el mes actual sí debe calcular días restantes y monto disponible
+      expect(find.textContaining('Disponible:'), findsOneWidget);
+      expect(find.textContaining('Ritmo:'), findsOneWidget);
     });
 
     testWidgets('al presionar botones de lente invoca onMonedaChanged con la moneda correcta', (tester) async {
@@ -74,22 +74,30 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Pulsar lente Bs.
+      // Abrir selector desplegable y pulsar lente Bs.
+      await tester.tap(find.byKey(const Key('summary_card_lens_dropdown')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('lens_switch_ves')));
       await tester.pumpAndSettle();
       expect(changedMoneda, equals('VES'));
 
-      // Pulsar lente USDT P2P
+      // Abrir selector desplegable y pulsar lente USDT P2P
+      await tester.tap(find.byKey(const Key('summary_card_lens_dropdown')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('lens_switch_usdt')));
       await tester.pumpAndSettle();
       expect(changedMoneda, equals('USDT'));
 
-      // Pulsar lente EUR BCV
+      // Abrir selector desplegable y pulsar lente EUR BCV
+      await tester.tap(find.byKey(const Key('summary_card_lens_dropdown')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('lens_switch_eur')));
       await tester.pumpAndSettle();
       expect(changedMoneda, equals('EUR'));
 
-      // Pulsar lente USD BCV
+      // Abrir selector desplegable y pulsar lente USD BCV
+      await tester.tap(find.byKey(const Key('summary_card_lens_dropdown')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('lens_switch_usd')));
       await tester.pumpAndSettle();
       expect(changedMoneda, equals('USD'));

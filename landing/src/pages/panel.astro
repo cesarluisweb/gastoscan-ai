@@ -161,9 +161,9 @@ import '../styles/global.css';
                 </div>
                 <div id="panel-lens-selector" class="flex p-1 bg-slate-100 rounded-xl gap-1">
                     <button type="button" data-lens="USD" class="panel-lens-btn flex-1 sm:flex-none px-3 py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-slate-900 shadow-sm">USD BCV</button>
+                    <button type="button" data-lens="VES" class="panel-lens-btn flex-1 sm:flex-none px-3 py-1.5 text-xs font-medium rounded-lg transition-all text-slate-600 hover:text-slate-900">Bs. (VES)</button>
                     <button type="button" data-lens="USDT" class="panel-lens-btn flex-1 sm:flex-none px-3 py-1.5 text-xs font-medium rounded-lg transition-all text-slate-600 hover:text-slate-900">USDT P2P</button>
                     <button type="button" data-lens="EUR" class="panel-lens-btn flex-1 sm:flex-none px-3 py-1.5 text-xs font-medium rounded-lg transition-all text-slate-600 hover:text-slate-900">EUR BCV</button>
-                    <button type="button" data-lens="VES" class="panel-lens-btn flex-1 sm:flex-none px-3 py-1.5 text-xs font-medium rounded-lg transition-all text-slate-600 hover:text-slate-900">Bs. (VES)</button>
                 </div>
             </div>
 
@@ -459,19 +459,19 @@ import '../styles/global.css';
                             </button>
                             <button 
                                 type="button" 
-                                id="btn-currency-eur" 
-                                data-currency="EUR"
-                                class="flex-1 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 transition-all"
-                            >
-                                EUR (€)
-                            </button>
-                            <button 
-                                type="button" 
                                 id="btn-currency-usdt" 
                                 data-currency="USDT"
                                 class="flex-1 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 transition-all"
                             >
                                 USDT
+                            </button>
+                            <button 
+                                type="button" 
+                                id="btn-currency-eur" 
+                                data-currency="EUR"
+                                class="flex-1 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 transition-all"
+                            >
+                                EUR (€)
                             </button>
                         </div>
                     </div>
@@ -1893,7 +1893,7 @@ import '../styles/global.css';
         };
 
         const setCurrencyButtonActive = (activeBtn) => {
-            const buttons = [btnCurrencyUsd, btnCurrencyVes, btnCurrencyEur, btnCurrencyUsdt];
+            const buttons = [btnCurrencyUsd, btnCurrencyVes, btnCurrencyUsdt, btnCurrencyEur];
             buttons.forEach(btn => {
                 if (!btn) return;
                 if (btn === activeBtn) {

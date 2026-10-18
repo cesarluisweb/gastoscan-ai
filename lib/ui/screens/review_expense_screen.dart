@@ -1662,7 +1662,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     padding: const EdgeInsets.all(2),
                     child: Row(
                       children: [
-                        for (final m in ['USD', 'VES', 'EUR', 'USDT'])
+                        for (final m in AppConstants.monedas)
                           Expanded(
                             child: InkWell(
                               key: Key('expense_currency_${m.toLowerCase()}_btn'),
