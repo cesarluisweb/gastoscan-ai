@@ -1128,6 +1128,8 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         ),
       );
     }
+  }
+
   Widget _buildLiquidacionPill({
     required Key key,
     required String title,
