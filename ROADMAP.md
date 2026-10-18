@@ -81,13 +81,13 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
   - *Solución:* 
     - En **Inicio**: mantener tarjetas compactas con resumen limpio (`14 Oct • 4 artículos`).
     - En **Gastos**: mostrar directamente los productos con mini-ícono de categoría y subtotal. Para facturas largas, limitar a los primeros 4 ítems con botón expansor `Ver X artículos más ▾`. Mantener formato limpio de una línea para compras sin desglose.
-- `UX-08` **Rediseño de Tarjeta 'Total gastado' y Selector Flotante de Moneda:** `Implementada 🔧`
-  - *Problema:* El control segmentado de 4 pestañas saturaba verticalmente la tarjeta de inicio, la píldora de meta ahorro competía con la barra de progreso, y el orden de monedas difería entre pantallas y web.
-  - *Solución:* 
-    - Eliminado el control segmentado de 4 pestañas; integrado selector desplegable compacto flotante estilo Binance (`USD BCV ▾`) junto al monto principal, protegido contra overflow con escala responsiva para cifras largas en Bolívares y sin duplicar la sigla "Bs.".
-    - Jerarquía clara de protagonistas: Gastado arriba y "Disponible: $ X" destacado sobre la barra de progreso verde de ancho completo, con porcentaje a la derecha.
-    - Fila inferior equilibrada y segura para pantallas estrechas: "Ritmo: $ X/día" a la izquierda y meta de ahorro a la derecha con ícono de alcancía coloreado por estado semafórico (verde/ámbar/rojo) sin textos extensos.
-    - Unificación del orden canónico de las 4 monedas (`USD`, `VES`, `USDT`, `EUR`) en constantes móviles, registro de gastos, presupuesto y panel web.
+- `UX-08` **Rediseño de Tarjeta 'Total gastado' (Modelo Mental y Arquitectura de 4 Bloques):** `Pendiente de validación 🧪`
+  - *Problema:* El porcentaje abstracto obligaba a calcular matemáticas mentales; el usuario venezolano necesita ver exactamente cuánto gastó, cuánto le queda en el bolsillo en verde y su marco de referencia.
+  - *Solución (4 Bloques):* 
+    - **Bloque 1:** `Total gastado` arriba, cifra grande sin símbolo de divisa a la izquierda (`205,31`) y selector compacto estilo Binance adyacente (`USD BCV ▾`), con equivalente secundario `≈ Bs. ...` en gris.
+    - **Bloque 2:** `Disponible por gastar` con monto grande en verde (`Color(0xFF2E7D32)`), o `Te sobraron` en meses pasados, o `Excedido del límite` en rojo si se superó. Cero porcentajes abstractos.
+    - **Bloque 3:** Barra de asignación (Allocation). Sin meta es continua; con meta se divide en tramo Límite y tramo Meta de ahorro ámbar con divisor vertical de `2dp`. Solo invade la meta en rojo si el gasto supera físicamente el límite.
+    - **Bloque 4:** Pie en tabla limpia de tres filas protegida contra desbordamientos en Bolívares: Fila 1 tocable (`Límite del mes` + `$ 550,00 ✏️` o `+ Definir presupuesto`), Fila 2 (`Ritmo sugerido: $ 24,62/día · 14 d` o `Período finalizado`), y Fila 3 (`● Meta de ahorro: $ 50,00 · Protegida/En riesgo`).
 - `UX-09` **Rediseño del Filtro de Comprobantes en "Gastos":**
   - *Solución:* Incorporar un distintivo de recibo/clip (`🧾`) en las tarjetas que tienen fotografía adjunta y reemplazar el botón confuso de galería por un chip activo `[🧾 Con comprobante]` o ícono de filtro con estado evidente.
 - `UX-10` **Jerarquía y Claridad de la Acción "Eliminar Cuenta":** `Implementada 🔧`
