@@ -18,6 +18,7 @@
 
 ## Próximo Paso Inmediato
 - Monitoreo de CI en GitHub Actions y verificación en producción web y dispositivo físico.
+- Revisar y unificar orden canónico (USD -> VES -> USDT -> EUR) en vistas secundarias (`analysis_screen.dart`, `more_screen.dart`, `panel.astro`) según UI-06 en ROADMAP.md.
 
 
 

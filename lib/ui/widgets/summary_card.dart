@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'budget_bottom_sheet.dart';
 import '../../core/constants/app_colors.dart';
@@ -71,26 +72,6 @@ class SummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final double usdtEff = totalUsdt > 0 ? totalUsdt : totalUsd;
-    final textoPrincipal = CurrencyFormatter.formatPreferido(
-      totalUsd,
-      totalVes > 0 ? totalVes : null,
-      tasaCambio,
-      monedaPrincipal,
-      tasaEur: tasaEur,
-      tasaUsdt: tasaUsdt,
-      totalUsdt: totalUsdt > 0 ? totalUsdt : null,
-    );
-
-    final textoSecundario = CurrencyFormatter.formatSecundario(
-      totalUsd,
-      totalVes > 0 ? totalVes : null,
-      tasaCambio,
-      monedaPrincipal,
-    );
-
-    final hasBudget = presupuestoGeneral > 0;
-    final hasSavingsGoal = metaAhorro > 0;
-
     final double usdRate = tasaCambio > 0 ? tasaCambio : 1.0;
     final double eurRate = tasaEur > 0 ? tasaEur : usdRate;
     final double vesEquiv = totalVes > 0 ? totalVes : (totalUsd * usdRate);
@@ -105,6 +86,19 @@ class SummaryCard extends StatelessWidget {
     } else {
       effectiveSpent = totalUsd;
     }
+
+    final numberFormatter = NumberFormat('#,##0.00', 'es_VE');
+    final displayMainAmount = numberFormatter.format(effectiveSpent);
+
+    final textoSecundario = CurrencyFormatter.formatSecundario(
+      totalUsd,
+      totalVes > 0 ? totalVes : null,
+      tasaCambio,
+      monedaPrincipal,
+    );
+
+    final hasBudget = presupuestoGeneral > 0;
+    final hasSavingsGoal = metaAhorro > 0;
 
     final double budgetInLens = _convertBudgetToLens(presupuestoGeneral);
     final double metaInLens = _convertBudgetToLens(metaAhorro);
@@ -130,10 +124,8 @@ class SummaryCard extends StatelessWidget {
         : (isPastMonth ? 0 : totalDaysInMonth);
     final daysForCalculation = daysRemaining > 0 ? daysRemaining : 1;
 
-    // Métricas para la fila inferior compacta proyectadas al lente activo
     final rem = (targetBudget - effectiveSpent).clamp(0.0, double.infinity);
     final ritmoDiario = rem / daysForCalculation;
-    final diasTexto = daysRemaining == 1 ? 'Falta 1 día' : 'Faltan $daysRemaining días';
     final remFormatted = CurrencyFormatter.formatAmount(rem, monedaPrincipal);
     final ritmoFormatted = CurrencyFormatter.formatAmount(ritmoDiario, monedaPrincipal);
     final budgetFormatted = CurrencyFormatter.formatAmount(budgetInLens, monedaPrincipal);
@@ -154,6 +146,13 @@ class SummaryCard extends StatelessWidget {
           )
         : null;
 
+    final lenses = [
+      {'id': 'USD', 'label': 'USD BCV'},
+      {'id': 'VES', 'label': 'Bs.'},
+      {'id': 'USDT', 'label': 'USDT P2P'},
+      {'id': 'EUR', 'label': 'EUR BCV'},
+    ];
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -172,271 +171,415 @@ class SummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Fila superior: "Total gastado" y "Presupuesto: $X"
+          // ==========================================
+          // BLOQUE 1: Total gastado + Selector Binance
+          // ==========================================
+          const Text(
+            'Total gastado',
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 4),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              const Text(
-                'Total gastado',
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    displayMainAmount,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 34,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: -1,
+                      height: 1.1,
+                    ),
+                  ),
                 ),
               ),
-              if (hasBudget)
-                Flexible(
-                  child: InkWell(
-                    key: const Key('summary_card_edit_budget_btn'),
-                    onTap: () => BudgetBottomSheet.show(context),
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.cardLighter,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              hasSavingsGoal
-                                  ? 'Límite: $limiteFormatted'
-                                  : 'Presupuesto: $budgetFormatted',
-                              style: const TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(width: 5),
-                          const Icon(
-                            Icons.edit_outlined,
-                            size: 13,
-                            color: AppColors.textSecondary,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                )
-              else
-                InkWell(
-                  key: const Key('summary_card_set_budget_btn'),
-                  onTap: () => BudgetBottomSheet.show(context),
-                  borderRadius: BorderRadius.circular(6),
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    child: Text(
-                      '+ Definir presupuesto',
-                      style: TextStyle(
-                        color: AppColors.secondary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
+              const SizedBox(width: 8),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 2),
+                child: _buildCurrencyDropdown(context, lenses),
+              ),
             ],
           ),
-          const SizedBox(height: 12),
-          // Fila Monto Principal + Selector Desplegable Flotante (Estilo Binance)
-          () {
-            final lenses = [
-              {'id': 'USD', 'label': 'USD BCV'},
-              {'id': 'VES', 'label': 'Bs.'},
-              {'id': 'USDT', 'label': 'USDT P2P'},
-              {'id': 'EUR', 'label': 'EUR BCV'},
-            ];
-            final displayMainAmount = monedaPrincipal == 'VES'
-                ? textoPrincipal.replaceFirst('Bs. ', '')
-                : textoPrincipal;
-
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Flexible(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      displayMainAmount,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 34,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: -1,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                _buildCurrencyDropdown(context, lenses),
-              ],
-            );
-          }(),
-          const SizedBox(height: 2),
-          // Monto Secundario (Bs. / USD) limpio con ≈
+          const SizedBox(height: 4),
           Text(
             '≈ $textoSecundario',
             style: const TextStyle(
               color: AppColors.textSecondary,
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: FontWeight.w500,
             ),
           ),
-          if (hasBudget) ...[
+
+          // ==========================================
+          // SIN PRESUPUESTO: Botón de definición
+          // ==========================================
+          if (!hasBudget) ...[
             const SizedBox(height: 16),
-            // Fila informativa: Disponible / Excedido a la izquierda, Porcentaje a la derecha
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.baseline,
-              textBaseline: TextBaseline.alphabetic,
-              children: [
-                Flexible(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          isOverBudget ? 'Excedido: ' : 'Disponible: ',
-                          style: TextStyle(
-                            color: isOverBudget ? AppColors.error : AppColors.textSecondary,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        Text(
-                          isOverBudget ? excessFormatted : remFormatted,
-                          style: TextStyle(
-                            color: isOverBudget ? AppColors.error : AppColors.textPrimary,
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+            InkWell(
+              key: const Key('summary_card_set_budget_btn'),
+              onTap: () => BudgetBottomSheet.show(context),
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.cardLighter,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.add,
+                      size: 16,
+                      color: AppColors.secondary,
                     ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '${(percentUsed * 100).toStringAsFixed(0)}%',
-                  style: TextStyle(
-                    color: isOverBudget ? AppColors.error : AppColors.textPrimary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            // Barra de progreso a todo el ancho de la tarjeta
-            ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: LinearProgressIndicator(
-                value: percentUsed.clamp(0.0, 1.0),
-                minHeight: 8,
-                backgroundColor: AppColors.cardLighter,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  AppColors.getBudgetProgressColor(percentUsed, isExceeded: isOverBudget),
+                    SizedBox(width: 6),
+                    Text(
+                      '+ Definir presupuesto del mes',
+                      style: TextStyle(
+                        color: AppColors.secondary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            const SizedBox(height: 8),
-            // Fila inferior de datos secundarios (Ritmo a la izquierda, Meta/Días a la derecha)
+          ] else ...[
+            // ==========================================
+            // BLOQUE 2: Disponible por gastar / Te sobraron
+            // ==========================================
+            const SizedBox(height: 16),
+            Builder(
+              builder: (context) {
+                final String label;
+                if (isPastMonth) {
+                  label = isOverBudget
+                      ? (hasSavingsGoal ? 'Excedido del límite' : 'Excedido del presupuesto')
+                      : 'Te sobraron';
+                } else {
+                  label = isOverBudget
+                      ? (hasSavingsGoal ? 'Excedido del límite' : 'Excedido del presupuesto')
+                      : 'Disponible por gastar';
+                }
+
+                final displayRemAmount = isOverBudget ? excessFormatted : remFormatted;
+                final amountColor = isOverBudget ? AppColors.error : const Color(0xFF2E7D32);
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyle(
+                        color: isOverBudget ? AppColors.error : AppColors.textSecondary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        displayRemAmount,
+                        style: TextStyle(
+                          color: amountColor,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+
+            // ==========================================
+            // BLOQUE 3: Barra de progreso (Allocation)
+            // ==========================================
+            const SizedBox(height: 14),
+            if (!hasSavingsGoal)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(5),
+                child: LinearProgressIndicator(
+                  value: percentUsed.clamp(0.0, 1.0),
+                  minHeight: 8,
+                  backgroundColor: AppColors.cardLighter,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    AppColors.getBudgetProgressColor(percentUsed, isExceeded: isOverBudget),
+                  ),
+                ),
+              )
+            else
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final totalWidth = constraints.maxWidth;
+                  const gap = 2.0;
+                  final availableWidth = (totalWidth - gap).clamp(0.0, double.infinity);
+
+                  final double rawMetaRatio = budgetInLens > 0 ? (metaInLens / budgetInLens) : 0.0;
+                  final double metaRatio = rawMetaRatio.clamp(0.12, 0.35);
+                  final double limiteRatio = 1.0 - metaRatio;
+
+                  final double limiteWidth = availableWidth * limiteRatio;
+                  final double metaWidth = availableWidth * metaRatio;
+
+                  final double limiteSpentRatio = limiteParaGastar > 0
+                      ? (effectiveSpent / limiteParaGastar).clamp(0.0, 1.0)
+                      : 1.0;
+                  final double spentInLimiteWidth = limiteWidth * limiteSpentRatio;
+
+                  final bool isInvading = effectiveSpent > limiteParaGastar;
+                  final double excessOverLimite = (effectiveSpent - limiteParaGastar).clamp(0.0, double.infinity);
+                  final double metaInvadedRatio = metaInLens > 0
+                      ? (excessOverLimite / metaInLens).clamp(0.0, 1.0)
+                      : (isInvading ? 1.0 : 0.0);
+                  final double spentInMetaWidth = metaWidth * metaInvadedRatio;
+
+                  final Color limiteFillColor = isInvading
+                      ? AppColors.error
+                      : AppColors.getBudgetProgressColor(limiteSpentRatio, isExceeded: false);
+
+                  const Color metaBaseColor = Color(0xFFF59E0B);
+
+                  return Row(
+                    children: [
+                      // Tramo Límite
+                      ClipRRect(
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(5),
+                          bottomLeft: Radius.circular(5),
+                        ),
+                        child: Container(
+                          width: limiteWidth,
+                          height: 8,
+                          color: AppColors.cardLighter,
+                          alignment: Alignment.centerLeft,
+                          child: Container(
+                            width: spentInLimiteWidth,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: limiteFillColor,
+                              borderRadius: spentInLimiteWidth >= limiteWidth
+                                  ? BorderRadius.zero
+                                  : const BorderRadius.only(
+                                      topRight: Radius.circular(2),
+                                      bottomRight: Radius.circular(2),
+                                    ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: gap),
+                      // Tramo Meta de Ahorro
+                      ClipRRect(
+                        borderRadius: const BorderRadius.only(
+                          topRight: Radius.circular(5),
+                          bottomRight: Radius.circular(5),
+                        ),
+                        child: Container(
+                          width: metaWidth,
+                          height: 8,
+                          color: metaBaseColor,
+                          alignment: Alignment.centerLeft,
+                          child: isInvading
+                              ? Container(
+                                  width: spentInMetaWidth,
+                                  height: 8,
+                                  color: AppColors.error,
+                                )
+                              : const SizedBox.shrink(),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+
+            // ==========================================
+            // BLOQUE 4: Pie en formato tabla limpia
+            // ==========================================
+            const SizedBox(height: 14),
+            // Fila 1: Límite del mes / Presupuesto del mes (Toda la fila tocable)
+            InkWell(
+              key: const Key('summary_card_edit_budget_btn'),
+              onTap: () => BudgetBottomSheet.show(context),
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      hasSavingsGoal ? 'Límite del mes' : 'Presupuesto del mes',
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerRight,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              hasSavingsGoal ? limiteFormatted : budgetFormatted,
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(
+                              Icons.edit_outlined,
+                              size: 14,
+                              color: AppColors.textSecondary,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            // Fila 2: Ritmo sugerido / Ritmo del mes
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Lado izquierdo: Ritmo sugerido corto y seguro
+                Text(
+                  isPastMonth ? 'Ritmo del mes' : 'Ritmo sugerido',
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(width: 8),
                 Flexible(
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
+                    alignment: Alignment.centerRight,
                     child: Text(
-                      isOverBudget
-                          ? (hasSavingsGoal ? 'Límite superado' : 'Presupuesto superado')
-                          : (isPastMonth ? 'Te sobraron $remFormatted' : 'Ritmo: $ritmoFormatted/día'),
+                      isPastMonth
+                          ? 'Período finalizado'
+                          : (isOverBudget
+                              ? (hasSavingsGoal ? 'Límite superado' : 'Presupuesto superado')
+                              : '$ritmoFormatted/día · $daysRemaining d'),
                       style: TextStyle(
-                        color: isOverBudget ? AppColors.error : AppColors.textSecondary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                        color: (isOverBudget && !isPastMonth) ? AppColors.error : AppColors.textPrimary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
-                // Lado derecho: Meta con cochinito coloreado o días restantes
-                if (hasSavingsGoal && snapshot != null) ...[
-                  Flexible(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerRight,
-                      child: Builder(
-                        builder: (context) {
-                          Color iconColor;
-                          switch (snapshot.status) {
-                            case SavingsGoalStatus.protegida:
-                              iconColor = const Color(0xFF2E7D32);
-                              break;
-                            case SavingsGoalStatus.enRiesgo:
-                              iconColor = const Color(0xFFB45309);
-                              break;
-                            case SavingsGoalStatus.comprometida:
-                              iconColor = const Color(0xFFC62828);
-                              break;
-                            case SavingsGoalStatus.sinMeta:
-                              iconColor = AppColors.textSecondary;
-                              break;
-                          }
-                          final metaFormatted = CurrencyFormatter.formatAmount(metaInLens, monedaPrincipal);
-
-                          return Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.savings_outlined,
-                                size: 14,
-                                color: iconColor,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Meta: $metaFormatted',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                ] else if (isCurrentMonth) ...[
-                  Flexible(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerRight,
-                      child: Text(
-                        diasTexto,
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
               ],
             ),
+            // Fila 3: Meta de ahorro (Condicional si hasSavingsGoal)
+            if (hasSavingsGoal) ...[
+              const SizedBox(height: 8),
+              Builder(
+                builder: (context) {
+                  final bool isInvading = effectiveSpent > limiteParaGastar;
+                  final bool isEnRiesgo = snapshot?.status == SavingsGoalStatus.enRiesgo;
+
+                  final Color dotColor;
+                  final String statusText;
+                  final Color statusTextColor;
+
+                  if (isInvading || snapshot?.status == SavingsGoalStatus.comprometida) {
+                    dotColor = AppColors.error;
+                    statusText = 'Comprometida';
+                    statusTextColor = AppColors.error;
+                  } else if (isEnRiesgo) {
+                    dotColor = const Color(0xFFD97706);
+                    statusText = 'En riesgo';
+                    statusTextColor = const Color(0xFFD97706);
+                  } else {
+                    dotColor = const Color(0xFFF59E0B);
+                    statusText = 'Protegida';
+                    statusTextColor = AppColors.textPrimary;
+                  }
+
+                  final metaFormatted = CurrencyFormatter.formatAmount(metaInLens, monedaPrincipal);
+
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: dotColor,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          const Text(
+                            'Meta de ahorro',
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerRight,
+                          child: RichText(
+                            text: TextSpan(
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                              ),
+                              children: [
+                                TextSpan(text: '$metaFormatted · '),
+                                TextSpan(
+                                  text: statusText,
+                                  style: TextStyle(
+                                    color: statusTextColor,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ],
           ],
         ],
       ),
@@ -517,11 +660,11 @@ class SummaryCard extends StatelessWidget {
           }).toList();
         },
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           decoration: BoxDecoration(
-            color: AppColors.cardLighter,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border),
+            color: AppColors.cardLighter.withValues(alpha: 0.7),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppColors.border.withValues(alpha: 0.8)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -529,8 +672,8 @@ class SummaryCard extends StatelessWidget {
               Text(
                 activeLens['label'] ?? 'USD BCV',
                 style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary,
                 ),
               ),

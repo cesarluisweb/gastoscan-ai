@@ -138,7 +138,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text(CurrencyFormatter.formatUsd(25.0)), findsOneWidget);
+      expect(find.text('25,00'), findsOneWidget);
+      expect(find.textContaining('USD BCV'), findsOneWidget);
       expect(find.textContaining(CurrencyFormatter.formatVes(1000.0)), findsOneWidget);
     });
 
@@ -158,8 +159,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // En lente VES, el monto principal no repite "Bs." pues el selector indica [ Bs. ▾ ]
+      // En lente VES, el monto principal muestra el número limpio y el selector indica Bs.
       expect(find.text('1.000,00'), findsOneWidget);
+      expect(find.textContaining('Bs.'), findsWidgets);
       expect(find.textContaining(CurrencyFormatter.formatUsd(25.0)), findsOneWidget);
     });
 
@@ -180,7 +182,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text(CurrencyFormatter.formatUsdt(20.0)), findsOneWidget);
+      expect(find.text('20,00'), findsOneWidget);
+      expect(find.textContaining('USDT P2P'), findsOneWidget);
       expect(find.textContaining('Brecha capturada'), findsNothing);
     });
 
@@ -202,9 +205,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // 100 USD * 40 Bs/USD = 4000 Bs de presupuesto y 25% consumido (1000 / 4000)
-      expect(find.textContaining('Presupuesto: ${CurrencyFormatter.formatVes(4000.0)}'), findsOneWidget);
-      expect(find.text('25%'), findsOneWidget);
+      // 100 USD * 40 Bs/USD = 4000 Bs de presupuesto en el pie
+      expect(find.text('Presupuesto del mes'), findsOneWidget);
+      expect(find.text(CurrencyFormatter.formatVes(4000.0)), findsOneWidget);
     });
   });
 

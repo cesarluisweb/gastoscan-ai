@@ -8,6 +8,7 @@ description: "Consultar al modificar montos, monedas (VES/USD/EUR/USDT), tasas d
 ## 1. Arquitectura Multimoneda y Conversión Determinista
 - **Paridad Directa USD/USDT:** Entre USD y USDT la conversión es determinista 1:1 a la par (1 USD = 1 USDT) en pagos directos en divisa (`DIVISA`), evitando triangular por bolívares para no introducir artificialmente la brecha cambiaria. Las tasas dinámicas de mercado (`tasaEur`, `tasaUsdt`, `tasaCambioVesUsd`) aplican cuando interviene Bolívares (VES) o para la paridad cambiaria oficial con EUR. Queda prohibido inventar ratios fijos cableados para EUR (ej. `usd / 1.08`).
 - **Los 4 Lentes Financieros Canónicos:** Móvil y web operan bajo 4 lentes de visualización: `USD BCV` (tasa oficial), `USDT P2P` (tasa Binance P2P / costo de reposición), `EUR BCV` (euro oficial) y `Bs.` (bolívares). El cambio de lente altera la moneda de reporte en vivo sin distorsionar el monto original registrado.
+- **Orden Canónico de Monedas:** En toda la plataforma móvil y web (selectores, menús desplegables, formularios y tablas), el catálogo de monedas se ordena estrictamente como: `USD` -> `VES` (o Bs.) -> `USDT` -> `EUR`.
 - **Las 3 Opciones de Liquidación para USD/EUR:** Al registrar gastos referenciados en divisa, el usuario elige:
   1. `BS_BCV`: Liquidado en bolívares a tasa oficial BCV (comercio formal, tarjeta, punto de venta).
   2. `BS_USDT`: Liquidado en bolívares a tasa P2P / paralelo (Binance / mercado informal).

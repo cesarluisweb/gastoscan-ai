@@ -66,6 +66,11 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 - `UI-05` **Ícono Superior de Asistente IA en Inicio:** `Completada ✅`
   - *Problema:* La burbuja con interrogación `[?]` en el AppBar de Inicio se confunde universalmente con "Soporte / Ayuda".
   - *Solución:* Reemplazar por ícono de destellos (`✨` / `Icons.auto_awesome`), coherente con las tarjetas del Asistente IA.
+- `UI-06` **Unificación del Orden Canónico de Monedas (USD -> VES -> USDT -> EUR) en Vistas Restantes:** `Pendiente`
+  - *Contexto:* Tras unificar `AppConstants.monedas`, `SummaryCard`, `ReviewExpenseScreen`, `BudgetBottomSheet` y los selectores principales del panel web, se identificaron pantallas secundarias pendientes de alinear:
+    1. `lib/ui/screens/analysis_screen.dart`: Selector horizontal de lente multimoneda (`_buildLensSwitch`).
+    2. `lib/ui/screens/more_screen.dart`: Selector desplegable de "Moneda Principal de Reportes" (`DropdownButtonFormField`) y orden de tasas informativas.
+    3. `landing/src/pages/panel.astro`: Selector de moneda en el modal de Presupuesto General (`<select id="modal-budget-currency">`).
 
 ### Bloque B: Claridad de Datos y Vistas Principales (UX)
 - `UX-06` **Corrección de Etiqueta de Agrupación en Gráfico de Inicio:** `Completada ✅`
