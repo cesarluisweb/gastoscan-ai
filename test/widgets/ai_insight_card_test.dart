@@ -52,18 +52,18 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Has superado tu presupuesto general'), findsOneWidget);
+      expect(find.textContaining('Superaste tu presupuesto'), findsOneWidget);
     });
 
-    testWidgets('displays budget alert when spent is 85 percent or more', (tester) async {
+    testWidgets('displays daily pace recommendation when budget is healthy', (tester) async {
       final gasto = GastoModel(
         id: 1,
         uuid: 'uuid-1',
         fecha: '2026-09-15',
         comercio: 'Mercado',
         moneda: 'USD',
-        totalOriginal: 9000,
-        totalUsd: 9000,
+        totalOriginal: 5000,
+        totalUsd: 5000,
         categoria: 'Alimentación',
         creadoEn: '2026-09-15T10:00:00',
       );
@@ -74,15 +74,16 @@ void main() {
             body: AiInsightCard(
               gastos: [gasto],
               presupuestoGeneral: 100.0,
-              totalesPorCategoria: const {'Alimentación': 90.0},
-              totalGastadoMes: 90.0,
+              totalesPorCategoria: const {'Alimentación': 50.0},
+              totalGastadoMes: 50.0,
             ),
           ),
         ),
       );
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('llevas gastado el 90%'), findsOneWidget);
+      expect(find.textContaining('Puedes gastar hasta'), findsOneWidget);
+      expect(find.textContaining('/día'), findsOneWidget);
     });
 
     testWidgets('suggests defining budget when no general budget exists', (tester) async {
@@ -112,7 +113,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Asigna un presupuesto mensual en la pestaña de Análisis'), findsOneWidget);
+      expect(find.textContaining('Define un presupuesto mensual'), findsOneWidget);
     });
 
     testWidgets('displays new month motivational insight when in first days with budget', (tester) async {
@@ -166,6 +167,38 @@ void main() {
 
       expect(find.textContaining('Tu meta de ahorro'), findsOneWidget);
       expect(find.textContaining('comprometida'), findsOneWidget);
+    });
+
+    testWidgets('displays pace and protected savings goal when healthy with savings goal', (tester) async {
+      final gasto = GastoModel(
+        id: 1,
+        uuid: 'uuid-1',
+        fecha: '2026-09-15',
+        comercio: 'Mercado',
+        moneda: 'USD',
+        totalOriginal: 15000,
+        totalUsd: 15000,
+        categoria: 'Alimentación',
+        creadoEn: '2026-09-15T10:00:00',
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AiInsightCard(
+              gastos: [gasto],
+              presupuestoGeneral: 500.0,
+              metaAhorro: 100.0,
+              totalesPorCategoria: const {'Alimentación': 150.0},
+              totalGastadoMes: 150.0,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('protegida'), findsOneWidget);
+      expect(find.textContaining('/día'), findsOneWidget);
     });
   });
 }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'budget_bottom_sheet.dart';
 import '../../core/constants/app_colors.dart';
@@ -87,16 +86,6 @@ class SummaryCard extends StatelessWidget {
       effectiveSpent = totalUsd;
     }
 
-    final numberFormatter = NumberFormat('#,##0.00', 'es_VE');
-    final displayMainAmount = numberFormatter.format(effectiveSpent);
-
-    final textoSecundario = CurrencyFormatter.formatSecundario(
-      totalUsd,
-      totalVes > 0 ? totalVes : null,
-      tasaCambio,
-      monedaPrincipal,
-    );
-
     final hasBudget = presupuestoGeneral > 0;
     final hasSavingsGoal = metaAhorro > 0;
 
@@ -118,30 +107,33 @@ class SummaryCard extends StatelessWidget {
         (now.month == targetMonth && now.year == targetYear);
     final isPastMonth = targetYear < now.year ||
         (targetYear == now.year && targetMonth < now.month);
-    final totalDaysInMonth = DateTime(targetYear, targetMonth + 1, 0).day;
-    final daysRemaining = isCurrentMonth
-        ? (totalDaysInMonth - now.day).clamp(0, 31)
-        : (isPastMonth ? 0 : totalDaysInMonth);
-    final daysForCalculation = daysRemaining > 0 ? daysRemaining : 1;
 
     final rem = (targetBudget - effectiveSpent).clamp(0.0, double.infinity);
-    final ritmoDiario = rem / daysForCalculation;
+    final excess = (effectiveSpent - targetBudget).clamp(0.0, double.infinity);
+
+    final spentFormatted = CurrencyFormatter.formatAmount(effectiveSpent, monedaPrincipal);
     final targetFormatted = CurrencyFormatter.formatAmount(targetBudget, monedaPrincipal);
     final remFormatted = CurrencyFormatter.formatAmount(rem, monedaPrincipal);
-    final ritmoFormatted = CurrencyFormatter.formatAmount(ritmoDiario, monedaPrincipal);
+    final excessFormatted = CurrencyFormatter.formatAmount(excess, monedaPrincipal);
     final metaFormatted = CurrencyFormatter.formatAmount(metaInLens, monedaPrincipal);
-    final excessFormatted = CurrencyFormatter.formatAmount(
-      (effectiveSpent - targetBudget).clamp(0.0, double.infinity),
-      monedaPrincipal,
-    );
+
+    String formatSecundarioAmount(double amountInLens) {
+      if (monedaPrincipal == 'VES') {
+        final inUsd = amountInLens / usdRate;
+        return CurrencyFormatter.formatUsd(inUsd);
+      } else {
+        final inVes = amountInLens * usdRate;
+        return CurrencyFormatter.formatVes(inVes);
+      }
+    }
 
     final snapshot = hasSavingsGoal
         ? SavingsHealthCalculator.calculate(
             presupuestoGeneral: budgetInLens,
             metaAhorro: metaInLens,
             gastoAcumulado: effectiveSpent,
-            diaActual: isCurrentMonth ? now.day : (isPastMonth ? totalDaysInMonth : 1),
-            diasTotalesMes: totalDaysInMonth,
+            diaActual: isCurrentMonth ? now.day : DateTime(targetYear, targetMonth + 1, 0).day,
+            diasTotalesMes: DateTime(targetYear, targetMonth + 1, 0).day,
             moneda: monedaPrincipal,
           )
         : null;
@@ -171,74 +163,48 @@ class SummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ==========================================
-          // 1. CABECERA: Total gastado <--> Selector Binance
-          // ==========================================
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const Text(
-                'Total gastado',
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              _buildCurrencyDropdown(context, lenses),
-            ],
-          ),
-
-          // ==========================================
-          // 2. BLOQUE DE GASTO Y LÍMITE: 205,31 de $ 550,00
-          // ==========================================
-          const SizedBox(height: 6),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.baseline,
-              textBaseline: TextBaseline.alphabetic,
+          // ========================================================
+          // 1. ESTADO SIN PRESUPUESTO DEFINIDO
+          // ========================================================
+          if (!hasBudget) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(
-                  displayMainAmount,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: -1,
-                    height: 1.1,
+                const Text(
+                  'Total gastado',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-                if (hasBudget) ...[
-                  const SizedBox(width: 4),
-                  Text(
-                    ' de $targetFormatted',
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
+                _buildCurrencyDropdown(context, lenses),
               ],
             ),
-          ),
-          const SizedBox(height: 3),
-          Text(
-            '≈ $textoSecundario',
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
+            const SizedBox(height: 6),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                spentFormatted,
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: -1,
+                ),
+              ),
             ),
-          ),
-
-          // ==========================================
-          // ESTADO SIN PRESUPUESTO
-          // ==========================================
-          if (!hasBudget) ...[
+            const SizedBox(height: 3),
+            Text(
+              '≈ ${formatSecundarioAmount(effectiveSpent)}',
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
             const SizedBox(height: 16),
             InkWell(
               key: const Key('summary_card_set_budget_btn'),
@@ -246,124 +212,199 @@ class SummaryCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                padding: const EdgeInsets.symmetric(vertical: 13),
                 decoration: BoxDecoration(
-                  color: AppColors.cardLighter,
+                  color: const Color(0xFFFACC15), // Amarillo de acento
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.add,
-                      size: 16,
-                      color: AppColors.secondary,
-                    ),
-                    SizedBox(width: 6),
-                    Flexible(
-                      child: Text(
-                        '+ Definir presupuesto y meta de ahorro / inversión',
-                        style: TextStyle(
-                          color: AppColors.secondary,
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    SizedBox(width: 4),
-                    Icon(
-                      Icons.edit_outlined,
-                      size: 14,
-                      color: AppColors.textSecondary,
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFFACC15).withValues(alpha: 0.25),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
                   ],
+                ),
+                child: const Center(
+                  child: Text(
+                    '+ Definir presupuesto del mes',
+                    style: TextStyle(
+                      color: Color(0xFF0F172A), // Texto oscuro
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
             ),
           ] else ...[
-            // ==========================================
-            // 3. BLOQUE DE DISPONIBLE Y RITMO
-            // ==========================================
-            const SizedBox(height: 14),
-            Text(
-              isPastMonth
-                  ? (isOverBudget ? (hasSavingsGoal ? 'Excedido del límite' : 'Excedido del presupuesto') : 'Te sobraron')
-                  : (isOverBudget
-                      ? (hasSavingsGoal ? 'Excedido del límite' : 'Excedido del presupuesto')
-                      : (daysRemaining == 1
-                          ? 'Disponible para gastar hoy'
-                          : 'Disponible para gastar en $daysRemaining días')),
-              style: TextStyle(
-                color: isOverBudget ? AppColors.error : AppColors.textSecondary,
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-              ),
+            // ========================================================
+            // 2. ESTADO CON PRESUPUESTO DEFINIDO
+            // ========================================================
+            // Fila superior: Disponible para gastar / Pastilla Excedido <---> Selector
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                if (!isOverBudget)
+                  Text(
+                    isPastMonth ? 'Te sobraron' : 'Disponible para gastar',
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  )
+                else
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEE2E2), // Fondo rojo suave
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      hasSavingsGoal ? 'Excedido del límite' : 'Excedido del presupuesto',
+                      style: const TextStyle(
+                        color: Color(0xFFDC2626), // Texto rojo negrita
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                _buildCurrencyDropdown(context, lenses),
+              ],
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 6),
+            // Monto protagonista (32sp negrita)
             FittedBox(
               fit: BoxFit.scaleDown,
               alignment: Alignment.centerLeft,
               child: Text(
-                isOverBudget ? excessFormatted : remFormatted,
+                isOverBudget ? '- $excessFormatted' : remFormatted,
                 style: TextStyle(
-                  color: isOverBudget ? AppColors.error : const Color(0xFF2E7D32),
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.5,
+                  color: isOverBudget ? const Color(0xFFDC2626) : const Color(0xFF16A34A),
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: -1,
                 ),
               ),
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 3),
+            // Equivalente secundario del monto protagonista
             Text(
-              isPastMonth
-                  ? 'Período finalizado'
-                  : (isOverBudget
-                      ? (hasSavingsGoal ? 'Límite superado' : 'Presupuesto superado')
-                      : 'Ritmo sugerido: $ritmoFormatted/día'),
-              style: TextStyle(
-                color: (isOverBudget && !isPastMonth) ? AppColors.error : AppColors.textSecondary,
+              '≈ ${formatSecundarioAmount(isOverBudget ? excess : rem)}',
+              style: const TextStyle(
+                color: AppColors.textSecondary,
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),
             ),
 
-            // ==========================================
-            // 4. BARRA DE PROGRESO CON MARCA SUTIL DE AHORRO
-            // ==========================================
-            const SizedBox(height: 12),
+            // Fila de contexto sobre la barra (Gastado vs Límite)
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Izquierda: Gastado: $ X
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: RichText(
+                      text: TextSpan(
+                        style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                        children: [
+                          const TextSpan(text: 'Gastado: ', style: TextStyle(fontWeight: FontWeight.w500)),
+                          TextSpan(
+                            text: spentFormatted,
+                            style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Derecha (tocable): Límite: $ Y ✏️
+                Flexible(
+                  child: InkWell(
+                    key: const Key('summary_card_edit_budget_btn'),
+                    onTap: () => BudgetBottomSheet.show(context),
+                    borderRadius: BorderRadius.circular(6),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerRight,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              hasSavingsGoal ? 'Límite: ' : 'Presupuesto: ',
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            Text(
+                              targetFormatted,
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(
+                              Icons.edit_outlined,
+                              size: 15,
+                              color: AppColors.textSecondary,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            // Barra de progreso con marcador vertical de ahorro
+            const SizedBox(height: 10),
             LayoutBuilder(
               builder: (context, constraints) {
                 final totalWidth = constraints.maxWidth;
-                final double rawMetaRatio = budgetInLens > 0 ? (metaInLens / budgetInLens) : 0.0;
-                final double metaRatio = rawMetaRatio.clamp(0.12, 0.35);
-                final double savingsDividerPos = totalWidth * (1.0 - metaRatio);
+                final double rawLimiteRatio = budgetInLens > 0 ? (limiteParaGastar / budgetInLens) : 1.0;
+                final double savingsMarkerPos = (totalWidth * rawLimiteRatio).clamp(0.0, totalWidth);
 
                 return Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.centerLeft,
                   children: [
-                    // Barra base de progreso
+                    // Barra lineal redondeada de 10dp de alto
                     ClipRRect(
                       borderRadius: BorderRadius.circular(5),
                       child: LinearProgressIndicator(
                         value: percentUsed.clamp(0.0, 1.0),
-                        minHeight: 8,
+                        minHeight: 10,
                         backgroundColor: AppColors.cardLighter,
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          AppColors.getBudgetProgressColor(percentUsed, isExceeded: isOverBudget),
+                          isOverBudget
+                              ? AppColors.error
+                              : AppColors.getBudgetProgressColor(percentUsed, isExceeded: false),
                         ),
                       ),
                     ),
-                    // Divisor sutil neutral de la meta de ahorro
+                    // Marcador vertical gris oscuro sobresaliendo 3dp arriba y abajo
                     if (hasSavingsGoal)
                       Positioned(
-                        left: savingsDividerPos - 1.0,
-                        top: 0,
-                        bottom: 0,
+                        left: savingsMarkerPos - 1.0,
+                        top: -3,
+                        bottom: -3,
                         child: Container(
                           width: 2,
                           decoration: BoxDecoration(
-                            color: AppColors.textMuted.withValues(alpha: 0.6),
+                            color: const Color(0xFF4B5563), // Gris oscuro nítido
                             borderRadius: BorderRadius.circular(1),
                           ),
                         ),
@@ -373,85 +414,75 @@ class SummaryCard extends StatelessWidget {
               },
             ),
 
-            // ==========================================
-            // 5. PIE DE TARJETA: Meta de ahorro + Lápiz
-            // ==========================================
-            const SizedBox(height: 12),
-            InkWell(
-              key: const Key('summary_card_edit_budget_btn'),
-              onTap: () => BudgetBottomSheet.show(context),
-              borderRadius: BorderRadius.circular(8),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Flexible(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerLeft,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.savings_outlined,
-                              size: 15,
-                              color: hasSavingsGoal
-                                  ? ((isOverBudget || snapshot?.status == SavingsGoalStatus.comprometida)
-                                      ? AppColors.error
-                                      : (snapshot?.status == SavingsGoalStatus.enRiesgo
-                                          ? const Color(0xFFD97706)
-                                          : const Color(0xFF2E7D32)))
-                                  : AppColors.textSecondary,
-                            ),
-                            const SizedBox(width: 6),
-                            if (hasSavingsGoal) ...[
-                              Text(
-                                'Meta de ahorro: $metaFormatted · ',
-                                style: const TextStyle(
-                                  color: AppColors.textSecondary,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              Text(
-                                (isOverBudget || snapshot?.status == SavingsGoalStatus.comprometida)
-                                    ? 'Comprometida'
-                                    : (snapshot?.status == SavingsGoalStatus.enRiesgo ? 'En riesgo' : 'Protegida'),
-                                style: TextStyle(
-                                  color: (isOverBudget || snapshot?.status == SavingsGoalStatus.comprometida)
-                                      ? AppColors.error
-                                      : (snapshot?.status == SavingsGoalStatus.enRiesgo
-                                          ? const Color(0xFFD97706)
-                                          : AppColors.textPrimary),
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ] else ...[
-                              const Text(
-                                '+ Definir meta de ahorro / inversión',
-                                style: TextStyle(
-                                  color: AppColors.textSecondary,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ],
+            // Divisor sutil y Pie de Meta de ahorro (si hasSavingsGoal es true)
+            if (hasSavingsGoal) ...[
+              const SizedBox(height: 12),
+              Divider(
+                height: 1,
+                thickness: 1,
+                color: AppColors.border.withValues(alpha: 0.6),
+              ),
+              const SizedBox(height: 10),
+              Builder(
+                builder: (context) {
+                  final bool isInvading = effectiveSpent > limiteParaGastar;
+                  final bool isEnRiesgo = snapshot?.status == SavingsGoalStatus.enRiesgo;
+
+                  final Color dotColor;
+                  final String statusText;
+                  final Color statusTextColor;
+
+                  if (isInvading || snapshot?.status == SavingsGoalStatus.comprometida) {
+                    dotColor = AppColors.error;
+                    statusText = 'En riesgo';
+                    statusTextColor = AppColors.error;
+                  } else if (isEnRiesgo) {
+                    dotColor = const Color(0xFFD97706);
+                    statusText = 'En riesgo';
+                    statusTextColor = const Color(0xFFD97706);
+                  } else {
+                    dotColor = const Color(0xFFF59E0B);
+                    statusText = 'Protegida';
+                    statusTextColor = const Color(0xFF16A34A);
+                  }
+
+                  return Row(
+                    children: [
+                      Icon(
+                        Icons.savings_outlined,
+                        size: 16,
+                        color: dotColor,
+                      ),
+                      const SizedBox(width: 6),
+                      const Text(
+                        'Meta de ahorro: ',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    const Icon(
-                      Icons.edit_outlined,
-                      size: 15,
-                      color: AppColors.textSecondary,
-                    ),
-                  ],
-                ),
+                      Text(
+                        metaFormatted,
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        ' · $statusText',
+                        style: TextStyle(
+                          color: statusTextColor,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
-            ),
+            ],
           ],
         ],
       ),

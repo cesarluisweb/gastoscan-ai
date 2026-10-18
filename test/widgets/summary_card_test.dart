@@ -4,7 +4,7 @@ import 'package:gastoscan_ai/ui/widgets/summary_card.dart';
 
 void main() {
   group('SummaryCard - Rediseño Modelo Mental V2 y FIN-07 Meses Históricos', () {
-    testWidgets('muestra mensaje de período finalizado y Te sobraron para meses pasados', (tester) async {
+    testWidgets('muestra Te sobraron para meses pasados y oculta disponible para gastar', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -23,16 +23,16 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // No debe mostrar días restantes de un mes pasado
-      expect(find.textContaining('Faltan'), findsNothing);
-      expect(find.textContaining('Falta 1 día'), findsNothing);
-      // En el Bloque 3 muestra "Te sobraron"
+      // No debe mostrar Disponible para gastar en un mes pasado
+      expect(find.textContaining('Disponible para gastar'), findsNothing);
+      // En la cabecera muestra "Te sobraron"
       expect(find.textContaining('Te sobraron'), findsOneWidget);
-      // Muestra "Período finalizado"
-      expect(find.textContaining('Período finalizado'), findsOneWidget);
+      // Muestra la fila de contexto Gastado vs Presupuesto
+      expect(find.textContaining('Gastado:'), findsOneWidget);
+      expect(find.textContaining('Presupuesto:'), findsOneWidget);
     });
 
-    testWidgets('muestra Disponible para gastar y Ritmo sugerido para el mes actual', (tester) async {
+    testWidgets('muestra Disponible para gastar y Gastado vs Presupuesto para el mes actual', (tester) async {
       final now = DateTime.now();
       await tester.pumpWidget(
         MaterialApp(
@@ -52,11 +52,11 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Para el mes actual debe mostrar Disponible para gastar y Ritmo sugerido
+      // Para el mes actual debe mostrar Disponible para gastar y contexto
       expect(find.textContaining('Disponible para gastar'), findsOneWidget);
-      expect(find.textContaining('Ritmo sugerido'), findsOneWidget);
-      expect(find.text('Total gastado'), findsOneWidget);
-      expect(find.textContaining('de \$ 100,00'), findsOneWidget);
+      expect(find.textContaining('Gastado:'), findsOneWidget);
+      expect(find.textContaining('Presupuesto:'), findsOneWidget);
+      expect(find.textContaining('\$ 100,00'), findsWidgets);
     });
 
     testWidgets('al presionar botones de lente invoca onMonedaChanged con la moneda correcta', (tester) async {
@@ -149,11 +149,12 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Debe mostrar el límite de gasto en la línea principal (600 - 100 = 500)
-      expect(find.textContaining('de \$ 500,00'), findsOneWidget);
+      // Debe mostrar el límite de gasto en la fila de contexto (600 - 100 = 500)
+      expect(find.textContaining('Límite:'), findsOneWidget);
+      expect(find.textContaining('\$ 500,00'), findsWidgets);
       // Fila inferior con la meta
       expect(find.textContaining('Meta de ahorro:'), findsOneWidget);
-      expect(find.text('Protegida'), findsOneWidget);
+      expect(find.textContaining('Protegida'), findsOneWidget);
     });
 
     testWidgets('cuando se supera el límite muestra estado excedido en rojo', (tester) async {
@@ -176,8 +177,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Excedido'), findsWidgets);
-      expect(find.textContaining('Límite superado'), findsOneWidget);
+      expect(find.textContaining('Excedido del límite'), findsOneWidget);
+      expect(find.textContaining('- \$ 100,00'), findsOneWidget);
     });
   });
 }

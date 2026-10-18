@@ -15,6 +15,8 @@ class AiInsightCard extends StatelessWidget {
   final double totalGastadoMes;
   final String monedaPresupuesto;
   final double tasaCambio;
+  final int? mes;
+  final int? anio;
   final VoidCallback? onChatTap;
   final DateTime? currentDate;
 
@@ -27,25 +29,89 @@ class AiInsightCard extends StatelessWidget {
     required this.totalGastadoMes,
     this.monedaPresupuesto = 'USD',
     this.tasaCambio = 1.0,
+    this.mes,
+    this.anio,
     this.onChatTap,
     this.currentDate,
   }) : super(key: key);
 
   String _generarMensaje() {
     final now = currentDate ?? DateTime.now();
-    final diasEnMes = DateTime(now.year, now.month + 1, 0).day;
-    final diasRestantes = (diasEnMes - now.day).clamp(1, diasEnMes);
-    final mesActualNombre = DateFormatter.getMonthName(now.month);
+    final targetYear = anio ?? now.year;
+    final targetMonth = mes ?? now.month;
+    final diasEnMes = DateTime(targetYear, targetMonth + 1, 0).day;
+    final isPastMonth = targetYear < now.year ||
+        (targetYear == now.year && targetMonth < now.month);
+    final isCurrentMonth = targetYear == now.year && targetMonth == now.month;
+    final diasRestantes = isCurrentMonth
+        ? (diasEnMes - now.day).clamp(1, diasEnMes)
+        : 1;
+    final mesActualNombre = DateFormatter.getMonthName(targetMonth);
 
     if (gastos.isEmpty) {
-      if (now.day <= 5 && presupuestoGeneral > 0) {
+      if (now.day <= 5 && presupuestoGeneral > 0 && isCurrentMonth) {
         return '¡Nuevo mes! Tu presupuesto de $mesActualNombre ya está listo. Hoy es un buen día para determinarte a aplicar lo aprendido el mes pasado.';
       }
       return 'Registra tu primera compra con el botón + para activar estadísticas y recomendaciones automáticas.';
     }
 
+    if (presupuestoGeneral <= 0) {
+      return 'Define un presupuesto mensual y te diré cuánto puedes gastar cada día sin descuidar tu ahorro.';
+    }
+
     final hasSavingsGoal = metaAhorro > 0;
-    if (hasSavingsGoal && presupuestoGeneral > 0) {
+    final limiteParaGastar = hasSavingsGoal
+        ? (presupuestoGeneral - metaAhorro).clamp(0.0, double.infinity)
+        : presupuestoGeneral;
+
+    final formattedMeta = CurrencyFormatter.formatPreferido(
+      metaAhorro,
+      null,
+      tasaCambio,
+      monedaPresupuesto,
+    );
+
+    // Caso: Mes pasado cerrado
+    if (isPastMonth) {
+      if (totalGastadoMes > limiteParaGastar) {
+        final exceso = totalGastadoMes - limiteParaGastar;
+        final formattedExceso = CurrencyFormatter.formatPreferido(
+          exceso,
+          null,
+          tasaCambio,
+          monedaPresupuesto,
+        );
+        return 'En $mesActualNombre superaste tu ${hasSavingsGoal ? "límite" : "presupuesto"} por $formattedExceso.';
+      } else {
+        final rem = limiteParaGastar - totalGastadoMes;
+        final formattedRem = CurrencyFormatter.formatPreferido(
+          rem,
+          null,
+          tasaCambio,
+          monedaPresupuesto,
+        );
+        return '¡Mes cerrado con éxito! Te sobraron $formattedRem de tu ${hasSavingsGoal ? "límite" : "presupuesto"}.';
+      }
+    }
+
+    // Caso: Excedido en el mes actual
+    if (totalGastadoMes > limiteParaGastar) {
+      final exceso = totalGastadoMes - limiteParaGastar;
+      final formattedExceso = CurrencyFormatter.formatPreferido(
+        exceso,
+        null,
+        tasaCambio,
+        monedaPresupuesto,
+      );
+      if (hasSavingsGoal) {
+        return 'Superaste tu límite por $formattedExceso. Tu meta de ahorro de $formattedMeta está comprometida; te sugiero pausar gastos no esenciales.';
+      } else {
+        return 'Superaste tu presupuesto por $formattedExceso. Te sugiero pausar gastos no esenciales esta semana.';
+      }
+    }
+
+    // Caso: En riesgo por ritmo proyectado (con meta de ahorro)
+    if (hasSavingsGoal) {
       final savingsSnapshot = SavingsHealthCalculator.calculate(
         presupuestoGeneral: presupuestoGeneral,
         metaAhorro: metaAhorro,
@@ -54,24 +120,6 @@ class AiInsightCard extends StatelessWidget {
         diasTotalesMes: diasEnMes,
         moneda: monedaPresupuesto,
       );
-
-      final formattedMeta = CurrencyFormatter.formatPreferido(
-        metaAhorro,
-        null,
-        tasaCambio,
-        monedaPresupuesto,
-      );
-
-      if (savingsSnapshot.status == SavingsGoalStatus.comprometida) {
-        final exceso = savingsSnapshot.gastoAcumulado - savingsSnapshot.limiteParaGastar;
-        final formattedExceso = CurrencyFormatter.formatPreferido(
-          exceso,
-          null,
-          tasaCambio,
-          monedaPresupuesto,
-        );
-        return 'Has superado tu límite de gasto por $formattedExceso. Tu meta de ahorro de $formattedMeta está siendo comprometida.';
-      }
 
       if (savingsSnapshot.status == SavingsGoalStatus.enRiesgo) {
         final proy = savingsSnapshot.gastoProyectadoFinDeMes;
@@ -83,62 +131,26 @@ class AiInsightCard extends StatelessWidget {
         );
         return 'Atención: a tu ritmo actual proyectas gastar $formattedProy. Modera tus consumos para proteger tu meta de ahorro de $formattedMeta.';
       }
-
-      if (savingsSnapshot.status == SavingsGoalStatus.protegida && now.day >= 15) {
-        return '¡Excelente administración! Tu ritmo de gasto mantiene tu meta de ahorro de $formattedMeta protegida.';
-      }
     }
 
-    if (presupuestoGeneral > 0) {
-      final porcentaje = totalGastadoMes / presupuestoGeneral;
-      final pctRedondeado = (porcentaje * 100).round();
-      final diasTexto = diasRestantes == 1 ? 'falta 1 día' : 'faltan $diasRestantes días';
+    // Caso: Ritmo saludable con presupuesto
+    final disponible = limiteParaGastar - totalGastadoMes;
+    final ritmoDiario = disponible / diasRestantes;
+    final formattedRitmo = CurrencyFormatter.formatPreferido(
+      ritmoDiario,
+      null,
+      tasaCambio,
+      monedaPresupuesto,
+    );
+    final diasTexto = diasRestantes == 1
+        ? 'el día restante'
+        : 'los $diasRestantes días restantes';
 
-      if (porcentaje >= 1.0) {
-        final excesoUsd = totalGastadoMes - presupuestoGeneral;
-        final formattedExceso = CurrencyFormatter.formatPreferido(
-          excesoUsd,
-          null,
-          tasaCambio,
-          monedaPresupuesto,
-        );
-        return 'Has superado tu presupuesto general por $formattedExceso. Conviene moderar consumos no esenciales.';
-      }
-
-      if (porcentaje >= 0.85) {
-        return 'Atención: llevas gastado el $pctRedondeado% de tu presupuesto y $diasTexto. Modera tus gastos.';
-      }
-
-      if (porcentaje < 0.50 && now.day >= 15) {
-        final diasCapTexto = diasRestantes == 1 ? 'Falta 1 día' : 'Faltan $diasRestantes días';
-        if (diasRestantes <= 5) {
-          return '¡Excelente cierre de mes! $diasCapTexto y solo has consumido el $pctRedondeado% de tu presupuesto. Tienes margen para ahorrar.';
-        }
-        return '¡Excelente administración! A más de mitad de mes solo has consumido el $pctRedondeado% de tu presupuesto. ¡Así se rinde más!';
-      }
+    if (hasSavingsGoal) {
+      return '¡Excelente administración! Puedes gastar hasta $formattedRitmo/día durante $diasTexto sin tocar tu meta de $formattedMeta protegida.';
+    } else {
+      return '¡Excelente administración! Puedes gastar hasta $formattedRitmo/día durante $diasTexto sin exceder tu presupuesto.';
     }
-
-    if (totalesPorCategoria.isNotEmpty && totalGastadoMes > 0) {
-      String? topCat;
-      double topMonto = 0.0;
-      totalesPorCategoria.forEach((cat, monto) {
-        if (monto > topMonto) {
-          topMonto = monto;
-          topCat = cat;
-        }
-      });
-
-      if (topCat != null && topMonto > 0) {
-        final pctTop = ((topMonto / totalGastadoMes) * 100).round();
-        return 'Tu mayor concentración de gasto este mes está en $topCat ($pctTop% del total). Mantén su seguimiento.';
-      }
-    }
-
-    if (presupuestoGeneral <= 0) {
-      return 'Consejo: Asigna un presupuesto mensual en la pestaña de Análisis para monitorear tu límite en tiempo real.';
-    }
-
-    return 'Tus finanzas van al día. Registra cada compra puntualmente para mantener tus estadísticas actualizadas.';
   }
 
   @override

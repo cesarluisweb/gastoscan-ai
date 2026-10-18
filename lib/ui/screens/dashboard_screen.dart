@@ -184,6 +184,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   : gastoProvider.totalMesUsd,
               monedaPresupuesto: gastoProvider.monedaPresupuesto,
               tasaCambio: settings.tasaCambioVesUsd,
+              mes: gastoProvider.selectedMonth,
+              anio: gastoProvider.selectedYear,
               onChatTap: widget.onNavigateToChat,
             ),
             const SizedBox(height: 16),
