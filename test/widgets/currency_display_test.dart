@@ -205,9 +205,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // 100 USD * 40 Bs/USD = 4000 Bs de presupuesto en el pie
-      expect(find.text('Presupuesto del mes'), findsOneWidget);
-      expect(find.text(CurrencyFormatter.formatVes(4000.0)), findsOneWidget);
+      // 100 USD * 40 Bs/USD = 4000 Bs de presupuesto
+      expect(find.textContaining(CurrencyFormatter.formatVes(4000.0)), findsOneWidget);
     });
   });
 

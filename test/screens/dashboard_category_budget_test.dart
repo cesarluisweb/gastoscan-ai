@@ -370,8 +370,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Presupuesto del mes'), findsOneWidget);
-      expect(find.text(CurrencyFormatter.formatUsd(200.0)), findsOneWidget);
+      expect(find.textContaining(CurrencyFormatter.formatUsd(200.0)), findsOneWidget);
       expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
 
       await tester.tap(find.byKey(const Key('summary_card_edit_budget_btn')));
