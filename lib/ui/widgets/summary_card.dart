@@ -361,7 +361,7 @@ class SummaryCard extends StatelessWidget {
                     child: Text(
                       isOverBudget
                           ? (hasSavingsGoal ? 'Límite superado' : 'Presupuesto superado')
-                          : (isPastMonth ? 'Mes finalizado' : 'Ritmo: $ritmoFormatted/día'),
+                          : (isPastMonth ? 'Te sobraron $remFormatted' : 'Ritmo: $ritmoFormatted/día'),
                       style: TextStyle(
                         color: isOverBudget ? AppColors.error : AppColors.textSecondary,
                         fontSize: 12,
