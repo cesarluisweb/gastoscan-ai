@@ -309,17 +309,26 @@ class SummaryCard extends StatelessWidget {
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.centerLeft,
-                    child: RichText(
-                      text: TextSpan(
-                        style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
-                        children: [
-                          const TextSpan(text: 'Gastado: ', style: TextStyle(fontWeight: FontWeight.w500)),
-                          TextSpan(
-                            text: spentFormatted,
-                            style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'Gastado: ',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w500,
                           ),
-                        ],
-                      ),
+                        ),
+                        Text(
+                          spentFormatted,
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
