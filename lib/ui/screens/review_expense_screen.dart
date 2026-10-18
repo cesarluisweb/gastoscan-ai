@@ -1128,6 +1128,68 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         ),
       );
     }
+  Widget _buildLiquidacionPill({
+    required Key key,
+    required String title,
+    required String subtitle,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        key: key,
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.surface : AppColors.cardLighter,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: isSelected ? AppColors.primary : AppColors.border,
+              width: isSelected ? 2.0 : 1.0,
+            ),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 4,
+                      offset: const Offset(0, 1),
+                    )
+                  ]
+                : null,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                  color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -1801,118 +1863,69 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     ),
                   ] else if (_selectedMoneda == 'USD' || _selectedMoneda == 'EUR') ...[
                     // Selector: 3 opciones de liquidación para USD / EUR
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.all(3),
-                      decoration: BoxDecoration(
-                        color: AppColors.cardLighter,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: InkWell(
-                              key: const Key('btn_pagado_en_bs'),
-                              onTap: () {
-                                setState(() {
-                                  _metodoLiquidacionUsd = MetodoLiquidacionUsd.pagadoEnBsBcv;
-                                  _bolivaresAjustadosManualmente = false;
-                                  _recalcularTotalUsd();
-                                });
-                              },
-                              borderRadius: BorderRadius.circular(8),
-                              child: Container(
-                                alignment: Alignment.center,
-                                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
-                                decoration: BoxDecoration(
-                                  color: _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsBcv ? AppColors.surface : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(8),
-                                  boxShadow: _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsBcv
-                                      ? [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 4)]
-                                      : null,
-                                ),
-                                child: Text(
-                                  'En Bs. · precio a tasa BCV',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsBcv ? FontWeight.bold : FontWeight.normal,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: InkWell(
-                              key: const Key('btn_pagado_en_bs_usdt'),
-                              onTap: () {
-                                setState(() {
-                                  _metodoLiquidacionUsd = MetodoLiquidacionUsd.pagadoEnBsUsdt;
-                                  _bolivaresAjustadosManualmente = false;
-                                  _recalcularTotalUsd();
-                                });
-                              },
-                              borderRadius: BorderRadius.circular(8),
-                              child: Container(
-                                alignment: Alignment.center,
-                                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
-                                decoration: BoxDecoration(
-                                  color: _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsUsdt ? AppColors.surface : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(8),
-                                  boxShadow: _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsUsdt
-                                      ? [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 4)]
-                                      : null,
-                                ),
-                                child: Text(
-                                  'En Bs. · precio a tasa P2P',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsUsdt ? FontWeight.bold : FontWeight.normal,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: InkWell(
-                              key: const Key('btn_pagado_en_divisa'),
-                              onTap: () {
-                                setState(() {
-                                  _metodoLiquidacionUsd = MetodoLiquidacionUsd.pagadoEnDivisa;
-                                  _bolivaresAjustadosManualmente = false;
-                                  _recalcularTotalUsd();
-                                });
-                              },
-                              borderRadius: BorderRadius.circular(8),
-                              child: Container(
-                                alignment: Alignment.center,
-                                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
-                                decoration: BoxDecoration(
-                                  color: _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnDivisa ? AppColors.surface : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(8),
-                                  boxShadow: _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnDivisa
-                                      ? [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 4)]
-                                      : null,
-                                ),
-                                child: Text(
-                                  'En \$ · efectivo o tarjeta',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnDivisa ? FontWeight.bold : FontWeight.normal,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 6),
+                      child: Text(
+                        'Forma de pago en Venezuela',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildLiquidacionPill(
+                            key: const Key('btn_pagado_en_bs'),
+                            title: 'En Bs.',
+                            subtitle: 'a tasa BCV',
+                            isSelected: _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsBcv,
+                            onTap: () {
+                              setState(() {
+                                _metodoLiquidacionUsd = MetodoLiquidacionUsd.pagadoEnBsBcv;
+                                _bolivaresAjustadosManualmente = false;
+                                _recalcularTotalUsd();
+                              });
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: _buildLiquidacionPill(
+                            key: const Key('btn_pagado_en_bs_usdt'),
+                            title: 'En Bs.',
+                            subtitle: 'a tasa P2P',
+                            isSelected: _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsUsdt,
+                            onTap: () {
+                              setState(() {
+                                _metodoLiquidacionUsd = MetodoLiquidacionUsd.pagadoEnBsUsdt;
+                                _bolivaresAjustadosManualmente = false;
+                                _recalcularTotalUsd();
+                              });
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: _buildLiquidacionPill(
+                            key: const Key('btn_pagado_en_divisa'),
+                            title: 'En divisa',
+                            subtitle: 'directa',
+                            isSelected: _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnDivisa,
+                            onTap: () {
+                              setState(() {
+                                _metodoLiquidacionUsd = MetodoLiquidacionUsd.pagadoEnDivisa;
+                                _bolivaresAjustadosManualmente = false;
+                                _recalcularTotalUsd();
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
                     TextFormField(
                       controller: _totalOriginalCtrl,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
