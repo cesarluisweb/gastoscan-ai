@@ -4,7 +4,7 @@
 ## Estado Actual Inmediato
 - **Rama:** `main`.
 - **Fase activa:** Fase 5 (Closed Testing activa) y validación de motor multimoneda (FIN-11).
-- **Acción Reciente:** Rediseño y desacoplamiento de las 3 pastillas de liquidación en `ReviewExpenseScreen` y `panel.astro`: pastillas independientes con bordes activos claros, espaciado de 6dp, textos limpios ('En Bs. a tasa BCV', 'En Bs. a tasa P2P', 'En divisa directa') y etiqueta de contexto superior.
+- **Acción Reciente:** Compilación en verde del Build 507 (CI 503, commit `d70fce1`). Rediseño exitoso de las 3 pastillas de liquidación en móvil y web con separación limpia, feedback táctil y textos breves ('En Bs. a tasa BCV', 'En Bs. a tasa P2P', 'En divisa directa'). Desplegado a producción.
 - **Preservación:** Blindaje de R8 en `build_apk.yml` intacto (`-dontobfuscate`, `-dontoptimize`, `-keepattributes`), scripts operativos y reglas intactos.
 
 ## Decisiones Técnicas y de Negocio Recientes
@@ -17,6 +17,7 @@
 - Monitoreo de CI por proceso dormido único (`scripts/wait_ci.ps1`), prohibido bucle activo turno a turno.
 
 ## Próximo Paso Inmediato
-- Monitorear CI tras push y verificar que el nuevo build mantenga las pastillas refinadas y las firmas DEX íntegras.
+- Validación en dispositivo físico por César de las nuevas pastillas de liquidación y cuadre de cuentas en el APK Build 507.
+
 
 
