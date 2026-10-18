@@ -554,24 +554,26 @@ class SummaryCard extends StatelessWidget {
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
                           alignment: Alignment.centerRight,
-                          child: RichText(
-                            text: TextSpan(
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
-                              ),
-                              children: [
-                                TextSpan(text: '$metaFormatted · '),
-                                TextSpan(
-                                  text: statusText,
-                                  style: TextStyle(
-                                    color: statusTextColor,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '$metaFormatted · ',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textPrimary,
                                 ),
-                              ],
-                            ),
+                              ),
+                              Text(
+                                statusText,
+                                style: TextStyle(
+                                  color: statusTextColor,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
