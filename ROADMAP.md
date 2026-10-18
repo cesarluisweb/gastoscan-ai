@@ -81,14 +81,13 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
   - *Solución:* 
     - En **Inicio**: mantener tarjetas compactas con resumen limpio (`14 Oct • 4 artículos`).
     - En **Gastos**: mostrar directamente los productos con mini-ícono de categoría y subtotal. Para facturas largas, limitar a los primeros 4 ítems con botón expansor `Ver X artículos más ▾`. Mantener formato limpio de una línea para compras sin desglose.
-- `UX-08` **Rediseño Compacto de Tarjeta 'Total gastado' (Modelo Mental V2):** `Pendiente de validación 🧪`
-  - *Problema:* El porcentaje abstracto obligaba a calcular matemáticas mentales y la versión previa con tabla de tres filas ocupaba demasiada altura vertical.
-  - *Solución Compacta V2:* 
-    - **Cabecera:** `Total gastado` a la izquierda y selector desplegable compacto estilo Binance (`USD BCV ▾`) a la derecha.
-    - **Gasto y Límite Unificados:** Cifra grande sin símbolo de divisa a la izquierda (`205,31`) seguida en la misma línea de ` de $ 550,00` (17sp gris) envuelta en `FittedBox`, con equivalente secundario `≈ Bs. 180.533,68` debajo.
-    - **Disponible con Contexto Temporal:** Etiqueta dinámica humana (`Disponible para gastar en 13 días` o `Te sobraron` en meses pasados), monto grande en 24sp verde (`Color(0xFF2E7D32)`), y ritmo sugerido secundario en gris (`Ritmo sugerido: $ 26,51/día`).
-    - **Barra de Asignación Sutil:** Barra de progreso lineal limpia sobre gris, con una marca vertical divisoria sutil (`┃`) que delimita el espacio de ahorro sin colores de alerta estridentes.
-    - **Pie Interactivo Único:** Una sola fila pulsable con ícono de alcancía + `Meta de ahorro: $ 50,00 · Protegida` (o `+ Definir meta de ahorro / inversión`) y botón de edición con lápiz (`Icons.edit_outlined`). Sin presupuesto muestra el botón a todo el ancho `+ Definir presupuesto y meta de ahorro / inversión ✏️`.
+- `UX-08` **Rediseño Definitivo de Tarjeta de Resumen (Modelo Mental V3 - Saldo Protagonista):** `Pendiente de validación 🧪`
+  - *Problema:* El porcentaje abstracto obligaba a cálculos mentales y apilar dos números grandes competía visualmente creando un efecto de factura sobrecargada.
+  - *Solución Definitiva (Estructura de 3 Niveles):*
+    - **Nivel 1 (Héroe Disponible):** `Disponible para gastar` (o `Te sobraron` en meses pasados) en la cabecera junto al selector compacto Binance (`USD BCV ▾`), con el saldo disponible en 32sp negrita verde (`Color(0xFF16A34A)`) y su equivalente secundario debajo (`≈ Bs. 302.737,82`). En estado excedido muestra pastilla roja compacta `Excedido del límite` con cifra en rojo negativo (`- $ 62,40`). Sin presupuesto muestra `Total gastado` y botón full-width amarillo `+ Definir presupuesto del mes`.
+    - **Nivel 2 (Contexto Horizontal sobre la Barra):** Fila equilibrada con `Gastado: $ 205,31` a la izquierda y `Límite: $ 550,00 ✏️` tocable a la derecha que abre `BudgetBottomSheet`.
+    - **Nivel 3 (Barra con Asignación y Pie de Meta):** Barra lineal de 10dp con marcador vertical gris oscuro (`#4B5563`, sobresale 3dp) delimitando el ahorro. Divisor de 1dp y pie con alcancía + `Meta de ahorro: $ 50,00 · Protegida` (o `· En riesgo`).
+    - **Pedagogía en Asistente IA:** El ritmo diario (`puedes gastar hasta $ 26,51/día durante los 13 días restantes...`) y sugerencias de pausa de gastos se integraron de forma dinámica en `AiInsightCard`.
 - `UX-09` **Rediseño del Filtro de Comprobantes en "Gastos":**
   - *Solución:* Incorporar un distintivo de recibo/clip (`🧾`) en las tarjetas que tienen fotografía adjunta y reemplazar el botón confuso de galería por un chip activo `[🧾 Con comprobante]` o ícono de filtro con estado evidente.
 - `UX-10` **Jerarquía y Claridad de la Acción "Eliminar Cuenta":** `Implementada 🔧`

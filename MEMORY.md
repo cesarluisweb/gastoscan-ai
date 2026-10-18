@@ -4,13 +4,13 @@
 ## Estado Actual Inmediato
 - **Rama:** `main`.
 - **Fase activa:** Fase 5 (Closed Testing activa) y validación de motor multimoneda (FIN-11).
-- **Acción Reciente:** Rediseño compacto V2 de `SummaryCard` (UX-08): Gasto y Límite unificados en una sola línea (`205,31 de $ 550,00`), selector Binance a la derecha, Disponible con horizonte temporal (`Disponible para gastar en 13 días`), barra lineal limpia con marca sutil `┃` de ahorro, y pie interactivo de una sola fila con ícono de alcancía y lápiz de edición.
-- **Estado de CI:** CI build 509 en verde (`success` en commit `39221e8`), APK build 513 desplegado a BanaHosting y panel web publicado. `UX-08` en `Pendiente de validación 🧪`.
+- **Acción Reciente:** Rediseño definitivo V3 de `SummaryCard` (UX-08): Saldo Disponible como héroe único de 32sp en verde, selector Binance a la derecha, contexto horizontal `Gastado: $ X` vs `Límite: $ Y ✏️` sobre la barra de 10dp con marcador vertical gris oscuro (#4B5563) de ahorro, pie interactivo de meta protegida/en riesgo, y pedagogía de ritmo diario transferida a `AiInsightCard`.
+- **Estado de CI:** CI build 511 en verde (`success` en commit `39839a3`), 301 tests pasando, APK build 515 listo para desplegar. `UX-08` en `Pendiente de validación 🧪`.
 
 ## Decisiones Técnicas y de Negocio Recientes
-- La línea `205,31 de $ 550,00` va envuelta en `FittedBox` con alineación izquierda para asegurar respuesta responsiva perfecta con cifras millonarias en Bolívares.
-- Se ampliaron los reintentos de verificación de APK en `build_apk.yml` a 10 intentos (150s) para absorber la latencia de flush en almacenamiento compartido de BanaHosting.
-- En `SummaryCard`, si no hay meta se muestra `+ Definir meta de ahorro / inversión` con el lápiz de edición, y sin presupuesto se muestra el botón a todo el ancho.
+- La etiqueta `Gastado: ` en `SummaryCard` utiliza `Row` con widgets `Text` (no `RichText`) para garantizar compatibilidad con tests y detectabilidad semántica de Flutter.
+- El cálculo y recomendación del ritmo sugerido diario (`$ 26,51/día durante los 13 días restantes...`) se delegó a `AiInsightCard` para descongestionar visualmente `SummaryCard`.
+- En `SummaryCard`, sin presupuesto definido se ocultan los niveles 2 y 3, mostrando el botón amarillo full-width `+ Definir presupuesto del mes`.
 
 ## Errores y Fricciones a Evitar
 - No encadenar comandos con `&&` ni usar redirección `>` en PowerShell.
