@@ -81,13 +81,14 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
   - *Solución:* 
     - En **Inicio**: mantener tarjetas compactas con resumen limpio (`14 Oct • 4 artículos`).
     - En **Gastos**: mostrar directamente los productos con mini-ícono de categoría y subtotal. Para facturas largas, limitar a los primeros 4 ítems con botón expansor `Ver X artículos más ▾`. Mantener formato limpio de una línea para compras sin desglose.
-- `UX-08` **Rediseño de Tarjeta 'Total gastado' (Modelo Mental y Arquitectura de 4 Bloques):** `Pendiente de validación 🧪`
-  - *Problema:* El porcentaje abstracto obligaba a calcular matemáticas mentales; el usuario venezolano necesita ver exactamente cuánto gastó, cuánto le queda en el bolsillo en verde y su marco de referencia.
-  - *Solución (4 Bloques):* 
-    - **Bloque 1:** `Total gastado` arriba, cifra grande sin símbolo de divisa a la izquierda (`205,31`) y selector compacto estilo Binance adyacente (`USD BCV ▾`), con equivalente secundario `≈ Bs. ...` en gris.
-    - **Bloque 2:** `Disponible por gastar` con monto grande en verde (`Color(0xFF2E7D32)`), o `Te sobraron` en meses pasados, o `Excedido del límite` en rojo si se superó. Cero porcentajes abstractos.
-    - **Bloque 3:** Barra de asignación (Allocation). Sin meta es continua; con meta se divide en tramo Límite y tramo Meta de ahorro ámbar con divisor vertical de `2dp`. Solo invade la meta en rojo si el gasto supera físicamente el límite.
-    - **Bloque 4:** Pie en tabla limpia de tres filas protegida contra desbordamientos en Bolívares: Fila 1 tocable (`Límite del mes` + `$ 550,00 ✏️` o `+ Definir presupuesto`), Fila 2 (`Ritmo sugerido: $ 24,62/día · 14 d` o `Período finalizado`), y Fila 3 (`● Meta de ahorro: $ 50,00 · Protegida/En riesgo`).
+- `UX-08` **Rediseño Compacto de Tarjeta 'Total gastado' (Modelo Mental V2):** `Pendiente de validación 🧪`
+  - *Problema:* El porcentaje abstracto obligaba a calcular matemáticas mentales y la versión previa con tabla de tres filas ocupaba demasiada altura vertical.
+  - *Solución Compacta V2:* 
+    - **Cabecera:** `Total gastado` a la izquierda y selector desplegable compacto estilo Binance (`USD BCV ▾`) a la derecha.
+    - **Gasto y Límite Unificados:** Cifra grande sin símbolo de divisa a la izquierda (`205,31`) seguida en la misma línea de ` de $ 550,00` (17sp gris) envuelta en `FittedBox`, con equivalente secundario `≈ Bs. 180.533,68` debajo.
+    - **Disponible con Contexto Temporal:** Etiqueta dinámica humana (`Disponible para gastar en 13 días` o `Te sobraron` en meses pasados), monto grande en 24sp verde (`Color(0xFF2E7D32)`), y ritmo sugerido secundario en gris (`Ritmo sugerido: $ 26,51/día`).
+    - **Barra de Asignación Sutil:** Barra de progreso lineal limpia sobre gris, con una marca vertical divisoria sutil (`┃`) que delimita el espacio de ahorro sin colores de alerta estridentes.
+    - **Pie Interactivo Único:** Una sola fila pulsable con ícono de alcancía + `Meta de ahorro: $ 50,00 · Protegida` (o `+ Definir meta de ahorro / inversión`) y botón de edición con lápiz (`Icons.edit_outlined`). Sin presupuesto muestra el botón a todo el ancho `+ Definir presupuesto y meta de ahorro / inversión ✏️`.
 - `UX-09` **Rediseño del Filtro de Comprobantes en "Gastos":**
   - *Solución:* Incorporar un distintivo de recibo/clip (`🧾`) en las tarjetas que tienen fotografía adjunta y reemplazar el botón confuso de galería por un chip activo `[🧾 Con comprobante]` o ícono de filtro con estado evidente.
 - `UX-10` **Jerarquía y Claridad de la Acción "Eliminar Cuenta":** `Implementada 🔧`
