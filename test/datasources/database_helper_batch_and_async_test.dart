@@ -83,6 +83,7 @@ class MockMemoryBudgetRepository extends GastoRepository {
   Future<Map<String, dynamic>?> obtenerUltimoPresupuestoConfigurado({
     int? antesDeAnio,
     int? antesDeMes,
+    bool estrictamenteAnterior = false,
   }) async {
     if (_prevGeneral > 0) {
       return {
