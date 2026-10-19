@@ -168,9 +168,9 @@ class PurchaseRadiographyCard extends StatelessWidget {
         children: [
           const Text('🏆 ', style: TextStyle(fontSize: 14)),
           Expanded(
-            child: RichText(
+            child: Text.rich(
               key: const Key('purchase_radiography_highest_expense'),
-              text: TextSpan(
+              TextSpan(
                 style: const TextStyle(
                   fontSize: 12,
                   color: AppColors.textSecondary,

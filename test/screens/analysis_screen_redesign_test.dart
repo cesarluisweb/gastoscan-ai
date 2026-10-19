@@ -245,7 +245,13 @@ void main() {
       expect(find.text('Total gastado en Octubre'), findsOneWidget);
 
       // Monto principal y límite en la misma fila: $ 18,00 y de $ 500,00
-      expect(find.text(CurrencyFormatter.formatUsd(18.0)), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('general_budget_card')),
+          matching: find.text(CurrencyFormatter.formatUsd(18.0)),
+        ),
+        findsOneWidget,
+      );
       expect(find.textContaining('de ${CurrencyFormatter.formatUsd(500.0)}'), findsOneWidget);
       expect(find.byKey(const Key('analysis_edit_budget_button')), findsOneWidget);
 
