@@ -155,6 +155,41 @@ void main() {
       // Fila inferior con la meta
       expect(find.textContaining('Meta de ahorro:'), findsOneWidget);
       expect(find.textContaining('Protegida'), findsOneWidget);
+
+      // Barra de progreso en estado normal: color neutro pizarra sobre fondo gris claro
+      final progressFinder = find.byKey(const Key('summary_card_progress_indicator'));
+      expect(progressFinder, findsOneWidget);
+      final progressBar = tester.widget<LinearProgressIndicator>(progressFinder);
+      expect(progressBar.backgroundColor, equals(const Color(0xFFF1F5F9)));
+      expect((progressBar.valueColor as AlwaysStoppedAnimation<Color>).value, equals(const Color(0xFF1E293B)));
+      expect(progressBar.value, closeTo(0.25, 0.001));
+    });
+
+    testWidgets('cuando el gasto supera el 85% del límite muestra barra en ámbar', (tester) async {
+      final now = DateTime.now();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SummaryCard(
+              totalUsd: 430.0,
+              totalVes: 17200.0,
+              periodo: 'Mes Actual',
+              monedaPrincipal: 'USD',
+              presupuestoGeneral: 500.0,
+              metaAhorro: 0.0,
+              mes: now.month,
+              anio: now.year,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // 430 / 500 = 86% (> 85%), debe mostrar color ámbar de precaución
+      final progressFinder = find.byKey(const Key('summary_card_progress_indicator'));
+      expect(progressFinder, findsOneWidget);
+      final progressBar = tester.widget<LinearProgressIndicator>(progressFinder);
+      expect((progressBar.valueColor as AlwaysStoppedAnimation<Color>).value, equals(const Color(0xFFF59E0B)));
     });
 
     testWidgets('cuando se supera el límite muestra estado excedido en rojo', (tester) async {
@@ -179,6 +214,12 @@ void main() {
 
       expect(find.textContaining('Excedido del límite'), findsOneWidget);
       expect(find.textContaining('- \$ 100,00'), findsOneWidget);
+
+      // Barra de progreso en estado excedido: color rojo
+      final progressFinder = find.byKey(const Key('summary_card_progress_indicator'));
+      expect(progressFinder, findsOneWidget);
+      final progressBar = tester.widget<LinearProgressIndicator>(progressFinder);
+      expect((progressBar.valueColor as AlwaysStoppedAnimation<Color>).value, equals(const Color(0xFFDC2626)));
     });
   });
 }

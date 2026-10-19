@@ -385,6 +385,19 @@ class SummaryCard extends StatelessWidget {
                 final totalWidth = constraints.maxWidth;
                 final double rawLimiteRatio = budgetInLens > 0 ? (limiteParaGastar / budgetInLens) : 1.0;
                 final double savingsMarkerPos = (totalWidth * rawLimiteRatio).clamp(0.0, totalWidth);
+                final double barFillRatio = budgetInLens > 0 ? (effectiveSpent / budgetInLens) : 0.0;
+
+                final bool isCaution = !isOverBudget &&
+                    (percentUsed >= 0.85 || snapshot?.status == SavingsGoalStatus.enRiesgo);
+
+                final Color barColor;
+                if (isOverBudget) {
+                  barColor = const Color(0xFFDC2626); // Rojo / AppColors.error
+                } else if (isCaution) {
+                  barColor = const Color(0xFFF59E0B); // Ámbar de precaución
+                } else {
+                  barColor = const Color(0xFF1E293B); // Tono pizarra oscuro de marca
+                }
 
                 return Stack(
                   clipBehavior: Clip.none,
@@ -394,20 +407,17 @@ class SummaryCard extends StatelessWidget {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(5),
                       child: LinearProgressIndicator(
-                        value: percentUsed.clamp(0.0, 1.0),
+                        key: const Key('summary_card_progress_indicator'),
+                        value: barFillRatio.clamp(0.0, 1.0),
                         minHeight: 10,
-                        backgroundColor: AppColors.cardLighter,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          isOverBudget
-                              ? AppColors.error
-                              : AppColors.getBudgetProgressColor(percentUsed, isExceeded: false),
-                        ),
+                        backgroundColor: const Color(0xFFF1F5F9), // Fondo gris claro
+                        valueColor: AlwaysStoppedAnimation<Color>(barColor),
                       ),
                     ),
                     // Marcador vertical gris oscuro sobresaliendo 3dp arriba y abajo
                     if (hasSavingsGoal)
                       Positioned(
-                        left: savingsMarkerPos - 1.0,
+                        left: (savingsMarkerPos - 1.0).clamp(0.0, totalWidth - 2.0),
                         top: -3,
                         bottom: -3,
                         child: Container(
