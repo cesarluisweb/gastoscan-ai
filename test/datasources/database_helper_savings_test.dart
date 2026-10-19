@@ -46,6 +46,46 @@ class MockableDatabaseHelperMonthly extends DatabaseHelper {
     };
   }
 
+  @override
+  Future<Map<String, dynamic>?> getUltimoPresupuestoConfigurado({
+    int? antesDeAnio,
+    int? antesDeMes,
+    bool estrictamenteAnterior = false,
+  }) async {
+    final valid = _monthlyStorage.values.where((m) {
+      final anio = m['anio'] as int;
+      final mes = m['mes'] as int;
+      final gen = (m['presupuesto_general'] as num?)?.toDouble() ?? 0.0;
+      final meta = (m['meta_ahorro'] as num?)?.toDouble() ?? 0.0;
+      if (gen <= 0 && meta <= 0) return false;
+      if (antesDeAnio != null && antesDeMes != null) {
+        if (estrictamenteAnterior) {
+          return (anio < antesDeAnio) || (anio == antesDeAnio && mes < antesDeMes);
+        } else {
+          return (anio < antesDeAnio) || (anio == antesDeAnio && mes <= antesDeMes);
+        }
+      }
+      return true;
+    }).toList();
+
+    if (valid.isEmpty) return null;
+
+    valid.sort((a, b) {
+      final anioDiff = (b['anio'] as int).compareTo(a['anio'] as int);
+      if (anioDiff != 0) return anioDiff;
+      return (b['mes'] as int).compareTo(a['mes'] as int);
+    });
+
+    final best = valid.first;
+    return {
+      'anio': best['anio'],
+      'mes': best['mes'],
+      'presupuesto_general': best['presupuesto_general'],
+      'meta_ahorro': best['meta_ahorro'],
+      'moneda': best['moneda'] ?? 'USD',
+      'categorias': <String, double>{},
+    };
+  }
 }
 
 void main() {
@@ -72,6 +112,24 @@ void main() {
 
       expect(general, 500.0);
       expect(meta, 100.0);
+    });
+
+    test('getUltimoPresupuestoConfigurado returns latest budget even across multiple months gap', () async {
+      // Set budget in August (month 8)
+      await dbHelper.setPresupuestoGeneral(2026, 8, 350.0, metaAhorro: 50.0);
+
+      // Querying for October (month 10) strictly prior should find August
+      final found = await dbHelper.getUltimoPresupuestoConfigurado(
+        antesDeAnio: 2026,
+        antesDeMes: 10,
+        estrictamenteAnterior: true,
+      );
+
+      expect(found, isNotNull);
+      expect(found!['anio'], 2026);
+      expect(found['mes'], 8);
+      expect(found['presupuesto_general'], 350.0);
+      expect(found['meta_ahorro'], 50.0);
     });
   });
 }

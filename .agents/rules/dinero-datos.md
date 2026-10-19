@@ -38,7 +38,7 @@ description: "Consultar al modificar montos, monedas (VES/USD/EUR/USDT), tasas d
 
 ## 4. Presupuestos Mensuales
 - **Aislamiento por Mes:** Los presupuestos se aíslan por año y mes `(anio, mes)` en SQLite. Modificar el presupuesto de un mes nunca debe alterar meses anteriores ni posteriores.
-- **Copia Automática del Mes Previo:** Si un mes recién consultado no posee presupuesto registrado, el sistema debe copiar automáticamente la configuración del mes inmediatamente anterior.
+- **Adopción Automática de Presupuesto Previo:** Si un mes recién consultado no posee presupuesto registrado, el sistema adopta automáticamente en memoria la configuración del presupuesto más reciente registrado en su historial (evitando vacíos o reinicios a cero cuando hay meses intermedios sin registros). Modificar o consolidar un mes nunca altera meses anteriores.
 - **Validación de Asignación:** La suma total de los presupuestos asignados a categorías individuales no puede superar el presupuesto general mensual. La interfaz debe validar esta restricción y bloquear el guardado si se excede.
 - **Escala Física de la Barra de Asignación y Meta de Ahorro:**
   - La barra de progreso de asignación escala siempre sobre el presupuesto general total (`budgetInLens`), no sobre el límite de gasto, asegurando proporcionalidad real.

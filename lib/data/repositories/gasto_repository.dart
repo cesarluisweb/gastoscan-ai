@@ -115,6 +115,18 @@ class GastoRepository {
     return _dbHelper.getAllPresupuestosMensualesCompletos();
   }
 
+  Future<Map<String, dynamic>?> obtenerUltimoPresupuestoConfigurado({
+    int? antesDeAnio,
+    int? antesDeMes,
+    bool estrictamenteAnterior = false,
+  }) {
+    return _dbHelper.getUltimoPresupuestoConfigurado(
+      antesDeAnio: antesDeAnio,
+      antesDeMes: antesDeMes,
+      estrictamenteAnterior: estrictamenteAnterior,
+    );
+  }
+
   Future<void> guardarPresupuestoMensualCompleto({
     required int anio,
     required int mes,

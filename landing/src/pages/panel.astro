@@ -979,7 +979,44 @@ import '../styles/global.css';
                         categorias: data.categorias || {}
                     };
                 } else {
-                    currentPresupuesto = { general: 0, meta_ahorro: 0, moneda: 'USD', categorias: {} };
+                    // Si este mes no tiene presupuesto registrado, heredar el más reciente previo
+                    let adopted = null;
+                    try {
+                        const presupuestosRef = collection(db, 'users', currentUser.uid, 'presupuestos');
+                        const allBudgetsSnap = await getDocs(presupuestosRef);
+                        const candidates = [];
+                        allBudgetsSnap.forEach(bDoc => {
+                            if (bDoc.id === 'user_settings') return;
+                            const bData = bDoc.data();
+                            const bAnio = Number(bData.anio || 0);
+                            const bMes = Number(bData.mes || 0);
+                            const bGen = Number(bData.presupuesto_general || 0);
+                            const bMeta = Number(bData.meta_ahorro || 0);
+                            const bCats = bData.categorias || {};
+                            const hasCats = Object.values(bCats).some(v => Number(v) > 0);
+                            if (bAnio > 0 && bMes > 0 && (bGen > 0 || bMeta > 0 || hasCats)) {
+                                if (bAnio < selectedYear || (bAnio === selectedYear && bMes < selectedMonth)) {
+                                    candidates.push({ anio: bAnio, mes: bMes, data: bData });
+                                }
+                            }
+                        });
+                        if (candidates.length > 0) {
+                            candidates.sort((a, b) => {
+                                if (a.anio !== b.anio) return b.anio - a.anio;
+                                return b.mes - a.mes;
+                            });
+                            const latest = candidates[0].data;
+                            adopted = {
+                                general: Number(latest.presupuesto_general || 0),
+                                meta_ahorro: Number(latest.meta_ahorro || 0),
+                                moneda: latest.moneda || 'USD',
+                                categorias: latest.categorias || {}
+                            };
+                        }
+                    } catch (adoptErr) {
+                        console.warn("No se pudo consultar presupuesto previo para adopción:", adoptErr);
+                    }
+                    currentPresupuesto = adopted || { general: 0, meta_ahorro: 0, moneda: 'USD', categorias: {} };
                 }
 
                 // 2. Cargar Gastos

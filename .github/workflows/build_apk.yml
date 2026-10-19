@@ -298,8 +298,8 @@ jobs:
           npm run build
           cd ..
 
-      - name: Desplegar Landing y APK a Firebase Hosting
+      - name: Desplegar Landing, APK y Reglas de Firestore
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_GATOSCAN_AI }}
         run: |
-          npx firebase-tools deploy --only hosting --project gastoscan-ai --token "${{ secrets.FIREBASE_SERVICE_ACCOUNT_GATOSCAN_AI }}" --non-interactive
+          npx firebase-tools deploy --only hosting,firestore:rules --project gastoscan-ai --token "${{ secrets.FIREBASE_SERVICE_ACCOUNT_GATOSCAN_AI }}" --non-interactive

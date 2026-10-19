@@ -102,22 +102,28 @@ class GastoProvider with ChangeNotifier {
       _presupuestosPorCategoria = await _repository.obtenerPresupuestosCategoriasMes(_selectedYear, _selectedMonth);
       _presupuestoEsAdoptado = false;
 
-      // Si este mes no tiene registros de presupuesto en BD, adoptar en memoria la configuración del mes previo
-      // sin escribir filas fantasmas en SQLite que alteren timestamps de sincronización
+      // Si este mes no tiene registros de presupuesto en BD, adoptar en memoria la configuración
+      // del presupuesto más reciente configurado previamente (sin escribir filas fantasmas en SQLite)
       if (_presupuestoGeneral == 0.0 && _metaAhorro == 0.0 && _presupuestosPorCategoria.isEmpty) {
-        final int prevMes = _selectedMonth == 1 ? 12 : _selectedMonth - 1;
-        final int prevAnio = _selectedMonth == 1 ? _selectedYear - 1 : _selectedYear;
-        final prevGeneral = await _repository.obtenerPresupuestoGeneralMes(prevAnio, prevMes);
-        final prevMeta = await _repository.obtenerMetaAhorroMes(prevAnio, prevMes);
-        final prevMoneda = await _repository.obtenerMonedaPresupuestoGeneralMes(prevAnio, prevMes);
-        final prevCats = await _repository.obtenerPresupuestosCategoriasMes(prevAnio, prevMes);
+        final ultimo = await _repository.obtenerUltimoPresupuestoConfigurado(
+          antesDeAnio: _selectedYear,
+          antesDeMes: _selectedMonth,
+          estrictamenteAnterior: true,
+        );
 
-        if (prevGeneral > 0 || prevMeta > 0 || prevCats.isNotEmpty) {
-          _presupuestoGeneral = prevGeneral;
-          _metaAhorro = prevMeta;
-          _monedaPresupuesto = prevMoneda;
-          _presupuestosPorCategoria = prevCats;
-          _presupuestoEsAdoptado = true;
+        if (ultimo != null) {
+          final prevGeneral = (ultimo['presupuesto_general'] as num?)?.toDouble() ?? 0.0;
+          final prevMeta = (ultimo['meta_ahorro'] as num?)?.toDouble() ?? 0.0;
+          final prevMoneda = (ultimo['moneda'] as String?) ?? 'USD';
+          final prevCats = (ultimo['categorias'] as Map<String, double>?) ?? {};
+
+          if (prevGeneral > 0 || prevMeta > 0 || prevCats.isNotEmpty) {
+            _presupuestoGeneral = prevGeneral;
+            _metaAhorro = prevMeta;
+            _monedaPresupuesto = prevMoneda;
+            _presupuestosPorCategoria = prevCats;
+            _presupuestoEsAdoptado = true;
+          }
         }
       }
     } catch (e) {

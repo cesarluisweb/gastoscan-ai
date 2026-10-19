@@ -57,13 +57,26 @@ class SyncService {
       final user = _auth?.currentUser;
       if (user == null || user.isAnonymous) return;
 
-      await syncToFirestore(user);
-      await syncFromFirestore(user);
-      await syncPresupuestosToFirestore(user);
-      await syncPresupuestosFromFirestore(user);
+      try {
+        await syncToFirestore(user);
+        await syncFromFirestore(user);
+      } catch (e) {
+        debugPrint("Error sincronizando gastos con Firestore: $e");
+      }
+
+      try {
+        await syncPresupuestosToFirestore(user);
+        await syncPresupuestosFromFirestore(user);
+      } catch (e) {
+        debugPrint("Error sincronizando presupuestos con Firestore: $e");
+      }
 
       // Sincronizar API Key personalizada de Gemini con la cuenta de Google
-      await syncApiKeyBidireccional(user);
+      try {
+        await syncApiKeyBidireccional(user);
+      } catch (e) {
+        debugPrint("Error sincronizando API Key con Firestore: $e");
+      }
     } catch (e) {
       debugPrint("Error en sincronización bidireccional: $e");
     }
@@ -215,102 +228,99 @@ class SyncService {
 
   Future<void> syncPresupuestosToFirestore(User user) async {
     if (_firestore == null) return;
-    final presupuestos = await _repository.obtenerTodosLosPresupuestosMensuales();
-    for (var pres in presupuestos) {
-      final anio = pres['anio'] as int;
-      final mes = pres['mes'] as int;
-      final general = (pres['presupuesto_general'] as num?)?.toDouble() ?? 0.0;
-      final moneda = (pres['moneda'] as String?) ?? 'USD';
-      final categorias = (pres['categorias'] as Map<String, dynamic>?) ?? {};
-      final actualizadoEn = pres['actualizado_en'] as String? ?? DateTime.now().toIso8601String();
+    try {
+      final presupuestos = await _repository.obtenerTodosLosPresupuestosMensuales();
+      for (var pres in presupuestos) {
+        final anio = pres['anio'] as int;
+        final mes = pres['mes'] as int;
+        final general = (pres['presupuesto_general'] as num?)?.toDouble() ?? 0.0;
+        final metaAhorro = (pres['meta_ahorro'] as num?)?.toDouble() ?? 0.0;
+        final moneda = (pres['moneda'] as String?) ?? 'USD';
+        final Map<String, dynamic> categorias = {};
+        if (pres['categorias'] is Map) {
+          (pres['categorias'] as Map).forEach((k, v) {
+            categorias[k.toString()] = v;
+          });
+        }
+        final actualizadoEn = pres['actualizado_en'] as String? ?? DateTime.now().toIso8601String();
 
-      if (general <= 0 && categorias.isEmpty) continue;
+        if (general <= 0 && metaAhorro <= 0 && categorias.isEmpty) continue;
 
-      final docId = '${anio}_${mes.toString().padLeft(2, '0')}';
-      final docRef = _firestore!
-          .collection('users')
-          .doc(user.uid)
-          .collection('presupuestos')
-          .doc(docId);
+        final docId = '${anio}_${mes.toString().padLeft(2, '0')}';
+        final docRef = _firestore!
+            .collection('users')
+            .doc(user.uid)
+            .collection('presupuestos')
+            .doc(docId);
 
-      final snapshot = await docRef.get();
-      if (snapshot.exists) {
-        final remoteData = snapshot.data();
-        if (remoteData != null && remoteData['actualizado_en'] != null) {
-          final remoteTime = DateTime.tryParse(remoteData['actualizado_en'].toString()) ?? DateTime.fromMillisecondsSinceEpoch(0);
-          final localTime = DateTime.tryParse(actualizadoEn) ?? DateTime.fromMillisecondsSinceEpoch(0);
-          if (remoteTime.isAfter(localTime)) {
-            continue;
+        final snapshot = await docRef.get();
+        if (snapshot.exists) {
+          final remoteData = snapshot.data();
+          if (remoteData != null && remoteData['actualizado_en'] != null) {
+            final remoteTime = DateTime.tryParse(remoteData['actualizado_en'].toString()) ?? DateTime.fromMillisecondsSinceEpoch(0);
+            final localTime = DateTime.tryParse(actualizadoEn) ?? DateTime.fromMillisecondsSinceEpoch(0);
+            if (remoteTime.isAfter(localTime)) {
+              continue;
+            }
           }
         }
-      }
 
-      await docRef.set({
-        'anio': anio,
-        'mes': mes,
-        'presupuesto_general': general,
-        'meta_ahorro': (pres['meta_ahorro'] as num?)?.toDouble() ?? 0.0,
-        'moneda': moneda,
-        'categorias': categorias,
-        'actualizado_en': actualizadoEn,
-      }, SetOptions(merge: true));
+        await docRef.set({
+          'anio': anio,
+          'mes': mes,
+          'presupuesto_general': general,
+          'meta_ahorro': metaAhorro,
+          'moneda': moneda,
+          'categorias': categorias,
+          'actualizado_en': actualizadoEn,
+        }, SetOptions(merge: true));
+      }
+    } catch (e) {
+      debugPrint("Error al guardar presupuestos en Firestore: $e");
     }
   }
 
   Future<void> syncPresupuestosFromFirestore(User user) async {
     if (_firestore == null) return;
-    final snapshot = await _firestore!
-        .collection('users')
-        .doc(user.uid)
-        .collection('presupuestos')
-        .get();
+    try {
+      final snapshot = await _firestore!
+          .collection('users')
+          .doc(user.uid)
+          .collection('presupuestos')
+          .get();
 
-    if (snapshot.docs.isEmpty) return;
+      if (snapshot.docs.isEmpty) return;
 
-    final localPresupuestos = await _repository.obtenerTodosLosPresupuestosMensuales();
-    final Map<String, Map<String, dynamic>> localMap = {};
-    for (var p in localPresupuestos) {
-      final anio = p['anio'] as int;
-      final mes = p['mes'] as int;
-      localMap['${anio}_${mes.toString().padLeft(2, '0')}'] = p;
-    }
+      final localPresupuestos = await _repository.obtenerTodosLosPresupuestosMensuales();
+      final Map<String, Map<String, dynamic>> localMap = {};
+      for (var p in localPresupuestos) {
+        final anio = p['anio'] as int;
+        final mes = p['mes'] as int;
+        localMap['${anio}_${mes.toString().padLeft(2, '0')}'] = p;
+      }
 
-    for (var doc in snapshot.docs) {
-      final data = doc.data();
-      final anio = (data['anio'] as num?)?.toInt() ?? 0;
-      final mes = (data['mes'] as num?)?.toInt() ?? 0;
-      if (anio == 0 || mes == 0) continue;
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        final anio = (data['anio'] as num?)?.toInt() ?? 0;
+        final mes = (data['mes'] as num?)?.toInt() ?? 0;
+        if (anio == 0 || mes == 0) continue;
 
-      final docId = '${anio}_${mes.toString().padLeft(2, '0')}';
-      final remoteGeneral = (data['presupuesto_general'] as num?)?.toDouble() ?? 0.0;
-      final remoteMetaAhorro = (data['meta_ahorro'] as num?)?.toDouble() ?? 0.0;
-      final remoteMoneda = (data['moneda'] as String?) ?? 'USD';
-      final remoteCatsRaw = data['categorias'] as Map<String, dynamic>? ?? {};
-      final Map<String, double> remoteCats = {};
-      remoteCatsRaw.forEach((k, v) {
-        if (v is num && v.toDouble() > 0) {
-          remoteCats[k] = v.toDouble();
+        final docId = '${anio}_${mes.toString().padLeft(2, '0')}';
+        final remoteGeneral = (data['presupuesto_general'] as num?)?.toDouble() ?? 0.0;
+        final remoteMetaAhorro = (data['meta_ahorro'] as num?)?.toDouble() ?? 0.0;
+        final remoteMoneda = (data['moneda'] as String?) ?? 'USD';
+        final Map<String, double> remoteCats = {};
+        if (data['categorias'] is Map) {
+          (data['categorias'] as Map).forEach((k, v) {
+            if (v is num && v.toDouble() > 0) {
+              remoteCats[k.toString()] = v.toDouble();
+            }
+          });
         }
-      });
-      final remoteActualizadoEn = data['actualizado_en'] as String? ?? DateTime.now().toIso8601String();
+        final remoteActualizadoEn = data['actualizado_en'] as String? ?? DateTime.now().toIso8601String();
 
-      final localP = localMap[docId];
-      if (localP == null) {
-        await _repository.guardarPresupuestoMensualCompleto(
-          anio: anio,
-          mes: mes,
-          general: remoteGeneral,
-          moneda: remoteMoneda,
-          categorias: remoteCats,
-          metaAhorro: remoteMetaAhorro,
-          actualizadoEn: remoteActualizadoEn,
-        );
-      } else {
-        final localActualizadoEn = localP['actualizado_en'] as String?;
-        final localTime = DateTime.tryParse(localActualizadoEn ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0);
-        final remoteTime = DateTime.tryParse(remoteActualizadoEn) ?? DateTime.fromMillisecondsSinceEpoch(0);
-
-        if (remoteTime.isAfter(localTime)) {
+        final localP = localMap[docId];
+        if (localP == null) {
           await _repository.guardarPresupuestoMensualCompleto(
             anio: anio,
             mes: mes,
@@ -320,8 +330,26 @@ class SyncService {
             metaAhorro: remoteMetaAhorro,
             actualizadoEn: remoteActualizadoEn,
           );
+        } else {
+          final localActualizadoEn = localP['actualizado_en'] as String?;
+          final localTime = DateTime.tryParse(localActualizadoEn ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0);
+          final remoteTime = DateTime.tryParse(remoteActualizadoEn) ?? DateTime.fromMillisecondsSinceEpoch(0);
+
+          if (remoteTime.isAfter(localTime)) {
+            await _repository.guardarPresupuestoMensualCompleto(
+              anio: anio,
+              mes: mes,
+              general: remoteGeneral,
+              moneda: remoteMoneda,
+              categorias: remoteCats,
+              metaAhorro: remoteMetaAhorro,
+              actualizadoEn: remoteActualizadoEn,
+            );
+          }
         }
       }
+    } catch (e) {
+      debugPrint("Error al leer presupuestos de Firestore: $e");
     }
   }
 

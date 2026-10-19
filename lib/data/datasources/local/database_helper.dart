@@ -1415,6 +1415,78 @@ class DatabaseHelper {
     return resultado;
   }
 
+  /// Obtiene la configuración de presupuesto más reciente registrada en o antes de un año/mes dado
+  Future<Map<String, dynamic>?> getUltimoPresupuestoConfigurado({
+    int? antesDeAnio,
+    int? antesDeMes,
+    bool estrictamenteAnterior = false,
+  }) async {
+    final db = await instance.database;
+    String? whereClause;
+    List<dynamic>? whereArgs;
+
+    if (antesDeAnio != null && antesDeMes != null) {
+      if (estrictamenteAnterior) {
+        whereClause = '(anio < ?) OR (anio = ? AND mes < ?)';
+      } else {
+        whereClause = '(anio < ?) OR (anio = ? AND mes <= ?)';
+      }
+      whereArgs = [antesDeAnio, antesDeAnio, antesDeMes];
+    }
+
+    final results = await db.query(
+      'presupuestos_mensuales',
+      where: whereClause != null
+          ? '($whereClause) AND (presupuesto_general > 0 OR meta_ahorro > 0)'
+          : '(presupuesto_general > 0 OR meta_ahorro > 0)',
+      whereArgs: whereArgs,
+      orderBy: 'anio DESC, mes DESC',
+      limit: 1,
+    );
+
+    if (results.isEmpty) {
+      final catResults = await db.query(
+        'presupuestos_categorias_mensuales',
+        where: whereClause != null ? '($whereClause) AND presupuesto > 0' : 'presupuesto > 0',
+        whereArgs: whereArgs,
+        orderBy: 'anio DESC, mes DESC',
+        limit: 1,
+      );
+      if (catResults.isEmpty) return null;
+
+      final targetAnio = catResults.first['anio'] as int;
+      final targetMes = catResults.first['mes'] as int;
+      final cats = await getPresupuestosCategorias(targetAnio, targetMes);
+      final moneda = (catResults.first['moneda'] as String?) ?? 'USD';
+
+      return {
+        'anio': targetAnio,
+        'mes': targetMes,
+        'presupuesto_general': 0.0,
+        'meta_ahorro': 0.0,
+        'moneda': moneda,
+        'categorias': cats,
+      };
+    }
+
+    final row = results.first;
+    final anio = row['anio'] as int;
+    final mes = row['mes'] as int;
+    final general = (row['presupuesto_general'] as num?)?.toDouble() ?? 0.0;
+    final metaAhorro = (row['meta_ahorro'] as num?)?.toDouble() ?? 0.0;
+    final moneda = (row['moneda'] as String?) ?? 'USD';
+    final cats = await getPresupuestosCategorias(anio, mes);
+
+    return {
+      'anio': anio,
+      'mes': mes,
+      'presupuesto_general': general,
+      'meta_ahorro': metaAhorro,
+      'moneda': moneda,
+      'categorias': cats,
+    };
+  }
+
   /// Guarda un presupuesto mensual completo con sus categorías (usado en sincronización)
   Future<void> guardarPresupuestoMensualCompleto({
     required int anio,
