@@ -4,13 +4,12 @@
 ## Estado Actual Inmediato
 - **Rama:** `main`.
 - **Fase activa:** Fase 5 (Closed Testing activa) y validación de motor multimoneda (FIN-11).
-- **Acción Reciente:** Rediseño definitivo V3 de `SummaryCard` (UX-08): Saldo Disponible como héroe único de 32sp en verde, selector Binance a la derecha, contexto horizontal `Gastado: $ X` vs `Límite: $ Y ✏️` sobre la barra de 10dp con marcador vertical gris oscuro (#4B5563) de ahorro, pie interactivo de meta protegida/en riesgo, y pedagogía de ritmo diario transferida a `AiInsightCard`.
-- **Estado de CI:** CI build 511 en verde (`success` en commit `39839a3`), 301 tests pasando, APK build 515 listo para desplegar. `UX-08` en `Pendiente de validación 🧪`.
+- **Acción Reciente:** Semántica de color separada y escala física en barra de `SummaryCard` (UX-08): verde exclusivo para `Disponible para gastar`, barra de progreso en pizarra oscuro (`#1E293B`) sobre fondo gris claro (`#F1F5F9`) en estado normal, ámbar (`#F59E0B`) en precaución (>85% o meta en riesgo) y rojo (`#DC2626`) al exceder límite cruzando el marcador vertical de ahorro.
+- **Estado de CI:** CI build 512 en verde (`success` en commit `d4fc9dc`), pruebas aprobadas, APK build 516 listo. `UX-08` en `Pendiente de validación 🧪`.
 
 ## Decisiones Técnicas y de Negocio Recientes
-- La etiqueta `Gastado: ` en `SummaryCard` utiliza `Row` con widgets `Text` (no `RichText`) para garantizar compatibilidad con tests y detectabilidad semántica de Flutter.
-- El cálculo y recomendación del ritmo sugerido diario (`$ 26,51/día durante los 13 días restantes...`) se delegó a `AiInsightCard` para descongestionar visualmente `SummaryCard`.
-- En `SummaryCard`, sin presupuesto definido se ocultan los niveles 2 y 3, mostrando el botón amarillo full-width `+ Definir presupuesto del mes`.
+- La barra de progreso de `SummaryCard` escala sobre el presupuesto total (`budgetInLens`) para que el marcador vertical en `limite / presupuesto` separe físicamente el gasto de la meta de ahorro, y la barra lo cruce al excederse.
+- El color verde queda reservado estrictamente para el saldo positivo disponible, eliminando ambigüedad visual con el monto gastado.
 
 ## Errores y Fricciones a Evitar
 - No encadenar comandos con `&&` ni usar redirección `>` en PowerShell.
