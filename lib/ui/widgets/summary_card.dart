@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
 import 'budget_bottom_sheet.dart';
 import 'currency_lens_dropdown.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../domain/finance/savings_health_models.dart';
 import '../../domain/finance/savings_health_calculator.dart';
-import '../../providers/settings_provider.dart';
 
 class SummaryCard extends StatelessWidget {
   final double totalUsd;
