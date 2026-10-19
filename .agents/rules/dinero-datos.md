@@ -40,6 +40,10 @@ description: "Consultar al modificar montos, monedas (VES/USD/EUR/USDT), tasas d
 - **Aislamiento por Mes:** Los presupuestos se aíslan por año y mes `(anio, mes)` en SQLite. Modificar el presupuesto de un mes nunca debe alterar meses anteriores ni posteriores.
 - **Copia Automática del Mes Previo:** Si un mes recién consultado no posee presupuesto registrado, el sistema debe copiar automáticamente la configuración del mes inmediatamente anterior.
 - **Validación de Asignación:** La suma total de los presupuestos asignados a categorías individuales no puede superar el presupuesto general mensual. La interfaz debe validar esta restricción y bloquear el guardado si se excede.
+- **Escala Física de la Barra de Asignación y Meta de Ahorro:**
+  - La barra de progreso de asignación escala siempre sobre el presupuesto general total (`budgetInLens`), no sobre el límite de gasto, asegurando proporcionalidad real.
+  - El divisor vertical (`2dp`, sobresaliendo `3dp` arriba y abajo) se posiciona exactamente en `limite / presupuesto`, delimitando a la derecha la reserva protegida de ahorro.
+  - La barra avanza físicamente cruzando el divisor hacia la derecha únicamente cuando el gasto real invade la meta de ahorro (`gasto > limite`), momento en que se tiñe de color rojo (`AppColors.error`).
 
 ## 5. Tratamiento de IVA y Precios de Anaquel
 - **Precios con IVA Imputado (Anaquel):** Todo producto gravado con alícuota general `(G)` en facturas fiscales debe almacenarse y presentarse con su precio final de anaquel (IVA incluido), evitando crear un renglón independiente de 'Impuesto IVA' que distorsione los presupuestos por categoría o altere las comparaciones históricas frente a entradas por voz o manuales. Los productos exentos `(E)` no se modifican. La diferencia de redondeo ($\pm 0,01$) se compensa deterministamente en el producto gravado de mayor valor. Especificación completa en `DOC_PRECIOS_ANAQUEL_IVA.md`.

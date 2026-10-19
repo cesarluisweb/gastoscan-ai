@@ -210,3 +210,17 @@ AlertDialog(
 
 ### 6.3 Accesibilidad y Contraste WCAG en Textos Secundarios
 - En interfaces web y móviles, los textos secundarios (metadatos, promedios, subtítulos informativos y enlaces de acción) deben mantener un contraste mínimo de 4.5:1 (WCAG AA). Queda prohibido usar grises excesivamente claros (`text-slate-400` en web o colores por debajo de `AppColors.textSecondary` en móvil) en elementos interactivos o informativos clave.
+
+### 6.4 Semántica de Color Separada en Medidores de Gasto vs. Saldo
+- **Verde Exclusivo para Saldo Restante:** El color verde (`Color(0xFF16A34A)`) se reserva EXCLUSIVAMENTE para cifras de capacidad disponible (`Disponible para gastar`, `Te sobraron`). Queda estrictamente prohibido usar verde en rellenos de barras de progreso que miden dinero ya gastado, para evitar ambigüedad semántica (gastar no es saldo a favor).
+- **Relleno de Barra de Gasto (`LinearProgressIndicator`):**
+  1. *Estado normal / saludable:* Pizarra oscuro neutro de marca (`Color(0xFF1E293B)`), alineado con el color del texto del monto gastado, sobre fondo gris claro (`Color(0xFFF1F5F9)`).
+  2. *Estado de precaución:* Ámbar (`Color(0xFFF59E0B)`) al superar el 85% del límite o cuando la meta de ahorro entra en proyección `enRiesgo`.
+  3. *Estado excedido:* Rojo (`AppColors.error` / `Color(0xFFDC2626)`), cruzando físicamente el divisor hacia la derecha.
+
+### 6.5 Jerarquía de Tres Niveles del Resumen Financiero (Modelo Mental V3)
+Para evitar saturación visual y fatiga cognitiva, las tarjetas de balance mensual no deben apilar múltiples números gigantes en 32sp ni mostrar porcentajes abstractos:
+- **Nivel 1 (Héroe Único):** Saldo disponible restante (`Disponible para gastar`) en 32sp verde negrita con selector compacto tipo Binance (`USD BCV ▾`). Si está excedido, pastilla roja compacta `Excedido del límite` con saldo negativo en rojo.
+- **Nivel 2 (Contexto Horizontal Equilibrado):** Fila sobre la barra con `Gastado: $ X` a la izquierda y `Límite: $ Y ✏️` (tocable) a la derecha.
+- **Nivel 3 (Barra con Asignación y Meta):** Barra lineal de 10dp con marcador vertical gris oscuro y pie con estado de meta (`Protegida` / `En riesgo`).
+- **Desacoplamiento Pedagógico:** El cálculo del ritmo diario permitido (`$ X/día durante Y días restantes`) y las sugerencias de moderación se delegan dinámicamente al componente del `Asistente IA` (`AiInsightCard`), manteniendo la tarjeta de resumen limpia y enfocada en los 3 números clave.
