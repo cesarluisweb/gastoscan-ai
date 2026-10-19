@@ -41,6 +41,18 @@ void main() {
       expect(tryParseAmount('5', isPrice: true), equals(0.05));
     });
 
+    test('múltiples separadores de miles se eliminan correctamente', () {
+      expect(tryParseAmount('1.250.000', isPrice: false), equals(1250000.0));
+      expect(tryParseAmount('1,250,000', isPrice: false), equals(1250000.0));
+      expect(tryParseAmount('1.250.000,50', isPrice: false), equals(1250000.50));
+      expect(tryParseAmount('1,250,000.50', isPrice: false), equals(1250000.50));
+    });
+
+    test('decimales en proceso de tipeo (coma o punto final)', () {
+      expect(tryParseAmount('12,', isPrice: false), equals(12.0));
+      expect(tryParseAmount('12.', isPrice: false), equals(12.0));
+    });
+
     test('texto invalido da null', () {
       expect(tryParseAmount('abc', isPrice: false), isNull);
     });

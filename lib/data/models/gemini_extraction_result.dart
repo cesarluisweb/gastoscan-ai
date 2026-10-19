@@ -128,20 +128,39 @@ class GeminiExtractionResult {
 
     // Validación cruzada matemática entre la suma de ítems y el Total Original
     if (itemsList.isNotEmpty && totalOriginal > 0) {
-      double sumItems = itemsList.fold(0.0, (sum, item) => sum + item.totalDisplay);
-      if (sumItems > 0) {
-        final ratioSumToTotal = sumItems / totalOriginal;
-        final ratioTotalToSum = totalOriginal / sumItems;
+      // 1. Corregir ítems individuales que evidentemente omitieron separador decimal
+      // Si un ítem individual supera el total general de la factura, pero dividido entre 100
+      // cabe dentro del total, con alta certeza omitió la coma o punto decimal en OCR.
+      for (int i = 0; i < itemsList.length; i++) {
+        final it = itemsList[i];
+        if (it.totalDisplay > totalOriginal * 1.05 && (it.totalDisplay / 100.0) <= totalOriginal * 1.05) {
+          final nuevoPrecioInt = (it.precioUnitario / 100).round();
+          final nuevoTotalInt = (it.total / 100).round();
+          itemsList[i] = it.copyWith(
+            precioUnitario: nuevoPrecioInt,
+            total: nuevoTotalInt,
+          );
+        }
+      }
 
-        if (ratioSumToTotal >= 90.0 && ratioSumToTotal <= 110.0) {
-          // El totalOriginal omitió los decimales (ej. 56.12 real vs 5612 extraído)
-          totalOriginal = totalOriginal / 100.0;
-        } else if (ratioTotalToSum >= 90.0 && ratioTotalToSum <= 110.0) {
-          // Los ítems omitieron decimales, los escalamos x100
+      final int sumItemsCentavos = itemsList.fold(0, (sum, item) => sum + item.total);
+      final double sumItems = sumItemsCentavos / 100.0;
+
+      if (sumItems > 0) {
+        final ratioTotalToSum = totalOriginal / sumItems;
+        final ratioSumToTotal = sumItems / totalOriginal;
+
+        if (ratioTotalToSum >= 90.0 && ratioTotalToSum <= 110.0) {
+          // Caso A: El totalOriginal omitió los decimales (ej. 5612 extraído vs 56.12 real en ítems).
+          // Se corrige el total dividiéndolo entre 100.
+          totalOriginal = (totalOriginal / 100.0);
+        } else if (ratioSumToTotal >= 90.0 && ratioSumToTotal <= 110.0) {
+          // Caso B: Los ítems omitieron los decimales (ej. ítems sumaban 5612 vs 56.12 real en total).
+          // Se corrigen los ítems dividiéndolos entre 100.
           for (int i = 0; i < itemsList.length; i++) {
             final old = itemsList[i];
-            final nuevoPrecioInt = old.precioUnitario * 100;
-            final nuevoTotalInt = (old.cantidad * (nuevoPrecioInt / 100.0) * 100).round();
+            final nuevoPrecioInt = (old.precioUnitario / 100).round();
+            final nuevoTotalInt = (old.total / 100).round();
             itemsList[i] = old.copyWith(
               precioUnitario: nuevoPrecioInt,
               total: nuevoTotalInt,
@@ -150,7 +169,8 @@ class GeminiExtractionResult {
         }
       }
     } else if (itemsList.isNotEmpty && totalOriginal == 0) {
-      totalOriginal = itemsList.fold(0.0, (sum, item) => sum + item.totalDisplay);
+      final int sumCentavos = itemsList.fold(0, (sum, item) => sum + item.total);
+      totalOriginal = sumCentavos / 100.0;
     }
 
     // Tasa de cambio detectada (si está impresa en la factura)

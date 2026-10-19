@@ -41,7 +41,17 @@ double? tryParseAmount(dynamic value, {bool isPrice = false}) {
         s = s.replaceAll(',', '');
       }
     } else {
-      s = s.replaceAll(',', '.');
+      final dotCount = '.'.allMatches(s).length;
+      final commaCount = ','.allMatches(s).length;
+      if (dotCount > 1) {
+        // Múltiples puntos sin coma: separadores de miles (ej. 1.250.000)
+        s = s.replaceAll('.', '');
+      } else if (commaCount > 1) {
+        // Múltiples comas sin punto: separadores de miles (ej. 1,250,000)
+        s = s.replaceAll(',', '');
+      } else {
+        s = s.replaceAll(',', '.');
+      }
     }
     parsed = double.tryParse(s);
   } else {

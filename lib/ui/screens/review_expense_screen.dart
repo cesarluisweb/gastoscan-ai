@@ -80,7 +80,8 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
 
   String _formatDouble(double value) {
     if (value == 0) return '';
-    return value.truncateToDouble() == value ? value.toInt().toString() : value.toString();
+    final rounded = (value * 100).round() / 100.0;
+    return rounded.truncateToDouble() == rounded ? rounded.toInt().toString() : rounded.toString();
   }
 
   String _normalizeText(String text) {
@@ -486,10 +487,8 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
   }
 
   void _recalcularTotal() {
-    double sum = 0.0;
-    for (var item in _items) {
-      sum += item.totalDisplay;
-    }
+    final int sumCentavos = _items.fold(0, (acc, item) => acc + item.total);
+    final double sum = sumCentavos / 100.0;
     if (sum > 0) {
       _bolivaresAjustadosManualmente = false;
       _totalOriginalCtrl.text = _formatDouble(sum);
