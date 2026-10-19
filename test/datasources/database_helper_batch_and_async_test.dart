@@ -80,6 +80,23 @@ class MockMemoryBudgetRepository extends GastoRepository {
   Future<String> obtenerMonedaPresupuestoGeneralMes(int anio, int mes) async => 'USD';
 
   @override
+  Future<Map<String, dynamic>?> obtenerUltimoPresupuestoConfigurado({
+    int? antesDeAnio,
+    int? antesDeMes,
+  }) async {
+    if (_prevGeneral > 0) {
+      return {
+        'anio': 2026,
+        'mes': 9,
+        'monto': _prevGeneral,
+        'meta_ahorro': 100.0,
+        'moneda': 'USD',
+      };
+    }
+    return null;
+  }
+
+  @override
   Future<Map<String, double>> obtenerPresupuestosCategoriasMes(int anio, int mes) async {
     if (anio == 2026 && mes == 10) return {};
     if (anio == 2026 && mes == 9) return Map.from(_prevBudgets);
