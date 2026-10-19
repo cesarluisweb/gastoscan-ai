@@ -89,9 +89,10 @@ class MockMemoryBudgetRepository extends GastoRepository {
       return {
         'anio': 2026,
         'mes': 9,
-        'monto': _prevGeneral,
+        'presupuesto_general': _prevGeneral,
         'meta_ahorro': 100.0,
         'moneda': 'USD',
+        'categorias': Map<String, double>.from(_prevBudgets),
       };
     }
     return null;
