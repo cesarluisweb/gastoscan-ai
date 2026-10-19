@@ -336,9 +336,12 @@ void main() {
       expect(find.text('🐘 Gastos fuertes (mayores a \$ 25)'), findsOneWidget);
 
       // Mayor gasto: Hipermercado Mayorista ($ 120,00 el 15 de Octubre)
-      expect(find.byKey(const Key('purchase_radiography_highest_expense')), findsOneWidget);
-      expect(find.textContaining('Hipermercado Mayorista'), findsOneWidget);
-      expect(find.textContaining(CurrencyFormatter.formatUsd(120.0)), findsOneWidget);
+      final highestExpenseFinder = find.byKey(const Key('purchase_radiography_highest_expense'));
+      expect(highestExpenseFinder, findsOneWidget);
+      final highestExpenseWidget = tester.widget<Text>(highestExpenseFinder);
+      final plainText = highestExpenseWidget.textSpan?.toPlainText() ?? '';
+      expect(plainText, contains('Hipermercado Mayorista'));
+      expect(plainText, contains(CurrencyFormatter.formatUsd(120.0)));
     });
 
     testWidgets('7. ListView de AnalysisScreen tiene padding inferior seguro de al menos 100dp', (tester) async {
