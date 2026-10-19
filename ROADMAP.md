@@ -95,10 +95,10 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 - `UX-11` **Feedback Visual e Indicador de Estado en Vinculación / Sincronización de Cuenta:** `Completada ✅`
   - *Problema:* Al pulsar "Vincular con Google" o autenticar con correo, la app carecía de indicadores durante la comunicación con Google Play Services y la sincronización con Firestore, generando sensación de bloqueo y permitiendo toques concurrentes.
   - *Solución:* Spinner negro de alto contraste con texto de estado (*"Conectando con Google..."*, *"Vinculando y sincronizando..."*), leyenda informativa, bloqueo de interacción cruzada y protección con `PopScope` en modales y diálogos.
-- `SYNC-01` **Respaldo y Sincronización de Presupuestos en la Nube:** `Implementada 🔧`
+- `SYNC-01` **Respaldo y Sincronización de Presupuestos en la Nube:** `Pendiente de validación 🧪`
   - *Problema:* Al vincular con cuenta de Google o reinstalar, los gastos se descargaban pero el presupuesto mensual aparecía en $0, debido a que las reglas de Firestore para presupuestos no se desplegaban en CI/CD, la adopción se limitaba estrictamente a `mes - 1`, y existía riesgo de error de tipo en mapas de Firestore.
   - *Solución:* Despliegue de `firestore:rules` en CI/CD, adopción histórica del último presupuesto previo en SQLite y panel web, casteo seguro y aislamiento de dominios de sincronización en `SyncService`.
-  - *Documentación técnica:* Ver [DOC_SINCRONIZACION_PRESUPUESTO.md](DOC_SINCRONIZACION_PRESUPUESTO.md).
+  - *Documentación técnica:* Ver [DOC_SINCRONIZACION_PRESUPUESTO.md](DOC_SINCRONIZACION_PRESUPUESTO.md). Tarea crítica: pendiente de prueba y visto bueno de César.
 
 ### Bloque C: Percepción con IA, Optimización y Seguridad
 - `AI-02` **Detección Automática y Transparente de Pagos Digitales (Pago Móvil / Zelle / Binance / PayPal):** `Completada ✅`

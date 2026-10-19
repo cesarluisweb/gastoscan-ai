@@ -5,7 +5,7 @@
 - **Rama:** `main`.
 - **Fase activa:** Fase 5 (Closed Testing activa) y validación de motor multimoneda (FIN-11).
 - **Acción Reciente:** Corrección integral de sincronización y adopción de presupuestos (SYNC-01): inclusión de `firestore:rules` en CI/CD, método `getUltimoPresupuestoConfigurado` en SQLite para heredar presupuestos saltando meses vacíos, sanitización de tipos Map en `SyncService`, adopción en panel web y aislamiento de bloques de sincronización.
-- **Estado de CI:** Commit y push de `SYNC-01` en preparación. Tarea en `Implementada 🔧`.
+- **Estado de CI:** CI build 516 en verde (`success` en commit `1d9e05f`), pruebas unitarias aprobadas, reglas desplegadas y APK/AAB listos. `SYNC-01` en `Pendiente de validación 🧪`.
 
 ## Decisiones Técnicas y de Negocio Recientes
 - Despliegue de `firestore:rules` integrado en GitHub Actions junto a `hosting` (`npx firebase-tools deploy --only hosting,firestore:rules`).
@@ -17,5 +17,5 @@
 - Monitoreo de CI por proceso dormido único (`scripts/wait_ci.ps1`), prohibido bucle activo turno a turno.
 
 ## Próximo Paso Inmediato
-- Push a `main` y monitoreo de CI mediante `scripts/wait_ci.ps1`.
-- Tras CI en verde, pasar `SYNC-01` a `Pendiente de validación 🧪` y proveer guía de validación a César.
+- Validación en dispositivo físico por César según DOC_SINCRONIZACION_PRESUPUESTO.md para graduar `SYNC-01` a `Completada ✅`.
+- Abordar `UI-06`: unificar orden canónico (USD -> VES -> USDT -> EUR) en vistas secundarias.
