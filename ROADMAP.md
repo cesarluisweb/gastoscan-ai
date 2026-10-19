@@ -98,7 +98,16 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 - `SYNC-01` **Respaldo y Sincronización de Presupuestos en la Nube:** `Pendiente de validación 🧪`
   - *Problema:* Al vincular con cuenta de Google o reinstalar, los gastos se descargaban pero el presupuesto mensual aparecía en $0, debido a que las reglas de Firestore para presupuestos no se desplegaban en CI/CD, la adopción se limitaba estrictamente a `mes - 1`, y existía riesgo de error de tipo en mapas de Firestore.
   - *Solución:* Despliegue de `firestore:rules` en CI/CD, adopción histórica del último presupuesto previo en SQLite y panel web, casteo seguro y aislamiento de dominios de sincronización en `SyncService`.
-  - *Documentación técnica:* Ver [DOC_SINCRONIZACION_PRESUPUESTO.md](DOC_SINCRONIZACION_PRESUPUESTO.md). Tarea crítica: pendiente de prueba y visto bueno de César.
+- `UX-12` **Rediseño y Enriquecimiento de la Pantalla de Análisis (Centro de Diagnóstico Exhaustivo):** `Implementada 🔧`
+  - *Problema:* Las 4 pestañas de moneda segmentadas fuera de las tarjetas fragmentaban la visión analítica y los gráficos se encontraban dispersos o limitados sin una vista de diagnóstico completa en scroll continuo.
+  - *Solución:* 
+    - Eliminación de la barra de 4 pestañas de moneda bajo el selector de mes y adopción del selector desplegable compacto compartido `CurrencyLensDropdown` (`[ USD BCV ▾ ]`) dentro de la Tarjeta 1 (compartido con Inicio).
+    - **Tarjeta 1:** Título `Total gastado en [Mes]`, monto gastado y límite en la misma fila con línea base (`FittedBox`), equivalente secundario, barra de 10dp con divisor de meta de ahorro y recuadro inferior analítico con 3 filas (Presupuesto total, Promedio gastado por día y Proyección/Gasto final).
+    - **Tarjeta 2:** Curva de `Evolución Diaria` con `LineChart` acumulativo del mes (ritmo ideal vs real con punto final destacado y etiqueta).
+    - **Tarjetas 3 y 4:** Dona de categorías y Control de presupuestos por categoría desacoplados en tarjetas independientes continuas.
+    - **Tarjeta 5:** `¿En qué moneda se va tu dinero?` con barra horizontal apilada multi-segmento y desglose ordenado de monedas de origen convertidas a la moneda activa.
+    - **Tarjeta 6:** `Radiografía de Compras` con clasificación por umbrales (hormiga <$5, medias $5-$25, fuertes >$25) y pie con mayor gasto del mes.
+    - **Padding inferior seguro:** $\ge 100\,\text{dp}$ para evitar solapamientos con la barra de navegación o el botón flotante.
 
 ### Bloque C: Percepción con IA, Optimización y Seguridad
 - `AI-02` **Detección Automática y Transparente de Pagos Digitales (Pago Móvil / Zelle / Binance / PayPal):** `Completada ✅`

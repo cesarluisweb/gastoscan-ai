@@ -1,13 +1,18 @@
-import '../widgets/month_selector_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/currency_formatter.dart';
+import '../../core/utils/date_formatter.dart';
 import '../../providers/gasto_provider.dart';
 import '../../providers/settings_provider.dart';
-import '../widgets/category_chart.dart';
 import '../widgets/budget_bottom_sheet.dart';
+import '../widgets/category_chart.dart';
+import '../widgets/currency_lens_dropdown.dart';
+import '../widgets/currency_radiography_card.dart';
+import '../widgets/daily_evolution_card.dart';
 import '../widgets/global_scan_queue_banner.dart';
+import '../widgets/month_selector_bar.dart';
+import '../widgets/purchase_radiography_card.dart';
 
 class AnalysisScreen extends StatelessWidget {
   final VoidCallback? onNavigateToSearch;
@@ -91,113 +96,156 @@ class AnalysisScreen extends StatelessWidget {
           const GlobalScanQueueBanner(),
           Expanded(
             child: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        children: [
-          const MonthSelectorBar(
-            keyPrefix: 'analysis_',
-            padding: EdgeInsets.only(bottom: 12),
-          ),
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _buildLensSwitch(context, settings),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+              children: [
+                const MonthSelectorBar(
+                  keyPrefix: 'analysis_',
+                  padding: EdgeInsets.only(bottom: 12),
+                ),
+
+                if (gastoProvider.isLoading)
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(32),
+                      child: CircularProgressIndicator(color: AppColors.primary),
+                    ),
+                  )
+                else if (hasData) ...[
+                  () {
+                    final String budgetMoneda = gastoProvider.monedaPresupuesto;
+                    final String activeMoneda = settings.monedaPrincipal;
+
+                    final Map<String, double> categoryTotals;
+                    final Map<String, double> categoryBudgets =
+                        gastoProvider.presupuestosPorCategoria.map(
+                      (k, v) => MapEntry(
+                          k, _convertBudgetToLens(v, budgetMoneda, activeMoneda, settings)),
+                    );
+                    final double totalMes;
+                    final double budgetGeneral = _convertBudgetToLens(
+                      gastoProvider.presupuestoGeneral,
+                      budgetMoneda,
+                      activeMoneda,
+                      settings,
+                    );
+                    final double metaAhorro = _convertBudgetToLens(
+                      gastoProvider.metaAhorro,
+                      budgetMoneda,
+                      activeMoneda,
+                      settings,
+                    );
+                    final double limiteTarget = metaAhorro > 0
+                        ? (budgetGeneral - metaAhorro).clamp(0.0, double.infinity)
+                        : budgetGeneral;
+
+                    if (activeMoneda == 'VES') {
+                      categoryTotals = gastoProvider.totalesPorCategoriaVes;
+                      totalMes = gastoProvider.totalMesVes;
+                    } else if (activeMoneda == 'USD') {
+                      categoryTotals = gastoProvider.totalesPorCategoria;
+                      totalMes = gastoProvider.totalMesUsd;
+                    } else if (activeMoneda == 'USDT') {
+                      categoryTotals = gastoProvider.totalesPorCategoriaUsdt;
+                      totalMes = gastoProvider.totalMesUsdt;
+                    } else {
+                      // EUR
+                      final double eurRate = settings.tasaCambioVesEur > 0
+                          ? settings.tasaCambioVesEur
+                          : (settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : 1.0);
+                      categoryTotals = gastoProvider.totalesPorCategoriaVes.isNotEmpty
+                          ? gastoProvider.totalesPorCategoriaVes.map(
+                              (k, v) => MapEntry(k, eurRate > 0 ? (v / eurRate) : 0.0))
+                          : gastoProvider.totalesPorCategoria.map((k, v) => MapEntry(
+                                k,
+                                CurrencyFormatter.convertFromUsd(
+                                  v,
+                                  activeMoneda,
+                                  settings.tasaCambioVesUsd,
+                                  tasaEur: settings.tasaCambioVesEur,
+                                  tasaUsdt: settings.tasaCambioVesUsdt,
+                                ),
+                              ));
+                      totalMes = gastoProvider.totalMesVes > 0 && eurRate > 0
+                          ? (gastoProvider.totalMesVes / eurRate)
+                          : CurrencyFormatter.convertFromUsd(
+                              gastoProvider.totalMesUsd,
+                              activeMoneda,
+                              settings.tasaCambioVesUsd,
+                              tasaEur: settings.tasaCambioVesEur,
+                              tasaUsdt: settings.tasaCambioVesUsdt,
+                            );
+                    }
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Tarjeta 1 — Total Gastado y Proyección de Fin de Mes
+                        _buildGeneralBudgetCard(
+                            context, gastoProvider, settings, activeMoneda),
+                        const SizedBox(height: 16),
+
+                        // Tarjeta 2 — Evolución Diaria (Tarjeta independiente)
+                        DailyEvolutionCard(
+                          gastosMes: gastoProvider.gastos,
+                          totalGastadoMes: totalMes,
+                          limitePresupuesto: limiteTarget,
+                          monedaPrincipal: activeMoneda,
+                          anio: gastoProvider.selectedYear,
+                          mes: gastoProvider.selectedMonth,
+                          tasaCambio: settings.tasaCambioVesUsd,
+                          tasaEur: settings.tasaCambioVesEur,
+                          tasaUsdt: settings.tasaCambioVesUsdt,
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Tarjeta 3 (Dona) y Tarjeta 4 (Control por Categoría)
+                        CategoryChart(
+                          categoryTotals: categoryTotals,
+                          categoryBudgets: categoryBudgets,
+                          presupuestoGeneral: budgetGeneral,
+                          totalGastadoMes: totalMes,
+                          gastosMes: gastoProvider.gastos,
+                          onSetBudget: (categoria, budget) async {
+                            await gastoProvider.setPresupuestoCategoria(categoria, budget);
+                          },
+                          monedaPrincipal: activeMoneda,
+                          showBudgetBars: true,
+                          separateCards: true,
+                          tasaCambio: settings.tasaCambioVesUsd,
+                          tasaEur: settings.tasaCambioVesEur,
+                          tasaUsdt: settings.tasaCambioVesUsdt,
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Tarjeta 5 — ¿En qué moneda se va tu dinero? (Radiografía por moneda de origen)
+                        CurrencyRadiographyCard(
+                          gastosMes: gastoProvider.gastos,
+                          monedaPrincipal: activeMoneda,
+                          tasaCambio: settings.tasaCambioVesUsd,
+                          tasaEur: settings.tasaCambioVesEur,
+                          tasaUsdt: settings.tasaCambioVesUsdt,
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Tarjeta 6 — Radiografía de Compras (Gastos Hormiga vs. Fuertes)
+                        PurchaseRadiographyCard(
+                          gastosMes: gastoProvider.gastos,
+                          monedaPrincipal: activeMoneda,
+                          tasaCambio: settings.tasaCambioVesUsd,
+                          tasaEur: settings.tasaCambioVesEur,
+                          tasaUsdt: settings.tasaCambioVesUsdt,
+                        ),
+                      ],
+                    );
+                  }(),
+                ] else
+                  _buildEmptyAnalysisState(context),
+              ],
             ),
           ),
-
-          if (gastoProvider.isLoading)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.all(32),
-                child: CircularProgressIndicator(color: AppColors.primary),
-              ),
-            )
-          else if (hasData) ...[
-            () {
-              final String budgetMoneda = gastoProvider.monedaPresupuesto;
-              final String activeMoneda = settings.monedaPrincipal;
-
-              final Map<String, double> categoryTotals;
-              final Map<String, double> categoryBudgets = gastoProvider.presupuestosPorCategoria.map(
-                (k, v) => MapEntry(k, _convertBudgetToLens(v, budgetMoneda, activeMoneda, settings)),
-              );
-              final double totalMes;
-              final double budgetGeneral = _convertBudgetToLens(
-                gastoProvider.presupuestoGeneral,
-                budgetMoneda,
-                activeMoneda,
-                settings,
-              );
-
-              if (activeMoneda == 'VES') {
-                categoryTotals = gastoProvider.totalesPorCategoriaVes;
-                totalMes = gastoProvider.totalMesVes;
-              } else if (activeMoneda == 'USD') {
-                categoryTotals = gastoProvider.totalesPorCategoria;
-                totalMes = gastoProvider.totalMesUsd;
-              } else if (activeMoneda == 'USDT') {
-                categoryTotals = gastoProvider.totalesPorCategoriaUsdt;
-                totalMes = gastoProvider.totalMesUsdt;
-              } else {
-                // EUR
-                final double eurRate = settings.tasaCambioVesEur > 0
-                    ? settings.tasaCambioVesEur
-                    : (settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : 1.0);
-                categoryTotals = gastoProvider.totalesPorCategoriaVes.isNotEmpty
-                    ? gastoProvider.totalesPorCategoriaVes.map((k, v) => MapEntry(k, eurRate > 0 ? (v / eurRate) : 0.0))
-                    : gastoProvider.totalesPorCategoria.map((k, v) => MapEntry(
-                          k,
-                          CurrencyFormatter.convertFromUsd(
-                            v,
-                            activeMoneda,
-                            settings.tasaCambioVesUsd,
-                            tasaEur: settings.tasaCambioVesEur,
-                            tasaUsdt: settings.tasaCambioVesUsdt,
-                          ),
-                        ));
-                totalMes = gastoProvider.totalMesVes > 0 && eurRate > 0
-                    ? (gastoProvider.totalMesVes / eurRate)
-                    : CurrencyFormatter.convertFromUsd(
-                        gastoProvider.totalMesUsd,
-                        activeMoneda,
-                        settings.tasaCambioVesUsd,
-                        tasaEur: settings.tasaCambioVesEur,
-                        tasaUsdt: settings.tasaCambioVesUsdt,
-                      );
-              }
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildGeneralBudgetCard(context, gastoProvider, settings, activeMoneda),
-                  const SizedBox(height: 16),
-                  CategoryChart(
-                    categoryTotals: categoryTotals,
-                    categoryBudgets: categoryBudgets,
-                    presupuestoGeneral: budgetGeneral,
-                    totalGastadoMes: totalMes,
-                    gastosMes: gastoProvider.gastos,
-                    onSetBudget: (categoria, budget) async {
-                      await gastoProvider.setPresupuestoCategoria(categoria, budget);
-                    },
-                    monedaPrincipal: activeMoneda,
-                    showBudgetBars: true,
-                    tasaCambio: settings.tasaCambioVesUsd,
-                    tasaEur: settings.tasaCambioVesEur,
-                    tasaUsdt: settings.tasaCambioVesUsdt,
-                  ),
-                ],
-              );
-            }(),
-          ] else
-            _buildEmptyAnalysisState(context),
-
-          const SizedBox(height: 80),
         ],
       ),
-    ),
-  ],
-),
-);
+    );
   }
 
   Widget _buildGeneralBudgetCard(
@@ -211,7 +259,8 @@ class AnalysisScreen extends StatelessWidget {
     final double rawMetaAhorro = gastoProvider.metaAhorro;
 
     final double budget = _convertBudgetToLens(rawBudget, budgetMoneda, activeMoneda, settings);
-    final double metaAhorro = _convertBudgetToLens(rawMetaAhorro, budgetMoneda, activeMoneda, settings);
+    final double metaAhorro =
+        _convertBudgetToLens(rawMetaAhorro, budgetMoneda, activeMoneda, settings);
     final double spent;
 
     if (activeMoneda == 'VES') {
@@ -244,211 +293,349 @@ class AnalysisScreen extends StatelessWidget {
     final bool hasBudget = budget > 0;
     final double targetBudget = hasSavingsGoal ? limiteParaGastar : budget;
     final bool isExceeded = hasBudget && (targetBudget > 0 ? spent > targetBudget : spent > 0);
-    final double percent = (hasBudget && targetBudget > 0) ? (spent / targetBudget).clamp(0.0, 1.0) : 0.0;
-    final int pctUsed = (hasBudget && targetBudget > 0) ? ((spent / targetBudget) * 100).round() : 0;
+    final double percentUsed = (hasBudget && targetBudget > 0) ? (spent / targetBudget) : 0.0;
 
     final now = DateTime.now();
     final isCurrentMonth = (now.month == gastoProvider.selectedMonth &&
         now.year == gastoProvider.selectedYear);
+    final isPastMonth = gastoProvider.selectedYear < now.year ||
+        (gastoProvider.selectedYear == now.year &&
+            gastoProvider.selectedMonth < now.month);
     final totalDays = DateTime(
       gastoProvider.selectedYear,
       gastoProvider.selectedMonth + 1,
       0,
     ).day;
-    final daysRemaining = (totalDays - now.day).clamp(0, 31);
+    final int diasTranscurridos = isCurrentMonth
+        ? now.day.clamp(1, totalDays)
+        : (isPastMonth ? totalDays : 1);
+    final double promedioDia = diasTranscurridos > 0 ? (spent / diasTranscurridos) : 0.0;
+    final double proyeccion = promedioDia * totalDays;
+    final bool proyectaSuperar = targetBudget > 0 && (proyeccion > targetBudget);
 
-    final snapshot = hasSavingsGoal ? gastoProvider.savingsSnapshot : null;
+    String formatSecundarioAmount(double amountInLens) {
+      final double usdRate =
+          settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : 1.0;
+      if (activeMoneda == 'VES') {
+        final inUsd = amountInLens / usdRate;
+        return CurrencyFormatter.formatUsd(inUsd);
+      } else {
+        final inVes = amountInLens * usdRate;
+        return CurrencyFormatter.formatVes(inVes);
+      }
+    }
+
+    String fmt(double val) => CurrencyFormatter.formatAmount(val, activeMoneda);
 
     return Container(
       key: const Key('general_budget_card'),
+      width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isExceeded ? AppColors.error.withValues(alpha: 0.06) : AppColors.card,
+        color: isExceeded ? AppColors.error.withValues(alpha: 0.04) : AppColors.card,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isExceeded ? AppColors.error.withValues(alpha: 0.4) : AppColors.border,
           width: isExceeded ? 1.5 : 1.0,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Fila superior: Título con mes y selector desplegable compacto [ USD BCV ▾ ]
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Row(
-                children: [
-                  Icon(
-                    hasSavingsGoal ? Icons.savings_outlined : Icons.account_balance_wallet,
-                    size: 20,
-                    color: AppColors.primaryDark,
+              Expanded(
+                child: Text(
+                  'Total gastado en ${DateFormatter.obtenerNombreMes(gastoProvider.selectedMonth)}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    hasSavingsGoal
-                        ? 'Límite para Gastar y Ahorro'
-                        : 'Control de Presupuesto Mensual General',
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ],
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              IconButton(
-                key: const Key('analysis_edit_budget_button'),
-                icon: const Icon(Icons.edit_outlined, size: 18, color: AppColors.secondary),
-                tooltip: 'Editar Presupuesto',
-                onPressed: () => BudgetBottomSheet.show(context),
+              const SizedBox(width: 8),
+              const CurrencyLensDropdown(
+                dropdownKey: Key('summary_card_lens_dropdown'),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          if (hasBudget) ...[
-            Builder(
-              builder: (context) {
-                String fmtAmount(double val) {
-                  return CurrencyFormatter.formatAmount(val, activeMoneda);
-                }
+          const SizedBox(height: 8),
 
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          '${fmtAmount(spent)} / ${fmtAmount(targetBudget)}',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: isExceeded ? AppColors.error : AppColors.textPrimary,
-                          ),
-                        ),
-                        Text(
-                          '$pctUsed% usado',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: isExceeded ? AppColors.error : AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: LinearProgressIndicator(
-                        value: percent,
-                        minHeight: 10,
-                        backgroundColor: AppColors.cardLighter,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          AppColors.getBudgetProgressColor(percent, isExceeded: isExceeded),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    if (isExceeded)
-                      Row(
-                        key: const Key('excess_alert_general'),
+          // Monto principal y límite: En una misma fila alineada por su línea base en FittedBox
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                Text(
+                  fmt(spent),
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: isExceeded ? AppColors.error : AppColors.textPrimary,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                if (hasBudget) ...[
+                  const SizedBox(width: 6),
+                  InkWell(
+                    key: const Key('analysis_edit_budget_button'),
+                    onTap: () => BudgetBottomSheet.show(context),
+                    borderRadius: BorderRadius.circular(6),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
                         children: [
-                          const Icon(Icons.warning_amber_rounded, size: 14, color: AppColors.error),
-                          const SizedBox(width: 4),
                           Text(
-                            hasSavingsGoal
-                                ? 'Límite de gasto superado por ${fmtAmount(spent - targetBudget)}'
-                                : 'Presupuesto superado por ${fmtAmount(spent - targetBudget)}',
+                            'de ${fmt(targetBudget)}',
                             style: const TextStyle(
-                              color: AppColors.error,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.textSecondary,
                             ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(
+                            Icons.edit_outlined,
+                            size: 15,
+                            color: AppColors.textSecondary,
                           ),
                         ],
-                      )
-                    else
-                      Text(
-                        isCurrentMonth
-                            ? (hasSavingsGoal
-                                ? 'Te quedan ${fmtAmount(targetBudget - spent)} para gastar y faltan $daysRemaining días'
-                                : 'Te quedan ${fmtAmount(targetBudget - spent)} y faltan $daysRemaining días')
-                            : 'Te sobraron ${fmtAmount(targetBudget - spent)} en este período',
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+          if (!hasBudget) ...[
+            const SizedBox(height: 8),
+            InkWell(
+              key: const Key('analysis_edit_budget_button'),
+              onTap: () => BudgetBottomSheet.show(context),
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.add, size: 15, color: Colors.black),
+                    SizedBox(width: 4),
+                    Text(
+                      'Definir presupuesto',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+
+          const SizedBox(height: 3),
+          Text(
+            '≈ ${formatSecundarioAmount(spent)}',
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+
+          if (isExceeded) ...[
+            const SizedBox(height: 10),
+            Row(
+              key: const Key('excess_alert_general'),
+              children: [
+                const Icon(Icons.warning_amber_rounded, size: 15, color: AppColors.error),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    hasSavingsGoal
+                        ? 'Límite de gasto superado por ${fmt(spent - targetBudget)}'
+                        : 'Presupuesto superado por ${fmt(spent - targetBudget)}',
+                    style: const TextStyle(
+                      color: AppColors.error,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+
+          if (hasBudget) ...[
+            const SizedBox(height: 12),
+            // Barra lineal limpia de 10dp con marcador vertical de ahorro
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final totalWidth = constraints.maxWidth;
+                final double rawLimiteRatio = budget > 0 ? (limiteParaGastar / budget) : 1.0;
+                final double savingsMarkerPos =
+                    (totalWidth * rawLimiteRatio).clamp(0.0, totalWidth);
+                final double barFillRatio = budget > 0 ? (spent / budget) : 0.0;
+
+                final bool isCaution = !isExceeded && percentUsed >= 0.85;
+
+                final Color barColor;
+                if (isExceeded) {
+                  barColor = AppColors.error;
+                } else if (isCaution) {
+                  barColor = const Color(0xFFF59E0B);
+                } else {
+                  barColor = const Color(0xFF1E293B);
+                }
+
+                return Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.centerLeft,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(5),
+                      child: LinearProgressIndicator(
+                        value: barFillRatio.clamp(0.0, 1.0),
+                        minHeight: 10,
+                        backgroundColor: AppColors.cardLighter,
+                        valueColor: AlwaysStoppedAnimation<Color>(barColor),
+                      ),
+                    ),
+                    if (hasSavingsGoal)
+                      Positioned(
+                        left: (savingsMarkerPos - 1.0).clamp(0.0, totalWidth - 2.0),
+                        top: -3,
+                        bottom: -3,
+                        child: Container(
+                          width: 2,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF4B5563),
+                            borderRadius: BorderRadius.circular(1),
+                          ),
                         ),
                       ),
-                    if (hasSavingsGoal && snapshot != null) ...[
-                      const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: AppColors.cardLighter,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: AppColors.border),
-                        ),
-                        child: Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text('Presupuesto Total:', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                                Text(fmtAmount(budget), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text('Meta de Ahorro / Inversión:', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                                Text(fmtAmount(metaAhorro), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text('Gasto Proyectado Fin de Mes:', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                                Text(
-                                  fmtAmount(
-                                    (activeMoneda == 'EUR' || activeMoneda == 'USDT')
-                                        ? CurrencyFormatter.convertFromUsd(
-                                            snapshot.gastoProyectadoFinDeMes,
-                                            activeMoneda,
-                                            settings.tasaCambioVesUsd,
-                                            tasaEur: settings.tasaCambioVesEur,
-                                            tasaUsdt: settings.tasaCambioVesUsdt,
-                                          )
-                                        : snapshot.gastoProyectadoFinDeMes,
-                                  ),
-                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
                   ],
                 );
               },
             ),
-          ] else ...[
-            const Text(
-              'Aún no has configurado un presupuesto general para este mes.',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton.icon(
-              key: const Key('btn_definir_presupuesto_general'),
-              icon: const Icon(Icons.add, size: 16),
-              label: const Text('Definir Presupuesto General'),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            const SizedBox(height: 14),
+
+            // Recuadro analítico inferior (Caja gris suave rounded-xl con padding 14dp)
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
               ),
-              onPressed: () => BudgetBottomSheet.show(context),
+              child: Column(
+                children: [
+                  // Fila 1: Presupuesto Total
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          hasSavingsGoal
+                              ? 'Presupuesto Total (incluye ${fmt(metaAhorro)} de ahorro)'
+                              : 'Presupuesto Total',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        fmt(budget),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Fila 2: Promedio gastado por día
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Promedio gastado por día',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        '${fmt(promedioDia)} / día',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Fila 3: Ritmo / Proyección o Gasto final
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        isPastMonth
+                            ? 'Gasto final del mes'
+                            : 'Si sigues a este ritmo gastarás en el mes',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        isPastMonth
+                            ? fmt(spent)
+                            : '${proyectaSuperar ? '↗' : '↘'} ≈ ${fmt(proyeccion)}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: isPastMonth
+                              ? (isExceeded ? AppColors.error : const Color(0xFF16A34A))
+                              : (proyectaSuperar ? AppColors.error : const Color(0xFF16A34A)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ],
         ],
@@ -502,54 +689,6 @@ class AnalysisScreen extends StatelessWidget {
             onPressed: () => BudgetBottomSheet.show(context),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildLensSwitch(BuildContext context, SettingsProvider settings) {
-    final current = settings.monedaPrincipal;
-    final lenses = [
-      {'id': 'USD', 'label': 'USD BCV'},
-      {'id': 'USDT', 'label': 'USDT P2P'},
-      {'id': 'EUR', 'label': 'EUR BCV'},
-      {'id': 'VES', 'label': 'Bs.'},
-    ];
-
-    return Container(
-      padding: const EdgeInsets.all(2),
-      decoration: BoxDecoration(
-        color: AppColors.cardLighter,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: lenses.map((l) {
-          final isSelected = current == l['id'];
-          return InkWell(
-            key: Key('analysis_lens_${l['id']?.toLowerCase()}'),
-            onTap: () => settings.setMonedaPrincipal(l['id']!),
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.surface : Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: isSelected
-                    ? [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 4)]
-                    : null,
-              ),
-              child: Text(
-                l['label']!,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                  color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
-                ),
-              ),
-            ),
-          );
-        }).toList(),
       ),
     );
   }

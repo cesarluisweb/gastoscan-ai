@@ -20,6 +20,7 @@ class CategoryChart extends StatefulWidget {
   final double tasaCambio;
   final double tasaEur;
   final double tasaUsdt;
+  final bool separateCards;
 
   const CategoryChart({
     Key? key,
@@ -35,6 +36,7 @@ class CategoryChart extends StatefulWidget {
     this.tasaCambio = 1.0,
     this.tasaEur = 0.0,
     this.tasaUsdt = 0.0,
+    this.separateCards = false,
   }) : super(key: key);
 
   static IconData getCategoryIcon(String cat) => AppConstants.getCategoryIcon(cat);
@@ -138,6 +140,238 @@ class _CategoryChartState extends State<CategoryChart> {
 
     final totalDisplayMonto = widget.totalGastadoMes > 0 ? widget.totalGastadoMes : totalSuma;
 
+    Widget buildDonutHeader() {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            widget.showBudgetBars ? 'Distribución por Categorías' : 'Distribución de Gastos',
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          if (!widget.showBudgetBars && widget.onNavigateToAnalysis != null)
+            InkWell(
+              key: const Key('btn_ver_analisis_completo'),
+              onTap: widget.onNavigateToAnalysis,
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.cardLighter,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Ver detalle',
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(width: 4),
+                    Icon(Icons.arrow_forward, size: 11, color: AppColors.textPrimary),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      );
+    }
+
+    Widget buildDonutBody() {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Dona con Total al Centro
+          SizedBox(
+            width: 140,
+            height: 140,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                PieChart(
+                  PieChartData(
+                    sections: sections,
+                    centerSpaceRadius: 40,
+                    sectionsSpace: 2,
+                  ),
+                ),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _fmt(totalDisplayMonto),
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const Text(
+                      'Total',
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 14),
+          // Lista de Categorías con icono circular, % y monto alineados
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: displayedEntries.map((entry) {
+                final color = AppColors.categoryColors[entry.key] ?? AppColors.textSecondary;
+                final total = totalDisplayMonto > 0 ? totalDisplayMonto : 1.0;
+                final pct = ((entry.value / total) * 100).round();
+                final icon = getCategoryIcon(entry.key);
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(icon, size: 13, color: color),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          entry.key,
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Text(
+                        '$pct%',
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        _fmt(entry.value),
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (widget.separateCards) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            key: const Key('card_category_distribution'),
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.card,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.02),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                buildDonutHeader(),
+                if (sections.isNotEmpty && totalSuma > 0) ...[
+                  const SizedBox(height: 16),
+                  buildDonutBody(),
+                ],
+              ],
+            ),
+          ),
+          if (widget.showBudgetBars && sortedCategories.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Container(
+              key: const Key('card_category_budget_control'),
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.card,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.border),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.02),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(
+                        Icons.label_outline,
+                        size: 16,
+                        color: AppColors.textSecondary,
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        'Control de Presupuestos por Categoría',
+                        style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  ...sortedCategories.map((cat) => _buildCategoryBudgetItem(context, cat)),
+                ],
+              ),
+            ),
+          ],
+        ],
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -155,154 +389,10 @@ class _CategoryChartState extends State<CategoryChart> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                widget.showBudgetBars ? 'Distribución por Categorías' : 'Distribución de Gastos',
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              if (!widget.showBudgetBars && widget.onNavigateToAnalysis != null)
-                InkWell(
-                  key: const Key('btn_ver_analisis_completo'),
-                  onTap: widget.onNavigateToAnalysis,
-                  borderRadius: BorderRadius.circular(20),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.cardLighter,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Ver detalle',
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(width: 4),
-                        Icon(Icons.arrow_forward, size: 11, color: AppColors.textPrimary),
-                      ],
-                    ),
-                  ),
-                ),
-            ],
-          ),
+          buildDonutHeader(),
           if (sections.isNotEmpty && totalSuma > 0) ...[
             const SizedBox(height: 16),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Dona con Total al Centro
-                SizedBox(
-                  width: 140,
-                  height: 140,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      PieChart(
-                        PieChartData(
-                          sections: sections,
-                          centerSpaceRadius: 40,
-                          sectionsSpace: 2,
-                        ),
-                      ),
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            _fmt(totalDisplayMonto),
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const Text(
-                            'Total',
-                            style: TextStyle(
-                              color: AppColors.textSecondary,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 14),
-                // Lista de Categorías con icono circular, % y monto alineados
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: displayedEntries.map((entry) {
-                      final color = AppColors.categoryColors[entry.key] ?? AppColors.textSecondary;
-                      final total = totalDisplayMonto > 0 ? totalDisplayMonto : 1.0;
-                      final pct = ((entry.value / total) * 100).round();
-                      final icon = getCategoryIcon(entry.key);
-
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 24,
-                              height: 24,
-                              decoration: BoxDecoration(
-                                color: color.withValues(alpha: 0.12),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(icon, size: 13, color: color),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                entry.key,
-                                style: const TextStyle(
-                                  color: AppColors.textPrimary,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            Text(
-                              '$pct%',
-                              style: const TextStyle(
-                                color: AppColors.textSecondary,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Text(
-                              _fmt(entry.value),
-                              style: const TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ],
-            ),
+            buildDonutBody(),
           ],
 
           if (widget.showBudgetBars && sortedCategories.isNotEmpty) ...[
