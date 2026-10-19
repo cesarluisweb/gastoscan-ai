@@ -98,7 +98,7 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 - `SYNC-01` **Respaldo y Sincronización de Presupuestos en la Nube:** `Pendiente de validación 🧪`
   - *Problema:* Al vincular con cuenta de Google o reinstalar, los gastos se descargaban pero el presupuesto mensual aparecía en $0, debido a que las reglas de Firestore para presupuestos no se desplegaban en CI/CD, la adopción se limitaba estrictamente a `mes - 1`, y existía riesgo de error de tipo en mapas de Firestore.
   - *Solución:* Despliegue de `firestore:rules` en CI/CD, adopción histórica del último presupuesto previo en SQLite y panel web, casteo seguro y aislamiento de dominios de sincronización en `SyncService`.
-- `UX-12` **Rediseño y Enriquecimiento de la Pantalla de Análisis (Centro de Diagnóstico Exhaustivo):** `Implementada 🔧`
+- `UX-12` **Rediseño y Enriquecimiento de la Pantalla de Análisis (Centro de Diagnóstico Exhaustivo):** `Pendiente de validación 🧪`
   - *Problema:* Las 4 pestañas de moneda segmentadas fuera de las tarjetas fragmentaban la visión analítica y los gráficos se encontraban dispersos o limitados sin una vista de diagnóstico completa en scroll continuo.
   - *Solución:* 
     - Eliminación de la barra de 4 pestañas de moneda bajo el selector de mes y adopción del selector desplegable compacto compartido `CurrencyLensDropdown` (`[ USD BCV ▾ ]`) dentro de la Tarjeta 1 (compartido con Inicio).
