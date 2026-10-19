@@ -38,7 +38,7 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 ## Fase 5: Marketing, Lanzamiento y Tracción (En Progreso 🔄)
 *Hitos para validar el producto con usuarios reales en Venezuela:*
 - **Subida a Google Play Store (Closed Testing):** (En progreso 🔄) Ficha técnica y capturas preparadas (`DOC_FICHA_PLAY_STORE.md`). Adaptación de políticas de información gubernamental completada: descargos de no representación y enlaces funcionales a `https://www.bcv.org.ve/` integrados en la ficha de tienda, Calculadora de divisas y pantalla Más. AAB v1.0.4 compilado y listo para reenvío conjunto con la ficha. Prueba cerrada activa en Play Console; coordinando los 12 evaluadores requeridos durante el período de prueba.
-- `REL-01` **Transición a Google Play y Silenciamiento de Actualizaciones Fantasma:** `Pendiente de validación 🧪`
+- `REL-01` **Transición a Google Play y Silenciamiento de Actualizaciones Fantasma:** `Completada ✅`
   - *Problema:* Discrepancia entre builds continuos de CI (`version.json` 470) y Google Play (466) causaba alertas falsas de actualización y bucle con "Abrir" en la tienda.
   - *Solución:* Silenciados popups automáticos en `DashboardScreen` y `MainScreen`. El botón de versión en `MoreScreen` ahora dice *"Google Play"* y abre directamente la ficha de la tienda para que el usuario actualice cuando Google apruebe el build. El APK directo en la landing se mantiene hasta el pase a Producción pública.
 - **Código QR de Descarga en Landing (Desktop):** (Pendiente) Incorporar tarjeta con código QR dinámico en `rindemas.cesarluis.com` para escanear e instalar directamente desde una PC.
@@ -57,7 +57,7 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 - `UI-02` **Contraste de Íconos y Controles en Pestaña "Más":**
   - *Problema:* Íconos y toggles amarillos sobre fondo blanco pierden definición visual.
   - *Solución:* Aplicar el patrón del modal `+` con contenedores circulares en tono suave (`AppColors.primaryContainer`) y trazos en carbón/negro (`AppColors.textPrimary`), o elevar el contraste hacia tonos ámbar/mostaza.
-- `UI-03` **Semántica de Color Unificada en Progreso de Presupuesto:** `Pendiente de validación 🧪`
+- `UI-03` **Semántica de Color Unificada en Progreso de Presupuesto:** `Completada ✅`
   - *Problema:* El mismo porcentaje (ej. 29%) se muestra verde en Inicio pero amarillo en Análisis.
   - *Solución:* Unificar la escala semafórica en toda la app: Verde (`AppColors.success` / `#10B981` para $<85\%$), Amarillo/Ámbar (`AppColors.warning` / `#F59E0B` para $\ge 85\%$) y Rojo (`AppColors.error` / `#EF4444` para $\ge 100\%$ o sobregiro), con paridad exacta en Inicio, Análisis y Web.
 - `UI-04` **Rediseño de Enlaces en Presupuesto por Categoría:**
@@ -81,7 +81,7 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
   - *Solución:* 
     - En **Inicio**: mantener tarjetas compactas con resumen limpio (`14 Oct • 4 artículos`).
     - En **Gastos**: mostrar directamente los productos con mini-ícono de categoría y subtotal. Para facturas largas, limitar a los primeros 4 ítems con botón expansor `Ver X artículos más ▾`. Mantener formato limpio de una línea para compras sin desglose.
-- `UX-08` **Rediseño Definitivo de Tarjeta de Resumen (Modelo Mental V3 - Saldo Protagonista):** `Pendiente de validación 🧪`
+- `UX-08` **Rediseño Definitivo de Tarjeta de Resumen (Modelo Mental V3 - Saldo Protagonista):** `Completada ✅`
   - *Problema:* El porcentaje abstracto obligaba a cálculos mentales y apilar dos números grandes competía visualmente creando un efecto de factura sobrecargada.
   - *Solución Definitiva (Estructura de 3 Niveles):*
     - **Nivel 1 (Héroe Disponible):** `Disponible para gastar` (o `Te sobraron` en meses pasados) en la cabecera junto al selector compacto Binance (`USD BCV ▾`), con el saldo disponible en 32sp negrita verde (`Color(0xFF16A34A)`) y su equivalente secundario debajo (`≈ Bs. 302.737,82`). En estado excedido muestra pastilla roja compacta `Excedido del límite` con cifra en rojo negativo (`- $ 62,40`). Sin presupuesto muestra `Total gastado` y botón full-width amarillo `+ Definir presupuesto del mes`.
@@ -90,15 +90,15 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
     - **Pedagogía en Asistente IA:** El ritmo diario (`puedes gastar hasta $ 26,51/día durante los 13 días restantes...`) y sugerencias de pausa de gastos se integraron de forma dinámica en `AiInsightCard`.
 - `UX-09` **Rediseño del Filtro de Comprobantes en "Gastos":**
   - *Solución:* Incorporar un distintivo de recibo/clip (`🧾`) en las tarjetas que tienen fotografía adjunta y reemplazar el botón confuso de galería por un chip activo `[🧾 Con comprobante]` o ícono de filtro con estado evidente.
-- `UX-10` **Jerarquía y Claridad de la Acción "Eliminar Cuenta":** `Implementada 🔧`
+- `UX-10` **Jerarquía y Claridad de la Acción "Eliminar Cuenta":** `Completada ✅`
   - *Solución:* Separar visualmente la acción de eliminar cuenta de la tarjeta "Respaldo en la Nube", ubicándola en una sección independiente y sutil de "Zona de Peligro" al final de la pantalla (solo visible con sesión en la nube activa) y modernizando el botón "Cerrar sesión" en la tarjeta de cuenta.
 - `UX-11` **Feedback Visual e Indicador de Estado en Vinculación / Sincronización de Cuenta:** `Completada ✅`
   - *Problema:* Al pulsar "Vincular con Google" o autenticar con correo, la app carecía de indicadores durante la comunicación con Google Play Services y la sincronización con Firestore, generando sensación de bloqueo y permitiendo toques concurrentes.
   - *Solución:* Spinner negro de alto contraste con texto de estado (*"Conectando con Google..."*, *"Vinculando y sincronizando..."*), leyenda informativa, bloqueo de interacción cruzada y protección con `PopScope` en modales y diálogos.
-- `SYNC-01` **Respaldo y Sincronización de Presupuestos en la Nube:** `Pendiente de validación 🧪`
+- `SYNC-01` **Respaldo y Sincronización de Presupuestos en la Nube:** `Completada ✅`
   - *Problema:* Al vincular con cuenta de Google o reinstalar, los gastos se descargaban pero el presupuesto mensual aparecía en $0, debido a que las reglas de Firestore para presupuestos no se desplegaban en CI/CD, la adopción se limitaba estrictamente a `mes - 1`, y existía riesgo de error de tipo en mapas de Firestore.
   - *Solución:* Despliegue de `firestore:rules` en CI/CD, adopción histórica del último presupuesto previo en SQLite y panel web, casteo seguro y aislamiento de dominios de sincronización en `SyncService`.
-- `UX-12` **Rediseño y Enriquecimiento de la Pantalla de Análisis (Centro de Diagnóstico Exhaustivo):** `Pendiente de validación 🧪`
+- `UX-12` **Rediseño y Enriquecimiento de la Pantalla de Análisis (Centro de Diagnóstico Exhaustivo):** `Completada ✅`
   - *Problema:* Las 4 pestañas de moneda segmentadas fuera de las tarjetas fragmentaban la visión analítica y los gráficos se encontraban dispersos o limitados sin una vista de diagnóstico completa en scroll continuo.
   - *Solución:* 
     - Eliminación de la barra de 4 pestañas de moneda bajo el selector de mes y adopción del selector desplegable compacto compartido `CurrencyLensDropdown` (`[ USD BCV ▾ ]`) dentro de la Tarjeta 1 (compartido con Inicio).
@@ -124,14 +124,14 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 - `AI-06` **Imputación de IVA en Precios de Anaquel y Algoritmo del Centavo Residual:** `Pendiente`
   - *Problema:* Las facturas fiscales del SENIAT imprimen bases imponibles (sin IVA) para productos gravados `(G)`. Al extraer el ticket, la app crea un renglón artificial "Impuesto IVA" en categoría 'Otros', distorsionando los presupuestos por categoría y descalzando el comparador histórico de precios con las entradas manuales y por voz.
   - *Solución:* Imputar el 16% de IVA directamente en los productos gravados para reflejar el precio de anaquel que el usuario pagó en caja, preservar intactos los alimentos exentos `(E)`, resolver la discrepancia de $\pm 0,01$ mediante ajuste determinista en el producto gravado de mayor valor y mostrar la base fiscal como microcopy informativo en `ReviewExpenseScreen`.
-- `AI-07` **Corrección de Escala de Decimales en OCR y Validación Matemática Cruzada:** `Pendiente de validación 🧪`
+- `AI-07` **Corrección de Escala de Decimales en OCR y Validación Matemática Cruzada:** `Completada ✅`
   - *Problema:* Discrepancias donde los montos perdían decimales (ej. $56.12 aparecía como $5.612,00 o viceversa). La validación matemática cruzada en `GeminiExtractionResult` tenía las ramas de ratio invertidas, multiplicando por 100 en lugar de dividir cuando el total o los ítems omitían el punto decimal en el OCR.
   - *Solución:* Inversión corregida de ramas en `GeminiExtractionResult`, corrección defensiva de ítems individuales cuyo subtotal supera el total general por falta de coma/punto, soporte de múltiples separadores de miles en `amount_parser.dart`, suma en céntimos enteros en `review_expense_screen.dart` para evitar residuos IEEE 754 y refuerzo estricto de la regla decimal en los prompts del Cloudflare Worker.
-  - *Documentación:* Ver [DOC_CORRECCION_DECIMALES_OCR.md](DOC_CORRECCION_DECIMALES_OCR.md). Tarea crítica: pendiente de prueba y visto bueno de César en dispositivo físico.
+  - *Documentación:* Ver [DOC_CORRECCION_DECIMALES_OCR.md](DOC_CORRECCION_DECIMALES_OCR.md). Tarea crítica: validada y aprobada por César en dispositivo físico.
 
 
 ### Bloque D: Nueva Herramienta Financiera
-- `FIN-09` **Calculadora Cambiaria Rápida (Conversor Bs. / $):** `Pendiente de validación 🧪`
+- `FIN-09` **Calculadora Cambiaria Rápida (Conversor Bs. / $):** `Completada ✅`
   - *Ubicación:* Exclusivamente en la pestaña **Más** (el botón central `+` se preserva intacto y 100% exclusivo para ingresar gastos).
   - *Propósito:* Resolver el cálculo instantáneo antes de pagar en caja o emitir un Pago Móvil, reteniendo usuarios en la app varias veces al día.
   - *Características Clave:*
@@ -145,7 +145,7 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
   - *Problema:* Al mostrar valores en USDT, la app triangulaba USD -> VES -> USDT aplicando la brecha cambiaria (spread oficial BCV vs Binance P2P) a dos monedas que cotizan en dólares ($19.99 USD se transformaban en 17.66 USDT), y recalculaba el total mensual con la tasa USDT en vivo de cada día, provocando que los totales históricos fluctuaran y disminuyeran día a día.
   - *Solución:* Establecimiento de paridad determinista 1:1 directa entre USD y USDT en pagos en divisas sin aplicar tasas futuras.
 
-- `FIN-11` **Motor Multimoneda "Dos Lentes", Pulido Integral (10 Puntos) y Soporte de IA:** `Pendiente de validación 🧪`
+- `FIN-11` **Motor Multimoneda "Dos Lentes", Pulido Integral (10 Puntos) y Soporte de IA:** `Completada ✅`
   - *Problema:* La paridad 1:1 global de FIN-10 impedía distinguir gastos cancelados en bolívares de gastos en divisas duras, borrando el ahorro real obtenido al vender USDT en Binance P2P para compras locales (ej. gasolina pagada en Bs a tasa BCV).
   - *Solución:*
     1. **Migración SQLite v17:** Columnas `total_usdt INTEGER` (céntimos inmutables) y `tasa_usdt REAL` con backfill determinista.
@@ -156,11 +156,11 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
     6. **Fallbacks Amigables y Tasas Históricas:** Fallback automático a `Compra general` y `Producto 1`, `Producto 2`, con actualización incondicional de tasas históricas al cambiar fecha.
     7. **Calculadora Cambiaria Limpia:** Estado inicial limpio sin borrado prematuro y remoción de badge duplicado.
     8. **Soporte de IA Integral:** Detección de `metodo_liquidacion` (`BS_BCV`, `BS_USDT`, `DIVISA`) en `GeminiService` y Workers Cloudflare, preselección automática en revisión y preservación de los 4 lentes en el contexto de `ChatScreen`.
-  - *Documentación:* Ver [DOC_MOTOR_MULTIMONEDA.md](DOC_MOTOR_MULTIMONEDA.md). Tarea crítica: pendiente de prueba y visto bueno de César.
+  - *Documentación:* Ver [DOC_MOTOR_MULTIMONEDA.md](DOC_MOTOR_MULTIMONEDA.md). Tarea crítica: validada y aprobada por César en dispositivo físico.
 
-- `FIN-12` **Resiliencia de Tasas de Cambio Multifuente (BCV / Paralelo):** `Pendiente de validación 🧪`
+- `FIN-12` **Resiliencia de Tasas de Cambio Multifuente (BCV / Paralelo):** `Completada ✅`
   - *Estado:* Resuelta la causa raíz en R8 (`NoSuchMethodError` en JNI) en el Build 500. Se integra la arquitectura de tasas multifuente (Cloudflare Gateway `/tasas`, DolarAPI, Yadio, jsDelivr), la purga automática de semillas `<= 50.0` y la actualización silenciosa sin alertas técnicas invasivas.
-  - *Documentación:* Ver [DOC_RESILIENCIA_TASAS_CAMBIO.md](DOC_RESILIENCIA_TASAS_CAMBIO.md). Tarea crítica: pendiente de prueba y visto bueno de César.
+  - *Documentación:* Ver [DOC_RESILIENCIA_TASAS_CAMBIO.md](DOC_RESILIENCIA_TASAS_CAMBIO.md). Tarea crítica: validada y aprobada por César en dispositivo físico.
 
 ---
 

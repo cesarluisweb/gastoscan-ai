@@ -1,7 +1,7 @@
 # Documentación Técnica: Corrección de Escala de Decimales en OCR y Registro de Gastos
 
 **Fecha:** 19 de octubre de 2026  
-**Estado:** Pendiente de validación 🧪 (Build 521 aprobado en CI/CD con 316 tests en verde)  
+**Estado:** Completada ✅ (Validada y aprobada en dispositivo físico por César; Build 521 aprobado con 316 tests en verde)  
 **ID de Tarea:** `AI-07` / `FIN-13`  
 **Archivos modificados:**
 - `lib/data/models/gemini_extraction_result.dart`
