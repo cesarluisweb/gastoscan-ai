@@ -103,7 +103,7 @@ void main() {
 
     // Verify body form fields are visible and rendered
     expect(find.text('Información General'), findsOneWidget);
-    expect(find.text('Comercio o Lugar'), findsOneWidget);
+    expect(find.text('Comercio o Beneficiario (opcional)'), findsOneWidget);
 
     // Ensure the ListView in body has non-zero height
     final listViewFinder = find.byType(ListView);
