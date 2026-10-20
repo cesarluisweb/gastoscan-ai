@@ -1312,7 +1312,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       },
       child: Scaffold(
       bottomNavigationBar: SafeArea(
-        child: Center(
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          heightFactor: 1.0,
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 600),
             child: Padding(
