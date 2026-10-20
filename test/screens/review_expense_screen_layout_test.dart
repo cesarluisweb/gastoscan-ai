@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:gastoscan_ai/data/datasources/local/database_helper.dart';
 import 'package:gastoscan_ai/data/models/gasto_model.dart';
+import 'package:gastoscan_ai/data/models/gemini_extraction_result.dart';
 import 'package:gastoscan_ai/providers/gasto_provider.dart';
 import 'package:gastoscan_ai/providers/scan_queue_provider.dart';
 import 'package:gastoscan_ai/providers/settings_provider.dart';
@@ -116,5 +117,52 @@ void main() {
     expect(buttonFinder, findsOneWidget);
     final Size buttonSize = tester.getSize(buttonFinder);
     expect(buttonSize.height, inInclusiveRange(40, 60));
+  });
+
+  testWidgets('ReviewExpenseScreen uses historical BCV rate (< 50.0) for 2023 dates and calculates VES properly', (tester) async {
+    tester.binding.window.physicalSizeTestValue = const Size(1080, 2400);
+    tester.binding.window.devicePixelRatioTestValue = 2.5;
+
+    addTearDown(() {
+      tester.binding.window.clearPhysicalSizeTestValue();
+      tester.binding.window.clearDevicePixelRatioTestValue();
+    });
+
+    SharedPreferences.setMockInitialValues({
+      'cached_rate_usd': 881.88,
+      'cached_rate_eur': 950.0,
+      'cached_rate_usdt': 900.0,
+      'cached_rate_USD_2023-10-20': 34.86,
+      'cached_rate_EUR_2023-10-20': 36.86,
+      'cached_rate_USDT_2023-10-20': 34.86,
+    });
+
+    await tester.pumpWidget(MultiProvider(
+      providers: [
+        ChangeNotifierProvider<GastoProvider>.value(value: gastoProvider),
+        ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+        ChangeNotifierProvider<ScanQueueProvider>.value(value: scanQueueProvider),
+      ],
+      child: const MaterialApp(
+        home: ReviewExpenseScreen(
+          extractedData: GeminiExtractionResult(
+            comercio: 'Automercado 2023',
+            fecha: '2023-10-20',
+            moneda: 'USD',
+            totalOriginal: 100.0,
+            items: [],
+          ),
+        ),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    // Verify rate is 34.86, NOT today's rate 881.88
+    expect(find.text('Tasa BCV: Bs. 34.86'), findsOneWidget);
+    expect(find.text('Tasa BCV: Bs. 881.88'), findsNothing);
+
+    // Verify Bolivares finales matches 100 * 34.86 = 3486.00 (not 88188.00)
+    final bsManualField = tester.widget<TextFormField>(find.byKey(const Key('input_total_bs_manual')));
+    expect(bsManualField.controller?.text, '3486.00');
   });
 }

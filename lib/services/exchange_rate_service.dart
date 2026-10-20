@@ -272,6 +272,14 @@ class ExchangeRateService {
     return null;
   }
 
+  static final Map<String, List<dynamic>> _historicosMemoryCache = {};
+
+  /// Limpia la caché en memoria de históricos (útil en pruebas)
+  @visibleForTesting
+  static void clearHistoricosCache() {
+    _historicosMemoryCache.clear();
+  }
+
   /// Obtiene la tasa de cambio para una fecha específica (formato YYYY-MM-DD) y moneda.
   /// Si la fecha es hoy o no hay histórico, consulta en vivo.
   static Future<double> getRateForDate(
@@ -316,11 +324,24 @@ class ExchangeRateService {
         endpoint = 'https://ve.dolarapi.com/v1/historicos/dolares/oficial';
       }
 
-      final url = Uri.parse(endpoint);
-      final response = await httpClient.get(url).timeout(const Duration(seconds: 5));
-      if (response.statusCode == 200) {
-        final List<dynamic> list = jsonDecode(response.body);
-        
+      // Si no se proporcionó cliente mock específico, usar la caché en memoria para no repetir descargas de 113KB
+      List<dynamic>? list = client == null ? _historicosMemoryCache[endpoint] : null;
+
+      if (list == null) {
+        final url = Uri.parse(endpoint);
+        final response = await httpClient.get(
+          url,
+          headers: {'User-Agent': 'RindeMas/1.0 (Android; Linux)'},
+        ).timeout(const Duration(seconds: 12));
+        if (response.statusCode == 200) {
+          list = jsonDecode(response.body) as List<dynamic>;
+          if (client == null) {
+            _historicosMemoryCache[endpoint] = list;
+          }
+        }
+      }
+
+      if (list != null) {
         // Buscar coincidencia exacta
         for (final item in list) {
           if (item['fecha'] == isoDate) {
@@ -334,12 +355,16 @@ class ExchangeRateService {
 
         // Si no hay fecha exacta (ej. fin de semana o feriado), buscar el último día hábil anterior a isoDate
         double? lastValidRate;
+        String? lastValidDate;
         for (final item in list) {
           final itemFecha = item['fecha']?.toString() ?? '';
           if (itemFecha.isNotEmpty && itemFecha.compareTo(isoDate) <= 0) {
             final rate = (item['promedio'] as num?)?.toDouble();
             if (rate != null && rate > 0) {
-              lastValidRate = rate;
+              if (lastValidDate == null || itemFecha.compareTo(lastValidDate) >= 0) {
+                lastValidDate = itemFecha;
+                lastValidRate = rate;
+              }
             }
           }
         }

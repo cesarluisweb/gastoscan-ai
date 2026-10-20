@@ -186,13 +186,13 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       esUsdtExacta = tUsdt > 0 && fecha.compareTo('2026-02-14') >= 0;
 
       // Fallback pragmático local-first si no hay red o histórico para esa fecha
-      if (tUsd <= 0 && settings.tasaCambioVesUsd > 50.0) {
+      if (tUsd <= 0 && settings.tasaCambioVesUsd > 0) {
         tUsd = settings.tasaCambioVesUsd;
       }
-      if (tEur <= 0 && settings.tasaCambioVesEur > 50.0) {
+      if (tEur <= 0 && settings.tasaCambioVesEur > 0) {
         tEur = settings.tasaCambioVesEur;
       }
-      if (tUsdt <= 0 && settings.tasaCambioVesUsdt > 50.0) {
+      if (tUsdt <= 0 && settings.tasaCambioVesUsdt > 0) {
         tUsdt = settings.tasaCambioVesUsdt;
       }
     }
@@ -401,17 +401,17 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
 
   double _effectiveBcvRate(SettingsProvider settings) {
     if (_selectedMoneda == 'EUR') {
-      if (_tasaEurFecha != null && _tasaEurFecha! > 50.0) return _tasaEurFecha!;
+      if (_tasaEurFecha != null && _tasaEurFecha! > 0) return _tasaEurFecha!;
       final parsed = tryParseAmount(_tasaCambioCtrl.text, isPrice: false) ?? 0.0;
-      if (parsed > 50.0) return parsed;
-      return settings.tasaCambioVesEur > 50.0
+      if (parsed > 0) return parsed;
+      return settings.tasaCambioVesEur > 0
           ? settings.tasaCambioVesEur
-          : (settings.tasaCambioVesUsd > 50.0 ? settings.tasaCambioVesUsd : AppConstants.defaultTasaCambio);
+          : (settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : AppConstants.defaultTasaCambio);
     }
-    if (_tasaUsdFecha != null && _tasaUsdFecha! > 50.0) return _tasaUsdFecha!;
+    if (_tasaUsdFecha != null && _tasaUsdFecha! > 0) return _tasaUsdFecha!;
     final parsed = tryParseAmount(_tasaCambioCtrl.text, isPrice: false) ?? 0.0;
-    if (parsed > 50.0) return parsed;
-    return settings.tasaCambioVesUsd > 50.0 ? settings.tasaCambioVesUsd : (parsed > 0 ? parsed : AppConstants.defaultTasaCambio);
+    if (parsed > 0) return parsed;
+    return settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : (parsed > 0 ? parsed : AppConstants.defaultTasaCambio);
   }
 
   double get _totalUsdtCalculado {
@@ -527,8 +527,15 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
 
   Future<void> _actualizarTasaPorFecha(String fecha, {bool esRellenoInicial = false}) async {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    final isToday = fecha.isEmpty || fecha == today;
     setState(() {
       _fuenteTasa = 'Buscando tasa del $fecha...';
+      if (!isToday && !esRellenoInicial) {
+        _tasaUsdFecha = null;
+        _tasaEurFecha = null;
+        _tasaUsdtFecha = null;
+      }
     });
 
     await _cargarTasasChips(fecha);
