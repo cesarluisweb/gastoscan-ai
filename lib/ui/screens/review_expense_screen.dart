@@ -547,7 +547,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
 
         if (_selectedMoneda == 'VES') {
           double? tasaAplicar = _tasaUsdFecha;
-          if (settings.tipoTasa == 'paralelo' || _modoLiquidacion == ModoLiquidacion.bsUsdt) {
+          if (settings.tipoTasa == 'paralelo' || _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsUsdt) {
             tasaAplicar = _tasaUsdtFecha;
             if (tasaAplicar != null && tasaAplicar > 0) _tasaCambioCtrl.text = tasaAplicar.toStringAsFixed(2);
             if (isToday) {
@@ -586,9 +586,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
             _fuenteTasa = 'Sin conexión para histórico · Tasa referencial';
           }
         } else if (_selectedMoneda == 'USD') {
-          double? tasaAplicar = (_modoLiquidacion == ModoLiquidacion.bsUsdt) ? _tasaUsdtFecha : _tasaUsdFecha;
+          double? tasaAplicar = (_metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsUsdt) ? _tasaUsdtFecha : _tasaUsdFecha;
           if (tasaAplicar != null && tasaAplicar > 0) _tasaCambioCtrl.text = tasaAplicar.toStringAsFixed(2);
-          if (_modoLiquidacion == ModoLiquidacion.bsUsdt) {
+          if (_metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsUsdt) {
             if (isToday) {
               _fuenteTasa = 'USDT P2P (Hoy)$offlineSuffix';
             } else if (_esTasaUsdtExacta) {
@@ -1884,7 +1884,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                               if (valor <= 0) return;
                               setState(() {
                                 _tasaUsdtCtrl.text = valor.toStringAsFixed(2);
-                                if (_modoLiquidacion == ModoLiquidacion.bsUsdt) {
+                                if (_metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsUsdt) {
                                   _tasaCambioCtrl.text = valor.toStringAsFixed(2);
                                 }
                                 _recalcularTotalUsd();
