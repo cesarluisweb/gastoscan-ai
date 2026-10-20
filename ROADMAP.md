@@ -162,10 +162,10 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
   - *Estado:* Resuelta la causa raíz en R8 (`NoSuchMethodError` en JNI) en el Build 500. Se integra la arquitectura de tasas multifuente (Cloudflare Gateway `/tasas`, DolarAPI, Yadio, jsDelivr), la purga automática de semillas `<= 50.0` y la actualización silenciosa sin alertas técnicas invasivas.
   - *Documentación:* Ver [DOC_RESILIENCIA_TASAS_CAMBIO.md](DOC_RESILIENCIA_TASAS_CAMBIO.md). Tarea crítica: validada y aprobada por César en dispositivo físico.
 
-- `FIN-13` **Límites de Fechas y Blindaje de Tasas Históricas (BCV / Paralelo):** `Implementada 🔧`
+- `FIN-13` **Límites de Fechas y Blindaje de Tasas Históricas (BCV / Paralelo):** `Pendiente de validación 🧪`
   - *Problema:* Al registrar gastos en fechas anteriores a 2023 (ej. 2021), la app asignaba la tasa de hoy (881.88) debido a un fallback ciego en `ExchangeRateService`. Adicionalmente, el gráfico de Evolución Diaria solapaba las etiquetas `d30d31` en meses de 31 días y la fila de proyección en Análisis carecía de flexibilidad de espaciado.
-  - *Solución:* Límite del selector a partir del 3 de enero de 2023 (`AppConstants.fechaMinimaHistoricoTasas`) hasta la fecha actual; eliminación del fallback a la tasa de hoy para fechas históricas (retorna 0.0 y avisa en UI para ingreso manual); fallback de USDT a USD histórico oficial; límites en `MonthSelectorBar`; supresión de `d30` en meses de 31 días en `DailyEvolutionCard`; y ajuste con `Expanded` en la proyección de `AnalysisScreen`.
-  - *Documentación:* Ver [DOC_LIMITES_FECHAS_TASAS_HISTORICAS.md](DOC_LIMITES_FECHAS_TASAS_HISTORICAS.md). Tarea crítica: en espera de validación de CI y aprobación por César.
+  - *Solución:* Límite del selector a partir del 3 de enero de 2023 (`AppConstants.fechaMinimaHistoricoTasas`) hasta la fecha actual; enfoque pragmático local-first para tasas históricas (aviso de referencia y sin conexión si no hay red, permitiendo cálculo editable sin bloquear en cero); sugerencia de tasa BCV como referencia para USDT antes de feb 2026; límites en `MonthSelectorBar`; supresión de `d30` en meses de 31 días en `DailyEvolutionCard`; y ajuste con `Expanded` en la proyección de `AnalysisScreen`.
+  - *Documentación:* Ver [DOC_LIMITES_FECHAS_TASAS_HISTORICAS.md](DOC_LIMITES_FECHAS_TASAS_HISTORICAS.md). Tarea crítica: Build 524 confirmado en verde (`conclusion: success`), pendiente de prueba en dispositivo por César.
 
 ---
 

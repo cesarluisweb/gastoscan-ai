@@ -4,13 +4,13 @@
 ## Estado Actual Inmediato
 - **Rama:** `main`.
 - **Fase activa:** Fase 5 (Closed Testing activa) y validación de motor multimoneda (FIN-11).
-- **Acción Reciente:** Implementación de `FIN-13` (Límites de fechas y blindaje de tasas históricas BCV/USDT, eliminación de fallback a tasa de hoy, corrección de solapamiento `d30d31` en `DailyEvolutionCard` y espaciado de proyección en `AnalysisScreen`).
-- **Estado de CI:** Pendiente de push y monitoreo de build para `FIN-13`.
-- **Estado General:** Bloque de fechas y tasas históricas blindado según fecha más antigua de DolarAPI (03/01/2023).
+- **Acción Reciente:** Implementación de `FIN-13` (Límites de fechas y blindaje de tasas históricas BCV/USDT con enfoque pragmático local-first, corrección de solapamiento `d30d31` en `DailyEvolutionCard` y espaciado de proyección en `AnalysisScreen`).
+- **Estado de CI:** Build 524 confirmado en verde (`conclusion: success`, commit `eba23be`).
+- **Estado General:** `FIN-13` en `Pendiente de validación 🧪` para pruebas en dispositivo por César.
 
 ## Decisiones Técnicas y de Negocio Recientes
-- Fecha mínima para registro de gastos e históricos acotada a `2023-01-03` (`AppConstants.fechaMinimaHistoricoTasas`) y máxima a fecha actual.
-- Eliminado fallback a tasa de hoy (`getAllTodayRates()`) para fechas históricas: retorna `0.0` y exige ingreso manual en UI si no hay registro oficial.
+- Fecha mínima para registro de gastos acotada al inicio de registros continuos de DolarAPI (`2023-01-03`) y máxima a fecha actual.
+- Enfoque pragmático local-first para tasas históricas: sin red se sugiere tasa referencial en caché con aviso visual sin bloquear en cero; USDT previo a feb 2026 sugiere BCV señalando `Referencia BCV (Ajusta la tasa P2P)`.
 - Supresión de `d30` en meses de 31 días en `DailyEvolutionCard` para erradicar el solapamiento visual `d30d31`.
 - Envoltura `Expanded` en etiqueta de proyección mensual en `AnalysisScreen` para evitar desbordes contra el margen derecho.
 
