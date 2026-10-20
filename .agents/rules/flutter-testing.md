@@ -38,6 +38,23 @@ description: "Convenciones para pruebas unitarias y de widgets, configuración d
 
 ## 5. Aserciones Robustas y Determinismo
 - **Aserciones de Moneda y Formato:** Evitar evaluar cadenas literales completas que combinen texto y montos formateados (ej. evitar `find.textContaining('de $100.00 está')`). Validar por separado las frases clave con `contains` independientes (ej. `find.textContaining('Tu meta de ahorro')` y `find.textContaining('comprometida')`), evitando falsos negativos por diferencias de separadores decimales (`.` vs `,`) o espacios de `NumberFormat`.
+- **Desambiguación de Montos y Textos Recurrentes:** En pantallas con múltiples tarjetas o desgloses analíticos (donde un mismo monto puede repetirse en totales, gráficos, listas o pies de página), PROHIBIDO usar `find.textContaining(...)` global con `findsOneWidget`. Se debe:
+  1. Acotar la búsqueda a su contenedor específico usando `find.descendant`:
+     ```dart
+     expect(
+       find.descendant(
+         of: find.byKey(const Key('id_contenedor_o_tarjeta')),
+         matching: find.textContaining(CurrencyFormatter.formatUsd(monto)),
+       ),
+       findsOneWidget,
+     );
+     ```
+  2. O bien, extraer el widget inspeccionado por su `Key` dedicada y validar su contenido textual directamente:
+     ```dart
+     final widgetText = tester.widget<Text>(find.byKey(const Key('id_widget')));
+     final plainText = widgetText.textSpan?.toPlainText() ?? widgetText.data ?? '';
+     expect(plainText, contains('Texto esperado'));
+     ```
 - **Aserciones sobre `RichText`:** Las funciones `find.text()` y `find.textContaining()` no inspeccionan widgets `RichText` a menos que se indique explícitamente `findRichText: true`. Cuando el componente a verificar use `RichText` o `TextSpan` (ej. montos en moneda compuesta), usar:
   ```dart
   expect(find.textContaining(r'$ 30,00', findRichText: true), findsOneWidget);
