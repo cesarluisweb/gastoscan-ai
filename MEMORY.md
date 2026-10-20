@@ -4,18 +4,18 @@
 ## Estado Actual Inmediato
 - **Rama:** `main`.
 - **Fase activa:** Fase 5 (Closed Testing activa) y validación de motor multimoneda (FIN-11).
-- **Acción Reciente:** Implementación de `REL-02` (Edge-to-Edge nativo en Android 15/16 y adaptabilidad de interfaz para pantallas grandes/tablets con ancho máximo de 600dp centrado).
-- **Estado de CI:** Build 525 confirmado en verde (`conclusion: success`, commit `6a9e804`).
-- **Estado General:** `REL-02` en `Pendiente de validación 🧪` para pruebas en dispositivo por César y subida de AAB a Google Play Console.
+- **Acción Reciente:** Corrección de colapso de pantalla en blanco en `ReviewExpenseScreen` (`bottomNavigationBar` con `Center` vertical sin cota sustituido por `Align(heightFactor: 1.0)`) y desbordamiento de `RenderFlex` en filas de tasas corregido con `Wrap`.
+- **Estado de CI:** Build 528 confirmado en verde (`conclusion: success`, commit `515c45e`).
+- **Estado General:** Listo para prueba manual en dispositivo por César.
 
 ## Decisiones Técnicas y de Negocio Recientes
-- Edge-to-Edge habilitado en capas nativa (MainActivity.kt con WindowCompat y barras transparentes en styles.xml) y Dart (SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge)).
-- Ancho máximo centrado (600dp) en MainScreen, ReviewExpenseScreen, CurrencyCalculatorScreen, ShoppingListScreen y ReceiptGalleryScreen para prevenir estiramiento en tablets/foldables (Android 16).
-- Optimización DEX (R8) postergada para después de la prueba cerrada de 14 días (plazo Play Store feb 2027), evitando riesgos de regresión en testers.
+- En `Scaffold.bottomNavigationBar`, no usar `Center` sin `heightFactor: 1.0` porque `Scaffold` otorga altura suelta y `Center` consume toda la pantalla, colapsando el `body` a altura cero.
+- En tarjetas de liquidación de compras en bolívares, usar `Wrap` en vez de `Row` para la leyenda de tasas para evitar desbordamientos horizontales en dispositivos móviles compactos (< 400dp).
+- Edge-to-Edge nativo y ancho máximo de 600dp centrado implementados en pantallas principales.
 
 ## Errores y Fricciones a Evitar
 - No encadenar comandos con `&&` ni usar redirección `>` en PowerShell.
 - Monitoreo de CI por proceso dormido único (`scripts/wait_ci.ps1`), prohibido bucle activo turno a turno.
 
 ## Próximo Paso Inmediato
-- Coordinación de Closed Testing (Fase 5) o avance en tareas planificadas de UI (`UI-02` contraste en Más, `UI-04` botón de presupuestos, `UI-06` orden canónico de monedas).
+- Validación en dispositivo del formulario de registro de gastos y avance en tareas planificadas (`UI-02` contraste en Más, `UI-04` botón de presupuestos, `UI-06` orden canónico de monedas).
