@@ -101,6 +101,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
   double? _tasaUsdFecha;
   double? _tasaEurFecha;
   double? _tasaUsdtFecha;
+  bool _esTasaHistoricaExacta = false;
+  bool _esTasaEurExacta = false;
+  bool _esTasaUsdtExacta = false;
 
   String _initialComercio = '';
   String _initialFecha = '';
@@ -143,14 +146,18 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     double tUsd;
     double tEur;
     double tUsdt;
+    bool esUsdExacta = false;
+    bool esEurExacta = false;
+    bool esUsdtExacta = false;
 
     final isToday = fecha.isEmpty || fecha == today;
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+
     if (isToday) {
       final allRates = await ExchangeRateService.getAllTodayRates();
       tUsd = allRates.usd;
       tEur = allRates.eur;
       tUsdt = allRates.usdt;
-      final settings = Provider.of<SettingsProvider>(context, listen: false);
       if (tUsd <= 50.0 && settings.tasaCambioVesUsd > 50.0) {
         tUsd = settings.tasaCambioVesUsd;
       }
@@ -160,6 +167,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       if (tUsdt <= 50.0 && settings.tasaCambioVesUsdt > 50.0) {
         tUsdt = settings.tasaCambioVesUsdt;
       }
+      esUsdExacta = !allRates.esReferencia;
+      esEurExacta = !allRates.esReferencia;
+      esUsdtExacta = !allRates.esReferencia;
     } else {
       final results = await Future.wait([
         ExchangeRateService.getRateForDate(fecha, moneda: 'USD'),
@@ -169,7 +179,22 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       tUsd = results[0];
       tEur = results[1];
       tUsdt = results[2];
-      // Para fechas históricas, no se sustituye con la tasa de hoy de settings
+
+      esUsdExacta = tUsd > 0;
+      esEurExacta = tEur > 0;
+      // DolarAPI histórico continuo de paralelo inicia el 14 de febrero de 2026
+      esUsdtExacta = tUsdt > 0 && fecha.compareTo('2026-02-14') >= 0;
+
+      // Fallback pragmático local-first si no hay red o histórico para esa fecha
+      if (tUsd <= 0 && settings.tasaCambioVesUsd > 50.0) {
+        tUsd = settings.tasaCambioVesUsd;
+      }
+      if (tEur <= 0 && settings.tasaCambioVesEur > 50.0) {
+        tEur = settings.tasaCambioVesEur;
+      }
+      if (tUsdt <= 0 && settings.tasaCambioVesUsdt > 50.0) {
+        tUsdt = settings.tasaCambioVesUsdt;
+      }
     }
 
     if (mounted && _selectedFecha == fecha) {
@@ -177,6 +202,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         _tasaUsdFecha = tUsd > 0.0 ? tUsd : null;
         _tasaEurFecha = tEur > 0.0 ? tEur : null;
         _tasaUsdtFecha = tUsdt > 0.0 ? tUsdt : null;
+        _esTasaHistoricaExacta = esUsdExacta;
+        _esTasaEurExacta = esEurExacta;
+        _esTasaUsdtExacta = esUsdtExacta;
         if (tUsdt > 0.0) {
           _tasaUsdtCtrl.text = tUsdt.toStringAsFixed(2);
         }
@@ -512,53 +540,77 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         }
         final today = DateTime.now().toIso8601String().substring(0, 10);
         final isToday = fecha == today;
+        final parsed = DateTime.tryParse(fecha) ?? DateTime.now();
+        final now = DateTime.now();
+        final isCurrentMonth = (parsed.year == now.year && parsed.month == now.month);
         final offlineSuffix = settings.tasasSonReferencia ? ' · Tasa estimada en caché (sin conexión)' : '';
+
         if (_selectedMoneda == 'VES') {
-          double? tasaAplicar = isToday
-              ? (_tasaUsdFecha ?? settings.tasaCambioVesUsd)
-              : _tasaUsdFecha;
-          if (settings.tipoTasa == 'paralelo') {
-            tasaAplicar = isToday
-                ? (_tasaUsdtFecha ?? settings.tasaCambioVesUsdt)
-                : _tasaUsdtFecha;
+          double? tasaAplicar = _tasaUsdFecha;
+          if (settings.tipoTasa == 'paralelo' || _modoLiquidacion == ModoLiquidacion.bsUsdt) {
+            tasaAplicar = _tasaUsdtFecha;
+            if (tasaAplicar != null && tasaAplicar > 0) _tasaCambioCtrl.text = tasaAplicar.toStringAsFixed(2);
+            if (isToday) {
+              _fuenteTasa = 'USDT P2P (Hoy)$offlineSuffix';
+            } else if (_esTasaUsdtExacta) {
+              _fuenteTasa = 'USDT P2P ($fecha)';
+            } else if (_esTasaHistoricaExacta) {
+              _fuenteTasa = 'Referencia BCV ($fecha) · Ajusta la tasa P2P';
+            } else if (isCurrentMonth) {
+              _fuenteTasa = 'Tasa referencial actual (sin conexión)';
+            } else {
+              _fuenteTasa = 'Sin conexión para histórico · Tasa referencial';
+            }
+          } else {
+            if (tasaAplicar != null && tasaAplicar > 0) _tasaCambioCtrl.text = tasaAplicar.toStringAsFixed(2);
+            if (isToday) {
+              _fuenteTasa = 'Tasa oficial BCV (Hoy)$offlineSuffix';
+            } else if (_esTasaHistoricaExacta) {
+              _fuenteTasa = 'Tasa oficial BCV ($fecha)';
+            } else if (isCurrentMonth) {
+              _fuenteTasa = 'Tasa referencial actual (sin conexión)';
+            } else {
+              _fuenteTasa = 'Sin conexión para histórico · Tasa referencial';
+            }
           }
-          if (tasaAplicar != null && tasaAplicar > 0) {
-            _tasaCambioCtrl.text = tasaAplicar.toStringAsFixed(2);
-          }
-          _fuenteTasa = isToday
-              ? 'Tasa oficial BCV (Hoy)$offlineSuffix'
-              : (tasaAplicar != null && tasaAplicar > 0
-                  ? 'Tasa oficial BCV ($fecha)$offlineSuffix'
-                  : 'Sin histórico oficial ($fecha) · Ingresa tasa manual');
         } else if (_selectedMoneda == 'EUR') {
-          double? tasaAplicar = isToday
-              ? (_tasaEurFecha ?? settings.tasaCambioVesEur)
-              : _tasaEurFecha;
-          if (tasaAplicar == null || tasaAplicar <= 0) {
-            tasaAplicar = isToday
-                ? (_tasaUsdFecha ?? settings.tasaCambioVesUsd)
-                : _tasaUsdFecha;
+          double? tasaAplicar = _tasaEurFecha ?? _tasaUsdFecha;
+          if (tasaAplicar != null && tasaAplicar > 0) _tasaCambioCtrl.text = tasaAplicar.toStringAsFixed(2);
+          if (isToday) {
+            _fuenteTasa = 'Euro BCV oficial (Hoy)$offlineSuffix';
+          } else if (_esTasaEurExacta) {
+            _fuenteTasa = 'Euro BCV oficial ($fecha)';
+          } else if (isCurrentMonth) {
+            _fuenteTasa = 'Tasa referencial actual (sin conexión)';
+          } else {
+            _fuenteTasa = 'Sin conexión para histórico · Tasa referencial';
           }
-          if (tasaAplicar != null && tasaAplicar > 0) {
-            _tasaCambioCtrl.text = tasaAplicar.toStringAsFixed(2);
-          }
-          _fuenteTasa = isToday
-              ? 'Euro BCV oficial (Hoy)$offlineSuffix'
-              : (tasaAplicar != null && tasaAplicar > 0
-                  ? 'Euro BCV oficial ($fecha)$offlineSuffix'
-                  : 'Sin histórico Euro ($fecha) · Ingresa tasa manual');
         } else if (_selectedMoneda == 'USD') {
-          double? tasaAplicar = isToday
-              ? (_tasaUsdFecha ?? settings.tasaCambioVesUsd)
-              : _tasaUsdFecha;
-          if (tasaAplicar != null && tasaAplicar > 0) {
-            _tasaCambioCtrl.text = tasaAplicar.toStringAsFixed(2);
+          double? tasaAplicar = (_modoLiquidacion == ModoLiquidacion.bsUsdt) ? _tasaUsdtFecha : _tasaUsdFecha;
+          if (tasaAplicar != null && tasaAplicar > 0) _tasaCambioCtrl.text = tasaAplicar.toStringAsFixed(2);
+          if (_modoLiquidacion == ModoLiquidacion.bsUsdt) {
+            if (isToday) {
+              _fuenteTasa = 'USDT P2P (Hoy)$offlineSuffix';
+            } else if (_esTasaUsdtExacta) {
+              _fuenteTasa = 'USDT P2P ($fecha)';
+            } else if (_esTasaHistoricaExacta) {
+              _fuenteTasa = 'Referencia BCV ($fecha) · Ajusta la tasa P2P';
+            } else if (isCurrentMonth) {
+              _fuenteTasa = 'Tasa referencial actual (sin conexión)';
+            } else {
+              _fuenteTasa = 'Sin conexión para histórico · Tasa referencial';
+            }
+          } else {
+            if (isToday) {
+              _fuenteTasa = 'Tasa oficial BCV (Hoy)$offlineSuffix';
+            } else if (_esTasaHistoricaExacta) {
+              _fuenteTasa = 'Tasa oficial BCV ($fecha)';
+            } else if (isCurrentMonth) {
+              _fuenteTasa = 'Tasa referencial actual (sin conexión)';
+            } else {
+              _fuenteTasa = 'Sin conexión para histórico · Tasa referencial';
+            }
           }
-          _fuenteTasa = isToday
-              ? 'Tasa oficial BCV (Hoy)$offlineSuffix'
-              : (tasaAplicar != null && tasaAplicar > 0
-                  ? 'Tasa oficial BCV ($fecha)$offlineSuffix'
-                  : 'Sin histórico oficial ($fecha) · Ingresa tasa manual');
         }
         _recalcularTotalUsd();
         if (esRellenoInicial) {
@@ -1702,21 +1754,21 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                   final today = DateTime.now().toIso8601String().substring(0, 10);
                                   final isToday = _selectedFecha == today;
                                   if (m == 'EUR') {
-                                    final val = isToday ? (_tasaEurFecha ?? settings.tasaCambioVesEur) : _tasaEurFecha;
-                                    if (val != null && val > 0) _tasaCambioCtrl.text = val.toStringAsFixed(2);
+                                    final val = _tasaEurFecha ?? settings.tasaCambioVesEur;
+                                    if (val > 0) _tasaCambioCtrl.text = val.toStringAsFixed(2);
                                     _fuenteTasa = isToday
                                         ? 'Euro BCV oficial (Hoy)'
-                                        : (val != null && val > 0
+                                        : (_esTasaEurExacta
                                             ? 'Euro BCV oficial ($_selectedFecha)'
-                                            : 'Sin histórico Euro ($_selectedFecha) · Ingresa tasa manual');
+                                            : 'Euro referencial ($_selectedFecha)');
                                   } else if (m == 'VES' || m == 'USD') {
-                                    final val = isToday ? (_tasaUsdFecha ?? settings.tasaCambioVesUsd) : _tasaUsdFecha;
-                                    if (val != null && val > 0) _tasaCambioCtrl.text = val.toStringAsFixed(2);
+                                    final val = _tasaUsdFecha ?? settings.tasaCambioVesUsd;
+                                    if (val > 0) _tasaCambioCtrl.text = val.toStringAsFixed(2);
                                     _fuenteTasa = isToday
                                         ? 'Dólar BCV oficial (Hoy)'
-                                        : (val != null && val > 0
+                                        : (_esTasaHistoricaExacta
                                             ? 'Dólar BCV oficial ($_selectedFecha)'
-                                            : 'Sin histórico BCV ($_selectedFecha) · Ingresa tasa manual');
+                                            : 'Dólar referencial ($_selectedFecha)');
                                   }
                                   _recalcularTotalUsd();
                                 });
@@ -1768,26 +1820,24 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                             key: const Key('chip_rate_usd_bcv'),
                             avatar: const Icon(Icons.attach_money, size: 14, color: AppColors.primaryDark),
                             label: Text(
-                              (_selectedFecha == DateTime.now().toIso8601String().substring(0, 10))
-                                  ? 'Dólar BCV: Bs. ${(_tasaUsdFecha ?? settings.tasaCambioVesUsd).toStringAsFixed(2)}'
-                                  : (_tasaUsdFecha != null
-                                      ? 'Dólar BCV: Bs. ${_tasaUsdFecha!.toStringAsFixed(2)}'
-                                      : 'Dólar BCV: No disponible'),
+                              'Dólar BCV: Bs. ${(_tasaUsdFecha ?? settings.tasaCambioVesUsd).toStringAsFixed(2)}${(_selectedFecha != DateTime.now().toIso8601String().substring(0, 10) && !_esTasaHistoricaExacta) ? ' (Ref.)' : ''}',
                               style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
                             ),
                             backgroundColor: AppColors.surface,
                             side: const BorderSide(color: AppColors.border),
                             onPressed: () {
-                              final todayStr = DateTime.now().toIso8601String().substring(0, 10);
-                              final valor = (_selectedFecha == todayStr)
-                                  ? (_tasaUsdFecha ?? settings.tasaCambioVesUsd)
-                                  : _tasaUsdFecha;
-                              if (valor == null || valor <= 0) return;
+                              final valor = _tasaUsdFecha ?? settings.tasaCambioVesUsd;
+                              if (valor <= 0) return;
                               setState(() {
                                 _tasaCambioCtrl.text = valor.toStringAsFixed(2);
-                                _fuenteTasa = (_selectedFecha == todayStr)
-                                    ? 'Dólar BCV oficial (Hoy)'
-                                    : 'Dólar BCV oficial ($_selectedFecha)';
+                                final todayStr = DateTime.now().toIso8601String().substring(0, 10);
+                                if (_selectedFecha == todayStr) {
+                                  _fuenteTasa = 'Dólar BCV oficial (Hoy)';
+                                } else if (_esTasaHistoricaExacta) {
+                                  _fuenteTasa = 'Dólar BCV oficial ($_selectedFecha)';
+                                } else {
+                                  _fuenteTasa = 'Tasa referencial actual ($_selectedFecha)';
+                                }
                                 _recalcularTotalUsd();
                               });
                             },
@@ -1797,26 +1847,24 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                             key: const Key('chip_rate_eur_bcv'),
                             avatar: const Icon(Icons.euro, size: 14, color: AppColors.primaryDark),
                             label: Text(
-                              (_selectedFecha == DateTime.now().toIso8601String().substring(0, 10))
-                                  ? 'Euro BCV: Bs. ${(_tasaEurFecha ?? settings.tasaCambioVesEur).toStringAsFixed(2)}'
-                                  : (_tasaEurFecha != null
-                                      ? 'Euro BCV: Bs. ${_tasaEurFecha!.toStringAsFixed(2)}'
-                                      : 'Euro BCV: No disponible'),
+                              'Euro BCV: Bs. ${(_tasaEurFecha ?? settings.tasaCambioVesEur).toStringAsFixed(2)}${(_selectedFecha != DateTime.now().toIso8601String().substring(0, 10) && !_esTasaEurExacta) ? ' (Ref.)' : ''}',
                               style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
                             ),
                             backgroundColor: AppColors.surface,
                             side: const BorderSide(color: AppColors.border),
                             onPressed: () {
-                              final todayStr = DateTime.now().toIso8601String().substring(0, 10);
-                              final valor = (_selectedFecha == todayStr)
-                                  ? (_tasaEurFecha ?? settings.tasaCambioVesEur)
-                                  : _tasaEurFecha;
-                              if (valor == null || valor <= 0) return;
+                              final valor = _tasaEurFecha ?? settings.tasaCambioVesEur;
+                              if (valor <= 0) return;
                               setState(() {
                                 _tasaCambioCtrl.text = valor.toStringAsFixed(2);
-                                _fuenteTasa = (_selectedFecha == todayStr)
-                                    ? 'Euro BCV oficial (Hoy)'
-                                    : 'Euro BCV oficial ($_selectedFecha)';
+                                final todayStr = DateTime.now().toIso8601String().substring(0, 10);
+                                if (_selectedFecha == todayStr) {
+                                  _fuenteTasa = 'Euro BCV oficial (Hoy)';
+                                } else if (_esTasaEurExacta) {
+                                  _fuenteTasa = 'Euro BCV oficial ($_selectedFecha)';
+                                } else {
+                                  _fuenteTasa = 'Euro referencial actual ($_selectedFecha)';
+                                }
                                 _recalcularTotalUsd();
                               });
                             },
@@ -1826,23 +1874,19 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                             key: const Key('chip_rate_usdt_binance'),
                             avatar: const Icon(Icons.currency_bitcoin, size: 14, color: AppColors.primaryDark),
                             label: Text(
-                              (_selectedFecha == DateTime.now().toIso8601String().substring(0, 10))
-                                  ? 'USDT P2P: Bs. ${(_tasaUsdtFecha ?? settings.tasaCambioVesUsdt).toStringAsFixed(2)}'
-                                  : (_tasaUsdtFecha != null
-                                      ? 'USDT P2P: Bs. ${_tasaUsdtFecha!.toStringAsFixed(2)}'
-                                      : 'USDT P2P: No disponible'),
+                              'USDT P2P: Bs. ${(_tasaUsdtFecha ?? settings.tasaCambioVesUsdt).toStringAsFixed(2)}${(_selectedFecha != DateTime.now().toIso8601String().substring(0, 10) && !_esTasaUsdtExacta) ? (_esTasaHistoricaExacta ? ' (Ref. BCV)' : ' (Ref.)') : ''}',
                               style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
                             ),
                             backgroundColor: AppColors.surface,
                             side: const BorderSide(color: AppColors.border),
                             onPressed: () {
-                              final todayStr = DateTime.now().toIso8601String().substring(0, 10);
-                              final valor = (_selectedFecha == todayStr)
-                                  ? (_tasaUsdtFecha ?? settings.tasaCambioVesUsdt)
-                                  : _tasaUsdtFecha;
-                              if (valor == null || valor <= 0) return;
+                              final valor = _tasaUsdtFecha ?? settings.tasaCambioVesUsdt;
+                              if (valor <= 0) return;
                               setState(() {
                                 _tasaUsdtCtrl.text = valor.toStringAsFixed(2);
+                                if (_modoLiquidacion == ModoLiquidacion.bsUsdt) {
+                                  _tasaCambioCtrl.text = valor.toStringAsFixed(2);
+                                }
                                 _recalcularTotalUsd();
                               });
                             },

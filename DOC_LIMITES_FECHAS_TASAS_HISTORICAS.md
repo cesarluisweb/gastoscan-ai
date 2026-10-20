@@ -23,14 +23,17 @@ Al registrar o editar un gasto con fechas pasadas remotas (ejemplo: `29/06/2021`
 - Para `USDT`, si la fecha histórica no tiene registro paralelo en DolarAPI (anteriores a febrero de 2026), realiza fallback a la tasa USD oficial de esa misma fecha histórica.
 - Para cualquier fecha histórica sin datos o sin red, se eliminó el fallback a la tasa de hoy (`getAllTodayRates()`); ahora retorna `0.0`, impidiendo falsificar tasas pasadas.
 
-### C. Selector de Fechas y UI en `ReviewExpenseScreen`
+### C. Selector de Fechas y UI Pragmática en `ReviewExpenseScreen`
 - El `showDatePicker` limita estrictamente:
   - `firstDate`: `AppConstants.fechaMinimaHistoricoTasas` (`2023-01-03`).
   - `lastDate`: Fecha de hoy (`DateTime.now()`).
   - `initialDate`: Clampeado de forma defensiva entre `firstDate` y `lastDate`.
-- En `_cargarTasasChips` y `_actualizarTasaPorFecha`: Si una fecha histórica no tiene tasa (`0.0`), no se sustituye con la tasa de hoy de `SettingsProvider`. La interfaz muestra:
-  `Sin histórico oficial (fecha) · Ingresa tasa manual`
-- Los `ActionChip` de tasas muestran `'Dólar BCV: No disponible'` si la fecha pasada no posee registro, evitando sobreescribir con valores de hoy.
+- **Enfoque Pragmático Local-First para Tasas:**
+  - Si la fecha es histórica y se cuenta con conexión / caché: se asigna la tasa oficial exacta de ese día (`Tasa oficial BCV ($fecha)`).
+  - Si la fecha es del mes en curso y no hay conexión: sugiere la última tasa en caché de la app etiquetada como `Tasa referencial actual (sin conexión)` y campo editable.
+  - Si la fecha es de un mes/año anterior y no hay conexión ni histórico: sugiere el último valor conocido pero advierte claramente `Sin conexión para histórico · Tasa referencial`.
+  - Para USDT en fechas anteriores a febrero de 2026 (sin histórico paralelo en DolarAPI): sugiere la tasa USD BCV de esa fecha histórica con la etiqueta explícita `Referencia BCV ($fecha) · Ajusta la tasa P2P`, permitiendo al usuario ajustar la brecha real de su operación.
+  - Los `ActionChip` indican `(Ref.)` o `(Ref. BCV)` cuando el valor no proviene de un registro exacto de esa fecha, preservando la honestidad contable sin romper los cálculos.
 
 ### D. Selector de Meses (`MonthSelectorBar`)
 - Se bloqueó la navegación hacia años anteriores a 2023 en el chevron izquierdo y en el modal selector de mes.
