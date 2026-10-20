@@ -4,15 +4,14 @@
 ## Estado Actual Inmediato
 - **Rama:** `main`.
 - **Fase activa:** Fase 5 (Closed Testing activa) y validación de motor multimoneda (FIN-11).
-- **Acción Reciente:** Implementación de `FIN-13` (Límites de fechas y blindaje de tasas históricas BCV/USDT con enfoque pragmático local-first, corrección de solapamiento `d30d31` en `DailyEvolutionCard` y espaciado de proyección en `AnalysisScreen`).
+- **Acción Reciente:** Implementación de `REL-02` (Edge-to-Edge nativo en Android 15/16 y adaptabilidad de interfaz para pantallas grandes/tablets con ancho máximo de 600dp centrado).
 - **Estado de CI:** Build 524 confirmado en verde (`conclusion: success`, commit `eba23be`).
-- **Estado General:** `FIN-13` en `Pendiente de validación 🧪` para pruebas en dispositivo por César.
+- **Estado General:** `REL-02` en `Implementada 🔧` previo a confirmación por CI.
 
 ## Decisiones Técnicas y de Negocio Recientes
-- Fecha mínima para registro de gastos acotada al inicio de registros continuos de DolarAPI (`2023-01-03`) y máxima a fecha actual.
-- Enfoque pragmático local-first para tasas históricas: sin red se sugiere tasa referencial en caché con aviso visual sin bloquear en cero; USDT previo a feb 2026 sugiere BCV señalando `Referencia BCV (Ajusta la tasa P2P)`.
-- Supresión de `d30` en meses de 31 días en `DailyEvolutionCard` para erradicar el solapamiento visual `d30d31`.
-- Envoltura `Expanded` en etiqueta de proyección mensual en `AnalysisScreen` para evitar desbordes contra el margen derecho.
+- Edge-to-Edge habilitado en capas nativa (MainActivity.kt con WindowCompat y barras transparentes en styles.xml) y Dart (SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge)).
+- Ancho máximo centrado (600dp) en MainScreen, ReviewExpenseScreen, CurrencyCalculatorScreen, ShoppingListScreen y ReceiptGalleryScreen para prevenir estiramiento en tablets/foldables (Android 16).
+- Optimización DEX (R8) postergada para después de la prueba cerrada de 14 días (plazo Play Store feb 2027), evitando riesgos de regresión en testers.
 
 ## Errores y Fricciones a Evitar
 - No encadenar comandos con `&&` ni usar redirección `>` en PowerShell.

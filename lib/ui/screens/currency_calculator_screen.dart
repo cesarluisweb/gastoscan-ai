@@ -274,8 +274,11 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
               )
             : null,
       ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
           // Selector de Chips de Tasa Rápida
           SingleChildScrollView(
@@ -586,6 +589,8 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
           const SizedBox(height: 30),
         ],
       ),
+    ),
+  ),
     );
   }
 

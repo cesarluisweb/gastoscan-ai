@@ -1312,8 +1312,11 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       },
       child: Scaffold(
       bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
           child: hasMoreInQueue
               ? Column(
                   mainAxisSize: MainAxisSize.min,
@@ -1354,6 +1357,8 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                       ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
                       : const Text('Guardar Gasto', style: TextStyle(color: Colors.black, fontSize: 16)),
                 ),
+            ),
+          ),
         ),
       ),
       appBar: AppBar(
@@ -1430,8 +1435,11 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
             ),
         ],
       ),
-        body: Form(
-        key: _formKey,
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Form(
+              key: _formKey,
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
@@ -2223,6 +2231,8 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         ),
       ),
     ),
+  ),
+),
   );
   }
 

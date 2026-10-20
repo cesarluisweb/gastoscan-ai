@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -17,6 +18,18 @@ import 'services/sync_service.dart';
 /// Punto de entrada oficial de Rinde Más.
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Configurar Edge-to-Edge nativo y barras del sistema transparentes (Android 15+)
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarIconBrightness: Brightness.dark,
+      systemNavigationBarDividerColor: Colors.transparent,
+    ),
+  );
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,

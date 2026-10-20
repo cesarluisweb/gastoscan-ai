@@ -256,7 +256,10 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       ),
       builder: (ctx) {
         return SafeArea(
-          child: Wrap(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 600),
+              child: Wrap(
             children: [
               Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -378,7 +381,9 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
               const SizedBox(height: 16),
             ],
           ),
-        );
+        ),
+      ),
+    );
       },
     );
   }
@@ -426,15 +431,20 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         SystemNavigator.pop();
       },
       child: Scaffold(
-        body: _showingChat
-            ? ChatScreen(
-                showBackButton: true,
-                onBack: _closeChat,
-              )
-            : _FadeIndexedStack(
-                index: _currentIndex,
-                children: _pages,
-              ),
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: _showingChat
+                ? ChatScreen(
+                    showBackButton: true,
+                    onBack: _closeChat,
+                  )
+                : _FadeIndexedStack(
+                    index: _currentIndex,
+                    children: _pages,
+                  ),
+          ),
+        ),
         floatingActionButton: isKeyboardOpen
             ? null
             : FloatingActionButton(
@@ -453,9 +463,12 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                 notchMargin: 6.0,
                 padding: EdgeInsets.zero,
                 height: 65, // Reducir altura
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 600),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
                     _buildTabItem(
                       icon: Icons.home_outlined,
                       activeIcon: Icons.home,
@@ -485,6 +498,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                   ],
                 ),
               ),
+            ),
+          ),
       ),
     );
   }

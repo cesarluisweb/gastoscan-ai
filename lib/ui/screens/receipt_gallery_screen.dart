@@ -74,8 +74,11 @@ class _ReceiptGalleryScreenState extends State<ReceiptGalleryScreen> {
             : null,
         automaticallyImplyLeading: widget.showBackButton,
       ),
-      body: Column(
-        children: [
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: Column(
+            children: [
           // Selector de Mes y Año
           const MonthSelectorBar(
             padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
@@ -263,6 +266,8 @@ class _ReceiptGalleryScreenState extends State<ReceiptGalleryScreen> {
           ),
         ],
       ),
+    ),
+  ),
     );
   }
 }

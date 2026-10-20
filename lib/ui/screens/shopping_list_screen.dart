@@ -111,8 +111,11 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
               )
             : null,
       ),
-      body: Column(
-        children: [
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: Column(
+            children: [
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Row(
@@ -170,6 +173,8 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
           ),
         ],
       ),
+    ),
+  ),
     );
   }
 }
