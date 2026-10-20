@@ -610,16 +610,19 @@ class AnalysisScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        isPastMonth
-                            ? 'Gasto final del mes'
-                            : 'Si sigues a este ritmo gastarás en el mes',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w500,
+                      Expanded(
+                        child: Text(
+                          isPastMonth
+                              ? 'Gasto final del mes'
+                              : 'Si sigues a este ritmo gastarás en el mes',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
+                      const SizedBox(width: 8),
                       Text(
                         isPastMonth
                             ? fmt(spent)

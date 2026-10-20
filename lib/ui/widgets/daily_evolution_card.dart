@@ -280,7 +280,10 @@ class DailyEvolutionCard extends StatelessWidget {
                       interval: 5,
                       getTitlesWidget: (value, meta) {
                         final valInt = value.toInt();
-                        if (valInt == 1 || valInt % 5 == 0 || valInt == totalDiasMes) {
+                        final esFinDeMes = valInt == totalDiasMes;
+                        // En meses de 31 días se omite el d30 para evitar el solapamiento visual "d30d31"
+                        final esMultiplo5NoColisionante = (valInt % 5 == 0) && (totalDiasMes - valInt > 1);
+                        if (valInt == 1 || esMultiplo5NoColisionante || esFinDeMes) {
                           return Padding(
                             padding: const EdgeInsets.only(top: 4),
                             child: Text(

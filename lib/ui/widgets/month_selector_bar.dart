@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_constants.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../providers/gasto_provider.dart';
 
@@ -47,15 +48,17 @@ class MonthSelectorBar extends StatelessWidget {
             icon: const Icon(Icons.chevron_left, color: AppColors.textSecondary, size: 22),
             visualDensity: VisualDensity.compact,
             tooltip: 'Mes anterior',
-            onPressed: () {
-              int nuevoMes = month - 1;
-              int nuevoAnio = year;
-              if (nuevoMes < 1) {
-                nuevoMes = 12;
-                nuevoAnio--;
-              }
-              _handleCambiarMes(context, nuevoAnio, nuevoMes);
-            },
+            onPressed: (year <= AppConstants.fechaMinimaHistoricoTasas.year && month <= 1)
+                ? null
+                : () {
+                    int nuevoMes = month - 1;
+                    int nuevoAnio = year;
+                    if (nuevoMes < 1) {
+                      nuevoMes = 12;
+                      nuevoAnio--;
+                    }
+                    _handleCambiarMes(context, nuevoAnio, nuevoMes);
+                  },
           ),
           InkWell(
             key: Key('${keyPrefix ?? ''}month_selector_title'),
@@ -152,11 +155,13 @@ class MonthSelectorBar extends StatelessWidget {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.chevron_left, color: AppColors.textPrimary),
-                    onPressed: () {
-                      setStateDialog(() {
-                        tempAnio--;
-                      });
-                    },
+                    onPressed: tempAnio <= AppConstants.fechaMinimaHistoricoTasas.year
+                        ? null
+                        : () {
+                            setStateDialog(() {
+                              tempAnio--;
+                            });
+                          },
                   ),
                   Text(
                     '$tempAnio',

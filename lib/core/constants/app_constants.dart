@@ -150,6 +150,11 @@ class AppConstants {
   );
   static const String prefGatewayUrl = 'gateway_api_url';
 
+  // Límites temporales e históricos de tasas
+  /// Fecha más antigua con registros continuos de tasas oficiales (DolarAPI / BCV).
+  static final DateTime fechaMinimaHistoricoTasas = DateTime(2023, 1, 3);
+  static const String fechaMinimaHistoricoTasasIso = '2023-01-03';
+
   // Soporte y Contacto
   static const String soporteWhatsAppNumero = '+58 414-8431543';
   static const String soporteWhatsAppUrl = 'https://wa.me/584148431543?text=Hola,%20tengo%20una%20consulta%20sobre%20Rinde%20M%C3%A1s';

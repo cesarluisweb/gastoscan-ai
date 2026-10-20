@@ -31,6 +31,31 @@ void main() {
       expect(rate, equals(150.0));
     });
 
+    test('retorna 0.0 para fechas anteriores al inicio del historico (ej. 2021) sin fallback a tasa de hoy', () async {
+      final rate = await ExchangeRateService.getRateForDate('2021-06-29', client: historicosMock());
+      expect(rate, equals(0.0));
+    });
+
+    test('retorna 0.0 para fecha historica inexistente o fallo de red en vez de tasa de hoy', () async {
+      final failingMock = MockClient((_) async => http.Response('error', 500));
+      final rate = await ExchangeRateService.getRateForDate('2024-05-15', client: failingMock);
+      expect(rate, equals(0.0));
+    });
+
+    test('USDT historico hace fallback a USD historico de la misma fecha si no hay paralelo', () async {
+      final mock = MockClient((request) async {
+        if (request.url.toString().contains('/dolares/paralelo')) {
+          return http.Response('[]', 200);
+        }
+        if (request.url.toString().contains('/dolares/oficial')) {
+          return http.Response('[{"fecha":"2024-05-15","promedio":36.5}]', 200);
+        }
+        return http.Response('error', 500);
+      });
+      final usdtRate = await ExchangeRateService.getRateForDate('2024-05-15', moneda: 'USDT', client: mock);
+      expect(usdtRate, equals(36.5));
+    });
+
     test('encuentra el ultimo dia habil anterior si la fecha es fin de semana', () async {
       // 2026-10-03 es sabado: sin dato exacto, usa el viernes 2026-10-02.
       final rateSabado = await ExchangeRateService.getRateForDate('2026-10-03', client: historicosMock());

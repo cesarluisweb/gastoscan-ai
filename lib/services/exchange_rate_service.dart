@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../core/constants/app_constants.dart';
 
 class ExchangeRatesData {
   final double usd;
@@ -299,6 +300,11 @@ class ExchangeRateService {
       return cachedRate;
     }
 
+    // Fechas anteriores al límite de histórico confiable no tienen datos
+    if (isoDate.compareTo(AppConstants.fechaMinimaHistoricoTasasIso) < 0) {
+      return 0.0;
+    }
+
     // 2. Consultar históricos oficiales en DolarAPI
     try {
       String endpoint = '';
@@ -369,28 +375,18 @@ class ExchangeRateService {
       }
     }
 
-    // 4. Fallback final a tasa del día (o última tasa en caché si no hay conexión)
-    final allRates = await getAllTodayRates(client: client);
-    double finalRate = 0.0;
-    if (monedaClean == 'EUR') {
-      finalRate = allRates.eur > 0 ? allRates.eur : allRates.usd;
-    } else if (monedaClean == 'USDT') {
-      finalRate = allRates.usdt > 0 ? allRates.usdt : allRates.usd;
-    } else {
-      finalRate = allRates.usd;
-    }
-
-    if (finalRate <= 50.0) {
-      final cachedVal = prefs.getDouble('cached_rate_usd') ??
-          prefs.getDouble('cached_exchange_rate') ??
-          prefs.getDouble('tasa_cambio_ves_usd');
-      if (cachedVal != null && cachedVal > 50.0) {
-        finalRate = cachedVal;
-      } else {
-        finalRate = 0.0;
+    // 4. Fallback de USDT a USD oficial de la misma fecha histórica si el histórico paralelo no existía
+    if (monedaClean == 'USDT') {
+      final usdHistorical = await getRateForDate(isoDate, moneda: 'USD', tipo: 'oficial', client: httpClient);
+      if (usdHistorical > 0) {
+        await prefs.setDouble(cacheKey, usdHistorical);
+        return usdHistorical;
       }
     }
-    return finalRate > 50.0 ? finalRate : 0.0;
+
+    // 5. Para fechas históricas sin datos, retornar 0.0 para no falsificar la tasa
+    // asignando erróneamente la tasa del día de hoy.
+    return 0.0;
   }
 
   /// Obtiene la tasa de cambio de hoy en tiempo real (retrocompatibilidad)
