@@ -85,12 +85,12 @@ void main() {
   }
 
   testWidgets('ReviewExpenseScreen renders form and does not collapse body due to bottomNavigationBar', (tester) async {
-    tester.binding.window.physicalSizeTestValue = const Size(1080, 2400);
-    tester.binding.window.devicePixelRatioTestValue = 2.5;
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.5;
 
     addTearDown(() {
-      tester.binding.window.clearPhysicalSizeTestValue();
-      tester.binding.window.clearDevicePixelRatioTestValue();
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
     });
 
     await tester.pumpWidget(createWidgetUnderTest());
@@ -120,12 +120,12 @@ void main() {
   });
 
   testWidgets('ReviewExpenseScreen uses historical BCV rate (< 50.0) for 2023 dates and calculates VES properly', (tester) async {
-    tester.binding.window.physicalSizeTestValue = const Size(1080, 2400);
-    tester.binding.window.devicePixelRatioTestValue = 2.5;
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.5;
 
     addTearDown(() {
-      tester.binding.window.clearPhysicalSizeTestValue();
-      tester.binding.window.clearDevicePixelRatioTestValue();
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
     });
 
     SharedPreferences.setMockInitialValues({
@@ -143,14 +143,15 @@ void main() {
         ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
         ChangeNotifierProvider<ScanQueueProvider>.value(value: scanQueueProvider),
       ],
-      child: const MaterialApp(
+      child: MaterialApp(
         home: ReviewExpenseScreen(
           extractedData: GeminiExtractionResult(
             comercio: 'Automercado 2023',
             fecha: '2023-10-20',
             moneda: 'USD',
             totalOriginal: 100.0,
-            items: [],
+            impuestoIva: 0.0,
+            items: const [],
           ),
         ),
       ),
