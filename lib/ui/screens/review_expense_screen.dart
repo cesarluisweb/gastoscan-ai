@@ -2076,12 +2076,17 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  const Text('Se guardará en Bolívares (VES):', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                                  Text('Tasa BCV: Bs. ${tBcv.toStringAsFixed(2)}', style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                                ],
+                              SizedBox(
+                                width: double.infinity,
+                                child: Wrap(
+                                  alignment: WrapAlignment.spaceBetween,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  runSpacing: 4,
+                                  children: [
+                                    const Text('Se guardará en Bolívares (VES):', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                                    Text('Tasa BCV: Bs. ${tBcv.toStringAsFixed(2)}', style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                                  ],
+                                ),
                               ),
                               if (settings.tasasSonReferencia) ...[
                                 const SizedBox(height: 2),
@@ -2143,12 +2148,17 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  const Text('Se guardará en Bolívares (VES):', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                                  Text('Tasa P2P: Bs. ${tUsdt.toStringAsFixed(2)}', style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                                ],
+                              SizedBox(
+                                width: double.infinity,
+                                child: Wrap(
+                                  alignment: WrapAlignment.spaceBetween,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  runSpacing: 4,
+                                  children: [
+                                    const Text('Se guardará en Bolívares (VES):', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                                    Text('Tasa P2P: Bs. ${tUsdt.toStringAsFixed(2)}', style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                                  ],
+                                ),
                               ),
                               if (settings.tasasSonReferencia) ...[
                                 const SizedBox(height: 2),
@@ -2330,8 +2340,10 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          Wrap(
+            alignment: WrapAlignment.spaceEvenly,
+            spacing: 8,
+            runSpacing: 4,
             children: [
               TextButton.icon(
                 onPressed: _showImagePickerOptions,
