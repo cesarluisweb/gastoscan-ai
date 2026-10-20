@@ -5,8 +5,8 @@
 - **Rama:** `main`.
 - **Fase activa:** Fase 5 (Closed Testing activa) y validación de motor multimoneda (FIN-11).
 - **Acción Reciente:** Implementación de `REL-02` (Edge-to-Edge nativo en Android 15/16 y adaptabilidad de interfaz para pantallas grandes/tablets con ancho máximo de 600dp centrado).
-- **Estado de CI:** Build 524 confirmado en verde (`conclusion: success`, commit `eba23be`).
-- **Estado General:** `REL-02` en `Implementada 🔧` previo a confirmación por CI.
+- **Estado de CI:** Build 525 confirmado en verde (`conclusion: success`, commit `6a9e804`).
+- **Estado General:** `REL-02` en `Pendiente de validación 🧪` para pruebas en dispositivo por César y subida de AAB a Google Play Console.
 
 ## Decisiones Técnicas y de Negocio Recientes
 - Edge-to-Edge habilitado en capas nativa (MainActivity.kt con WindowCompat y barras transparentes en styles.xml) y Dart (SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge)).
