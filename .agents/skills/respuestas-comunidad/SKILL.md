@@ -46,6 +46,20 @@ Esta habilidad se activa al preparar mensajes para usuarios, publicaciones en Re
 > 
 > Me ayuda bastante este tipo de reporte para corregirlo rápido.
 
+### Caso 5: "En Venezuela no dan factura en todas partes / La mayoría de comercios no dan ticket"
+> Totalmente, en la calle casi ningún comercio da factura (el chino, la camioneta, el pago móvil).
+> 
+> Por eso la app no depende del papel: puedes registrar los gastos del día dictándolos por voz o anotándolos a mano en segundos. La foto de la factura es solo una opción para cuando sales del supermercado o la farmacia con un ticket largo y no quieres tipear 15 productos a mano.
+> 
+> Si le das una oportunidad, me comentas qué tal te parece.
+
+### Caso 6: "Yo ya uso ChatGPT / IA directamente para organizar mis gastos"
+> Totalmente, hablarle o dictarle a la IA es mil veces más rápido que escribir. Por eso la app permite registrar los gastos del día por voz sin necesidad de tener factura.
+> 
+> La ventaja es que la app ya viene lista para hacer todo: calcula la tasa BCV o el promedio P2P automáticamente, te guarda los registros en tu teléfono y te arma los gráficos contra tu presupuesto del mes sin que tengas que pedirle que haga cuentas a mano cada vez.
+> 
+> Igual entiendo si prefieres seguir usando la IA directamente. Si en algún momento quieres probar la app para ver si te ahorra ese trabajo, me comentas.
+
 ---
 
 ## 3. Registro Obligatorio en Bitácora

@@ -48,8 +48,12 @@ function Get-ApiHeaders {
         'Accept'     = 'application/vnd.github+json'
         'User-Agent' = 'rindemas-wait-ci'
     }
-    if ($env:GITHUB_TOKEN -and $env:GITHUB_TOKEN.Trim().Length -gt 0) {
-        $headers['Authorization'] = 'Bearer ' + $env:GITHUB_TOKEN.Trim()
+    $token = $env:GITHUB_TOKEN
+    if (-not $token) {
+        $token = [System.Environment]::GetEnvironmentVariable('GITHUB_TOKEN', 'User')
+    }
+    if ($token -and $token.Trim().Length -gt 0) {
+        $headers['Authorization'] = 'Bearer ' + $token.Trim()
     }
     return $headers
 }
