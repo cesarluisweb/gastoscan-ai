@@ -4,8 +4,9 @@
 ## Estado Actual Inmediato
 - **Rama:** `main`.
 - **Fase activa:** Fase 5 (Closed Testing activa) y preparación de lanzamiento.
+- **Acción Reciente:** Landing actualizada en producción con botón outline y microtexto limpio (commit `38ce64a`).
 - **Activos Oficiales Creados:** Gmail (`rindemas.app@gmail.com`), Instagram (`@rindemas.app`), TikTok (`@rindemas.app`), WhatsApp (`channel/0029VbEPwHLDJ6H678QLlN1H`). Clave en Bitwarden de César.
-- **Estado de CI:** Build 533 en verde y landing desplegada con 'Unirme a la lista de espera'.
+- **Estado de CI:** Build 535 en verde confirmado (`CI 39871687458 | success | build 535 | 38ce64a`). Producción verificada vía HTTP.
 
 ## Decisiones Técnicas y de Negocio Recientes
 - En `_effectiveBcvRate`, la validación de tasa debe ser `> 0` y no `> 50.0`, ya que en 2023 las tasas BCV oficiales se encontraban entre 17 y 36 Bs/USD. Descartar `<= 50.0` solo aplica a la tasa del día actual para depurar semillas de prueba obsoletas.
