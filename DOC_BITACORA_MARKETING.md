@@ -117,6 +117,13 @@ Este documento registra la estrategia real ejecutada en comunidades, los textos 
 ### E. Ante la crítica "O sea un AI wrapper":
 > *"La IA (Gemini Flash) es solo el motor para extraer la foto de la factura en 2 segundos sin teclear a mano. Alrededor hay todo el desarrollo local: base de datos en SQLite, lógica de presupuestos aislados por mes en bolívares y dólares a tasa BCV, lista de compras con cotejo automático, cola de sincronización offline/online y panel web. La IA resuelve la extracción del comprobante, el resto es la arquitectura de la app para que la persona organice sus finanzas cotidianas en el país."*
 
+### F. Ante el usuario que usa IA directamente (ChatGPT / Claude) y la objeción "no dan factura":
+> *"Totalmente, hablarle o dictarle a la IA es mil veces más rápido que tipear. Por eso la app permite dictar por voz los gastos del día sin necesidad de tener factura.*
+> 
+> *La diferencia con usar un chat directo es que la app te calcula la tasa BCV oficial automáticamente, te guarda los registros en SQLite en tu teléfono y te arma los gráficos contra tu presupuesto del mes sin que tengas que pedirle que haga cuentas a mano cada vez.*
+> 
+> *Si quieres probarla en Google Play, me dices y te paso el acceso."*
+
 ---
 
 ## 6. Grandes Aprendizajes para Futuros Lanzamientos
@@ -191,4 +198,11 @@ Este marco sintetiza la experiencia y aprendizajes reales del caso de estudio de
 * **Medición de Fugas (Leak Tracking):** Instrumentar eventos con Firebase Analytics para detectar con precisión dónde cae el usuario: abandono tras instalar, fallo en primer escaneo, o rebote en la pantalla de precios Pro.
 * **Filosofía "Fracasa Rápido, Ajusta Barato":** Si una función añadida no genera retención ni intención de compra, se itera o se retira sin apego emocional para mantener la app ligera y enfocada.
 * **Infraestructura como Activo Permanente:** El código de sincronización offline/online, la cola resiliente de escaneo, la integración con Gemini, el manejo de SQLite local y el sistema de cobro de Google Play quedan empaquetados como módulos modulares que permitirán lanzar el próximo proyecto en una fracción del tiempo.
+
+---
+
+## 7. Canal Oficial de WhatsApp (Fase Pre-Google Play)
+* **Enlace oficial:** `https://whatsapp.com/channel/0029VbEPwHLDJ6H678QLlN1H`
+* **Integración en Web:** Botón en Hero y tarjeta dedicada en `#descargar` de la landing page (`rindemas.cesarluis.com`).
+* **Propósito:** Captación y expectativa con tasa de apertura del 80%+ para avisar del lanzamiento en Play Store y distribuir la versión anticipada.
 

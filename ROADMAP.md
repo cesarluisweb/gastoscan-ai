@@ -111,6 +111,9 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
     - **Tarjeta 5:** `¿En qué moneda se va tu dinero?` con barra horizontal apilada multi-segmento y desglose ordenado de monedas de origen convertidas a la moneda activa.
     - **Tarjeta 6:** `Radiografía de Compras` con clasificación por umbrales (hormiga <$5, medias $5-$25, fuertes >$25) y pie con mayor gasto del mes.
     - **Padding inferior seguro:** $\ge 100\,\text{dp}$ para evitar solapamientos con la barra de navegación o el botón flotante.
+- `UX-13` **Sistema Ligero de Etiquetas (Tags) para Gastos:** `Pendiente`
+  - *Problema:* Los usuarios solicitan clasificar gastos en conceptos específicos no cubiertos por las 8 categorías canónicas (como Entretenimiento, Comisiones bancarias, Mascotas o Ocio). Crear categorías libres rompería el catálogo canónico de `AppConstants.categorias`, la clasificación determinista de Gemini y la paridad con el panel web.
+  - *Solución:* Permitir agregar una o más etiquetas opcionales (`#tags`) en `ReviewExpenseScreen` y formularios manuales, persistirlas en SQLite/Firestore y habilitar filtro por etiquetas en el historial sin alterar las 8 categorías fijas en presupuestos y radiografías.
 
 ### Bloque C: Percepción con IA, Optimización y Seguridad
 - `AI-02` **Detección Automática y Transparente de Pagos Digitales (Pago Móvil / Zelle / Binance / PayPal):** `Completada ✅`
@@ -131,6 +134,12 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
   - *Problema:* Discrepancias donde los montos perdían decimales (ej. $56.12 aparecía como $5.612,00 o viceversa). La validación matemática cruzada en `GeminiExtractionResult` tenía las ramas de ratio invertidas, multiplicando por 100 en lugar de dividir cuando el total o los ítems omitían el punto decimal en el OCR.
   - *Solución:* Inversión corregida de ramas en `GeminiExtractionResult`, corrección defensiva de ítems individuales cuyo subtotal supera el total general por falta de coma/punto, soporte de múltiples separadores de miles en `amount_parser.dart`, suma en céntimos enteros en `review_expense_screen.dart` para evitar residuos IEEE 754 y refuerzo estricto de la regla decimal en los prompts del Cloudflare Worker.
   - *Documentación:* Ver [DOC_CORRECCION_DECIMALES_OCR.md](DOC_CORRECCION_DECIMALES_OCR.md). Tarea crítica: validada y aprobada por César en dispositivo físico.
+- `AI-08` **Tratamiento Defensivo de Decimales y Comas en OCR y Asistente IA:** `Pendiente`
+  - *Problema:* Tras desactivar `isPrice: true` para preservar enteros devueltos por IA, los recibos térmicos fiscales donde los puntos o comas se imprimen tenues o borrosos (ej. `12,50` leído como `1250`) se interpretan como enteros de cuatro dígitos (`1250.00`), inflando los montos x100. Asimismo, en el Asistente (Chat y Voz), montos dictados o escritos con coma (ej. `15,50`) o ejemplos de prompts sin decimales hacen que el modelo omita separadores o confunda la parte fraccionaria.
+  - *Solución:*
+    1. Restaurar regla heurística en `GeminiExtractionResult` para que si un monto de ítem o total carece de punto decimal en OCR y difiere por factor 100x respecto al contexto o total de ítems, se reescale a céntimos defensivamente.
+    2. Reforzar el prompt del Cloudflare Worker tanto en OCR como en Chat ordenando que todo monto numérico se devuelva con punto decimal explícito (`0.00`), y que si el usuario escribe o dicta con coma (`15,50`), se normalice inmediatamente a punto (`15.50`).
+    3. Asegurar que `parseVoiceExpense` y `tryParseAmount` interpreten adecuadamente valores con comas decimales aisladas.
 
 
 ### Bloque D: Nueva Herramienta Financiera
@@ -170,6 +179,21 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
   - *Solución:* Límite del selector a partir del 3 de enero de 2023 (`AppConstants.fechaMinimaHistoricoTasas`) hasta la fecha actual; enfoque pragmático local-first para tasas históricas (aviso de referencia y sin conexión si no hay red, permitiendo cálculo editable sin bloquear en cero); sugerencia de tasa BCV como referencia para USDT antes de feb 2026; límites en `MonthSelectorBar`; supresión de `d30` en meses de 31 días en `DailyEvolutionCard`; y ajuste con `Expanded` en la proyección de `AnalysisScreen`.
   - *Documentación:* Ver [DOC_LIMITES_FECHAS_TASAS_HISTORICAS.md](DOC_LIMITES_FECHAS_TASAS_HISTORICAS.md). Tarea crítica: Build 524 confirmado en verde (`conclusion: success`), pendiente de prueba en dispositivo por César.
 
+- `FIN-14` **Flexibilidad y Opciones de Liquidación en Gastos Registrados en USDT:** `Pendiente`
+  - *Problema:* Al seleccionar `USDT` como moneda de un gasto en `ReviewExpenseScreen`, la app aplica paridad 1:1 plana con el dólar (`helperText: 'Paridad 1:1 con USD'`) sin habilitar los métodos de liquidación (`BS_BCV`, `BS_USDT`, `DIVISA`) ni calcular el contravalor real en bolívares a tasa Binance P2P. Esto impide registrar compras cotizadas o pagadas en USDT que tienen impacto en bolívares o reflejar la brecha cambiaria frente al BCV.
+  - *Solución:*
+    1. Permitir opciones de liquidación para gastos ingresados en `USDT` (ej. liquidado en Bolívares a tasa Binance P2P o pagado en USDT directo vía Binance Pay/cripto).
+    2. Almacenar el contravalor en Bolívares y USD calculándolo con `tasaUsdt` de la fecha seleccionada.
+    3. Mantener la consistencia matemática en el switch de los 4 lentes (`USD BCV`, `USDT P2P`, `EUR BCV`, `Bs.`) sin alterar la inmutabilidad histórica.
+
+### Bloque E: Respaldo y Soberanía de Datos (Local-First Backup)
+- `BACKUP-01` **Exportación e Importación Completa con Comprobantes (.zip):** `Pendiente`
+  - *Problema:* Al desinstalar y reinstalar la app (común en evaluadores de Play Store y cambios de dispositivo), los gastos se recuperan desde Firestore pero las fotos de los comprobantes (`recibo_*.jpg`) se pierden definitivamente, ya que por política de privacidad y costo cero residen exclusivamente en el sandbox local del teléfono y no en la nube.
+  - *Solución:*
+    1. Crear en la pestaña Más la opción **"Exportar copia de seguridad completa (.zip)"** que comprima la base de datos SQLite y la carpeta de imágenes de comprobantes.
+    2. Implementar la acción inversa **"Restaurar copia de seguridad (.zip)"** mediante selector de archivos (`file_picker`), extrayendo las imágenes al directorio local y reinsertando/fusionando los registros en SQLite sin colisiones de IDs.
+    3. Permitir guardar o compartir el archivo `.zip` en Google Drive personal, almacenamiento interno o mensajería, ofreciendo total soberanía y respaldo offline sin depender de servidores en la nube.
+
 ---
 
 ## Fase 6.1 (Remanente): Catálogo de Categorías
@@ -185,7 +209,7 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 - **Procesamiento Background Nativo:** Migrar la cola local en Dart a un Background Worker real del sistema operativo (Firebase Cloud Tasks / WorkManager) para asegurar subidas e IA incluso con la app cerrada.
 - **Extracción Asistida por Confianza (Confidence Scores):** Retorno de nivel de confianza por dato extraído con alerta "⚠️ Revisar" y diccionario personal local de aprendizaje.
 - **Cifrado de Extremo a Extremo en Nube (E2EE / Zero-Knowledge Sync):** Cifrado local con AES-256 de gastos y comprobantes antes de persistir en Firestore utilizando clave derivada de la contraseña del usuario.
-- **Copia de Seguridad y Restauración Portable (.zip):** Generación de archivo comprimido con SQLite e imágenes para resguardo bajo demanda en Google Drive personal o almacenamiento local.
+- **Copia de Seguridad y Restauración Portable (.zip):** Especificada y priorizada en Fase 6.2 Bloque E (`BACKUP-01`).
 
 ---
 
