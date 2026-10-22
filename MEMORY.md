@@ -4,9 +4,9 @@
 ## Estado Actual Inmediato
 - **Rama:** `main`.
 - **Fase activa:** Fase 5 (Closed Testing activa) y preparación de lanzamiento.
-- **Acción Reciente:** Integración del Canal oficial de WhatsApp y tarjeta dual (Canal de WhatsApp + descarga anticipada de APK) en Hero y sección `#descargar` de la landing page (`index.astro`).
-- **Estado de CI:** Build 530 confirmado en verde (`conclusion: success`, commit `78986b6`). Pendiente de nuevo push para landing.
-- **Estado General:** Landing verificada con `npm run build` local exitoso. Listo para push y despliegue CI.
+- **Acción Reciente:** Integración del Canal oficial de WhatsApp (`0029VbEPwHLDJ6H678QLlN1H`) y tarjeta dual en Hero y sección `#descargar` de la landing page.
+- **Estado de CI:** Build 531 confirmado en verde (`conclusion: success`, commit `b0204c1`).
+- **Estado General:** Landing verificada en vivo en producción (`rindemas.cesarluis.com`) con canal de WhatsApp y APK build 535 activos.
 
 ## Decisiones Técnicas y de Negocio Recientes
 - En `_effectiveBcvRate`, la validación de tasa debe ser `> 0` y no `> 50.0`, ya que en 2023 las tasas BCV oficiales se encontraban entre 17 y 36 Bs/USD. Descartar `<= 50.0` solo aplica a la tasa del día actual para depurar semillas de prueba obsoletas.
