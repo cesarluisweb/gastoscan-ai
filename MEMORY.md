@@ -4,9 +4,8 @@
 ## Estado Actual Inmediato
 - **Rama:** `main`.
 - **Fase activa:** Fase 5 (Closed Testing activa) y preparación de lanzamiento.
-- **Acción Reciente:** Ajuste de botón en Hero de landing a 'Lista de espera en WhatsApp' y creación de la skill local `generador-contenido-redes` (`.agents/skills/generador-contenido-redes/SKILL.md`).
-- **Estado de CI:** Build 531 confirmado en verde (`conclusion: success`, commit `b0204c1`).
-- **Estado General:** Landing en producción con doble vía y skill de contenido auditada con `check_rules.ps1` (0 errores).
+- **Activos Oficiales Creados:** Gmail (`rindemas.app@gmail.com`), Instagram (`@rindemas.app`), TikTok (`@rindemas.app`), WhatsApp (`channel/0029VbEPwHLDJ6H678QLlN1H`). Clave en Bitwarden de César.
+- **Estado de CI:** Build 533 en verde y landing desplegada con 'Unirme a la lista de espera'.
 
 ## Decisiones Técnicas y de Negocio Recientes
 - En `_effectiveBcvRate`, la validación de tasa debe ser `> 0` y no `> 50.0`, ya que en 2023 las tasas BCV oficiales se encontraban entre 17 y 36 Bs/USD. Descartar `<= 50.0` solo aplica a la tasa del día actual para depurar semillas de prueba obsoletas.

@@ -206,3 +206,13 @@ Este marco sintetiza la experiencia y aprendizajes reales del caso de estudio de
 * **Integración en Web:** Botón en Hero y tarjeta dedicada en `#descargar` de la landing page (`rindemas.cesarluis.com`).
 * **Propósito:** Captación y expectativa con tasa de apertura del 80%+ para avisar del lanzamiento en Play Store y distribuir la versión anticipada.
 
+---
+
+## 8. Activos Oficiales y Cuentas de Redes Sociales
+* **Correo Oficial de Marca:** `rindemas.app@gmail.com` (Contraseña guardada en Bitwarden personal de César).
+* **Instagram:** `@rindemas.app` (Cuenta profesional de creador, enlace a la landing y lista de espera).
+* **TikTok:** `@rindemas.app` (Cuenta personal para audios en tendencia, enlace en bio y nombre `Rinde Más 🇻🇪`).
+* **Landing Page Oficial:** `https://rindemas.cesarluis.com/`
+* **Canal de WhatsApp:** `https://whatsapp.com/channel/0029VbEPwHLDJ6H678QLlN1H`
+
+
