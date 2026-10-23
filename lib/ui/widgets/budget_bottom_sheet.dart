@@ -435,19 +435,24 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    const Icon(Icons.account_balance_wallet_outlined, color: AppColors.primaryDark),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Presupuestos ($mesNombre $anio)',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
+                Expanded(
+                  child: Row(
+                    children: [
+                      const Icon(Icons.account_balance_wallet_outlined, color: AppColors.primaryDark),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          'Presupuestos ($mesNombre $anio)',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close, color: AppColors.textSecondary),
@@ -462,14 +467,18 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Moneda del presupuesto:',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary,
+                const Flexible(
+                  child: Text(
+                    'Moneda del presupuesto:',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textSecondary,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                const SizedBox(width: 8),
                 Container(
                   decoration: BoxDecoration(
                     color: AppColors.cardLighter,
@@ -595,10 +604,14 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                const Text(
-                                  'Límite para gastar:',
-                                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                                const Flexible(
+                                  child: Text(
+                                    'Límite para gastar:',
+                                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
+                                const SizedBox(width: 8),
                                 Text(
                                   fmt(limite),
                                   style: const TextStyle(fontSize: 13, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
@@ -622,10 +635,14 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                meta > 0 ? 'Asignado a categorías: ${fmt(suma)}' : 'Asignado: ${fmt(suma)}',
-                                style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                              Flexible(
+                                child: Text(
+                                  'Asignado: ${fmt(suma)}',
+                                  style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
+                              const SizedBox(width: 8),
                               Text(
                                 categoriesExceeded
                                     ? 'Exceso: ${fmt(suma - limite)}'

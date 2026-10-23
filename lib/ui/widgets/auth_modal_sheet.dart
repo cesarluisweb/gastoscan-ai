@@ -82,19 +82,24 @@ Future<void> mostrarModalAutenticacionEmail(
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            const Icon(Icons.alternate_email, color: AppColors.primaryDark, size: 24),
-                            const SizedBox(width: 8),
-                            Text(
-                              esRegistro ? 'Vincular con Correo' : 'Iniciar Sesión con Correo',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
+                        Expanded(
+                          child: Row(
+                            children: [
+                              const Icon(Icons.alternate_email, color: AppColors.primaryDark, size: 24),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  esRegistro ? 'Vincular con Correo' : 'Iniciar Sesión con Correo',
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                         IconButton(
                           icon: const Icon(Icons.close, color: AppColors.textSecondary),
