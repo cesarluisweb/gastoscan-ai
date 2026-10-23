@@ -4,14 +4,14 @@
 ## Estado Actual Inmediato
 - **Rama:** `main`.
 - **Fase activa:** Fase 5 (Closed Testing activa) y Fase 6.2 (Finanzas y UX).
-- **CI Móvil Reciente:** Build 550 en verde (`CI 39987221563 | success | 4f369bc`). Artefactos `rindemas-dev-apk` y `app-release-aab` generados y listos en GitHub Actions.
+- **CI Móvil Reciente:** Build 552 en verde (`CI 40001429888 | success | 7df0d49`). Artefactos `rindemas-dev-apk` y `app-release-aab` listos en GitHub Actions.
 - **Acción Reciente (FIN-09 Equivalencias Multimoneda Inmutables & Refinamiento UX):**
-  1. Base de datos elevada a SQLite v18: columnas `total_eur` (INTEGER centavos) y `tasa_eur` (REAL) con backfill inmutable en `DatabaseHelper` y soporte en `GastoModel`.
+  1. Base de datos SQLite v18: columnas inmutables `total_eur` y `tasa_eur`.
   2. `ReviewExpenseScreen` & `panel.astro`:
-     - En `USD` y `EUR`: `En divisa` reordenada como primera sub-opción a la izquierda y seleccionada por defecto en gastos nuevos.
-     - En `VES`: Divulgación progresiva. Muestra de inmediato las 3 columnas de equivalencia (`USD BCV`, `EUR BCV`, `USDT P2P`), y oculta chips y edición de tasa tras el botón `Ajustar tasas ▾` con indicador de tasa personalizada activa y botón de restaurar oficial (`Icons.restart_alt`).
-  3. Compras en `USDT`: flujo limpio sin pedir bolívares, con cintillo de equivalencias informativas y respaldo de tasas del día en segundo plano.
-  4. Lentes financieros móviles (`DashboardScreen`, `SummaryCard`, `ExpenseCard`, `CurrencyFormatter`) y panel web (`landing/src/pages/panel.astro`) unificados con paridad al céntimo.
+     - `USD` y `EUR`: `En divisa` reordenada en 1.ª posición (izquierda) y seleccionada por defecto en gastos nuevos.
+     - `VES`: Divulgación progresiva. 3 columnas simultáneas visibles de inmediato (`USD BCV`, `EUR BCV`, `USDT P2P`), y chips/edición manual de tasa colapsados tras el botón `Ajustar tasas ▾` (con badge `Tasa personalizada activa` y botón `Icons.restart_alt`).
+  3. Compras en `USDT`: cintillo limpio multimoneda sin pedir bolívares.
+  4. Lentes financieros móviles y web unificados con paridad al céntimo.
   5. Documentación de tarea crítica: [docs/DOC_TASAS_EQUIVALENCIAS_MULTIMONEDA.md](docs/DOC_TASAS_EQUIVALENCIAS_MULTIMONEDA.md). Estado: `Pendiente de validación 🧪`.
 - **Acción Previa (Lote 1 Argon):** Sanitización XSS en panel web, protección de clave BYOK en `FlutterSecureStorage`, cabecera `x-goog-api-key` y anti-CSV Injection.
 
