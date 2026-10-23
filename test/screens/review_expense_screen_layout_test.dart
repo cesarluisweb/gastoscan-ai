@@ -194,8 +194,16 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
+    // Asegurar scroll visible hasta el botón de forma de pago
+    await tester.ensureVisible(find.byKey(const Key('btn_pagado_en_bs')));
+    await tester.pumpAndSettle();
+
     // Seleccionar explícitamente "En Bs. a tasa BCV" (2.ª opción)
     await tester.tap(find.byKey(const Key('btn_pagado_en_bs')));
+    await tester.pumpAndSettle();
+
+    // Scroll hasta los campos resultantes
+    await tester.ensureVisible(find.byKey(const Key('input_total_bs_manual')));
     await tester.pumpAndSettle();
 
     // Verify rate is 34.86, NOT today's rate 881.88
@@ -258,6 +266,8 @@ void main() {
 
     // 2. Al tocar el botón 'Ajustar tasas ▾' se despliegan los 3 chips y la caja de edición de tasa
     expect(find.byKey(const Key('btn_ajustar_tasas_ves')), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('btn_ajustar_tasas_ves')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('btn_ajustar_tasas_ves')));
     await tester.pumpAndSettle();
 
@@ -270,6 +280,8 @@ void main() {
     await tester.tap(find.byKey(const Key('chip_rate_eur_bcv')));
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.byKey(const Key('input_tasa_ves')));
+    await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const Key('input_tasa_ves')), '1000.00');
     await tester.pumpAndSettle();
 
@@ -277,6 +289,8 @@ void main() {
     expect(find.text('Tasa personalizada activa'), findsOneWidget);
 
     // Al tocar restaurar, vuelve a la tasa oficial (950.00)
+    await tester.ensureVisible(find.byKey(const Key('btn_restore_official_rate')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('btn_restore_official_rate')));
     await tester.pumpAndSettle();
     expect(find.byIcon(Icons.restart_alt), findsNothing);

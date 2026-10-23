@@ -2029,23 +2029,29 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              if (anyRateModified)
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: const [
-                                    Icon(Icons.edit_note, size: 14, color: AppColors.primaryDark),
-                                    SizedBox(width: 4),
-                                    Text(
-                                      'Tasa personalizada activa',
-                                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.primaryDark),
-                                    ),
-                                  ],
-                                )
-                              else
-                                Text(
-                                  'Tasas del $_selectedFecha',
-                                  style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
-                                ),
+                              Expanded(
+                                child: anyRateModified
+                                    ? Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: const [
+                                          Icon(Icons.edit_note, size: 14, color: AppColors.primaryDark),
+                                          SizedBox(width: 4),
+                                          Flexible(
+                                            child: Text(
+                                              'Tasa personalizada activa',
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.primaryDark),
+                                            ),
+                                          ),
+                                        ],
+                                      )
+                                    : Text(
+                                        'Tasas del $_selectedFecha',
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                                      ),
+                              ),
+                              const SizedBox(width: 8),
                               InkWell(
                                 key: const Key('btn_ajustar_tasas_ves'),
                                 borderRadius: BorderRadius.circular(8),
