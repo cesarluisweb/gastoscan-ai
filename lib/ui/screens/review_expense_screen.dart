@@ -2351,8 +2351,8 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                               const SizedBox(height: 6),
                               Text(
                                 _selectedMoneda == 'EUR'
-                                    ? '≈ ${_totalUsdtCalculado.toStringAsFixed(2)} USDT P2P  •  €${(tUsdt > 0 ? (totalBs / tUsdt) : val).toStringAsFixed(2)} EUR  •  \$${equivUsdBcv.toStringAsFixed(2)} USD'
-                                    : '≈ ${_totalUsdtCalculado.toStringAsFixed(2)} USDT P2P  •  \$${equivUsdBcv.toStringAsFixed(2)} USD Oficial  •  €${_totalEurCalculado.toStringAsFixed(2)} EUR',
+                                    ? '≈ ${equivUsdt.toStringAsFixed(2)} USDT P2P  •  €${(tUsdt > 0 ? (totalBs / tUsdt) : val).toStringAsFixed(2)} EUR  •  \$${equivUsdBcv.toStringAsFixed(2)} USD'
+                                    : '≈ ${equivUsdt.toStringAsFixed(2)} USDT P2P  •  \$${equivUsdBcv.toStringAsFixed(2)} USD Oficial  •  €${_totalEurCalculado.toStringAsFixed(2)} EUR',
                                 style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
                               ),
                             ],
