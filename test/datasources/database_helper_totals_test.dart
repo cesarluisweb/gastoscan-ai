@@ -188,7 +188,7 @@ void main() {
     setUp(() {
       helper = MockTotalsDatabaseHelper();
 
-      // Gasto 1: En Bolívares (Factura de mercado de Bs. 50.000,00 a tasa 800 -> $62.50, a tasa USDT 1000 -> 50.00 USDT)
+      // Gasto 1: En Bolívares (Factura de mercado de Bs. 50.000,00 a tasa 800 -> $62.50, a tasa USDT 1000 -> 50.00 USDT, a tasa EUR 900 -> 55.56 EUR)
       helper.seedGasto(
         id: 1,
         fecha: '2026-10-02',
@@ -196,8 +196,10 @@ void main() {
         totalOriginal: 5000000, // Bs. 50.000,00
         totalUsd: 6250,        // $62.50
         totalUsdt: 5000,       // 50.00 USDT
+        totalEur: 5556,        // 55.56 EUR
         tasaCambio: 800.0,
         tasaUsdt: 1000.0,
+        tasaEur: 900.0,
         categoria: 'Alimentación',
         items: [
           {'categoria': 'Alimentación', 'total': 3000000}, // Bs. 30.000
@@ -213,7 +215,9 @@ void main() {
         totalOriginal: 1000,   // $10.00
         totalUsd: 1000,        // $10.00
         totalUsdt: 1000,       // 10.00 USDT
+        totalEur: 890,         // 8.90 EUR
         tasaCambio: 850.0,
+        tasaEur: 955.0,
         categoria: 'Transporte',
         items: [
           {'categoria': 'Transporte', 'total': 1000}, // $10.00
@@ -227,7 +231,9 @@ void main() {
         moneda: 'VES',
         totalOriginal: 596047, // Bs. 5.960,47
         totalUsd: 700,         // $7.00
+        totalEur: 624,         // 6.24 EUR
         tasaCambio: 851.49,
+        tasaEur: 955.0,
         categoria: 'Servicios',
         items: [], // Sin ítems detallados
       );
