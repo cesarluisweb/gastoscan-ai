@@ -12,7 +12,7 @@ El SDK de Flutter no está instalado en la máquina local. Toda compilación y s
 **Regla de oro:** el agente NUNCA consulta el estado del CI turno tras turno. Lanza una sola invocación dormida y espera su notificación.
 
 ### Paso 1: Lanzar el Proceso Dormido (Única Invocación)
-`gh` CLI NO está instalado en esta máquina. Ejecutar `scripts/wait_ci.ps1` **una sola vez en segundo plano** y no consultar nada más mientras corre:
+`gh` CLI NO está instalado en esta máquina. Ejecutar `scripts/wait_ci.ps1` **una sola vez en segundo plano sin pasarle argumentos** (el script no acepta parámetros como `-HeadSha`; detecta `git rev-parse HEAD` automáticamente):
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/wait_ci.ps1
@@ -56,6 +56,9 @@ git fetch origin main
 # 2. Leer directamente el reporte de fallos desde el commit remoto
 #    Limitado a las ultimas 60 lineas para no volcar el reporte completo
 git show origin/main:test_results.txt | Select-Object -Last 60
+
+# 3. Si falló el step "Analisis Estatico de Codigo" (flutter analyze), filtrar solo errores y warnings:
+git show origin/main:test_results.txt | Select-String -Pattern "error|warning"
 ```
 *Ventajas:*
 - No genera conflictos de git.
