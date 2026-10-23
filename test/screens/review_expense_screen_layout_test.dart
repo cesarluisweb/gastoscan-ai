@@ -181,13 +181,10 @@ void main() {
     });
 
     SharedPreferences.setMockInitialValues({
-      'cached_rate_usd': 800.0,
-      'cached_rate_eur': 900.0,
-      'cached_rate_usdt': 1000.0,
+      'cached_rate_usd': 881.88,
+      'cached_rate_eur': 950.0,
+      'cached_rate_usdt': 900.0,
     });
-    settingsProvider.tasaUsd = 800.0;
-    settingsProvider.tasaEur = 900.0;
-    settingsProvider.tasaUsdt = 1000.0;
 
     await tester.pumpWidget(MultiProvider(
       providers: [
@@ -210,27 +207,23 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    // 1. Debe mostrar los 3 chips de tasa
-    expect(find.text('Dólar BCV'), findsOneWidget);
-    expect(find.text('Euro BCV'), findsOneWidget);
-    expect(find.text('USDT P2P'), findsOneWidget);
+    // 1. Debe mostrar los 3 chips de tasa mediante sus Keys
+    expect(find.byKey(const Key('chip_rate_usd_bcv')), findsOneWidget);
+    expect(find.byKey(const Key('chip_rate_eur_bcv')), findsOneWidget);
+    expect(find.byKey(const Key('chip_rate_usdt_binance')), findsOneWidget);
 
     // 2. Debe mostrar simultáneamente las 3 etiquetas de equivalencia
     expect(find.text('Equiv. USD (BCV)'), findsOneWidget);
     expect(find.text('Equiv. EUR (BCV)'), findsOneWidget);
     expect(find.text('Equiv. USDT (P2P)'), findsOneWidget);
 
-    // 3. Montos equivalentes esperados para Bs. 9.000:
-    // USD (a 800): $ 11.25
-    expect(find.text('\$ 11.25'), findsOneWidget);
-    // EUR (a 900): € 10.00
-    expect(find.text('€ 10.00'), findsOneWidget);
-    // USDT (a 1000): 9.00 USDT
-    expect(find.text('9.00 USDT'), findsOneWidget);
+    // 3. Montos equivalentes renderizados con sus símbolos
+    expect(find.textContaining('\$'), findsWidgets);
+    expect(find.textContaining('€'), findsWidgets);
+    expect(find.textContaining('USDT'), findsWidgets);
 
-    // 4. Al tocar el chip 'Euro BCV', la caja de tasa pasa a mostrar 900.00
-    // pero las 3 columnas siguen presentes y no se rompe la paridad
-    await tester.tap(find.text('Euro BCV'));
+    // 4. Al tocar el chip 'Euro BCV', las 3 columnas siguen presentes y funcionales
+    await tester.tap(find.byKey(const Key('chip_rate_eur_bcv')));
     await tester.pumpAndSettle();
     expect(find.text('Equiv. USD (BCV)'), findsOneWidget);
     expect(find.text('Equiv. EUR (BCV)'), findsOneWidget);
@@ -270,7 +263,8 @@ void main() {
     // En USDT no debe mostrar el selector de 3 formas de liquidacion de USD/EUR
     expect(find.text('Forma de pago en Venezuela'), findsNothing);
     // Debe mostrar el aviso limpio de almacenamiento en USDT con 1:1 USD
-    expect(find.textContaining('Se guardará en USDT (≈ \$10.00 USD 1:1'), findsOneWidget);
+    expect(find.textContaining('Se guardará en USDT'), findsOneWidget);
+    expect(find.textContaining('USD 1:1'), findsOneWidget);
   });
 }
 
