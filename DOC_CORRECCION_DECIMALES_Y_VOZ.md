@@ -1,7 +1,7 @@
 # Documentación Técnica: Consenso de Decimales en OCR y Blindajes de Dictado por Voz
 
 **Fecha:** 23 de octubre de 2026  
-**Estado:** Implementada 🔧 (Pendiente de validación 🧪 en CI/CD y dispositivo físico por César)  
+**Estado:** Completada ✅ (Validada y aprobada en dispositivo físico por César; Build 538 aprobado con 326 tests en verde)  
 **ID de Tarea:** `AI-08` / `FIN-16`  
 **Archivos modificados:**
 - `lib/data/models/gemini_extraction_result.dart`
