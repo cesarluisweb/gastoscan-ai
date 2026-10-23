@@ -224,14 +224,14 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 - `OPS-02` **Desacoplamiento de Pipelines CI/CD Web y Móvil:** `Completada ✅`
   - *Problema:* El pipeline monolítico `build_apk.yml` compilaba Android (APK + AAB, 12–14 min) ante cualquier cambio estético o de texto en `landing/`, `firebase.json` o `firestore.rules`.
   - *Solución:* Creación de `.github/workflows/deploy_web.yml` (~45–60 s) con caché de npm, control de concurrencia y preservación automática del `version.json` activo de producción antes de compilar Astro; exclusión de rutas web en `paths-ignore` de `build_apk.yml`; corrección de `set -e -o pipefail` en compilación de binarios y soporte multi-workflow e intervalo adaptativo en `scripts/wait_ci.ps1`. (Verificado en CI `deploy_web.yml` run `39876106103`, commit `af85856`).
-- `OPS-03` **Entorno Paralelo de Pruebas (Rinde Más Dev) y Aislamiento de Producción:** `Implementada 🔧`
+- `OPS-03` **Entorno Paralelo de Pruebas (Rinde Más Dev) y Aislamiento de Producción:** `Pendiente de validación 🧪`
   - *Problema:* Necesidad de validar cambios en dispositivo físico sin desinstalar ni alterar la app oficial de Google Play (`com.cesarluis.rindemas`) en el teléfono de César (para no reiniciar ni poner en riesgo los 14 días consecutivos de la Prueba Cerrada). Asimismo, la landing page ofrecía descargas de APK directos con advertencias de fuentes desconocidas en Android y obligaba a subidas FTP a BanaHosting en cada push.
   - *Solución:*
     1. **App Paralela Dev:** `build_apk.yml` compila el artefacto privado `rindemas-dev-apk` (`com.cesarluis.rindemas.dev` / *"Rinde Más Dev"*) firmado con `rindemas.jks`, coexistiendo en el mismo teléfono sin pisar la versión de la tienda.
     2. **AAB de Producción Intacto:** En la misma corrida se genera el artefacto `app-release-aab` (`com.cesarluis.rindemas`) para Play Store.
     3. **Landing Centrada en Lanzamiento:** Eliminada la descarga de APK en la web y la subida FTP a BanaHosting. Todo el tráfico web se canaliza a la lista de espera oficial en el Canal de WhatsApp y la insignia de Google Play.
     4. **Soporte Oficial en Firebase:** Sincronizado `google-services.json` con el cliente registrado `com.cesarluis.rindemas.dev`.
-  - *Documentación:* Ver [ci-distribucion.md](.agents/rules/ci-distribucion.md) y [AGENTS.md](AGENTS.md). En curso en CI.
+  - *Documentación:* Ver [ci-distribucion.md](.agents/rules/ci-distribucion.md) y [AGENTS.md](AGENTS.md). CI en verde (run `39966116419`).
 - **Evaluación de Firebase AI Logic (`firebase_vertexai`):** Evaluar migración de llamadas REST al SDK de Firebase Vertex AI en Flutter, integrando Firebase App Check y Remote Config.
 - **Despliegue Dinámico y Configuración Remota (Firebase Remote Config):** Configurar cuotas mensuales de IA, textos y parámetros de modelos desde el servidor sin requerir nuevo APK.
 - **Manejo de Casos Borde en Facturas Locales (Corner Cases):** Refinamiento para facturas térmicas dobladas, comprobantes mixtos con ítems en Bs y total en USD/"Ref", y marcadores de IVA exento/gravado.
