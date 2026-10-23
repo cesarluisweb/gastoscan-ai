@@ -3,7 +3,8 @@
 
 ## Estado Actual Inmediato
 - **Rama:** `main`.
-- **Fase activa:** Fase 5 (Closed Testing activa) y remediación por lotes de Auditoría Argon.
+- **Fase activa:** Fase 5 (Closed Testing activa) y preparación de lanzamiento.
+- **CI Móvil Reciente:** Build 542 en verde (`CI 39980220022 | success | 83ab331`). Elevación y respiro seguro completados en `VoiceExpenseSheet`, `BudgetBottomSheet`, `AuthModalSheet` y `ReviewExpenseScreen` (Edge-to-Edge). Artefactos `rindemas-dev-apk` y `app-release-aab` generados con éxito.
 - **Acción Reciente (Lote 1 Argon):** Ejecutado Lote 1 de seguridad crítica:
   1. Sanitización XSS (`escapeHtml`) en `landing/src/pages/panel.astro` (categorías, facturas, notas, ítems y modales) y validación de `metaAhorro > general`.
   2. Eliminada sincronización en texto plano de `gemini_api_key` hacia/desde Firestore (`presupuestos/user_settings`) en `SyncService` y `SettingsProvider` (reside solo en `FlutterSecureStorage`).
