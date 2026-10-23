@@ -37,14 +37,18 @@ class FakeGastoProvider extends GastoProvider {
 }
 
 class FakeSettingsProvider extends SettingsProvider {
-  @override
-  double get tasaCambioVesUsd => 881.88;
+  double tasaUsd = 881.88;
+  double tasaEur = 950.0;
+  double tasaUsdt = 900.0;
 
   @override
-  double get tasaCambioVesEur => 950.0;
+  double get tasaCambioVesUsd => tasaUsd;
 
   @override
-  double get tasaCambioVesUsdt => 900.0;
+  double get tasaCambioVesEur => tasaEur;
+
+  @override
+  double get tasaCambioVesUsdt => tasaUsdt;
 
   @override
   String get monedaPrincipal => 'USD';
@@ -181,6 +185,9 @@ void main() {
       'cached_rate_eur': 900.0,
       'cached_rate_usdt': 1000.0,
     });
+    settingsProvider.tasaUsd = 800.0;
+    settingsProvider.tasaEur = 900.0;
+    settingsProvider.tasaUsdt = 1000.0;
 
     await tester.pumpWidget(MultiProvider(
       providers: [
