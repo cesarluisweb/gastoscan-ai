@@ -6,10 +6,10 @@ description: "Procedimiento oficial para compilar, verificar y desplegar la land
 # Procedimiento de Publicación de la Landing Page y Panel Web
 
 ## 1. Regla de Oro del Canal Único
-**GitHub Actions (`build_apk.yml`) es el único canal autorizado para desplegar la web a producción en Firebase Hosting.**
-- **Sobrescritura por CI:** Cualquier despliegue ejecutado manualmente desde la máquina local será sobrescrito en el siguiente `git push` a `main`, ya que el pipeline de GitHub Actions compila y despliega automáticamente Firebase Hosting en el paso final.
-- **Riesgo de Desincronización en Despliegues Locales:** Si se ejecuta un deploy local, el archivo `landing/public/version.json` contendrá valores estáticos locales sin el número de compilación dinámico oficial (`BASE_BUILD + github.run_number`) que genera el CI. Esto provoca desincronización entre la versión anunciada en la landing y el APK real distribuido en BanaHosting.
-- **Consumo de Cuota de CI en Cambios Web:** De acuerdo con los filtros `paths-ignore` de `.github/workflows/build_apk.yml`, un `git push` que modifique archivos dentro de `landing/` disparará la compilación completa de Android (APK y AAB) consumiendo minutos de GitHub Actions. *(Mejora futura documentada: desacoplar los workflows de web y móvil).*
+**GitHub Actions (`deploy_web.yml` para cambios web y `build_apk.yml` tras releases móviles) es el único canal autorizado para desplegar la web a producción en Firebase Hosting.**
+- **Pipeline Web Independiente (~50 s):** Todo cambio en `landing/**`, `firebase.json` o `firestore.rules` dispara exclusivamente `.github/workflows/deploy_web.yml` sin ejecutar la compilación de Android (`build_apk.yml` los ignora mediante `paths-ignore`).
+- **Preservación Automática de `version.json`:** Antes de compilar Astro, `deploy_web.yml` descarga el `https://rindemas.cesarluis.com/version.json` activo en producción y parcha el `href` de `#btn-download-apk` en `landing/src/pages/index.astro`, garantizando que el número de compilación del último APK y el chequeo de actualizaciones (`UpdateService`) nunca se pierdan ni se pisen con valores estáticos locales.
+- **Sobrescritura por CI:** Cualquier despliegue ejecutado manualmente desde la máquina local carecerá del paso de sincronización de `version.json` de CI y será sobrescrito en el siguiente `git push` a `main`.
 
 ---
 
@@ -20,10 +20,7 @@ Antes de enviar cambios al repositorio, verificar que el proyecto Astro compila 
 
 En PowerShell desde el directorio raíz:
 ```powershell
-Set-Location landing
-$env:ASTRO_TELEMETRY_DISABLED="1"
-npm run build
-Set-Location ..
+Set-Location landing; $env:ASTRO_TELEMETRY_DISABLED="1"; npm run build; Set-Location ..
 ```
 *Criterio de Éxito:* La salida debe terminar con `✓ Completed in ...` y generar el directorio `landing/dist/`.
 
@@ -35,40 +32,41 @@ git commit -m "feat(web): descripcion del cambio en landing o panel"
 git push origin main
 ```
 
-### Paso 3: Monitoreo del Pipeline en GitHub Actions
-Monitorear activamente el workflow hasta confirmar `conclusion: success` utilizando la API de GitHub:
+### Paso 3: Monitoreo del Pipeline en GitHub Actions (Proceso Dormido Único)
+Lanzar una sola vez `scripts/wait_ci.ps1` en segundo plano hasta confirmar `conclusion: success` (detecta automáticamente `deploy_web.yml` y usa intervalo corto de 30 s):
 ```powershell
-# Obtener el run_id del commit recién enviado
-$run = gh run list --branch main --limit 1 --json databaseId,status,conclusion | ConvertFrom-Json
-$runId = $run[0].databaseId
-gh run watch $runId
+powershell -ExecutionPolicy Bypass -File scripts/wait_ci.ps1
 ```
+**Prohibido** usar `gh run watch` o consultar la API turno tras turno.
 
 ### Paso 4: Verificación en Vivo en Producción
-Una vez que el job finalice con éxito, validar mediante petición HTTP que el contenido nuevo esté disponible:
+Una vez que el job finalice con éxito, validar mediante petición HTTP que el contenido nuevo esté disponible y que `version.json` conserve el build activo:
 ```powershell
 # Verificar estado HTTP de la landing
 curl.exe -sI https://rindemas.cesarluis.com/ | Select-String "HTTP/"
 
 # Verificar redirección del APK
 curl.exe -sI https://rindemas.cesarluis.com/rindemas.apk | Select-String "HTTP/"
+
+# Verificar integridad de version.json en producción
+curl.exe -s https://rindemas.cesarluis.com/version.json
 ```
 
 ---
 
 ## 3. Despliegue de Emergencia Local (Solo con Autorización de César)
-Si la cuota de GitHub Actions está agotada o el CI presenta una caída global, y César ha dado **autorización explícita previa**, se puede ejecutar el despliegue manual:
+Si la cuota de GitHub Actions está agotada o el CI presenta una caída global, y César ha dado **autorización explícita previa**, se puede ejecutar el despliegue manual asegurándose primero de sincronizar `version.json` desde producción:
 
 ```powershell
-# 1. Compilar Astro
-Set-Location landing
-$env:ASTRO_TELEMETRY_DISABLED="1"
-npm run build
-Set-Location ..
+# 1. Sincronizar version.json vivo antes de compilar
+Invoke-WebRequest -Uri "https://rindemas.cesarluis.com/version.json" -OutFile "landing/public/version.json"
 
-# 2. Desplegar a Firebase Hosting (flag --non-interactive OBLIGATORIO en Windows)
+# 2. Compilar Astro
+Set-Location landing; $env:ASTRO_TELEMETRY_DISABLED="1"; npm run build; Set-Location ..
+
+# 3. Desplegar a Firebase Hosting (flag --non-interactive OBLIGATORIO en Windows)
 firebase.cmd deploy --only hosting --non-interactive
 
-# 3. Validar producción
+# 4. Validar producción
 curl.exe -sI https://rindemas.cesarluis.com/
 ```

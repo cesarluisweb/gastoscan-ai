@@ -4,6 +4,12 @@ on:
   push:
     branches: [ main, master ]
     paths-ignore:
+      - 'landing/**'
+      - 'firebase.json'
+      - 'firestore.rules'
+      - 'firestore.indexes.json'
+      - '.firebaserc'
+      - '.github/workflows/deploy_web.yml'
       - '**.md'
       - 'docs/**'
       - '.agents/**'
@@ -148,6 +154,7 @@ jobs:
 
       - name: Compilar APK Release
         run: |
+          set -e -o pipefail
           APP_VERSION=$(grep "^version:" pubspec.yaml | sed -e 's/version:[[:space:]]*//' | cut -d '+' -f 1 | tr -d '[:space:]')
           BASE_BUILD=$(grep "^version:" pubspec.yaml | sed -e 's/version:[[:space:]]*//' | cut -d '+' -f 2 | tr -d '[:space:]')
           BUILD_NUM=$(( BASE_BUILD + ${{ github.run_number }} ))
@@ -175,6 +182,7 @@ jobs:
 
       - name: Compilar Android App Bundle (AAB de Produccion)
         run: |
+          set -e -o pipefail
           APP_VERSION=$(grep "^version:" pubspec.yaml | sed -e 's/version:[[:space:]]*//' | cut -d '+' -f 1 | tr -d '[:space:]')
           BASE_BUILD=$(grep "^version:" pubspec.yaml | sed -e 's/version:[[:space:]]*//' | cut -d '+' -f 2 | tr -d '[:space:]')
           BUILD_NUM=$(( BASE_BUILD + ${{ github.run_number }} ))

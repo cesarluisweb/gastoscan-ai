@@ -203,6 +203,9 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 
 ## Fase 7: Arquitectura de Producción y Confiabilidad (Pendientes Técnicos)
 *Evolución hacia grado de confiabilidad bancaria ("Bank-grade"):*
+- `OPS-02` **Desacoplamiento de Pipelines CI/CD Web y Móvil:** `Implementada 🔧`
+  - *Problema:* El pipeline monolítico `build_apk.yml` compilaba Android (APK + AAB, 12–14 min) ante cualquier cambio estético o de texto en `landing/`, `firebase.json` o `firestore.rules`.
+  - *Solución:* Creación de `.github/workflows/deploy_web.yml` (~45–60 s) con caché de npm, control de concurrencia y preservación automática del `version.json` activo de producción antes de compilar Astro; exclusión de rutas web en `paths-ignore` de `build_apk.yml`; corrección de `set -e -o pipefail` en compilación de binarios y soporte multi-workflow e intervalo adaptativo en `scripts/wait_ci.ps1`.
 - **Evaluación de Firebase AI Logic (`firebase_vertexai`):** Evaluar migración de llamadas REST al SDK de Firebase Vertex AI en Flutter, integrando Firebase App Check y Remote Config.
 - **Despliegue Dinámico y Configuración Remota (Firebase Remote Config):** Configurar cuotas mensuales de IA, textos y parámetros de modelos desde el servidor sin requerir nuevo APK.
 - **Manejo de Casos Borde en Facturas Locales (Corner Cases):** Refinamiento para facturas térmicas dobladas, comprobantes mixtos con ítems en Bs y total en USD/"Ref", y marcadores de IVA exento/gravado.

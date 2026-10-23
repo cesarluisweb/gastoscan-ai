@@ -8,15 +8,19 @@
 # Ahorro de tokens:
 #   - Una invocacion, una salida. Prohibido `gh run watch` y prohibido consultar
 #     el estado del CI turno tras turno desde el agente.
-#   - Espera internamente (Start-Sleep) hasta que el run concluya o venza el tope.
+#   - Espera internamente (Start-Sleep) hasta que todos los runs del commit
+#     concluyan o venza el tope.
+#   - Soporta flujos desacoplados: si el commit solo disparo el workflow ligero
+#     `deploy_web.yml` (~45 s), ajusta el intervalo a 30 s automaticamente.
 #   - Si falla, imprime SOLO los steps fallidos y la cola de test_results.txt,
 #     nunca el log completo del job (que ademas devuelve HTTP 403 en repo privado).
 #
 # Presupuesto de API (importante):
 #   Sin token, GitHub limita a 60 peticiones/hora por IP. Por eso el intervalo por
-#   defecto es de 180 s. Con GITHUB_TOKEN en el entorno (5.000 peticiones/hora)
-#   se puede bajar a 60 s con -IntervalSeconds 60. Ante HTTP 403 el script espera
-#   a que se restablezca la cuota en lugar de fallar en silencio.
+#   defecto para compilacion Android es de 180 s (y 30 s para web corta). Con
+#   GITHUB_TOKEN en el entorno (5.000 peticiones/hora) se puede bajar con
+#   -IntervalSeconds 60. Ante HTTP 403 el script espera a que se restablezca la
+#   cuota en lugar de fallar en silencio.
 #
 # Codigos de salida:
 #   0 = CI en verde         1 = CI fallo         2 = repo inaccesible (401/404)
@@ -36,12 +40,15 @@ param(
     [int]$MaxMinutes = 25,
     [int]$DiscoveryMinutes = 5,
     [int]$IntervalSeconds = 180,
+    [int]$WebIntervalSeconds = 30,
     [int]$TestLogTailLines = 40
 )
 
 $ErrorActionPreference = 'Continue'
 $ProgressPreference = 'SilentlyContinue'
 try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 } catch {}
+
+$CustomInterval = $PSBoundParameters.ContainsKey('IntervalSeconds')
 
 function Get-ApiHeaders {
     $headers = @{
@@ -99,11 +106,13 @@ $startedAt = Get-Date
 $discoveryDeadline = $startedAt.AddMinutes($DiscoveryMinutes)
 $deadline = $startedAt.AddMinutes($MaxMinutes)
 
-# 2. Localizar el run del commit (el run tarda unos segundos en registrarse)
-$runId = [int64]0
-$runNumber = 0
-while ((Get-Date) -lt $discoveryDeadline -and $runId -eq 0) {
-    $runs = Invoke-Api ($apiBase + '/actions/runs?branch=' + $Branch + '&per_page=10')
+# Breve pausa inicial para permitir que GitHub Actions registre los workflows del push
+Start-Sleep -Seconds 6
+
+# 2. Localizar TODOS los runs del commit (puede ser deploy_web.yml, build_apk.yml o ambos)
+$matchedRuns = @()
+while ((Get-Date) -lt $discoveryDeadline -and $matchedRuns.Count -eq 0) {
+    $runs = Invoke-Api ($apiBase + '/actions/runs?branch=' + $Branch + '&per_page=15')
     if ($null -eq $runs) {
         if ($script:HttpStatus -eq 401 -or $script:HttpStatus -eq 404) {
             'CI: SIN ACCESO | HTTP ' + $script:HttpStatus + ' | repo ' + $Repo
@@ -116,76 +125,115 @@ while ((Get-Date) -lt $discoveryDeadline -and $runId -eq 0) {
             Start-Sleep -Seconds (Get-SleepSeconds -Seconds $wait -Deadline $discoveryDeadline)
             continue
         }
-        Start-Sleep -Seconds (Get-SleepSeconds -Seconds $IntervalSeconds -Deadline $discoveryDeadline)
+        Start-Sleep -Seconds (Get-SleepSeconds -Seconds 20 -Deadline $discoveryDeadline)
         continue
     }
 
-    $match = $null
     if ($Sha) {
-        $match = @($runs.workflow_runs) | Where-Object { $_.head_sha -eq $Sha -or $_.head_sha -like ($Sha + '*') } | Select-Object -First 1
+        $matchedRuns = @($runs.workflow_runs | Where-Object { $_.head_sha -eq $Sha -or $_.head_sha -like ($Sha + '*') })
     }
-    if ($null -eq $match) {
-        Start-Sleep -Seconds (Get-SleepSeconds -Seconds $IntervalSeconds -Deadline $discoveryDeadline)
+    if ($matchedRuns.Count -eq 0) {
+        Start-Sleep -Seconds (Get-SleepSeconds -Seconds 20 -Deadline $discoveryDeadline)
         continue
     }
-
-    $runId = [int64]$match.id
-    $runNumber = [int64]$match.run_number
 }
 
-if ($runId -eq 0) {
+if ($matchedRuns.Count -eq 0) {
     'CI: SIN RUN | ' + $shaShort + ' no disparo compilacion en ' + $DiscoveryMinutes + ' min (revisa paths-ignore)'
     exit 4
 }
 
-# 3. Esperar a que el run concluya
-$conclusion = ''
-while ((Get-Date) -lt $deadline) {
-    $run = Invoke-Api ($apiBase + '/actions/runs/' + $runId)
-    if ($null -ne $run) {
-        if ($run.status -eq 'completed') {
-            $conclusion = [string]$run.conclusion
-            break
-        }
-        Start-Sleep -Seconds (Get-SleepSeconds -Seconds $IntervalSeconds -Deadline $deadline)
-        continue
+# Determinar si hay compilacion pesada de Android o solo despliegue web ligero
+$hasAndroidBuild = $false
+foreach ($r in $matchedRuns) {
+    if ($r.path -like '*build_apk*' -or $r.name -like '*APK*') {
+        $hasAndroidBuild = $true
     }
-    if ($script:HttpStatus -eq 403 -and $script:RateReset -gt 0) {
-        $wait = [int][Math]::Max(5, ($script:RateReset - [datetimeoffset]::UtcNow.ToUnixTimeSeconds()))
-        Start-Sleep -Seconds (Get-SleepSeconds -Seconds $wait -Deadline $deadline)
-        continue
-    }
-    Start-Sleep -Seconds (Get-SleepSeconds -Seconds $IntervalSeconds -Deadline $deadline)
+}
+$pollSeconds = $IntervalSeconds
+if (-not $hasAndroidBuild -and -not $CustomInterval) {
+    $pollSeconds = $WebIntervalSeconds
 }
 
-if ($conclusion -eq '') {
-    'CI ' + $runId + ' | EN CURSO | tope ' + $MaxMinutes + ' min | build ' + $runNumber + ' | ' + $shaShort
+# 3. Esperar a que TODOS los runs del commit concluyan
+$runStates = @{}
+foreach ($r in $matchedRuns) {
+    $runStates[[int64]$r.id] = $r
+}
+
+while ((Get-Date) -lt $deadline) {
+    $pendingIds = @($runStates.Keys | Where-Object { $runStates[$_].status -ne 'completed' })
+    if ($pendingIds.Count -eq 0) {
+        break
+    }
+
+    foreach ($rid in $pendingIds) {
+        $updated = Invoke-Api ($apiBase + '/actions/runs/' + $rid)
+        if ($null -ne $updated) {
+            $runStates[$rid] = $updated
+        } elseif ($script:HttpStatus -eq 403 -and $script:RateReset -gt 0) {
+            $wait = [int][Math]::Max(5, ($script:RateReset - [datetimeoffset]::UtcNow.ToUnixTimeSeconds()))
+            Start-Sleep -Seconds (Get-SleepSeconds -Seconds $wait -Deadline $deadline)
+            break
+        }
+    }
+
+    $stillPending = @($runStates.Keys | Where-Object { $runStates[$_].status -ne 'completed' })
+    if ($stillPending.Count -eq 0) {
+        break
+    }
+
+    Start-Sleep -Seconds (Get-SleepSeconds -Seconds $pollSeconds -Deadline $deadline)
+}
+
+# 4. Imprimir resultados y diagnosticar fallos
+$anyIncomplete = $false
+$anyFailed = $false
+$androidFailed = $false
+
+foreach ($rid in ($runStates.Keys | Sort-Object)) {
+    $r = $runStates[$rid]
+    $wfName = [string]$r.name
+    $rNum = [int64]$r.run_number
+    if ($r.status -ne 'completed') {
+        $anyIncomplete = $true
+        'CI ' + $rid + ' (' + $wfName + ') | EN CURSO | tope ' + $MaxMinutes + ' min | build ' + $rNum + ' | ' + $shaShort
+    } else {
+        $conc = [string]$r.conclusion
+        'CI ' + $rid + ' (' + $wfName + ') | ' + $conc + ' | build ' + $rNum + ' | ' + $shaShort
+        if ($conc -ne 'success') {
+            $anyFailed = $true
+            if ($r.path -like '*build_apk*' -or $wfName -like '*APK*') {
+                $androidFailed = $true
+            }
+            $jobs = Invoke-Api ($apiBase + '/actions/runs/' + $rid + '/jobs')
+            if ($null -ne $jobs) {
+                $failed = @($jobs.jobs | ForEach-Object { $_.steps } | Where-Object { $_.conclusion -eq 'failure' })
+                foreach ($s in $failed) {
+                    '  step fallido: #' + $s.number + ' ' + $s.name
+                }
+            }
+        }
+    }
+}
+
+if ($anyIncomplete) {
     exit 3
 }
 
-'CI ' + $runId + ' | ' + $conclusion + ' | build ' + $runNumber + ' | ' + $shaShort
-
-if ($conclusion -ne 'success') {
-    # 3a. Solo los steps fallidos
-    $jobs = Invoke-Api ($apiBase + '/actions/runs/' + $runId + '/jobs')
-    if ($null -ne $jobs) {
-        $failed = @($jobs.jobs | ForEach-Object { $_.steps } | Where-Object { $_.conclusion -eq 'failure' })
-        foreach ($s in $failed) {
-            '  step fallido: #' + $s.number + ' ' + $s.name
+if ($anyFailed) {
+    if ($androidFailed) {
+        for ($i = 1; $i -le 3; $i++) {
+            git fetch origin $Branch --quiet 2>$null
+            $logRef = 'origin/' + $Branch + ':test_results.txt'
+            $log = git show $logRef 2>$null
+            if ($LASTEXITCODE -eq 0 -and $log) {
+                '  --- test_results.txt (ultimas ' + $TestLogTailLines + ' lineas) ---'
+                @($log) | Select-Object -Last $TestLogTailLines | ForEach-Object { '  ' + $_ }
+                break
+            }
+            Start-Sleep -Seconds 10
         }
-    }
-
-    # 3b. Cola del reporte remoto (el workflow lo commitea en el paso "Guardar Logs de Error")
-    for ($i = 1; $i -le 3; $i++) {
-        git fetch origin $Branch --quiet 2>$null
-        $logRef = 'origin/' + $Branch + ':test_results.txt'
-        $log = git show $logRef 2>$null
-        if ($LASTEXITCODE -eq 0 -and $log) {
-            '  --- test_results.txt (ultimas ' + $TestLogTailLines + ' lineas) ---'
-            @($log) | Select-Object -Last $TestLogTailLines | ForEach-Object { '  ' + $_ }
-            break
-        }
-        Start-Sleep -Seconds 10
     }
     exit 1
 }

@@ -23,7 +23,8 @@ description: "Estándares de desarrollo web, enrutamiento en Astro, cabeceras de
   - `Permissions-Policy: camera=(), microphone=(), geolocation=()`
 
 ## 2. Flujo de Despliegue y Publicación
-- **Canal Único Autorizado:** GitHub Actions (`build_apk.yml`) es el único canal autorizado de despliegue a producción en Firebase Hosting.
+- **Canal Único Autorizado:** GitHub Actions (`deploy_web.yml` para cambios web/reglas en ~50 s, y `build_apk.yml` al publicar una nueva versión móvil) es el único canal autorizado de despliegue a producción en Firebase Hosting.
+- **Preservación de `version.json`:** `deploy_web.yml` sincroniza automáticamente el `version.json` activo desde producción antes de compilar Astro para nunca sobrescribir el `buildNumber` del último APK publicado.
 - **Prohibición de Despliegue Local:** Prohibido ejecutar `firebase deploy --only hosting` en local salvo emergencia técnica expresa autorizada por César.
 - **Compilación Local de Verificación:** En tareas de la web, compilar localmente con telemetría desactivada (`$env:ASTRO_TELEMETRY_DISABLED="1"; npm run build` en `landing/`) exclusivamente para confirmar que no hay errores de build antes de hacer `git push`.
 
