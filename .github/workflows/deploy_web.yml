@@ -1,0 +1,84 @@
+name: Desplegar Web (Landing y Panel)
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'landing/**'
+      - 'firebase.json'
+      - 'firestore.rules'
+      - 'firestore.indexes.json'
+      - '.firebaserc'
+      - '.github/workflows/deploy_web.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-web-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy-web:
+    name: Compilar Astro y Desplegar a Firebase
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Descargar codigo fuente
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: 'npm'
+          cache-dependency-path: 'landing/package-lock.json'
+
+      - name: Preservar version.json activo de produccion
+        run: |
+          set -e
+          LIVE_URL="https://rindemas.cesarluis.com/version.json?t=$(date +%s)"
+          echo "Consultando version.json activo en produccion..."
+          if curl -fsSL --retry 3 --retry-delay 2 "$LIVE_URL" -o /tmp/live_version.json; then
+            BUILD_NUM=$(node -e '
+              try {
+                const fs = require("fs");
+                const data = JSON.parse(fs.readFileSync("/tmp/live_version.json", "utf8"));
+                if (data && Number(data.buildNumber) > 0 && data.version) {
+                  process.stdout.write(String(data.buildNumber));
+                }
+              } catch (_) {}
+            ')
+            if [ -n "$BUILD_NUM" ]; then
+              cp /tmp/live_version.json landing/public/version.json
+              sed -i "s|href=\"/rindemas.apk\"|href=\"https://cesarluis.com/rindemas/rindemas.apk?b=$BUILD_NUM\"|g" landing/src/pages/index.astro
+              echo "version.json sincronizado desde produccion (buildNumber=$BUILD_NUM):"
+              cat landing/public/version.json
+            else
+              echo "ADVERTENCIA: respuesta no valida en /tmp/live_version.json; se conserva landing/public/version.json local."
+            fi
+          else
+            echo "ADVERTENCIA: no se pudo descargar version.json de produccion; se conserva landing/public/version.json local."
+          fi
+
+      - name: Instalar Dependencias de Landing
+        run: |
+          cd landing
+          npm ci || npm install
+          cd ..
+
+      - name: Compilar Landing y Panel Web (Astro)
+        env:
+          ASTRO_TELEMETRY_DISABLED: "1"
+        run: |
+          cd landing
+          npm run build
+          cd ..
+
+      - name: Desplegar a Firebase Hosting y Reglas de Firestore
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_GATOSCAN_AI }}
+        run: |
+          npx firebase-tools deploy --only hosting,firestore:rules --project gastoscan-ai --token "${{ secrets.FIREBASE_SERVICE_ACCOUNT_GATOSCAN_AI }}" --non-interactive
