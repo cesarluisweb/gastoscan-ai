@@ -4,12 +4,13 @@
 ## Estado Actual Inmediato
 - **Rama:** `main`.
 - **Fase activa:** Fase 5 (Closed Testing activa) y Fase 6.2 (Finanzas y UX).
+- **CI Móvil Reciente:** Build 550 en verde (`CI 39987221563 | success | 4f369bc`). Artefactos `rindemas-dev-apk` y `app-release-aab` generados y listos en GitHub Actions.
 - **Acción Reciente (FIN-09 Equivalencias Multimoneda Inmutables):**
   1. Base de datos elevada a SQLite v18: columnas `total_eur` (INTEGER centavos) y `tasa_eur` (REAL) con backfill inmutable en `DatabaseHelper` y soporte en `GastoModel`.
   2. `ReviewExpenseScreen`: resuelto bug donde Euro BCV sobreescribía Dólar BCV en compras en `VES`. Implementadas 3 columnas fijas de equivalencia simultáneas (`USD BCV`, `EUR BCV`, `USDT P2P`), edición de tasa por chip y botón para restaurar tasa oficial histórica (`Icons.restart_alt`).
   3. Compras en `USDT`: flujo limpio sin pedir bolívares, con cintillo de equivalencias informativas y respaldo de tasas del día en segundo plano.
   4. Lentes financieros móviles (`DashboardScreen`, `SummaryCard`, `ExpenseCard`, `CurrencyFormatter`) y panel web (`landing/src/pages/panel.astro`) unificados con paridad al céntimo.
-  5. Documentación de tarea crítica creada: `docs/DOC_TASAS_EQUIVALENCIAS_MULTIMONEDA.md`. Estado en `ROADMAP.md`: `Pendiente de validación 🧪`.
+  5. Documentación de tarea crítica: [docs/DOC_TASAS_EQUIVALENCIAS_MULTIMONEDA.md](docs/DOC_TASAS_EQUIVALENCIAS_MULTIMONEDA.md). Estado: `Pendiente de validación 🧪`.
 - **Acción Previa (Lote 1 Argon):** Sanitización XSS en panel web, protección de clave BYOK en `FlutterSecureStorage`, cabecera `x-goog-api-key` y anti-CSV Injection.
 
 ## Decisiones Técnicas y de Negocio Recientes
@@ -22,4 +23,4 @@
 - Monitoreo de CI por proceso dormido único (`scripts/wait_ci.ps1`), prohibido bucle activo turno a turno.
 
 ## Próximo Paso Inmediato
-- Iniciar Lote 3 de la Auditoría Integral Argon (`docs/auditoria_integral_argon.md`): Integridad de Sincronización offline, optimización SQLite y limpieza de datos en cierre de sesión (`clearLocalDataOnSignOut`).
+- Esperar validación física de César en *Rinde Más Dev* (Build 550) para marcar `FIN-09` como `Completada ✅`. Continuar con Lote 3 Argon (`docs/auditoria_integral_argon.md`).
