@@ -134,14 +134,14 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
   - *Problema:* Discrepancias donde los montos perdían decimales (ej. $56.12 aparecía como $5.612,00 o viceversa). La validación matemática cruzada en `GeminiExtractionResult` tenía las ramas de ratio invertidas, multiplicando por 100 en lugar de dividir cuando el total o los ítems omitían el punto decimal en el OCR.
   - *Solución:* Inversión corregida de ramas en `GeminiExtractionResult`, corrección defensiva de ítems individuales cuyo subtotal supera el total general por falta de coma/punto, soporte de múltiples separadores de miles en `amount_parser.dart`, suma en céntimos enteros en `review_expense_screen.dart` para evitar residuos IEEE 754 y refuerzo estricto de la regla decimal en los prompts del Cloudflare Worker.
   - *Documentación:* Ver [DOC_CORRECCION_DECIMALES_OCR.md](DOC_CORRECCION_DECIMALES_OCR.md). Tarea crítica: validada y aprobada por César en dispositivo físico.
-- `AI-08` **Tratamiento Defensivo de Decimales y Comas en OCR y Asistente IA:** `Implementada 🔧`
+- `AI-08` **Tratamiento Defensivo de Decimales y Comas en OCR y Asistente IA:** `Pendiente de validación 🧪`
   - *Problema:* Tras desactivar `isPrice: true` para preservar enteros devueltos por IA, los recibos térmicos fiscales donde los puntos o comas se imprimen tenues o borrosos (ej. `11,56` leído como `1156`) se interpretan como enteros de cuatro dígitos (`1156.00`), inflando los montos x100 cuando el total general de la factura es mayor que el ítem o cuando la IA sobreescribe el total sumando el error. Asimismo, en el Asistente y Dictado por Voz, expresiones coloquiales ("11 con 56", "3 harinas en 4 dólares") causaban confusión entre subtotales y precios unitarios.
   - *Solución:*
     1. **Consenso de Decimales y Residual Match en `GeminiExtractionResult`:** Si un ítem omitió la coma (ej. `1156` en vez de `11.56`), el motor comprueba si al dividirlo entre 100 calza con el `total_original` impreso (Residual Match) o si la mayoría de los productos tienen decimales y el ítem es un outlier de escala (Consenso de Decimales), normalizándolo a `11.56` y desinflando el total si fue alterado por la IA.
     2. **Ancla de Verdad en Worker:** El prompt de Gemini instruye leer el `total_original` estrictamente del pie de la factura como ancla inmutable y no inventarlo sumando ítems a ciegas.
     3. **Sanitización de Comas Térmicas y Expresiones de Voz:** `LocalOcrService.sanitizeOcrLine` une comas partidas (`11 . 56` -> `11.56`) y `GeminiService.normalizeVoiceText` convierte "11 con 56" y "12 y medio", desarmando además la trampa del subtotal vs precio unitario en dictado múltiple.
     4. **Corrección de IVA en `SemanticValidator`:** Eliminada la doble suma de IVA cuando la lista de ítems ya incluye el renglón impositivo.
-  - *Documentación:* Ver [DOC_CORRECCION_DECIMALES_Y_VOZ.md](DOC_CORRECCION_DECIMALES_Y_VOZ.md). Tarea crítica: implementada con pruebas unitarias, en espera de verificación en CI/CD y prueba en dispositivo físico por César.
+  - *Documentación:* Ver [DOC_CORRECCION_DECIMALES_Y_VOZ.md](DOC_CORRECCION_DECIMALES_Y_VOZ.md). Tarea crítica: CI Build 538 aprobado en verde (`conclusion: success`), pendiente de prueba en dispositivo físico por César.
 
 
 ### Bloque D: Nueva Herramienta Financiera
