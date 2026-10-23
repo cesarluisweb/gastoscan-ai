@@ -1,3 +1,4 @@
+import '../../core/constants/app_constants.dart';
 import '../../core/utils/amount_parser.dart';
 import 'item_gasto_model.dart';
 
@@ -57,16 +58,15 @@ class GeminiExtractionResult {
       fecha = fechaRaw;
     }
 
-    // Moneda
-    final monedaRaw = json['moneda']?.toString().toUpperCase() ?? 'USD';
-    final moneda = ['USD', 'VES', 'EUR'].contains(monedaRaw) ? monedaRaw : 'USD';
+    // Moneda (USD, VES, USDT, EUR)
+    final moneda = AppConstants.normalizarMoneda(json['moneda']?.toString(), fallback: 'USD');
 
     double totalOriginal = _parseAmount(json['total_original']);
     final impuestoIva = _parseAmount(json['impuesto_iva']);
 
     // Ítems de la factura
     final itemsList = <ItemGastoModel>[];
-    const validCategorias = ['Alimentación', 'Salud', 'Educación', 'Hogar', 'Servicios', 'Transporte', 'Otros'];
+    final validCategorias = AppConstants.categorias;
     
     if (json['items'] is List) {
       for (final rawItem in (json['items'] as List)) {
@@ -87,7 +87,8 @@ class GeminiExtractionResult {
           // El total del ítem se calcula estrictamente como Cantidad * Precio Unitario
           final totalCalculado = cant * precio;
           final catItemRaw = itemMap['categoria']?.toString() ?? 'Otros';
-          final catItem = validCategorias.contains(catItemRaw) ? catItemRaw : 'Otros';
+          final normCat = AppConstants.normalizarCategoria(catItemRaw);
+          final catItem = validCategorias.contains(normCat) ? normCat : 'Otros';
 
           itemsList.add(ItemGastoModel(
             descripcion: desc,
@@ -100,9 +101,20 @@ class GeminiExtractionResult {
       }
     }
 
-    // Agregar impuesto IVA como ítem independiente si aplica y no fue incluido previamente
+    // Categoría dominante de la factura para asignar al renglón de IVA (evitando inflar 'Otros')
+    final String dominantCat = ItemGastoModel.calcularCategoriaDominante(itemsList);
+
+    // Si la IA ya devolvió un ítem fiscal de IVA con categoría 'Otros', asignarle la categoría dominante
+    for (int i = 0; i < itemsList.length; i++) {
+      if (ItemGastoModel.isTaxDescription(itemsList[i].descripcion) && itemsList[i].categoria == 'Otros') {
+        itemsList[i] = itemsList[i].copyWith(categoria: dominantCat);
+      }
+    }
+
+    // Agregar impuesto IVA como ítem independiente con la categoría dominante si aplica y no fue incluido previamente
     if (impuestoIva > 0) {
       final yaTieneIva = itemsList.any((it) =>
+          ItemGastoModel.isTaxDescription(it.descripcion) ||
           it.descripcion.toLowerCase().contains('iva') ||
           it.descripcion.toLowerCase().contains('impuesto'));
       if (!yaTieneIva) {
@@ -111,7 +123,7 @@ class GeminiExtractionResult {
           cantidad: 1.0,
           precioUnitario: (impuestoIva * 100).round(),
           total: (impuestoIva * 100).round(),
-          categoria: 'Otros',
+          categoria: dominantCat,
         ));
       }
     }

@@ -65,4 +65,52 @@ class ItemGastoModel {
 
   double get precioUnitarioDisplay => precioUnitario / 100.0;
   double get totalDisplay => total / 100.0;
+
+  /// Determina si la descripción de un ítem corresponde a un renglón fiscal de impuesto (IVA / IGTF).
+  static bool isTaxDescription(String descripcion) {
+    final lower = descripcion.trim().toLowerCase();
+    return lower == 'impuesto iva' ||
+        lower == 'iva' ||
+        lower.startsWith('iva ') ||
+        lower.startsWith('iva(') ||
+        lower.contains('impuesto iva') ||
+        lower.contains('iva 16%') ||
+        lower == 'igtf' ||
+        lower.startsWith('igtf ');
+  }
+
+  /// Calcula la categoría dominante de una factura sumando `precio * cantidad` (`total`)
+  /// de los ítems no impositivos agrupados por categoría canónica, eligiendo la de mayor
+  /// monto acumulado y usando `'Otros'` solo como fallback si no hay ítems previos.
+  static String calcularCategoriaDominante(List<ItemGastoModel> items) {
+    if (items.isEmpty) return 'Otros';
+
+    final Map<String, int> catTotals = {};
+    String? firstNonTaxCat;
+
+    for (final item in items) {
+      if (isTaxDescription(item.descripcion)) continue;
+      final cat = AppConstants.normalizarCategoria(item.categoria);
+      firstNonTaxCat ??= cat;
+      final int itemMonto = item.total > 0
+          ? item.total
+          : (item.precioUnitario * item.cantidad).round();
+      catTotals[cat] = (catTotals[cat] ?? 0) + itemMonto;
+    }
+
+    if (catTotals.isEmpty) {
+      return 'Otros';
+    }
+
+    String dominant = firstNonTaxCat ?? 'Otros';
+    int maxMonto = -1;
+    for (final entry in catTotals.entries) {
+      if (entry.value > maxMonto) {
+        maxMonto = entry.value;
+        dominant = entry.key;
+      }
+    }
+
+    return maxMonto > 0 ? dominant : (firstNonTaxCat ?? 'Otros');
+  }
 }

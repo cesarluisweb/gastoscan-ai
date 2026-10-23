@@ -30,9 +30,9 @@ description: "Consultar al modificar montos, monedas (VES/USD/EUR/USDT), tasas d
   Esto garantiza que la suma de los ítems coincida exactamente al céntimo con el total mostrado en el encabezado de la tarjeta.
 
 ## 3. Catálogo Canónico e Invariante de Categorías
-- **Catálogo Oficial Único (8 Categorías):** Móvil y web deben utilizar estrictamente las 8 categorías canónicas de `AppConstants.categorias`:
-  `'Alimentación'`, `'Salud'`, `'Higiene'`, `'Educación'`, `'Hogar'`, `'Servicios'`, `'Transporte'`, `'Otros'`.
-  Prohibido inventar categorías en la web o en código móvil (como 'Ropa', 'Entretenimiento' o 'Comida').
+- **Catálogo Oficial Único (10 Categorías):** Móvil y web deben utilizar estrictamente las 10 categorías canónicas de `AppConstants.categorias`:
+  `'Alimentación'`, `'Salud'`, `'Higiene'`, `'Educación'`, `'Hogar'`, `'Servicios'`, `'Transporte'`, `'Ropa'`, `'Entretenimiento'`, `'Otros'`.
+  Prohibido inventar categorías fuera de este catálogo en la web o en código móvil (como 'Comida' o 'Aseo').
 - **Valor por Defecto Neutro:** Todo formulario de creación manual de gastos debe preseleccionar por defecto la categoría `'Otros'` si no proviene de una clasificación contextual de IA, evitando distorsionar reportes si el usuario omite el selector.
 - **Normalización Defensiva en Deserialización:** Toda capa de entrada (Firestore, SQLite, `GastoModel.fromMap`, respuestas del chat o voz) DEBE invocar `AppConstants.normalizarCategoria` (y su función homóloga en JavaScript) para transformar sinónimos heredados a su categoría canónica oficial.
 
@@ -45,5 +45,5 @@ description: "Consultar al modificar montos, monedas (VES/USD/EUR/USDT), tasas d
   - El divisor vertical (`2dp`, sobresaliendo `3dp` arriba y abajo) se posiciona exactamente en `limite / presupuesto`, delimitando a la derecha la reserva protegida de ahorro.
   - La barra avanza físicamente cruzando el divisor hacia la derecha únicamente cuando el gasto real invade la meta de ahorro (`gasto > limite`), momento en que se tiñe de color rojo (`AppColors.error`).
 
-## 5. Tratamiento de IVA y Precios de Anaquel
-- **Precios con IVA Imputado (Anaquel):** Todo producto gravado con alícuota general `(G)` en facturas fiscales debe almacenarse y presentarse con su precio final de anaquel (IVA incluido), evitando crear un renglón independiente de 'Impuesto IVA' que distorsione los presupuestos por categoría o altere las comparaciones históricas frente a entradas por voz o manuales. Los productos exentos `(E)` no se modifican. La diferencia de redondeo ($\pm 0,01$) se compensa deterministamente en el producto gravado de mayor valor. Especificación completa en `DOC_PRECIOS_ANAQUEL_IVA.md`.
+## 5. Tratamiento de IVA en Facturas Fiscales (Opción A — Categoría Dominante)
+- **Renglón `'Impuesto IVA'` con Categoría Dominante:** Cuando la extracción OCR (`GeminiExtractionResult.fromJson`) detecta un monto de IVA (`impuesto_iva > 0`) cuyos productos vienen impresos a base imponible sin IVA, se conserva la creación del ítem independiente `'Impuesto IVA'` para que el usuario pueda cotejar 1:1 los precios unitarios del papel impreso en `ReviewExpenseScreen`. Sin embargo, dicho ítem `'Impuesto IVA'` **nunca debe asignarse por defecto a `'Otros'`**, sino a la **categoría dominante de la factura** (`ItemGastoModel.calcularCategoriaDominante`, calculada sumando `precio * cantidad` de los demás ítems por categoría, usando `'Otros'` solo como fallback si no hay ítems previos). Si el usuario edita categorías en `ReviewExpenseScreen`, el renglón `'Impuesto IVA'` sincroniza su categoría con la dominante resultante. Especificación en `DOC_PRECIOS_ANAQUEL_IVA.md`.

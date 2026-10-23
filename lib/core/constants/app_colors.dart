@@ -49,6 +49,8 @@ class AppColors {
     'Higiene': Color(0xFF06B6D4),      // Cyan fresco
     'Servicios': Color(0xFF7C3AED),    // Violeta balanceado
     'Transporte': Color(0xFF2563EB),   // Azul cobalto
+    'Ropa': Color(0xFFEC4899),         // Magenta / Rosa elegante
+    'Entretenimiento': Color(0xFFF97316), // Naranja vibrante
     'Otros': Color(0xFF64748B),        // Gris pizarra
   };
 }

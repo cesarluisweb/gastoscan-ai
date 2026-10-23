@@ -110,6 +110,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
   String _initialMoneda = '';
   double _initialTotalOriginal = 0.0;
   double _initialTasa = 0.0;
+  double _initialRateForItems = 1.0;
   List<ItemGastoModel>? _initialItems;
   bool _initialHasImage = false;
   String _initialTotalUsdStr = '';
@@ -228,31 +229,49 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       _comercioCtrl = TextEditingController(text: gasto.comercio);
       _selectedFecha = gasto.fecha;
 
+      final String fuente = gasto.fuenteTasaCambio ?? '';
+      final bool isIndexedEur = gasto.moneda == 'VES' && fuente.contains('indexado a EUR');
       final bool isIndexedBcv = gasto.moneda == 'VES' &&
-          (gasto.fuenteTasaCambio?.contains('indexado a USD') == true ||
-              gasto.fuenteTasaCambio?.contains('BCV (Pago en Bs.') == true);
+          (fuente.contains('indexado a USD') ||
+              isIndexedEur ||
+              fuente.contains('BCV (Pago en Bs.'));
       final bool isIndexedUsdt = gasto.moneda == 'VES' &&
-          (gasto.fuenteTasaCambio?.contains('indexado a USDT') == true ||
-              gasto.fuenteTasaCambio?.contains('Binance P2P') == true);
+          (fuente.contains('indexado a USDT') ||
+              fuente.contains('Binance P2P'));
 
       double tasa = gasto.tasaCambio;
       if (tasa <= 0 && gasto.moneda == 'VES' && gasto.totalUsd > 0) {
         tasa = gasto.totalOriginalDisplay / gasto.totalUsdDisplay;
+      } else if (gasto.moneda == 'EUR' && gasto.totalOriginalDisplay > 0 && gasto.totalUsdDisplay > 0 && tasa > 0) {
+        final matchEur = RegExp(r'Euro BCV \(Bs\.\s*([0-9]+(?:\.[0-9]+)?)\)').firstMatch(fuente);
+        if (matchEur != null) {
+          tasa = double.tryParse(matchEur.group(1)!) ?? ((gasto.totalUsdDisplay * tasa) / gasto.totalOriginalDisplay);
+        } else {
+          tasa = (gasto.totalUsdDisplay * tasa) / gasto.totalOriginalDisplay;
+        }
       }
       _tasaCambioCtrl = TextEditingController(text: tasa.toStringAsFixed(2));
       _fuenteTasa = gasto.fuenteTasaCambio ?? 'Tasa histórica del gasto';
 
       if (isIndexedBcv || isIndexedUsdt) {
-        _selectedMoneda = 'USD';
+        _selectedMoneda = isIndexedEur ? 'EUR' : 'USD';
         _metodoLiquidacionUsd = isIndexedUsdt
             ? MetodoLiquidacionUsd.pagadoEnBsUsdt
             : MetodoLiquidacionUsd.pagadoEnBsBcv;
-        final double usdAmount = isIndexedUsdt ? gasto.totalUsdtDisplay : gasto.totalUsdDisplay;
-        _totalOriginalCtrl = TextEditingController(text: _formatDouble(usdAmount));
+        final double indexedAmount = isIndexedUsdt
+            ? gasto.totalUsdtDisplay
+            : (isIndexedEur && tasa > 0
+                ? (gasto.totalOriginalDisplay / tasa)
+                : gasto.totalUsdDisplay);
+        _totalOriginalCtrl = TextEditingController(text: _formatDouble(indexedAmount));
         _totalBsManualCtrl = TextEditingController(text: gasto.totalOriginalDisplay.toStringAsFixed(2));
         _bolivaresAjustadosManualmente = true;
         _totalUsdCtrl = TextEditingController(text: gasto.totalUsdDisplay.toStringAsFixed(2));
-        _tasaUsdFecha = tasa > 0 ? tasa : null;
+        if (isIndexedEur) {
+          _tasaEurFecha = tasa > 0 ? tasa : null;
+        } else {
+          _tasaUsdFecha = tasa > 0 ? tasa : null;
+        }
         if (gasto.tasaUsdt != null && gasto.tasaUsdt! > 0) {
           _tasaUsdtFecha = gasto.tasaUsdt;
         }
@@ -260,8 +279,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         final double rateForItems = isIndexedUsdt
             ? ((gasto.tasaUsdt != null && gasto.tasaUsdt! > 0)
                 ? gasto.tasaUsdt!
-                : (usdAmount > 0 ? (gasto.totalOriginalDisplay / usdAmount) : tasa))
-            : (tasa > 0 ? tasa : (usdAmount > 0 ? (gasto.totalOriginalDisplay / usdAmount) : 1.0));
+                : (indexedAmount > 0 ? (gasto.totalOriginalDisplay / indexedAmount) : tasa))
+            : (tasa > 0 ? tasa : (indexedAmount > 0 ? (gasto.totalOriginalDisplay / indexedAmount) : 1.0));
+        _initialRateForItems = rateForItems;
         _items = gasto.items.map((it) {
           final usdPrice = rateForItems > 0 ? (it.precioUnitarioDisplay / rateForItems) : it.precioUnitarioDisplay;
           final usdTotal = rateForItems > 0 ? (it.totalDisplay / rateForItems) : it.totalDisplay;
@@ -822,14 +842,19 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       // Opción 1: En Bs. · precio a tasa BCV
       monedaFinal = 'VES';
       final tasaBcv = _effectiveBcvRate(settings);
+      final double tasaRefUsd = (_tasaUsdFecha != null && _tasaUsdFecha! > 0)
+          ? _tasaUsdFecha!
+          : (settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : tasaBcv);
       final manualBs = _bolivaresAjustadosManualmente
           ? tryParseAmount(_totalBsManualCtrl.text, isPrice: false)
           : null;
       totalVesCalculado = (manualBs != null && manualBs > 0) ? manualBs : (totalOrig * tasaBcv);
       totalOriginalCentavos = (totalVesCalculado * 100).round();
-      final enUsdBcv = tasaBcv > 0 ? (totalVesCalculado / tasaBcv) : totalOrig;
+      final enUsdBcv = _selectedMoneda == 'EUR'
+          ? (tasaRefUsd > 0 ? (totalVesCalculado / tasaRefUsd) : totalOrig)
+          : (tasaBcv > 0 ? (totalVesCalculado / tasaBcv) : totalOrig);
       totalUsdCentavos = (enUsdBcv * 100).round();
-      final enUsdt = tasaUsdtFinal > 0 ? (totalVesCalculado / tasaUsdtFinal) : totalOrig;
+      final enUsdt = tasaUsdtFinal > 0 ? (totalVesCalculado / tasaUsdtFinal) : enUsdBcv;
       totalUsdtCentavos = (enUsdt * 100).round();
       tasaParaGasto = tasaBcv;
       fuenteFinal = 'BCV (Pago en Bs. indexado a $_selectedMoneda)';
@@ -838,17 +863,22 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       monedaFinal = 'VES';
       final tasaUsdtEfectiva = tasaUsdtFinal > 0 ? tasaUsdtFinal : settings.tasaCambioVesUsdt;
       final tasaBcv = _effectiveBcvRate(settings);
+      final double tasaRefUsd = (_tasaUsdFecha != null && _tasaUsdFecha! > 0)
+          ? _tasaUsdFecha!
+          : (settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : tasaBcv);
       final manualBs = _bolivaresAjustadosManualmente
           ? tryParseAmount(_totalBsManualCtrl.text, isPrice: false)
           : null;
       totalVesCalculado = (manualBs != null && manualBs > 0) ? manualBs : (totalOrig * tasaUsdtEfectiva);
       totalOriginalCentavos = (totalVesCalculado * 100).round();
-      final enUsdBcv = tasaBcv > 0 ? (totalVesCalculado / tasaBcv) : totalOrig;
+      final enUsdBcv = tasaRefUsd > 0 ? (totalVesCalculado / tasaRefUsd) : totalOrig;
       totalUsdCentavos = (enUsdBcv * 100).round();
       final enUsdt = tasaUsdtEfectiva > 0 ? (totalVesCalculado / tasaUsdtEfectiva) : totalOrig;
       totalUsdtCentavos = (enUsdt * 100).round();
       tasaParaGasto = tasaBcv;
-      fuenteFinal = 'Binance P2P (Pago en Bs. indexado a USDT)';
+      fuenteFinal = _selectedMoneda == 'EUR'
+          ? 'Binance P2P (Pago en Bs. indexado a EUR)'
+          : 'Binance P2P (Pago en Bs. indexado a USDT)';
     } else if (_selectedMoneda == 'EUR') {
       final totalVes = totalOrig * tasa;
       tasaParaGasto = (totalUsd > 0)
@@ -880,27 +910,46 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         : 1.0;
 
     int unnamedCounter = 1;
-    final itemsFinal = _items.map((it) {
+    final itemsFinal = <ItemGastoModel>[];
+    for (int idx = 0; idx < _items.length; idx++) {
+      final it = _items[idx];
       final desc = it.descripcion.trim().isEmpty ? 'Producto ${unnamedCounter++}' : it.descripcion.trim();
       if (ratioConversionItems != 1.0) {
-        final bsPrice = it.precioUnitarioDisplay * ratioConversionItems;
-        final bsTotal = it.totalDisplay * ratioConversionItems;
-        return it.copyWith(
-          descripcion: desc,
-          precioUnitario: (bsPrice * 100).round(),
-          total: (bsTotal * 100).round(),
-        );
-      }
-      return it.copyWith(descripcion: desc);
-    }).toList();
+        final bool canPreserveOriginalBsCents = widget.existingGasto != null &&
+            (ratioConversionItems - _initialRateForItems).abs() < 0.0001 &&
+            _initialItems != null &&
+            idx < _initialItems!.length &&
+            idx < widget.existingGasto!.items.length &&
+            it.cantidad == _initialItems![idx].cantidad &&
+            it.precioUnitario == _initialItems![idx].precioUnitario &&
+            it.total == _initialItems![idx].total;
 
-    String predominantCat = 'Otros';
-    if (itemsFinal.isNotEmpty) {
-      Map<String, double> catTotals = {};
-      for (var item in itemsFinal) {
-        catTotals[item.categoria] = (catTotals[item.categoria] ?? 0) + item.totalDisplay;
+        if (canPreserveOriginalBsCents) {
+          final origBsItem = widget.existingGasto!.items[idx];
+          itemsFinal.add(it.copyWith(
+            descripcion: desc,
+            precioUnitario: origBsItem.precioUnitario,
+            total: origBsItem.total,
+          ));
+        } else {
+          final bsPrice = it.precioUnitarioDisplay * ratioConversionItems;
+          final bsTotal = it.totalDisplay * ratioConversionItems;
+          itemsFinal.add(it.copyWith(
+            descripcion: desc,
+            precioUnitario: (bsPrice * 100).round(),
+            total: (bsTotal * 100).round(),
+          ));
+        }
+      } else {
+        itemsFinal.add(it.copyWith(descripcion: desc));
       }
-      predominantCat = catTotals.entries.reduce((a, b) => a.value > b.value ? a : b).key;
+    }
+
+    final String predominantCat = ItemGastoModel.calcularCategoriaDominante(itemsFinal);
+    for (int i = 0; i < itemsFinal.length; i++) {
+      if (ItemGastoModel.isTaxDescription(itemsFinal[i].descripcion)) {
+        itemsFinal[i] = itemsFinal[i].copyWith(categoria: predominantCat);
+      }
     }
 
     final comercioFinal = _comercioCtrl.text.trim().isEmpty ? 'Compra general' : _comercioCtrl.text.trim();
@@ -1696,6 +1745,14 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                     if (val != null) {
                                       setState(() {
                                         _items[idx] = _items[idx].copyWith(categoria: val);
+                                        if (!ItemGastoModel.isTaxDescription(_items[idx].descripcion)) {
+                                          final domCat = ItemGastoModel.calcularCategoriaDominante(_items);
+                                          for (int i = 0; i < _items.length; i++) {
+                                            if (ItemGastoModel.isTaxDescription(_items[i].descripcion)) {
+                                              _items[i] = _items[i].copyWith(categoria: domCat);
+                                            }
+                                          }
+                                        }
                                       });
                                     }
                                   },

@@ -233,8 +233,9 @@ import '../styles/global.css';
                     </div>
                     <span id="card-daily-pace" class="text-xs text-slate-500"></span>
                 </div>
-                <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
-                    <div id="progress-bar-fill" class="bg-[#FACC15] h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+                <div class="relative w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                    <div id="progress-bar-fill" class="bg-slate-800 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    <div id="progress-savings-marker" class="hidden absolute top-0 bottom-0 w-0.5 bg-slate-900 z-10" title="Límite para gastar (Meta de ahorro)"></div>
                 </div>
             </div>
 
@@ -608,6 +609,8 @@ import '../styles/global.css';
             'Hogar',
             'Servicios',
             'Transporte',
+            'Ropa',
+            'Entretenimiento',
             'Otros'
         ];
 
@@ -619,11 +622,11 @@ import '../styles/global.css';
             'Hogar': '🏠',
             'Servicios': '💡',
             'Transporte': '🚗',
+            'Ropa': '👕',
+            'Entretenimiento': '🎬',
             'Otros': '📦',
             // Compatibilidad hacia atrás
-            'Alimentos': '🛒',
-            'Entretenimiento': '🎬',
-            'Ropa': '👕'
+            'Alimentos': '🛒'
         };
 
         const normalizarCategoria = (cat) => {
@@ -637,6 +640,8 @@ import '../styles/global.css';
             if (lower === 'hogar' || lower === 'casa') return 'Hogar';
             if (lower === 'servicios' || lower === 'servicio') return 'Servicios';
             if (lower === 'transporte' || lower === 'gasolina' || lower === 'pasaje') return 'Transporte';
+            if (lower === 'ropa' || lower === 'vestimenta' || lower === 'calzado') return 'Ropa';
+            if (lower === 'entretenimiento' || lower === 'ocio' || lower === 'recreacion' || lower === 'recreación' || lower === 'cine') return 'Entretenimiento';
             const match = CATEGORIAS_DEF.find(c => c.toLowerCase() === lower);
             return match || 'Otros';
         };
@@ -815,6 +820,7 @@ import '../styles/global.css';
 
         const progressTitleLabel = document.getElementById('progress-title-label');
         const progressBarFill = document.getElementById('progress-bar-fill');
+        const progressSavingsMarker = document.getElementById('progress-savings-marker');
         const progressPercentLabel = document.getElementById('progress-percent-label');
         const cardDailyPace = document.getElementById('card-daily-pace');
         const categoriesList = document.getElementById('categories-list');
@@ -955,6 +961,7 @@ import '../styles/global.css';
                 updateLensSelectorUI();
                 renderMetrics();
                 renderCategories();
+                renderBills(searchBills?.value || '');
             });
         });
 
@@ -1274,26 +1281,39 @@ import '../styles/global.css';
                 cardDailyPace.textContent = isCurrentMonth ? `Faltan ${diasRestantes} días para el cierre` : 'Período cerrado';
             }
 
-            // Barra de Progreso
-            if (hasBudget && targetBudget > 0) {
-                const percent = Math.round((effectiveSpent / targetBudget) * 100);
+            // Barra de Progreso (Alineada con SummaryCard móvil: escala completa + marcador de ahorro)
+            if (hasBudget && effectiveGeneralBudget > 0) {
+                const limitRatio = targetBudget > 0 ? (effectiveSpent / targetBudget) : 0;
+                const fullRatio = effectiveSpent / effectiveGeneralBudget;
+                const percentLabelVal = Math.round(limitRatio * 100);
                 if (progressTitleLabel) {
                     progressTitleLabel.textContent = hasSavings ? "Consumo del límite para gastar" : "Consumo del presupuesto";
                 }
-                progressPercentLabel.textContent = `${percent}% consumido`;
-                progressBarFill.style.width = `${Math.min(percent, 100)}%`;
-                
-                if (percent > 100) {
-                    progressBarFill.className = "bg-rose-500 h-3 rounded-full transition-all duration-500";
-                } else if (percent >= 85) {
+                progressPercentLabel.textContent = `${percentLabelVal}% consumido`;
+                progressBarFill.style.width = `${Math.min(fullRatio * 100, 100)}%`;
+
+                if (progressSavingsMarker) {
+                    if (hasSavings && targetBudget > 0 && targetBudget < effectiveGeneralBudget) {
+                        const markerPct = Math.min(Math.max((targetBudget / effectiveGeneralBudget) * 100, 2), 98);
+                        progressSavingsMarker.style.left = `${markerPct}%`;
+                        progressSavingsMarker.classList.remove('hidden');
+                    } else {
+                        progressSavingsMarker.classList.add('hidden');
+                    }
+                }
+
+                if (effectiveSpent > targetBudget) {
+                    progressBarFill.className = "bg-rose-600 h-3 rounded-full transition-all duration-500";
+                } else if (health.status === 'enRiesgo' || limitRatio >= 0.85) {
                     progressBarFill.className = "bg-amber-500 h-3 rounded-full transition-all duration-500";
                 } else {
-                    progressBarFill.className = "bg-emerald-500 h-3 rounded-full transition-all duration-500";
+                    progressBarFill.className = "bg-slate-800 h-3 rounded-full transition-all duration-500";
                 }
             } else {
                 if (progressTitleLabel) progressTitleLabel.textContent = "Consumo del presupuesto";
                 progressPercentLabel.textContent = "0% (Sin presupuesto fijado)";
                 progressBarFill.style.width = "0%";
+                if (progressSavingsMarker) progressSavingsMarker.classList.add('hidden');
             }
         };
 
@@ -1451,6 +1471,19 @@ import '../styles/global.css';
                     secondarySubtext = `≈ ${formatMoney(equivVes, 'VES')} (Tasa: Bs. ${tasa.toFixed(2)})`;
                 }
 
+                const budgetCurrency = currentPresupuesto.moneda || 'USD';
+                const displayCurrency = activeLens || budgetCurrency;
+                const vesTotalGasto = moneda === 'VES' ? totalOrig : (totalUsd * tasa);
+                const eurRateRef = liveRates.eur > 0 ? liveRates.eur : (liveRates.usd > 0 ? liveRates.usd : 1.0);
+                let targetTotalLens = totalUsd;
+                if (displayCurrency === 'VES') {
+                    targetTotalLens = vesTotalGasto;
+                } else if (displayCurrency === 'USDT') {
+                    targetTotalLens = totalUsdt > 0 ? totalUsdt : totalUsd;
+                } else if (displayCurrency === 'EUR') {
+                    targetTotalLens = eurRateRef > 0 ? (vesTotalGasto / eurRateRef) : totalUsd;
+                }
+
                 const card = document.createElement('div');
                 card.className = "p-4 rounded-xl border border-slate-200 hover:border-slate-300 bg-white transition-all";
                 card.innerHTML = `
@@ -1483,12 +1516,14 @@ import '../styles/global.css';
                                 </summary>
                                 <div class="mt-2 space-y-1.5 pl-2 border-l-2 border-slate-100 text-slate-600">
                                     ${items.map(it => {
-                                        const unitPrice = (Number(it.precio_unitario || 0) / 100.0);
                                         const itTotal = (Number(it.total || 0) / 100.0);
+                                        const ratio = totalOrig > 0 ? (itTotal / totalOrig) : 0;
+                                        const itAmountLens = ratio > 0 ? (targetTotalLens * ratio) : itTotal;
+                                        const cleanDesc = String(it.descripcion || 'Producto').replace(/\s*\(\s*[EeGg]\s*\)\s*$/g, '').trim() || 'Producto';
                                         return `
                                             <div class="flex justify-between items-center py-0.5">
-                                                <span>${it.cantidad || 1}x ${it.descripcion || 'Producto'}</span>
-                                                <span class="font-mono text-slate-800">${formatMoney(itTotal, gasto.moneda || 'USD')}</span>
+                                                <span>${it.cantidad || 1}x ${cleanDesc}</span>
+                                                <span class="font-mono text-slate-800">${formatMoney(itAmountLens, displayCurrency)}</span>
                                             </div>
                                         `;
                                     }).join('')}
@@ -1580,7 +1615,8 @@ import '../styles/global.css';
 
             const ves = toVes(val, effFrom);
             const converted = fromVes(ves, effTo);
-            return converted >= 100 ? Math.round(converted).toString() : converted.toFixed(2);
+            const rounded = Math.round(converted * 100) / 100;
+            return rounded % 1 === 0 ? Math.trunc(rounded).toString() : rounded.toFixed(2);
         };
 
         const openBudgetModal = () => {
@@ -2214,12 +2250,22 @@ import '../styles/global.css';
             modalExpFecha.value = gasto.fecha || '';
 
             const fuente = gasto.fuente_tasa_cambio || '';
-            const esIndexadoBcv = (gasto.moneda === 'VES' && (fuente.includes('indexado a USD') || fuente.includes('BCV (Pago en Bs.')));
+            const esIndexadoEur = (gasto.moneda === 'VES' && fuente.includes('indexado a EUR'));
+            const esIndexadoBcv = (gasto.moneda === 'VES' && !esIndexadoEur && (fuente.includes('indexado a USD') || fuente.includes('BCV (Pago en Bs.')));
             const esIndexadoUsdt = (gasto.moneda === 'VES' && (fuente.includes('indexado a USDT') || fuente.includes('Binance P2P')));
+            const esIndexado = esIndexadoEur || esIndexadoBcv || esIndexadoUsdt;
 
             const totalBsOriginal = (Number(gasto.total_original || 0) / 100.0);
 
-            if (esIndexadoBcv) {
+            if (esIndexadoEur) {
+                expMoneda = 'EUR';
+                selectedLiq = 'BS_BCV';
+                const tasaVal = Number(gasto.tasa_cambio || 0) > 0 ? Number(gasto.tasa_cambio) : (getRateForCurrency('EUR') || 1.0);
+                const totalEur = tasaVal > 0 && totalBsOriginal > 0 ? (totalBsOriginal / tasaVal) : ((Number(gasto.total_usd || 0) / 100.0));
+                modalExpTotal.value = totalEur > 0 ? totalEur.toFixed(2) : '';
+                if (modalExpTasa) modalExpTasa.value = tasaVal.toFixed(2);
+                bolivaresAjustadosManualmente = true;
+            } else if (esIndexadoBcv) {
                 expMoneda = 'USD';
                 selectedLiq = 'BS_BCV';
                 const totalUsd = (Number(gasto.total_usd || 0) / 100.0);
@@ -2232,43 +2278,65 @@ import '../styles/global.css';
                 selectedLiq = 'BS_USDT';
                 const totalUsdt = (Number(gasto.total_usdt || 0) / 100.0);
                 modalExpTotal.value = totalUsdt > 0 ? totalUsdt.toFixed(2) : '';
-                const tasaVal = Number(gasto.tasa_cambio || 0) > 0 ? Number(gasto.tasa_cambio) : (liveRates.usd || 1.0);
+                const tasaVal = Number(gasto.tasa_usdt || gasto.tasa_cambio || 0) > 0
+                    ? Number(gasto.tasa_usdt || gasto.tasa_cambio)
+                    : (liveRates.usdt || liveRates.usd || 1.0);
                 if (modalExpTasa) modalExpTasa.value = tasaVal.toFixed(2);
                 bolivaresAjustadosManualmente = true;
             } else {
                 expMoneda = gasto.moneda || 'USD';
                 selectedLiq = gasto.metodo_liquidacion || (expMoneda === 'USD' || expMoneda === 'EUR' ? 'DIVISA' : 'BS_BCV');
                 const totalOrig = (Number(gasto.total_original || 0) / 100.0);
+                const totalUsd = (Number(gasto.total_usd || 0) / 100.0);
                 modalExpTotal.value = totalOrig > 0 ? totalOrig.toFixed(2) : '';
-                const tasaVal = Number(gasto.tasa_cambio || 0) > 0 ? Number(gasto.tasa_cambio) : (getRateForCurrency(expMoneda) || 1.0);
+                let tasaVal = Number(gasto.tasa_cambio || 0) > 0 ? Number(gasto.tasa_cambio) : (getRateForCurrency(expMoneda) || 1.0);
+                if (expMoneda === 'EUR' && totalOrig > 0 && totalUsd > 0 && tasaVal > 0) {
+                    const matchEur = fuente.match(/Euro BCV \(Bs\.\s*([0-9]+(?:\.[0-9]+)?)\)/);
+                    if (matchEur && Number(matchEur[1]) > 0) {
+                        tasaVal = Number(matchEur[1]);
+                    } else {
+                        tasaVal = (totalUsd * tasaVal) / totalOrig;
+                    }
+                }
                 if (modalExpTasa) modalExpTasa.value = tasaVal.toFixed(2);
                 bolivaresAjustadosManualmente = false;
             }
 
             const usdInputVal = Number(modalExpTotal.value) || 0;
-            const rateConversion = (esIndexadoBcv || esIndexadoUsdt)
+            const rateConversion = esIndexado
                 ? (usdInputVal > 0 && totalBsOriginal > 0 ? (totalBsOriginal / usdInputVal) : (Number(modalExpTasa?.value) || 1.0))
                 : 1.0;
 
             if (gasto.items && gasto.items.length > 0) {
                 modalExpenseItems = gasto.items.map(it => {
                     const cant = Number(it.cantidad) || 1;
-                    const totRaw = (Number(it.total) || 0) / 100.0;
-                    const prRaw = (Number(it.precio_unitario) || 0) / 100.0;
+                    const origBsTotal = Number(it.total) || 0;
+                    const origBsPrecio = Number(it.precio_unitario) || 0;
+                    const totRaw = origBsTotal / 100.0;
+                    const prRaw = origBsPrecio / 100.0;
 
-                    const tot = (esIndexadoBcv || esIndexadoUsdt) && rateConversion > 0
+                    const tot = esIndexado && rateConversion > 0
                         ? (totRaw / rateConversion)
                         : totRaw;
-                    const pr = (esIndexadoBcv || esIndexadoUsdt) && rateConversion > 0
+                    const pr = esIndexado && rateConversion > 0
                         ? (prRaw / rateConversion)
                         : (prRaw > 0 ? prRaw : (cant > 0 ? tot / cant : tot));
+
+                    const precioStr = pr > 0 ? pr.toFixed(2) : '';
+                    const totalStr = tot > 0 ? tot.toFixed(2) : '';
 
                     return {
                         descripcion: it.descripcion || '',
                         cantidad: cant,
-                        precio: pr > 0 ? pr.toFixed(2) : '',
-                        total: tot > 0 ? tot.toFixed(2) : '',
-                        categoria: it.categoria || 'Otros'
+                        precio: precioStr,
+                        total: totalStr,
+                        categoria: it.categoria || 'Otros',
+                        origBsPrecio: esIndexado ? origBsPrecio : null,
+                        origBsTotal: esIndexado ? origBsTotal : null,
+                        initPrecioStr: precioStr,
+                        initTotalStr: totalStr,
+                        initCant: cant,
+                        initRate: esIndexado ? rateConversion : null
                     };
                 });
             } else {
@@ -2280,7 +2348,7 @@ import '../styles/global.css';
             renderExpenseItems();
             updateCurrencyDisplay();
 
-            if (esIndexadoBcv || esIndexadoUsdt) {
+            if (esIndexado) {
                 const bsInput = document.getElementById('modal-exp-bs-final');
                 if (bsInput && totalBsOriginal > 0) {
                     bsInput.value = totalBsOriginal.toFixed(2);
@@ -2332,8 +2400,11 @@ import '../styles/global.css';
                 }
             }
 
-            const tasa = Number(modalExpTasa.value) || getRateForCurrency(expMoneda) || 1.0;
-            const tasaUsdt = Number(liveRates.usdt || 0) > 0 ? Number(liveRates.usdt) : tasa;
+            const tasaInput = Number(modalExpTasa.value) || getRateForCurrency(expMoneda) || 1.0;
+            let tasa = tasaInput;
+            let tasaUsdt = (selectedLiq === 'BS_USDT' || expMoneda === 'USDT')
+                ? tasaInput
+                : (Number(liveRates.usdt || 0) > 0 ? Number(liveRates.usdt) : tasaInput);
 
             let monedaFinal = expMoneda;
             let totalOriginalCents = Math.round(monto * 100);
@@ -2352,7 +2423,15 @@ import '../styles/global.css';
                 }
 
                 totalOriginalCents = Math.round(bsFinal * 100);
-                totalUsdCents = tasa > 0 ? Math.round((bsFinal / tasa) * 100) : Math.round(monto * 100);
+                if (expMoneda === 'EUR') {
+                    const refUsd = liveRates.usd > 0 ? liveRates.usd : tasa;
+                    totalUsdCents = refUsd > 0 ? Math.round((bsFinal / refUsd) * 100) : Math.round(monto * 100);
+                } else if (selectedLiq === 'BS_USDT') {
+                    const refUsd = liveRates.usd > 0 ? liveRates.usd : tasaUsdt;
+                    totalUsdCents = refUsd > 0 ? Math.round((bsFinal / refUsd) * 100) : Math.round(monto * 100);
+                } else {
+                    totalUsdCents = tasa > 0 ? Math.round((bsFinal / tasa) * 100) : Math.round(monto * 100);
+                }
                 totalUsdtCents = tasaUsdt > 0 ? Math.round((bsFinal / tasaUsdt) * 100) : totalUsdCents;
 
                 fuenteTasa = selectedLiq === 'BS_BCV'
@@ -2369,18 +2448,19 @@ import '../styles/global.css';
                 totalUsdtCents = totalOriginalCents;
                 fuenteTasa = 'Divisa Directa';
             } else if (expMoneda === 'EUR') {
-                const equivVes = monto * tasa;
-                const refUsd = liveRates.usd > 0 ? liveRates.usd : tasa;
+                const equivVes = monto * tasaInput;
+                const refUsd = liveRates.usd > 0 ? liveRates.usd : tasaInput;
                 totalUsdCents = Math.round((equivVes / (refUsd > 0 ? refUsd : 1.0)) * 100);
                 totalUsdtCents = totalUsdCents;
-                fuenteTasa = `Euro BCV (Bs. ${tasa.toFixed(2)})`;
+                tasa = totalUsdCents > 0 ? (equivVes / (totalUsdCents / 100.0)) : refUsd;
+                fuenteTasa = `Euro BCV (Bs. ${tasaInput.toFixed(2)})`;
             } else if (expMoneda === 'USDT') {
                 totalUsdCents = totalOriginalCents;
                 totalUsdtCents = totalOriginalCents;
                 fuenteTasa = 'Binance P2P';
             }
 
-            // Preparar ítems para guardar con fallback Producto 1, Producto 2, etc.
+            // Preparar ítems para guardar con preservación de centavos originales en gastos indexados sin editar
             const validItems = modalExpenseItems
                 .filter(it => (it.descripcion || '').trim() || (Number(it.total) || 0) > 0)
                 .map((it, idx) => {
@@ -2388,26 +2468,52 @@ import '../styles/global.css';
                     const totNum = Number(it.total) || 0;
                     const prNum = Number(it.precio) || (cant > 0 ? totNum / cant : totNum);
 
-                    const finalPr = prNum * ratioConversionItems;
-                    const finalTot = totNum * ratioConversionItems;
+                    const unchangedIndexed = (
+                        it.origBsTotal !== null &&
+                        it.origBsTotal !== undefined &&
+                        it.initRate !== null &&
+                        Math.abs(ratioConversionItems - it.initRate) < 0.005 &&
+                        cant === it.initCant &&
+                        String(it.total || '') === String(it.initTotalStr || '') &&
+                        String(it.precio || '') === String(it.initPrecioStr || '')
+                    );
+
+                    const finalPrCents = unchangedIndexed ? it.origBsPrecio : Math.round(prNum * ratioConversionItems * 100);
+                    const finalTotCents = unchangedIndexed ? it.origBsTotal : Math.round(totNum * ratioConversionItems * 100);
 
                     return {
                         descripcion: (it.descripcion || '').trim() || `Producto ${idx + 1}`,
                         cantidad: cant,
-                        precio_unitario: Math.round(finalPr * 100),
-                        total: Math.round(finalTot * 100),
+                        precio_unitario: finalPrCents,
+                        total: finalTotCents,
                         categoria: normalizarCategoria(it.categoria)
                     };
                 });
 
-            // Categoría predominante del gasto (paridad con móvil)
+            // Categoría predominante del gasto (paridad con ItemGastoModel.calcularCategoriaDominante)
+            const isTaxDesc = (d) => {
+                const low = String(d || '').trim().toLowerCase();
+                return low === 'impuesto iva' || low.startsWith('impuesto iva ') || low === 'iva (16%)' || low === 'iva 16%';
+            };
             let primaryCat = 'Otros';
             if (validItems.length > 0) {
                 const catTotals = {};
                 validItems.forEach(it => {
-                    catTotals[it.categoria] = (catTotals[it.categoria] || 0) + (it.total || 0);
+                    if (!isTaxDesc(it.descripcion)) {
+                        catTotals[it.categoria] = (catTotals[it.categoria] || 0) + (it.total || 0);
+                    }
                 });
-                primaryCat = Object.entries(catTotals).reduce((a, b) => a[1] >= b[1] ? a : b)[0] || normalizarCategoria(validItems[0].categoria);
+                const entries = Object.entries(catTotals);
+                if (entries.length > 0) {
+                    primaryCat = entries.reduce((a, b) => a[1] >= b[1] ? a : b)[0] || 'Otros';
+                } else {
+                    primaryCat = normalizarCategoria(validItems[0].categoria);
+                }
+                validItems.forEach(it => {
+                    if (isTaxDesc(it.descripcion) && it.categoria === 'Otros') {
+                        it.categoria = primaryCat;
+                    }
+                });
             }
 
             const gastoId = editingGastoId || (crypto.randomUUID ? crypto.randomUUID() : `web_${Date.now()}`);

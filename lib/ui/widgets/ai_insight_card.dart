@@ -64,10 +64,8 @@ class AiInsightCard extends StatelessWidget {
         ? (presupuestoGeneral - metaAhorro).clamp(0.0, double.infinity)
         : presupuestoGeneral;
 
-    final formattedMeta = CurrencyFormatter.formatPreferido(
+    final formattedMeta = CurrencyFormatter.formatAmount(
       metaAhorro,
-      null,
-      tasaCambio,
       monedaPresupuesto,
     );
 
@@ -75,19 +73,15 @@ class AiInsightCard extends StatelessWidget {
     if (isPastMonth) {
       if (totalGastadoMes > limiteParaGastar) {
         final exceso = totalGastadoMes - limiteParaGastar;
-        final formattedExceso = CurrencyFormatter.formatPreferido(
+        final formattedExceso = CurrencyFormatter.formatAmount(
           exceso,
-          null,
-          tasaCambio,
           monedaPresupuesto,
         );
         return 'En $mesActualNombre superaste tu ${hasSavingsGoal ? "límite" : "presupuesto"} por $formattedExceso.';
       } else {
         final rem = limiteParaGastar - totalGastadoMes;
-        final formattedRem = CurrencyFormatter.formatPreferido(
+        final formattedRem = CurrencyFormatter.formatAmount(
           rem,
-          null,
-          tasaCambio,
           monedaPresupuesto,
         );
         return '¡Mes cerrado con éxito! Te sobraron $formattedRem de tu ${hasSavingsGoal ? "límite" : "presupuesto"}.';
@@ -97,10 +91,8 @@ class AiInsightCard extends StatelessWidget {
     // Caso: Excedido en el mes actual
     if (totalGastadoMes > limiteParaGastar) {
       final exceso = totalGastadoMes - limiteParaGastar;
-      final formattedExceso = CurrencyFormatter.formatPreferido(
+      final formattedExceso = CurrencyFormatter.formatAmount(
         exceso,
-        null,
-        tasaCambio,
         monedaPresupuesto,
       );
       if (hasSavingsGoal) {
@@ -123,10 +115,8 @@ class AiInsightCard extends StatelessWidget {
 
       if (savingsSnapshot.status == SavingsGoalStatus.enRiesgo) {
         final proy = savingsSnapshot.gastoProyectadoFinDeMes;
-        final formattedProy = CurrencyFormatter.formatPreferido(
+        final formattedProy = CurrencyFormatter.formatAmount(
           proy,
-          null,
-          tasaCambio,
           monedaPresupuesto,
         );
         return 'Atención: a tu ritmo actual proyectas gastar $formattedProy. Modera tus consumos para proteger tu meta de ahorro de $formattedMeta.';
@@ -136,10 +126,8 @@ class AiInsightCard extends StatelessWidget {
     // Caso: Ritmo saludable con presupuesto
     final disponible = limiteParaGastar - totalGastadoMes;
     final ritmoDiario = disponible / diasRestantes;
-    final formattedRitmo = CurrencyFormatter.formatPreferido(
+    final formattedRitmo = CurrencyFormatter.formatAmount(
       ritmoDiario,
-      null,
-      tasaCambio,
       monedaPresupuesto,
     );
     final diasTexto = diasRestantes == 1

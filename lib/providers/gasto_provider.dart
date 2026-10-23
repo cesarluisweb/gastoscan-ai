@@ -1,4 +1,6 @@
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../core/constants/app_constants.dart';
 import '../data/models/gasto_model.dart';
 import '../data/models/item_gasto_model.dart';
 import '../data/repositories/gasto_repository.dart';
@@ -30,6 +32,13 @@ class GastoProvider with ChangeNotifier {
   Map<String, double> _totalesPorCategoriaUsdt = {};
   Map<String, double> _presupuestosPorCategoria = {};
   bool _presupuestoEsAdoptado = false;
+  double _tasaUsd = AppConstants.defaultTasaCambio;
+  double _tasaEur = 0.0;
+
+  void setTasasReferencia({double? tasaUsd, double? tasaEur}) {
+    if (tasaUsd != null && tasaUsd > 0) _tasaUsd = tasaUsd;
+    if (tasaEur != null && tasaEur > 0) _tasaEur = tasaEur;
+  }
 
   List<GastoModel> get gastos => _gastos;
   bool get isLoading => _isLoading;
@@ -52,9 +61,23 @@ class GastoProvider with ChangeNotifier {
   Map<String, double> get presupuestosPorCategoria => _presupuestosPorCategoria;
 
   SavingsHealthSnapshot get savingsSnapshot {
-    final double gastoAcumulado = _monedaPresupuesto == 'VES'
-        ? _totalMesVes
-        : (_monedaPresupuesto == 'USDT' ? _totalMesUsdt : _totalMesUsd);
+    final double gastoAcumulado;
+    if (_monedaPresupuesto == 'VES') {
+      gastoAcumulado = _totalMesVes;
+    } else if (_monedaPresupuesto == 'USDT') {
+      gastoAcumulado = _totalMesUsdt > 0 ? _totalMesUsdt : _totalMesUsd;
+    } else if (_monedaPresupuesto == 'EUR') {
+      final double eurRate = _tasaEur > 0 ? _tasaEur : (_tasaUsd > 0 ? _tasaUsd : 0.0);
+      if (eurRate > 0 && _totalMesVes > 0) {
+        gastoAcumulado = _totalMesVes / eurRate;
+      } else if (eurRate > 0 && _tasaUsd > 0) {
+        gastoAcumulado = (_totalMesUsd * _tasaUsd) / eurRate;
+      } else {
+        gastoAcumulado = _totalMesUsd;
+      }
+    } else {
+      gastoAcumulado = _totalMesUsd;
+    }
 
     final now = DateTime.now();
     final isCurrentMonth = (now.year == _selectedYear && now.month == _selectedMonth);
@@ -85,6 +108,15 @@ class GastoProvider with ChangeNotifier {
     notifyListeners();
 
     try {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final cachedUsd = prefs.getDouble('cached_rate_usd') ??
+            prefs.getDouble(AppConstants.prefTasaCambio);
+        if (cachedUsd != null && cachedUsd > 1.0) _tasaUsd = cachedUsd;
+        final cachedEur = prefs.getDouble('cached_rate_eur');
+        if (cachedEur != null && cachedEur > 1.0) _tasaEur = cachedEur;
+      } catch (_) {}
+
       _gastos = await _repository.obtenerGastosPorMes(_selectedYear, _selectedMonth);
       
       final totales = await _repository.obtenerTotalesMes(_selectedYear, _selectedMonth);
@@ -171,7 +203,7 @@ class GastoProvider with ChangeNotifier {
     return defaultMessage;
   }
 
-  Future<int> repararTasasHistoricas({double tasaFallback = 40.0}) async {
+  Future<int> repararTasasHistoricas({double tasaFallback = AppConstants.defaultTasaCambio}) async {
     final count = await _repository.repararTasasHistoricasIncompletas(tasaFallback: tasaFallback);
     if (count > 0) {
       await cargarDatos();
@@ -440,14 +472,36 @@ class GastoProvider with ChangeNotifier {
   }
 
   double getSpentForCategory(String categoria, {String? moneda}) {
-    final isVes = (moneda?.toUpperCase() == 'VES');
-    final map = isVes ? totalesPorCategoriaVes : _totalesPorCategoria;
+    final normMoneda = (moneda ?? 'USD').toUpperCase().trim();
+    Map<String, double> map;
+    double factor = 1.0;
+
+    if (normMoneda == 'VES') {
+      map = totalesPorCategoriaVes;
+    } else if (normMoneda == 'USDT') {
+      map = totalesPorCategoriaUsdt;
+    } else if (normMoneda == 'EUR') {
+      final double effEur = _tasaEur > 0 ? _tasaEur : 0.0;
+      final double effUsd = _tasaUsd > 0 ? _tasaUsd : 0.0;
+      if (effEur > 0 && _totalesPorCategoriaVes.isNotEmpty) {
+        map = _totalesPorCategoriaVes;
+        factor = 1.0 / effEur;
+      } else if (effEur > 0 && effUsd > 0) {
+        map = _totalesPorCategoria;
+        factor = effUsd / effEur;
+      } else {
+        map = _totalesPorCategoria;
+      }
+    } else {
+      map = _totalesPorCategoria;
+    }
+
     if (map.containsKey(categoria)) {
-      return map[categoria]!;
+      return map[categoria]! * factor;
     }
     for (final entry in map.entries) {
       if (entry.key.toLowerCase().trim() == categoria.toLowerCase().trim()) {
-        return entry.value;
+        return entry.value * factor;
       }
     }
     return 0.0;

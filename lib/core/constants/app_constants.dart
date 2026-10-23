@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class AppConstants {
   static const String appName = 'Rinde Más';
 
-  // Categorías estándar
+  // Categorías estándar (10 categorías canónicas oficiales)
   static const List<String> categorias = [
     'Alimentación',
     'Salud',
@@ -12,6 +12,8 @@ class AppConstants {
     'Hogar',
     'Servicios',
     'Transporte',
+    'Ropa',
+    'Entretenimiento',
     'Otros',
   ];
 
@@ -50,6 +52,18 @@ class AppConstants {
       case 'gasolina':
       case 'pasaje':
         return 'Transporte';
+      case 'ropa':
+      case 'vestimenta':
+      case 'calzado':
+      case 'zapatos':
+        return 'Ropa';
+      case 'entretenimiento':
+      case 'ocio':
+      case 'recreacion':
+      case 'recreación':
+      case 'cine':
+      case 'salidas':
+        return 'Entretenimiento';
       default:
         // Si coincide exactamente con alguna categoría registrada respetando mayúsculas/minúsculas
         for (final c in categorias) {
@@ -77,6 +91,10 @@ class AppConstants {
         return Icons.bolt;
       case 'Transporte':
         return Icons.directions_car_outlined;
+      case 'Ropa':
+        return Icons.checkroom_outlined;
+      case 'Entretenimiento':
+        return Icons.movie_outlined;
       case 'Otros':
       default:
         return Icons.more_horiz;

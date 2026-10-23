@@ -1544,7 +1544,7 @@ class DatabaseHelper {
   }
 
   /// Repara gastos históricos que tengan tasa_cambio <= 1.0 para que cuadren en Bolívares
-  Future<int> repararTasasHistoricasIncompletas({double tasaFallback = 40.0}) async {
+  Future<int> repararTasasHistoricasIncompletas({double tasaFallback = AppConstants.defaultTasaCambio}) async {
     final db = await instance.database;
     final rows = await db.query(
       'gastos',
@@ -1563,9 +1563,28 @@ class DatabaseHelper {
       // Caso 1: Tasa implícita existente en los montos (ej: gasto en Bs. con total original y total USD ya calculados)
       if (totalOrig > 0 && totalUsd > 0 && (totalOrig / totalUsd) > 2.0) {
         nuevaTasa = totalOrig / totalUsd;
-      } else if (moneda == 'USD' && totalUsd > 0) {
-        // Caso 2: Gasto registrado en USD pero sin tasa asignada (ej: desde chat)
-        nuevaTasa = tasaFallback;
+      } else if (moneda != 'VES' && totalUsd > 0) {
+        // Caso 2: Gasto registrado en divisa sin tasa asignada; buscar primero la tasa más cercana en el historial local
+        final fechaStr = (row['fecha'] as String?) ?? '';
+        if (fechaStr.isNotEmpty) {
+          try {
+            final closest = await db.rawQuery(
+              '''
+              SELECT tasa_cambio FROM gastos
+              WHERE tasa_cambio > 1.0 AND eliminado_en IS NULL
+              ORDER BY ABS(julianday(substr(fecha, 1, 10)) - julianday(substr(?, 1, 10))) ASC, id DESC
+              LIMIT 1
+              ''',
+              [fechaStr],
+            );
+            if (closest.isNotEmpty) {
+              nuevaTasa = (closest.first['tasa_cambio'] as num?)?.toDouble() ?? 0.0;
+            }
+          } catch (_) {}
+        }
+        if (nuevaTasa <= 1.0) {
+          nuevaTasa = tasaFallback > 1.0 ? tasaFallback : AppConstants.defaultTasaCambio;
+        }
       }
 
       if (nuevaTasa > 1.0) {

@@ -152,8 +152,13 @@ void main() {
       expect(AppConstants.normalizarCategoria('casa'), 'Hogar');
       expect(AppConstants.normalizarCategoria('servicio'), 'Servicios');
       expect(AppConstants.normalizarCategoria('estudios'), 'Educación');
+      expect(AppConstants.normalizarCategoria('Ropa'), 'Ropa');
+      expect(AppConstants.normalizarCategoria('calzado'), 'Ropa');
+      expect(AppConstants.normalizarCategoria('Entretenimiento'), 'Entretenimiento');
+      expect(AppConstants.normalizarCategoria('cine'), 'Entretenimiento');
       expect(AppConstants.normalizarCategoria('Categoría Inexistente'), 'Otros');
       expect(AppConstants.normalizarCategoria(null), 'Otros');
+      expect(AppConstants.categorias.length, 10);
     });
 
     test('GastoModel and ItemGastoModel normalize category fromMap', () {

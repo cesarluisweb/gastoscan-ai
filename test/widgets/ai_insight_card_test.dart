@@ -200,5 +200,40 @@ void main() {
       expect(find.textContaining('protegida'), findsOneWidget);
       expect(find.textContaining('/día'), findsOneWidget);
     });
+
+    testWidgets('does not double-multiply VES amounts by tasaCambio ([F1-C03])', (tester) async {
+      final gasto = GastoModel(
+        id: 1,
+        uuid: 'uuid-ves',
+        fecha: '2026-10-15',
+        comercio: 'Mercado',
+        moneda: 'VES',
+        totalOriginal: 450000,
+        totalUsd: 1000,
+        categoria: 'Alimentación',
+        creadoEn: '2026-10-15T10:00:00',
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AiInsightCard(
+              gastos: [gasto],
+              presupuestoGeneral: 5000.0,
+              metaAhorro: 1000.0,
+              totalesPorCategoria: const {'Alimentación': 4500.0},
+              totalGastadoMes: 4500.0,
+              monedaPresupuesto: 'VES',
+              tasaCambio: 400.0,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Exceso es 500 Bs y meta es 1.000 Bs (NO 200.000 Bs ni 400.000 Bs)
+      expect(find.textContaining('Bs. 500,00'), findsOneWidget);
+      expect(find.textContaining('Bs. 1.000,00'), findsOneWidget);
+    });
   });
 }

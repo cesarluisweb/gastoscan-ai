@@ -186,6 +186,15 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
     2. Almacenar el contravalor en Bolívares y USD calculándolo con `tasaUsdt` de la fecha seleccionada.
     3. Mantener la consistencia matemática en el switch de los 4 lentes (`USD BCV`, `USDT P2P`, `EUR BCV`, `Bs.`) sin alterar la inmutabilidad histórica.
 
+- `FIN-15` **Soporte Nativo para Cashea y Compras en Cuotas (Flujo de Caja + Cuotas Programadas):** `Pendiente`
+  - *Problema:* Registrar una compra con Cashea como 100% pagada el día 0 distorsiona el "Disponible para gastar" del mes actual y congela las cuotas futuras a una tasa BCV/USDT obsoleta (en Venezuela cada cuota cada 14 días se liquida en Bolívares a la tasa BCV vigente el día en que se paga la cuota). Por otro lado, un módulo contable de "Cuentas por Pagar / Pasivos" rompería la filosofía anti-microgestión de Rinde Más.
+  - *Solución:*
+    1. **Selector `[ Contado | ⚡ Cashea / Cuotas ]` en captura:** Permite elegir el nivel de inicial (`60%`, `50%`, `40%`, `20%` o monto manual) y la cantidad de cuotas (`3`, `6`, `9` o `12` cada 14 días), aplicando el algoritmo determinista del centavo residual.
+    2. **Criterio de Caja + Compromisos Visibles:** Hoy impacta el presupuesto únicamente la **Inicial** pagada; las cuotas futuras se generan automáticamente en `USD` con `estado_pago = 'PENDIENTE'` en sus fechas de vencimiento (+14, +28, +42 días), mostrándose en un banner preventivo (*"⚡ Cuotas por pagar este mes"*) sin inflar el gasto ejecutado hasta que se paguen.
+    3. **Liquidación en 1 toque y notificaciones locales:** Aviso 24h antes y el día de vencimiento; al pulsar `[ ✓ Pagar cuota ]` (incluso por adelantado), precarga la tasa BCV oficial de ese día, permite adjuntar el capture del Pago Móvil y pasa a `'PAGADO'`.
+    4. **Soporte en IA (Voz, OCR y Chat) y Paridad Web:** Detección por voz/OCR de compras con Cashea e inyección de `cuotas_pendientes` en el contexto del Asistente IA.
+  - *Documentación y Plan Técnico:* Ver [DOC_PLAN_CASHEA.md](DOC_PLAN_CASHEA.md).
+
 ### Bloque E: Respaldo y Soberanía de Datos (Local-First Backup)
 - `BACKUP-01` **Exportación e Importación Completa con Comprobantes (.zip):** `Pendiente`
   - *Problema:* Al desinstalar y reinstalar la app (común en evaluadores de Play Store y cambios de dispositivo), los gastos se recuperan desde Firestore pero las fotos de los comprobantes (`recibo_*.jpg`) se pierden definitivamente, ya que por política de privacidad y costo cero residen exclusivamente en el sandbox local del teléfono y no en la nube.
@@ -193,6 +202,13 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
     1. Crear en la pestaña Más la opción **"Exportar copia de seguridad completa (.zip)"** que comprima la base de datos SQLite y la carpeta de imágenes de comprobantes.
     2. Implementar la acción inversa **"Restaurar copia de seguridad (.zip)"** mediante selector de archivos (`file_picker`), extrayendo las imágenes al directorio local y reinsertando/fusionando los registros en SQLite sin colisiones de IDs.
     3. Permitir guardar o compartir el archivo `.zip` en Google Drive personal, almacenamiento interno o mensajería, ofreciendo total soberanía y respaldo offline sin depender de servidores en la nube.
+- `BACKUP-02` **Importación Masiva y Migración desde Otras Apps (MyMoney Pro / CSV / Plantilla Excel):** `Pendiente`
+  - *Problema:* Usuarios que llevan meses o años registrando gastos en otras aplicaciones (como MyMoney Pro, Gestor de Gastos, 1Money o hojas de Excel) enfrentan una alta barrera de salida al no poder traer su historial a Rinde Más sin transcribir compra por compra.
+  - *Solución:*
+    1. **Plantilla Oficial Descargable (`.csv` / `.xlsx`) y Parser Directo:** Proveer una plantilla limpia desde la app y el panel web (`panel.astro`) con columnas claras (`Fecha`, `Comercio/Concepto`, `Monto`, `Moneda`, `Categoría`, `Tasa opcional`, `Notas`), además de un detector automático del formato CSV nativo exportado por MyMoney Pro (`Time`, `Type`, `Category`, `Amount`, `Account`, `Notes`).
+    2. **Normalización y Cruce Histórico Automático de Tasas:** Para registros desde el 3 de enero de 2023 sin tasa especificada, cruzar automáticamente la fecha del gasto con el historial local/remoto de `ExchangeRateService` (`getRateForDate`) para calcular e inmutabilizar los contravalores (`total_ves`, `total_usd`, `total_usdt`, `tasa_bcv`) en céntimos.
+    3. **Mapeo Inteligente a las 8 Categorías Canónicas:** Traducir las categorías libres de la app de origen hacia las 8 categorías oficiales mediante `AppConstants.normalizarCategoria` y conservar el nombre de la categoría o cuenta original como `#etiqueta` o en el concepto para no perder contexto ni alterar la filosofía sin múltiples cuentas bancarias.
+    4. **Vista Previa y Deduplicación en Lote:** Mostrar resumen previo a la inserción (`X gastos listos para importar, Y omitidos por ingresos/transferencias`) y ejecutar inserción transaccional por lotes (`batch`) en SQLite y Firestore.
 
 ---
 

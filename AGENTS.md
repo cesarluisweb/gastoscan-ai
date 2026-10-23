@@ -38,7 +38,7 @@
 - Usar dominios con proxy naranja de Cloudflare como `FTP_SERVER` en CI/CD (bloquea el puerto 21 de FTP).
 - Introducir conciliación bancaria o microgestión de múltiples cuentas (anti-filosofía de Rinde Más).
 - Utilizar ratios de cambio cableados o asumir paridad 1:1 entre divisas (salvo la paridad directa USD/USDT según `dinero-datos.md`).
-- Inventar categorías fuera de las 8 canónicas oficiales de `AppConstants.categorias`.
+- Inventar categorías fuera de las 10 canónicas oficiales de `AppConstants.categorias`.
 - Implementar cobros digitales dentro de la app Android fuera de Google Play Billing (riesgo de suspensión de cuenta).
 - Prometer paquetes de IA vitalicia ilimitada en planes o microcopy.
 - Escribir contraseñas, tokens o API keys en texto plano en archivos versionados por git.

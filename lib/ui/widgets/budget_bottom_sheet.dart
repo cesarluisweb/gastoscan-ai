@@ -162,7 +162,8 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
     }
 
     String formatear(double val) {
-      return val >= 100 ? val.round().toString() : val.toStringAsFixed(2);
+      final rounded = (val * 100).round() / 100.0;
+      return rounded % 1 == 0 ? rounded.toInt().toString() : rounded.toStringAsFixed(2);
     }
 
     // Convertir presupuesto general a partir de base

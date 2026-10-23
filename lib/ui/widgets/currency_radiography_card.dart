@@ -51,16 +51,11 @@ class CurrencyRadiographyCard extends StatelessWidget {
           ? gasto.totalUsdtDisplay
           : gasto.totalUsdDisplay;
     } else if (monedaPrincipal == 'EUR') {
-      if (gasto.moneda == 'VES') {
-        return eurRate > 0 ? gasto.totalOriginalDisplay / eurRate : gasto.totalUsdDisplay;
-      }
-      return CurrencyFormatter.convertFromUsd(
-        gasto.totalUsdDisplay,
-        'EUR',
-        usdRate,
-        tasaEur: tasaEur,
-        tasaUsdt: tasaUsdt,
-      );
+      final rate = gasto.tasaCambio > 0 ? gasto.tasaCambio : usdRate;
+      final ves = gasto.moneda == 'VES'
+          ? gasto.totalOriginalDisplay
+          : gasto.totalUsdDisplay * rate;
+      return eurRate > 0 ? ves / eurRate : gasto.totalUsdDisplay;
     } else {
       // USD
       return gasto.totalUsdDisplay;

@@ -385,7 +385,7 @@ Reglas estrictas para los productos de cada factura:
 1. "descripcion": Transcribe el nombre legible, claro y completo del producto. Si el texto en la factura viene abreviado o cortado por la impresora térmica (por ejemplo "TOLLAS" -> "Toallas Húmedas", "ARRZ SUP" -> "Arroz Superior"), interpreta el contexto comercial y coloca un nombre descriptivo, limpio y bien escrito en español. No dejes caracteres truncados o incomprensibles.
 2. Decimales y Céntimos: Extrae con exactitud los montos numéricos usando SIEMPRE el PUNTO (.) como separador decimal. NUNCA devuelvas precios en céntimos enteros sin punto decimal (ej. si la factura fiscal o impresora térmica imprime 1250 o 12,50, DEBES interpretarlo y extraerlo como 12.50, NO como 1250). Todo precio debe tener sus decimales correspondientes. La suma de los precios de los items debe coincidir con total_original.
 3. Moneda Unificada: Todos los precios extraídos (ítems y total_original) DEBEN estar estrictamente en la misma moneda. Si los ítems están detallados en Bolívares (VES), extrae el total_original en Bolívares (ignorando el total Ref en USD) y coloca "moneda": "VES".
-4. "categoria": Asigna a cada ítem individual una de las categorías válidas ("Alimentación", "Salud", "Higiene", "Educación", "Hogar", "Servicios", "Transporte", "Otros") según el tipo de producto.
+4. "categoria": Asigna a cada ítem individual una de las categorías válidas ("Alimentación", "Salud", "Higiene", "Educación", "Hogar", "Servicios", "Transporte", "Ropa", "Entretenimiento", "Otros") según el tipo de producto.
 5. "impuesto_iva" y marcadores fiscales: En facturas fiscales venezolanas, los ítems suelen marcarse al final como (E) Exento o (G) Gravado al 16% (o alícuotas reducidas). En cada ítem, extrae "alicuota_fiscal": "E" para exento, o "G" para gravado. En el campo general "impuesto_iva", extrae el monto total del IVA liquidado (suele decir "Total IVA", "IVA 16%", "Impuesto"). Si toda la factura es exenta o no tiene IVA desglosado, coloca 0.00.
 
 Devuelve EXCLUSIVAMENTE un objeto JSON válido con la siguiente estructura, sin texto adicional ni bloques markdown:
@@ -394,7 +394,7 @@ Devuelve EXCLUSIVAMENTE un objeto JSON válido con la siguiente estructura, sin 
     {
       "comercio": "Nombre del establecimiento o persona receptora",
       "fecha": "YYYY-MM-DD",
-      "moneda": "VES" | "USD" | "EUR",
+      "moneda": "VES" | "USD" | "EUR" | "USDT",
       "total_original": 0.00,
       "tasa_cambio": 0.00,
       "impuesto_iva": 0.00,
@@ -405,7 +405,7 @@ Devuelve EXCLUSIVAMENTE un objeto JSON válido con la siguiente estructura, sin 
           "cantidad": 1.0,
           "precio_unitario": 0.00,
           "total": 0.00,
-          "categoria": "Alimentación" | "Salud" | "Higiene" | "Educación" | "Hogar" | "Servicios" | "Transporte" | "Otros",
+          "categoria": "Alimentación" | "Salud" | "Higiene" | "Educación" | "Hogar" | "Servicios" | "Transporte" | "Ropa" | "Entretenimiento" | "Otros",
           "alicuota_fiscal": "E" | "G" | null
         }
       ]
@@ -701,7 +701,7 @@ Nota de análisis cambiario: La diferencia entre total_usd_bcv y total_usdt_p2p 
                     enum: ["BS_BCV", "BS_USDT", "DIVISA"],
                     description: "Para compras en USD o EUR: 'BS_BCV' si pagó en bolívares a tasa oficial/BCV/pago móvil/punto; 'BS_USDT' si cobraron a tasa paralelo/USDT; 'DIVISA' si pagó en efectivo/Zelle/divisa directa."
                   },
-                  categoria: { type: "string", description: "Una de: Alimentación, Salud, Higiene, Educación, Hogar, Servicios, Transporte, Otros." },
+                  categoria: { type: "string", description: "Una de: Alimentación, Salud, Higiene, Educación, Hogar, Servicios, Transporte, Ropa, Entretenimiento, Otros." },
                   items: {
                     type: "array",
                     description: "Lista de productos comprados y sus precios estimados en la moneda original.",
@@ -730,7 +730,7 @@ Nota de análisis cambiario: La diferencia entre total_usd_bcv y total_usdt_p2p 
                           enum: ["BS_BCV", "BS_USDT", "DIVISA"],
                           description: "Método de liquidación si la compra fue en USD o EUR: 'BS_BCV', 'BS_USDT' o 'DIVISA'."
                         },
-                        categoria: { type: "string", description: "Una de: Alimentación, Salud, Higiene, Educación, Hogar, Servicios, Transporte, Otros." },
+                        categoria: { type: "string", description: "Una de: Alimentación, Salud, Higiene, Educación, Hogar, Servicios, Transporte, Ropa, Entretenimiento, Otros." },
                         items: {
                           type: "array",
                           description: "Lista de productos comprados en este establecimiento.",

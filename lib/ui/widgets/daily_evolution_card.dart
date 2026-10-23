@@ -62,18 +62,13 @@ class DailyEvolutionCard extends StatelessWidget {
               ? g.totalUsdtDisplay
               : g.totalUsdDisplay;
         } else if (monedaPrincipal == 'EUR') {
-          final eurRate = tasaEur > 0 ? tasaEur : (tasaCambio > 0 ? tasaCambio : 1.0);
-          if (g.moneda == 'VES') {
-            monto = eurRate > 0 ? g.totalOriginalDisplay / eurRate : g.totalUsdDisplay;
-          } else {
-            monto = CurrencyFormatter.convertFromUsd(
-              g.totalUsdDisplay,
-              'EUR',
-              tasaCambio,
-              tasaEur: tasaEur,
-              tasaUsdt: tasaUsdt,
-            );
-          }
+          final usdRate = tasaCambio > 0 ? tasaCambio : 1.0;
+          final eurRate = tasaEur > 0 ? tasaEur : usdRate;
+          final rate = g.tasaCambio > 0 ? g.tasaCambio : usdRate;
+          final ves = g.moneda == 'VES'
+              ? g.totalOriginalDisplay
+              : g.totalUsdDisplay * rate;
+          monto = eurRate > 0 ? ves / eurRate : g.totalUsdDisplay;
         } else {
           // USD
           monto = g.totalUsdDisplay;

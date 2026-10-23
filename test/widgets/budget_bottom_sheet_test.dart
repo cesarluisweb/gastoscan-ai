@@ -98,4 +98,33 @@ void main() {
 
     expect(find.text('100'), findsOneWidget);
   });
+
+  testWidgets('BudgetBottomSheet preserves 2 decimals on non-integer amounts >= 100 ([F1-I01])', (tester) async {
+    final gastoProvider = TestGastoProvider();
+    await gastoProvider.guardarTodoElPresupuesto(125.50, {'Alimentación': 50.0}, moneda: 'USD', metaAhorro: 20.0);
+    final settingsProvider = TestSettingsProvider();
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<GastoProvider>.value(value: gastoProvider),
+          ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+        ],
+        child: const MaterialApp(
+          home: Scaffold(
+            body: BudgetBottomSheet(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('125.50'), findsOneWidget);
+
+    // Switch to USDT (1:1 parity with USD -> must preserve 125.50, not round to 126)
+    await tester.tap(find.byKey(const Key('budget_currency_usdt_btn')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('125.50'), findsOneWidget);
+  });
 }

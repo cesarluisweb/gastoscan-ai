@@ -642,54 +642,52 @@ class _CategoryChartState extends State<CategoryChart> {
   }
   List<Widget> _buildCategoryItems(String cat) {
     final List<Map<String, dynamic>> items = [];
+    final double usdRate = widget.tasaCambio > 0 ? widget.tasaCambio : 1.0;
+    final double eurRate = widget.tasaEur > 0 ? widget.tasaEur : usdRate;
+
     for (final gasto in widget.gastosMes) {
-      final tasa = gasto.tasaCambio > 0 ? gasto.tasaCambio : (widget.tasaCambio > 0 ? widget.tasaCambio : 1.0);
+      final tasa = gasto.tasaCambio > 0 ? gasto.tasaCambio : usdRate;
+      final double vesTotal = gasto.moneda == 'VES'
+          ? gasto.totalOriginalDisplay
+          : gasto.totalUsdDisplay * tasa;
+      final double targetTotal;
+      if (widget.monedaPrincipal == 'VES') {
+        targetTotal = vesTotal;
+      } else if (widget.monedaPrincipal == 'USDT') {
+        targetTotal = (gasto.totalUsdt != null && gasto.totalUsdt! > 0)
+            ? gasto.totalUsdtDisplay
+            : gasto.totalUsdDisplay;
+      } else if (widget.monedaPrincipal == 'EUR') {
+        targetTotal = eurRate > 0 ? vesTotal / eurRate : gasto.totalUsdDisplay;
+      } else {
+        targetTotal = gasto.totalUsdDisplay;
+      }
+
       if (gasto.items.isEmpty) {
         if (gasto.categoria.toLowerCase().trim() == cat.toLowerCase().trim()) {
-          final double amount;
-          if (widget.monedaPrincipal == 'VES') {
-            amount = gasto.moneda == 'VES' ? gasto.totalOriginalDisplay : gasto.totalUsdDisplay * tasa;
-          } else {
-            amount = CurrencyFormatter.convertFromUsd(
-              gasto.totalUsdDisplay,
-              widget.monedaPrincipal,
-              tasa,
-              tasaEur: widget.tasaEur,
-              tasaUsdt: widget.tasaUsdt,
-            );
-          }
           items.add({
             'descripcion': gasto.comercio,
             'comercio': gasto.fecha,
-            'monto': amount,
+            'monto': targetTotal,
             'cantidad': 1.0,
           });
         }
       } else {
         for (final item in gasto.items) {
           if (item.categoria.toLowerCase().trim() == cat.toLowerCase().trim()) {
-            double itemUsd;
-            if (gasto.moneda == 'USD') {
-              itemUsd = item.totalDisplay;
-            } else {
-              final ratio = gasto.totalOriginalDisplay > 0 ? (gasto.totalUsdDisplay / gasto.totalOriginalDisplay) : 0.0;
-              itemUsd = ratio > 0 ? item.totalDisplay * ratio : item.totalDisplay / tasa;
-            }
-
+            final double ratio = gasto.totalOriginalDisplay > 0
+                ? (item.totalDisplay / gasto.totalOriginalDisplay)
+                : 0.0;
             final double itemAmount;
-            if (widget.monedaPrincipal == 'VES') {
+            if (ratio > 0) {
+              itemAmount = targetTotal * ratio;
+            } else if (widget.monedaPrincipal == 'VES') {
               itemAmount = gasto.moneda == 'VES' ? item.totalDisplay : item.totalDisplay * tasa;
             } else {
-              itemAmount = CurrencyFormatter.convertFromUsd(
-                itemUsd,
-                widget.monedaPrincipal,
-                tasa,
-                tasaEur: widget.tasaEur,
-                tasaUsdt: widget.tasaUsdt,
-              );
+              itemAmount = item.totalDisplay;
             }
             items.add({
-              'descripcion': item.descripcion,
+              'descripcion': AppConstants.cleanItemDescription(item.descripcion),
               'comercio': gasto.comercio,
               'monto': itemAmount,
               'cantidad': item.cantidad,

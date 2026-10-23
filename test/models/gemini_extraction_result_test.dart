@@ -113,5 +113,30 @@ void main() {
       expect(result.items[0].precioUnitarioDisplay, equals(15.00));
       expect(result.items[0].totalDisplay, equals(15.00));
     });
+
+    test('Caso G ([F1-C04]): Preserva Higiene, Ropa, Entretenimiento, moneda USDT y asigna categoría dominante a Impuesto IVA', () {
+      final json = {
+        'comercio': 'Farmatodo',
+        'fecha': '2026-10-20',
+        'moneda': 'USDT',
+        'total_original': 11.60,
+        'impuesto_iva': 1.60,
+        'items': [
+          {'descripcion': 'Champú', 'cantidad': 1, 'precio_unitario': 7.00, 'total': 7.00, 'categoria': 'Higiene'},
+          {'descripcion': 'Galletas', 'cantidad': 1, 'precio_unitario': 3.00, 'total': 3.00, 'categoria': 'Alimentación'},
+        ],
+      };
+
+      final result = GeminiExtractionResult.fromJson(json);
+
+      expect(result.moneda, equals('USDT'));
+      expect(result.items.length, equals(3));
+      expect(result.items[0].categoria, equals('Higiene'));
+      expect(result.items[1].categoria, equals('Alimentación'));
+      expect(result.items[2].descripcion, equals('Impuesto IVA'));
+      // Categoría dominante es Higiene (7.00 > 3.00), no 'Otros'
+      expect(result.items[2].categoria, equals('Higiene'));
+      expect(result.items[2].totalDisplay, equals(1.60));
+    });
   });
 }

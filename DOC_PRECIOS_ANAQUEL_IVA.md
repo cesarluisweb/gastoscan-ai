@@ -24,18 +24,16 @@ En Venezuela conviven dos realidades de precios:
 
 ---
 
-## 2. Regla de Negocio
+## 2. Regla de Negocio Vigente (Opción A — Renglón `'Impuesto IVA'` con Categoría Dominante)
 
-1. **Precios de Anaquel por Defecto:**
-   Todo producto gravado con alícuota general `(G)` debe almacenarse y presentarse en la aplicación con su precio final con IVA incluido.
-2. **Productos Exentos Intactos:**
-   Los productos exentos marcados con `(E)` mantienen su precio original sin modificaciones.
-3. **Eliminación del Renglón Huérfano de IVA:**
-   No se creará una línea independiente de gasto denominada *"Impuesto IVA"* en la base de datos ni en los desgloses; el impuesto queda imputado en los productos que lo causaron.
-4. **Cotejo en Pantalla de Revisión (`ReviewExpenseScreen`):**
-   Para no generar dudas cuando el usuario coteje la app contra el papel físico de la factura:
-   - El campo principal editable muestra el **precio final con IVA** (ej. `$3,00`).
-   - Debajo del campo, en texto secundario gris sutil, se muestra la base leída en el papel: `IVA 16% incl. (Base en factura: $2,59)`.
+1. **Conservación del Renglón `'Impuesto IVA'` para Cotejo 1:1 con Factura Física:**
+   Cuando una factura fiscal venezolana desglosa los productos a base imponible y liquida el IVA (`impuesto_iva > 0`) al pie del recibo, `GeminiExtractionResult.fromJson` conserva los precios unitarios sin IVA tal como salen impresos en el papel físico y agrega el renglón independiente `'Impuesto IVA'`. Esto permite al usuario cotejar visualmente 1:1 cada renglón de `ReviewExpenseScreen` contra su ticket impreso.
+2. **Asignación Automática a la Categoría Dominante (`ItemGastoModel.calcularCategoriaDominante`):**
+   En lugar de asignarle `'Otros'` al ítem `'Impuesto IVA'`, se calcula la **categoría dominante de la factura** (sumando `precio_unitario * cantidad` de todos los ítems no impositivos agrupados por categoría canónica y seleccionando la de mayor monto acumulado, usando `'Otros'` únicamente como fallback si no hay ítems previos) y se le asigna dicha categoría dominante al renglón `'Impuesto IVA'`.
+3. **Sincronización en Revisión (`ReviewExpenseScreen`):**
+   - La función `ItemGastoModel.calcularCategoriaDominante` es la única fuente de verdad tanto para determinar la categoría principal de la compra (y su icono en la pantalla de Inicio) como para categorizar el renglón `'Impuesto IVA'`.
+   - Si el usuario modifica las categorías de los productos en `ReviewExpenseScreen`, el renglón `'Impuesto IVA'` actualiza su categoría a la nueva categoría dominante antes de guardar.
+   - Si por algún motivo llega una factura con `impuestoIva > 0` cuyos ítems aún no incluían el renglón `'Impuesto IVA'` y cuya suma difiere del total en ese monto, `ReviewExpenseScreen._buildInitialItemsWithTaxAllocated` ofrece como respaldo el prorrateo proporcional con compensación del centavo residual ($\pm 0,01$).
 
 ---
 
