@@ -101,6 +101,15 @@ class AppConstants {
     }
   }
 
+  /// Limpia sufijos de alícuotas fiscales como (G), (E), -G, -E al final de la descripción de un ítem.
+  static String cleanItemDescription(String desc) {
+    final cleaned = desc
+        .replaceAll(RegExp(r'\s*\([GERgerExX]+\)\s*$', caseSensitive: false), '')
+        .replaceAll(RegExp(r'\s*-(G|E|R)\s*$', caseSensitive: false), '')
+        .trim();
+    return cleaned.isNotEmpty ? cleaned : desc.trim();
+  }
+
   // Monedas soportadas
   static const List<String> monedas = ['USD', 'VES', 'USDT', 'EUR'];
 
