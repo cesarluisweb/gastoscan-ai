@@ -5,9 +5,11 @@
 - **Rama:** `main`.
 - **Fase activa:** Fase 5 (Closed Testing activa) y Fase 6.2 (Finanzas y UX).
 - **CI Móvil Reciente:** Build 550 en verde (`CI 39987221563 | success | 4f369bc`). Artefactos `rindemas-dev-apk` y `app-release-aab` generados y listos en GitHub Actions.
-- **Acción Reciente (FIN-09 Equivalencias Multimoneda Inmutables):**
+- **Acción Reciente (FIN-09 Equivalencias Multimoneda Inmutables & Refinamiento UX):**
   1. Base de datos elevada a SQLite v18: columnas `total_eur` (INTEGER centavos) y `tasa_eur` (REAL) con backfill inmutable en `DatabaseHelper` y soporte en `GastoModel`.
-  2. `ReviewExpenseScreen`: resuelto bug donde Euro BCV sobreescribía Dólar BCV en compras en `VES`. Implementadas 3 columnas fijas de equivalencia simultáneas (`USD BCV`, `EUR BCV`, `USDT P2P`), edición de tasa por chip y botón para restaurar tasa oficial histórica (`Icons.restart_alt`).
+  2. `ReviewExpenseScreen` & `panel.astro`:
+     - En `USD` y `EUR`: `En divisa` reordenada como primera sub-opción a la izquierda y seleccionada por defecto en gastos nuevos.
+     - En `VES`: Divulgación progresiva. Muestra de inmediato las 3 columnas de equivalencia (`USD BCV`, `EUR BCV`, `USDT P2P`), y oculta chips y edición de tasa tras el botón `Ajustar tasas ▾` con indicador de tasa personalizada activa y botón de restaurar oficial (`Icons.restart_alt`).
   3. Compras en `USDT`: flujo limpio sin pedir bolívares, con cintillo de equivalencias informativas y respaldo de tasas del día en segundo plano.
   4. Lentes financieros móviles (`DashboardScreen`, `SummaryCard`, `ExpenseCard`, `CurrencyFormatter`) y panel web (`landing/src/pages/panel.astro`) unificados con paridad al céntimo.
   5. Documentación de tarea crítica: [docs/DOC_TASAS_EQUIVALENCIAS_MULTIMONEDA.md](docs/DOC_TASAS_EQUIVALENCIAS_MULTIMONEDA.md). Estado: `Pendiente de validación 🧪`.

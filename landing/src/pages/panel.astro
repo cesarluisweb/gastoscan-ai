@@ -483,9 +483,18 @@ import '../styles/global.css';
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                             <button 
                                 type="button" 
+                                id="btn-liq-divisa"
+                                data-liq="DIVISA" 
+                                class="btn-liq-opt flex flex-col items-start p-2.5 rounded-xl border-2 border-[#FACC15] bg-amber-50/50 shadow-sm transition-all text-left"
+                            >
+                                <span class="text-xs font-bold text-slate-800">En divisa</span>
+                                <span class="text-[10px] text-slate-500">Divisa directa sin conversión</span>
+                            </button>
+                            <button 
+                                type="button" 
                                 id="btn-liq-bcv"
                                 data-liq="BS_BCV" 
-                                class="btn-liq-opt flex flex-col items-start p-2.5 rounded-xl border-2 border-[#FACC15] bg-amber-50/50 shadow-sm transition-all text-left"
+                                class="btn-liq-opt flex flex-col items-start p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-all text-left"
                             >
                                 <span class="text-xs font-bold text-slate-800">En Bs. a tasa BCV</span>
                                 <span class="text-[10px] text-slate-500">Liquida y guarda en Bs. oficiales</span>
@@ -498,15 +507,6 @@ import '../styles/global.css';
                             >
                                 <span class="text-xs font-bold text-slate-800">En Bs. a tasa P2P</span>
                                 <span class="text-[10px] text-slate-500">Liquida y guarda a tasa P2P</span>
-                            </button>
-                            <button 
-                                type="button" 
-                                id="btn-liq-divisa"
-                                data-liq="DIVISA" 
-                                class="btn-liq-opt flex flex-col items-start p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-all text-left"
-                            >
-                                <span class="text-xs font-bold text-slate-800">En divisa directa</span>
-                                <span class="text-[10px] text-slate-500">Divisa directa sin conversión</span>
                             </button>
                         </div>
                         <div id="liq-preview-card" class="p-2.5 rounded-xl bg-slate-100 text-[11px] text-slate-600">
@@ -669,7 +669,7 @@ import '../styles/global.css';
         let currentGastos = [];
         let currentPresupuesto = { general: 0, meta_ahorro: 0, moneda: 'USD', categorias: {} };
         let activeLens = null;
-        let selectedLiq = 'BS_BCV';
+        let selectedLiq = 'DIVISA';
         let editingGastoId = null;
         let bolivaresAjustadosManualmente = false;
 
@@ -2178,6 +2178,9 @@ import '../styles/global.css';
 
         const selectCurrency = async (cur) => {
             expMoneda = cur;
+            if ((cur === 'USD' || cur === 'EUR') && !editingGastoId) {
+                selectedLiq = 'DIVISA';
+            }
             const f = modalExpFecha?.value;
             let rate = 0;
             if (f) {
@@ -2248,7 +2251,7 @@ import '../styles/global.css';
 
             modalExpComercio.value = '';
             modalExpTotal.value = '';
-            selectedLiq = 'BS_BCV';
+            selectedLiq = 'DIVISA';
             expMoneda = 'USD';
             bolivaresAjustadosManualmente = false;
 

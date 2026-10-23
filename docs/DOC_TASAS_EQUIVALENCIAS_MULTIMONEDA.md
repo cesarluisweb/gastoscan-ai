@@ -38,18 +38,15 @@
 
 ## 3. Comportamiento de los 4 Flujos en Pantalla de Registro (`ReviewExpenseScreen`)
 
-### 1. Registro en Dólares (`USD`)
-- **En Bs. a tasa BCV:** Usuario introduce monto en `$`; se calcula el total en Bolívares (`monto × tasa_usd`). Abajo se muestran los 3 equivalentes informativos: `≈ $10.00 USD BCV • €8.92 EUR • 8.88 USDT`. Se congela en `moneda: VES` con `total_usd`, `total_eur` y `total_usdt`.
-- **En Bs. a tasa P2P:** Usuario introduce monto en `$`; se calcula el total en Bolívares (`monto × tasa_usdt`). Muestra equivalentes `USDT P2P • USD BCV • EUR BCV`.
-- **En divisa directa:** Se guarda en `moneda: USD` con paridad 1:1 en USDT y cálculo de contravalor en EUR BCV de esa fecha.
+### 1. Registro en Dólares (`USD`) y Euros (`EUR`)
+- **En divisa directa (1.ª opción y por defecto al registrar nuevo gasto):** Formulario limpio con solo el campo `Monto Total ($/€)` y debajo un cintillo resumen con las equivalencias en las otras divisas y en Bolívares.
+- **En Bs. a tasa BCV (2.ª opción):** Usuario introduce monto en etiqueta; se calcula el total en Bolívares (`monto × tasa_bcv`). Muestra equivalentes `USD BCV • EUR BCV • USDT P2P`.
+- **En Bs. a tasa P2P (3.ª opción):** Usuario introduce monto en etiqueta; se calcula el total en Bolívares (`monto × tasa_usdt`). Muestra equivalentes `USDT P2P • USD BCV • EUR BCV`.
 
-### 2. Registro en Bolívares (`VES`)
+### 2. Registro en Bolívares (`VES`) - Divulgación Progresiva
 - Usuario introduce el monto en Bolívares.
-- **3 Chips de Tasa Superior (`Dólar BCV`, `Euro BCV`, `USDT P2P`):** Permiten al usuario alternar qué tasa está inspeccionando o editando en la caja de texto. Si altera el valor, aparece un botón de restauración (`Icons.restart_alt`) para devolver la tasa al valor oficial exacto de la fecha seleccionada.
-- **3 Columnas de Equivalencias Simultáneas:**
-  - `Equiv. USD (BCV)`: `$ X.XX`
-  - `Equiv. EUR (BCV)`: `€ X.XX`
-  - `Equiv. USDT (P2P)`: `X.XX USDT`
+- **Por defecto (estado colapsado):** Muestra el campo de monto en Bolívares y debajo las **3 columnas de equivalencias simultáneas** sincronizadas con la fecha seleccionada (`Equiv. USD (BCV)`, `Equiv. EUR (BCV)` y `Equiv. USDT (P2P)`), junto con el botón sutil `Ajustar tasas ▾`.
+- **Al presionar `Ajustar tasas ▾` (estado desplegado):** Revela los chips rápidos (`Dólar BCV`, `Euro BCV`, `USDT P2P`), la caja de edición manual de la tasa y el botón de restauración (`Icons.restart_alt`) para restablecer el valor oficial exacto de la fecha. Si alguna tasa fue alterada, muestra el indicador visual `Tasa personalizada activa`.
 - Se guardan de forma inmutable los 4 totales y las 3 tasas correspondientes a la fecha.
 
 ### 3. Registro en USDT (`USDT`)

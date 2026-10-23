@@ -123,6 +123,38 @@ void main() {
     expect(buttonSize.height, inInclusiveRange(40, 60));
   });
 
+  testWidgets('ReviewExpenseScreen en USD y EUR selecciona En divisa por defecto y en primera posicion', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.5;
+
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pumpAndSettle();
+
+    // 1. Verificar que los 3 botones de forma de pago existen y que 'En divisa' está en primer lugar a la izquierda
+    final divisaPos = tester.getTopLeft(find.byKey(const Key('btn_pagado_en_divisa')));
+    final bsBcvPos = tester.getTopLeft(find.byKey(const Key('btn_pagado_en_bs')));
+    final bsUsdtPos = tester.getTopLeft(find.byKey(const Key('btn_pagado_en_bs_usdt')));
+    expect(divisaPos.dx, lessThan(bsBcvPos.dx));
+    expect(bsBcvPos.dx, lessThan(bsUsdtPos.dx));
+
+    // 2. En USD por defecto está activo 'En divisa': muestra cintillo_divisa_info y oculta input_total_bs_manual
+    expect(find.byKey(const Key('cintillo_divisa_info')), findsOneWidget);
+    expect(find.byKey(const Key('input_total_bs_manual')), findsNothing);
+    expect(find.textContaining('Se guardará en USD'), findsOneWidget);
+
+    // 3. Al cambiar a EUR en gasto nuevo, 'En divisa' sigue siendo la opción por defecto
+    await tester.tap(find.byKey(const Key('expense_currency_eur_btn')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('cintillo_divisa_info')), findsOneWidget);
+    expect(find.byKey(const Key('input_total_bs_manual')), findsNothing);
+    expect(find.textContaining('Se guardará en EUR'), findsOneWidget);
+  });
+
   testWidgets('ReviewExpenseScreen uses historical BCV rate (< 50.0) for 2023 dates and calculates VES properly', (tester) async {
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 2.5;
@@ -162,6 +194,10 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
+    // Seleccionar explícitamente "En Bs. a tasa BCV" (2.ª opción)
+    await tester.tap(find.byKey(const Key('btn_pagado_en_bs')));
+    await tester.pumpAndSettle();
+
     // Verify rate is 34.86, NOT today's rate 881.88
     expect(find.text('Tasa BCV: Bs. 34.86'), findsOneWidget);
     expect(find.text('Tasa BCV: Bs. 881.88'), findsNothing);
@@ -171,7 +207,7 @@ void main() {
     expect(bsManualField.controller?.text, '3486.00');
   });
 
-  testWidgets('ReviewExpenseScreen en VES muestra las 3 columnas simultaneas de equivalencia (USD, EUR, USDT)', (tester) async {
+  testWidgets('ReviewExpenseScreen en VES aplica divulgacion progresiva: muestra 3 columnas y despliega chips al tocar Ajustar tasas', (tester) async {
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 2.5;
 
@@ -207,27 +243,43 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    // 1. Debe mostrar los 3 chips de tasa mediante sus Keys
-    expect(find.byKey(const Key('chip_rate_usd_bcv')), findsOneWidget);
-    expect(find.byKey(const Key('chip_rate_eur_bcv')), findsOneWidget);
-    expect(find.byKey(const Key('chip_rate_usdt_binance')), findsOneWidget);
-
-    // 2. Debe mostrar simultáneamente las 3 etiquetas de equivalencia
+    // 1. Por defecto (estado colapsado): Las 3 columnas de equivalencias son visibles de inmediato
     expect(find.text('Equiv. USD (BCV)'), findsOneWidget);
     expect(find.text('Equiv. EUR (BCV)'), findsOneWidget);
     expect(find.text('Equiv. USDT (P2P)'), findsOneWidget);
-
-    // 3. Montos equivalentes renderizados con sus símbolos
     expect(find.textContaining('\$'), findsWidgets);
     expect(find.textContaining('€'), findsWidgets);
     expect(find.textContaining('USDT'), findsWidgets);
 
-    // 4. Al tocar el chip 'Euro BCV', las 3 columnas siguen presentes y funcionales
+    // Los chips y el campo manual de tasa están ocultos por defecto
+    expect(find.byKey(const Key('chip_rate_usd_bcv')), findsNothing);
+    expect(find.byKey(const Key('chip_rate_eur_bcv')), findsNothing);
+    expect(find.byKey(const Key('input_tasa_ves')), findsNothing);
+
+    // 2. Al tocar el botón 'Ajustar tasas ▾' se despliegan los 3 chips y la caja de edición de tasa
+    expect(find.byKey(const Key('btn_ajustar_tasas_ves')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('btn_ajustar_tasas_ves')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('chip_rate_usd_bcv')), findsOneWidget);
+    expect(find.byKey(const Key('chip_rate_eur_bcv')), findsOneWidget);
+    expect(find.byKey(const Key('chip_rate_usdt_binance')), findsOneWidget);
+    expect(find.byKey(const Key('input_tasa_ves')), findsOneWidget);
+
+    // 3. Al tocar el chip 'Euro BCV' y editar manualmente la tasa, aparece el botón Icons.restart_alt
     await tester.tap(find.byKey(const Key('chip_rate_eur_bcv')));
     await tester.pumpAndSettle();
-    expect(find.text('Equiv. USD (BCV)'), findsOneWidget);
-    expect(find.text('Equiv. EUR (BCV)'), findsOneWidget);
-    expect(find.text('Equiv. USDT (P2P)'), findsOneWidget);
+
+    await tester.enterText(find.byKey(const Key('input_tasa_ves')), '1000.00');
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.restart_alt), findsOneWidget);
+    expect(find.text('Tasa personalizada activa'), findsOneWidget);
+
+    // Al tocar restaurar, vuelve a la tasa oficial (950.00)
+    await tester.tap(find.byKey(const Key('btn_restore_official_rate')));
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.restart_alt), findsNothing);
   });
 
   testWidgets('ReviewExpenseScreen en USDT muestra cintillo informativo multimoneda limpio', (tester) async {
@@ -248,7 +300,7 @@ void main() {
       child: MaterialApp(
         home: ReviewExpenseScreen(
           extractedData: GeminiExtractionResult(
-            comercio: 'Cripto Store',
+            comercio: 'Recarga Binance',
             fecha: DateTime.now().toIso8601String().substring(0, 10),
             moneda: 'USDT',
             totalOriginal: 10.0,
@@ -260,12 +312,8 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    // En USDT no debe mostrar el selector de 3 formas de liquidacion de USD/EUR
-    expect(find.text('Forma de pago en Venezuela'), findsNothing);
-    // Debe mostrar el campo de entrada de Monto Total en USDT con paridad 1:1
-    expect(find.text('Monto Total (USDT)'), findsOneWidget);
-    expect(find.text('Paridad 1:1 con USD'), findsOneWidget);
     expect(find.byKey(const Key('cintillo_usdt_info')), findsOneWidget);
+    expect(find.textContaining('Se guardará en USDT'), findsOneWidget);
+    expect(find.textContaining('USD 1:1'), findsOneWidget);
   });
 }
-
