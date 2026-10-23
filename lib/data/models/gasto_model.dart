@@ -10,8 +10,10 @@ class GastoModel {
   final int totalOriginal;
   final int totalUsd;
   final int? totalUsdt;
+  final int? totalEur;
   final double tasaCambio;
   final double? tasaUsdt;
+  final double? tasaEur;
   final String? fuenteTasaCambio;
   final String? fechaTasaCambio;
   final String categoria;
@@ -33,8 +35,10 @@ class GastoModel {
     required this.totalOriginal,
     required this.totalUsd,
     this.totalUsdt,
+    this.totalEur,
     this.tasaCambio = 1.0,
     this.tasaUsdt,
+    this.tasaEur,
     this.fuenteTasaCambio,
     this.fechaTasaCambio,
     required this.categoria,
@@ -58,8 +62,10 @@ class GastoModel {
       'total_original': totalOriginal,
       'total_usd': totalUsd,
       'total_usdt': totalUsdt,
+      'total_eur': totalEur,
       'tasa_cambio': tasaCambio,
       'tasa_usdt': tasaUsdt,
+      'tasa_eur': tasaEur,
       'fuente_tasa_cambio': fuenteTasaCambio,
       'fecha_tasa_cambio': fechaTasaCambio,
       'categoria': categoria,
@@ -84,8 +90,10 @@ class GastoModel {
   factory GastoModel.fromMap(Map<String, dynamic> map, {List<ItemGastoModel> items = const []}) {
     final int tUsd = (map['total_usd'] as num?)?.toInt() ?? 0;
     final int? tUsdt = (map['total_usdt'] as num?)?.toInt();
+    final int? tEur = (map['total_eur'] as num?)?.toInt();
     final double tCambio = (map['tasa_cambio'] as num?)?.toDouble() ?? 1.0;
     final double? tUsdtRate = (map['tasa_usdt'] as num?)?.toDouble();
+    final double? tEurRate = (map['tasa_eur'] as num?)?.toDouble();
 
     return GastoModel(
       id: map['id'] as int?,
@@ -96,8 +104,10 @@ class GastoModel {
       totalOriginal: (map['total_original'] as num?)?.toInt() ?? 0,
       totalUsd: tUsd,
       totalUsdt: tUsdt ?? tUsd,
+      totalEur: tEur,
       tasaCambio: tCambio,
       tasaUsdt: tUsdtRate ?? tCambio,
+      tasaEur: tEurRate,
       fuenteTasaCambio: map['fuente_tasa_cambio'] as String?,
       fechaTasaCambio: map['fecha_tasa_cambio'] as String?,
       categoria: AppConstants.normalizarCategoria(map['categoria'] as String?),
@@ -121,8 +131,10 @@ class GastoModel {
     int? totalOriginal,
     int? totalUsd,
     int? totalUsdt,
+    int? totalEur,
     double? tasaCambio,
     double? tasaUsdt,
+    double? tasaEur,
     String? fuenteTasaCambio,
     String? fechaTasaCambio,
     String? categoria,
@@ -144,8 +156,10 @@ class GastoModel {
       totalOriginal: totalOriginal ?? this.totalOriginal,
       totalUsd: totalUsd ?? this.totalUsd,
       totalUsdt: totalUsdt ?? this.totalUsdt,
+      totalEur: totalEur ?? this.totalEur,
       tasaCambio: tasaCambio ?? this.tasaCambio,
       tasaUsdt: tasaUsdt ?? this.tasaUsdt,
+      tasaEur: tasaEur ?? this.tasaEur,
       fuenteTasaCambio: fuenteTasaCambio ?? this.fuenteTasaCambio,
       fechaTasaCambio: fechaTasaCambio ?? this.fechaTasaCambio,
       categoria: categoria ?? this.categoria,
@@ -164,4 +178,6 @@ class GastoModel {
   double get totalUsdDisplay => totalUsd / 100.0;
   double get totalUsdtDisplay => (totalUsdt ?? totalUsd) / 100.0;
   double get tasaUsdtDisplay => (tasaUsdt != null && tasaUsdt! > 0) ? tasaUsdt! : tasaCambio;
+  double get totalEurDisplay => (totalEur ?? totalUsd) / 100.0;
+  double get tasaEurDisplay => (tasaEur != null && tasaEur! > 0) ? tasaEur! : tasaCambio;
 }

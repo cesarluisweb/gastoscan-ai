@@ -159,6 +159,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               totalUsd: gastoProvider.totalMesUsd,
               totalVes: gastoProvider.totalMesVes,
               totalUsdt: gastoProvider.totalMesUsdt,
+              totalEur: gastoProvider.totalMesEur,
               periodo: '$mesNombre $anio',
               monedaPrincipal: settings.monedaPrincipal,
               tasaCambio: settings.tasaCambioVesUsd,
@@ -213,17 +214,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ? gastoProvider.totalMesUsdt
                     : gastoProvider.totalMesUsd;
               } else {
-                // EUR: convertir desde el equivalente histórico en VES usando la tasa EUR BCV
+                // EUR: usar los totales congelados en EUR o fallback proporcional
                 final double vesEquiv = gastoProvider.totalMesVes > 0
                     ? gastoProvider.totalMesVes
                     : (gastoProvider.totalMesUsd * usdRate);
-                categoryTotals = gastoProvider.totalesPorCategoriaVes.isNotEmpty
-                    ? gastoProvider.totalesPorCategoriaVes.map((k, v) => MapEntry(k, eurRate > 0 ? (v / eurRate) : 0.0))
-                    : gastoProvider.totalesPorCategoria.map((k, v) => MapEntry(
-                          k,
-                          eurRate > 0 ? ((v * usdRate) / eurRate) : v,
-                        ));
-                totalMes = eurRate > 0 ? (vesEquiv / eurRate) : gastoProvider.totalMesUsd;
+                categoryTotals = gastoProvider.totalesPorCategoriaEur.isNotEmpty
+                    ? gastoProvider.totalesPorCategoriaEur
+                    : (gastoProvider.totalesPorCategoriaVes.isNotEmpty
+                        ? gastoProvider.totalesPorCategoriaVes.map((k, v) => MapEntry(k, eurRate > 0 ? (v / eurRate) : 0.0))
+                        : gastoProvider.totalesPorCategoria.map((k, v) => MapEntry(
+                              k,
+                              eurRate > 0 ? ((v * usdRate) / eurRate) : v,
+                            )));
+                totalMes = gastoProvider.totalMesEur > 0
+                    ? gastoProvider.totalMesEur
+                    : (eurRate > 0 ? (vesEquiv / eurRate) : gastoProvider.totalMesUsd);
               }
 
               return <Widget>[

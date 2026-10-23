@@ -11,6 +11,7 @@ class SummaryCard extends StatelessWidget {
   final double totalUsd;
   final double totalVes;
   final double totalUsdt;
+  final double totalEur;
   final String periodo;
   final String monedaPrincipal;
   final double tasaCambio;
@@ -28,6 +29,7 @@ class SummaryCard extends StatelessWidget {
     required this.totalUsd,
     required this.totalVes,
     this.totalUsdt = 0.0,
+    this.totalEur = 0.0,
     required this.periodo,
     this.monedaPrincipal = 'USD',
     this.tasaCambio = 1.0,
@@ -80,7 +82,7 @@ class SummaryCard extends StatelessWidget {
     } else if (monedaPrincipal == 'USDT') {
       effectiveSpent = usdtEff;
     } else if (monedaPrincipal == 'EUR') {
-      effectiveSpent = eurRate > 0 ? (vesEquiv / eurRate) : totalUsd;
+      effectiveSpent = totalEur > 0 ? totalEur : (eurRate > 0 ? (vesEquiv / eurRate) : totalUsd);
     } else {
       effectiveSpent = totalUsd;
     }

@@ -16,6 +16,8 @@ class MockTotalsDatabaseHelper extends DatabaseHelper {
     required double tasaCambio,
     int? totalUsdt,
     double? tasaUsdt,
+    int? totalEur,
+    double? tasaEur,
     String categoria = 'Otros',
     List<Map<String, dynamic>> items = const [],
   }) {
@@ -26,8 +28,10 @@ class MockTotalsDatabaseHelper extends DatabaseHelper {
       'total_original': totalOriginal,
       'total_usd': totalUsd,
       'total_usdt': totalUsdt,
+      'total_eur': totalEur,
       'tasa_cambio': tasaCambio,
       'tasa_usdt': tasaUsdt,
+      'tasa_eur': tasaEur,
       'categoria': categoria,
       'eliminado_en': null,
     });
@@ -44,14 +48,17 @@ class MockTotalsDatabaseHelper extends DatabaseHelper {
     double sumUsd = 0.0;
     double sumVes = 0.0;
     double sumUsdt = 0.0;
+    double sumEur = 0.0;
 
     for (final r in rows) {
       final moneda = (r['moneda'] as String?) ?? 'VES';
       final totalOrigInt = (r['total_original'] as num?)?.toInt() ?? 0;
       final totalUsdInt = (r['total_usd'] as num?)?.toInt() ?? 0;
       final totalUsdtInt = (r['total_usdt'] as num?)?.toInt();
+      final totalEurInt = (r['total_eur'] as num?)?.toInt();
       final tasa = (r['tasa_cambio'] as num?)?.toDouble() ?? 1.0;
       final tasaUsdt = (r['tasa_usdt'] as num?)?.toDouble();
+      final tasaEur = (r['tasa_eur'] as num?)?.toDouble();
 
       final double totalOrig = totalOrigInt / 100.0;
       final double totalUsd = totalUsdInt / 100.0;
@@ -67,8 +74,20 @@ class MockTotalsDatabaseHelper extends DatabaseHelper {
         totalUsdt = totalUsd;
       }
 
+      final double totalEur;
+      if (totalEurInt != null && totalEurInt > 0) {
+        totalEur = totalEurInt / 100.0;
+      } else if (moneda == 'EUR') {
+        totalEur = totalOrig;
+      } else if (tasaEur != null && tasaEur > 0) {
+        totalEur = moneda == 'VES' ? totalOrig / tasaEur : totalUsd;
+      } else {
+        totalEur = totalUsd;
+      }
+
       sumUsd += totalUsd;
       sumUsdt += totalUsdt;
+      sumEur += totalEur;
 
       if (moneda == 'VES') {
         sumVes += totalOrig;
@@ -81,6 +100,7 @@ class MockTotalsDatabaseHelper extends DatabaseHelper {
       'USD': sumUsd,
       'VES': sumVes,
       'USDT': sumUsdt,
+      'EUR': sumEur,
     };
   }
 
@@ -113,11 +133,26 @@ class MockTotalsDatabaseHelper extends DatabaseHelper {
         totalUsdt = totalUsd;
       }
 
+      final totalEurInt = (g['total_eur'] as num?)?.toInt();
+      final tasaEur = (g['tasa_eur'] as num?)?.toDouble();
+      final double totalEur;
+      if (totalEurInt != null && totalEurInt > 0) {
+        totalEur = totalEurInt / 100.0;
+      } else if (gastoMoneda == 'EUR') {
+        totalEur = totalOrig;
+      } else if (tasaEur != null && tasaEur > 0) {
+        totalEur = gastoMoneda == 'VES' ? totalOrig / tasaEur : totalUsd;
+      } else {
+        totalEur = totalUsd;
+      }
+
       final double targetTotal;
       if (moneda == 'VES') {
         targetTotal = (gastoMoneda == 'VES' ? totalOrig : totalUsd * (tasa > 0 ? tasa : 1.0));
       } else if (moneda == 'USDT') {
         targetTotal = totalUsdt;
+      } else if (moneda == 'EUR') {
+        targetTotal = totalEur;
       } else {
         targetTotal = totalUsd;
       }
@@ -259,6 +294,17 @@ void main() {
       expect(categoriesUsdt['Transporte'], closeTo(10.00, 0.01));
       // Servicios: 100% de 7.00 USDT = 7.00 USDT
       expect(categoriesUsdt['Servicios'], closeTo(7.00, 0.01));
+    });
+
+    test('getCategoryTotals en EUR suma exactamente lo mismo que el Total Gastado en EUR y refleja montos congelados', () async {
+      final monthly = await helper.getMonthlyTotals(2026, 10);
+      final categoriesEur = await helper.getCategoryTotals(2026, 10, moneda: 'EUR');
+
+      final sumCategories = categoriesEur.values.fold(0.0, (sum, val) => sum + val);
+
+      expect(sumCategories, closeTo(monthly['EUR']!, 0.001));
+      // Total EUR = 55.56 + 8.90 + 6.24 = 70.70
+      expect(monthly['EUR']!, closeTo(70.70, 0.01));
     });
   });
 }

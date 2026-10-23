@@ -48,6 +48,7 @@ class CurrencyFormatter {
     double tasaEur = 0.0,
     double tasaUsdt = 0.0,
     double? totalUsdt,
+    double? totalEur,
     String? monedaOrigen,
   }) {
     final double ves = (totalVes != null && totalVes > 0)
@@ -58,6 +59,9 @@ class CurrencyFormatter {
       case 'VES':
         return formatVes(ves);
       case 'EUR':
+        if (totalEur != null && totalEur > 0) {
+          return formatEur(totalEur);
+        }
         // Sin tasa EUR no se inventa ratio: se usa la tasa USD como aproximación
         // solo si existe; si no hay dato, la rama neutra muestra el equivalente en USD.
         final double eurRate = tasaEur > 0 ? tasaEur : (tasaCambio > 0 ? tasaCambio : 0.0);

@@ -166,4 +166,104 @@ void main() {
     final bsManualField = tester.widget<TextFormField>(find.byKey(const Key('input_total_bs_manual')));
     expect(bsManualField.controller?.text, '3486.00');
   });
+
+  testWidgets('ReviewExpenseScreen en VES muestra las 3 columnas simultaneas de equivalencia (USD, EUR, USDT)', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.5;
+
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    SharedPreferences.setMockInitialValues({
+      'cached_rate_usd': 800.0,
+      'cached_rate_eur': 900.0,
+      'cached_rate_usdt': 1000.0,
+    });
+
+    await tester.pumpWidget(MultiProvider(
+      providers: [
+        ChangeNotifierProvider<GastoProvider>.value(value: gastoProvider),
+        ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+        ChangeNotifierProvider<ScanQueueProvider>.value(value: scanQueueProvider),
+      ],
+      child: MaterialApp(
+        home: ReviewExpenseScreen(
+          extractedData: GeminiExtractionResult(
+            comercio: 'Abasto Central',
+            fecha: DateTime.now().toIso8601String().substring(0, 10),
+            moneda: 'VES',
+            totalOriginal: 9000.0, // Bs. 9.000
+            impuestoIva: 0.0,
+            items: const [],
+          ),
+        ),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    // 1. Debe mostrar los 3 chips de tasa
+    expect(find.text('Dólar BCV'), findsOneWidget);
+    expect(find.text('Euro BCV'), findsOneWidget);
+    expect(find.text('USDT P2P'), findsOneWidget);
+
+    // 2. Debe mostrar simultáneamente las 3 etiquetas de equivalencia
+    expect(find.text('Equiv. USD (BCV)'), findsOneWidget);
+    expect(find.text('Equiv. EUR (BCV)'), findsOneWidget);
+    expect(find.text('Equiv. USDT (P2P)'), findsOneWidget);
+
+    // 3. Montos equivalentes esperados para Bs. 9.000:
+    // USD (a 800): $ 11.25
+    expect(find.text('\$ 11.25'), findsOneWidget);
+    // EUR (a 900): € 10.00
+    expect(find.text('€ 10.00'), findsOneWidget);
+    // USDT (a 1000): 9.00 USDT
+    expect(find.text('9.00 USDT'), findsOneWidget);
+
+    // 4. Al tocar el chip 'Euro BCV', la caja de tasa pasa a mostrar 900.00
+    // pero las 3 columnas siguen presentes y no se rompe la paridad
+    await tester.tap(find.text('Euro BCV'));
+    await tester.pumpAndSettle();
+    expect(find.text('Equiv. USD (BCV)'), findsOneWidget);
+    expect(find.text('Equiv. EUR (BCV)'), findsOneWidget);
+    expect(find.text('Equiv. USDT (P2P)'), findsOneWidget);
+  });
+
+  testWidgets('ReviewExpenseScreen en USDT muestra cintillo informativo multimoneda limpio', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.5;
+
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(MultiProvider(
+      providers: [
+        ChangeNotifierProvider<GastoProvider>.value(value: gastoProvider),
+        ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+        ChangeNotifierProvider<ScanQueueProvider>.value(value: scanQueueProvider),
+      ],
+      child: MaterialApp(
+        home: ReviewExpenseScreen(
+          extractedData: GeminiExtractionResult(
+            comercio: 'Cripto Store',
+            fecha: DateTime.now().toIso8601String().substring(0, 10),
+            moneda: 'USDT',
+            totalOriginal: 10.0,
+            impuestoIva: 0.0,
+            items: const [],
+          ),
+        ),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    // En USDT no debe mostrar el selector de 3 formas de liquidacion de USD/EUR
+    expect(find.text('Forma de pago en Venezuela'), findsNothing);
+    // Debe mostrar el aviso limpio de almacenamiento en USDT con 1:1 USD
+    expect(find.textContaining('Se guardará en USDT (≈ \$10.00 USD 1:1'), findsOneWidget);
+  });
 }
+

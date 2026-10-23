@@ -25,7 +25,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 17,
+      version: 18,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
       onConfigure: _onConfigure,
@@ -258,6 +258,33 @@ class DatabaseHelper {
         WHERE total_usdt IS NULL
       ''');
     }
+    if (oldVersion < 18) {
+      try {
+        await db.execute('ALTER TABLE gastos ADD COLUMN tasa_eur REAL');
+      } catch (_) {}
+      try {
+        await db.execute('ALTER TABLE gastos ADD COLUMN total_eur INTEGER');
+      } catch (_) {}
+
+      // Backfill inmutable para gastos existentes:
+      // 1. Gastos en moneda EUR: total_eur = total_original, tasa_eur = tasa_cambio
+      await db.execute('''
+        UPDATE gastos 
+        SET total_eur = total_original,
+            tasa_eur = tasa_cambio
+        WHERE moneda = 'EUR' AND (total_eur IS NULL OR total_eur = 0)
+      ''');
+
+      // 2. Gastos en VES donde la fuente fue EUR: total_eur = total_usd
+      await db.execute('''
+        UPDATE gastos 
+        SET total_eur = total_usd,
+            tasa_eur = tasa_cambio
+        WHERE moneda = 'VES' 
+          AND fuente_tasa_cambio LIKE '%EUR%' 
+          AND (total_eur IS NULL OR total_eur = 0)
+      ''');
+    }
   }
 
   Future<void> _onConfigure(Database db) async {
@@ -281,8 +308,10 @@ class DatabaseHelper {
         total_original INTEGER NOT NULL,
         total_usd INTEGER NOT NULL,
         total_usdt INTEGER,
+        total_eur INTEGER,
         tasa_cambio REAL DEFAULT 1.0,
         tasa_usdt REAL,
+        tasa_eur REAL,
         fuente_tasa_cambio TEXT,
         fecha_tasa_cambio TEXT,
         categoria TEXT NOT NULL,
@@ -560,7 +589,7 @@ class DatabaseHelper {
 
     final rows = await db.query(
       'gastos',
-      columns: ['moneda', 'total_original', 'total_usd', 'total_usdt', 'tasa_cambio', 'tasa_usdt'],
+      columns: ['moneda', 'total_original', 'total_usd', 'total_usdt', 'total_eur', 'tasa_cambio', 'tasa_usdt', 'tasa_eur'],
       where: 'fecha LIKE ? AND eliminado_en IS NULL',
       whereArgs: [pattern],
     );
@@ -568,20 +597,27 @@ class DatabaseHelper {
     double sumUsd = 0.0;
     double sumVes = 0.0;
     double sumUsdt = 0.0;
+    double sumEur = 0.0;
 
     for (final r in rows) {
       final moneda = (r['moneda'] as String?) ?? 'VES';
       final totalOrigInt = (r['total_original'] as num?)?.toInt() ?? 0;
       final totalUsdInt = (r['total_usd'] as num?)?.toInt() ?? 0;
       final totalUsdtInt = (r['total_usdt'] as num?)?.toInt() ?? totalUsdInt;
+      final totalEurInt = (r['total_eur'] as num?)?.toInt();
       final tasa = (r['tasa_cambio'] as num?)?.toDouble() ?? 1.0;
+      final tasaEur = (r['tasa_eur'] as num?)?.toDouble();
 
       final double totalOrig = totalOrigInt / 100.0;
       final double totalUsd = totalUsdInt / 100.0;
       final double totalUsdt = totalUsdtInt / 100.0;
+      final double totalEur = (totalEurInt != null)
+          ? (totalEurInt / 100.0)
+          : ((tasaEur != null && tasaEur > 0) ? (moneda == 'VES' ? totalOrig / tasaEur : totalUsd) : totalUsd);
 
       sumUsd += totalUsd;
       sumUsdt += totalUsdt;
+      sumEur += totalEur;
 
       if (moneda == 'VES') {
         sumVes += totalOrig;
@@ -594,6 +630,7 @@ class DatabaseHelper {
       'USD': sumUsd,
       'VES': sumVes,
       'USDT': sumUsdt,
+      'EUR': sumEur,
     };
   }
 
@@ -608,7 +645,7 @@ class DatabaseHelper {
 
     final gastosRows = await db.query(
       'gastos',
-      columns: ['id', 'moneda', 'total_original', 'total_usd', 'total_usdt', 'tasa_cambio', 'categoria'],
+      columns: ['id', 'moneda', 'total_original', 'total_usd', 'total_usdt', 'total_eur', 'tasa_cambio', 'tasa_eur', 'categoria'],
       where: 'fecha LIKE ? AND eliminado_en IS NULL',
       whereArgs: [pattern],
     );
@@ -642,12 +679,24 @@ class DatabaseHelper {
       final totalOrig = ((g['total_original'] as num?)?.toInt() ?? 0) / 100.0;
       final totalUsd = ((g['total_usd'] as num?)?.toInt() ?? 0) / 100.0;
       final totalUsdt = ((g['total_usdt'] as num?)?.toInt() ?? (g['total_usd'] as num?)?.toInt() ?? 0) / 100.0;
+      final totalEurInt = (g['total_eur'] as num?)?.toInt();
+      final tasaEur = (g['tasa_eur'] as num?)?.toDouble();
+      final totalEur = (totalEurInt != null)
+          ? (totalEurInt / 100.0)
+          : ((tasaEur != null && tasaEur > 0) ? (gastoMoneda == 'VES' ? totalOrig / tasaEur : totalUsd) : totalUsd);
       final tasa = (g['tasa_cambio'] as num?)?.toDouble() ?? 1.0;
       final gastoCat = AppConstants.normalizarCategoria(g['categoria'] as String?);
 
-      final double targetTotal = (moneda == 'VES')
-          ? (gastoMoneda == 'VES' ? totalOrig : totalUsd * (tasa > 0 ? tasa : 1.0))
-          : (moneda == 'USDT' ? totalUsdt : totalUsd);
+      final double targetTotal;
+      if (moneda == 'VES') {
+        targetTotal = (gastoMoneda == 'VES') ? totalOrig : totalUsd * (tasa > 0 ? tasa : 1.0);
+      } else if (moneda == 'USDT') {
+        targetTotal = totalUsdt;
+      } else if (moneda == 'EUR') {
+        targetTotal = totalEur;
+      } else {
+        targetTotal = totalUsd;
+      }
 
       final items = itemsMap[gastoId] ?? const [];
 

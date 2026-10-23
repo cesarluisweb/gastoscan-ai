@@ -75,7 +75,18 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
     2. `lib/ui/screens/more_screen.dart`: Selector desplegable de "Moneda Principal de Reportes" (`DropdownButtonFormField`) y orden de tasas informativas.
     3. `landing/src/pages/panel.astro`: Selector de moneda en el modal de Presupuesto General (`<select id="modal-budget-currency">`).
 
-### Bloque B: Claridad de Datos y Vistas Principales (UX)
+### Bloque B: Finanzas Bimonetarias y Lentes Multimoneda (Finanzas / UX)
+- `FIN-09` **Equivalencias Multimoneda Inmutables (`USD`, `VES`, `USDT`, `EUR`) y Migración SQLite v18:** `Pendiente de validación 🧪`
+  - *Problema:* Al registrar un gasto en `VES` y pulsar el chip `Euro BCV`, la app actualizaba la tasa al euro oficial pero abajo seguía diciendo `Equiv. USD (BCV)` con símbolo `$`. Asimismo, la base de datos carecía de `total_eur` y `tasa_eur`, obligando al lente `EUR` a recalcular compras pasadas con la tasa del día actual.
+  - *Solución:* 
+    1. Migración SQLite v18 con columnas `total_eur` (en centavos) y `tasa_eur` con backfill inmutable, sincronización en Firestore y soporte en `GastoModel`.
+    2. En registro de gastos (`ReviewExpenseScreen`), visualización simultánea de 3 columnas de equivalencia en `VES` (`USD BCV`, `EUR BCV`, `USDT P2P`), con chips independientes para editar cada tasa y botón circular (`Icons.restart_alt`) para restaurar la tasa oficial de la fecha.
+    3. En `USDT` directo: interfaz limpia sin pedir bolívares, con cintillo de paridad 1:1 USD y contravalores informativos, guardando tasas en segundo plano para los lentes `Bs.` y `EUR`.
+    4. En `USD` y `EUR`: 3 formas de liquidación alineadas y cálculo de 4 lentes deterministas.
+    5. Paridad matemática al céntimo en el panel web (`landing/src/pages/panel.astro`).
+  - *Documentación:* Ver [DOC_TASAS_EQUIVALENCIAS_MULTIMONEDA.md](docs/DOC_TASAS_EQUIVALENCIAS_MULTIMONEDA.md). Tarea crítica: pendiente de validación por César en *Rinde Más Dev*.
+
+
 - `UX-06` **Corrección de Etiqueta de Agrupación en Gráfico de Inicio:** `Completada ✅`
   - *Comportamiento:* Se mantiene la lógica de consolidar las categorías secundarias después del Top 4 para no saturar el espacio vertical de la tarjeta.
   - *Ajuste:* Cambiar únicamente el texto de esa fila consolidada (reemplazar la palabra "Otros" por `+X categorías` o `Resto de categorías`) para que no se confunda con la categoría individual canónica *Otros*.

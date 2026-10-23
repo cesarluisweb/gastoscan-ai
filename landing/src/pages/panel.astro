@@ -1144,6 +1144,7 @@ import '../styles/global.css';
             let sumUsd = 0;
             let sumVes = 0;
             let sumUsdt = 0;
+            let sumEur = 0;
 
             currentGastos.forEach(g => {
                 const totalUsd = (Number(g.total_usd || 0)) / 100.0;
@@ -1163,6 +1164,17 @@ import '../styles/global.css';
                 }
                 sumUsdt += totalUsdt;
 
+                let totalEur = 0;
+                if (g.total_eur !== undefined && g.total_eur !== null) {
+                    totalEur = (Number(g.total_eur || 0)) / 100.0;
+                } else if (g.moneda === 'EUR') {
+                    totalEur = totalOrig;
+                } else {
+                    const tEur = Number(g.tasa_eur || 0) > 0 ? Number(g.tasa_eur) : (Number(liveRates.eur || 0) > 0 ? Number(liveRates.eur) : 0);
+                    totalEur = tEur > 0 ? (g.moneda === 'VES' ? totalOrig / tEur : (totalUsd * (tasa > 0 ? tasa : 1.0)) / tEur) : totalUsd;
+                }
+                sumEur += totalEur;
+
                 if (g.moneda === 'VES') {
                     // Inmutabilidad del bolívar: los gastos en VES suman su monto original
                     sumVes += totalOrig;
@@ -1178,7 +1190,7 @@ import '../styles/global.css';
             if (displayCurrency === 'VES') {
                 effectiveSpent = sumVes;
             } else if (displayCurrency === 'EUR') {
-                effectiveSpent = liveRates.eur > 0 ? (sumVes / liveRates.eur) : (liveRates.usd > 0 ? (sumVes / liveRates.usd) : sumUsd);
+                effectiveSpent = sumEur > 0 ? sumEur : (liveRates.eur > 0 ? (sumVes / liveRates.eur) : sumUsd);
             } else if (displayCurrency === 'USDT') {
                 effectiveSpent = sumUsdt;
             } else {
@@ -1356,8 +1368,15 @@ import '../styles/global.css';
                 if (displayCurrency === 'VES') {
                     targetTotal = g.moneda === 'VES' ? totalOrig : (totalUsd * (tasa > 0 ? tasa : 1.0));
                 } else if (displayCurrency === 'EUR') {
-                    const vesEquiv = g.moneda === 'VES' ? totalOrig : (totalUsd * (tasa > 0 ? tasa : 1.0));
-                    targetTotal = liveRates.eur > 0 ? (vesEquiv / liveRates.eur) : totalUsd;
+                    if (g.total_eur !== undefined && g.total_eur !== null) {
+                        targetTotal = (Number(g.total_eur || 0)) / 100.0;
+                    } else if (g.moneda === 'EUR') {
+                        targetTotal = totalOrig;
+                    } else {
+                        const tEur = Number(g.tasa_eur || 0) > 0 ? Number(g.tasa_eur) : (Number(liveRates.eur || 0) > 0 ? Number(liveRates.eur) : 0);
+                        const vesEquiv = g.moneda === 'VES' ? totalOrig : (totalUsd * (tasa > 0 ? tasa : 1.0));
+                        targetTotal = tEur > 0 ? (vesEquiv / tEur) : (liveRates.eur > 0 ? (vesEquiv / liveRates.eur) : totalUsd);
+                    }
                 } else if (displayCurrency === 'USDT') {
                     targetTotal = totalUsdt;
                 } else {
@@ -1491,7 +1510,14 @@ import '../styles/global.css';
                 } else if (displayCurrency === 'USDT') {
                     targetTotalLens = totalUsdt > 0 ? totalUsdt : totalUsd;
                 } else if (displayCurrency === 'EUR') {
-                    targetTotalLens = eurRateRef > 0 ? (vesTotalGasto / eurRateRef) : totalUsd;
+                    if (gasto.total_eur !== undefined && gasto.total_eur !== null) {
+                        targetTotalLens = (Number(gasto.total_eur || 0)) / 100.0;
+                    } else if (moneda === 'EUR') {
+                        targetTotalLens = totalOrig;
+                    } else {
+                        const tEur = Number(gasto.tasa_eur || 0) > 0 ? Number(gasto.tasa_eur) : (Number(liveRates.eur || 0) > 0 ? Number(liveRates.eur) : 0);
+                        targetTotalLens = tEur > 0 ? (vesTotalGasto / tEur) : (eurRateRef > 0 ? (vesTotalGasto / eurRateRef) : totalUsd);
+                    }
                 }
 
                 const card = document.createElement('div');
@@ -2421,6 +2447,8 @@ import '../styles/global.css';
             let totalOriginalCents = Math.round(monto * 100);
             let totalUsdCents = 0;
             let totalUsdtCents = 0;
+            let totalEurCents = 0;
+            let tasaEur = liveRates.eur > 0 ? liveRates.eur : (tasa > 0 ? tasa : 1.0);
             let fuenteTasa = expMoneda === 'USDT' ? 'Binance P2P' : 'BCV';
             let metodoLiqFinal = (expMoneda === 'USD' || expMoneda === 'EUR') ? selectedLiq : null;
             let ratioConversionItems = 1.0;
@@ -2453,22 +2481,37 @@ import '../styles/global.css';
             } else if (expMoneda === 'VES') {
                 totalUsdCents = tasa > 0 ? Math.round((monto / tasa) * 100) : 0;
                 totalUsdtCents = tasaUsdt > 0 ? Math.round((monto / tasaUsdt) * 100) : totalUsdCents;
+                totalEurCents = tasaEur > 0 ? Math.round((monto / tasaEur) * 100) : totalUsdCents;
                 fuenteTasa = 'BCV';
             } else if (expMoneda === 'USD') {
                 totalUsdCents = totalOriginalCents;
                 totalUsdtCents = totalOriginalCents;
+                const bsEquiv = monto * (liveRates.usd > 0 ? liveRates.usd : tasa);
+                totalEurCents = tasaEur > 0 ? Math.round((bsEquiv / tasaEur) * 100) : totalUsdCents;
                 fuenteTasa = 'Divisa Directa';
             } else if (expMoneda === 'EUR') {
-                const equivVes = monto * tasaInput;
+                totalEurCents = totalOriginalCents;
+                const equivVes = monto * (tasaInput > 0 ? tasaInput : (liveRates.eur > 0 ? liveRates.eur : 1.0));
                 const refUsd = liveRates.usd > 0 ? liveRates.usd : tasaInput;
                 totalUsdCents = Math.round((equivVes / (refUsd > 0 ? refUsd : 1.0)) * 100);
                 totalUsdtCents = totalUsdCents;
+                tasaEur = tasaInput > 0 ? tasaInput : (liveRates.eur > 0 ? liveRates.eur : 1.0);
                 tasa = totalUsdCents > 0 ? (equivVes / (totalUsdCents / 100.0)) : refUsd;
-                fuenteTasa = `Euro BCV (Bs. ${tasaInput.toFixed(2)})`;
+                fuenteTasa = `Euro BCV (Bs. ${tasaEur.toFixed(2)})`;
             } else if (expMoneda === 'USDT') {
                 totalUsdCents = totalOriginalCents;
                 totalUsdtCents = totalOriginalCents;
+                const bsEquiv = monto * (liveRates.usdt > 0 ? liveRates.usdt : (liveRates.usd > 0 ? liveRates.usd : tasa));
+                totalEurCents = tasaEur > 0 ? Math.round((bsEquiv / tasaEur) * 100) : totalUsdCents;
                 fuenteTasa = 'Binance P2P';
+            }
+
+            if (expMoneda === 'EUR' && (selectedLiq === 'BS_BCV' || selectedLiq === 'BS_USDT')) {
+                totalEurCents = Math.round(monto * 100);
+                tasaEur = tasaInput > 0 ? tasaInput : (liveRates.eur > 0 ? liveRates.eur : 1.0);
+            } else if (expMoneda === 'USD' && (selectedLiq === 'BS_BCV' || selectedLiq === 'BS_USDT')) {
+                const bsFinal = (totalOriginalCents / 100.0);
+                totalEurCents = tasaEur > 0 ? Math.round((bsFinal / tasaEur) * 100) : totalUsdCents;
             }
 
             // Preparar ítems para guardar con preservación de centavos originales en gastos indexados sin editar
@@ -2542,8 +2585,10 @@ import '../styles/global.css';
                     total_original: totalOriginalCents,
                     total_usd: totalUsdCents,
                     total_usdt: totalUsdtCents,
+                    total_eur: totalEurCents,
                     tasa_cambio: tasa,
                     tasa_usdt: tasaUsdt,
+                    tasa_eur: tasaEur,
                     metodo_liquidacion: metodoLiqFinal,
                     fuente_tasa_cambio: fuenteTasa,
                     fecha_tasa_cambio: fecha,

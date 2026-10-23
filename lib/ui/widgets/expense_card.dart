@@ -98,9 +98,10 @@ class _ExpenseCardState extends State<ExpenseCard> {
       ves,
       tasa,
       widget.monedaPrincipal,
-      tasaEur: widget.tasaEur,
+      tasaEur: widget.gasto.tasaEurDisplay > 0 ? widget.gasto.tasaEurDisplay : widget.tasaEur,
       tasaUsdt: widget.gasto.tasaUsdtDisplay > 0 ? widget.gasto.tasaUsdtDisplay : widget.tasaUsdt,
       totalUsdt: widget.gasto.totalUsdtDisplay,
+      totalEur: widget.gasto.totalEurDisplay,
       monedaOrigen: widget.gasto.moneda,
     );
 

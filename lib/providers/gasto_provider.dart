@@ -30,6 +30,8 @@ class GastoProvider with ChangeNotifier {
   Map<String, double> _totalesPorCategoria = {};
   Map<String, double> _totalesPorCategoriaVes = {};
   Map<String, double> _totalesPorCategoriaUsdt = {};
+  Map<String, double> _totalesPorCategoriaEur = {};
+  double _totalMesEur = 0.0;
   Map<String, double> _presupuestosPorCategoria = {};
   bool _presupuestoEsAdoptado = false;
   double _tasaUsd = AppConstants.defaultTasaCambio;
@@ -48,6 +50,7 @@ class GastoProvider with ChangeNotifier {
   double get totalMesUsd => _totalMesUsd;
   double get totalMesVes => _totalMesVes;
   double get totalMesUsdt => _totalMesUsdt;
+  double get totalMesEur => _totalMesEur;
   double get presupuestoGeneral => _presupuestoGeneral;
   double get metaAhorro => _metaAhorro;
   String get monedaPresupuesto => _monedaPresupuesto;
@@ -57,6 +60,8 @@ class GastoProvider with ChangeNotifier {
       _totalesPorCategoriaVes.isNotEmpty ? _totalesPorCategoriaVes : _totalesPorCategoria;
   Map<String, double> get totalesPorCategoriaUsdt =>
       _totalesPorCategoriaUsdt.isNotEmpty ? _totalesPorCategoriaUsdt : _totalesPorCategoria;
+  Map<String, double> get totalesPorCategoriaEur =>
+      _totalesPorCategoriaEur.isNotEmpty ? _totalesPorCategoriaEur : _totalesPorCategoria;
 
   Map<String, double> get presupuestosPorCategoria => _presupuestosPorCategoria;
 
@@ -67,14 +72,7 @@ class GastoProvider with ChangeNotifier {
     } else if (_monedaPresupuesto == 'USDT') {
       gastoAcumulado = _totalMesUsdt > 0 ? _totalMesUsdt : _totalMesUsd;
     } else if (_monedaPresupuesto == 'EUR') {
-      final double eurRate = _tasaEur > 0 ? _tasaEur : (_tasaUsd > 0 ? _tasaUsd : 0.0);
-      if (eurRate > 0 && _totalMesVes > 0) {
-        gastoAcumulado = _totalMesVes / eurRate;
-      } else if (eurRate > 0 && _tasaUsd > 0) {
-        gastoAcumulado = (_totalMesUsd * _tasaUsd) / eurRate;
-      } else {
-        gastoAcumulado = _totalMesUsd;
-      }
+      gastoAcumulado = _totalMesEur > 0 ? _totalMesEur : _totalMesUsd;
     } else {
       gastoAcumulado = _totalMesUsd;
     }
@@ -123,10 +121,12 @@ class GastoProvider with ChangeNotifier {
       _totalMesUsd = totales['USD'] ?? 0.0;
       _totalMesVes = totales['VES'] ?? 0.0;
       _totalMesUsdt = totales['USDT'] ?? _totalMesUsd;
+      _totalMesEur = totales['EUR'] ?? _totalMesUsd;
 
       _totalesPorCategoria = await _repository.obtenerTotalesPorCategoria(_selectedYear, _selectedMonth, moneda: 'USD');
       _totalesPorCategoriaVes = await _repository.obtenerTotalesPorCategoria(_selectedYear, _selectedMonth, moneda: 'VES');
       _totalesPorCategoriaUsdt = await _repository.obtenerTotalesPorCategoria(_selectedYear, _selectedMonth, moneda: 'USDT');
+      _totalesPorCategoriaEur = await _repository.obtenerTotalesPorCategoria(_selectedYear, _selectedMonth, moneda: 'EUR');
 
       _presupuestoGeneral = await _repository.obtenerPresupuestoGeneralMes(_selectedYear, _selectedMonth);
       _metaAhorro = await _repository.obtenerMetaAhorroMes(_selectedYear, _selectedMonth);
