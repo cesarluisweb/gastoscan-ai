@@ -9,6 +9,7 @@ class SettingsProvider with ChangeNotifier {
   final FlutterSecureStorage _secureStorage;
 
   String _apiKey = '';
+  int _apiKeyRevision = 0;
   bool _guardarFotos = AppConstants.defaultGuardarFotos;
   double _tasaCambioVesUsd = AppConstants.defaultTasaCambio;
   double _tasaCambioVesEur = 0.0;
@@ -39,9 +40,11 @@ class SettingsProvider with ChangeNotifier {
   double get presupuestoMensual => _presupuestoMensual;
   bool get recordatoriosActivos => _recordatoriosActivos;
 
-  SettingsProvider({FlutterSecureStorage? secureStorage})
+  SettingsProvider({FlutterSecureStorage? secureStorage, bool autoLoad = true})
       : _secureStorage = secureStorage ?? const FlutterSecureStorage() {
-    loadSettings();
+    if (autoLoad) {
+      loadSettings();
+    }
   }
 
   Future<void> loadSettings() async {
@@ -80,13 +83,17 @@ class SettingsProvider with ChangeNotifier {
     actualizarTasaAutomatica();
 
     // 2. Cargar API Key exclusivamente desde el almacenamiento seguro local del dispositivo
+    final int revBeforeRead = _apiKeyRevision;
     try {
       String? secureKey = await _secureStorage.read(key: AppConstants.prefApiKey);
+      if (_apiKeyRevision != revBeforeRead) return;
       if (secureKey == null) {
         String oldKey = prefs.getString(AppConstants.prefApiKey) ?? '';
+        if (_apiKeyRevision != revBeforeRead) return;
         if (oldKey.isNotEmpty) {
           await _secureStorage.write(key: AppConstants.prefApiKey, value: oldKey);
           await prefs.remove(AppConstants.prefApiKey);
+          if (_apiKeyRevision != revBeforeRead) return;
           _apiKey = oldKey;
           notifyListeners();
         } else {
@@ -153,6 +160,7 @@ class SettingsProvider with ChangeNotifier {
   }
 
   Future<void> setApiKey(String key) async {
+    _apiKeyRevision++;
     _apiKey = key.trim();
     try {
       await _secureStorage.write(key: AppConstants.prefApiKey, value: _apiKey);
@@ -163,6 +171,7 @@ class SettingsProvider with ChangeNotifier {
   }
 
   Future<void> removeApiKey() async {
+    _apiKeyRevision++;
     _apiKey = '';
     try {
       await _secureStorage.delete(key: AppConstants.prefApiKey);

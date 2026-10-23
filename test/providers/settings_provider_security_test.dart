@@ -33,7 +33,7 @@ class FakeSecureStorage extends Fake implements FlutterSecureStorage {
 }
 
 class TestableSettingsProvider extends SettingsProvider {
-  TestableSettingsProvider({super.secureStorage});
+  TestableSettingsProvider({super.secureStorage}) : super(autoLoad: false);
 
   @override
   Future<bool> actualizarTasaAutomatica({http.Client? client}) async => false;
