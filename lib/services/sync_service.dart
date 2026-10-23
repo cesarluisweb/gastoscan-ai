@@ -70,72 +70,8 @@ class SyncService {
       } catch (e) {
         debugPrint("Error sincronizando presupuestos con Firestore: $e");
       }
-
-      // Sincronizar API Key personalizada de Gemini con la cuenta de Google
-      try {
-        await syncApiKeyBidireccional(user);
-      } catch (e) {
-        debugPrint("Error sincronizando API Key con Firestore: $e");
-      }
     } catch (e) {
       debugPrint("Error en sincronización bidireccional: $e");
-    }
-  }
-
-  Future<void> syncApiKeyBidireccional(User user) async {
-    try {
-      if (user.isAnonymous) return;
-      final secureStorage = _secureStorageInstance;
-      final localKey = await secureStorage.read(key: AppConstants.prefApiKey);
-      final remoteKey = await syncSettingsFromFirestore(user);
-
-      if (remoteKey != null && remoteKey.trim().isNotEmpty) {
-        if (localKey != remoteKey.trim()) {
-          await secureStorage.write(key: AppConstants.prefApiKey, value: remoteKey.trim());
-        }
-      } else if (localKey != null && localKey.trim().isNotEmpty) {
-        await syncSettingsToFirestore(user, apiKey: localKey.trim());
-      }
-    } catch (e) {
-      debugPrint("Error sincronizando API Key de Gemini: $e");
-    }
-  }
-
-  Future<void> syncSettingsToFirestore(User user, {required String apiKey}) async {
-    try {
-      if (user.isAnonymous || _firestore == null) return;
-      final docRef = _firestore!
-          .collection('users')
-          .doc(user.uid)
-          .collection('presupuestos')
-          .doc('user_settings');
-
-      await docRef.set({
-        'gemini_api_key': apiKey.trim(),
-        'updated_at': DateTime.now().toIso8601String(),
-      }, SetOptions(merge: true));
-    } catch (e) {
-      debugPrint("Error guardando settings en Firestore: $e");
-    }
-  }
-
-  Future<String?> syncSettingsFromFirestore(User user) async {
-    try {
-      if (user.isAnonymous || _firestore == null) return null;
-      final docRef = _firestore!
-          .collection('users')
-          .doc(user.uid)
-          .collection('presupuestos')
-          .doc('user_settings');
-
-      final doc = await docRef.get();
-      if (!doc.exists) return null;
-      final data = doc.data();
-      if (data == null) return null;
-      return data['gemini_api_key'] as String?;
-    } catch (e) {
-      debugPrint("Error leyendo settings de Firestore: $e");
-      return null;
     }
   }
 

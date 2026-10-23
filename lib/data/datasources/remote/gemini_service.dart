@@ -21,15 +21,22 @@ class GeminiService {
         _client = client ?? http.Client();
 
   /// Valida una API key directamente contra el endpoint público de Google Gemini
-  static Future<bool> validateGeminiApiKey(String apiKey) async {
+  static Future<bool> validateGeminiApiKey(String apiKey, {http.Client? client}) async {
     final trimmed = apiKey.trim();
     if (trimmed.length < 10) return false;
+    final httpClient = client ?? http.Client();
     try {
-      final uri = Uri.parse('https://generativelanguage.googleapis.com/v1beta/models?key=$trimmed');
-      final res = await http.get(uri).timeout(const Duration(seconds: 10));
+      final uri = Uri.parse('https://generativelanguage.googleapis.com/v1beta/models');
+      final res = await httpClient
+          .get(uri, headers: {'x-goog-api-key': trimmed})
+          .timeout(const Duration(seconds: 10));
       return res.statusCode == 200;
     } catch (_) {
       return false;
+    } finally {
+      if (client == null) {
+        httpClient.close();
+      }
     }
   }
 

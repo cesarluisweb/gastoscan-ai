@@ -646,6 +646,16 @@ import '../styles/global.css';
             return match || 'Otros';
         };
 
+        const escapeHtml = (str) => {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        };
+
         const MONTH_NAMES = [
             'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
             'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
@@ -1393,12 +1403,12 @@ import '../styles/global.css';
                 row.innerHTML = `
                     <div class="flex justify-between items-center text-xs">
                         <div class="flex items-center gap-2 font-bold text-slate-800">
-                            <span>${icon}</span>
-                            <span>${cat}</span>
+                            <span>${escapeHtml(icon)}</span>
+                            <span>${escapeHtml(cat)}</span>
                         </div>
                         <div class="text-right">
-                            <span class="font-bold text-slate-900">${formatMoney(spent, displayCurrency)}</span>
-                            ${budget > 0 ? `<span class="text-slate-400"> / ${formatMoney(budget, displayCurrency)}</span>` : ''}
+                            <span class="font-bold text-slate-900">${escapeHtml(formatMoney(spent, displayCurrency))}</span>
+                            ${budget > 0 ? `<span class="text-slate-400"> / ${escapeHtml(formatMoney(budget, displayCurrency))}</span>` : ''}
                         </div>
                     </div>
                     ${budget > 0 ? `
@@ -1408,7 +1418,7 @@ import '../styles/global.css';
                         <div class="flex justify-between items-center text-[10px]">
                             <span class="${isOver ? 'text-rose-600 font-bold' : 'text-slate-500'}">${percent}% consumido</span>
                             <span class="${isOver ? 'text-rose-600 font-semibold' : 'text-slate-400'}">
-                                ${isOver ? 'Excedido' : `Restan ${formatMoney(budget - spent, displayCurrency)}`}
+                                ${isOver ? 'Excedido' : `Restan ${escapeHtml(formatMoney(budget - spent, displayCurrency))}`}
                             </span>
                         </div>
                     ` : ''}
@@ -1490,20 +1500,21 @@ import '../styles/global.css';
                     <div class="flex justify-between items-start gap-3">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-lg flex-shrink-0">
-                                ${icon}
+                                ${escapeHtml(icon)}
                             </div>
                             <div>
-                                <h4 class="font-bold text-sm text-slate-900 leading-snug">${gasto.comercio || 'Comercio'}</h4>
+                                <h4 class="font-bold text-sm text-slate-900 leading-snug">${escapeHtml(gasto.comercio || 'Comercio')}</h4>
                                 <div class="flex items-center gap-2 mt-0.5 text-xs text-slate-400">
-                                    <span>${gasto.fecha || ''}</span>
+                                    <span>${escapeHtml(gasto.fecha || '')}</span>
                                     <span>•</span>
-                                    <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium text-[10px]">${catNorm}</span>
+                                    <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium text-[10px]">${escapeHtml(catNorm)}</span>
                                 </div>
+                                ${gasto.notas ? `<p class="text-[11px] text-slate-500 mt-1">${escapeHtml(gasto.notas)}</p>` : ''}
                             </div>
                         </div>
                         <div class="text-right flex-shrink-0">
-                            <span class="font-bold text-base text-slate-900 block">${formatMoney(totalOrig, moneda)}</span>
-                            <span class="text-xs text-slate-400 block">${secondarySubtext}</span>
+                            <span class="font-bold text-base text-slate-900 block">${escapeHtml(formatMoney(totalOrig, moneda))}</span>
+                            <span class="text-xs text-slate-400 block">${escapeHtml(secondarySubtext)}</span>
                         </div>
                     </div>
 
@@ -1522,8 +1533,8 @@ import '../styles/global.css';
                                         const cleanDesc = String(it.descripcion || 'Producto').replace(/\s*\(\s*[EeGg]\s*\)\s*$/g, '').trim() || 'Producto';
                                         return `
                                             <div class="flex justify-between items-center py-0.5">
-                                                <span>${it.cantidad || 1}x ${cleanDesc}</span>
-                                                <span class="font-mono text-slate-800">${formatMoney(itAmountLens, displayCurrency)}</span>
+                                                <span>${escapeHtml(it.cantidad || 1)}x ${escapeHtml(cleanDesc)}</span>
+                                                <span class="font-mono text-slate-800">${escapeHtml(formatMoney(itAmountLens, displayCurrency))}</span>
                                             </div>
                                         `;
                                     }).join('')}
@@ -1533,10 +1544,10 @@ import '../styles/global.css';
                     ` : ''}
 
                     <div class="mt-3 pt-2 border-t border-slate-100 flex justify-end gap-3">
-                        <button class="btn-edit-expense text-[11px] font-semibold text-slate-500 hover:text-slate-900 transition-colors flex items-center gap-1" data-id="${gasto.id}">
+                        <button class="btn-edit-expense text-[11px] font-semibold text-slate-500 hover:text-slate-900 transition-colors flex items-center gap-1" data-id="${escapeHtml(gasto.id)}">
                             ✏️ Editar
                         </button>
-                        <button class="btn-delete-expense text-[11px] font-semibold text-slate-400 hover:text-rose-600 transition-colors" data-id="${gasto.id}">
+                        <button class="btn-delete-expense text-[11px] font-semibold text-slate-400 hover:text-rose-600 transition-colors" data-id="${escapeHtml(gasto.id)}">
                             Eliminar factura
                         </button>
                     </div>
@@ -1637,15 +1648,15 @@ import '../styles/global.css';
                 row.className = "flex items-center justify-between gap-3";
                 row.innerHTML = `
                     <span class="text-xs text-slate-700 font-medium flex items-center gap-1.5 w-32 truncate">
-                        <span>${CATEGORIA_ICONS[cat] || '🏷️'}</span>
-                        <span>${cat}</span>
+                        <span>${escapeHtml(CATEGORIA_ICONS[cat] || '🏷️')}</span>
+                        <span>${escapeHtml(cat)}</span>
                     </span>
                     <input 
                         type="number" 
                         step="0.01" 
                         min="0" 
-                        data-cat="${cat}" 
-                        value="${existingVal}" 
+                        data-cat="${escapeHtml(cat)}" 
+                        value="${escapeHtml(existingVal)}" 
                         placeholder="0.00" 
                         class="input-cat-budget flex-1 px-2.5 py-1.5 text-xs rounded-xl border border-slate-200 text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#FACC15]"
                     />
@@ -1674,7 +1685,7 @@ import '../styles/global.css';
             const curr = modalBudgetCurrency.value;
 
             // Validación visual de la meta de ahorro
-            if (gen > 0 && meta > gen) {
+            if (meta > 0 && meta > gen) {
                 modalBudgetLimitIndicator.classList.remove('hidden');
                 modalBudgetLimitIndicator.className = "text-[11px] font-bold text-rose-600";
                 modalBudgetLimitIndicator.textContent = "La meta supera el presupuesto general";
@@ -1691,7 +1702,7 @@ import '../styles/global.css';
             const limiteReal = meta > 0 ? Math.max(0, gen - meta) : gen;
             modalBudgetSumIndicator.textContent = `Suma: ${formatMoney(sum, curr)}`;
 
-            if (gen > 0 && meta > gen) {
+            if (meta > 0 && meta > gen) {
                 modalBudgetSumIndicator.className = "text-xs font-bold text-rose-600";
                 modalBudgetSumIndicator.textContent = `Suma: ${formatMoney(sum, curr)} (Corrige la meta de ahorro)`;
             } else if (gen > 0 && sum > limiteReal) {
@@ -1777,7 +1788,7 @@ import '../styles/global.css';
                 }
             });
 
-            if (general > 0 && metaAhorro > general) {
+            if (metaAhorro > 0 && metaAhorro > general) {
                 alert("La meta de ahorro no puede superar el presupuesto general.");
                 return;
             }
@@ -1846,7 +1857,7 @@ import '../styles/global.css';
                         <input 
                             type="text" 
                             placeholder="Descripción del Producto" 
-                            value="${item.descripcion || ''}" 
+                            value="${escapeHtml(item.descripcion || '')}" 
                             class="item-input-desc flex-1 px-3 py-1.5 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#FACC15] text-slate-900"
                         />
                         <button 
@@ -1866,7 +1877,7 @@ import '../styles/global.css';
                                 type="number" 
                                 step="1" 
                                 min="0.01" 
-                                value="${item.cantidad || 1}" 
+                                value="${escapeHtml(item.cantidad || 1)}" 
                                 class="item-input-cant w-full px-2.5 py-1 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#FACC15] text-slate-900"
                             />
                         </div>
@@ -1877,7 +1888,7 @@ import '../styles/global.css';
                                 step="0.01" 
                                 min="0" 
                                 placeholder="0.00" 
-                                value="${item.precio !== '' ? item.precio : ''}" 
+                                value="${escapeHtml(item.precio !== '' ? item.precio : '')}" 
                                 class="item-input-precio w-full px-2.5 py-1 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#FACC15] text-slate-900"
                             />
                         </div>
@@ -1888,7 +1899,7 @@ import '../styles/global.css';
                                 step="0.01" 
                                 min="0" 
                                 placeholder="0.00" 
-                                value="${item.total !== '' ? item.total : ''}" 
+                                value="${escapeHtml(item.total !== '' ? item.total : '')}" 
                                 class="item-input-total w-full px-2.5 py-1 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#FACC15] text-slate-900 font-semibold"
                             />
                         </div>
@@ -1899,8 +1910,8 @@ import '../styles/global.css';
                         <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">Categoría</label>
                         <select class="item-input-cat w-full px-2.5 py-1 text-xs rounded-lg border border-slate-200 bg-slate-50 text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#FACC15]">
                             ${CATEGORIAS_DEF.map(c => `
-                                <option value="${c}" ${c === normalizarCategoria(item.categoria || 'Otros') ? 'selected' : ''}>
-                                    ${CATEGORIA_ICONS[c] || '🏷️'} ${c}
+                                <option value="${escapeHtml(c)}" ${c === normalizarCategoria(item.categoria || 'Otros') ? 'selected' : ''}>
+                                    ${escapeHtml(CATEGORIA_ICONS[c] || '🏷️')} ${escapeHtml(c)}
                                 </option>
                             `).join('')}
                         </select>

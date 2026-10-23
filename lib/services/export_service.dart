@@ -6,6 +6,24 @@ import '../data/models/gasto_model.dart';
 import '../core/utils/currency_formatter.dart';
 
 class ExportService {
+  /// Neutraliza celdas de texto que comiencen con caracteres ejecutables de
+  /// hojas de cálculo (=, +, -, @, \t, \r) anteponiendo una comilla simple (').
+  static String sanitizeCsvCell(String value) {
+    if (value.isEmpty) return value;
+    final trimmedLeft = value.trimLeft();
+    if (trimmedLeft.isNotEmpty) {
+      final first = trimmedLeft[0];
+      if (first == '=' || first == '+' || first == '-' || first == '@') {
+        return "'$value";
+      }
+    }
+    final rawFirst = value[0];
+    if (rawFirst == '\t' || rawFirst == '\r') {
+      return "'$value";
+    }
+    return value;
+  }
+
   /// Genera un archivo CSV estructurado con todos los gastos e items
   static String generateCsvData(List<GastoModel> gastos) {
     final List<List<dynamic>> rows = [];
@@ -24,19 +42,20 @@ class ExportService {
 
     for (final gasto in gastos) {
       final itemsDescription = gasto.items.map((it) {
-        return '${it.cantidad}x ${it.descripcion} (@${it.precioUnitarioDisplay} = ${it.totalDisplay})';
+        final safeDesc = sanitizeCsvCell(it.descripcion);
+        return '${it.cantidad}x $safeDesc (@${it.precioUnitarioDisplay} = ${it.totalDisplay})';
       }).join('; ');
 
       rows.add([
         gasto.id ?? '',
-        gasto.fecha,
-        gasto.comercio,
-        gasto.categoria,
-        gasto.moneda,
+        sanitizeCsvCell(gasto.fecha),
+        sanitizeCsvCell(gasto.comercio),
+        sanitizeCsvCell(gasto.categoria),
+        sanitizeCsvCell(gasto.moneda),
         gasto.totalOriginalDisplay,
         gasto.totalUsdDisplay,
-        itemsDescription,
-        gasto.creadoEn,
+        sanitizeCsvCell(itemsDescription),
+        sanitizeCsvCell(gasto.creadoEn),
       ]);
     }
 

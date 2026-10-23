@@ -274,6 +274,25 @@ async function handleTasas() {
   return jsonTasas(body, "directa");
 }
 
+const MAX_RECEIPT_BODY_BYTES = 8 * 1024 * 1024; // 8 MB máx para imagen base64
+const MAX_CHAT_BODY_BYTES = 512 * 1024; // 512 KB máx para chat
+
+async function readJsonBodyWithLimit(request, maxBytes) {
+  const contentLength = parseInt(request.headers.get("content-length") || "0", 10);
+  if (Number.isFinite(contentLength) && contentLength > maxBytes) {
+    const err = new Error("El tamaño de la solicitud excede el límite permitido.");
+    err.statusCode = 413;
+    throw err;
+  }
+  const rawBody = await request.text();
+  if (rawBody.length > maxBytes) {
+    const err = new Error("El tamaño de la solicitud excede el límite permitido.");
+    err.statusCode = 413;
+    throw err;
+  }
+  return JSON.parse(rawBody);
+}
+
 export default {
   async fetch(request, env, ctx) {
     if (request.method === "OPTIONS") {
@@ -286,6 +305,13 @@ export default {
     // comprobación de GEMINI_API_KEY y del bloqueo de login, porque la app
     // necesita leer la tasa vigente aunque no haya sesión ni IA configurada.
     if (url.pathname === "/tasas" && request.method === "GET") {
+      const clientIp = request.headers.get("CF-Connecting-IP") || request.headers.get("x-forwarded-for") || "anon_ip";
+      if (isRateLimited(`tasas:${clientIp}`, 60, 60000)) {
+        return new Response(JSON.stringify({ error: "Demasiadas consultas de tasas. Intenta en un minuto." }), {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
       return handleTasas();
     }
 
@@ -365,12 +391,26 @@ export default {
 // Controlador: Análisis de Facturas (OCR / Visión)
 async function handleAnalyzeReceipt(request, geminiKey, isCustomKey = false) {
   try {
-    const data = await request.json();
+    const data = await readJsonBodyWithLimit(request, MAX_RECEIPT_BODY_BYTES);
     const { imageBase64, ocrText, forceVision, shoppingList } = data;
 
     if (!imageBase64 && !ocrText) {
       return new Response(JSON.stringify({ error: "Falta la imagen base64 o el texto OCR." }), {
         status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    if (ocrText && typeof ocrText === "string" && ocrText.length > 100000) {
+      return new Response(JSON.stringify({ error: "El texto OCR excede el tamaño máximo permitido." }), {
+        status: 413,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    if (imageBase64 && typeof imageBase64 === "string" && imageBase64.length > MAX_RECEIPT_BODY_BYTES) {
+      return new Response(JSON.stringify({ error: "La imagen excede el tamaño máximo permitido." }), {
+        status: 413,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
@@ -438,7 +478,7 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
 
     for (let i = 0; i < FALLBACK_MODELS.length; i++) {
       const currentModel = FALLBACK_MODELS[modelIndex];
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${geminiKey}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent`;
       const attemptStart = Date.now();
 
       try {
@@ -596,8 +636,9 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
       }
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: "Fallo al procesar la factura.", message: err.message }), {
-      status: 500,
+    const statusCode = err && err.statusCode === 413 ? 413 : 500;
+    return new Response(JSON.stringify({ error: statusCode === 413 ? err.message : "Fallo al procesar la factura.", message: err.message }), {
+      status: statusCode,
       headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
   }
@@ -606,12 +647,19 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
 // Controlador: Chat y Asistente Financiero / Voz
 async function handleChatAnalyst(request, geminiKey, isCustomKey = false) {
   try {
-    const data = await request.json();
+    const data = await readJsonBodyWithLimit(request, MAX_CHAT_BODY_BYTES);
     const { messages, contextData } = data;
 
     if (!messages || !Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: "Faltan los mensajes o formato inválido." }), {
         status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    if (messages.length > 50) {
+      return new Response(JSON.stringify({ error: "El historial de mensajes excede el límite permitido." }), {
+        status: 413,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
@@ -829,13 +877,16 @@ Nota de análisis cambiario: La diferencia entre total_usd_bcv y total_usdt_p2p 
 
     for (let i = 0; i < FALLBACK_MODELS.length; i++) {
       const currentModel = FALLBACK_MODELS[modelIndex];
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${geminiKey}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent`;
       const attemptStart = Date.now();
 
       try {
         response = await fetch(url, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": geminiKey
+          },
           body: JSON.stringify(payload),
           signal: AbortSignal.timeout(20000)
         });
@@ -963,8 +1014,9 @@ Nota de análisis cambiario: La diferencia entre total_usd_bcv y total_usdt_p2p 
       headers: responseHeaders
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: "Fallo al conectar con el asistente.", message: error.message }), {
-      status: 500,
+    const statusCode = error && error.statusCode === 413 ? 413 : 500;
+    return new Response(JSON.stringify({ error: statusCode === 413 ? error.message : "Fallo al conectar con el asistente.", message: error.message }), {
+      status: statusCode,
       headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
   }

@@ -210,7 +210,7 @@
 
 ---
 
-### 🔴 [F2-C03] Exposición y Sincronización en Texto Plano de la `gemini_api_key` Personal del Usuario (BYOK) en Firestore e IndexedDB Web
+### ✅ [F2-C03] [RESUELTO EN LOTE 1] Exposición y Sincronización en Texto Plano de la `gemini_api_key` Personal del Usuario (BYOK) en Firestore e IndexedDB Web
 - **Evidencia en Código:**
   - [`lib/services/sync_service.dart:L104-L139`](file:///c:/Development/Control%20de%20gastos%20VE/lib/services/sync_service.dart#L104-L139) (`syncSettingsToCloud` / `pullSettingsFromCloud`).
   - [`landing/src/pages/panel.astro:L597`](file:///c:/Development/Control%20de%20gastos%20VE/landing/src/pages/panel.astro#L597) (`enableIndexedDbPersistence(db)`) y [`L985-L1035`](file:///c:/Development/Control%20de%20gastos%20VE/landing/src/pages/panel.astro#L985-L1035) (`getDocs(presupuestosRef)`).
@@ -220,7 +220,7 @@
 
 ---
 
-### 🟠 [F2-I01] Envío de `GEMINI_API_KEY` como parámetro de URL (`?key=`) en lugar de cabecera exclusiva `x-goog-api-key`
+### ✅ [F2-I01] [RESUELTO EN LOTE 1] Envío de `GEMINI_API_KEY` como parámetro de URL (`?key=`) en lugar de cabecera exclusiva `x-goog-api-key`
 - **Evidencia en Código:**
   - [`lib/data/datasources/remote/gemini_service.dart:L28`](file:///c:/Development/Control%20de%20gastos%20VE/lib/data/datasources/remote/gemini_service.dart#L28): `Uri.parse('https://generativelanguage.googleapis.com/v1beta/models?key=$trimmed')` (sin cabecera `x-goog-api-key`).
   - [`workers/src/index.js:L441`](file:///c:/Development/Control%20de%20gastos%20VE/workers/src/index.js#L441): `const url = \`https://generativelanguage.googleapis.com/v1beta/models/\${currentModel}:generateContent?key=\${geminiKey}\`;`.
@@ -232,7 +232,7 @@
 
 ## 2.2 Almacenamiento, Validación de Datos y Vulnerabilidades de Inyección (XSS / CSV / Firestore)
 
-### 🔴 [F2-C04] Vulnerabilidad de Cross-Site Scripting (Stored / DOM XSS) en el Panel Web (`landing/src/pages/panel.astro`)
+### ✅ [F2-C04] [RESUELTO EN LOTE 1] Vulnerabilidad de Cross-Site Scripting (Stored / DOM XSS) en el Panel Web (`landing/src/pages/panel.astro`)
 - **Evidencia en Código:**
   1. **Inyección directa en listado de facturas (`renderBills` en [`landing/src/pages/panel.astro:L1456-L1508`](file:///c:/Development/Control%20de%20gastos%20VE/landing/src/pages/panel.astro#L1456-L1508)):**
      ```javascript
@@ -271,7 +271,7 @@
 
 ---
 
-### 🟠 [F2-I02] Riesgo de Inyección de Fórmulas en Exportación CSV (Móvil y Web)
+### ✅ [F2-I02] [RESUELTO EN LOTE 1] Riesgo de Inyección de Fórmulas en Exportación CSV (Móvil y Web)
 - **Evidencia en Código:**
   - **Móvil:** [`lib/services/export_service.dart:L24-L43`](file:///c:/Development/Control%20de%20gastos%20VE/lib/services/export_service.dart#L24-L43).
   - **Web:** [`landing/src/pages/panel.astro:L1519-L1541`](file:///c:/Development/Control%20de%20gastos%20VE/landing/src/pages/panel.astro#L1519-L1541).
@@ -490,7 +490,7 @@ Para ejecutar todas las correcciones sin romper la suite de pruebas en GitHub Ac
 
 | Lote | Enfoque Principal | Hallazgos Incluidos | Nivel de Criticidad |
 | :--- | :--- | :--- | :--- |
-| **Lote 1** | Blindaje de Seguridad, Secretos, Reglas Firestore y XSS Web | `[F2-C01]`, `[F2-C02]`, `[F2-C03]`, `[F2-C04]`, `[F2-C05]`, `[F2-I01]`, `[F2-I02]`, `[F2-O01]` | 🔴 Crítico (Seguridad / Privacidad) |
+| **Lote 1** | Blindaje de Seguridad, Secretos, Reglas Firestore y XSS Web | `[F2-C01]`, `[F2-C02]`, `[F2-C03]` ✅, `[F2-C04]` ✅, `[F2-C05]` ✅ (Worker), `[F2-I01]` ✅, `[F2-I02]` ✅, `[F2-O01]` | 🔴 Crítico (Seguridad / Privacidad — En validación 🧪) |
 | **Lote 2** | Exactitud Matemática Multimoneda y Paridad Móvil / Web | `[F1-C01]` ✅, `[F1-C02]` ✅, `[F1-C03]` ✅, `[F1-C04]` ✅, `[F1-I01]` ✅, `[F1-I02]` ✅, `[F1-I03]` ✅, `[F1-I04]` ✅, `[F1-I05]` ✅, `[F1-I06]` ✅, `[F3-I03]` ✅ | 🔴 Crítico (Completado en código / En validación 🧪) |
 | **Lote 3** | Integridad de Sincronización Cloud/Offline, Privacidad Local y SQLite | `[F4-C01]`, `[F4-C02]`, `[F4-I01]`, `[F4-I02]`, `[F4-I03]`, `[F4-I05]`, `[F4-O01]`, `[F2-I03]` | 🔴 Crítico (Sincronización / Datos) |
 | **Lote 4** | Resiliencia UI en Bolívares (`RenderFlex`), Coherencia `DESIGN.md` y UX | `[F3-C01]`, `[F3-I01]`, `[F3-I02]`, `[F3-I03]`, `[F3-I04]`, `[F3-I05]`, `[F3-I06]`, `[F4-I04]`, `[F4-O02]` | 🟠 Importante (UI/UX / Rendimiento) |
