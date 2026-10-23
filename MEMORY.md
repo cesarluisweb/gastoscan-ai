@@ -4,8 +4,8 @@
 ## Estado Actual Inmediato
 - **Rama:** `main`.
 - **Fase activa:** Fase 5 (Closed Testing activa) y preparación de lanzamiento.
-- **Acción Reciente:** Implementada tarea crítica `AI-08` / `FIN-16` (`DOC_CORRECCION_DECIMALES_Y_VOZ.md`). Se incorporó Consenso de Decimales y Residual Match en `GeminiExtractionResult` para corregir ítems descalzados como `1156` -> `11.56`, se eliminó la doble suma de IVA en `SemanticValidator`, se sanitizaron comas térmicas en `LocalOcrService` y se blindó el dictado por voz en `GeminiService` contra expresiones coloquiales y subtotales.
-- **CI/CD Reciente:** Desacoplados los pipelines CI/CD de Web (`deploy_web.yml`, ~50 s) y Móvil (`build_apk.yml`, ~13 min) bajo `OPS-02` (commit `af85856`), con preservación automática de `version.json` vivo en producción (`buildNumber: 539`).
+- **Acción Reciente:** Implementada tarea `OPS-03` (`Entorno Paralelo de Pruebas Rinde Más Dev y Aislamiento de Producción`). Se configuró la compilación de `rindemas-dev-apk` (`com.cesarluis.rindemas.dev`) para coexistir en el teléfono de César sin alterar la app de Google Play (preservando los 14 días), se eliminó la subida de APKs a BanaHosting y se enfocó la landing exclusivamente en la lista de espera oficial de WhatsApp y Google Play.
+- **CI/CD Reciente:** `build_apk.yml` simplificado para compilar en paralelo `app-release-aab` y `rindemas-dev-apk` como artefactos privados. Sincronizado `google-services.json` con `com.cesarluis.rindemas.dev`.
 - **Activos Oficiales Creados:** Gmail (`rindemas.app@gmail.com`), Instagram (`@rindemas.app`), TikTok (`@rindemas.app`), WhatsApp (`channel/0029VbEPwHLDJ6H678QLlN1H`). Clave en Bitwarden de César.
 - **Estado de CI:** `deploy_web.yml` Build 1 en verde (`CI 39876106103 | success | build 1 | af85856`) y `build_apk.yml` Build 538 (`CI 39952415667 | success | build 538 | 8af32c4`). Producción verificada vía HTTP (`200 OK`, `302 Found`, `version.json` intacto en build 539).
 

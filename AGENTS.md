@@ -62,10 +62,10 @@
 ### Estados Oficiales de Tareas en `ROADMAP.md`:
 - `Pendiente`: Tarea planificada no iniciada.
 - `Implementada 🔧`: Código commiteado en `main` y CI en curso o aún no confirmado en verde.
-- `Pendiente de validación 🧪`: CI en verde (`conclusion: success`) y, si aplica, verificación HTTP en producción; pendiente de prueba manual por César.
+- `Pendiente de validación 🧪`: CI en verde (`conclusion: success`). Las pruebas manuales en dispositivo físico se realizan exclusivamente descargando el artefacto `rindemas-dev-apk` (*Rinde Más Dev*), preservando intacta la app oficial de Google Play en el teléfono de César.
 - `Completada ✅`:
   - **Tareas no críticas:** El agente puede marcarla cuando CI esté en verde y se hayan completado las verificaciones técnicas. Si requiere prueba en dispositivo no cubierta por CI, mantenerla en 🧪 y avisar a César.
-  - **Tareas críticas:** El agente se detiene obligatoriamente en `Pendiente de validación 🧪`. **Solo César marca `Completada ✅`** tras su visto bueno explícito.
+  - **Tareas críticas:** El agente se detiene obligatoriamente en `Pendiente de validación 🧪`. **Solo César marca `Completada ✅`** tras su visto bueno explícito en *Rinde Más Dev*. La promoción a Google Play Console se realiza utilizando el artefacto `app-release-aab` generado en esa misma corrida de GitHub Actions.
 
 ### Definición Estricta de Tareas Críticas:
 Se considera Tarea Crítica cualquier cambio que involucre:

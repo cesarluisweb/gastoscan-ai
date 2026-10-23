@@ -152,34 +152,6 @@ jobs:
           cat android/app/proguard-rules.pro
           cat android/app/build.gradle.kts
 
-      - name: Compilar APK Release
-        run: |
-          set -e -o pipefail
-          APP_VERSION=$(grep "^version:" pubspec.yaml | sed -e 's/version:[[:space:]]*//' | cut -d '+' -f 1 | tr -d '[:space:]')
-          BASE_BUILD=$(grep "^version:" pubspec.yaml | sed -e 's/version:[[:space:]]*//' | cut -d '+' -f 2 | tr -d '[:space:]')
-          BUILD_NUM=$(( BASE_BUILD + ${{ github.run_number }} ))
-          echo "Compilando Rinde Más v$APP_VERSION (Build $BUILD_NUM)..."
-          flutter build apk --release --no-tree-shake-icons --build-name="$APP_VERSION" --build-number="$BUILD_NUM" 2>&1 | tee build_log.txt || (tail -n 120 build_log.txt > test_results.txt && exit 1)
-
-      - name: Guardar Logs de Error de Compilacion
-        if: failure()
-        run: |
-          git config --global user.name 'GitHub Actions'
-          git config --global user.email 'actions@github.com'
-          git add test_results.txt
-          git commit -m "chore: ci build failure logs" || true
-          git push || true
-        
-      - name: Firmar APK con Keystore de Produccion
-        run: |
-          BUILD_TOOLS=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1)
-          # Alineacion
-          $BUILD_TOOLS/zipalign -v -p 4 build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/app-release-aligned.apk
-          # Firma
-          $BUILD_TOOLS/apksigner sign --ks android_template/rindemas.jks --ks-pass pass:rindemas123 --ks-key-alias rindemas --key-pass pass:rindemas123 --out build/app/outputs/flutter-apk/app-release-signed.apk build/app/outputs/flutter-apk/app-release-aligned.apk
-          # Reemplazar el original
-          mv build/app/outputs/flutter-apk/app-release-signed.apk build/app/outputs/flutter-apk/app-release.apk
-
       - name: Compilar Android App Bundle (AAB de Produccion)
         run: |
           set -e -o pipefail
@@ -209,105 +181,48 @@ jobs:
           path: build/app/outputs/bundle/release/app-release.aab
           retention-days: 14
 
-      - name: Limpiar Release Assets Anteriores
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Configurar y Compilar APK Dev (Rinde Más Dev)
         run: |
-          gh release delete-asset latest app-release.apk --yes 2>/dev/null || true
-          gh release delete-asset latest app-release.aab --yes 2>/dev/null || true
-
-      - name: Publicar Release (Descarga Directa)
-        uses: ncipollo/release-action@v1
-        continue-on-error: true
-        with:
-          artifacts: |
-            build/app/outputs/flutter-apk/app-release.apk
-            build/app/outputs/bundle/release/app-release.aab
-          tag: "latest"
-          name: "Ultima Version"
-          body: "Descarga directa de la ultima version estable de Rinde Más (APK y AAB para Google Play)."
-          allowUpdates: true
-          replacesArtifacts: true
-          makeLatest: true
-          token: "${{ secrets.GITHUB_TOKEN }}"
-
-      - name: Preparar y Subir APK a BanaHosting por FTP
-        run: |
-          mkdir -p ftp_deploy
-          cp build/app/outputs/flutter-apk/app-release.apk ftp_deploy/rindemas.apk
-          cp build/app/outputs/flutter-apk/app-release.apk ftp_deploy/app-release.apk
-
-      - name: Subir APK a BanaHosting
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        # SIN continue-on-error a proposito: si el APK no sube, el job debe
-        # detenerse AQUI para no publicar un version.json que anuncie un build
-        # inexistente (fail-closed en distribucion).
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ftp_deploy/
-          server-dir: ./
-          dangerous-clean-slate: false
-
-      - name: Verificar APK publicado
-        # Fail-closed: el version.json (paso siguiente) solo debe generarse si
-        # el APK compilado es el que sirve el redirect. Compara tamanos con
-        # reintentos por propagacion del servidor usando cache buster para bypass de Cloudflare.
-        run: |
-          LOCAL_SIZE=$(stat -c%s build/app/outputs/flutter-apk/app-release.apk)
+          set -e -o pipefail
           APP_VERSION=$(grep "^version:" pubspec.yaml | sed -e 's/version:[[:space:]]*//' | cut -d '+' -f 1 | tr -d '[:space:]')
           BASE_BUILD=$(grep "^version:" pubspec.yaml | sed -e 's/version:[[:space:]]*//' | cut -d '+' -f 2 | tr -d '[:space:]')
           BUILD_NUM=$(( BASE_BUILD + ${{ github.run_number }} ))
           
-          for i in 1 2 3 4 5 6 7 8 9 10; do
-            REMOTE_SIZE=$(curl -sIL -H "Cache-Control: no-cache" -H "Pragma: no-cache" -A "Mozilla/5.0" "https://cesarluis.com/rindemas/rindemas.apk?b=${BUILD_NUM}_verify_$i" | grep -i '^content-length:' | tr -d '\r' | awk '{print $2}' | tail -n 1)
-            if [ "$REMOTE_SIZE" = "$LOCAL_SIZE" ]; then echo "APK verificado: $LOCAL_SIZE bytes"; exit 0; fi
-            echo "Intento $i: local=$LOCAL_SIZE remoto=$REMOTE_SIZE. Reintentando en 15s..."
-            sleep 15
-          done
-          echo "ERROR: el APK publicado no coincide con el compilado (local=$LOCAL_SIZE, remoto=$REMOTE_SIZE)"
-          curl -IL -H "Cache-Control: no-cache" -H "Pragma: no-cache" -A "Mozilla/5.0" "https://cesarluis.com/rindemas/rindemas.apk?b=${BUILD_NUM}_verify_err" || true
-          exit 1
+          # Inyectar applicationId .dev y nombre Rinde Mas Dev para coexistencia en dispositivo
+          python3 -c '
+          with open("android/app/build.gradle.kts", "r") as f:
+              content = f.read()
+          content = content.replace("applicationId = \"com.cesarluis.rindemas\"", "applicationId = \"com.cesarluis.rindemas.dev\"")
+          with open("android/app/build.gradle.kts", "w") as f:
+              f.write(content)
 
-      - name: Configurar Node.js
-        uses: actions/setup-node@v4
+          with open("android/app/src/main/AndroidManifest.xml", "r") as f:
+              manifest = f.read()
+          manifest = manifest.replace("android:label=\"Rinde Más\"", "android:label=\"Rinde Más Dev\"")
+          with open("android/app/src/main/AndroidManifest.xml", "w") as f:
+              f.write(manifest)
+          '
+          
+          echo "Compilando Rinde Más Dev v$APP_VERSION (Build $BUILD_NUM)..."
+          flutter build apk --release --no-tree-shake-icons --build-name="$APP_VERSION" --build-number="$BUILD_NUM" 2>&1 | tee build_log.txt || (tail -n 120 build_log.txt > test_results.txt && exit 1)
+          
+          # Firmar APK Dev con Keystore
+          BUILD_TOOLS=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1)
+          $BUILD_TOOLS/zipalign -v -p 4 build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/rindemas-dev-aligned.apk
+          $BUILD_TOOLS/apksigner sign --ks android_template/rindemas.jks --ks-pass pass:rindemas123 --ks-key-alias rindemas --key-pass pass:rindemas123 --out build/app/outputs/flutter-apk/rindemas-dev.apk build/app/outputs/flutter-apk/rindemas-dev-aligned.apk
+
+      - name: Guardar Logs de Error de APK Dev
+        if: failure()
+        run: |
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'actions@github.com'
+          git add test_results.txt
+          git commit -m "chore: ci dev apk build failure logs" || true
+          git push || true
+
+      - name: Subir APK Dev como Artefacto de GitHub Actions
+        uses: actions/upload-artifact@v4
         with:
-          node-version: "20"
-
-      - name: Generar version.json y Compilar Landing
-        run: |
-          # Extraer version y build number dinamico (BASE_BUILD + github.run_number)
-          APP_VERSION=$(grep "^version:" pubspec.yaml | sed -e 's/version:[[:space:]]*//' | cut -d '+' -f 1 | tr -d '[:space:]')
-          BASE_BUILD=$(grep "^version:" pubspec.yaml | sed -e 's/version:[[:space:]]*//' | cut -d '+' -f 2 | tr -d '[:space:]')
-          BUILD_NUM=$(( BASE_BUILD + ${{ github.run_number }} ))
-          
-          # Verificar si se marca como actualizacion mayor
-          IS_MAJOR=false
-          if grep -q "is_major_release: true" pubspec.yaml 2>/dev/null; then
-            IS_MAJOR=true
-          fi
-          
-          cat <<EOF > landing/public/version.json
-          {
-            "version": "$APP_VERSION",
-            "buildNumber": $BUILD_NUM,
-            "isMajor": $IS_MAJOR,
-            "releaseNotes": "Actualización de Rinde Más con mejoras de rendimiento y nuevas funciones.",
-            "apkUrl": "https://cesarluis.com/rindemas/rindemas.apk?b=$BUILD_NUM"
-          }
-          EOF
-          
-          sed -i "s|href=\"/rindemas.apk\"|href=\"https://cesarluis.com/rindemas/rindemas.apk?b=$BUILD_NUM\"|g" landing/src/pages/index.astro
-          
-          cat landing/public/version.json
-          cd landing
-          npm install
-          npm run build
-          cd ..
-
-      - name: Desplegar Landing, APK y Reglas de Firestore
-        env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_GATOSCAN_AI }}
-        run: |
-          npx firebase-tools deploy --only hosting,firestore:rules --project gastoscan-ai --token "${{ secrets.FIREBASE_SERVICE_ACCOUNT_GATOSCAN_AI }}" --non-interactive
+          name: rindemas-dev-apk
+          path: build/app/outputs/flutter-apk/rindemas-dev.apk
+          retention-days: 14

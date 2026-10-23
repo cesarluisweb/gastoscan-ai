@@ -53,7 +53,6 @@ jobs:
             ')
             if [ -n "$BUILD_NUM" ]; then
               cp /tmp/live_version.json landing/public/version.json
-              sed -i "s|href=\"/rindemas.apk\"|href=\"https://cesarluis.com/rindemas/rindemas.apk?b=$BUILD_NUM\"|g" landing/src/pages/index.astro
               echo "version.json sincronizado desde produccion (buildNumber=$BUILD_NUM):"
               cat landing/public/version.json
             else
