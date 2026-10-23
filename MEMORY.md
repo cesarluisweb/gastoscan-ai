@@ -22,5 +22,4 @@
 - Monitoreo de CI por proceso dormido único (`scripts/wait_ci.ps1`), prohibido bucle activo turno a turno.
 
 ## Próximo Paso Inmediato
-- Hacer commit, push y monitoreo único de CI en segundo plano con `scripts/wait_ci.ps1`.
-- Proveer a César la guía de pruebas paso a paso para validación en *Rinde Más Dev*.
+- Iniciar Lote 3 de la Auditoría Integral Argon (`docs/auditoria_integral_argon.md`): Integridad de Sincronización offline, optimización SQLite y limpieza de datos en cierre de sesión (`clearLocalDataOnSignOut`).
