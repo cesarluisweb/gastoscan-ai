@@ -57,17 +57,25 @@ Future<void> mostrarModalAutenticacionEmail(
       return StatefulBuilder(
         builder: (context, setModalState) {
           final mediaQuery = MediaQuery.of(context);
+          final systemBottom = mediaQuery.padding.bottom > 0
+              ? mediaQuery.padding.bottom
+              : mediaQuery.viewPadding.bottom;
+          final effectiveBottomPadding = mediaQuery.viewInsets.bottom + (systemBottom > 0 ? systemBottom : 16.0) + 20.0;
+
           return PopScope(
             canPop: !isLoading,
-            child: Padding(
-              padding: EdgeInsets.only(
-                bottom: mediaQuery.viewInsets.bottom + 20,
-                left: 20,
-                right: 20,
-                top: 20,
-              ),
-              child: SingleChildScrollView(
-                child: Column(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    bottom: effectiveBottomPadding,
+                    left: 20,
+                    right: 20,
+                    top: 20,
+                  ),
+                  child: SingleChildScrollView(
+                    child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -286,7 +294,9 @@ Future<void> mostrarModalAutenticacionEmail(
               ),
             ),
           ),
-        );
+        ),
+      ),
+    );
         },
       );
     },

@@ -19,6 +19,13 @@ description: "Convenciones de código Dart, maquetación de widgets, imports obl
 - **Composición de Textos con Estilo Mixto (Evitar `RichText` Plano):** Para elementos de interfaz que combinen etiquetas regulares con cifras destacadas en negrita (ej. `Gastado: $ 205,31`), preferir `Row(children: [Text(...), Text(...)])` o `Text.rich(TextSpan(...))`. Evitar el widget `RichText` plano como nodo raíz en estos componentes, ya que no hereda `DefaultTextStyle` automáticamente y provoca fallos en pruebas de widgets (`find.textContaining` requiere el flag no estándar `findRichText: true` sobre `RichText`).
 - **Reutilización Obligatoria de Componentes (DRY):** Si un patrón visual o interactivo (selectores de fecha/período, modales de confirmación, tarjetas resumen) se usa en 2 o más pantallas, DEBE abstraerse como widget modular en `lib/ui/widgets/`. Prohibido duplicar maquetación local idéntica.
 - **Jerarquía y Estilo en Diálogos (`AlertDialog`):** Prohibido dejar botones `TextButton` sin estilo de color explícito en modales o diálogos. Los botones de cancelación o retorno ("Cancelar", "Volver", "Más tarde") DEBEN utilizar siempre `AppColors.textSecondary` (gris). Las acciones destructivas ("Eliminar", "Descartar") deben usar `AppColors.error` (rojo). Las confirmaciones afirmativas deben usar `ElevatedButton` (`AppColors.primary` con texto negro).
+- **Protección de Navegación del Sistema en Bottom Sheets (Edge-to-Edge Android 15+):** En ventanas desplegables inferiores (`showModalBottomSheet`), la barra de navegación del sistema (los 3 botones de Android de ~48dp o la barra de gestos) se dibuja sobre el fondo. Todo modal inferior DEBE calcular el espaciado seguro:
+  ```dart
+  final mediaQuery = MediaQuery.of(context);
+  final systemBottom = mediaQuery.padding.bottom > 0 ? mediaQuery.padding.bottom : mediaQuery.viewPadding.bottom;
+  final effectiveBottomPadding = (systemBottom > 0 ? systemBottom : 16.0) + 24.0;
+  ```
+  y aplicar `padding: EdgeInsets.fromLTRB(..., effectiveBottomPadding)` dentro de un `ConstrainedBox(constraints: const BoxConstraints(maxWidth: 600))` para que los botones de acción nunca queden recortados u ocultos bajo la barra del sistema.
 - **Navegación Raíz y Protección de Cierre con `PopScope`:** En pantallas contenedor con pestañas (`MainScreen`), el botón/gesto hacia atrás NUNCA debe cerrar la app directamente desde pestañas secundarias. Debe cumplir el siguiente flujo estándar:
   1. Si hay un flujo modal o chat de IA abierto, cerrarlo y permanecer en la pestaña de origen.
   2. Si hay búsqueda activa en `Gastos`, cancelar la búsqueda y permanecer en `Gastos`.
