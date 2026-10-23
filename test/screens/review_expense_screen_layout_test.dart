@@ -262,9 +262,10 @@ void main() {
 
     // En USDT no debe mostrar el selector de 3 formas de liquidacion de USD/EUR
     expect(find.text('Forma de pago en Venezuela'), findsNothing);
-    // Debe mostrar el aviso limpio de almacenamiento en USDT con 1:1 USD
-    expect(find.textContaining('Se guardará en USDT'), findsOneWidget);
-    expect(find.textContaining('USD 1:1'), findsOneWidget);
+    // Debe mostrar el campo de entrada de Monto Total en USDT con paridad 1:1
+    expect(find.text('Monto Total (USDT)'), findsOneWidget);
+    expect(find.text('Paridad 1:1 con USD'), findsOneWidget);
+    expect(find.byKey(const Key('cintillo_usdt_info')), findsOneWidget);
   });
 }
 

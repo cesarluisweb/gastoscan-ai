@@ -2399,6 +2399,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     ),
                     const SizedBox(height: 10),
                     Container(
+                      key: const Key('cintillo_usdt_info'),
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                       decoration: BoxDecoration(
                         color: AppColors.cardLighter,
