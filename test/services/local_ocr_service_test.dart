@@ -46,5 +46,12 @@ GRACIAS
       expect(score.hasTotalKeyword, isFalse);
       expect(score.shouldAttemptText, isFalse);
     });
+
+    test('sanitizeOcrLine elimina espacios accidentales en decimales térmicos', () {
+      expect(LocalOcrService.sanitizeOcrLine('PAN CANILLA 11 . 56 BS'), equals('PAN CANILLA 11.56 BS'));
+      expect(LocalOcrService.sanitizeOcrLine('QUESO BLANCO 12 , 50'), equals('QUESO BLANCO 12.50'));
+      expect(LocalOcrService.sanitizeOcrLine('LECHE 4. 20'), equals('LECHE 4.20'));
+      expect(LocalOcrService.sanitizeOcrLine('HARINA 3 ,50'), equals('HARINA 3.50'));
+    });
   });
 }

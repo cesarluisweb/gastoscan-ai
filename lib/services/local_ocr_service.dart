@@ -86,11 +86,20 @@ class LocalOcrService {
     }
   }
 
+  /// Sanitiza artefactos frecuentes de escaneo OCR (ej. espacios accidentales alrededor de comas/puntos decimales: "11 . 56" -> "11.56")
+  static String sanitizeOcrLine(String text) {
+    if (text.isEmpty) return text;
+    return text.replaceAllMapped(
+      RegExp(r'(\b\d+)\s*([.,])\s*(\d{2}\b)'),
+      (match) => '${match.group(1)}.${match.group(3)}',
+    );
+  }
+
   /// Construye una representación espacial ordenada de bloques y líneas
   /// para que el modelo de lenguaje entienda las columnas relativas (descripción | precio).
   String formatSpatialText(RecognizedText recognizedText) {
     if (recognizedText.blocks.isEmpty) {
-      return recognizedText.text;
+      return sanitizeOcrLine(recognizedText.text);
     }
 
     final StringBuffer buffer = StringBuffer();
@@ -112,7 +121,8 @@ class LocalOcrService {
         final sortedElements = List<TextElement>.from(line.elements)
           ..sort((a, b) => a.boundingBox.left.compareTo(b.boundingBox.left));
 
-        final lineText = sortedElements.map((e) => e.text).join(' ');
+        final rawLineText = sortedElements.map((e) => e.text).join(' ');
+        final lineText = sanitizeOcrLine(rawLineText);
         if (lineText.trim().isNotEmpty) {
           buffer.writeln('  [LÍNEA] $lineText');
         }

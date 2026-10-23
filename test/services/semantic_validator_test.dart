@@ -104,5 +104,35 @@ void main() {
       expect(result.isValid, isFalse);
       expect(result.reason, contains('Discrepancia'));
     });
+
+    test('no duplica impuestoIva si la lista items ya incluye el renglón de IVA', () {
+      // Compra de 100 con 16 de IVA ya incluido en items: total 116
+      final factura = GeminiExtractionResult(
+        comercio: 'Farmatodo',
+        fecha: '2026-10-23',
+        moneda: 'USD',
+        totalOriginal: 116.0,
+        impuestoIva: 16.0,
+        items: [
+          ItemGastoModel(
+            descripcion: 'Medicamentos',
+            cantidad: 1.0,
+            precioUnitario: 10000,
+            total: 10000, // 100.00
+            categoria: 'Salud',
+          ),
+          ItemGastoModel(
+            descripcion: 'Impuesto IVA',
+            cantidad: 1.0,
+            precioUnitario: 1600,
+            total: 1600, // 16.00
+            categoria: 'Salud',
+          ),
+        ],
+      );
+
+      final result = validator.validate([factura]);
+      expect(result.isValid, isTrue);
+    });
   });
 }

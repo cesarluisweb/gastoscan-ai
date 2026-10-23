@@ -4,7 +4,7 @@
 ## Estado Actual Inmediato
 - **Rama:** `main`.
 - **Fase activa:** Fase 5 (Closed Testing activa) y preparación de lanzamiento.
-- **Acción Reciente:** Ejecutado el **Lote 2 (Exactitud Matemática Multimoneda, OCR y Paridad Móvil/Web)** de `docs/auditoria_integral_argon.md` (`[F1-C01]`, `[F1-C02]`, `[F1-C03]`, `[F1-C04]`, `[F1-I01]`..`[F1-I06]`, `[F3-I03]`). Se amplió el catálogo canónico oficial a 10 categorías (sumando `'Ropa'` y `'Entretenimiento'`) y se unificó `ItemGastoModel.calcularCategoriaDominante` para asignar la categoría dominante al ítem `'Impuesto IVA'`.
+- **Acción Reciente:** Implementada tarea crítica `AI-08` / `FIN-16` (`DOC_CORRECCION_DECIMALES_Y_VOZ.md`). Se incorporó Consenso de Decimales y Residual Match en `GeminiExtractionResult` para corregir ítems descalzados como `1156` -> `11.56`, se eliminó la doble suma de IVA en `SemanticValidator`, se sanitizaron comas térmicas en `LocalOcrService` y se blindó el dictado por voz en `GeminiService` contra expresiones coloquiales y subtotales.
 - **CI/CD Reciente:** Desacoplados los pipelines CI/CD de Web (`deploy_web.yml`, ~50 s) y Móvil (`build_apk.yml`, ~13 min) bajo `OPS-02` (commit `af85856`), con preservación automática de `version.json` vivo en producción (`buildNumber: 539`).
 - **Activos Oficiales Creados:** Gmail (`rindemas.app@gmail.com`), Instagram (`@rindemas.app`), TikTok (`@rindemas.app`), WhatsApp (`channel/0029VbEPwHLDJ6H678QLlN1H`). Clave en Bitwarden de César.
 - **Estado de CI:** `deploy_web.yml` Build 1 en verde (`CI 39876106103 | success | build 1 | af85856`) y `build_apk.yml` Build 535 (`38ce64a`). Producción verificada vía HTTP (`200 OK`, `302 Found`, `version.json` intacto en build 539).

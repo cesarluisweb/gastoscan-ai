@@ -217,4 +217,35 @@ void main() {
       expect(scanQueueProvider.readyItems.length, 2);
     });
   });
+
+  group('GeminiService.normalizeVoiceText Tests', () {
+    test('normaliza decimales venezolanos hablados "X con Y" a formato con punto', () {
+      expect(
+        GeminiService.normalizeVoiceText('Gasté 11 con 56 en la farmacia'),
+        equals('Gasté 11.56 en la farmacia'),
+      );
+      expect(
+        GeminiService.normalizeVoiceText('Compré queso por 3 con 50 dólares'),
+        equals('Compré queso por 3.50 dólares'),
+      );
+    });
+
+    test('normaliza "X y medio" o "X y media" a ".50"', () {
+      expect(
+        GeminiService.normalizeVoiceText('Pagué 12 y medio de pasaje'),
+        equals('Pagué 12.50 de pasaje'),
+      );
+      expect(
+        GeminiService.normalizeVoiceText('Fueron 4 y media manzanas'),
+        equals('Fueron 4.50 manzanas'),
+      );
+    });
+
+    test('normaliza "X coma Y" a "X.Y"', () {
+      expect(
+        GeminiService.normalizeVoiceText('El refresco costó 2 coma 25'),
+        equals('El refresco costó 2.25'),
+      );
+    });
+  });
 }

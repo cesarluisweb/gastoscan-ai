@@ -256,6 +256,29 @@ class GeminiService {
     }
   }
 
+  /// Normaliza expresiones coloquiales venezolanas de voz para números y decimales
+  /// (ej. "11 con 56" -> "11.56", "12 y medio" -> "12.50", "3 coma 20" -> "3.20")
+  static String normalizeVoiceText(String text) {
+    if (text.isEmpty) return text;
+    String normalized = text;
+    // 1. "X con Y" para decimales hablados (ej. "11 con 56" -> "11.56", "3 con 50" -> "3.50")
+    normalized = normalized.replaceAllMapped(
+      RegExp(r'\b(\d+)\s+con\s+(\d{1,2})\b', caseSensitive: false),
+      (m) => '${m.group(1)}.${m.group(2)}',
+    );
+    // 2. "X y medio" / "X y media" -> "X.50"
+    normalized = normalized.replaceAllMapped(
+      RegExp(r'\b(\d+)\s+y\s+medi[ao]\b', caseSensitive: false),
+      (m) => '${m.group(1)}.50',
+    );
+    // 3. "X coma Y" -> "X.Y"
+    normalized = normalized.replaceAllMapped(
+      RegExp(r'\b(\d+)\s+coma\s+(\d{1,2})\b', caseSensitive: false),
+      (m) => '${m.group(1)}.${m.group(2)}',
+    );
+    return normalized;
+  }
+
   GeminiExtractionResult _mapArgsToExtractionResult(Map args, String spokenText) {
     final double totalUsd = (args['total_usd'] as num?)?.toDouble() ?? 0.0;
     final double montoOriginalArg = (args['monto_original'] as num?)?.toDouble() ?? totalUsd;
@@ -280,12 +303,24 @@ class GeminiService {
     if (regMontoExplicitoBs.hasMatch(spokenText) && montoOriginalArg > totalUsd && totalUsd > 0) {
       moneda = 'VES';
     }
-    final double totalOriginal = montoOriginalArg > 0 ? montoOriginalArg : totalUsd;
+    final double rawTotalOriginal = montoOriginalArg > 0 ? montoOriginalArg : totalUsd;
     final List itemsList = args['items'] as List? ?? [];
 
     List<ItemGastoModel> itemsGasto = itemsList.whereType<Map>().map((item) {
       final double cant = (item['cantidad'] as num?)?.toDouble() ?? 1.0;
-      final double precioUnit = (item['precio_unitario'] as num?)?.toDouble() ?? (cant > 0 ? totalOriginal / cant : totalOriginal);
+      double precioUnit = (item['precio_unitario'] as num?)?.toDouble() ?? (cant > 0 && rawTotalOriginal > 0 ? rawTotalOriginal / cant : rawTotalOriginal);
+
+      // Trampa del subtotal vs precio unitario en dictado (ej. "3 harinas en 4 dólares"):
+      // Si la IA asigna cantidad 3 y precio_unitario 4, el total del renglón daría 12$ en vez de 4$.
+      // Si el precio unitario multiplicado supera el total general dictado pero precioUnit == rawTotalOriginal,
+      // significa que el usuario dictó el subtotal de la línea y no el precio unitario.
+      if (cant > 1 && rawTotalOriginal > 0) {
+        if ((precioUnit * cant) > rawTotalOriginal * 1.05 &&
+            (precioUnit - rawTotalOriginal).abs() <= rawTotalOriginal * 0.05) {
+          precioUnit = rawTotalOriginal / cant;
+        }
+      }
+
       final String catItemRaw = item['categoria']?.toString().trim() ?? categoria;
       return ItemGastoModel(
         descripcion: item['descripcion']?.toString() ?? 'Artículo',
@@ -295,6 +330,13 @@ class GeminiService {
         categoria: AppConstants.normalizarCategoria(catItemRaw),
       );
     }).toList();
+
+    double totalOriginal = rawTotalOriginal;
+    // Si se extrajeron ítems pero el total original vino en 0, calcularlo sumando los ítems
+    if (totalOriginal <= 0 && itemsGasto.isNotEmpty) {
+      final sumItemsCents = itemsGasto.fold(0, (sum, it) => sum + it.total);
+      totalOriginal = sumItemsCents / 100.0;
+    }
 
     if (itemsGasto.isEmpty) {
       itemsGasto = [
@@ -359,12 +401,13 @@ class GeminiService {
   }
 
   Future<List<GeminiExtractionResult>> parseVoiceExpense(String spokenText) async {
+    final cleanSpokenText = normalizeVoiceText(spokenText);
     try {
       final responseMap = await chatWithAnalyst(
         messages: [
           {
             'role': 'user',
-            'text': 'Registra este gasto o compras: "$spokenText". Asume que la fecha es hoy si no la menciono. Si menciono compras en múltiples lugares o comercios distintos, extrae cada una por separado en la lista "gastos". Extrae los productos, precios y la categoría adecuada para cada uno. REGLA CRÍTICA DE MONEDA: Si menciono un monto explícito en Bolívares (ej. "Pagué 4.000 Bs por gasolina; eran unos 20 dólares"), el dato original obligatorio e inmutable es 4000 con moneda: "VES" (el monto en dólares es solo contexto y no debe sobreescribir los bolívares). Si el gasto es en USD o EUR: si fue a tasa paralelo/USDT/Binance especifica metodo_liquidacion: "BS_USDT"; si fue en efectivo/Zelle/Zinli/divisa directa especifica "DIVISA"; en cualquier otro caso (pago móvil, punto, BCV o sin especificar tasa) especifica "BS_BCV".',
+            'text': 'Registra este gasto o compras: "$cleanSpokenText". Asume que la fecha es hoy si no la menciono. Si menciono compras en múltiples lugares o comercios distintos, extrae cada una por separado en la lista "gastos". Extrae los productos, precios y la categoría adecuada para cada uno. REGLA DE PRECIOS Y CANTIDADES: Expresa los precios usando siempre punto decimal (ej. 11.56 y nunca 1156). Si digo "3 harinas en 4 dólares", el precio_unitario es 4 / 3 = 1.33 (el monto es el subtotal del renglón, no unitario). REGLA CRÍTICA DE MONEDA: Si menciono un monto explícito en Bolívares (ej. "Pagué 4.000 Bs por gasolina; eran unos 20 dólares"), el dato original obligatorio e inmutable es 4000 con moneda: "VES" (el monto en dólares es solo contexto y no debe sobreescribir los bolívares). Si el gasto es en USD o EUR: si fue a tasa paralelo/USDT/Binance especifica metodo_liquidacion: "BS_USDT"; si fue en efectivo/Zelle/Zinli/divisa directa especifica "DIVISA"; en cualquier otro caso (pago móvil, punto, BCV o sin especificar tasa) especifica "BS_BCV".',
           }
         ],
         contextData: {
@@ -382,7 +425,7 @@ class GeminiService {
             final List<GeminiExtractionResult> results = [];
             for (final g in gastosList) {
               if (g is Map) {
-                results.add(_mapArgsToExtractionResult(g, spokenText));
+                results.add(_mapArgsToExtractionResult(g, cleanSpokenText));
               }
             }
             if (results.isNotEmpty) {
@@ -390,7 +433,7 @@ class GeminiService {
             }
           }
 
-          return [_mapArgsToExtractionResult(args, spokenText)];
+          return [_mapArgsToExtractionResult(args, cleanSpokenText)];
         }
       }
     } catch (e) {
@@ -400,10 +443,8 @@ class GeminiService {
     // Fallback básico si la IA no devolvió functionCall o hubo un corte
     double montoFallback = 0.0;
     final regexMonto = RegExp(r'(\d+([.,]\d+)?)');
-    final match = regexMonto.firstMatch(spokenText);
+    final match = regexMonto.firstMatch(cleanSpokenText);
     if (match != null) {
-      // Misma semántica que antes (isPrice: false): el regex solo captura
-      // dígitos con un separador opcional, sin miles.
       montoFallback = tryParseAmount(match.group(1)!, isPrice: false) ?? 0.0;
     }
 
@@ -411,10 +452,10 @@ class GeminiService {
       throw Exception('No se detectó el monto en el dictado. Por favor incluye el precio de la compra.');
     }
 
-    final String monedaFallback = AppConstants.detectarMonedaDeTexto(spokenText, fallback: 'USD');
+    final String monedaFallback = AppConstants.detectarMonedaDeTexto(cleanSpokenText, fallback: 'USD');
     String? metodoFallback;
     if (monedaFallback == 'USD' || monedaFallback == 'EUR') {
-      final textLower = spokenText.toLowerCase();
+      final textLower = cleanSpokenText.toLowerCase();
       if (textLower.contains('bcv') ||
           textLower.contains('banco central') ||
           textLower.contains('oficial') ||

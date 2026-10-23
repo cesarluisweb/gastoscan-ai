@@ -138,5 +138,86 @@ void main() {
       expect(result.items[2].categoria, equals('Higiene'));
       expect(result.items[2].totalDisplay, equals(1.60));
     });
+
+    test('Caso H (Residual Match): Ítem 1156 se corrige a 11.56 al calzar con total impreso 36.56', () {
+      final json = {
+        'comercio': 'Supermercado Central',
+        'fecha': '2026-10-23',
+        'moneda': 'USD',
+        'total_original': 36.56,
+        'items': [
+          {'descripcion': 'Queso', 'cantidad': 1, 'precio_unitario': 12.50, 'total': 12.50},
+          {'descripcion': 'Jamón', 'cantidad': 1, 'precio_unitario': 8.40, 'total': 8.40},
+          {'descripcion': 'Mantequilla', 'cantidad': 1, 'precio_unitario': 1156, 'total': 1156}, // Perdió decimal (11.56)
+          {'descripcion': 'Pan', 'cantidad': 1, 'precio_unitario': 4.10, 'total': 4.10},
+        ],
+      };
+
+      final result = GeminiExtractionResult.fromJson(json);
+
+      expect(result.totalOriginal, equals(36.56));
+      expect(result.items[2].precioUnitarioDisplay, equals(11.56));
+      expect(result.items[2].totalDisplay, equals(11.56));
+    });
+
+    test('Caso I (Consenso de Decimales y Outlier): Ítem 1156 se corrige y desinfla total_original inflado por IA', () {
+      final json = {
+        'comercio': 'Supermercado Central',
+        'fecha': '2026-10-23',
+        'moneda': 'USD',
+        'total_original': 1181.00, // La IA sumó 12.50 + 8.40 + 1156 + 4.10
+        'items': [
+          {'descripcion': 'Queso', 'cantidad': 1, 'precio_unitario': 12.50, 'total': 12.50},
+          {'descripcion': 'Jamón', 'cantidad': 1, 'precio_unitario': 8.40, 'total': 8.40},
+          {'descripcion': 'Mantequilla', 'cantidad': 1, 'precio_unitario': 1156, 'total': 1156},
+          {'descripcion': 'Pan', 'cantidad': 1, 'precio_unitario': 4.10, 'total': 4.10},
+        ],
+      };
+
+      final result = GeminiExtractionResult.fromJson(json);
+
+      expect(result.items[2].precioUnitarioDisplay, equals(11.56));
+      expect(result.items[2].totalDisplay, equals(11.56));
+      expect(result.totalOriginal, closeTo(36.56, 0.01));
+    });
+
+    test('Caso J (Preservar precio entero legítimo): Compra con decimales y un ítem entero de 10.00', () {
+      final json = {
+        'comercio': 'Ferretería',
+        'fecha': '2026-10-23',
+        'moneda': 'USD',
+        'total_original': 35.00,
+        'items': [
+          {'descripcion': 'Tornillos', 'cantidad': 1, 'precio_unitario': 12.50, 'total': 12.50},
+          {'descripcion': 'Pega', 'cantidad': 1, 'precio_unitario': 8.40, 'total': 8.40},
+          {'descripcion': 'Herramienta', 'cantidad': 1, 'precio_unitario': 10.00, 'total': 10.00},
+          {'descripcion': 'Lija', 'cantidad': 1, 'precio_unitario': 4.10, 'total': 4.10},
+        ],
+      };
+
+      final result = GeminiExtractionResult.fromJson(json);
+
+      expect(result.totalOriginal, equals(35.00));
+      expect(result.items[2].precioUnitarioDisplay, equals(10.00));
+      expect(result.items[2].totalDisplay, equals(10.00));
+    });
+
+    test('Caso K (Preservar compra en Bolívares con enteros legítimos)', () {
+      final json = {
+        'comercio': 'Carnicería',
+        'fecha': '2026-10-23',
+        'moneda': 'VES',
+        'total_original': 1350.00,
+        'items': [
+          {'descripcion': 'Pan', 'cantidad': 1, 'precio_unitario': 150.00, 'total': 150.00},
+          {'descripcion': 'Carne', 'cantidad': 1, 'precio_unitario': 1200.00, 'total': 1200.00},
+        ],
+      };
+
+      final result = GeminiExtractionResult.fromJson(json);
+
+      expect(result.totalOriginal, equals(1350.00));
+      expect(result.items[1].precioUnitarioDisplay, equals(1200.00));
+    });
   });
 }

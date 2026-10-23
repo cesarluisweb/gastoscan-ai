@@ -8,6 +8,7 @@ description: "Consultar al modificar extracción OCR con Gemini, prompts de IA, 
 ## 1. Extracción de Facturas con IA (Gemini OCR)
 - **Prompt de Manejo de Decimales:** En prompts de extracción OCR, NUNCA instruir "no usar comas" (la IA tiende a eliminarlas inflando los montos). Ordenar explícitamente:
   > *"Si el precio usa coma (ej. 12,50), reemplázala por un punto (12.50)."*
+- **Ancla de Verdad en Total Impreso y Consenso de Decimales:** El campo `total_original` debe extraerse leyendo con fidelidad el TOTAL impreso al pie de la factura (no inventándolo sumando ítems a ciegas). Si un ítem omitió la coma decimal (ej. `1156` en vez de `11.56`), `GeminiExtractionResult.fromJson` aplica doble reconciliación: *Residual Match* contra el total impreso y *Consenso de Decimales con Detección de Outliers* para normalizarlo automáticamente sin distorsionar precios enteros legítimos.
 - **Moneda Unificada en Facturas Mixtas:** Para facturas venezolanas con ítems expresados en Bolívares (VES) y total de referencia en USD ("Ref"), la IA DEBE extraer todos los montos en la moneda de los ítems (VES) para prevenir discrepancias en balances.
 - **Pipeline Híbrido de Percepción (Ahorro de Tokens):**
   1. *Fase 1 (OCR Local):* Toda captura ejecuta primero Google ML Kit en el teléfono sin consumo de red ni costes de API.
@@ -35,6 +36,7 @@ description: "Consultar al modificar extracción OCR con Gemini, prompts de IA, 
   - *Un solo comercio:* No encolar en SQLite (`queueItemId: null`); navegar directamente a `ReviewExpenseScreen`.
   - *Dos o más comercios distintos en la misma frase:* Encolar todos los registros en `ScanQueueProvider` en estado `ready` con `image_path: ''` y abrir el primero pasando su `queueItemId` para habilitar el flujo continuo secuencial.
 - **Respeto de Divisa Dictada:** Respetar estrictamente la moneda indicada por el usuario (VES, USD, EUR, USDT), prohibiéndose forzar USD por defecto si se especificó otra moneda.
+- **Normalización Coloquial de Decimales y Subtotales:** Expresiones de dictado populares como "11 con 56" o "12 y medio" se normalizan a formato numérico (11.56, 12.50) antes del análisis. En frases como "3 harinas en 4 dólares", el monto dictado se interpreta como el subtotal de la línea (precio unitario = 4 / 3 = 1.33) para evitar triplicar el gasto.
 - **Detección de Método de Liquidación en Dictado:** Al dictar gastos en USD o EUR, el prompt del Worker debe inferir `metodo_liquidacion`:
   - `"BS_BCV"`: Si pagó en bolívares a tasa oficial BCV, pago móvil, tarjeta de débito, biopago, punto de venta o no especificó divisas en efectivo.
   - `"BS_USDT"`: Si pagó en bolívares a tasa paralelo, USDT, Binance o P2P.
