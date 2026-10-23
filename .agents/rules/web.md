@@ -28,7 +28,8 @@ description: "Estándares de desarrollo web, enrutamiento en Astro, cabeceras de
 - **Prohibición de Despliegue Local:** Prohibido ejecutar `firebase deploy --only hosting` en local salvo emergencia técnica expresa autorizada por César.
 - **Compilación Local de Verificación:** En tareas de la web, compilar localmente con telemetría desactivada (`$env:ASTRO_TELEMETRY_DISABLED="1"; npm run build` en `landing/`) exclusivamente para confirmar que no hay errores de build antes de hacer `git push`.
 
-## 3. Identidad Visual y Paridad con la App Móvil
+## 3. Identidad Visual, Seguridad y Paridad con la App Móvil
+- **Sanitización Obligatoria contra Inyecciones (XSS):** Todo dato textual proveniente de Firestore o entradas de usuario renderizado dinámicamente en el DOM (categorías, notas, tablas, modales) DEBE sanitizarse usando `escapeHtml(str)` para los caracteres peligrosos (`&`, `<`, `>`, `"`, `'`).
 - **Paleta de Colores Web:** Usar estrictamente la paleta oficial de Rinde Más: amarillo (`#FACC15` / `#EAB308`) para acentos y botones principales, fondos limpios (`#F8FAFC` / `#FFFFFF`) y textos oscuros legibles (`#0F172A` / `#334155`). Prohibido el uso de tonos naranjas.
 - **Representación Gráfica (Mockups):** Las vistas previas de la app móvil DEBEN presentarse dentro de un chasis de smartphone vertical (~20:9 con bordes redondeados y notch/cámara). Las capturas del panel web se representan con marco de navegador de escritorio.
 - **Paridad de Negocio:** El panel web (`landing/src/pages/panel.astro`) debe mantener paridad matemática exacta con la app móvil: catálogo único de las 8 categorías canónicas de `AppConstants.categorias` y soporte para las 4 divisas (VES, USD, EUR, USDT) con tasas dinámicas.
