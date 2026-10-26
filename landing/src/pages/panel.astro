@@ -76,9 +76,9 @@ import '../styles/global.css';
                 Accede a tu presupuesto mensual, desglose de facturas y control de gastos en bolívares y dólares directamente desde tu PC, Mac o iPhone.
             </p>
 
-            <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-                <button id="btn-login-hero" class="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-3.5 text-base font-bold text-slate-900 bg-[#FACC15] hover:bg-[#EAB308] rounded-full shadow-md hover:shadow-lg transition-all">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24">
+            <div class="mt-8 max-w-sm mx-auto space-y-4 text-left">
+                <button id="btn-login-hero" class="w-full inline-flex items-center justify-center gap-3 px-6 py-3.5 text-sm font-bold text-slate-900 bg-[#FACC15] hover:bg-[#EAB308] rounded-2xl shadow-sm hover:shadow transition-all">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24">
                         <path fill="currentColor" d="M21.35 11.1h-9.17v2.98h5.27c-.23 1.21-.92 2.24-1.95 2.93v2.43h3.16c1.85-1.7 2.92-4.21 2.92-7.24 0-.48-.04-.95-.1-1.39z"/>
                         <path fill="currentColor" d="M12.18 21c2.65 0 4.88-.88 6.51-2.39l-3.16-2.43c-.88.59-2.01.94-3.35.94-2.58 0-4.76-1.74-5.54-4.08H3.36v2.51C5 18.8 8.35 21 12.18 21z"/>
                         <path fill="currentColor" d="M6.64 13.04c-.2-.59-.31-1.22-.31-1.87s.11-1.28.31-1.87V6.79H3.36C2.69 8.12 2.31 9.62 2.31 11.17s.38 3.05 1.05 4.38l3.28-2.51z"/>
@@ -86,13 +86,62 @@ import '../styles/global.css';
                     </svg>
                     Iniciar sesión con Google
                 </button>
+
+                <div class="relative flex items-center justify-center my-2">
+                    <div class="border-t border-slate-200 w-full"></div>
+                    <span class="bg-[#F8FAFC] px-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider relative">o con correo</span>
+                </div>
+
+                <form id="form-auth-email" class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-3">
+                    <div>
+                        <label for="auth-email-input" class="block text-xs font-semibold text-slate-700 mb-1">Correo electrónico</label>
+                        <input 
+                            id="auth-email-input" 
+                            type="email" 
+                            required 
+                            autocomplete="email"
+                            placeholder="ejemplo@correo.com" 
+                            class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:bg-white focus:ring-2 focus:ring-[#FACC15] focus:outline-none"
+                        />
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label for="auth-password-input" class="block text-xs font-semibold text-slate-700">Contraseña</label>
+                            <button type="button" id="btn-auth-forgot" class="text-[11px] font-medium text-slate-500 hover:text-slate-800 transition-colors">¿Olvidaste tu clave?</button>
+                        </div>
+                        <input 
+                            id="auth-password-input" 
+                            type="password" 
+                            required 
+                            autocomplete="current-password"
+                            placeholder="Mínimo 6 caracteres" 
+                            class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:bg-white focus:ring-2 focus:ring-[#FACC15] focus:outline-none"
+                        />
+                    </div>
+
+                    <div id="auth-email-msg" class="hidden text-xs p-2.5 rounded-xl font-medium"></div>
+
+                    <button 
+                        type="submit" 
+                        id="btn-auth-email-submit" 
+                        class="w-full py-2.5 text-sm font-bold text-slate-900 bg-[#FACC15] hover:bg-[#EAB308] rounded-xl transition-all shadow-sm flex items-center justify-center gap-2"
+                    >
+                        <span>Iniciar sesión</span>
+                    </button>
+
+                    <div class="pt-2 border-t border-slate-100 text-center">
+                        <button type="button" id="btn-auth-mode-toggle" class="text-xs text-slate-500 hover:text-slate-800 font-medium">
+                            ¿No tienes cuenta? <span class="font-bold text-slate-800 underline">Regístrate</span>
+                        </button>
+                    </div>
+                </form>
             </div>
 
             <p class="mt-6 text-xs text-slate-500 flex items-center justify-center gap-1.5">
                 <span>🔒</span> Solo usamos tu cuenta para respaldar tus facturas en tu propio espacio privado. Sin accesos bancarios.
             </p>
             <p class="mt-2 text-[11px] text-slate-400">
-                Usa el mismo correo Google que tienes vinculado en la app móvil Rinde Más para sincronizar tus datos.
+                Usa el mismo correo (Google o correo y contraseña) vinculado en la app móvil Rinde Más para sincronizar tus datos.
             </p>
         </div>
 
@@ -161,7 +210,7 @@ import '../styles/global.css';
                 </div>
                 <div id="panel-lens-selector" class="flex p-1 bg-slate-100 rounded-xl gap-1">
                     <button type="button" data-lens="USD" class="panel-lens-btn flex-1 sm:flex-none px-3 py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-slate-900 shadow-sm">USD BCV</button>
-                    <button type="button" data-lens="VES" class="panel-lens-btn flex-1 sm:flex-none px-3 py-1.5 text-xs font-medium rounded-lg transition-all text-slate-600 hover:text-slate-900">Bs. (VES)</button>
+                    <button type="button" data-lens="VES" class="panel-lens-btn flex-1 sm:flex-none px-3 py-1.5 text-xs font-medium rounded-lg transition-all text-slate-600 hover:text-slate-900">VES Bolívares</button>
                     <button type="button" data-lens="USDT" class="panel-lens-btn flex-1 sm:flex-none px-3 py-1.5 text-xs font-medium rounded-lg transition-all text-slate-600 hover:text-slate-900">USDT P2P</button>
                     <button type="button" data-lens="EUR" class="panel-lens-btn flex-1 sm:flex-none px-3 py-1.5 text-xs font-medium rounded-lg transition-all text-slate-600 hover:text-slate-900">EUR BCV</button>
                 </div>
@@ -301,10 +350,10 @@ import '../styles/global.css';
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1">Moneda del presupuesto</label>
                     <select id="modal-budget-currency" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 bg-slate-50 font-medium text-slate-800">
-                        <option value="USD">Dólares (USD $)</option>
-                        <option value="VES">Bolívares (VES Bs.)</option>
-                        <option value="EUR">Euros (EUR €)</option>
-                        <option value="USDT">Tether (USDT)</option>
+                        <option value="USD">USD BCV</option>
+                        <option value="VES">VES Bolívares</option>
+                        <option value="USDT">USDT P2P</option>
+                        <option value="EUR">EUR BCV</option>
                     </select>
                 </div>
 
@@ -448,7 +497,7 @@ import '../styles/global.css';
                                 data-currency="USD"
                                 class="flex-1 py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-slate-900 shadow-sm"
                             >
-                                USD ($)
+                                USD
                             </button>
                             <button 
                                 type="button" 
@@ -456,7 +505,7 @@ import '../styles/global.css';
                                 data-currency="VES"
                                 class="flex-1 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 transition-all"
                             >
-                                VES (Bs.)
+                                VES
                             </button>
                             <button 
                                 type="button" 
@@ -472,7 +521,7 @@ import '../styles/global.css';
                                 data-currency="EUR"
                                 class="flex-1 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 transition-all"
                             >
-                                EUR (€)
+                                EUR
                             </button>
                         </div>
                     </div>
@@ -567,6 +616,9 @@ import '../styles/global.css';
             getAuth, 
             signInWithPopup, 
             GoogleAuthProvider, 
+            signInWithEmailAndPassword,
+            createUserWithEmailAndPassword,
+            sendPasswordResetEmail,
             onAuthStateChanged, 
             signOut 
         } from 'firebase/auth';
@@ -811,6 +863,14 @@ import '../styles/global.css';
         const userAvatar = document.getElementById('user-avatar');
         const userName = document.getElementById('user-name');
 
+        const formAuthEmail = document.getElementById('form-auth-email');
+        const authEmailInput = document.getElementById('auth-email-input');
+        const authPasswordInput = document.getElementById('auth-password-input');
+        const btnAuthEmailSubmit = document.getElementById('btn-auth-email-submit');
+        const btnAuthModeToggle = document.getElementById('btn-auth-mode-toggle');
+        const btnAuthForgot = document.getElementById('btn-auth-forgot');
+        const authEmailMsg = document.getElementById('auth-email-msg');
+
         const currentMonthDisplay = document.getElementById('current-month-display');
         const btnPrevMonth = document.getElementById('btn-prev-month');
         const btnNextMonth = document.getElementById('btn-next-month');
@@ -891,12 +951,121 @@ import '../styles/global.css';
         const getDocId = (year, month) => `${year}_${String(month).padStart(2, '0')}`;
 
         // Autenticación
+        const getAuthErrorMessage = (errCode) => {
+            switch (errCode) {
+                case 'auth/invalid-credential':
+                case 'auth/wrong-password':
+                case 'auth/user-not-found':
+                    return 'Correo o contraseña incorrectos.';
+                case 'auth/invalid-email':
+                    return 'Ingresa un correo electrónico válido.';
+                case 'auth/email-already-in-use':
+                    return 'Este correo ya está registrado. Intenta iniciar sesión.';
+                case 'auth/weak-password':
+                    return 'La contraseña debe tener al menos 6 caracteres.';
+                case 'auth/too-many-requests':
+                    return 'Demasiados intentos fallidos. Intenta más tarde.';
+                case 'auth/user-disabled':
+                    return 'Esta cuenta ha sido inhabilitada.';
+                case 'auth/popup-closed-by-user':
+                    return 'Ventana de inicio de sesión cerrada.';
+                default:
+                    return 'Ocurrió un error al procesar la solicitud. Intenta de nuevo.';
+            }
+        };
+
+        const setAuthMessage = (text, isError = true) => {
+            if (!authEmailMsg) return;
+            if (!text) {
+                authEmailMsg.className = 'hidden text-xs p-2.5 rounded-xl font-medium';
+                authEmailMsg.textContent = '';
+                return;
+            }
+            authEmailMsg.className = isError
+                ? 'block text-xs p-2.5 rounded-xl font-medium bg-rose-50 text-rose-700 border border-rose-200'
+                : 'block text-xs p-2.5 rounded-xl font-medium bg-emerald-50 text-emerald-700 border border-emerald-200';
+            authEmailMsg.textContent = text;
+        };
+
+        let isRegisterMode = false;
+
+        btnAuthModeToggle?.addEventListener('click', () => {
+            isRegisterMode = !isRegisterMode;
+            setAuthMessage('');
+            if (btnAuthEmailSubmit) {
+                const sp = btnAuthEmailSubmit.querySelector('span');
+                if (sp) sp.textContent = isRegisterMode ? 'Crear cuenta' : 'Iniciar sesión';
+            }
+            if (btnAuthModeToggle) {
+                btnAuthModeToggle.innerHTML = isRegisterMode
+                    ? '¿Ya tienes cuenta? <span class="font-bold text-slate-800 underline">Inicia sesión</span>'
+                    : '¿No tienes cuenta? <span class="font-bold text-slate-800 underline">Regístrate</span>';
+            }
+        });
+
+        formAuthEmail?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = authEmailInput?.value.trim() || '';
+            const password = authPasswordInput?.value || '';
+
+            if (!email || !email.includes('@')) {
+                setAuthMessage('Ingresa un correo electrónico válido.', true);
+                return;
+            }
+            if (password.length < 6) {
+                setAuthMessage('La contraseña debe tener al menos 6 caracteres.', true);
+                return;
+            }
+
+            setAuthMessage('');
+            if (btnAuthEmailSubmit) {
+                btnAuthEmailSubmit.disabled = true;
+                const sp = btnAuthEmailSubmit.querySelector('span');
+                if (sp) sp.textContent = isRegisterMode ? 'Creando cuenta...' : 'Verificando...';
+            }
+
+            try {
+                if (isRegisterMode) {
+                    await createUserWithEmailAndPassword(auth, email, password);
+                } else {
+                    await signInWithEmailAndPassword(auth, email, password);
+                }
+            } catch (err) {
+                console.error("Error de autenticación:", err);
+                setAuthMessage(getAuthErrorMessage(err.code), true);
+            } finally {
+                if (btnAuthEmailSubmit) {
+                    btnAuthEmailSubmit.disabled = false;
+                    const sp = btnAuthEmailSubmit.querySelector('span');
+                    if (sp) sp.textContent = isRegisterMode ? 'Crear cuenta' : 'Iniciar sesión';
+                }
+            }
+        });
+
+        btnAuthForgot?.addEventListener('click', async () => {
+            const email = authEmailInput?.value.trim() || '';
+            if (!email || !email.includes('@')) {
+                setAuthMessage('Ingresa tu correo en el campo de arriba para enviarte el enlace de recuperación.', true);
+                authEmailInput?.focus();
+                return;
+            }
+            try {
+                await sendPasswordResetEmail(auth, email);
+                setAuthMessage('Enlace de recuperación enviado. Revisa tu bandeja de entrada o spam.', false);
+            } catch (err) {
+                console.error("Error al restablecer contraseña:", err);
+                setAuthMessage(getAuthErrorMessage(err.code), true);
+            }
+        });
+
         const handleLogin = async () => {
             try {
                 await signInWithPopup(auth, provider);
             } catch (err) {
-                console.error("Error al iniciar sesión:", err);
-                alert("No se pudo iniciar sesión con Google. Revisa la consola o configuración de dominios.");
+                console.error("Error al iniciar sesión con Google:", err);
+                if (err.code !== 'auth/popup-closed-by-user') {
+                    alert("No se pudo iniciar sesión con Google. Revisa la consola o configuración de dominios.");
+                }
             }
         };
 
@@ -927,6 +1096,9 @@ import '../styles/global.css';
                 userProfileMenu.classList.add('hidden');
                 viewDashboard.classList.add('hidden');
                 viewLoggedOut.classList.remove('hidden');
+                if (authEmailInput) authEmailInput.value = '';
+                if (authPasswordInput) authPasswordInput.value = '';
+                setAuthMessage('');
             }
         });
 

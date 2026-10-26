@@ -21,7 +21,7 @@ class CurrencyLensDropdown extends StatelessWidget {
 
   static const List<Map<String, String>> lenses = [
     {'id': 'USD', 'label': 'USD BCV'},
-    {'id': 'VES', 'label': 'Bs.'},
+    {'id': 'VES', 'label': 'VES Bolívares'},
     {'id': 'USDT', 'label': 'USDT P2P'},
     {'id': 'EUR', 'label': 'EUR BCV'},
   ];

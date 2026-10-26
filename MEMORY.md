@@ -3,18 +3,18 @@
 
 ## Estado Actual Inmediato
 - **Rama:** `main`.
-- **Auditoría Argon (Lotes 1, 2, 3 y 4):** Todos los 4 lotes cerrados y marcados como `Completada ✅` tras aprobación explícita de César.
+- **Auditoría Argon (Lotes 1, 2, 3 y 4):** Todos cerrados y aprobados.
 - **Fase 5 (Google Play):** Closed Testing activo con 20 evaluadores (período de 14 días).
-- **Fase 6.2 (Roadmap):** Próximas iniciativas funcionales y de arquitectura listas para priorizar.
+- **UI-06 & Web (Fase 4 y 5):** Nomenclatura unificada limpia `USD BCV`, `VES Bolívares`, `USDT P2P`, `EUR BCV` (y versión corta `USD`, `VES`, `USDT`, `EUR`) aplicada en móvil y web. Login con correo/contraseña implementado en `panel.astro`.
 
 ## Decisiones Técnicas y de Negocio Recientes
-- Lote 3 completado: serialización pura Firestore, reemplazo atómico SQLite v18, política Borrado Gana, bloqueo durable por UID, retención de fotos físicas.
-- Lote 4 completado: virtualización `ListView.builder` en historial, escáner documental ML Kit en `+`, blindaje `RenderFlex` 360dp con `FittedBox` y eliminación de `cloudflare_worker/`.
-- Aprendizajes graduados en `AGENTS.md` y `.agents/rules/flutter-desarrollo.md` vía `/learn`: lectura UTF-8 en PowerShell 5.1 y normas de maquetación 360dp.
+- Nomenclatura canónica de 4 lentes establecida: `USD BCV`, `VES Bolívares`, `USDT P2P` y `EUR BCV` (sin paréntesis decorativos). En vistas compactas: `USD`, `VES`, `USDT`, `EUR`.
+- Web Fase 4: Autenticación por correo/contraseña (`signInWithEmailAndPassword`, `createUserWithEmailAndPassword`, `sendPasswordResetEmail`) integrada en `panel.astro` con mensajes traducidos.
+- Web Fase 5: Edición de compras y desglose dinámico validada en `panel.astro`. Compilación estática Astro exitosa.
 
 ## Errores y Fricciones a Evitar
 - No encadenar comandos con `&&` ni usar redirección `>` en PowerShell.
 - Monitoreo de CI por proceso dormido único (`scripts/wait_ci.ps1`) con `BypassSandbox: true`.
 
 ## Próximo Paso Inmediato
-- Seleccionar y abordar la siguiente tarea de la Fase 6.2 del Roadmap (`UI-06`, `FIN-15`, `BACKUP-01`, `UX-13` o `AI-06`).
+- Commitear cambios a `main`, monitorear CI y validar despliegue en `rindemas.cesarluis.com/panel/`.

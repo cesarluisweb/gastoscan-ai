@@ -744,10 +744,10 @@ class MoreScreenState extends State<MoreScreen> {
                     ),
                     dropdownColor: AppColors.surface,
                     items: const [
-                      DropdownMenuItem(value: 'USD', child: Text('USD BCV (Dólar oficial)')),
-                      DropdownMenuItem(value: 'USDT', child: Text('USDT P2P (Binance / Cripto)')),
-                      DropdownMenuItem(value: 'EUR', child: Text('EUR BCV (Euro oficial)')),
-                      DropdownMenuItem(value: 'VES', child: Text('Bs. (Bolívares)')),
+                      DropdownMenuItem(value: 'USD', child: Text('USD BCV')),
+                      DropdownMenuItem(value: 'VES', child: Text('VES Bolívares')),
+                      DropdownMenuItem(value: 'USDT', child: Text('USDT P2P')),
+                      DropdownMenuItem(value: 'EUR', child: Text('EUR BCV')),
                     ],
                     onChanged: (val) {
                       if (val != null) settings.setMonedaPrincipal(val);
