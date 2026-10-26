@@ -200,10 +200,11 @@ void main() {
           fecha: '2026-10-26',
           comercio: 'Plaza',
           moneda: 'USD',
-          totalOriginal: 10.0,
-          totalUsd: 10.0,
+          totalOriginal: 1000,
+          totalUsd: 1000,
           tasaCambio: 40.0,
           categoria: 'Comida',
+          creadoEn: '2026-10-26T10:00:00.000Z',
           synced: 0,
         ),
       ];
@@ -223,17 +224,18 @@ void main() {
           fecha: '2026-10-26',
           comercio: 'Plaza',
           moneda: 'USD',
-          totalOriginal: 10.0,
-          totalUsd: 10.0,
+          totalOriginal: 1000,
+          totalUsd: 1000,
           tasaCambio: 40.0,
           categoria: 'Comida',
+          creadoEn: '2026-10-26T10:00:00.000Z',
           eliminadoEn: '2026-10-26T10:00:00.000Z',
           firestoreId: null,
           synced: 0,
         ),
       ];
 
-      await syncService.syncToFirestore();
+      await syncService.syncToFirestore(fakeAuth.user!);
 
       // Should purge locally
       expect(fakeRepo.physicallyDeletedIds, contains(1));
@@ -249,17 +251,18 @@ void main() {
           fecha: '2026-10-26',
           comercio: 'Farmatodo',
           moneda: 'USD',
-          totalOriginal: 20.0,
-          totalUsd: 20.0,
+          totalOriginal: 2000,
+          totalUsd: 2000,
           tasaCambio: 40.0,
           categoria: 'Salud',
+          creadoEn: '2026-10-26T10:00:00.000Z',
           eliminadoEn: '2026-10-26T11:00:00.000Z',
           firestoreId: 'doc-remote-2',
           synced: 0,
         ),
       ];
 
-      await syncService.syncToFirestore();
+      await syncService.syncToFirestore(fakeAuth.user!);
 
       expect(fakeRemote.softDeletedUuids, contains('synced-uuid-2'));
       expect(fakeRepo.physicallyDeletedIds, contains(2));
@@ -273,10 +276,11 @@ void main() {
           fecha: '2026-10-26',
           comercio: 'Excelsior Gama',
           moneda: 'USD',
-          totalOriginal: 30.0,
-          totalUsd: 30.0,
+          totalOriginal: 3000,
+          totalUsd: 3000,
           tasaCambio: 40.0,
           categoria: 'Comida',
+          creadoEn: '2026-10-26T10:00:00.000Z',
           firestoreId: null, // Needs healing!
           actualizadoEn: '2026-10-26T10:00:00.000Z',
           synced: 1,
@@ -284,7 +288,7 @@ void main() {
       ];
 
       fakeRemote.remoteGastos = [
-        RemoteGasto(
+        const RemoteGasto(
           id: 'doc-remote-3',
           data: {
             'uuid': 'matching-uuid-3',
@@ -316,10 +320,11 @@ void main() {
           fecha: '2026-10-26',
           comercio: 'Bio Mercados',
           moneda: 'USD',
-          totalOriginal: 15.0,
-          totalUsd: 15.0,
+          totalOriginal: 1500,
+          totalUsd: 1500,
           tasaCambio: 40.0,
           categoria: 'Comida',
+          creadoEn: '2026-10-26T10:00:00.000Z',
           synced: 0,
         ),
       ];
@@ -327,10 +332,10 @@ void main() {
       await syncService.syncBidirectional();
       expect(fakeRemote.upsertedGastos, isEmpty);
 
-      await syncService.syncToFirestore();
+      await syncService.syncToFirestore(fakeAuth.user!);
       expect(fakeRemote.upsertedGastos, isEmpty);
 
-      await syncService.syncPresupuestosToFirestore();
+      await syncService.syncPresupuestosToFirestore(fakeAuth.user!);
       expect(fakeRemote.upsertedPresupuestos, isEmpty);
     });
 
@@ -339,7 +344,7 @@ void main() {
       await prefs.setBool('sync_pending_replace_user-abc', true);
 
       fakeRemote.remoteGastos = [
-        RemoteGasto(
+        const RemoteGasto(
           id: 'remote-doc-5',
           data: {
             'uuid': 'uuid-remote-5',
@@ -356,7 +361,7 @@ void main() {
       ];
 
       fakeRemote.remotePresupuestos = [
-        RemotePresupuesto(
+        const RemotePresupuesto(
           id: '2026_10',
           data: {
             'anio': 2026,
