@@ -1,3 +1,5 @@
+import '../../core/constants/app_constants.dart';
+
 /// Modelo tipado para normalizar documentos de presupuestos provenientes de Firestore.
 class PresupuestoRemotoModel {
   final int anio;
@@ -37,7 +39,8 @@ class PresupuestoRemotoModel {
     if (data['categorias'] is Map) {
       (data['categorias'] as Map).forEach((k, v) {
         if (v is num && v.toDouble() > 0) {
-          cats[k.toString()] = v.toDouble();
+          final catNorm = AppConstants.normalizarCategoria(k.toString());
+          cats[catNorm] = v.toDouble();
         }
       });
     }
