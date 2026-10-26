@@ -215,4 +215,20 @@ Este marco sintetiza la experiencia y aprendizajes reales del caso de estudio de
 * **Landing Page Oficial:** `https://rindemas.cesarluis.com/`
 * **Canal de WhatsApp:** `https://whatsapp.com/channel/0029VbEPwHLDJ6H678QLlN1H`
 
+---
+
+## 9. Registro de Publicaciones en Redes
+
+### Video #1: Expectativa y Escaneo de Factura
+* **Fecha:** 26 de Octubre de 2026.
+* **Plataformas:** Instagram Reels (`@rindemas.app`) y TikTok (`@rindemas.app`).
+* **Estructura del video:**
+  - Apertura con dos clips generados con IA (mujer en el supermercado y revisando factura al salir).
+  - Grabación de pantalla en cámara rápida tomando foto a una factura física y guardando el gasto con IA.
+  - Cierre con logo de Rinde Más y animación sutil.
+  - Locución grabada por la esposa de César, edición de César y música de fondo suave.
+* **Objetivo:** Primer impacto orgánico, presentación visual de la app y llamado a la lista de espera / versión anticipada.
+* **Hipótesis a evaluar:** Medir retención en los primeros 3 segundos (impacto de clips IA vs. gancho con factura real).
+
+
 
