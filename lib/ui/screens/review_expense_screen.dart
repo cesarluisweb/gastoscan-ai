@@ -14,6 +14,7 @@ import '../../data/models/gemini_extraction_result.dart';
 import '../../data/models/item_gasto_model.dart';
 import '../../providers/gasto_provider.dart';
 import '../../providers/settings_provider.dart';
+import '../../providers/chat_provider.dart';
 import '../../services/image_service.dart';
 import '../../services/exchange_rate_service.dart';
 import '../../providers/scan_queue_provider.dart';
@@ -101,6 +102,7 @@ class ReviewExpenseScreen extends StatefulWidget {
 
 class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
   final _formKey = GlobalKey<FormState>();
+  int _tasaRequestId = 0;
 
   late TextEditingController _comercioCtrl;
   late TextEditingController _totalOriginalCtrl;
@@ -203,6 +205,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
   }
 
   Future<void> _cargarTasasChips(String fecha) async {
+    final requestId = ++_tasaRequestId;
     final today = DateTime.now().toIso8601String().substring(0, 10);
     double tUsd;
     double tEur;
@@ -258,7 +261,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       }
     }
 
-    if (mounted && _selectedFecha == fecha) {
+    if (mounted && _selectedFecha == fecha && requestId == _tasaRequestId) {
       setState(() {
         _tasaUsdFecha = tUsd > 0.0 ? tUsd : null;
         _tasaEurFecha = tEur > 0.0 ? tEur : null;
@@ -1278,12 +1281,19 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                         isLinking = false;
                                       });
                                     } else if (error != null) {
+                                      await gastoProvider.checkPendingReplaceBlock();
                                       setDialogState(() {
                                         isLinking = false;
                                         errorMessage = error;
                                       });
                                     } else {
                                       cuentaVinculada = true;
+                                      if (descartarLocales) {
+                                        try {
+                                          Provider.of<ChatProvider>(context, listen: false).clearConversation();
+                                        } catch (_) {}
+                                      }
+                                      await gastoProvider.checkPendingReplaceBlock();
                                       await Provider.of<SettingsProvider>(context, listen: false).loadSettings();
                                       if (!ctx.mounted) return;
                                       Navigator.pop(ctx, 'google');

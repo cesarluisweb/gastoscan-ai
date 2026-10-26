@@ -36,6 +36,32 @@ class GastoProvider with ChangeNotifier {
   bool _presupuestoEsAdoptado = false;
   double _tasaUsd = AppConstants.defaultTasaCambio;
   double _tasaEur = 0.0;
+  bool _hasPendingReplaceBlock = false;
+
+  bool get hasPendingReplaceBlock => _hasPendingReplaceBlock;
+
+  Future<void> checkPendingReplaceBlock() async {
+    final user = _syncService.currentUser;
+    if (user == null || user.isAnonymous) {
+      _hasPendingReplaceBlock = false;
+    } else {
+      final prefs = await SharedPreferences.getInstance();
+      _hasPendingReplaceBlock = prefs.getBool('sync_pending_replace_${user.uid}') == true;
+    }
+    notifyListeners();
+  }
+
+  Future<String?> retryPendingReplace() async {
+    final error = await _syncService.retryPendingReplace();
+    if (error == null) {
+      _hasPendingReplaceBlock = false;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('presupuesto_mensual');
+      await cargarDatos();
+    }
+    notifyListeners();
+    return error;
+  }
 
   void setTasasReferencia({double? tasaUsd, double? tasaEur}) {
     if (tasaUsd != null && tasaUsd > 0) _tasaUsd = tasaUsd;
@@ -115,6 +141,7 @@ class GastoProvider with ChangeNotifier {
         if (cachedEur != null && cachedEur > 1.0) _tasaEur = cachedEur;
       } catch (_) {}
 
+      await checkPendingReplaceBlock();
       _gastos = await _repository.obtenerGastosPorMes(_selectedYear, _selectedMonth);
       
       final totales = await _repository.obtenerTotalesMes(_selectedYear, _selectedMonth);
@@ -255,8 +282,17 @@ class GastoProvider with ChangeNotifier {
   Future<String?> vincularCuentaGoogle({bool descartarDatosLocales = false}) async {
     final error = await _syncService.vincularCuentaGoogle(descartarDatosLocales: descartarDatosLocales);
     if (error == null) {
+      if (descartarDatosLocales) {
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.remove('presupuesto_mensual');
+        } catch (_) {}
+      }
+      await checkPendingReplaceBlock();
       await cargarDatos(); // Recargar tras sincronizar
       notifyListeners();
+    } else {
+      await checkPendingReplaceBlock();
     }
     return error;
   }
@@ -264,17 +300,35 @@ class GastoProvider with ChangeNotifier {
   Future<String?> vincularConEmail(String email, String password, {bool descartarDatosLocales = false}) async {
     final error = await _syncService.vincularConEmail(email, password, descartarDatosLocales: descartarDatosLocales);
     if (error == null) {
+      if (descartarDatosLocales) {
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.remove('presupuesto_mensual');
+        } catch (_) {}
+      }
+      await checkPendingReplaceBlock();
       await cargarDatos();
       notifyListeners();
+    } else {
+      await checkPendingReplaceBlock();
     }
     return error;
   }
 
-  Future<String?> iniciarSesionConEmail(String email, String password, {bool descartarDatosLocales = true}) async {
+  Future<String?> iniciarSesionConEmail(String email, String password, {bool descartarDatosLocales = false}) async {
     final error = await _syncService.iniciarSesionConEmail(email, password, descartarDatosLocales: descartarDatosLocales);
     if (error == null) {
+      if (descartarDatosLocales) {
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.remove('presupuesto_mensual');
+        } catch (_) {}
+      }
+      await checkPendingReplaceBlock();
       await cargarDatos();
       notifyListeners();
+    } else {
+      await checkPendingReplaceBlock();
     }
     return error;
   }
@@ -283,6 +337,11 @@ class GastoProvider with ChangeNotifier {
     _errorMessage = null;
     try {
       await _syncService.cerrarSesion();
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('presupuesto_mensual');
+      } catch (_) {}
+      await checkPendingReplaceBlock();
       _gastos = [];
       _presupuestoGeneral = 0.0;
       _metaAhorro = 0.0;
@@ -295,15 +354,23 @@ class GastoProvider with ChangeNotifier {
     }
   }
 
-  Future<String?> eliminarCuentaYDatos({String? reauthPassword}) async {
+  Future<String?> eliminarCuentaYDatos({String? reauthPassword, bool eliminarFotos = false}) async {
     _errorMessage = null;
     try {
-      final error = await _syncService.eliminarCuentaYDatos(reauthPassword: reauthPassword);
+      final error = await _syncService.eliminarCuentaYDatos(
+        reauthPassword: reauthPassword,
+        eliminarFotos: eliminarFotos,
+      );
       if (error != null) {
         _errorMessage = error;
         notifyListeners();
         return error;
       }
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('presupuesto_mensual');
+      } catch (_) {}
+      await checkPendingReplaceBlock();
       _gastos = [];
       _presupuestoGeneral = 0.0;
       _metaAhorro = 0.0;

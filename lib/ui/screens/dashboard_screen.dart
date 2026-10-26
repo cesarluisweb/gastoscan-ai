@@ -155,6 +155,92 @@ class _DashboardScreenState extends State<DashboardScreen> {
               padding: EdgeInsets.only(bottom: 12),
             ),
             const SizedBox(height: 8),
+            if (gastoProvider.hasPendingReplaceBlock) ...[
+              Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF3C7),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFF59E0B), width: 1.5),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: const [
+                        Icon(Icons.warning_amber_rounded, color: Color(0xFFD97706), size: 22),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Sincronización pendiente interrumpida',
+                            style: TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'La descarga de tus datos de la nube se detuvo. Para evitar pérdida de información, completa la descarga antes de registrar gastos.',
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 13,
+                        height: 1.3,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () async {
+                            await gastoProvider.cerrarSesion();
+                          },
+                          child: const Text(
+                            'Cerrar sesión',
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton.icon(
+                          onPressed: () async {
+                            final err = await gastoProvider.retryPendingReplace();
+                            if (err != null && context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(err),
+                                  backgroundColor: AppColors.error,
+                                ),
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.refresh, size: 16, color: Colors.black),
+                          label: const Text(
+                            'Reintentar',
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
             SummaryCard(
               totalUsd: gastoProvider.totalMesUsd,
               totalVes: gastoProvider.totalMesVes,

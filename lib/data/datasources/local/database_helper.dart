@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../../models/gasto_model.dart';
 import '../../models/item_gasto_model.dart';
+import '../../models/presupuesto_remoto_model.dart';
 import '../../models/shopping_item_model.dart';
 import '../../models/categoria_model.dart';
 import '../../../core/constants/app_constants.dart';
@@ -1665,6 +1667,104 @@ class DatabaseHelper {
       try {
         await txn.update('categorias', {'presupuesto_mensual': 0.0});
       } catch (_) {}
+    });
+  }
+
+  /// Marca un gasto como pendiente de sincronización (synced = 0)
+  Future<void> marcarComoPendiente(int id) async {
+    final db = await instance.database;
+    await db.update(
+      'gastos',
+      {'synced': 0},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  /// Repara el firestore_id de un gasto local sin tocar el flag synced
+  Future<void> repararFirestoreId(int id, String firestoreId) async {
+    final db = await instance.database;
+    await db.update(
+      'gastos',
+      {'firestore_id': firestoreId},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  /// Reemplaza atómicamente todos los datos locales con los descargados de Firestore.
+  /// Ejecuta todas las operaciones bajo una única transacción SQLite.
+  /// Si ocurre cualquier fallo, SQLite realiza un rollback automático completo.
+  Future<void> reemplazarDatosLocales({
+    required List<GastoModel> gastos,
+    required List<PresupuestoRemotoModel> presupuestos,
+  }) async {
+    final db = await instance.database;
+    await db.transaction((txn) async {
+      // 1. Limpieza total de tablas locales
+      await txn.delete('items_gasto');
+      await txn.delete('gastos');
+      try {
+        await txn.delete('gastos_fts');
+      } catch (_) {
+        debugPrint("DatabaseHelper: FTS5 no disponible; se omite limpieza de búsqueda");
+      }
+      await txn.delete('shopping_items');
+      await txn.delete('scan_queue');
+      await txn.delete('presupuestos_mensuales');
+      await txn.delete('presupuestos_categorias_mensuales');
+      try {
+        await txn.update('categorias', {'presupuesto_mensual': 0.0});
+      } catch (_) {
+        debugPrint("DatabaseHelper: No se pudo resetear presupuesto_mensual en categorias");
+      }
+
+      // 2. Inserción de gastos e ítems (omitiendo tombstones)
+      for (final gasto in gastos) {
+        if (gasto.eliminadoEn != null) continue;
+
+        final gMap = gasto.toMap()..remove('id');
+        final gId = await txn.insert('gastos', gMap);
+
+        for (final item in gasto.items) {
+          final iMap = item.toMap()
+            ..['gasto_id'] = gId
+            ..remove('id');
+          await txn.insert('items_gasto', iMap);
+        }
+
+        try {
+          await txn.insert('gastos_fts', {
+            'gasto_id': gId,
+            'comercio': gasto.comercio,
+            'ocr_text': gasto.ocrText ?? '',
+          });
+        } catch (_) {
+          debugPrint("DatabaseHelper: FTS5 no disponible; se omite índice de búsqueda");
+        }
+      }
+
+      // 3. Inserción de presupuestos mensuales y categorías
+      for (final pres in presupuestos) {
+        await txn.insert('presupuestos_mensuales', {
+          'anio': pres.anio,
+          'mes': pres.mes,
+          'presupuesto_general': pres.general,
+          'meta_ahorro': pres.metaAhorro,
+          'moneda': pres.moneda,
+          'actualizado_en': pres.actualizadoEn,
+        });
+
+        for (final entry in pres.categorias.entries) {
+          await txn.insert('presupuestos_categorias_mensuales', {
+            'anio': pres.anio,
+            'mes': pres.mes,
+            'categoria': entry.key,
+            'presupuesto': entry.value,
+            'moneda': pres.moneda,
+          });
+        }
+      }
     });
   }
 

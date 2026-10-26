@@ -9,6 +9,7 @@ import '../../core/constants/app_constants.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/gasto_provider.dart';
+import '../../providers/chat_provider.dart';
 import '../../providers/scan_queue_provider.dart';
 import '../../services/export_service.dart';
 import '../../services/update_service.dart';
@@ -1155,6 +1156,7 @@ class MoreScreenState extends State<MoreScreen> {
                               final error = await gastoProvider
                                   .vincularCuentaGoogle(descartarDatosLocales: descartarLocales);
                               if (!mounted) return;
+                              await gastoProvider.checkPendingReplaceBlock();
                               if (error != null && error != 'CANCELLED') {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
@@ -1163,6 +1165,11 @@ class MoreScreenState extends State<MoreScreen> {
                                   ),
                                 );
                               } else if (error == null) {
+                                if (descartarLocales) {
+                                  try {
+                                    Provider.of<ChatProvider>(context, listen: false).clearConversation();
+                                  } catch (_) {}
+                                }
                                 await Provider.of<SettingsProvider>(context, listen: false).loadSettings();
                                 if (!mounted) return;
                                 ScaffoldMessenger.of(context).showSnackBar(
@@ -1337,13 +1344,19 @@ class MoreScreenState extends State<MoreScreen> {
   }
 
   Future<void> _confirmarCerrarSesion(BuildContext context) async {
+    final user = _currentUser;
+    final esVinculado = user != null && !user.isAnonymous;
+    final copyMensaje = esVinculado
+        ? 'Tus gastos numéricos están respaldados en la nube. Las fotos de facturas quedarán guardadas en este teléfono pero no se sincronizan con la nube ni se volverán a vincular a tus gastos.'
+        : 'Al cerrar sesión sin vincular una cuenta, tus datos se perderán de forma permanente. Las fotos guardadas permanecerán en este teléfono pero no podrás volver a verlas desde la app.';
+
     final confirmar = await showDialog<bool>(
       context: context,
       builder: (dialogCtx) => AlertDialog(
         title: const Text('¿Cerrar sesión?'),
-        content: const Text(
-          'Tus datos quedan guardados y respaldados en tu cuenta en la nube. Este dispositivo se pondrá a cero para que puedas empezar de nuevo o usar otra cuenta.',
-          style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+        content: Text(
+          copyMensaje,
+          style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
         ),
         actions: [
           TextButton(
@@ -1369,6 +1382,9 @@ class MoreScreenState extends State<MoreScreen> {
     final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
 
     await gastoProvider.cerrarSesion();
+    try {
+      Provider.of<ChatProvider>(context, listen: false).clearConversation();
+    } catch (_) {}
     await scanQueue.loadQueue();
     await settingsProvider.loadSettings();
 
@@ -1385,28 +1401,52 @@ class MoreScreenState extends State<MoreScreen> {
   }
 
   Future<void> _confirmarEliminarCuenta(BuildContext context) async {
+    bool eliminarFotos = false;
     final confirmar = await showDialog<bool>(
       context: context,
-      builder: (dialogCtx) => AlertDialog(
-        title: const Text('¿Eliminar cuenta y datos?'),
-        content: const Text(
-          'Esta acción es definitiva e irreversible. Se eliminará permanentemente tu usuario en la nube, tus gastos y tus presupuestos sincronizados. Los registros en este dispositivo también se borrarán.',
-          style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogCtx, false),
-            child: const Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
+      builder: (dialogCtx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('¿Eliminar cuenta y datos?'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Esta acción es definitiva e irreversible. Se eliminará permanentemente tu usuario en la nube, tus gastos y tus presupuestos sincronizados. Los registros en este dispositivo también se borrarán.',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                value: eliminarFotos,
+                activeColor: AppColors.error,
+                title: const Text(
+                  'Eliminar también los archivos de fotos de comprobantes de este teléfono',
+                  style: TextStyle(color: AppColors.textPrimary, fontSize: 13),
+                ),
+                onChanged: (val) {
+                  setDialogState(() {
+                    eliminarFotos = val ?? false;
+                  });
+                },
+              ),
+            ],
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              foregroundColor: Colors.white,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogCtx, false),
+              child: const Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
             ),
-            onPressed: () => Navigator.pop(dialogCtx, true),
-            child: const Text('Eliminar definitivamente'),
-          ),
-        ],
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.error,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () => Navigator.pop(dialogCtx, true),
+              child: const Text('Eliminar definitivamente'),
+            ),
+          ],
+        ),
       ),
     );
 
@@ -1416,7 +1456,7 @@ class MoreScreenState extends State<MoreScreen> {
     final scanQueue = Provider.of<ScanQueueProvider>(context, listen: false);
     final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
 
-    String? error = await gastoProvider.eliminarCuentaYDatos();
+    String? error = await gastoProvider.eliminarCuentaYDatos(eliminarFotos: eliminarFotos);
 
     if (!mounted) return;
 
@@ -1463,7 +1503,10 @@ class MoreScreenState extends State<MoreScreen> {
       );
 
       if (reauthConfirm == true && passwordCtrl.text.isNotEmpty && mounted) {
-        error = await gastoProvider.eliminarCuentaYDatos(reauthPassword: passwordCtrl.text.trim());
+        error = await gastoProvider.eliminarCuentaYDatos(
+          reauthPassword: passwordCtrl.text.trim(),
+          eliminarFotos: eliminarFotos,
+        );
       } else {
         return;
       }
@@ -1479,6 +1522,9 @@ class MoreScreenState extends State<MoreScreen> {
         ),
       );
     } else {
+      try {
+        Provider.of<ChatProvider>(context, listen: false).clearConversation();
+      } catch (_) {}
       await scanQueue.loadQueue();
       await settingsProvider.loadSettings();
       if (mounted) {

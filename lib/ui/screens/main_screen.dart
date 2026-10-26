@@ -254,6 +254,17 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   void _showAddMenu(BuildContext context) => MainScreen.showAddMenu(context);
 
   static void mostrarMenuAgregar(BuildContext context) {
+    final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
+    if (gastoProvider.hasPendingReplaceBlock) {
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Descarga pendiente en curso. Completa la sincronización antes de registrar gastos.'),
+          backgroundColor: AppColors.warning,
+        ),
+      );
+      return;
+    }
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,

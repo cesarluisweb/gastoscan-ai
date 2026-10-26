@@ -32,6 +32,9 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 - `SEC-12`: Versionado formal del Cloudflare Worker en la carpeta `workers/` del repositorio.
 - `OCR-01`: Deduplicación SHA-256 nativa en cola de escaneo para evitar duplicar comprobantes.
 - `AI-01`: 5 chips analíticos diferenciados sin acciones destructivas, inyección de `tasa_usdt` en contexto y saludo guiado.
+- `LOTE-03` **Integridad de Sincronización Cloud/Offline, Privacidad Local y Resiliencia SQLite (Auditoría Argon):** `Pendiente de validación 🧪`
+  - *Problema:* Pérdida de ítems de compra en Firestore por falta de mapper, reemplazo no atómico y desalineación de esquema SQLite v18 (`presupuestos_categorias_mensuales`, `gastos_fts`), resurrección de gastos borrados en web, fuga de datos al vincular con error de descarga, y condiciones de carrera en tasas históricas.
+  - *Solución:* Serialización pura con `GastoFirestoreMapper`, reemplazo atómico en una sola `db.transaction` con `PresupuestoRemotoModel`, política "Borrado Gana" en `sync_conflict_resolver.dart`, bloqueo durable en `SharedPreferences` (`sync_pending_replace_<uid>`) con guard completo en `SyncService`, método `retryPendingReplace()` con cerrojo de concurrencia y banner ámbar en Dashboard, bloqueo en botón `+` de MainScreen, desbloqueo automático en fusiones (`descartarDatosLocales == false`), token monótono `_tasaRequestId` en `ReviewExpenseScreen`, pre-check offline con `ConnectivityService.instance.isConnected()` y diálogo con switch opcional para eliminación física de fotos en `MoreScreen`. Detallado en `docs/DOC_SINCRONIZACION_OFFLINE.md`.
 
 ---
 
@@ -285,7 +288,7 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
   - Experiencia Cero Publicidad (Zero Ads).
   - Categorías personalizadas ilimitadas (icono y color propio).
   - Exportación contable avanzada (PDF mensual con balance y diseño limpio; Excel/CSV con desglose completo ítem por ítem).
-  - Sincronización de comprobantes en la nube (Cloud Storage).
+  - Sincronización y respaldo de fotos de comprobantes en la nube (Cloudflare R2 / Storage / Plan Pro: en la versión gratuita las fotos se mantienen 100% locales en el dispositivo por privacidad y contención de costos).
   - Consultas analíticas profundas al Asistente IA con comparativa de meses previos.
   - Modo Contable y Desglose Tributario Formal: Selector en Más para alternar entre Modo Anaquel (con IVA) y Modo Fiscal (base imponible desglosada), con exportación de libro fiscal de compras en Excel/PDF.
 - **Optimización del Embudo de Conversión (Funnel):** Medición de fugas con Firebase Analytics (Impresión → Descarga → Onboarding → Activación → Retención → Pago) y Paywalls contextuales.

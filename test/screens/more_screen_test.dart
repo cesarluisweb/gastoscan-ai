@@ -8,6 +8,7 @@ import 'package:gastoscan_ai/data/datasources/local/database_helper.dart';
 import 'package:gastoscan_ai/providers/gasto_provider.dart';
 import 'package:gastoscan_ai/providers/scan_queue_provider.dart';
 import 'package:gastoscan_ai/providers/settings_provider.dart';
+import 'package:gastoscan_ai/providers/chat_provider.dart';
 import 'package:gastoscan_ai/ui/screens/more_screen.dart';
 
 class FakeTestUser extends Fake implements User {
@@ -80,8 +81,13 @@ class FakeGastoProvider extends GastoProvider {
 
   String? errorEliminarCuenta;
 
+  bool lastEliminarFotosPassed = false;
+
   @override
-  Future<String?> eliminarCuentaYDatos({String? reauthPassword}) async => errorEliminarCuenta;
+  Future<String?> eliminarCuentaYDatos({String? reauthPassword, bool eliminarFotos = false}) async {
+    lastEliminarFotosPassed = eliminarFotos;
+    return errorEliminarCuenta;
+  }
 }
 
 class FakeSettingsProvider extends SettingsProvider {
@@ -121,6 +127,7 @@ void main() {
           ChangeNotifierProvider<GastoProvider>.value(value: gastoProvider),
           ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
           ChangeNotifierProvider<ScanQueueProvider>.value(value: scanQueueProvider),
+          ChangeNotifierProvider<ChatProvider>(create: (_) => ChatProvider()),
         ],
         child: MaterialApp(
           home: MoreScreen(customUser: customUser),

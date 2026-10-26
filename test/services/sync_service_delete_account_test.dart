@@ -127,6 +127,7 @@ class FakeGoogleSignIn extends Fake implements GoogleSignIn {
 
 class FakeGastoRepository extends Fake implements GastoRepository {
   bool limpiarDatosLocalesCalled = false;
+  bool obtenerRutasCalled = false;
   List<String> fakeRutasArchivos = [];
 
   @override
@@ -136,6 +137,7 @@ class FakeGastoRepository extends Fake implements GastoRepository {
 
   @override
   Future<List<String>> obtenerRutasArchivosApp() async {
+    obtenerRutasCalled = true;
     return fakeRutasArchivos;
   }
 }
@@ -335,6 +337,36 @@ void main() {
         if (externalUserFile.existsSync()) externalUserFile.deleteSync();
         if (tempDir.existsSync()) tempDir.deleteSync(recursive: true);
       }
+    });
+
+    test('eliminarCuentaYDatos respects eliminarFotos flag', () async {
+      final fakeUser = FakeUser(uid: 'user-photos-flag', isAnonymous: false);
+      final fakeAuth = FakeFirebaseAuth(currentUser: fakeUser);
+      final repo = FakeGastoRepository();
+
+      final syncService = SyncService(
+        repository: repo,
+        auth: fakeAuth,
+        googleSignIn: fakeGoogle,
+        secureStorage: fakeStorage,
+        firestorePurger: (uid) async {},
+      );
+
+      // 1. When false, does NOT query or delete files
+      await syncService.eliminarCuentaYDatos(eliminarFotos: false);
+      expect(repo.obtenerRutasCalled, isFalse);
+
+      // 2. When true, queries routes and purges
+      final repo2 = FakeGastoRepository();
+      final syncService2 = SyncService(
+        repository: repo2,
+        auth: fakeAuth,
+        googleSignIn: fakeGoogle,
+        secureStorage: fakeStorage,
+        firestorePurger: (uid) async {},
+      );
+      await syncService2.eliminarCuentaYDatos(eliminarFotos: true);
+      expect(repo2.obtenerRutasCalled, isTrue);
     });
   });
 }

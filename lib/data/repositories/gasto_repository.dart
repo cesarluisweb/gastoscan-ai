@@ -1,6 +1,7 @@
 import '../datasources/local/database_helper.dart';
 import '../models/gasto_model.dart';
 import '../models/item_gasto_model.dart';
+import '../models/presupuesto_remoto_model.dart';
 import '../models/categoria_model.dart';
 
 class GastoRepository {
@@ -150,6 +151,24 @@ class GastoRepository {
   /// Limpia todos los registros financieros locales de SQLite
   Future<void> limpiarDatosLocales() {
     return _dbHelper.limpiarBaseDatosLocal();
+  }
+
+  Future<void> marcarComoPendiente(int id) {
+    return _dbHelper.marcarComoPendiente(id);
+  }
+
+  Future<void> repararFirestoreId(int id, String firestoreId) {
+    return _dbHelper.repararFirestoreId(id, firestoreId);
+  }
+
+  Future<void> reemplazarDatosLocales({
+    required List<GastoModel> gastos,
+    required List<PresupuestoRemotoModel> presupuestos,
+  }) {
+    return _dbHelper.reemplazarDatosLocales(
+      gastos: gastos,
+      presupuestos: presupuestos,
+    );
   }
 
   /// Obtiene todas las rutas de archivos de recibos y temporales registradas localmente

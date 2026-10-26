@@ -280,7 +280,7 @@
 
 ---
 
-### 🟠 [F2-I03] Persistencia de Fotos de Facturas y Base de Datos SQLite sin Cifrado en Reposo y Limpieza Incompleta al Cerrar Sesión
+### ✅ [F2-I03] [RESUELTO EN LOTE 3] Persistencia de Fotos de Facturas y Base de Datos SQLite sin Cifrado en Reposo y Limpieza Incompleta al Cerrar Sesión
 - **Evidencia en Código:**
   - [`lib/data/datasources/local/database_helper.dart:L1523-L1538`](file:///c:/Development/Control%20de%20gastos%20VE/lib/data/datasources/local/database_helper.dart#L1523-L1538) (`clearAllUserData`).
   - [`lib/services/sync_service.dart:L282-L343`](file:///c:/Development/Control%20de%20gastos%20VE/lib/services/sync_service.dart#L282-L343) (`clearLocalDataOnSignOut`).
@@ -392,7 +392,7 @@ En pantallas estándar de gama de entrada/media en Venezuela (`360dp` de ancho l
 
 ### 4.1. Resiliencia ante Fallos de Red, Condiciones de Carrera y Sincronización (`SyncService`)
 
-#### 🔴 [F4-C01] Borrado prematuro de SQLite antes de confirmar la descarga de Firestore en `SyncService.pullGastosFromCloud(reemplazarLocales: true)`
+#### ✅ [F4-C01] [RESUELTO EN LOTE 3] Borrado prematuro de SQLite antes de confirmar la descarga de Firestore en `SyncService.pullGastosFromCloud(reemplazarLocales: true)`
 - **Severidad:** 🔴 Crítico (Pérdida total de datos locales si la red móvil venezolana cae o da timeout durante la descarga).
 - **Evidencia en código:**
   - En [`lib/services/sync_service.dart:L538-L545`](file:///c:/Development/Control%20de%20gastos%20VE/lib/services/sync_service.dart#L538-L545):
@@ -411,7 +411,7 @@ En pantallas estándar de gama de entrada/media en Venezuela (`360dp` de ancho l
   - Si la conexión falla, sufre un corte de datos móviles o lanza una excepción en `L545`, el bloque `catch (e)` en `L616` captura el error y retorna `0`, dejando al usuario con su base de datos SQLite completamente vaciada y sin los datos de la nube.
 - **Acción recomendada:** Invertir el orden: descargar primero `gastos` y `presupuestos` desde Firestore en memoria, y solo cuando ambas lecturas de red hayan finalizado con éxito, ejecutar `_dbHelper.clearAllUserData()` y la inserción local dentro de una única transacción SQLite (`db.transaction(...)`).
 
-#### 🔴 [F4-C02] Sobrescritura Silenciosa de Ediciones Web y Resurrección de Gastos Borrados ("Stale Push Overwrite")
+#### ✅ [F4-C02] [RESUELTO EN LOTE 3] Sobrescritura Silenciosa de Ediciones Web y Resurrección de Gastos Borrados ("Stale Push Overwrite")
 - **Severidad:** 🔴 Crítico (Corrupción de sincronización entre el Panel Web `panel.astro` y la App Móvil).
 - **Evidencia en código:**
   1. **Ausencia de `updated_at` y de flag `dirty`/`is_synced` en SQLite:**
@@ -423,13 +423,13 @@ En pantallas estándar de gama de entrada/media en Venezuela (`360dp` de ancho l
   4. **Consecuencia 2 (Resurrección de gastos eliminados en Web):** Si el usuario elimina un gasto desde el panel web (`panel.astro:L1614-L1638`), el documento desaparece de Firestore pero sigue existiendo en el SQLite del teléfono. Al abrir la app móvil, `pushAllLocalDataToCloud()` vuelve a subir el gasto eliminado a Firestore; y como `pullGastosFromCloud()` (`lib/services/sync_service.dart:L533-L619`) solo inserta/actualiza documentos presentes en el snapshot sin conciliar eliminaciones, los gastos borrados en la web "resucitan" permanentemente.
 - **Acción recomendada:** Añadir `actualizado_en` (`ISO-8601`) y `pendiente_sync` (`0/1`) en SQLite; hacer que `pushAllLocalDataToCloud` solo envíe registros con `pendiente_sync == 1` (comparando `actualizado_en`), o ejecutar primero el `pull` comparando marcas de tiempo y propagar bajas mediante *tombstones* o conciliación de UUIDs sincronizados.
 
-#### 🟠 [F4-I01] Ruptura del límite de 500 operaciones por `WriteBatch` de Firestore en `SyncService.eliminarCuentaYDatos`
+#### ✅ [F4-I01] [RESUELTO EN LOTE 3] Ruptura del límite de 500 operaciones por `WriteBatch` de Firestore en `SyncService.eliminarCuentaYDatos`
 - **Severidad:** 🟠 Importante (Impide eliminar la cuenta a usuarios con historial medio/alto, incumpliendo políticas de Google Play Data Safety).
 - **Evidencia en código:**
   - En [`lib/services/sync_service.dart:L361-L379`](file:///c:/Development/Control%20de%20gastos%20VE/lib/services/sync_service.dart#L361-L379), `eliminarCuentaYDatos` instancia un único `final batch = _firestore.batch();` (`L361`) y vuelca en él todos los documentos de `gastos` (`L365-L367`), todos los de `presupuestos` (`L371-L373`) y el documento `users/{uid}` (`L378`), llamando a `await batch.commit()` en `L379`.
   - Cloud Firestore impone un límite estricto de **500 operaciones por `WriteBatch`**. A diferencia de `pushAllLocalDataToCloud` (que en `L498` fragmenta en lotes de `batchSize = 400`), `eliminarCuentaYDatos` no fragmenta el lote: cualquier usuario con más de ~485 gastos recibirá un `FirebaseException (INVALID_ARGUMENT: maximum 500 writes allowed per batch)` y el borrado de su cuenta fallará.
 
-#### 🟠 [F4-I02] Cascada de Timeouts en `ExchangeRateService` y condición de carrera al cambiar fechas en `ReviewExpenseScreen`
+#### ✅ [F4-I02] [RESUELTO EN LOTE 3] Cascada de Timeouts en `ExchangeRateService` y condición de carrera al cambiar fechas en `ReviewExpenseScreen`
 - **Severidad:** 🟠 Importante (Bloqueos de hasta 26 segundos en redes lentas y sobrescritura de tasa histórica en UI).
 - **Evidencia en código:**
   - En `lib/services/exchange_rate_service.dart:L131-L263`, cuando el endpoint primario del Worker (`/tasas`, timeout `6s` en `L138`) no responde o no trae las tres tasas, `fetchVesUsdRate`, `fetchVesEurRate` y `fetchVesUsdtRate` iteran secuencialmente hasta 4 URLs de respaldo con timeouts de `6s + 6s + 6s + 8s = 26 segundos` (`L174, L197, L215, L242`).
@@ -439,7 +439,7 @@ En pantallas estándar de gama de entrada/media en Venezuela (`360dp` de ancho l
 
 ### 4.2. Escalabilidad y Rendimiento (SQLite, Memoria y `build()`)
 
-#### 🟠 [F4-I03] Problema de Consultas `N+1` en SQLite (`getAllGastos`, `getGastosRecientes`, `getGastosByMonth`)
+#### ✅ [F4-I03] [RESUELTO EN LOTE 3] Problema de Consultas `N+1` en SQLite (`getAllGastos`, `getGastosRecientes`, `getGastosByMonth`)
 - **Severidad:** 🟠 Importante (Degradación progresiva al acumular cientos o miles de gastos).
 - **Evidencia en código:**
   - En [`lib/data/datasources/local/database_helper.dart`](file:///c:/Development/Control%20de%20gastos%20VE/lib/data/datasources/local/database_helper.dart):
@@ -456,7 +456,7 @@ En pantallas estándar de gama de entrada/media en Venezuela (`360dp` de ancho l
   2. **`ListView(children: [...])` sin `ListView.builder` (`lib/ui/screens/expense_history_screen.dart:L298-L415`):**
      - Usa el constructor `ListView(children: [ for (final entry in groupedGastos.entries) ... ])` en lugar de `ListView.builder`. Esto fuerza a Flutter a instanciar y medir en memoria **todas las tarjetas `ExpenseCard` del mes (o de todo el historial histórico durante una búsqueda global)** de una sola vez, en lugar de reciclarlas bajo demanda conforme el usuario hace scroll.
 
-#### 🟢 [F4-O01] Índices faltantes en SQLite para `scan_queue` y `tasas_historicas`
+#### ✅ [F4-O01] [RESUELTO EN LOTE 3] Índices faltantes en SQLite para `scan_queue` y `tasas_historicas`
 - **Severidad:** 🟢 Oportunidad de mejora (Optimización de consultas frecuentes).
 - **Evidencia en código:**
   - En `lib/data/datasources/local/database_helper.dart:L395-L398`, se crean índices para `gastos(fecha)`, `gastos(uuid)` e `items_gasto(gasto_id)`, pero faltan índices para:
@@ -467,7 +467,7 @@ En pantallas estándar de gama de entrada/media en Venezuela (`360dp` de ancho l
 
 ### 4.3. Bloques `catch (_) {}` Silenciosos y Deuda Técnica
 
-#### 🟠 [F4-I05] Más de 25 bloques `catch (_) {}` silenciosos en capas críticas de Almacenamiento Seguro, Sincronización y Cola IA
+#### ✅ [F4-I05] [RESUELTO EN LOTE 3] Más de 25 bloques `catch (_) {}` silenciosos en capas críticas de Almacenamiento Seguro, Sincronización y Cola IA
 - **Severidad:** 🟠 Importante (Violación directa de `AGENTS.md:L47`: *"Nunca silenciar excepciones en bloques `catch (_) {}` sin registrar el error en capas críticas"*).
 - **Evidencia exacta en código:**
   - **`SettingsProvider` (`lib/providers/settings_provider.dart`):** `L70, L97, L111, L121, L199, L234, L242, L256` — silencia fallos de lectura/escritura en `FlutterSecureStorage` y fallos de `SyncService.pushUserSettings` sin siquiera un `debugPrint`.
@@ -492,7 +492,7 @@ Para ejecutar todas las correcciones sin romper la suite de pruebas en GitHub Ac
 | :--- | :--- | :--- | :--- |
 | **Lote 1** | Blindaje de Seguridad, Secretos, Reglas Firestore y XSS Web | `[F2-C01]`, `[F2-C02]`, `[F2-C03]` ✅, `[F2-C04]` ✅, `[F2-C05]` ✅ (Worker), `[F2-I01]` ✅, `[F2-I02]` ✅, `[F2-O01]` | 🔴 Crítico (Seguridad / Privacidad — En validación 🧪) |
 | **Lote 2** | Exactitud Matemática Multimoneda y Paridad Móvil / Web | `[F1-C01]` ✅, `[F1-C02]` ✅, `[F1-C03]` ✅, `[F1-C04]` ✅, `[F1-I01]` ✅, `[F1-I02]` ✅, `[F1-I03]` ✅, `[F1-I04]` ✅, `[F1-I05]` ✅, `[F1-I06]` ✅, `[F3-I03]` ✅ | 🔴 Crítico (Completado en código / En validación 🧪) |
-| **Lote 3** | Integridad de Sincronización Cloud/Offline, Privacidad Local y SQLite | `[F4-C01]`, `[F4-C02]`, `[F4-I01]`, `[F4-I02]`, `[F4-I03]`, `[F4-I05]`, `[F4-O01]`, `[F2-I03]` | 🔴 Crítico (Sincronización / Datos) |
+| **Lote 3** | Integridad de Sincronización Cloud/Offline, Privacidad Local y SQLite | `[F4-C01]` ✅, `[F4-C02]` ✅, `[F4-I01]` ✅, `[F4-I02]` ✅, `[F4-I03]` ✅, `[F4-I05]` ✅, `[F4-O01]` ✅, `[F2-I03]` ✅ | 🔴 Crítico (Completado en código / En validación 🧪) |
 | **Lote 4** | Resiliencia UI en Bolívares (`RenderFlex`), Coherencia `DESIGN.md` y UX | `[F3-C01]`, `[F3-I01]`, `[F3-I02]`, `[F3-I03]`, `[F3-I04]`, `[F3-I05]`, `[F3-I06]`, `[F4-I04]`, `[F4-O02]` | 🟠 Importante (UI/UX / Rendimiento) |
 
 ---

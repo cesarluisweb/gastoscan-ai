@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../providers/gasto_provider.dart';
 import '../../providers/settings_provider.dart';
+import '../../providers/chat_provider.dart';
 
 /// Diálogo reutilizable para preguntar al usuario si desea conservar/sumar
 /// los gastos locales no respaldados o reemplazarlos con el respaldo existente en la nube.
@@ -111,12 +112,18 @@ class _AuthEmailDialogState extends State<AuthEmailDialog> {
 
       if (!mounted) return;
 
+      await gastoProvider.checkPendingReplaceBlock();
       if (error != null) {
         setState(() {
           _isLoading = false;
           _localError = error;
         });
       } else {
+        if (descartarLocales) {
+          try {
+            Provider.of<ChatProvider>(context, listen: false).clearConversation();
+          } catch (_) {}
+        }
         Navigator.pop(context);
         await settingsProvider.loadSettings();
         messenger.showSnackBar(
