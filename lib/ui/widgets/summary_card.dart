@@ -478,39 +478,43 @@ class SummaryCard extends StatelessWidget {
                     statusTextColor = const Color(0xFF16A34A);
                   }
 
-                  return Row(
-                    children: [
-                      Icon(
-                        Icons.savings_outlined,
-                        size: 16,
-                        color: dotColor,
-                      ),
-                      const SizedBox(width: 6),
-                      const Text(
-                        'Meta de ahorro: ',
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
+                  return FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.savings_outlined,
+                          size: 16,
+                          color: dotColor,
                         ),
-                      ),
-                      Text(
-                        metaFormatted,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
+                        const SizedBox(width: 6),
+                        const Text(
+                          'Meta de ahorro: ',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                      ),
-                      Text(
-                        ' · $statusText',
-                        style: TextStyle(
-                          color: statusTextColor,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
+                        Text(
+                          metaFormatted,
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                    ],
+                        Text(
+                          ' · $statusText',
+                          style: TextStyle(
+                            color: statusTextColor,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
                   );
                 },
               ),

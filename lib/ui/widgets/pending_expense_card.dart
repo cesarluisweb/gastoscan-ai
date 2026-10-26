@@ -67,125 +67,124 @@ class PendingExpenseCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.pending_actions,
-                          size: 14,
-                          color: AppColors.warning,
-                        ),
-                        const SizedBox(width: 4),
-                        const Flexible(
-                          child: Text(
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.pending_actions,
+                            size: 14,
+                            color: AppColors.warning,
+                          ),
+                          const SizedBox(width: 4),
+                          const Text(
                             'Pendiente de revisar',
                             style: TextStyle(
                               color: AppColors.warning,
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        Flexible(
-                          child: Text(
+                          const SizedBox(width: 8),
+                          Text(
                             DateFormatter.formatDate(gasto.fecha),
                             style: const TextStyle(
                               color: AppColors.textMuted,
                               fontSize: 12,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Builder(
-                    builder: (context) {
-                      final tasa = gasto.tasaCambio > 0 ? gasto.tasaCambio : (tasaCambio > 0 ? tasaCambio : 1.0);
-                      final double ves = gasto.moneda == 'VES'
-                          ? gasto.totalOriginalDisplay
-                          : (gasto.totalUsdDisplay > 0
-                              ? gasto.totalUsdDisplay * tasa
-                              : gasto.totalOriginalDisplay * tasa);
-                      final double usd = gasto.moneda == 'USD'
-                          ? gasto.totalOriginalDisplay
-                          : (gasto.totalUsdDisplay > 0
-                              ? gasto.totalUsdDisplay
-                              : (tasa > 0 ? gasto.totalOriginalDisplay / tasa : 0.0));
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 125),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Builder(
+                      builder: (context) {
+                        final tasa = gasto.tasaCambio > 0 ? gasto.tasaCambio : (tasaCambio > 0 ? tasaCambio : 1.0);
+                        final double ves = gasto.moneda == 'VES'
+                            ? gasto.totalOriginalDisplay
+                            : (gasto.totalUsdDisplay > 0
+                                ? gasto.totalUsdDisplay * tasa
+                                : gasto.totalOriginalDisplay * tasa);
+                        final double usd = gasto.moneda == 'USD'
+                            ? gasto.totalOriginalDisplay
+                            : (gasto.totalUsdDisplay > 0
+                                ? gasto.totalUsdDisplay
+                                : (tasa > 0 ? gasto.totalOriginalDisplay / tasa : 0.0));
 
-                      final double amount;
-                      switch (monedaPrincipal.toUpperCase()) {
-                        case 'VES':
-                          amount = ves;
-                          break;
-                        case 'EUR':
-                          amount = CurrencyFormatter.convertFromUsd(
-                            usd,
-                            'EUR',
-                            tasa,
-                            tasaEur: tasaEur,
-                            tasaUsdt: tasaUsdt,
-                          );
-                          break;
-                        case 'USDT':
-                          amount = CurrencyFormatter.convertFromUsd(
-                            usd,
-                            'USDT',
-                            tasa,
-                            tasaEur: tasaEur,
-                            tasaUsdt: tasaUsdt,
-                          );
-                          break;
-                        case 'USD':
-                        default:
-                          amount = usd;
-                          break;
-                      }
+                        final double amount;
+                        switch (monedaPrincipal.toUpperCase()) {
+                          case 'VES':
+                            amount = ves;
+                            break;
+                          case 'EUR':
+                            amount = CurrencyFormatter.convertFromUsd(
+                              usd,
+                              'EUR',
+                              tasa,
+                              tasaEur: tasaEur,
+                              tasaUsdt: tasaUsdt,
+                            );
+                            break;
+                          case 'USDT':
+                            amount = CurrencyFormatter.convertFromUsd(
+                              usd,
+                              'USDT',
+                              tasa,
+                              tasaEur: tasaEur,
+                              tasaUsdt: tasaUsdt,
+                            );
+                            break;
+                          case 'USD':
+                          default:
+                            amount = usd;
+                            break;
+                        }
 
-                      if (amount <= 0) {
-                        return Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppColors.warning.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: AppColors.warning.withValues(alpha: 0.4)),
-                          ),
-                          child: const Text(
-                            'Por revisar',
-                            style: TextStyle(
-                              color: AppColors.warning,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
+                        if (amount <= 0) {
+                          return Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.warning.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: AppColors.warning.withValues(alpha: 0.4)),
                             ),
+                            child: const Text(
+                              'Por revisar',
+                              style: TextStyle(
+                                color: AppColors.warning,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          );
+                        }
+
+                        return FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            CurrencyFormatter.formatAmount(amount, monedaPrincipal),
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                            maxLines: 1,
                           ),
                         );
-                      }
-
-                      return FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerRight,
-                        child: Text(
-                          CurrencyFormatter.formatAmount(amount, monedaPrincipal),
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                          maxLines: 1,
-                        ),
-                      );
-                    },
-                  ),
-                ],
+                      },
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(width: 8),
               const Icon(Icons.chevron_right, color: AppColors.primaryDark),

@@ -119,16 +119,16 @@ class _ExpenseCardState extends State<ExpenseCard> {
       final fechaStr = DateFormatter.formatDate(widget.gasto.fecha);
       if (widget.gasto.items.isNotEmpty) {
         final count = widget.gasto.items.length;
-        final artStr = count == 1 ? '1 artículo' : '$count artículos';
-        subtitleText = '$fechaStr • $artStr';
+        final artStr = count == 1 ? '1 artÃ­culo' : '$count artÃ­culos';
+        subtitleText = '$fechaStr â€¢ $artStr';
       } else {
         subtitleText = fechaStr;
       }
     } else {
       if (widget.gasto.items.length > 1) {
-        subtitleText = '${widget.gasto.items.length} artículos • Tasa $tasaStr';
+        subtitleText = '${widget.gasto.items.length} artÃ­culos â€¢ Tasa $tasaStr';
       } else if (widget.gasto.items.length == 1) {
-        subtitleText = '1 artículo • Tasa $tasaStr';
+        subtitleText = '1 artÃ­culo â€¢ Tasa $tasaStr';
       } else {
         subtitleText = 'Tasa $tasaStr';
       }
@@ -219,26 +219,39 @@ class _ExpenseCardState extends State<ExpenseCard> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        primaryFormatted,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 130),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            primaryFormatted,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                            maxLines: 1,
+                          ),
                         ),
-                      ),
-                      Text(
-                        secondaryFormatted,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            secondaryFormatted,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                            maxLines: 1,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   const SizedBox(width: 4),
                   PopupMenuButton<String>(
@@ -407,12 +420,18 @@ class _ExpenseCardState extends State<ExpenseCard> {
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              Text(
-                                itemText,
-                                style: const TextStyle(
-                                  color: AppColors.textPrimary,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold,
+                              Flexible(
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerRight,
+                                  child: Text(
+                                    itemText,
+                                    style: const TextStyle(
+                                      color: AppColors.textPrimary,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ],
@@ -441,7 +460,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
                                   Text(
                                     _showAllItems
                                         ? 'Ver menos'
-                                        : 'Ver ${widget.gasto.items.length - 4} artículos más',
+                                        : 'Ver ${widget.gasto.items.length - 4} artÃ­culos mÃ¡s',
                                     style: const TextStyle(
                                       color: AppColors.textPrimary,
                                       fontSize: 12,

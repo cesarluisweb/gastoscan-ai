@@ -144,15 +144,20 @@ class _CategoryChartState extends State<CategoryChart> {
       return Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            widget.showBudgetBars ? 'Distribución por Categorías' : 'Distribución de Gastos',
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
+          Expanded(
+            child: Text(
+              widget.showBudgetBars ? 'Distribución por Categorías' : 'Distribución de Gastos',
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-          if (!widget.showBudgetBars && widget.onNavigateToAnalysis != null)
+          if (!widget.showBudgetBars && widget.onNavigateToAnalysis != null) ...[
+            const SizedBox(width: 8),
             InkWell(
               key: const Key('btn_ver_analisis_completo'),
               onTap: widget.onNavigateToAnalysis,
@@ -181,6 +186,7 @@ class _CategoryChartState extends State<CategoryChart> {
                 ),
               ),
             ),
+          ],
         ],
       );
     }
@@ -358,12 +364,16 @@ class _CategoryChartState extends State<CategoryChart> {
                         color: AppColors.textSecondary,
                       ),
                       SizedBox(width: 8),
-                      Text(
-                        'Control de Presupuestos por Categoría',
-                        style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
+                      Expanded(
+                        child: Text(
+                          'Control de Presupuestos por Categoría',
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -413,12 +423,16 @@ class _CategoryChartState extends State<CategoryChart> {
                   color: AppColors.textSecondary,
                 ),
                 SizedBox(width: 6),
-                Text(
-                  'Control de Presupuestos por Categoría',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+                Expanded(
+                  child: Text(
+                    'Control de Presupuestos por Categoría',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],

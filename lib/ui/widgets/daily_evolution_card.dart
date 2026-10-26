@@ -223,13 +223,17 @@ class DailyEvolutionCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: AppColors.border.withValues(alpha: 0.8)),
                 ),
-                child: Text(
-                  _fmt(gastoActual),
-                  key: const Key('daily_evolution_current_spent'),
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.center,
+                  child: Text(
+                    _fmt(gastoActual),
+                    key: const Key('daily_evolution_current_spent'),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                 ),
               ),
@@ -330,36 +334,40 @@ class DailyEvolutionCard extends StatelessWidget {
 
           if (hasBudget) ...[
             const SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 14,
-                  height: 2,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF94A3B8),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.center,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 14,
+                    height: 2,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF94A3B8),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 6),
-                const Text(
-                  'Ritmo límite permitido',
-                  style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
-                ),
-                const SizedBox(width: 16),
-                Container(
-                  width: 14,
-                  height: 3,
-                  decoration: BoxDecoration(
-                    color: actualLineColor,
-                    borderRadius: BorderRadius.circular(2),
+                  const SizedBox(width: 6),
+                  const Text(
+                    'Ritmo límite permitido',
+                    style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
                   ),
-                ),
-                const SizedBox(width: 6),
-                const Text(
-                  'Gasto acumulado',
-                  style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
-                ),
-              ],
+                  const SizedBox(width: 16),
+                  Container(
+                    width: 14,
+                    height: 3,
+                    decoration: BoxDecoration(
+                      color: actualLineColor,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  const Text(
+                    'Gasto acumulado',
+                    style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
             ),
           ],
         ],
