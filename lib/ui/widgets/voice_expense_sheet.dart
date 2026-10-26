@@ -353,9 +353,12 @@ class _VoiceExpenseSheetState extends State<VoiceExpenseSheet> {
                 children: const [
                   Icon(Icons.edit_note, size: 16, color: AppColors.textSecondary),
                   SizedBox(width: 4),
-                  Text(
-                    'Puedes editar el texto antes de procesarlo',
-                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                  Flexible(
+                    child: Text(
+                      'Puedes editar el texto antes de procesarlo',
+                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
               ),

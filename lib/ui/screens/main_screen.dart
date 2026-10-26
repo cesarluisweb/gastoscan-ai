@@ -23,6 +23,8 @@ import '../widgets/voice_expense_sheet.dart';
 class MainScreen extends StatefulWidget {
   const MainScreen({Key? key}) : super(key: key);
 
+  static void showAddMenu(BuildContext context) => _MainScreenState.mostrarMenuAgregar(context);
+
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
@@ -249,7 +251,9 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     });
   }
 
-  void _showAddMenu(BuildContext context) {
+  void _showAddMenu(BuildContext context) => MainScreen.showAddMenu(context);
+
+  static void mostrarMenuAgregar(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,

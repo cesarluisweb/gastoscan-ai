@@ -34,279 +34,286 @@ Future<bool?> mostrarDialogoFusionarOReemplazar(BuildContext context) async {
   );
 }
 
-/// Modal inferior centralizado para vincular o iniciar sesión con correo electrónico
+/// Diálogo flotante centrado para vincular o iniciar sesión con correo electrónico
 Future<void> mostrarModalAutenticacionEmail(
   BuildContext context, {
   VoidCallback? onSuccess,
 }) {
-  final emailController = TextEditingController();
-  final passwordController = TextEditingController();
-  bool esRegistro = true;
-  bool obscurePassword = true;
-  bool isLoading = false;
-  String? localError;
-
-  return showModalBottomSheet(
+  return showDialog(
     context: context,
-    isScrollControlled: true,
-    backgroundColor: AppColors.background,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    builder: (modalContext) {
-      return StatefulBuilder(
-        builder: (context, setModalState) {
-          final mediaQuery = MediaQuery.of(context);
-          final systemBottom = mediaQuery.padding.bottom > 0
-              ? mediaQuery.padding.bottom
-              : mediaQuery.viewPadding.bottom;
-          final effectiveBottomPadding = mediaQuery.viewInsets.bottom + (systemBottom > 0 ? systemBottom : 16.0) + 20.0;
+    barrierDismissible: true,
+    builder: (dialogContext) => AuthEmailDialog(onSuccess: onSuccess),
+  );
+}
 
-          return PopScope(
-            canPop: !isLoading,
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 600),
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    bottom: effectiveBottomPadding,
-                    left: 20,
-                    right: 20,
-                    top: 20,
-                  ),
-                  child: SingleChildScrollView(
-                    child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+class AuthEmailDialog extends StatefulWidget {
+  final VoidCallback? onSuccess;
+
+  const AuthEmailDialog({Key? key, this.onSuccess}) : super(key: key);
+
+  @override
+  State<AuthEmailDialog> createState() => _AuthEmailDialogState();
+}
+
+class _AuthEmailDialogState extends State<AuthEmailDialog> {
+  final _emailCtrl = TextEditingController();
+  final _passwordCtrl = TextEditingController();
+  bool _esRegistro = true;
+  bool _obscurePassword = true;
+  bool _isLoading = false;
+  String? _localError;
+
+  @override
+  void dispose() {
+    _emailCtrl.dispose();
+    _passwordCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final email = _emailCtrl.text.trim();
+    final password = _passwordCtrl.text;
+
+    if (email.isEmpty || !email.contains('@') || !email.contains('.')) {
+      setState(() {
+        _localError = 'Ingresa un correo electrónico válido.';
+      });
+      return;
+    }
+    if (password.length < 6) {
+      setState(() {
+        _localError = 'La contraseña debe tener al menos 6 caracteres.';
+      });
+      return;
+    }
+
+    final messenger = ScaffoldMessenger.of(context);
+    final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
+    final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+
+    bool descartarLocales = false;
+    if (gastoProvider.gastos.isNotEmpty) {
+      final decision = await mostrarDialogoFusionarOReemplazar(context);
+      if (decision == null) return;
+      descartarLocales = decision;
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _isLoading = true;
+      _localError = null;
+    });
+
+    try {
+      final error = _esRegistro
+          ? await gastoProvider.vincularConEmail(email, password, descartarDatosLocales: descartarLocales)
+          : await gastoProvider.iniciarSesionConEmail(email, password, descartarDatosLocales: descartarLocales);
+
+      if (!mounted) return;
+
+      if (error != null) {
+        setState(() {
+          _isLoading = false;
+          _localError = error;
+        });
+      } else {
+        Navigator.pop(context);
+        await settingsProvider.loadSettings();
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              _esRegistro ? 'Cuenta vinculada con éxito' : 'Sesión iniciada con éxito',
+              style: const TextStyle(color: Colors.black),
+            ),
+            backgroundColor: AppColors.primary,
+          ),
+        );
+        widget.onSuccess?.call();
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _localError = 'Ocurrió un error al procesar la solicitud. Verifica tu conexión e intenta de nuevo.';
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: !_isLoading,
+      child: Dialog(
+        key: const Key('dialog_surface_auth'),
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Row(
-                            children: [
-                              const Icon(Icons.alternate_email, color: AppColors.primaryDark, size: 24),
-                              const SizedBox(width: 8),
-                              Flexible(
-                                child: Text(
-                                  esRegistro ? 'Vincular con Correo' : 'Iniciar Sesión con Correo',
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close, color: AppColors.textSecondary),
-                          onPressed: isLoading ? null : () => Navigator.pop(modalContext),
-                        ),
-                      ],
-                    ),
-                  const SizedBox(height: 8),
-                  Text(
-                    esRegistro
-                        ? 'Puedes usar cualquier correo electrónico para respaldar tus facturas de forma segura.'
-                        : 'Ingresa tu correo y contraseña para restaurar y sincronizar tus gastos.',
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
-                  ),
-                  const SizedBox(height: 16),
-                  if (localError != null) ...[
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: AppColors.error.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppColors.error),
-                      ),
+                    Expanded(
                       child: Row(
                         children: [
-                          const Icon(Icons.error_outline, color: AppColors.error, size: 18),
+                          const Icon(Icons.alternate_email, color: AppColors.primaryDark, size: 24),
                           const SizedBox(width: 8),
-                          Expanded(
+                          Flexible(
                             child: Text(
-                              localError!,
-                              style: const TextStyle(color: AppColors.error, fontSize: 13),
+                              _esRegistro ? 'Vincular con Correo' : 'Iniciar Sesión con Correo',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: AppColors.textSecondary),
+                      onPressed: _isLoading ? null : () => Navigator.pop(context),
+                    ),
                   ],
-                  TextField(
-                    controller: emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    autocorrect: false,
-                    enabled: !isLoading,
-                    decoration: InputDecoration(
-                      labelText: 'Correo electrónico',
-                      hintText: 'tu@correo.com',
-                      prefixIcon: const Icon(Icons.email_outlined, color: AppColors.primaryDark),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _esRegistro
+                      ? 'Puedes usar cualquier correo electrónico para respaldar tus facturas de forma segura.'
+                      : 'Ingresa tu correo y contraseña para restaurar y sincronizar tus gastos.',
+                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                ),
+                const SizedBox(height: 16),
+                if (_localError != null) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.error),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: passwordController,
-                    obscureText: obscurePassword,
-                    enabled: !isLoading,
-                    decoration: InputDecoration(
-                      labelText: 'Contraseña',
-                      hintText: 'Mínimo 6 caracteres',
-                      prefixIcon: const Icon(Icons.lock_outline, color: AppColors.primaryDark),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          obscurePassword ? Icons.visibility_off : Icons.visibility,
-                          color: AppColors.textSecondary,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error_outline, color: AppColors.error, size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _localError!,
+                            style: const TextStyle(color: AppColors.error, fontSize: 13),
+                          ),
                         ),
-                        onPressed: () {
-                          setModalState(() {
-                            obscurePassword = !obscurePassword;
-                          });
-                        },
-                      ),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.black,
-                        disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.8),
-                        disabledForegroundColor: Colors.black,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      onPressed: isLoading
-                          ? null
-                          : () async {
-                              final email = emailController.text.trim();
-                              final password = passwordController.text;
-
-                              if (email.isEmpty || !email.contains('@') || !email.contains('.')) {
-                                setModalState(() {
-                                  localError = 'Ingresa un correo electrónico válido.';
-                                });
-                                return;
-                              }
-                              if (password.length < 6) {
-                                setModalState(() {
-                                  localError = 'La contraseña debe tener al menos 6 caracteres.';
-                                });
-                                return;
-                              }
-
-                              final provider = Provider.of<GastoProvider>(context, listen: false);
-                              bool descartarLocales = false;
-
-                              if (provider.gastos.isNotEmpty) {
-                                final decision = await mostrarDialogoFusionarOReemplazar(context);
-                                if (decision == null) return;
-                                descartarLocales = decision;
-                              }
-
-                              setModalState(() {
-                                isLoading = true;
-                                localError = null;
-                              });
-
-                              try {
-                                final error = esRegistro
-                                    ? await provider.vincularConEmail(email, password, descartarDatosLocales: descartarLocales)
-                                    : await provider.iniciarSesionConEmail(email, password, descartarDatosLocales: descartarLocales);
-
-                                if (!modalContext.mounted) return;
-
-                                if (error != null) {
-                                  setModalState(() {
-                                    isLoading = false;
-                                    localError = error;
-                                  });
-                                } else {
-                                  Navigator.pop(modalContext);
-                                  await Provider.of<SettingsProvider>(context, listen: false).loadSettings();
-                                  if (!context.mounted) return;
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        esRegistro ? 'Cuenta vinculada con éxito' : 'Sesión iniciada con éxito',
-                                        style: const TextStyle(color: Colors.black),
-                                      ),
-                                      backgroundColor: AppColors.primary,
-                                    ),
-                                  );
-                                  onSuccess?.call();
-                                }
-                              } catch (e) {
-                                if (modalContext.mounted) {
-                                  setModalState(() {
-                                    isLoading = false;
-                                    localError = e.toString();
-                                  });
-                                }
-                              }
-                            },
-                      child: isLoading
-                          ? Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
-                                ),
-                                const SizedBox(width: 10),
-                                Text(
-                                  esRegistro ? 'Vinculando y sincronizando...' : 'Iniciando sesión...',
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.black),
-                                ),
-                              ],
-                            )
-                          : Text(
-                              esRegistro ? 'Vincular y Respaldar' : 'Iniciar Sesión',
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                            ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Center(
-                    child: TextButton(
-                      onPressed: isLoading
-                          ? null
-                          : () {
-                              setModalState(() {
-                                esRegistro = !esRegistro;
-                                localError = null;
-                              });
-                            },
-                      child: Text(
-                        esRegistro
-                            ? '¿Ya tienes una cuenta registrada? Inicia sesión aquí'
-                            : '¿No tienes cuenta? Vincular correo aquí',
-                        style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
+                ],
+                TextField(
+                  key: const Key('auth_email_input'),
+                  controller: _emailCtrl,
+                  keyboardType: TextInputType.emailAddress,
+                  autocorrect: false,
+                  enabled: !_isLoading,
+                  decoration: InputDecoration(
+                    labelText: 'Correo electrónico',
+                    hintText: 'tu@correo.com',
+                    prefixIcon: const Icon(Icons.email_outlined, color: AppColors.primaryDark),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  key: const Key('auth_password_input'),
+                  controller: _passwordCtrl,
+                  obscureText: _obscurePassword,
+                  enabled: !_isLoading,
+                  decoration: InputDecoration(
+                    labelText: 'Contraseña',
+                    hintText: 'Mínimo 6 caracteres',
+                    prefixIcon: const Icon(Icons.lock_outline, color: AppColors.primaryDark),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                        color: AppColors.textSecondary,
                       ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    key: const Key('auth_submit_btn'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.black,
+                      disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.8),
+                      disabledForegroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: _isLoading ? null : _submit,
+                    child: _isLoading
+                        ? Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                _esRegistro ? 'Vinculando y sincronizando...' : 'Iniciando sesión...',
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.black),
+                              ),
+                            ],
+                          )
+                        : Text(
+                            _esRegistro ? 'Vincular y Respaldar' : 'Iniciar Sesión',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Center(
+                  child: TextButton(
+                    key: const Key('auth_toggle_mode_btn'),
+                    onPressed: _isLoading
+                        ? null
+                        : () {
+                            setState(() {
+                              _esRegistro = !_esRegistro;
+                              _localError = null;
+                            });
+                          },
+                    child: Text(
+                      _esRegistro
+                          ? '¿Ya tienes una cuenta registrada? Inicia sesión aquí'
+                          : '¿No tienes cuenta? Vincular correo aquí',
+                      style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
       ),
     );
-        },
-      );
-    },
-  ).whenComplete(() {
-    emailController.dispose();
-    passwordController.dispose();
-  });
+  }
 }

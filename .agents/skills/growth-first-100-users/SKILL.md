@@ -60,11 +60,17 @@ Google Play exige para cuentas personales nuevas creadas después de noviembre d
    * Enlace en tienda: `https://play.google.com/store/apps/details?id=com.cesarluis.rindemas`
 
 ### Bitácora Obligatoria para Solicitud de Producción (Apply for Production)
-Al finalizar los 14 días, Google evaluará la solicitud mediante un formulario obligatorio. Se debe llevar registro activo de:
+Al finalizar los 14 días, Google evaluará la solicitud mediante un formulario obligatorio. Se debe llevar registro activo continuo en [`DOC_CUESTIONARIO_PRODUCCION.md`](../../DOC_CUESTIONARIO_PRODUCCION.md):
 1. **Dispositivos reales evaluados:** Registrar modelos exactos reportados por evaluadores (ej. Redmi Note 11S, Samsung Galaxy, etc.).
 2. **Uso real de funciones principales:** Pruebas de persistencia local en SQLite, filtros por mes, escaneo de facturas con IA, cálculo de tasas BCV/P2P y presupuestos mensuales.
 3. **Feedback recopilado y fallos reportados:** Respuestas de evaluadores, capturas enviadas y confirmación de estabilidad (cero crashes).
 4. **Versiones desplegadas y corregidas:** Historial de entregas en la pista cerrada (`v1.0.4+4`, etc.) durante los 14 días.
+
+### Cadencia de Comunicación y Retención durante los 14 Días
+Para evitar que los evaluadores desinstalen la app o sientan saturación de mensajes, seguir esta dosificación:
+* **Días 1 a 3 (Silencio en el grupo / Contacto 1:1):** No enviar correos masivos al grupo de Google inmediatamente tras la instalación. Contactar en privado por WhatsApp a 2 o 3 personas de confianza para pedirles que abran la app y registren un gasto de prueba.
+* **Días 4 a 5 (Mensaje de balance y consignas concretas):** Enviar un correo al grupo de Google agradeciendo el feedback, anunciando próximas actualizaciones menores y dando tareas prácticas que incentiven el uso real (ej. probar el gasto por voz, el escáner de facturas, la Calculadora de tasas o la Lista de compras en la pestaña Más).
+* **Recordatorio de Reseñas Privadas en Play Store:** Pedir a los evaluadores dejar una calificación o comentario breve dentro de la ficha de Google Play. Estas opiniones solo las ve el desarrollador, pero demuestran a los revisores de Google que hubo interacción humana genuina.
 
 ### Tiempos de Revisión y Regla de Lanzamiento
 * **Primera versión:** La revisión inicial de una app nueva en Google Play suele demorar entre 3 y 7 días hábiles.
@@ -104,11 +110,15 @@ Una vez aprobada la app en producción, se activan 3 canales de distribución di
 * **Enfoque del mensaje:** Compartir la app como una herramienta gratuita construida por necesidad propia para resolver el cálculo de tasas y el desorden de facturas físicas.
 * **Objetivo:** 30 a 40 usuarios activos con alta retroalimentación.
 
-### Canal 2: Video Demostrativo Corto (TikTok / Reels)
-* **Formato:** Video vertical de 15 segundos sin introducciones:
-  * *0 a 3s:* Toma directa de una factura larga de supermercado. Texto en pantalla: *"¿Cuánto gastaste aquí en dólares?"*
-  * *4 a 10s:* Enfocar la app tomando la foto y ver cómo se extrae cada producto con su precio convertido a BCV.
-  * *11 a 15s:* *"Disponible gratis en Google Play como Rinde Más."*
+### Canal 2: Video Demostrativo Corto (TikTok / Reels) - Formato Sin Rostro ni Voz
+Para desarrolladores en solitario que no desean aparecer en cámara ni grabar locución, este formato maximiza la conversión con cero fricción:
+* **Grabación de Pantalla Nativa:** Utilizar la herramienta integrada del sistema operativo (ej. *Grabar pantalla* en Samsung One UI / Ajustes rápidos) en resolución 1080p, evitando aplicaciones de terceros que añadan marcas de agua o publicidad.
+* **Estructura del Video (15 segundos):**
+  * *0 a 3s:* Factura física real sobre una mesa o en pantalla con texto de dolor: *"¿Cuánto gastaste aquí en dólares a tasa BCV?"*
+  * *4 a 10s:* Grabación de pantalla mostrando la cámara de Rinde Más tomando la foto y la extracción instantánea de ítems con sus precios convertidos.
+  * *11 a 15s:* Vista de la pantalla de inicio con el presupuesto y saldo actualizado. Texto de cierre: *"Control de gastos para Venezuela. Gratis en Google Play: Rinde Más"*.
+* **Edición y Textos:** Recortar tiempos muertos en la Galería nativa del teléfono y agregar textos flotantes claros y música en tendencia mediante CapCut.
+* **Rol de las Redes Sociales (TikTok / Instagram):** Crear los perfiles estrictamente para reservar el nombre de usuario (`@rindemasapp`), enlazar la ficha de Google Play en la biografía y alojar los videos demostrativos. Prohibido desgastarse diseñando carruseles estáticos o publicaciones de relleno sin tracción algorítmica.
 * **Objetivo:** 40 a 60 descargas directas impulsadas por la búsqueda del nombre en la tienda.
 
 ### Canal 3: Círculo Inmediato y Boca a Boca

@@ -180,16 +180,15 @@ void main() {
 
       await tester.pumpWidget(
         wrapWithProviders(
-          MaterialApp(
-            home: ReviewExpenseScreen(
-              extractedData: GeminiExtractionResult(
-                comercio: '',
-                fecha: '2026-10-26',
-                moneda: 'USD',
-                totalOriginal: 0.0,
-                tasaCambioDetectada: null,
-                impuestoIva: 0.0,
-                items: [],
+          Scaffold(
+            body: Builder(
+              builder: (ctx) => ElevatedButton(
+                key: const Key('btn_open_picker'),
+                onPressed: () => ReviewExpenseScreen.showImagePickerOptions(
+                  ctx,
+                  onPickImage: (_) {},
+                ),
+                child: const Text('Abrir'),
               ),
             ),
           ),
@@ -197,9 +196,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final attachBtn = find.text('Adjuntar comprobante (Opcional)');
-      expect(attachBtn, findsOneWidget);
-      await tester.tap(attachBtn);
+      await tester.tap(find.byKey(const Key('btn_open_picker')));
       await tester.pumpAndSettle();
 
       final surface = find.byKey(const Key('sheet_surface_picker'));
@@ -217,14 +214,20 @@ void main() {
 
       await tester.pumpWidget(
         wrapWithProviders(
-          const MainScreen(),
+          Scaffold(
+            body: Builder(
+              builder: (ctx) => ElevatedButton(
+                key: const Key('btn_open_add_menu'),
+                onPressed: () => MainScreen.showAddMenu(ctx),
+                child: const Text('Abrir'),
+              ),
+            ),
+          ),
         ),
       );
       await tester.pumpAndSettle();
 
-      final fab = find.byType(FloatingActionButton);
-      expect(fab, findsOneWidget);
-      await tester.tap(fab);
+      await tester.tap(find.byKey(const Key('btn_open_add_menu')));
       await tester.pumpAndSettle();
 
       final surface = find.byKey(const Key('sheet_surface_add_menu'));
