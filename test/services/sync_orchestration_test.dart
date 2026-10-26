@@ -59,6 +59,11 @@ class FakeGastoRepository extends Fake implements GastoRepository {
   List<PresupuestoRemotoModel>? replacedPresupuestos;
 
   @override
+  Future<List<GastoModel>> obtenerGastosNoSincronizados() async {
+    return localGastos.where((g) => g.synced == 0).toList();
+  }
+
+  @override
   Future<List<GastoModel>> obtenerTodosLosGastosConBorrados() async {
     return List.from(localGastos);
   }
@@ -271,7 +276,7 @@ void main() {
       fakeRepo.localGastos = [
         GastoModel(
           id: 3,
-          uuid: 'matching-uuid-3',
+          uuid: 'doc-remote-3',
           fecha: '2026-10-26',
           comercio: 'Excelsior Gama',
           moneda: 'USD',
@@ -290,7 +295,7 @@ void main() {
         const RemoteGasto(
           id: 'doc-remote-3',
           data: {
-            'uuid': 'matching-uuid-3',
+            'uuid': 'doc-remote-3',
             'fecha': '2026-10-26',
             'comercio': 'Excelsior Gama',
             'moneda': 'USD',

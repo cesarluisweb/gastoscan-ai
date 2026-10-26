@@ -29,8 +29,8 @@ void main() {
       expect(model.moneda, equals('USD'));
       expect(model.actualizadoEn, equals('2026-10-26T12:00:00.000Z'));
 
-      expect(model.categorias.containsKey('Comida'), isTrue);
-      expect(model.categorias['Comida'], equals(150.0));
+      expect(model.categorias.containsKey('Alimentación'), isTrue);
+      expect(model.categorias['Alimentación'], equals(150.0));
       expect(model.categorias['Transporte'], equals(60.0));
       expect(model.categorias.containsKey('Servicios'), isFalse);
       expect(model.categorias.containsKey('Salud'), isFalse);

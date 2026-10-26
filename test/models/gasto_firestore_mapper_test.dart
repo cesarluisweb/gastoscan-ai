@@ -52,7 +52,7 @@ void main() {
       expect(payload.containsKey('eliminado_en'), isFalse);
 
       // Category normalized
-      expect(payload['categoria'], equals('Comida'));
+      expect(payload['categoria'], equals('Alimentación'));
 
       // actualizado_en falls back to creado_en when null
       expect(payload['actualizado_en'], equals('2026-10-26T10:00:00.000Z'));
