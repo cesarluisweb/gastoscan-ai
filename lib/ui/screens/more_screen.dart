@@ -597,7 +597,7 @@ class MoreScreenState extends State<MoreScreen> {
                         padding: EdgeInsets.symmetric(vertical: 8),
                         child: Divider(height: 1, color: AppColors.border),
                       ),
-                      // Fila USDT Binance
+                      // Fila USDT P2P
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -606,7 +606,7 @@ class MoreScreenState extends State<MoreScreen> {
                               Icon(Icons.currency_bitcoin, size: 18, color: AppColors.primaryDark),
                               SizedBox(width: 6),
                               Text(
-                                'USDT Binance',
+                                'USDT P2P',
                                 style: TextStyle(
                                   color: AppColors.textPrimary,
                                   fontSize: 14,

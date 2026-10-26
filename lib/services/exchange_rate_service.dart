@@ -48,7 +48,7 @@ class ExchangeRateService {
   static const String _jsdelivrUsd = 'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json';
   static const String _jsdelivrEur = 'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/eur.json';
 
-  /// Obtiene las 3 tasas del día (USD BCV, EUR BCV, USDT Binance / Paralelo) en paralelo
+  /// Obtiene las 3 tasas del día (USD BCV, EUR BCV, USDT P2P) en paralelo
   /// con respaldo automático (Gateway Cloudflare -> DolarAPI -> Yadio Oficial -> jsDelivr).
   /// Descarta cualquier valor obsoleto <= 50.0 proveniente de semillas o pruebas previas.
   static Future<ExchangeRatesData> getAllTodayRates({http.Client? client}) async {

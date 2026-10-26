@@ -303,7 +303,7 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
                 const SizedBox(width: 8),
                 _buildRateChip(
                   key: const Key('calc_chip_usdt'),
-                  label: 'USDT Binance',
+                  label: 'USDT P2P',
                   sub: 'Bs. ${tasaUsdt.toStringAsFixed(2)}',
                   isSelected: _selectedTipoTasa == TipoTasaCalculadora.usdtBinance,
                   onTap: () => _seleccionarTipoTasa(TipoTasaCalculadora.usdtBinance, settings),
@@ -487,7 +487,7 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
                 ),
                 const Divider(height: 16, color: AppColors.border),
                 _buildComparisonRow(
-                  title: 'USDT Binance',
+                  title: 'USDT P2P',
                   rate: 'Bs. ${tasaUsdt.toStringAsFixed(2)}',
                   total: 'Bs. ${CurrencyFormatter.formatVes(montoBaseDivisa * tasaUsdt).replaceAll('Bs. ', '')}',
                   isHighlighted: _selectedTipoTasa == TipoTasaCalculadora.usdtBinance,

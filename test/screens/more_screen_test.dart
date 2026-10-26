@@ -148,7 +148,7 @@ void main() {
       expect(find.text('⚠ Tasa de referencia'), findsOneWidget);
       expect(find.text('Dólar BCV'), findsOneWidget);
       expect(find.text('Euro BCV'), findsOneWidget);
-      expect(find.text('USDT Binance'), findsOneWidget);
+      expect(find.text('USDT P2P'), findsOneWidget);
       expect(find.text('Almacenamiento y Fotos', skipOffstage: false), findsOneWidget);
       expect(find.text('Exportar a Excel (.csv)', skipOffstage: false), findsOneWidget);
       expect(find.text('Exportar como Texto (.md)', skipOffstage: false), findsOneWidget);

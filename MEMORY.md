@@ -7,7 +7,7 @@
 - **UI-06 & Web (Fase 4 y 5):** `Pendiente de validación 🧪`. CI verde (Android build 566 y Web build 8, commit `0bd3500`). Web validada en vivo vía HTTP 200 en `https://rindemas.cesarluis.com/panel/`.
 
 ## Decisiones Técnicas y de Negocio Recientes
-- Nomenclatura canónica de 4 lentes establecida: `USD BCV`, `VES Bolívares`, `USDT P2P` y `EUR BCV` (sin paréntesis decorativos). En vistas compactas: `USD`, `VES`, `USDT`, `EUR`.
+- Nomenclatura canónica de 4 lentes establecida: `USD BCV`, `VES Bolívares`, `USDT P2P` y `EUR BCV` (sin paréntesis decorativos). En vistas compactas: `USD`, `VES`, `USDT`, `EUR`. Removida mención «Binance» de UI de tasas y calculadora cambiaria a favor de `USDT P2P`.
 - Web Fase 4: Autenticación por correo/contraseña (`signInWithEmailAndPassword`, `createUserWithEmailAndPassword`, `sendPasswordResetEmail`) integrada en `panel.astro` con mensajes traducidos.
 - Web Fase 5: Edición de compras y desglose dinámico validada en `panel.astro`.
 

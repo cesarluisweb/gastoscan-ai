@@ -2226,7 +2226,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                 officialRate = offEur;
                               } else if (_monedaTasaSeleccionadaVes == 'USDT') {
                                 activeCtrl = _tasaUsdtCtrl;
-                                activeLabel = 'Tasa USDT P2P (Binance)';
+                                activeLabel = 'Tasa USDT P2P';
                                 activeIcon = Icons.currency_bitcoin;
                                 officialRate = offUsdt;
                               } else {
