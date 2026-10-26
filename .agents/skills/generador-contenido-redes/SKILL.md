@@ -22,7 +22,11 @@ Esta habilidad guía la creación de contenidos orgánicos de alto impacto (vide
    - Mensaje oficial: *"Sin conectar bancos ni pedir contraseñas. Funciona en tu propio teléfono y tienes la opción de sincronizar con tu cuenta de Google si tú quieres"*.
 4. **Matemática y Rigor Financiero en Venezuela:**
    - La conversión de Bolívares a Dólares es una **división**: $\text{Monto en Bs.} \div \text{Tasa BCV}$. Prohibido multiplicar.
-   - Al hablar de USDT / Binance P2P, explicar la equivalencia de forma exacta: si pagas en bolívares compras marcadas a BCV tras vender USDT en P2P, requieres menos USDT (ahorro real).
+   - Mantener el foco en la moneda del día a día: **Bolívares y Dólares**. No saturar los copys generales con conceptos de Binance o cripto.
+5. **El Asistente Integrado de Ahorro:**
+   - Rinde Más no es una simple libreta ni un lector pasivo: es un asistente inteligente que clasifica por categorías y ofrece recomendaciones diarias para cuidar y estirar el dinero.
+6. **Cierre Transparente de Expectativa:**
+   - Recordar siempre que está en fase previa a Google Play, invitar a la lista de espera para ser los primeros y recalcar que es **100% gratis**.
 
 ---
 

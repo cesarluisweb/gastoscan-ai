@@ -231,5 +231,20 @@ Este marco sintetiza la experiencia y aprendizajes reales del caso de estudio de
 * **Objetivo:** Primer impacto orgánico, presentación visual de la app y llamado a la lista de espera / versión anticipada.
 * **Hipótesis a evaluar:** Medir retención en los primeros 3 segundos (impacto de clips IA vs. gancho con factura real).
 
+---
+
+## 10. Definición de la Voz de Marca Canónica de Rinde Más
+* **Fecha de consolidación:** 26 de Octubre de 2026.
+* **Principio fundamental:** Eliminar tecnicismos y posturas defensivas. No enredar con Binance, USDT ni explicaciones de "por qué no somos un banco". Enfocarse en la realidad del 95% de las compras cotidianas en Venezuela: bolívares y dólares a tasa oficial.
+* **El Mensaje Nuclear Oficial (Voz de Marca de César):**
+  > *"Es una app venezolana que te ayuda a controlar tus gastos de una forma muy sencilla. Le tomas foto a la factura o le dictas por voz lo que compraste y la app te clasifica la compra en las diferentes categorías, hace la equivalencia entre bolívares y dólares sin que tengas que estar haciendo cálculos y el asistente integrado te va dando recomendaciones todos los días para que cuides lo más posible tu dinero. Todavía no ha salido en Google Play, pero pueden anotarse en la lista de espera para que sean los primeros en descargarla. Y lo mejor es que es totalmente gratis."*
+* **Los 5 Elementos Irrenunciables:**
+  1. Propósito simple: control de gastos sin complicaciones.
+  2. Entrada dual: foto o dictado por voz.
+  3. Automatización: categorización y equivalencia Bs/$ sin cálculos manuales.
+  4. Asistente proactivo: recomendaciones diarias para estirar y cuidar el dinero.
+  5. Oferta irresistible: lista de espera Google Play y 100% gratis.
+
+
 
 
