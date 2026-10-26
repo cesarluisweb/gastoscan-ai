@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
-import 'package:gastoscan_ai/core/constants/app_colors.dart';
-import 'package:gastoscan_ai/core/utils/currency_formatter.dart';
 import 'package:gastoscan_ai/data/datasources/local/database_helper.dart';
 import 'package:gastoscan_ai/data/models/gasto_model.dart';
 import 'package:gastoscan_ai/data/models/item_gasto_model.dart';
+import 'package:gastoscan_ai/data/models/shopping_item_model.dart';
 import 'package:gastoscan_ai/providers/gasto_provider.dart';
 import 'package:gastoscan_ai/providers/scan_queue_provider.dart';
 import 'package:gastoscan_ai/providers/settings_provider.dart';
@@ -32,7 +31,7 @@ class FakeDatabaseHelper extends DatabaseHelper {
   Future<int> resetFailedScanQueueItems() async => 0;
 
   @override
-  Future<List<String>> getPendingShoppingItems() async => [];
+  Future<List<ShoppingItemModel>> getPendingShoppingItems() async => [];
 }
 
 class FakeGastoProvider extends GastoProvider {
@@ -81,9 +80,6 @@ class FakeGastoProvider extends GastoProvider {
 
   @override
   Future<void> cargarDatos() async {}
-
-  @override
-  Future<void> cargarGastosMes() async {}
 
   @override
   Future<List<GastoModel>> obtenerTodosLosGastos() async => _mockGastos;
@@ -150,21 +146,19 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: SingleChildScrollView(
               child: SummaryCard(
-                disponible: 4149580.00,
-                disponibleUsd: 82.99,
-                spent: 15850420.00,
-                spentUsd: 317.00,
-                targetBudget: 20000000.00,
-                hasBudget: true,
-                hasSavingsGoal: true,
+                totalUsd: 317.00,
+                totalVes: 15850420.00,
+                periodo: 'Octubre 2026',
                 monedaPrincipal: 'VES',
-                activeMoneda: 'VES',
-                isOverBudget: false,
-                percentUsed: 0.79,
+                tasaCambio: 50.0,
+                presupuestoGeneral: 20000000.00,
+                metaAhorro: 5000000.00,
+                mes: 10,
+                anio: 2026,
               ),
             ),
           ),
@@ -207,7 +201,7 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: SingleChildScrollView(
               child: CategoryChart(
@@ -247,6 +241,7 @@ void main() {
               gasto: mockGastos.first,
               monedaPrincipal: 'VES',
               tasaCambio: 50.0,
+              onTap: () {},
             ),
           ),
         ),
