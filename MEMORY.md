@@ -3,18 +3,18 @@
 
 ## Estado Actual Inmediato
 - **Rama:** `main`.
-- **Lote 3 (Sincronización Cloud/Offline y SQLite):** CI en verde confirmado (Build 561, commit `4f3823a`). Estado: `Pendiente de validación 🧪` en dispositivo físico (*Rinde Más Dev*).
-- **Lote 4 (Auditoría Argon — UI/UX y Resiliencia en Bs):** Siguiente lote técnico a implementar/validar en CI.
+- **Lote 3 (Sincronización Cloud/Offline y SQLite):** CI en verde (Build 561). Estado: `Pendiente de validación 🧪` en dispositivo físico (*Rinde Más Dev*).
+- **Lote 4 (Auditoría Argon — UI/UX, Rendimiento y Resiliencia en Bs):** CI en verde confirmado (Build 565, commit `8c816d5`). Estado: `Pendiente de validación 🧪` en dispositivo físico (*Rinde Más Dev*).
 - **Fase 5 (Google Play):** Closed Testing activo con evaluadores (período de 14 días).
 - **Marketing:** Video #1 publicado en Instagram Reels y TikTok (`@rindemas.app`). Canal de WhatsApp con 15 suscriptores orgánicos.
 
 ## Decisiones Técnicas y de Negocio Recientes
-- Lote 3 cerrado en CI: serialización pura con `GastoFirestoreMapper`, reemplazo atómico en SQLite v18, política Borrado Gana, bloqueo durable por UID ante fallo de reemplazo (`sync_pending_replace_<uid>`) y normalización canónica en `PresupuestoRemotoModel`.
-- Lote 4 por aplicar: virtualización con `ListView.builder` en historial de gastos, protección `RenderFlex` con `FittedBox` en cifras millonarias en Bs. y eliminación del directorio duplicado `cloudflare_worker/`.
+- Lote 4 cerrado en CI: virtualización `ListView.builder` y eliminación de doble `jsonDecode` en historial, blindaje contra desbordes `RenderFlex` con `FittedBox` y `ConstrainedBox` en pantallas de 360dp con cifras en Bs, escáner ML Kit integrado en botón `+`, evaluación OCR unificada en `LocalOcrService.evaluateRawText` y eliminación del directorio redundante `cloudflare_worker/`.
+- Lección aprendida: al leer archivos con PowerShell, usar siempre `Get-Content -Encoding UTF8` para evitar corrupción de caracteres ANSI a UTF-8.
 
 ## Errores y Fricciones a Evitar
 - No encadenar comandos con `&&` ni usar redirección `>` en PowerShell.
 - Monitoreo de CI por proceso dormido único (`scripts/wait_ci.ps1`) con `BypassSandbox: true` para acceso a la API de GitHub.
 
 ## Próximo Paso Inmediato
-- Notificar a César el éxito de CI Build 561 (Lote 3) y acordar inicio de Lote 4 o validación en dispositivo físico.
+- Notificar a César la culminación exitosa del Lote 4 en CI (Build 565) para validación en dispositivo físico (*Rinde Más Dev*).
