@@ -75,9 +75,9 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 - `UI-05` **Ícono Superior de Asistente IA en Inicio:** `Completada ✅`
   - *Problema:* La burbuja con interrogación `[?]` en el AppBar de Inicio se confunde universalmente con "Soporte / Ayuda".
   - *Solución:* Reemplazar por ícono de destellos (`✨` / `Icons.auto_awesome`), coherente con las tarjetas del Asistente IA.
-- `UI-06` **Unificación del Orden Canónico de Monedas (USD -> VES -> USDT -> EUR) en Vistas Restantes:** `Implementada 🔧`
-  - *Contexto:* Tras unificar `AppConstants.monedas`, `SummaryCard`, `ReviewExpenseScreen`, `BudgetBottomSheet` y los selectores principales del panel web, se alinearon las vistas secundarias pendientes:
-    1. `lib/ui/screens/analysis_screen.dart`: Alinedao vía `CurrencyLensDropdown` compartido.
+- `UI-06` **Unificación del Orden Canónico de Monedas (USD -> VES -> USDT -> EUR) en Vistas Restantes:** `Pendiente de validación 🧪`
+  - *Contexto:* Tras unificar `AppConstants.monedas`, `SummaryCard`, `ReviewExpenseScreen`, `BudgetBottomSheet` y los selectores principales del panel web, se alinearon las vistas secundarias pendientes (Verificado en CI build 566 y deploy web 8, commit `0bd3500`):
+    1. `lib/ui/screens/analysis_screen.dart`: Alineado vía `CurrencyLensDropdown` compartido.
     2. `lib/ui/screens/more_screen.dart`: Selector desplegable de "Moneda Principal de Reportes" reordenado a `USD -> VES -> USDT -> EUR` con etiquetas unificadas limpias (`USD BCV`, `VES Bolívares`, `USDT P2P`, `EUR BCV`).
     3. `landing/src/pages/panel.astro`: Selector de moneda en el modal de Presupuesto General y barra de lentes alineados al estándar limpio (`USD BCV`, `VES Bolívares`, `USDT P2P`, `EUR BCV`). En modal de gasto compacto se usan códigos directos (`USD`, `VES`, `USDT`, `EUR`).
 - `UI-07` **Anclaje Canónico de Hojas Desplegables (Bottom Sheets) y Diálogo de Autenticación Flotante:** `Pendiente de validación 🧪`
@@ -267,8 +267,8 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 - **Fase 1 (Web): Presupuesto y Meta de Ahorro en Modal y Firestore:** (En verificación 🔄)
 - **Fase 2 (Web): Semáforo de Salud de Ahorro y Ritmo Diario:** (En verificación 🔄)
 - **Fase 3 (Web): Soporte Multimoneda (USD, VES, EUR, USDT) y Tasas en Vivo:** (En verificación 🔄)
-- **Fase 4 (Web): Autenticación con Correo y Contraseña:** (Implementada 🔧) Soporte en `panel.astro` para inicio de sesión, registro y recuperación de clave vía Firebase Auth (`signInWithEmailAndPassword`, `createUserWithEmailAndPassword`, `sendPasswordResetEmail`).
-- **Fase 5 (Web): Edición y Detalle Ampliado de Facturas:** (Implementada 🔧) Edición completa de compras, desglose dinámico de ítems, cálculo proporcional y sincronización directa con Firestore desde el navegador.
+- **Fase 4 (Web): Autenticación con Correo y Contraseña:** (Pendiente de validación 🧪) Soporte en `panel.astro` para inicio de sesión, registro y recuperación de clave vía Firebase Auth (`signInWithEmailAndPassword`, `createUserWithEmailAndPassword`, `sendPasswordResetEmail`). Desplegado a producción en web build 8 (commit `0bd3500`).
+- **Fase 5 (Web): Edición y Detalle Ampliado de Facturas:** (Pendiente de validación 🧪) Edición completa de compras, desglose dinámico de ítems, cálculo proporcional y sincronización directa con Firestore desde el navegador. Desplegado a producción en web build 8 (commit `0bd3500`).
 
 ---
 
