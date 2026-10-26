@@ -142,7 +142,13 @@ class ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
 
     // Crear borradores pendientes si no hay búsqueda activa (o si coinciden con los filtros)
     final List<GastoModel> pendingGastos = [];
+    final Map<int, GeminiExtractionResult> readyItemResults = {};
+    final Map<int, File?> readyItemFiles = {};
+
     for (final item in scanQueue.readyItems) {
+      final queueId = item['id'] as int?;
+      if (queueId == null) continue;
+
       final imagePath = item['image_path'] as String?;
       if (_onlyWithReceipt && (imagePath == null || imagePath.isEmpty)) {
         continue;
@@ -153,6 +159,11 @@ class ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
         data = Map<String, dynamic>.from(jsonDecode(item['extracted_data']));
       }
       final result = GeminiExtractionResult.fromJson(data);
+      readyItemResults[queueId] = result;
+      if (imagePath != null && imagePath.isNotEmpty) {
+        final f = File(imagePath);
+        readyItemFiles[queueId] = f.existsSync() ? f : null;
+      }
 
       if (_selectedCategory != null && !result.items.any((it) => it.categoria == _selectedCategory)) {
         continue;
@@ -203,6 +214,14 @@ class ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
     for (final gasto in sortedGastos) {
       final header = _getGroupHeader(gasto.fecha);
       groupedGastos.putIfAbsent(header, () => []).add(gasto);
+    }
+
+    final List<_HistoryRowItem> flatHistoryItems = [];
+    for (final entry in groupedGastos.entries) {
+      flatHistoryItems.add(_HistoryHeaderRow(entry.key));
+      for (final gasto in entry.value) {
+        flatHistoryItems.add(_HistoryGastoRow(gasto));
+      }
     }
 
     return Scaffold(
@@ -295,123 +314,114 @@ class ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
                   )
                 : sortedGastos.isEmpty
                     ? _buildEmptyState(query.isNotEmpty || _onlyWithReceipt || _selectedCategory != null)
-                    : ListView(
+                    : ListView.builder(
                         padding: const EdgeInsets.only(left: 16, right: 16, top: 4, bottom: 80),
-                        children: [
-                          for (final entry in groupedGastos.entries) ...[
-                            Padding(
+                        itemCount: flatHistoryItems.length,
+                        itemBuilder: (context, index) {
+                          final rowItem = flatHistoryItems[index];
+                          if (rowItem is _HistoryHeaderRow) {
+                            return Padding(
                               padding: const EdgeInsets.only(top: 14, bottom: 6),
                               child: Text(
-                                entry.key,
+                                rowItem.title,
                                 style: const TextStyle(
                                   color: AppColors.textSecondary,
                                   fontSize: 13,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                            ),
-                            for (final gasto in entry.value)
-                              if (gasto.categoria == 'Pendiente' && gasto.uuid.startsWith('pending_'))
-                                (() {
-                                  final queueItemId = int.parse(gasto.uuid.split('_')[1]);
-                                  final item = scanQueue.readyItems.firstWhere(
-                                    (e) => e['id'] == queueItemId,
-                                    orElse: () => <String, dynamic>{},
-                                  );
+                            );
+                          }
+                          final gasto = (rowItem as _HistoryGastoRow).gasto;
+                          if (gasto.categoria == 'Pendiente' && gasto.uuid.startsWith('pending_')) {
+                            final queueItemId = int.parse(gasto.uuid.split('_')[1]);
+                            final result = readyItemResults[queueItemId];
+                            if (result == null) return const SizedBox.shrink();
+                            final file = readyItemFiles[queueItemId];
 
-                                  if (item.isEmpty) return const SizedBox.shrink();
+                            return PendingExpenseCard(
+                              key: ValueKey('history_${gasto.uuid}'),
+                              gasto: gasto,
+                              monedaPrincipal: settings.monedaPrincipal,
+                              tasaCambio: settings.tasaCambioVesUsd,
+                              tasaEur: settings.tasaCambioVesEur,
+                              tasaUsdt: settings.tasaCambioVesUsdt,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ReviewExpenseScreen(
+                                      imageFile: file,
+                                      extractedData: result,
+                                      queueItemId: queueItemId,
+                                    ),
+                                  ),
+                                ).then((_) {
+                                  scanQueue.loadReadyItems();
+                                });
+                              },
+                            );
+                          }
 
-                                  Map<String, dynamic> data = {};
-                                  if (item['extracted_data'] != null) {
-                                    data = Map<String, dynamic>.from(jsonDecode(item['extracted_data']));
-                                  }
-                                  final result = GeminiExtractionResult.fromJson(data);
-                                  final file = File(item['image_path']);
-
-                                  return PendingExpenseCard(
-                                    key: ValueKey('history_${gasto.uuid}'),
-                                    gasto: gasto,
-                                    monedaPrincipal: settings.monedaPrincipal,
-                                    tasaCambio: settings.tasaCambioVesUsd,
-                                    tasaEur: settings.tasaCambioVesEur,
-                                    tasaUsdt: settings.tasaCambioVesUsdt,
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => ReviewExpenseScreen(
-                                            imageFile: file.existsSync() ? file : null,
-                                            extractedData: result,
-                                            queueItemId: queueItemId,
-                                          ),
-                                        ),
-                                      ).then((_) {
-                                        scanQueue.loadReadyItems();
-                                      });
-                                    },
-                                  );
-                                })()
-                              else
-                                ExpenseCard(
-                                  key: ValueKey('history_${gasto.id ?? gasto.comercio}_${gasto.uuid}'),
-                                  gasto: gasto,
-                                  monedaPrincipal: settings.monedaPrincipal,
-                                  tasaCambio: settings.tasaCambioVesUsd,
-                                  tasaEur: settings.tasaCambioVesEur,
-                                  tasaUsdt: settings.tasaCambioVesUsdt,
-                                  showDirectItemBreakdown: true,
-                                  initiallyExpanded: query.isNotEmpty && gasto.items.any((item) => _normalizeText(item.descripcion).contains(query)),
-                                  onEdit: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => ReviewExpenseScreen(
-                                          existingGasto: gasto,
-                                        ),
-                                      ),
-                                    ).then((_) {
-                                      if (_isSearching) {
-                                        _allGastos = null;
-                                        _cargarTodosLosGastos();
-                                      }
-                                    });
-                                  },
-                                  onDelete: () async {
-                                    final confirm = await showDialog<bool>(
-                                      context: context,
-                                      builder: (ctx) => AlertDialog(
-                                        backgroundColor: AppColors.card,
-                                        title: const Text('Eliminar Factura',
-                                            style: TextStyle(color: AppColors.textPrimary)),
-                                        content: Text(
-                                          '¿Deseas eliminar el gasto de "${gasto.comercio}"?',
-                                          style: const TextStyle(color: AppColors.textSecondary),
-                                        ),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () => Navigator.pop(ctx, false),
-                                            child: const Text('Cancelar',
-                                                style: TextStyle(color: AppColors.textSecondary)),
-                                          ),
-                                          TextButton(
-                                            onPressed: () => Navigator.pop(ctx, true),
-                                            child: const Text('Eliminar',
-                                                style: TextStyle(color: AppColors.error)),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                    if (confirm == true && gasto.id != null) {
-                                      await gastoProvider.eliminarGasto(gasto.id!);
-                                      if (_isSearching) {
-                                        _allGastos = null;
-                                        _cargarTodosLosGastos();
-                                      }
-                                    }
-                                  },
+                          return ExpenseCard(
+                            key: ValueKey('history_${gasto.id ?? gasto.comercio}_${gasto.uuid}'),
+                            gasto: gasto,
+                            monedaPrincipal: settings.monedaPrincipal,
+                            tasaCambio: settings.tasaCambioVesUsd,
+                            tasaEur: settings.tasaCambioVesEur,
+                            tasaUsdt: settings.tasaCambioVesUsdt,
+                            showDirectItemBreakdown: true,
+                            initiallyExpanded: query.isNotEmpty && gasto.items.any((item) => _normalizeText(item.descripcion).contains(query)),
+                            onEdit: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ReviewExpenseScreen(
+                                    existingGasto: gasto,
+                                  ),
                                 ),
-                          ],
-                        ],
+                              ).then((_) {
+                                if (_isSearching) {
+                                  _allGastos = null;
+                                  _cargarTodosLosGastos();
+                                }
+                              });
+                            },
+                            onDelete: () async {
+                              final confirm = await showDialog<bool>(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  backgroundColor: AppColors.card,
+                                  title: const Text('Eliminar Factura',
+                                      style: TextStyle(color: AppColors.textPrimary)),
+                                  content: Text(
+                                    '¿Deseas eliminar el gasto de "${gasto.comercio}"?',
+                                    style: const TextStyle(color: AppColors.textSecondary),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx, false),
+                                      child: const Text('Cancelar',
+                                          style: TextStyle(color: AppColors.textSecondary)),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx, true),
+                                      child: const Text('Eliminar',
+                                          style: TextStyle(color: AppColors.error)),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (confirm == true && gasto.id != null) {
+                                await gastoProvider.eliminarGasto(gasto.id!);
+                                if (_isSearching) {
+                                  _allGastos = null;
+                                  _cargarTodosLosGastos();
+                                }
+                              }
+                            },
+                          );
+                        },
                       ),
           ),
         ],
@@ -461,28 +471,31 @@ class ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.border),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.receipt_long_outlined, size: 16, color: AppColors.textSecondary),
-            const SizedBox(width: 6),
-            Text(
-              'Total gastado ($countStr): ',
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.receipt_long_outlined, size: 16, color: AppColors.textSecondary),
+              const SizedBox(width: 6),
+              Text(
+                'Total gastado ($countStr): ',
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
-            Text(
-              primaryFormatted,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
+              Text(
+                primaryFormatted,
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -623,4 +636,18 @@ class ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
       ),
     );
   }
+}
+
+abstract class _HistoryRowItem {
+  const _HistoryRowItem();
+}
+
+class _HistoryHeaderRow extends _HistoryRowItem {
+  final String title;
+  const _HistoryHeaderRow(this.title);
+}
+
+class _HistoryGastoRow extends _HistoryRowItem {
+  final GastoModel gasto;
+  const _HistoryGastoRow(this.gasto);
 }

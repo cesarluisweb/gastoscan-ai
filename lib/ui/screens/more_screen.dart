@@ -448,21 +448,29 @@ class MoreScreenState extends State<MoreScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Row(
-                      children: [
-                        Icon(Icons.currency_exchange, color: AppColors.primaryDark, size: 20),
-                        SizedBox(width: 8),
-                        Text(
-                          'Tasas de Cambio',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
+                    const Expanded(
+                      child: Row(
+                        children: [
+                          Icon(Icons.currency_exchange, color: AppColors.primaryDark, size: 20),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Tasas de Cambio',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
+                    const SizedBox(width: 8),
                     Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -1214,31 +1222,30 @@ class MoreScreenState extends State<MoreScreen> {
                 ),
               ],
             ),
-          ] else ...[
-            const SizedBox(height: 14),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                key: const Key('btn_cerrar_sesion'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.textSecondary,
-                  side: const BorderSide(color: AppColors.border),
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-                icon: const Icon(Icons.logout, size: 16, color: AppColors.textSecondary),
-                label: const Text(
-                  'Cerrar sesión',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                onPressed: () => _confirmarCerrarSesion(context),
-              ),
-            ),
           ],
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              key: const Key('btn_cerrar_sesion'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.textSecondary,
+                side: const BorderSide(color: AppColors.border),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              icon: const Icon(Icons.logout, size: 16, color: AppColors.textSecondary),
+              label: const Text(
+                'Cerrar sesión',
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              onPressed: () => _confirmarCerrarSesion(context),
+            ),
+          ),
         ],
       ),
     );
@@ -1365,8 +1372,8 @@ class MoreScreenState extends State<MoreScreen> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              foregroundColor: Colors.white,
+              backgroundColor: esVinculado ? AppColors.primary : AppColors.error,
+              foregroundColor: esVinculado ? Colors.black : Colors.white,
             ),
             onPressed: () => Navigator.pop(dialogCtx, true),
             child: const Text('Cerrar sesión'),

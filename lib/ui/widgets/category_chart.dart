@@ -273,13 +273,19 @@ class _CategoryChartState extends State<CategoryChart> {
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      const SizedBox(width: 10),
-                      Text(
-                        _fmt(entry.value),
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            _fmt(entry.value),
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -521,14 +527,21 @@ class _CategoryChartState extends State<CategoryChart> {
                         ),
                       ),
                     ),
-                    Text(
-                      hasBudget
-                          ? '${_fmt(spent)} / ${_fmt(budget)}'
-                          : _fmt(spent),
-                      style: TextStyle(
-                        color: isExceeded ? AppColors.error : AppColors.textPrimary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          hasBudget
+                              ? '${_fmt(spent)} / ${_fmt(budget)}'
+                              : _fmt(spent),
+                          style: TextStyle(
+                            color: isExceeded ? AppColors.error : AppColors.textPrimary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
                       ),
                     ),
                     if (hasBudget) ...[

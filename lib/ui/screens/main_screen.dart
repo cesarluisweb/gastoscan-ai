@@ -10,6 +10,7 @@ import '../../providers/scan_queue_provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../data/models/gemini_extraction_result.dart';
 import '../../services/notification_service.dart';
+import '../../services/document_scanner_service.dart';
 import 'dashboard_screen.dart';
 import 'expense_history_screen.dart';
 import 'analysis_screen.dart';
@@ -341,11 +342,15 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                 onTap: () async {
                   Navigator.pop(ctx);
                   try {
-                    final picker = ImagePicker();
-                    final picked = await picker.pickImage(source: ImageSource.camera, imageQuality: 90);
-                    if (picked != null && context.mounted) {
+                    final scanner = DocumentScannerService();
+                    final scannedPaths = await scanner.scanDocuments();
+                    if (scannedPaths.isNotEmpty && context.mounted) {
                       final scanQueue = Provider.of<ScanQueueProvider>(context, listen: false);
-                      await scanQueue.enqueue(picked.path);
+                      if (scannedPaths.length == 1) {
+                        await scanQueue.enqueue(scannedPaths.first);
+                      } else {
+                        await scanQueue.enqueueMultiple(scannedPaths);
+                      }
                       HapticFeedback.mediumImpact();
                     }
                   } catch (e) {

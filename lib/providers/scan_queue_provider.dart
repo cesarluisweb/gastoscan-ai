@@ -392,21 +392,10 @@ class ScanQueueProvider with ChangeNotifier {
             List<GeminiExtractionResult> extractedList = [];
             bool processedByText = false;
 
-            // 2. Evaluar evidencia para intentar Gemini Texto
+            // 2. Evaluar evidencia para intentar Gemini Texto con evaluación unificada OCR
             if (ocrText.trim().isNotEmpty) {
-              final upper = ocrText.toUpperCase();
-              final hasAmounts = RegExp(r'\b\d+[\.,]\d{2}\b').hasMatch(upper);
-              final hasTotal = upper.contains('TOTAL') || upper.contains('SUBTOTAL') || upper.contains('MONTO');
-              final lineCount = upper.split('\n').where((l) => l.trim().isNotEmpty).length;
-
-              int score = 0;
-              if (hasAmounts) score += 2;
-              if (hasTotal) score += 2;
-              if (lineCount >= 5) score += 2;
-              if (upper.contains('BS') || upper.contains('VES') || upper.contains('REF') || upper.contains('\$')) score += 1;
-              if (RegExp(r'\b\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}\b').hasMatch(upper)) score += 1;
-
-              final shouldAttemptText = score >= 6;
+              final quality = _localOcrService.evaluateRawText(ocrText);
+              final shouldAttemptText = quality.totalScore >= 6;
 
               if (shouldAttemptText) {
                 try {

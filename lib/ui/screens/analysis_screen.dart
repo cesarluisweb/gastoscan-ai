@@ -465,6 +465,8 @@ class AnalysisScreen extends StatelessWidget {
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
 
           if (isExceeded) ...[
@@ -570,12 +572,19 @@ class AnalysisScreen extends StatelessWidget {
                           ),
                         ),
                       ),
-                      Text(
-                        fmt(budget),
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            fmt(budget),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -586,20 +595,29 @@ class AnalysisScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Promedio gastado por día',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w500,
+                      const Expanded(
+                        child: Text(
+                          'Promedio gastado por día',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
-                      Text(
-                        '${fmt(promedioDia)} / día',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            '${fmt(promedioDia)} / día',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -623,16 +641,22 @@ class AnalysisScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text(
-                        isPastMonth
-                            ? fmt(spent)
-                            : '${proyectaSuperar ? '↗' : '↘'} ≈ ${fmt(proyeccion)}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: isPastMonth
-                              ? (isExceeded ? AppColors.error : const Color(0xFF16A34A))
-                              : (proyectaSuperar ? AppColors.error : const Color(0xFF16A34A)),
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            isPastMonth
+                                ? fmt(spent)
+                                : '${proyectaSuperar ? '↗' : '↘'} ≈ ${fmt(proyeccion)}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: isPastMonth
+                                  ? (isExceeded ? AppColors.error : const Color(0xFF16A34A))
+                                  : (proyectaSuperar ? AppColors.error : const Color(0xFF16A34A)),
+                            ),
+                          ),
                         ),
                       ),
                     ],

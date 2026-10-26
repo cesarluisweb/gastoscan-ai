@@ -75,20 +75,28 @@ class PendingExpenseCard extends StatelessWidget {
                           color: AppColors.warning,
                         ),
                         const SizedBox(width: 4),
-                        Text(
-                          'Pendiente de revisar',
-                          style: const TextStyle(
-                            color: AppColors.warning,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
+                        const Flexible(
+                          child: Text(
+                            'Pendiente de revisar',
+                            style: TextStyle(
+                              color: AppColors.warning,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Text(
-                          DateFormatter.formatDate(gasto.fecha),
-                          style: const TextStyle(
-                            color: AppColors.textMuted,
-                            fontSize: 12,
+                        Flexible(
+                          child: Text(
+                            DateFormatter.formatDate(gasto.fecha),
+                            style: const TextStyle(
+                              color: AppColors.textMuted,
+                              fontSize: 12,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
@@ -162,12 +170,17 @@ class PendingExpenseCard extends StatelessWidget {
                         );
                       }
 
-                      return Text(
-                        CurrencyFormatter.formatAmount(amount, monedaPrincipal),
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                      return FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          CurrencyFormatter.formatAmount(amount, monedaPrincipal),
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                          maxLines: 1,
                         ),
                       );
                     },

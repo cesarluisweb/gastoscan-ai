@@ -201,6 +201,8 @@ class SummaryCard extends StatelessWidget {
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 16),
             InkWell(
@@ -242,31 +244,40 @@ class SummaryCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                if (!isOverBudget)
-                  Text(
-                    isPastMonth ? 'Te sobraron' : 'Disponible para gastar',
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  )
-                else
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFEE2E2), // Fondo rojo suave
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      hasSavingsGoal ? 'Excedido del límite' : 'Excedido del presupuesto',
-                      style: const TextStyle(
-                        color: Color(0xFFDC2626), // Texto rojo negrita
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
+                Expanded(
+                  child: !isOverBudget
+                      ? Text(
+                          isPastMonth ? 'Te sobraron' : 'Disponible para gastar',
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        )
+                      : Align(
+                          alignment: Alignment.centerLeft,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFEE2E2), // Fondo rojo suave
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              hasSavingsGoal ? 'Excedido del límite' : 'Excedido del presupuesto',
+                              style: const TextStyle(
+                                color: Color(0xFFDC2626), // Texto rojo negrita
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                          ),
+                        ),
+                ),
+                const SizedBox(width: 8),
                 CurrencyLensDropdown(
                   monedaSeleccionada: monedaPrincipal,
                   onMonedaChanged: onMonedaChanged,
@@ -297,6 +308,8 @@ class SummaryCard extends StatelessWidget {
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
 
             // Fila de contexto sobre la barra (Gastado vs Límite)

@@ -493,7 +493,7 @@ Para ejecutar todas las correcciones sin romper la suite de pruebas en GitHub Ac
 | **Lote 1** | Blindaje de Seguridad, Secretos, Reglas Firestore y XSS Web | `[F2-C01]`, `[F2-C02]`, `[F2-C03]` ✅, `[F2-C04]` ✅, `[F2-C05]` ✅ (Worker), `[F2-I01]` ✅, `[F2-I02]` ✅, `[F2-O01]` | 🔴 Crítico (Seguridad / Privacidad — En validación 🧪) |
 | **Lote 2** | Exactitud Matemática Multimoneda y Paridad Móvil / Web | `[F1-C01]` ✅, `[F1-C02]` ✅, `[F1-C03]` ✅, `[F1-C04]` ✅, `[F1-I01]` ✅, `[F1-I02]` ✅, `[F1-I03]` ✅, `[F1-I04]` ✅, `[F1-I05]` ✅, `[F1-I06]` ✅, `[F3-I03]` ✅ | 🔴 Crítico (Completado en código / En validación 🧪) |
 | **Lote 3** | Integridad de Sincronización Cloud/Offline, Privacidad Local y SQLite | `[F4-C01]` ✅, `[F4-C02]` ✅, `[F4-I01]` ✅, `[F4-I02]` ✅, `[F4-I03]` ✅, `[F4-I05]` ✅, `[F4-O01]` ✅, `[F2-I03]` ✅ | 🔴 Crítico (Completado en código / En validación 🧪) |
-| **Lote 4** | Resiliencia UI en Bolívares (`RenderFlex`), Coherencia `DESIGN.md` y UX | `[F3-C01]`, `[F3-I01]`, `[F3-I02]`, `[F3-I03]`, `[F3-I04]`, `[F3-I05]`, `[F3-I06]`, `[F4-I04]`, `[F4-O02]` | 🟠 Importante (UI/UX / Rendimiento) |
+| **Lote 4** | Resiliencia UI en Bolívares (`RenderFlex`), Coherencia `DESIGN.md` y UX | `[F3-C01]` ✅, `[F3-I06]` ✅, `[F4-I04]` ✅, `[F4-O02]` ✅, `[F3-I02]` ✅ | 🟠 Importante (Completado en código / En validación 🧪) |
 
 ---
 
