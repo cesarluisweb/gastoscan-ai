@@ -30,6 +30,8 @@ class FakeAuthGastoProvider extends GastoProvider {
 class FakeAuthSettingsProvider extends SettingsProvider {
   int loadSettingsCount = 0;
 
+  FakeAuthSettingsProvider() : super(autoLoad: false);
+
   @override
   Future<void> loadSettings() async {
     loadSettingsCount++;
@@ -155,7 +157,7 @@ void main() {
       await tester.pump(); // Inicia la carga
 
       // Verificar que está en carga
-      expect(find.text('Vinculando y sincronizando...'), findsOneWidget);
+      expect(find.text('Sincronizando...'), findsOneWidget);
 
       // Tocar fuera del diálogo en el barrier (esquina superior izquierda)
       await tester.tapAt(const Offset(5, 5));

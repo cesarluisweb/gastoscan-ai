@@ -145,11 +145,11 @@ class _AuthEmailDialogState extends State<AuthEmailDialog> {
     return PopScope(
       canPop: !_isLoading,
       child: Dialog(
-        key: const Key('dialog_surface_auth'),
         backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         child: ConstrainedBox(
+          key: const Key('dialog_surface_auth'),
           constraints: const BoxConstraints(maxWidth: 480),
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
@@ -269,6 +269,7 @@ class _AuthEmailDialogState extends State<AuthEmailDialog> {
                     onPressed: _isLoading ? null : _submit,
                     child: _isLoading
                         ? Row(
+                            mainAxisSize: MainAxisSize.min,
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               const SizedBox(
@@ -277,9 +278,12 @@ class _AuthEmailDialogState extends State<AuthEmailDialog> {
                                 child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
                               ),
                               const SizedBox(width: 10),
-                              Text(
-                                _esRegistro ? 'Vinculando y sincronizando...' : 'Iniciando sesión...',
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.black),
+                              Flexible(
+                                child: Text(
+                                  _esRegistro ? 'Sincronizando...' : 'Iniciando sesión...',
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.black),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
                             ],
                           )
