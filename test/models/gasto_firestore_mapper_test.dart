@@ -12,10 +12,10 @@ void main() {
         fecha: '2026-10-26',
         comercio: 'Automercados Plaza',
         moneda: 'USD',
-        totalOriginal: 50.0,
-        totalUsd: 50.0,
-        totalUsdt: 50.0,
-        totalEur: 45.0,
+        totalOriginal: 5000,
+        totalUsd: 5000,
+        totalUsdt: 5000,
+        totalEur: 4500,
         tasaCambio: 40.0,
         tasaUsdt: 40.0,
         tasaEur: 44.0,
@@ -33,8 +33,8 @@ void main() {
             gastoId: 42,
             descripcion: 'Harina PAN 1kg',
             cantidad: 2.0,
-            precioUnitario: 1.20,
-            total: 2.40,
+            precioUnitario: 120,
+            total: 240,
             categoria: 'supermercado', // should normalize to 'Comida' or canonical
           ),
         ],
@@ -65,8 +65,8 @@ void main() {
       expect(itemMap.containsKey('gasto_id'), isFalse);
       expect(itemMap['descripcion'], equals('Harina PAN 1kg'));
       expect(itemMap['cantidad'], equals(2.0));
-      expect(itemMap['precio_unitario'], equals(1.20));
-      expect(itemMap['total'], equals(2.40));
+      expect(itemMap['precio_unitario'], equals(120));
+      expect(itemMap['total'], equals(240));
     });
 
     test('toPayload includes eliminado_en when not null', () {
@@ -75,8 +75,8 @@ void main() {
         fecha: '2026-10-26',
         comercio: 'Farmatodo',
         moneda: 'USD',
-        totalOriginal: 10.0,
-        totalUsd: 10.0,
+        totalOriginal: 1000,
+        totalUsd: 1000,
         tasaCambio: 40.0,
         categoria: 'Salud',
         creadoEn: '2026-10-26T10:00:00.000Z',
@@ -95,10 +95,10 @@ void main() {
         'fecha': '2026-10-26',
         'comercio': 'Unicasa',
         'moneda': 'VES',
-        'total_original': 200.0,
-        'total_usd': 5.0,
-        'total_usdt': 5.0,
-        'total_eur': 4.5,
+        'total_original': 20000,
+        'total_usd': 500,
+        'total_usdt': 500,
+        'total_eur': 450,
         'tasa_cambio': 40.0,
         'tasa_usdt': 40.0,
         'tasa_eur': 44.4,
@@ -109,8 +109,8 @@ void main() {
           {
             'descripcion': 'Pago de Luz',
             'cantidad': 1,
-            'precio_unitario': 200.0,
-            'total': 200.0,
+            'precio_unitario': 20000,
+            'total': 20000,
             'categoria': 'servicios',
           }
         ],

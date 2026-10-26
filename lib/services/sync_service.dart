@@ -10,8 +10,6 @@ import '../core/constants/app_constants.dart';
 import '../data/datasources/remote/firestore_gastos_remote_data_source.dart';
 import '../data/datasources/remote/gastos_remote_data_source.dart';
 import '../data/models/gasto_firestore_mapper.dart';
-import '../data/models/gasto_model.dart';
-import '../data/models/item_gasto_model.dart';
 import '../data/models/presupuesto_remoto_model.dart';
 import '../data/repositories/gasto_repository.dart';
 import 'connectivity_service.dart';
