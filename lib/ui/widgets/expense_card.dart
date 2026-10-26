@@ -119,16 +119,16 @@ class _ExpenseCardState extends State<ExpenseCard> {
       final fechaStr = DateFormatter.formatDate(widget.gasto.fecha);
       if (widget.gasto.items.isNotEmpty) {
         final count = widget.gasto.items.length;
-        final artStr = count == 1 ? '1 artÃ­culo' : '$count artÃ­culos';
-        subtitleText = '$fechaStr â€¢ $artStr';
+        final artStr = count == 1 ? '1 artículo' : '$count artículos';
+        subtitleText = '$fechaStr • $artStr';
       } else {
         subtitleText = fechaStr;
       }
     } else {
       if (widget.gasto.items.length > 1) {
-        subtitleText = '${widget.gasto.items.length} artÃ­culos â€¢ Tasa $tasaStr';
+        subtitleText = '${widget.gasto.items.length} artículos • Tasa $tasaStr';
       } else if (widget.gasto.items.length == 1) {
-        subtitleText = '1 artÃ­culo â€¢ Tasa $tasaStr';
+        subtitleText = '1 artículo • Tasa $tasaStr';
       } else {
         subtitleText = 'Tasa $tasaStr';
       }
@@ -460,7 +460,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
                                   Text(
                                     _showAllItems
                                         ? 'Ver menos'
-                                        : 'Ver ${widget.gasto.items.length - 4} artÃ­culos mÃ¡s',
+                                        : 'Ver ${widget.gasto.items.length - 4} artículos más',
                                     style: const TextStyle(
                                       color: AppColors.textPrimary,
                                       fontSize: 12,
