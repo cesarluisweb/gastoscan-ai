@@ -24,4 +24,4 @@
 - Monitoreo de CI por proceso dormido único (`scripts/wait_ci.ps1`), prohibido bucle activo turno a turno.
 
 ## Próximo Paso Inmediato
-- Esperar validación física de César en *Rinde Más Dev* (Build 555) para las hojas inferiores y el diálogo de autenticación.
+- Iniciar UI-06: Unificación del orden canónico de monedas (USD -> VES -> USDT -> EUR) en nalysis_screen.dart, more_screen.dart y modal de presupuestos en panel.astro.

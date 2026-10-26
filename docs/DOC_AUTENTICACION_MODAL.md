@@ -1,5 +1,7 @@
 # Documento Técnico: Migración a Diálogo Flotante de Autenticación y Vinculación (`AuthEmailDialog`)
 
+**Estado:** Completada ✅ (Validado en dispositivo físico por César)
+
 ## 1. Contexto y Justificación
 En versiones previas, la vinculación e inicio de sesión con correo (`mostrarModalAutenticacionEmail`) utilizaba `showModalBottomSheet` con `backgroundColor: AppColors.background` y `isScrollControlled: true`. Debido a la presencia de un widget `Center` y la expansión natural de la ruta modal a pantalla completa, la interfaz se pintaba completamente de blanco con franjas vacías arriba y abajo del formulario, rompiendo la apariencia de ventana modal y oscureciendo el fondo de la aplicación.
 

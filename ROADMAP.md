@@ -87,7 +87,7 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
     3. En `USDT` directo: interfaz limpia sin pedir bolívares, con cintillo de paridad 1:1 USD y contravalores informativos, guardando tasas en segundo plano para los lentes `Bs.` y `EUR`.
     4. En `USD` y `EUR`: 3 formas de liquidación alineadas y cálculo de 4 lentes deterministas.
     5. Paridad matemática al céntimo en el panel web (`landing/src/pages/panel.astro`).
-  - *Documentación:* Ver [DOC_TASAS_EQUIVALENCIAS_MULTIMONEDA.md](docs/DOC_TASAS_EQUIVALENCIAS_MULTIMONEDA.md). Tarea crítica: pendiente de validación por César en *Rinde Más Dev*.
+  - *Documentación:* Ver [DOC_TASAS_EQUIVALENCIAS_MULTIMONEDA.md](docs/DOC_TASAS_EQUIVALENCIAS_MULTIMONEDA.md). Tarea crítica: validada y aprobada por César en *Rinde Más Dev*.
 
 
 - `UX-06` **Corrección de Etiqueta de Agrupación en Gráfico de Inicio:** `Completada ✅`

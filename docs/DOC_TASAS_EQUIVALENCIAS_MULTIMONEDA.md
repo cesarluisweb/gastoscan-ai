@@ -2,7 +2,7 @@
 
 **Fecha:** 23 de octubre de 2026  
 **Versión de Esquema SQLite:** `18`  
-**Estado:** Pendiente de validación 🧪  
+**Estado:** Completada ✅ (Validado en dispositivo físico por César)  
 **Módulo:** Finanzas Bimonetarias / Lentes Multimoneda / Registro de Gastos  
 
 ---
