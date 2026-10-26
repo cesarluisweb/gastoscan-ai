@@ -205,6 +205,7 @@ Este marco sintetiza la experiencia y aprendizajes reales del caso de estudio de
 * **Enlace oficial:** `https://whatsapp.com/channel/0029VbEPwHLDJ6H678QLlN1H`
 * **Integración en Web:** Botón en Hero y tarjeta dedicada en `#descargar` de la landing page (`rindemas.cesarluis.com`).
 * **Propósito:** Captación y expectativa con tasa de apertura del 80%+ para avisar del lanzamiento en Play Store y distribuir la versión anticipada.
+* **Métrica actual (26/10/2026):** **15 suscriptores** captados a través de difusión orgánica directa en WhatsApp y estados de Instagram de la esposa de César. Base activa para notificar la salida en Play Store.
 
 ---
 

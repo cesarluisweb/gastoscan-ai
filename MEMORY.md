@@ -4,7 +4,7 @@
 ## Estado Actual Inmediato
 - **Rama:** `main`.
 - **Fase activa:** Fase 5 (Closed Testing activa, Marketing inicial) y Fase 6.2 (Finanzas y UX).
-- **Hito de Marketing:** Video #1 publicado en Instagram Reels y TikTok (`@rindemas.app`) con locución y demo de escaneo.
+- **Hito de Marketing:** Video #1 publicado en Instagram Reels y TikTok (`@rindemas.app`). Canal de WhatsApp alcanza 15 suscriptores orgánicos. Preparando Video #2 (gancho físico real).
 - **CI Móvil Reciente:** Build 555 en verde (`CI 40355952613 | success | 7fbbe3d`). Artefactos `rindemas-dev-apk` y `app-release-aab` listos en GitHub Actions.
 - **Acción Reciente (Anclaje de Bottom Sheets & Diálogo Auth Flotante):**
   1. Patrón canónico *shrink-wrapped* (`Material` + `SafeArea(top: false)` sin `Center` vertical) en `VoiceExpenseSheet`, `BudgetBottomSheet`, selector de comprobante (`ReviewExpenseScreen`) y menú (+) (`MainScreen`).
