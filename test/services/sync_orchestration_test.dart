@@ -59,7 +59,7 @@ class FakeGastoRepository extends Fake implements GastoRepository {
   List<PresupuestoRemotoModel>? replacedPresupuestos;
 
   @override
-  Future<List<GastoModel>> obtenerTodosLosGastosIncluyendoBorrados() async {
+  Future<List<GastoModel>> obtenerTodosLosGastosConBorrados() async {
     return List.from(localGastos);
   }
 
@@ -73,9 +73,10 @@ class FakeGastoRepository extends Fake implements GastoRepository {
   }
 
   @override
-  Future<void> eliminarGastoFisico(int id) async {
+  Future<int> eliminarGastoFisico(int id) async {
     physicallyDeletedIds.add(id);
     localGastos.removeWhere((g) => g.id == id);
+    return 1;
   }
 
   @override
@@ -103,7 +104,7 @@ class FakeGastoRepository extends Fake implements GastoRepository {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> obtenerTodosLosPresupuestos() async {
+  Future<List<Map<String, dynamic>>> obtenerTodosLosPresupuestosMensuales() async {
     return List.from(localPresupuestos);
   }
 
@@ -111,18 +112,16 @@ class FakeGastoRepository extends Fake implements GastoRepository {
   Future<void> guardarPresupuestoGeneralMes(
     int anio,
     int mes,
-    double general, {
+    double monto, {
     String moneda = 'USD',
     double metaAhorro = 0.0,
-    String? actualizadoEn,
   }) async {
     localPresupuestos.add({
       'anio': anio,
       'mes': mes,
-      'presupuesto_general': general,
+      'presupuesto_general': monto,
       'meta_ahorro': metaAhorro,
       'moneda': moneda,
-      'actualizado_en': actualizadoEn,
     });
   }
 
@@ -130,7 +129,7 @@ class FakeGastoRepository extends Fake implements GastoRepository {
   Future<void> guardarPresupuestosCategoriasMes(
     int anio,
     int mes,
-    Map<String, double> categorias, {
+    Map<String, double> presupuestos, {
     String moneda = 'USD',
   }) async {}
 
@@ -186,7 +185,7 @@ void main() {
     syncService = SyncService(
       auth: fakeAuth,
       repository: fakeRepo,
-      customRemoteDataSource: fakeRemote,
+      remoteDataSource: fakeRemote,
     );
   });
 
@@ -304,7 +303,7 @@ void main() {
         ),
       ];
 
-      await syncService.syncFromFirestore();
+      await syncService.syncFromFirestore(fakeAuth.user!);
 
       expect(fakeRepo.repairedFirestoreIds[3], equals('doc-remote-3'));
     });
