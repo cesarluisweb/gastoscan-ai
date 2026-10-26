@@ -33,3 +33,8 @@ description: "Estándares de desarrollo web, enrutamiento en Astro, cabeceras de
 - **Paleta de Colores Web:** Usar estrictamente la paleta oficial de Rinde Más: amarillo (`#FACC15` / `#EAB308`) para acentos y botones principales, fondos limpios (`#F8FAFC` / `#FFFFFF`) y textos oscuros legibles (`#0F172A` / `#334155`). Prohibido el uso de tonos naranjas.
 - **Representación Gráfica (Mockups):** Las vistas previas de la app móvil DEBEN presentarse dentro de un chasis de smartphone vertical (~20:9 con bordes redondeados y notch/cámara). Las capturas del panel web se representan con marco de navegador de escritorio.
 - **Paridad de Negocio:** El panel web (`landing/src/pages/panel.astro`) debe mantener paridad matemática exacta con la app móvil: catálogo único de las 8 categorías canónicas de `AppConstants.categorias` y soporte para las 4 divisas (VES, USD, EUR, USDT) con tasas dinámicas.
+
+## 4. Jerarquía Visual de Llamados a la Acción (Hero)
+- **Botón Principal Exclusivo:** El color amarillo oficial (`#FACC15`) queda reservado para la acción de conversión primaria ("Descargar gratis").
+- **Botón Secundario (Canales / Lista de Espera):** Debe diseñarse con estilo contorno/blanco (`bg-white hover:bg-slate-50 border border-slate-300 text-slate-800`), limitando los colores de terceros (ej. verde WhatsApp `#25D366`) estrictamente al icono vectorizado para no saturar ni competir con el botón principal.
+- **Microtexto Inferior:** Debe ser minimalista (ej. `🚀 Próximamente en Google Play`), evitando repetir información ya comunicada por los botones superiores.

@@ -28,7 +28,10 @@ Esta habilidad guía la creación de contenidos orgánicos de alto impacto (vide
 
 ## 2. Los 5 Formatos de Video Clave (TikTok / Reels)
 
-> **Regla de oro de video:** Vertical (9:16), entre 15 y 30 segundos. Hook en los primeros 2 segundos (cero intros). Hecho con el teléfono en la mano, mostrando la pantalla o la factura real.
+> **Reglas de oro de video:**
+> 1. **Gancho 100% Real y Crudo (0-3s):** Prohibido usar clips generados por IA, animaciones o metraje de stock en los primeros 3 segundos. Los datos analíticos demuestran que activan rechazo inmediato (skip rate >70%). El hook debe ser físico y contextual: factura arrugada de supermercado en mano, dinero en efectivo o pantalla real del teléfono.
+> 2. **Formato y Duración:** Vertical (9:16), entre 15 y 30 segundos. Hook sin saludos ("hola amigos") ni intros de marca.
+> 3. **Publicación Nativa Manual:** Prohibido usar APIs externas o herramientas automáticas (MCP) para publicar. Subir siempre desde la app oficial en el teléfono para conservar audios en tendencia, stickers interactivos y máximo alcance algorítmico.
 
 ### Formato A: La Factura Arrugada ("Escaneando Facturas Random")
 * **Objetivo:** Mostrar la magia del OCR y la extracción automática.
