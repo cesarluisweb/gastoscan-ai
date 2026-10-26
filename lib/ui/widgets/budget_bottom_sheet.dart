@@ -406,31 +406,28 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
 
     final mediaQuery = MediaQuery.of(context);
     final bottomInset = mediaQuery.viewInsets.bottom;
-    final systemBottom = mediaQuery.padding.bottom > 0
-        ? mediaQuery.padding.bottom
-        : mediaQuery.viewPadding.bottom;
-    final effectiveBottomPadding = (systemBottom > 0 ? systemBottom : 16.0) + 24.0;
 
     return Padding(
       padding: EdgeInsets.only(
         bottom: bottomInset,
       ),
-      child: Center(
+      child: Material(
+        key: const Key('sheet_surface_budget'),
+        color: AppColors.card,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        clipBehavior: Clip.antiAlias,
         child: ConstrainedBox(
           constraints: BoxConstraints(
-            maxWidth: 600,
-            maxHeight: mediaQuery.size.height * 0.90,
+            maxHeight: mediaQuery.size.height * 0.88,
           ),
-          child: Container(
-            decoration: const BoxDecoration(
-              color: AppColors.card,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-            ),
-            padding: EdgeInsets.fromLTRB(20, 20, 20, effectiveBottomPadding),
-            child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
             // Encabezado
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -525,8 +522,10 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
             ),
             const SizedBox(height: 10),
 
-            Expanded(
+            Flexible(
+              fit: FlexFit.loose,
               child: ListView(
+                shrinkWrap: true,
                 children: [
                   // Sección 1: Presupuesto General y Meta de Ahorro
                   Container(
@@ -814,10 +813,11 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
               ),
             ),
           ],
+            ),
+          ),
         ),
       ),
     ),
-  ),
-);
-  }
+  );
+}
 }

@@ -2660,48 +2660,46 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
   void _showImagePickerOptions() {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) {
-        final mediaQuery = MediaQuery.of(ctx);
-        final systemBottom = mediaQuery.padding.bottom > 0
-            ? mediaQuery.padding.bottom
-            : mediaQuery.viewPadding.bottom;
-        final effectiveBottom = (systemBottom > 0 ? systemBottom : 16.0) + 20.0;
-
-        return Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 600),
-            child: Container(
-              padding: EdgeInsets.fromLTRB(20, 20, 20, effectiveBottom),
-              decoration: const BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    'Adjuntar comprobante',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                  ),
-                  const SizedBox(height: 20),
-                  ListTile(
-                    leading: const Icon(Icons.camera_alt, color: AppColors.primaryDark),
-                    title: const Text('Tomar foto con la cámara'),
-                    onTap: () {
-                      Navigator.pop(ctx);
-                      _pickImage(ImageSource.camera);
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.photo_library, color: AppColors.primaryDark),
-                    title: const Text('Elegir de la galería'),
-                    onTap: () {
-                      Navigator.pop(ctx);
-                      _pickImage(ImageSource.gallery);
-                    },
-                  ),
-                ],
+        return Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          child: Material(
+            key: const Key('sheet_surface_picker'),
+            color: AppColors.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            clipBehavior: Clip.antiAlias,
+            child: SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Adjuntar comprobante',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                    ),
+                    const SizedBox(height: 12),
+                    ListTile(
+                      leading: const Icon(Icons.camera_alt, color: AppColors.primaryDark),
+                      title: const Text('Tomar foto con la cámara'),
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        _pickImage(ImageSource.camera);
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.photo_library, color: AppColors.primaryDark),
+                      title: const Text('Elegir de la galería'),
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        _pickImage(ImageSource.gallery);
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

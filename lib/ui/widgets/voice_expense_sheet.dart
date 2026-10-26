@@ -215,47 +215,39 @@ class _VoiceExpenseSheetState extends State<VoiceExpenseSheet> {
   @override
   Widget build(BuildContext context) {
     final hasText = _textCtrl.text.trim().isNotEmpty;
-    final mediaQuery = MediaQuery.of(context);
-    final bottomInset = mediaQuery.viewInsets.bottom;
-    final systemBottom = mediaQuery.padding.bottom > 0
-        ? mediaQuery.padding.bottom
-        : mediaQuery.viewPadding.bottom;
-    // Si la barra del sistema ocupa espacio (ej. 3 botones de navegación Android de ~48dp o barra de gestos),
-    // sumamos ese espacio más un respiro holgado de 28dp para que los botones nunca queden tapados.
-    final effectiveBottomPadding = (systemBottom > 0 ? systemBottom : 16.0) + 28.0;
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Padding(
       padding: EdgeInsets.only(bottom: bottomInset),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600),
-          child: Container(
-            padding: EdgeInsets.fromLTRB(24, 20, 24, effectiveBottomPadding),
-            decoration: const BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-            ),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.border,
-                  borderRadius: BorderRadius.circular(2),
+      child: Material(
+        key: const Key('sheet_surface_voice'),
+        color: AppColors.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        clipBehavior: Clip.antiAlias,
+        child: SafeArea(
+          top: false,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Dictar Gasto',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                const SizedBox(height: 16),
+                const Text(
+                  'Dictar Gasto',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
-              ),
               const SizedBox(height: 4),
               Text(
                 _statusMessage,
@@ -415,12 +407,11 @@ class _VoiceExpenseSheetState extends State<VoiceExpenseSheet> {
                     ),
                   ],
                 ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  ),
-);
+    );
   }
 }

@@ -252,17 +252,22 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   void _showAddMenu(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (ctx) {
-        return SafeArea(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 600),
-              child: Wrap(
-            children: [
+        return Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          child: Material(
+            key: const Key('sheet_surface_add_menu'),
+            color: AppColors.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            clipBehavior: Clip.antiAlias,
+            child: SafeArea(
+              top: false,
+              child: SizedBox(
+                width: double.infinity,
+                child: Wrap(
+                  children: [
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Text(
@@ -385,7 +390,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
           ),
         ),
       ),
-    );
+    ),
+  );
       },
     );
   }
