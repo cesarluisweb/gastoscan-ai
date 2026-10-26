@@ -74,6 +74,9 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
     1. `lib/ui/screens/analysis_screen.dart`: Selector horizontal de lente multimoneda (`_buildLensSwitch`).
     2. `lib/ui/screens/more_screen.dart`: Selector desplegable de "Moneda Principal de Reportes" (`DropdownButtonFormField`) y orden de tasas informativas.
     3. `landing/src/pages/panel.astro`: Selector de moneda en el modal de Presupuesto General (`<select id="modal-budget-currency">`).
+- `UI-07` **Anclaje Canónico de Hojas Desplegables (Bottom Sheets) y Diálogo de Autenticación Flotante:** `Pendiente de validación 🧪`
+  - *Problema:* Las hojas modales (`VoiceExpenseSheet`, `BudgetBottomSheet`) flotaban en el centro vertical de la pantalla en lugar de anclarse abajo; la hoja de presupuesto mostraba un espacio en blanco excesivo bajo "Guardar Presupuestos"; la modal de vinculación con correo cubría la pantalla de blanco en pantallas estrechas con `Center` y carecía de `dispose()` en controladores.
+  - *Solución:* Patrón canónico shrink-wrapped (`Material` + `SafeArea(top: false)` sin `Center` ni `Align` vertical) aplicado en `VoiceExpenseSheet`, `BudgetBottomSheet`, `ReviewExpenseScreen` y `MainScreen`. Migración del modal de autenticación a `AuthEmailDialog` (`Dialog` nativo centrado sobre scrim, con `PopScope`, `dispose()`, textos flexibles sin desborde y sanitización de errores). Pruebas de geometría y ciclo de vida unitarias implementadas (`sheet_geometry_test.dart` y `auth_dialog_test.dart`). (Verificado en CI build 555, commit `7fbbe3d`).
 
 ### Bloque B: Finanzas Bimonetarias y Lentes Multimoneda (Finanzas / UX)
 - `FIN-09` **Equivalencias Multimoneda Inmutables (`USD`, `VES`, `USDT`, `EUR`) y Migración SQLite v18:** `Pendiente de validación 🧪`
