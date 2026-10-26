@@ -7,7 +7,7 @@
 - **Sin Flutter Local:** El SDK de Flutter NO está instalado en la máquina local del usuario. Todo build, análisis estático y suite de pruebas se ejecuta exclusivamente en la nube mediante GitHub Actions CI.
 
 ## 1. Entorno PowerShell Seguro (Windows)
-- **Codificación UTF-8 Obligatoria:** Al crear o modificar archivos con PowerShell (`Set-Content`, `Out-File`), usar SIEMPRE el parámetro `-Encoding UTF8`. Omitirlo corrompe acentos y caracteres especiales.
+- **Codificación UTF-8 Obligatoria:** Al crear, modificar o leer archivos con PowerShell (`Get-Content`, `Set-Content`, `Out-File`), usar SIEMPRE el parámetro `-Encoding UTF8`. En PowerShell 5.1, `Get-Content` omite UTF-8 y asume ANSI/Windows-1252 por defecto, corrompiendo caracteres con acento (`artículo` → `artÃ­culo`) al reescribirlos. Para normalización de finales de línea (`\r\n` a `\n`), preferir Node.js (`fs.readFileSync(..., 'utf8')`) o las herramientas nativas del agente (`edit_file`, `write_file`).
 - **Prohibición del Operador `>`:** Prohibido usar el operador de redirección `>` en PowerShell (guarda en UTF-16 LE). Usar siempre tuberías: `... | Out-File archivo.ext -Encoding utf8`.
 - **Separador de Comandos en PowerShell 5.1:** Prohibido encadenar comandos con `&&` (provoca `ParserError`). Utilizar siempre el punto y coma `;` o invocar comandos en pasos independientes.
 

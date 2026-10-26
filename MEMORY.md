@@ -10,11 +10,11 @@
 
 ## Decisiones Técnicas y de Negocio Recientes
 - Lote 4 cerrado en CI: virtualización `ListView.builder` y eliminación de doble `jsonDecode` en historial, blindaje contra desbordes `RenderFlex` con `FittedBox` y `ConstrainedBox` en pantallas de 360dp con cifras en Bs, escáner ML Kit integrado en botón `+`, evaluación OCR unificada en `LocalOcrService.evaluateRawText` y eliminación del directorio redundante `cloudflare_worker/`.
-- Lección aprendida: al leer archivos con PowerShell, usar siempre `Get-Content -Encoding UTF8` para evitar corrupción de caracteres ANSI a UTF-8.
+- Aprendizajes graduados a `AGENTS.md` y `.agents/rules/flutter-desarrollo.md` vía `/learn`: lectura obligatoria UTF-8 en PowerShell 5.1 y reglas de resiliencia `RenderFlex` en 360dp.
 
 ## Errores y Fricciones a Evitar
 - No encadenar comandos con `&&` ni usar redirección `>` en PowerShell.
 - Monitoreo de CI por proceso dormido único (`scripts/wait_ci.ps1`) con `BypassSandbox: true` para acceso a la API de GitHub.
 
 ## Próximo Paso Inmediato
-- Notificar a César la culminación exitosa del Lote 4 en CI (Build 565) para validación en dispositivo físico (*Rinde Más Dev*).
+- Realizar pruebas manuales de Lote 3 y Lote 4 en dispositivo físico (*Rinde Más Dev*) antes de promocionar cambios a Google Play.
