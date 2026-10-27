@@ -23,3 +23,13 @@ Para garantizar coherencia y precisión en la experiencia de usuario, los térmi
 
 - **Prohibición de Mezcla:** Queda prohibido titular un modal como "Comprobante" si los botones de acción dicen "Guardar Factura". El vocabulario debe mantenerse uniforme en toda la vista.
 - **Avisos Neutros en Cola de Procesamiento:** En SnackBars y banners de progreso de cola, referirse a "imágenes" o "comprobantes" (ej. *"Analizando imagen con IA..."*), evitando asumir que una fotografía física corresponde únicamente a una sola factura.
+
+## 4. Terminología Oficial de Monedas y Tasas
+- **Nomenclatura Canónica Completa:** En toda vista de selección, menús desplegables, barras de lentes, tarjetas de tasas y comparativas cambiarias, los nombres de moneda deben expresarse estrictamente como:
+  - `USD BCV`
+  - `VES Bolívares`
+  - `USDT P2P`
+  - `EUR BCV`
+- **Prohibición de Textos Explicativos Entre Paréntesis:** Queda estrictamente prohibido añadir sufijos descriptivos o redundantes como `(Dólar oficial)`, `(Bolívares)`, `(Binance / Cripto)` o `(Euro oficial)`.
+- **Prohibición de "Binance" en UI de Tasas:** Queda terminantemente prohibido rotular tasas, chips o comparativas como `USDT Binance`. El término estándar oficial para la tasa de mercado/reposición en toda la interfaz es exclusivamente `USDT P2P`.
+- **Nomenclatura Corta para Espacios Compactos:** Cuando el espacio físico no permita los nombres completos (ej. filas estrechas de 4 botones, chips en formularios o modales de gastos), se deben utilizar exclusivamente los códigos canónicos de 3-4 letras: `USD`, `VES`, `USDT`, `EUR`.

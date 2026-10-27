@@ -32,7 +32,11 @@ description: "Estándares de desarrollo web, enrutamiento en Astro, cabeceras de
 - **Sanitización Obligatoria contra Inyecciones (XSS):** Todo dato textual proveniente de Firestore o entradas de usuario renderizado dinámicamente en el DOM (categorías, notas, tablas, modales) DEBE sanitizarse usando `escapeHtml(str)` para los caracteres peligrosos (`&`, `<`, `>`, `"`, `'`).
 - **Paleta de Colores Web:** Usar estrictamente la paleta oficial de Rinde Más: amarillo (`#FACC15` / `#EAB308`) para acentos y botones principales, fondos limpios (`#F8FAFC` / `#FFFFFF`) y textos oscuros legibles (`#0F172A` / `#334155`). Prohibido el uso de tonos naranjas.
 - **Representación Gráfica (Mockups):** Las vistas previas de la app móvil DEBEN presentarse dentro de un chasis de smartphone vertical (~20:9 con bordes redondeados y notch/cámara). Las capturas del panel web se representan con marco de navegador de escritorio.
-- **Paridad de Negocio:** El panel web (`landing/src/pages/panel.astro`) debe mantener paridad matemática exacta con la app móvil: catálogo único de las 8 categorías canónicas de `AppConstants.categorias` y soporte para las 4 divisas (VES, USD, EUR, USDT) con tasas dinámicas.
+- **Paridad de Negocio:** El panel web (`landing/src/pages/panel.astro`) debe mantener paridad matemática exacta con la app móvil: catálogo único de las 10 categorías canónicas de `AppConstants.categorias` y soporte para las 4 divisas (VES, USD, EUR, USDT) con tasas dinámicas.
+- **Reactividad Multimoneda en el Panel Web (`panel.astro`):** Toda tarjeta, fila o tabla que represente transacciones o facturas (`renderBills`) DEBE renderizar su monto principal en el lente activo (`formatMoney(targetTotalLens, displayCurrency)`), nunca en la moneda original de registro (`totalOrig`, `moneda`). El subtexto secundario (`secondarySubtext`) debe adaptarse reactivamente:
+  - Bajo lentes en divisa (`USD`, `USDT`, `EUR`): mostrar el monto original de caja si fue pagado en bolívares (`Orig: Bs. X.XX (Tasa: Bs. Y.YY)`) o la equivalencia en bolívares.
+  - Bajo el lente `VES`: mostrar equivalencias en divisa (`≈ $X.XX BCV • X.XX USDT`) o el monto original si fue pagado en divisa dura (`Orig: $X.XX (Tasa: Bs. Y.YY)`).
+  - La suma de los productos del desglose interno debe coincidir al céntimo en la misma divisa con el encabezado.
 
 ## 4. Jerarquía Visual de Llamados a la Acción (Hero)
 - **Botón Principal Exclusivo:** El color amarillo oficial (`#FACC15`) queda reservado para la acción de conversión primaria ("Descargar gratis").
