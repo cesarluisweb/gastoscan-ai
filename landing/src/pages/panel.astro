@@ -1737,11 +1737,34 @@ import '../styles/global.css';
                                         const itTotal = (Number(it.total || 0) / 100.0);
                                         const ratio = totalOrig > 0 ? (itTotal / totalOrig) : 0;
                                         const itAmountLens = ratio > 0 ? (targetTotalLens * ratio) : itTotal;
+                                        const itAmountUsd = ratio > 0 ? (totalUsd * ratio) : (moneda === 'VES' ? (tasa > 0 ? itTotal / tasa : itTotal) : itTotal);
+                                        const itAmountVes = moneda === 'VES' ? itTotal : (itAmountUsd * tasa);
+
+                                        const isVesLens = displayCurrency === 'VES';
+                                        const itSecAmount = isVesLens ? itAmountUsd : itAmountVes;
+                                        const itSecCurrency = isVesLens ? 'USD' : 'VES';
+
                                         const cleanDesc = String(it.descripcion || 'Producto').replace(/\s*\(\s*[EeGg]\s*\)\s*$/g, '').trim() || 'Producto';
+                                        const cant = Number(it.cantidad || 1);
+                                        const cantStr = Number.isInteger(cant) ? cant.toString() : cant.toFixed(2);
+
+                                        let unitSubtext = '';
+                                        if (cant > 1) {
+                                            const unitLens = itAmountLens / cant;
+                                            const unitSec = itSecAmount / cant;
+                                            unitSubtext = `${cantStr}x a ${formatMoney(unitLens, displayCurrency)} (${formatMoney(unitSec, itSecCurrency)}) c/u`;
+                                        }
+
                                         return `
-                                            <div class="flex justify-between items-center py-0.5">
-                                                <span>${escapeHtml(it.cantidad || 1)}x ${escapeHtml(cleanDesc)}</span>
-                                                <span class="font-mono text-slate-800">${escapeHtml(formatMoney(itAmountLens, displayCurrency))}</span>
+                                            <div class="flex justify-between items-center py-1 gap-2">
+                                                <div class="min-w-0 pr-2">
+                                                    <div class="truncate text-xs text-slate-700 font-medium">${cantStr}x ${escapeHtml(cleanDesc)}</div>
+                                                    ${unitSubtext ? `<div class="text-[10px] text-slate-400 font-medium">${escapeHtml(unitSubtext)}</div>` : ''}
+                                                </div>
+                                                <div class="text-right flex-shrink-0">
+                                                    <span class="font-mono font-semibold text-xs text-slate-800 block">${escapeHtml(formatMoney(itAmountLens, displayCurrency))}</span>
+                                                    <span class="font-mono text-[10px] text-slate-400 block">${escapeHtml(formatMoney(itSecAmount, itSecCurrency))}</span>
+                                                </div>
                                             </div>
                                         `;
                                     }).join('')}

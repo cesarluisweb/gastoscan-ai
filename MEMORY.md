@@ -11,6 +11,7 @@
 - Nomenclatura canónica de 4 lentes establecida: `USD BCV`, `VES Bolívares`, `USDT P2P` y `EUR BCV` (sin paréntesis decorativos). En vistas compactas: `USD`, `VES`, `USDT`, `EUR`. Removida mención «Binance» de UI de tasas y calculadora cambiaria a favor de `USDT P2P`.
 - Web Fase 4: Autenticación por correo/contraseña (`signInWithEmailAndPassword`, `createUserWithEmailAndPassword`, `sendPasswordResetEmail`) integrada en `panel.astro` con mensajes traducidos.
 - Web Fase 5: Edición de compras, desglose dinámico y reactividad de facturas al lente multimoneda corregida en `panel.astro`.
+- Desglose Bimonetario de Artículos: Corregida alineación derecha de precios en `ExpenseCard` (removido `Flexible` redundante de la fila) y añadido equivalente secundario en bolívares (o dólares si el lente es VES) en `ExpenseCard` y en `panel.astro`. En compras múltiples (`> 1`), el precio unitario refleja ambas monedas.
 
 ## Errores y Fricciones a Evitar
 - No encadenar comandos con `&&` ni usar redirección `>` en PowerShell.

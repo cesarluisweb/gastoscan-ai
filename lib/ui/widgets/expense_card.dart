@@ -377,6 +377,26 @@ class _ExpenseCardState extends State<ExpenseCard> {
                         final itCatIcon = AppConstants.getCategoryIcon(it.categoria);
                         final cleanDesc = cleanItemDescription(it.descripcion);
 
+                        final double itemSecondaryDisplay = (widget.monedaPrincipal.toUpperCase() == 'VES')
+                            ? itemUsd
+                            : itemVes;
+                        final String secondaryCurrency = (widget.monedaPrincipal.toUpperCase() == 'VES')
+                            ? 'USD'
+                            : 'VES';
+                        final String secondaryItemText = CurrencyFormatter.formatAmount(itemSecondaryDisplay, secondaryCurrency);
+
+                        final String unitPriceSubtext;
+                        if (it.cantidad > 1) {
+                          final double unitPrimary = itemDisplay / it.cantidad;
+                          final double unitSecondary = itemSecondaryDisplay / it.cantidad;
+                          final String cantStr = it.cantidad.toStringAsFixed(it.cantidad % 1 == 0 ? 0 : 2);
+                          final String unitPrimaryStr = CurrencyFormatter.formatAmount(unitPrimary, widget.monedaPrincipal);
+                          final String unitSecondaryStr = CurrencyFormatter.formatAmount(unitSecondary, secondaryCurrency);
+                          unitPriceSubtext = '${cantStr}x a $unitPrimaryStr ($unitSecondaryStr) c/u';
+                        } else {
+                          unitPriceSubtext = '';
+                        }
+
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 4),
                           child: Row(
@@ -408,30 +428,50 @@ class _ExpenseCardState extends State<ExpenseCard> {
                                     if (it.cantidad > 1) ...[
                                       const SizedBox(height: 2),
                                       Text(
-                                        '${it.cantidad.toStringAsFixed(it.cantidad % 1 == 0 ? 0 : 2)}x a ${CurrencyFormatter.formatAmount(itemDisplay / it.cantidad, widget.monedaPrincipal)} c/u',
+                                        unitPriceSubtext,
                                         style: const TextStyle(
                                           color: AppColors.textSecondary,
                                           fontSize: 11,
                                           fontWeight: FontWeight.w500,
                                         ),
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ],
                                   ],
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              Flexible(
-                                child: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  alignment: Alignment.centerRight,
-                                  child: Text(
-                                    itemText,
-                                    style: const TextStyle(
-                                      color: AppColors.textPrimary,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold,
+                              ConstrainedBox(
+                                constraints: const BoxConstraints(maxWidth: 130),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      alignment: Alignment.centerRight,
+                                      child: Text(
+                                        itemText,
+                                        style: const TextStyle(
+                                          color: AppColors.textPrimary,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                                     ),
-                                  ),
+                                    FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      alignment: Alignment.centerRight,
+                                      child: Text(
+                                        secondaryItemText,
+                                        style: const TextStyle(
+                                          color: AppColors.textSecondary,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.normal,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],

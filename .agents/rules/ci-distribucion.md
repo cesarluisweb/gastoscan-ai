@@ -29,6 +29,11 @@ description: "Pipeline de CI/CD en GitHub Actions, inyección programática en A
 - **Canal Único de Adquisición Web (Lista de Espera WhatsApp):** La landing page (`rindemas.cesarluis.com`) no distribuye archivos APK directos para evitar advertencias de seguridad en Android y maximizar la conversión hacia el lanzamiento en la tienda. El tráfico web se canaliza exclusivamente hacia el Canal Oficial de WhatsApp (`channel/0029VbEPwHLDJ6H678QLlN1H`) y la insignia de *Próximamente en Google Play*.
 - **Transición Post-Prueba Cerrada:** Una vez concluido el período de 14 días y aprobada la app para producción abierta, el botón principal de la landing page enlazará directamente a la ficha oficial en Google Play Store (`https://play.google.com/store/apps/details?id=com.cesarluis.rindemas`).
 - **Numeración de Build vs. `run_number`:** El número de compilación interno (`buildNumber`) es **`BASE_BUILD + github.run_number`**, donde `BASE_BUILD` se extrae de `version: x.y.z+N` en `pubspec.yaml`.
+- **Incremento Obligatorio de Versión Semántica (pubspec.yaml):** Al cerrar una tarea o conjunto de cambios en Flutter, el agente DEBE evaluar si corresponde incrementar la versión semántica antes del commit y push:
+  - **Parche (+0.0.1):** Ante correcciones de errores (bugs), ajustes de diseño, textos o rendimiento.
+  - **Menor (+0.1.0, reiniciando parche a 0):** Ante nuevas pantallas, nuevos flujos, integración de APIs o capacidades funcionales.
+  - **Mayor (+1.0.0):** Ante rediseños completos o cambios incompatibles.
+  César no debe tener que recordarlo; es responsabilidad proactiva del agente proponer o aplicar el salto correspondiente.
 
 ## 4. Gestión de Cuota y Desacoplamiento de Pipelines en GitHub Actions
 - **Pipelines Desacoplados (`build_apk.yml` vs `deploy_web.yml`):**

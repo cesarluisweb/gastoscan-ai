@@ -100,8 +100,8 @@ void main() {
       expect(find.text('2x Arroz'), findsOneWidget);
       expect(find.textContaining('Arroz (G)'), findsNothing);
 
-      // Unit price subtitle shown for multi-quantity item
-      expect(find.textContaining('2x a \$ 1,50 c/u'), findsOneWidget);
+      // Unit price subtitle shown for multi-quantity item with primary and secondary equivalent
+      expect(find.textContaining('2x a \$ 1,50 (Bs. 67,50) c/u'), findsOneWidget);
 
       expect(find.text('1x Jabón'), findsOneWidget);
       expect(find.text('2x Leche'), findsOneWidget);
@@ -249,6 +249,48 @@ void main() {
 
       // Both card header and item row display $ 7,84 proportionally
       expect(find.text(r'$ 7,84'), findsNWidgets(2));
+      // Secondary equivalent in Bolívares is also shown in header and item row
+      expect(find.text('Bs. 352,80'), findsNWidgets(2));
+    });
+
+    testWidgets('bimonetary item breakdown shows primary in VES and secondary in USD when lens is VES', (tester) async {
+      final vesGasto = GastoModel(
+        id: 4,
+        uuid: 'test-uuid-ves-bimonetary',
+        comercio: 'Panadería Central',
+        fecha: '2026-10-14',
+        moneda: 'VES',
+        totalOriginal: 9000, // Bs. 90,00
+        totalUsd: 200, // $2.00
+        tasaCambio: 45.0,
+        categoria: 'Alimentación',
+        creadoEn: '2026-10-14T12:00:00',
+        items: [
+          ItemGastoModel(descripcion: 'Canilla', cantidad: 2.0, precioUnitario: 4500, total: 9000, categoria: 'Alimentación'),
+        ],
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ExpenseCard(
+              gasto: vesGasto,
+              onDelete: () {},
+              onEdit: () {},
+              showDirectItemBreakdown: true,
+              monedaPrincipal: 'VES',
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Primary in VES: header and item row both show Bs. 90,00
+      expect(find.text('Bs. 90,00'), findsNWidgets(2));
+      // Secondary in USD: header and item row both show $ 2,00
+      expect(find.text(r'$ 2,00'), findsNWidgets(2));
+      // Unit subtitle shows primary in Bs and secondary in USD
+      expect(find.textContaining('2x a Bs. 45,00 (\$ 1,00) c/u'), findsOneWidget);
     });
   });
 }
