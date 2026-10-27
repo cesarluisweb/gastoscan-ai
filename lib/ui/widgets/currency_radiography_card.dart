@@ -189,7 +189,8 @@ class CurrencyRadiographyCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 10),
-                    Flexible(
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 130),
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
                         alignment: Alignment.centerRight,
