@@ -91,8 +91,6 @@
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/core/utils/image_hash_service_test.dart: ImageHashService - SHA-256 (OCR-01) calcula hash de "abc"
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/core/utils/image_hash_service_test.dart: ImageHashService - SHA-256 (OCR-01) calcula hash de mensaje largo de 56 bytes (1 bloque con padding multi-bloque)
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/core/utils/image_hash_service_test.dart: ImageHashService - SHA-256 (OCR-01) calcula hash identico para archivos con el mismo contenido
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) tapping search icon reveals search text field with hint
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) entering search query immediately filters out non-matching expenses
 ::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/currency_calculator_screen_test.dart: CurrencyCalculatorScreen Tests renders all initial fields, chips and comparison rows
 Aviso: no se pudo resetear ítems en procesamiento: Bad state: databaseFactory not initialized
@@ -103,7 +101,7 @@ You must call `databaseFactory = databaseFactoryFfi;` before using global openDa
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) expenses matching by commerce are included
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) tapping search icon reveals search text field with hint
 ::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/currency_calculator_screen_test.dart: CurrencyCalculatorScreen Tests typing in divisa field updates bolivares field in real time
 Aviso: no se pudo resetear ítems en procesamiento: Bad state: databaseFactory not initialized
@@ -113,6 +111,9 @@ You must call `databaseFactory = databaseFactoryFfi;` before using global openDa
 ::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) entering search query immediately filters out non-matching expenses
+::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/currency_calculator_screen_test.dart: CurrencyCalculatorScreen Tests typing in ves field updates divisa field in real time
 Aviso: no se pudo resetear ítems en procesamiento: Bad state: databaseFactory not initialized
 databaseFactory is only initialized when using sqflite. When using `sqflite_common_ffi`
@@ -122,7 +123,7 @@ You must call `databaseFactory = databaseFactoryFfi;` before using global openDa
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) expenses matching by product name are included
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) expenses matching by commerce are included
 ::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/currency_calculator_screen_test.dart: CurrencyCalculatorScreen Tests selecting Euro BCV chip recalculates with EUR rate
 Aviso: no se pudo resetear ítems en procesamiento: Bad state: databaseFactory not initialized
@@ -133,8 +134,7 @@ You must call `databaseFactory = databaseFactoryFfi;` before using global openDa
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) clearing search query via close button restores all expenses
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) clearing search text restores all expenses while keeping search open
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) expenses matching by product name are included
 ::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/currency_calculator_screen_test.dart: CurrencyCalculatorScreen Tests selecting custom rate chip allows entering custom rate
 Aviso: no se pudo resetear ítems en procesamiento: Bad state: databaseFactory not initialized
@@ -142,10 +142,8 @@ databaseFactory is only initialized when using sqflite. When using `sqflite_comm
 You must call `databaseFactory = databaseFactoryFfi;` before using global openDatabase API
 
 ::endgroup::
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) displays friendly empty state message when search yields 0 matches
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) clearing search query via close button restores all expenses
 ::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/currency_calculator_screen_test.dart: CurrencyCalculatorScreen Tests tapping copiar Bs. button copies amount to clipboard and shows snackbar
 Aviso: no se pudo resetear ítems en procesamiento: Bad state: databaseFactory not initialized
@@ -155,8 +153,10 @@ You must call `databaseFactory = databaseFactoryFfi;` before using global openDa
 ::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) case-insensitive and diacritic-insensitive search works
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) clearing search text restores all expenses while keeping search open
 ::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/currency_calculator_screen_test.dart: CurrencyCalculatorScreen Tests tapping swap pill button swaps fields, changes copy button to divisa, and recalculates properly
 Aviso: no se pudo resetear ítems en procesamiento: Bad state: databaseFactory not initialized
@@ -166,9 +166,6 @@ You must call `databaseFactory = databaseFactoryFfi;` before using global openDa
 ::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) filtering by receipt only shows expenses that have receipt image
-::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/currency_calculator_screen_test.dart: CurrencyCalculatorScreen Tests registrar gasto button is present and enabled with valid input
 Aviso: no se pudo resetear ítems en procesamiento: Bad state: databaseFactory not initialized
 databaseFactory is only initialized when using sqflite. When using `sqflite_common_ffi`
@@ -178,7 +175,7 @@ You must call `databaseFactory = databaseFactoryFfi;` before using global openDa
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) cross-month global search finds expenses from other months (UX-03)
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) displays friendly empty state message when search yields 0 matches
 ::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/currency_calculator_screen_test.dart: CurrencyCalculatorScreen Tests renders BCV legal disclaimer card and official source link
 Aviso: no se pudo resetear ítems en procesamiento: Bad state: databaseFactory not initialized
@@ -195,6 +192,9 @@ You must call `databaseFactory = databaseFactoryFfi;` before using global openDa
 
 ::endgroup::
 ::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) case-insensitive and diacritic-insensitive search works
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) filtering by receipt only shows expenses that have receipt image
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) cross-month global search finds expenses from other months (UX-03)
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) R3 Acceptance Criteria: Asignar $50 a Alimentación, y registrar un gasto de $60 en Alimentación hace que se dibuje un indicador visual de exceso (color rojo) en la UI de esa categoría
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Category within budget does NOT render the red excess alert
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests does not show local processing banner in DashboardScreen (delegated to GlobalScanQueueBanner)
@@ -209,10 +209,6 @@ You must call `databaseFactory = databaseFactoryFfi;` before using global openDa
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) AnalysisScreen month selector opens picker dialog and changes month
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) SummaryCard shows Presupuesto mensual and edit button opens budget bottom sheet
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests renders all hub sections in main view
-::endgroup::
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping shopping list navigates internally and back button returns to hub
 ::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
@@ -222,25 +218,25 @@ NotificationService: Excepción al cancelar recordatorio de pendientes: MissingP
 ::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_screen_layout_test.dart: ReviewExpenseScreen renders form and does not collapse body due to bottomNavigationBar
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests calling openChat navigates directly to chat view
 ::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_screen_layout_test.dart: ReviewExpenseScreen en USD y EUR selecciona En divisa por defecto y en primera posicion
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping view receipts navigates to ReceiptGalleryScreen and back button returns to hub
 ::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_screen_layout_test.dart: ReviewExpenseScreen uses historical BCV rate (< 50.0) for 2023 dates and calculates VES properly
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping currency calculator navigates internally and back button returns to hub
 ::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_screen_layout_test.dart: ReviewExpenseScreen renders form and does not collapse body due to bottomNavigationBar
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests renders email auth button and opens email auth modal
 ::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
@@ -250,15 +246,37 @@ NotificationService: Excepción al cancelar recordatorio de pendientes: MissingP
 ::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_screen_layout_test.dart: ReviewExpenseScreen en USD y EUR selecciona En divisa por defecto y en primera posicion
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping eliminar cuenta and confirming shows success snackbar on success
+::endgroup::
+NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_screen_layout_test.dart: ReviewExpenseScreen uses historical BCV rate (< 50.0) for 2023 dates and calculates VES properly
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping eliminar cuenta and confirming shows error snackbar on failure
+::endgroup::
+NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests Danger Zone is hidden for anonymous users and visible for logged in users
+::endgroup::
+NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests renders rates legal disclaimer and legal disclaimer menu item in MoreScreen
+::endgroup::
+NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_screen_layout_test.dart: ReviewExpenseScreen en VES aplica divulgacion progresiva: muestra 3 columnas y despliega chips al tocar Ajustar tasas
 
 Warning: A call to tap() with finder "Found 1 widget with key [<'chip_rate_eur_bcv'>]: [
-  ChoiceChip-[<'chip_rate_eur_bcv'>](dependencies: [InheritedCupertinoTheme, MediaQuery, _InheritedTheme, _LocalizationsScope-[GlobalKey#e8675]]),
+  ChoiceChip-[<'chip_rate_eur_bcv'>](dependencies: [InheritedCupertinoTheme, MediaQuery, _InheritedTheme, _LocalizationsScope-[GlobalKey#2d4da]]),
 ]" derived an Offset (Offset(461.1, 853.0)) that would not hit test on the specified widget.
 Maybe the widget is actually off-screen, or another widget is obscuring it, or the widget cannot receive pointer events.
 Indeed, Offset(461.1, 853.0) is outside the bounds of the root of the render tree, Size(432.0, 960.0).
-The finder corresponds to this RenderBox: RenderSemanticsAnnotations#eeb48 relayoutBoundary=up19
-The hit test result at that offset is: HitTestResult(HitTestEntry<HitTestTarget>#b4a2d(_ReusableRenderView#0bc21), HitTestEntry<HitTestTarget>#feee1(<AutomatedTestWidgetsFlutterBinding>))
+The finder corresponds to this RenderBox: RenderSemanticsAnnotations#3f93b relayoutBoundary=up19
+The hit test result at that offset is: HitTestResult(HitTestEntry<HitTestTarget>#e946e(_ReusableRenderView#fc4fa), HitTestEntry<HitTestTarget>#d20bd(<AutomatedTestWidgetsFlutterBinding>))
 #0      WidgetController._getElementPoint (package:flutter_test/src/controller.dart:2165:25)
 #1      WidgetController.getCenter (package:flutter_test/src/controller.dart:1947:12)
 #2      WidgetController.tap (package:flutter_test/src/controller.dart:1080:7)
@@ -275,27 +293,6 @@ To make this warning fatal, set WidgetController.hitTestWarningShouldBeFatal to 
 
 ::endgroup::
 ::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_screen_layout_test.dart: ReviewExpenseScreen en USDT muestra cintillo informativo multimoneda limpio
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping eliminar cuenta and confirming shows success snackbar on success
-::endgroup::
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping eliminar cuenta and confirming shows error snackbar on failure
-::endgroup::
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests Danger Zone is hidden for anonymous users and visible for logged in users
-::endgroup::
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests renders rates legal disclaimer and legal disclaimer menu item in MoreScreen
-::endgroup::
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests renders version card with Google Play button in MoreScreen
 ::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
@@ -304,27 +301,29 @@ NotificationService: Excepción al cancelar recordatorio de pendientes: MissingP
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests al tocar refresh_rates_btn ejecuta actualizacion silenciosa
 ::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_screen_layout_test.dart: ReviewExpenseScreen en USDT muestra cintillo informativo multimoneda limpio
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_token_test.dart: ReviewExpenseScreen mounts and loads rates without error under token guard
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/analysis_screen_redesign_test.dart: AnalysisScreen Redesign & Enrichment Tests 1. Cabecera global: no tiene pestañas de moneda segmentadas y aloja CurrencyLensDropdown en Tarjeta 1
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/analysis_screen_redesign_test.dart: AnalysisScreen Redesign & Enrichment Tests 2. Tarjeta 1: Total gastado en [Mes], límite editable, equivalente secundario y recuadro inferior analítico
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/analysis_screen_redesign_test.dart: AnalysisScreen Redesign & Enrichment Tests 3. Tarjeta 2: Evolución Diaria renderiza curva acumulativa y ritmo dinámico
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/analysis_screen_redesign_test.dart: AnalysisScreen Redesign & Enrichment Tests 4. Tarjeta 3 y Tarjeta 4: Dona y Control de Presupuestos desacoplados en tarjetas independientes
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/receipt_gallery_screen_test.dart: ReceiptGalleryScreen Widget Tests displays empty state when there are no receipts with existing files
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/analysis_screen_redesign_test.dart: AnalysisScreen Redesign & Enrichment Tests 5. Tarjeta 5: ¿En qué moneda se va tu dinero? agrupa por moneda de origen
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/analysis_screen_redesign_test.dart: AnalysisScreen Redesign & Enrichment Tests 6. Tarjeta 6: Radiografía de Compras clasifica hormiga/medias/fuertes y mayor gasto
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/analysis_screen_redesign_test.dart: AnalysisScreen Redesign & Enrichment Tests 7. ListView de AnalysisScreen tiene padding inferior seguro de al menos 100dp
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/receipt_gallery_screen_test.dart: ReceiptGalleryScreen Widget Tests displays empty state when there are no receipts with existing files
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/receipt_gallery_screen_test.dart: ReceiptGalleryScreen Widget Tests month navigation buttons update selected month and year
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/receipt_gallery_screen_test.dart: ReceiptGalleryScreen Widget Tests invokes onBack callback when back button is pressed
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/analysis_screen_redesign_test.dart: AnalysisScreen Redesign & Enrichment Tests 7. ListView de AnalysisScreen tiene padding inferior seguro de al menos 100dp
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/expense_history_screen_test.dart: ExpenseHistoryScreen Tests renders monthly summary strip and filter chips
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/expense_history_screen_test.dart: ExpenseHistoryScreen Tests tapping receipt filter chip filters only expenses with photo
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/expense_history_screen_test.dart: ExpenseHistoryScreen Tests tapping category chip filters only expenses in that category
 ::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart: ScanScreen Multi-Image Selection Tests multi-image selection enqueues all images and pops back to Dashboard
 [ScanScreen] pickMultiImage returned 3 files
 [ScanScreen] Enqueueing multiple paths: [/tmp/receipt1.jpg, /tmp/receipt2.jpg, /tmp/receipt3.jpg]
 [ScanScreen] Finished enqueueMultiple. Provider pendingCount: 3
+::endgroup::
+::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/expense_history_screen_test.dart: ExpenseHistoryScreen Tests tapping category chip filters only expenses in that category
 ::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart: ScanScreen Multi-Image Selection Tests empty selection from gallery does not enqueue or pop
 [ScanScreen] pickMultiImage returned 0 files
@@ -346,8 +345,8 @@ NotificationService: Excepción al cancelar recordatorio de pendientes: MissingP
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping Asistente IA in Mas and pressing back returns to Mas hub
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests preserves chat conversation in ChatProvider across screen rebuilds
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests system back on non-home tab returns to Inicio
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests system back on Inicio tab shows exit confirmation snackbar
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests reset conversation dialog cancels without clearing or confirms and clears
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests system back on Inicio tab shows exit confirmation snackbar
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests excludes tax and IVA items from top_productos_mes in semantic context
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping search button on Inicio navigates to Gastos and activates search
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping search button on Analisis navigates to Gastos and activates search
@@ -520,7 +519,7 @@ Error en LocalOcrService.processImage: MissingPluginException(No implementation 
 Error en LocalOcrService.processImage: MissingPluginException(No implementation found for method vision#startTextRecognizer on channel google_mlkit_text_recognizer)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al programar recordatorio de pendientes: LateInitializationError: Field '_local@712310200' has not been initialized.
-Fallo al procesar item en cola: PathNotFoundException: Cannot open file, path = '/tmp/scan_queue_test_UZCKRV/ready_shared.jpg' (OS Error: No such file or directory, errno = 2)
+Fallo al procesar item en cola: PathNotFoundException: Cannot open file, path = '/tmp/scan_queue_test_DIQONA/ready_shared.jpg' (OS Error: No such file or directory, errno = 2)
 ::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests loadQueue recovers stale processing items back to pending
 ::endgroup::
@@ -545,7 +544,7 @@ Error en LocalOcrService.processImage: MissingPluginException(No implementation 
 ::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: GeminiExtractionResult.listFromJson Tests enqueueMultiple drops duplicate receipts within same batch (OCR-01)
 Error en LocalOcrService.processImage: MissingPluginException(No implementation found for method vision#startTextRecognizer on channel google_mlkit_text_recognizer)
-[ScanQueue] Comprobante duplicado en el mismo lote ignorado: /tmp/GKKYSB/recibo_a_dup.jpg
+[ScanQueue] Comprobante duplicado en el mismo lote ignorado: /tmp/TUQSJR/recibo_a_dup.jpg
 Error en LocalOcrService.processImage: MissingPluginException(No implementation found for method vision#startTextRecognizer on channel google_mlkit_text_recognizer)
 ::endgroup::
 ::group::✅ Passing tests
@@ -572,8 +571,8 @@ Error en LocalOcrService.processImage: MissingPluginException(No implementation 
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/auth_dialog_test.dart: AuthEmailDialog Tests (Geometría flotante, ciclo de vida y teclado) Geometría: se renderiza como Dialog centrado y flotante sobre scrim
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/auth_dialog_test.dart: AuthEmailDialog Tests (Geometría flotante, ciclo de vida y teclado) Ciclo de vida: abrir y cerrar dos veces seguidas no genera excepciones ni fugas
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/summary_card_test.dart: SummaryCard - Rediseño Modelo Mental V2 y FIN-07 Meses Históricos muestra Te sobraron para meses pasados y oculta disponible para gastar
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/summary_card_test.dart: SummaryCard - Rediseño Modelo Mental V2 y FIN-07 Meses Históricos muestra Disponible para gastar y Gastado vs Presupuesto para el mes actual
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/auth_dialog_test.dart: AuthEmailDialog Tests (Geometría flotante, ciclo de vida y teclado) Teclado abierto (300dp): sin desbordamientos de RenderFlex
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/summary_card_test.dart: SummaryCard - Rediseño Modelo Mental V2 y FIN-07 Meses Históricos muestra Disponible para gastar y Gastado vs Presupuesto para el mes actual
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/auth_dialog_test.dart: AuthEmailDialog Tests (Geometría flotante, ciclo de vida y teclado) Bloqueo de cierre tocando el barrier durante la carga
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/summary_card_test.dart: SummaryCard - Rediseño Modelo Mental V2 y FIN-07 Meses Históricos al presionar botones de lente invoca onMonedaChanged con la moneda correcta
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/summary_card_test.dart: SummaryCard - Rediseño Modelo Mental V2 y FIN-07 Meses Históricos cuando no hay presupuesto muestra botón para definirlo y oculta disponible
@@ -592,136 +591,76 @@ Error en LocalOcrService.processImage: MissingPluginException(No implementation 
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/month_selector_bar_test.dart: MonthSelectorBar Widget Tests tapping chevron right navigates to next month and increments year when month is December
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: SummaryCard Currency Preference Tests renders USD on top when monedaPrincipal is USD
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: SummaryCard Currency Preference Tests renders VES on top when monedaPrincipal is VES
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/month_selector_bar_test.dart: MonthSelectorBar Widget Tests tapping pill opens 12-month dialog and selecting month updates provider and closes dialog
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: SummaryCard Currency Preference Tests renders USDT formatted amount when monedaPrincipal is USDT
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: SummaryCard Currency Preference Tests converts USD budget to VES lens when monedaPrincipal is VES
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/month_selector_bar_test.dart: MonthSelectorBar Widget Tests respects keyPrefix for title and dialog picks
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/month_selector_bar_test.dart: MonthSelectorBar Widget Tests tapping pill opens 12-month dialog and selecting month updates provider and closes dialog
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: ExpenseCard Currency Preference Tests displays USD as primary when monedaPrincipal is USD
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/month_selector_bar_test.dart: MonthSelectorBar Widget Tests supports custom onMonthChanged callback without relying solely on default provider
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: ExpenseCard Currency Preference Tests displays VES as primary when monedaPrincipal is VES
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: ExpenseCard Currency Preference Tests displays EUR as primary with converted amount when monedaPrincipal is EUR
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: ExpenseCard Currency Preference Tests displays USDT as primary with 1:1 parity when monedaPrincipal is USDT
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/month_selector_bar_test.dart: MonthSelectorBar Widget Tests respects keyPrefix for title and dialog picks
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: ExpenseCard Currency Preference Tests displays USDT as primary with P2P rate when gasto is in VES
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/month_selector_bar_test.dart: MonthSelectorBar Widget Tests supports custom onMonthChanged callback without relying solely on default provider
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CategoryChart Currency Preference Tests renders category totals and budgets in the budget currency (VES)
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CategoryChart Currency Preference Tests renders EUR symbol and converted amounts when monedaPrincipal is EUR
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CategoryChart Currency Preference Tests renders USDT symbol and amounts when monedaPrincipal is USDT
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/lote_4_ui_resilience_and_performance_test.dart: Lote 4: UI Resilience & Performance Tests SummaryCard resists 360dp width with million Bolivares amounts without RenderFlex overflow
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays welcome prompt when expenses are empty
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/lote_4_ui_resilience_and_performance_test.dart: Lote 4: UI Resilience & Performance Tests AnalysisScreen analytical box resists 360dp width with million Bolivares amounts
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays over budget warning when spent exceeds budget
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays daily pace recommendation when budget is healthy
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/lote_4_ui_resilience_and_performance_test.dart: Lote 4: UI Resilience & Performance Tests CategoryChart category budget rows resist 360dp width with million Bolivares amounts
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests suggests defining budget when no general budget exists
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/lote_4_ui_resilience_and_performance_test.dart: Lote 4: UI Resilience & Performance Tests PendingExpenseCard date and amount row resists 360dp width with million Bolivares
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays new month motivational insight when in first days with budget
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays compromised savings goal alert when spent exceeds spending limit
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays pace and protected savings goal when healthy with savings goal
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests does not double-multiply VES amounts by tasaCambio ([F1-C03])
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/lote_4_ui_resilience_and_performance_test.dart: Lote 4: UI Resilience & Performance Tests AnalysisScreen analytical box resists 360dp width with million Bolivares amounts
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/lote_4_ui_resilience_and_performance_test.dart: Lote 4: UI Resilience & Performance Tests CategoryChart category budget rows resist 360dp width with million Bolivares amounts
+::endgroup::
+::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/lote_4_ui_resilience_and_performance_test.dart: Lote 4: UI Resilience & Performance Tests PendingExpenseCard date and amount row resists 360dp width with million Bolivares (failed)
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: null
+  Actual: FlutterError:<A RenderFlex overflowed by 23 pixels on the right.>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure>.<anonymous closure> (file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/lote_4_ui_resilience_and_performance_test.dart:252:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/lote_4_ui_resilience_and_performance_test.dart line 252
+The test description was:
+  PendingExpenseCard date and amount row resists 360dp width with million Bolivares
+════════════════════════════════════════════════════════════════════════════════════════════════════
+Test failed. See exception logs above.
+The test description was: PendingExpenseCard date and amount row resists 360dp width with million Bolivares
+
+::endgroup::
+::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/lote_4_ui_resilience_and_performance_test.dart: Lote 4: UI Resilience & Performance Tests ExpenseHistoryScreen virtualizes list with ListView.builder and shows summary strip at 360dp
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/lote_4_ui_resilience_and_performance_test.dart: Lote 4: UI Resilience & Performance Tests LocalOcrService.evaluateRawText unifies OCR evaluation for text pipeline
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests does not double-multiply VES amounts by tasaCambio ([F1-C03])
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/expense_card_test.dart: AppConstants.getCategoryIcon Canonical Tests returns canonical icons for all standard categories
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/expense_card_test.dart: AppConstants.getCategoryIcon Canonical Tests normalizes synonyms to canonical icons
-::endgroup::
-::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/expense_card_test.dart: ExpenseCard Widget Tests (UX-07 & Refinements) compact mode (showDirectItemBreakdown=false) hides breakdown initially and shows item count in subtitle (failed)
-══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
-The following TestFailure was thrown running a test:
-Expected: exactly one matching candidate
-  Actual: _TextContainingWidgetFinder:<Found 0 widgets with text containing 6 artículos: []>
-   Which: means none were found but one was expected
-
-When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/expense_card_test.dart:69:7)
-<asynchronous suspension>
-#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
-<asynchronous suspension>
-#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
-<asynchronous suspension>
-<asynchronous suspension>
-(elided one frame from package:stack_trace)
-
-This was caught by the test expectation on the following line:
-  file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/expense_card_test.dart line 69
-The test description was:
-  compact mode (showDirectItemBreakdown=false) hides breakdown initially and shows item count in
-  subtitle
-════════════════════════════════════════════════════════════════════════════════════════════════════
-Test failed. See exception logs above.
-The test description was: compact mode (showDirectItemBreakdown=false) hides breakdown initially and shows item count in subtitle
-
-::endgroup::
-::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/expense_card_test.dart: ExpenseCard Widget Tests (UX-07 & Refinements) direct breakdown mode (showDirectItemBreakdown=true) displays top 4 items, cleans (G) suffixes and shows unit price (failed)
-══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
-The following TestFailure was thrown running a test:
-Expected: exactly one matching candidate
-  Actual: _TextWidgetFinder:<Found 0 widgets with text "Ver 2 artículos más": []>
-   Which: means none were found but one was expected
-
-When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/expense_card_test.dart:114:7)
-<asynchronous suspension>
-#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
-<asynchronous suspension>
-#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
-<asynchronous suspension>
-<asynchronous suspension>
-(elided one frame from package:stack_trace)
-
-This was caught by the test expectation on the following line:
-  file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/expense_card_test.dart line 114
-The test description was:
-  direct breakdown mode (showDirectItemBreakdown=true) displays top 4 items, cleans (G) suffixes and
-  shows unit price
-════════════════════════════════════════════════════════════════════════════════════════════════════
-Test failed. See exception logs above.
-The test description was: direct breakdown mode (showDirectItemBreakdown=true) displays top 4 items, cleans (G) suffixes and shows unit price
-
-::endgroup::
-::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/category_chart_test.dart: CategoryChart moneda del presupuesto gastado y presupuesto en la misma moneda (VES)
-::endgroup::
-::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/expense_card_test.dart: ExpenseCard Widget Tests (UX-07 & Refinements) single item purchase shows item row with category icon, quantity and price consistently (failed)
-══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
-The following TestFailure was thrown running a test:
-Expected: exactly one matching candidate
-  Actual: _TextContainingWidgetFinder:<Found 0 widgets with text containing 1 artículo • Tasa 45,00:
-[]>
-   Which: means none were found but one was expected
-
-When the exception was thrown, this was the stack:
-#4      main.<anonymous closure>.<anonymous closure> (file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/expense_card_test.dart:167:7)
-<asynchronous suspension>
-#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
-<asynchronous suspension>
-#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
-<asynchronous suspension>
-<asynchronous suspension>
-(elided one frame from package:stack_trace)
-
-This was caught by the test expectation on the following line:
-  file:///home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/expense_card_test.dart line 167
-The test description was:
-  single item purchase shows item row with category icon, quantity and price consistently
-════════════════════════════════════════════════════════════════════════════════════════════════════
-Test failed. See exception logs above.
-The test description was: single item purchase shows item row with category icon, quantity and price consistently
-
-::endgroup::
-::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/category_chart_test.dart: CategoryChart moneda del presupuesto sin presupuesto no muestra ratio gastado/presupuesto
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/expense_card_test.dart: ExpenseCard Widget Tests (UX-07 & Refinements) compact mode (showDirectItemBreakdown=false) hides breakdown initially and shows item count in subtitle
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/expense_card_test.dart: ExpenseCard Widget Tests (UX-07 & Refinements) direct breakdown mode (showDirectItemBreakdown=true) displays top 4 items, cleans (G) suffixes and shows unit price
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/expense_card_test.dart: ExpenseCard Widget Tests (UX-07 & Refinements) single item purchase shows item row with category icon, quantity and price consistently
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/expense_card_test.dart: ExpenseCard Widget Tests (UX-07 & Refinements) compact mode allows expanding 1-item purchase on tap
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/expense_card_test.dart: ExpenseCard Widget Tests (UX-07 & Refinements) proportional currency calculation aligns EUR expense items with USD header
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/category_chart_test.dart: CategoryChart moneda del presupuesto gastado y presupuesto en la misma moneda (VES)
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/category_chart_test.dart: CategoryChart moneda del presupuesto sin presupuesto no muestra ratio gastado/presupuesto
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/category_chart_test.dart: CategoryChart moneda del presupuesto presupuesto USD se muestra sin conversión artificial
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/category_chart_test.dart: CategoryChart UX-06 Grouping Tests consolidates categories after top 4 with +X categorias in Dashboard view
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/sheet_geometry_test.dart: Pruebas de Geometría Real y Anclaje de Bottom Sheets (Edge-to-Edge) VoiceExpenseSheet: anclada abajo y con scrim visible arriba
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/sheet_geometry_test.dart: Pruebas de Geometría Real y Anclaje de Bottom Sheets (Edge-to-Edge) BudgetBottomSheet: anclada abajo, shrink-wrapped y con botón visible sobre la barra
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/sheet_geometry_test.dart: Pruebas de Geometría Real y Anclaje de Bottom Sheets (Edge-to-Edge) ReviewExpenseScreen selector de comprobante: anclada abajo y shrink-wrapped
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/sheet_geometry_test.dart: Pruebas de Geometría Real y Anclaje de Bottom Sheets (Edge-to-Edge) MainScreen menú central (+): anclado abajo y shrink-wrapped
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/more_screen_copy_and_dialogs_test.dart: Cerrar sesión shows linked copy when user is linked
-::endgroup::
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/sheet_geometry_test.dart: Pruebas de Geometría Real y Anclaje de Bottom Sheets (Edge-to-Edge) Resistencia con teclado abierto: sin desbordamientos de RenderFlex
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/more_screen_copy_and_dialogs_test.dart: Cerrar sesión shows linked copy when user is linked
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/more_screen_copy_and_dialogs_test.dart: Eliminar cuenta dialog includes eliminarFotos switch and passes value to provider
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/receipt_viewer_dialog_test.dart: ReceiptViewerDialog Tests renders title and non-existing image fallback gracefully
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: VoiceExpenseSheet Editable Tests renders title, input field, mic button and cancel button
@@ -736,4 +675,4 @@ NotificationService: Excepción al cancelar recordatorio de pendientes: MissingP
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/budget_bottom_sheet_test.dart: BudgetBottomSheet preserves 2 decimals on non-integer amounts >= 100 ([F1-I01])
 ::endgroup::
 
-::error::386 tests passed, 3 failed.
+::error::388 tests passed, 1 failed.
