@@ -123,7 +123,7 @@ class PendingExpenseCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                // Contenido central: Comercio y estado/artículos sin colisiones
+                // Contenido central: Comercio y estado/artículos protegido contra desbordes
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -141,51 +141,51 @@ class PendingExpenseCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 3),
                       if (hasAmount) ...[
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFEF3C7),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.pending_actions,
-                                    size: 11,
-                                    color: Color(0xFF92400E),
-                                  ),
-                                  SizedBox(width: 3),
-                                  Text(
-                                    'Por revisar',
-                                    style: TextStyle(
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFEF3C7),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.pending_actions,
+                                      size: 11,
                                       color: Color(0xFF92400E),
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
                                     ),
-                                  ),
-                                ],
+                                    SizedBox(width: 3),
+                                    Text(
+                                      'Por revisar',
+                                      style: TextStyle(
+                                        color: Color(0xFF92400E),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                            if (gasto.items.isNotEmpty) ...[
-                              const SizedBox(width: 6),
-                              Flexible(
-                                child: Text(
+                              if (gasto.items.isNotEmpty) ...[
+                                const SizedBox(width: 6),
+                                Text(
                                   '${gasto.items.length} ${gasto.items.length == 1 ? 'artículo' : 'artículos'}',
                                   style: const TextStyle(
                                     color: AppColors.textSecondary,
                                     fontSize: 11,
                                     fontWeight: FontWeight.w500,
                                   ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
                                 ),
-                              ),
+                              ],
                             ],
-                          ],
+                          ),
                         ),
                       ] else ...[
                         Text(
