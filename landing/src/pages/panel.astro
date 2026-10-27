@@ -1664,14 +1664,6 @@ import '../styles/global.css';
                     totalUsdt = tUsdt > 0 ? (totalOrig / tUsdt) : totalUsd;
                 }
 
-                let secondarySubtext = '';
-                if (moneda === 'VES') {
-                    secondarySubtext = `≈ ${formatMoney(totalUsd, 'USD')} BCV • ${formatMoney(totalUsdt, 'USDT')}`;
-                } else {
-                    const equivVes = (totalUsd * tasa);
-                    secondarySubtext = `≈ ${formatMoney(equivVes, 'VES')} (Tasa: Bs. ${tasa.toFixed(2)})`;
-                }
-
                 const budgetCurrency = currentPresupuesto.moneda || 'USD';
                 const displayCurrency = activeLens || budgetCurrency;
                 const vesTotalGasto = moneda === 'VES' ? totalOrig : (totalUsd * tasa);
@@ -1689,6 +1681,23 @@ import '../styles/global.css';
                     } else {
                         const tEur = Number(gasto.tasa_eur || 0) > 0 ? Number(gasto.tasa_eur) : (Number(liveRates.eur || 0) > 0 ? Number(liveRates.eur) : 0);
                         targetTotalLens = tEur > 0 ? (vesTotalGasto / tEur) : (eurRateRef > 0 ? (vesTotalGasto / eurRateRef) : totalUsd);
+                    }
+                }
+
+                let secondarySubtext = '';
+                if (displayCurrency === 'VES') {
+                    if (moneda === 'VES') {
+                        secondarySubtext = `≈ ${formatMoney(totalUsd, 'USD')} BCV • ${formatMoney(totalUsdt, 'USDT')}`;
+                    } else {
+                        secondarySubtext = `Orig: ${formatMoney(totalOrig, moneda)} (Tasa: Bs. ${tasa.toFixed(2)})`;
+                    }
+                } else {
+                    if (moneda === 'VES') {
+                        secondarySubtext = `Orig: ${formatMoney(totalOrig, 'VES')} (Tasa: Bs. ${tasa.toFixed(2)})`;
+                    } else if (moneda === displayCurrency) {
+                        secondarySubtext = `≈ ${formatMoney(vesTotalGasto, 'VES')} (Tasa: Bs. ${tasa.toFixed(2)})`;
+                    } else {
+                        secondarySubtext = `Orig: ${formatMoney(totalOrig, moneda)} • ≈ ${formatMoney(vesTotalGasto, 'VES')}`;
                     }
                 }
 
@@ -1711,7 +1720,7 @@ import '../styles/global.css';
                             </div>
                         </div>
                         <div class="text-right flex-shrink-0">
-                            <span class="font-bold text-base text-slate-900 block">${escapeHtml(formatMoney(totalOrig, moneda))}</span>
+                            <span class="font-bold text-base text-slate-900 block">${escapeHtml(formatMoney(targetTotalLens, displayCurrency))}</span>
                             <span class="text-xs text-slate-400 block">${escapeHtml(secondarySubtext)}</span>
                         </div>
                     </div>
