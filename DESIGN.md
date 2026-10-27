@@ -56,6 +56,13 @@ El color amarillo (`AppColors.primaryDark` preferiblemente) queda reservado de f
 2. **Contenedores de fondo:** Cajas de acento o badges gráficos (con texto explícito en negro).
 3. **Bordes activos:** Indicadores de selección o foco en tarjetas y chips.
 
+### 2.4 Tarjetas de Borrador y Estados Pendientes de Validación (IA)
+Para componentes que representen compras o facturas no confirmadas (`PendingExpenseCard`):
+1. **Fondo y Superficie:** Prohibido usar fondos amarillos planos intensos en la tarjeta completa para evitar fatiga visual cuando hay múltiples facturas en cola. Usar fondo marfil suave cálido (`#FFFDF5`), armónico con `GlobalScanQueueBanner`, con borde ámbar suave (`#FEF08A`, ancho 1.2px).
+2. **Contraste de Estado:** Los badges o textos de advertencia/pendiente DEBEN usar ámbar oscuro (`Color(0xFF92400E)`) sobre pastilla ámbar claro (`Color(0xFFFEF3C7)` o `#FEF9C3`), garantizando contraste WCAG AAA superior a 7:1. Prohibido usar texto o iconos ámbar claro sobre fondos amarillos.
+3. **Acción Faltante:** Si la factura carece de monto detectado, mostrar un botón interactivo de acción directa con fondo amarillo de marca y texto negro explícito (`Por revisar →`).
+4. **Densidad y Ergonomía:** Mantener padding vertical compacto ($\le 12\text{dp}$, idealmente $11\text{dp}$) y márgenes entre 8dp y 10dp para permitir visualizar múltiples elementos sin scroll excesivo.
+
 ---
 
 ## 3. Patrones de Código Dart Recomendados
