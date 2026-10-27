@@ -280,8 +280,7 @@ class _CategoryChartState extends State<CategoryChart> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 130),
+                      Flexible(
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
                           alignment: Alignment.centerRight,
