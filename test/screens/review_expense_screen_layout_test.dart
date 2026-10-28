@@ -130,12 +130,12 @@ void main() {
     expect(comoPagasteText.style?.fontSize, 16);
     expect(comoPagasteText.style?.fontWeight, FontWeight.bold);
 
-    // Verify Agregar producto button (without +) and icon color
-    await tester.drag(find.byType(ListView), const Offset(0, -500));
+    // Verify Agregar otro producto button (without +) and icon color
+    await tester.ensureVisible(find.byKey(const Key('review_expense_add_item_btn')));
     await tester.pumpAndSettle();
     final addBtnFinder = find.byKey(const Key('review_expense_add_item_btn'));
     expect(addBtnFinder, findsOneWidget);
-    expect(find.widgetWithText(OutlinedButton, 'Agregar producto'), findsOneWidget);
+    expect(find.widgetWithText(OutlinedButton, 'Agregar otro producto'), findsOneWidget);
     final addIconFinder = find.descendant(of: addBtnFinder, matching: find.byIcon(Icons.add));
     expect(addIconFinder, findsOneWidget);
     final addIcon = tester.widget<Icon>(addIconFinder);
