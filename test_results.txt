@@ -1,10 +1,7 @@
 Analyzing gastoscan-ai...                                       
 
    info • Use 'const' for final variables initialized to a constant value. Try replacing 'final' with 'const' • lib/data/models/gemini_extraction_result.dart:69:5 • prefer_const_declarations
-   info • The import of 'package:flutter/foundation.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart'. Try removing the import directive • lib/main.dart:1:8 • unnecessary_import
-   info • Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter • lib/main.dart:68:9 • use_super_parameters
-  error • The getter 'prefUltimoRecordatorioFinDeSemanaTs' isn't defined for the type 'AppConstants'. Try importing the library that defines 'prefUltimoRecordatorioFinDeSemanaTs', correcting the name to the name of an existing getter, or defining a getter or field named 'prefUltimoRecordatorioFinDeSemanaTs' • lib/services/notification_service.dart:473:50 • undefined_getter
-  error • The getter 'prefUltimoRecordatorioFinDeSemanaTs' isn't defined for the type 'AppConstants'. Try importing the library that defines 'prefUltimoRecordatorioFinDeSemanaTs', correcting the name to the name of an existing getter, or defining a getter or field named 'prefUltimoRecordatorioFinDeSemanaTs' • lib/services/notification_service.dart:482:37 • undefined_getter
+   info • Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter • lib/main.dart:67:9 • use_super_parameters
    info • Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter • lib/ui/screens/analysis_screen.dart:21:9 • use_super_parameters
    info • Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter • lib/ui/screens/chat_screen.dart:56:9 • use_super_parameters
    info • 'localeId' is deprecated and shouldn't be used. Use SpeechListenOptions.localeId instead. Try replacing the use of the deprecated member with the replacement • lib/ui/screens/chat_screen.dart:190:11 • deprecated_member_use
