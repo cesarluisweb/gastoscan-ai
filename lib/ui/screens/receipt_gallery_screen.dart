@@ -288,16 +288,20 @@ class _ReceiptGalleryScreenState extends State<ReceiptGalleryScreen> {
                       children: [
                         const Icon(Icons.photo_library_outlined, size: 16, color: AppColors.textSecondary),
                         const SizedBox(width: 6),
-                        Text(
-                          '${receipts.length} ${receipts.length == 1 ? 'comprobante guardado' : 'comprobantes guardados'}',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textSecondary,
+                        Expanded(
+                          child: Text(
+                            '${receipts.length} ${receipts.length == 1 ? 'comprobante guardado' : 'comprobantes guardados'}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textSecondary,
+                            ),
                           ),
                         ),
-                        const Spacer(),
-                        if (!_isSelectionMode)
+                        if (!_isSelectionMode) ...[
+                          const SizedBox(width: 8),
                           const Text(
                             'Mantén para seleccionar',
                             style: TextStyle(
@@ -305,6 +309,7 @@ class _ReceiptGalleryScreenState extends State<ReceiptGalleryScreen> {
                               color: AppColors.textMuted,
                             ),
                           ),
+                        ],
                       ],
                     ),
                   ),

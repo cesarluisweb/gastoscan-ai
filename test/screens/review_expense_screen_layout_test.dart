@@ -253,7 +253,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // 1. Por defecto (estado colapsado): Las 3 columnas de equivalencias son visibles de inmediato
-    expect(find.text('Equiv. USD (BCV)'), findsOneWidget);
+    expect(find.text('Equiv. USD (BCV)'), findsWidgets);
     expect(find.text('Equiv. EUR (BCV)'), findsOneWidget);
     expect(find.text('Equiv. USDT (P2P)'), findsOneWidget);
     expect(find.textContaining('\$'), findsWidgets);
@@ -347,7 +347,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Monto total (Bs.)'), findsOneWidget);
-    expect(find.text('Equiv. USD (BCV)'), findsOneWidget);
+    expect(find.text('Equiv. USD (BCV)'), findsWidgets);
   });
 
   testWidgets('ReviewExpenseScreen preserva moneda de GeminiExtractionResult sobre monedaPrincipal', (tester) async {

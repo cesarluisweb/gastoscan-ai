@@ -1884,9 +1884,12 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                       children: [
                         const Icon(Icons.info_outline, size: 14, color: AppColors.textSecondary),
                         const SizedBox(width: 4),
-                        Text(
-                          'Se usará la tasa oficial del ${DateFormatter.formatDate(_selectedFecha)}',
-                          style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                        Expanded(
+                          child: Text(
+                            'Se usará la tasa oficial del ${DateFormatter.formatDate(_selectedFecha)}',
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                          ),
                         ),
                       ],
                     ),
@@ -2439,7 +2442,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                           SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              '1 USDT = \$1.00 USD  •  Contravalor en Bs. a tasa P2P guardado en segundo plano.',
+                              'Se guardará en USDT (USD 1:1)  •  Contravalor en Bs. a tasa P2P guardado en segundo plano.',
                               style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
                             ),
                           ),
