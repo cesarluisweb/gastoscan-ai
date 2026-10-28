@@ -973,8 +973,14 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     double totalVesCalculado = 0.0;
 
     if (_selectedMoneda == 'VES') {
-      final tUsd = tryParseAmount(_tasaCambioCtrl.text, isPrice: false) ?? (_tasaUsdFecha ?? settings.tasaCambioVesUsd);
-      tasaParaGasto = tUsd > 0 ? tUsd : tasa;
+      final tUsd = tryParseAmount(_tasaCambioCtrl.text, isPrice: false);
+      if (tUsd != null && tUsd > 0) {
+        tasaParaGasto = tUsd;
+      } else if (tUsd != null && tUsd <= 0) {
+        tasaParaGasto = 0.0;
+      } else {
+        tasaParaGasto = _tasaUsdFecha ?? settings.tasaCambioVesUsd;
+      }
       if (tasaParaGasto <= 1.0) {
         setState(() => _isSaving = false);
         ScaffoldMessenger.of(context).showSnackBar(

@@ -484,12 +484,13 @@ class GeminiService {
     // 1. Detección de comercio tras "en ..."
     final matchEn = RegExp(r'\ben\s+([A-Za-z0-9ÁÉÍÓÚáéíóúñÑ\s]+)$', caseSensitive: false).firstMatch(text);
     if (matchEn != null) {
-      final possibleComercio = matchEn.group(1)!.trim();
+      String possibleComercio = matchEn.group(1)!.trim();
+      possibleComercio = possibleComercio.replaceFirst(RegExp(r'^(?:el|la|los|las|un|una)\s+', caseSensitive: false), '').trim();
       if (possibleComercio.isNotEmpty &&
           !possibleComercio.toLowerCase().startsWith('dolar') &&
           !possibleComercio.toLowerCase().startsWith('bolivar') &&
           !possibleComercio.toLowerCase().startsWith('bs')) {
-        comercio = possibleComercio;
+        comercio = possibleComercio[0].toUpperCase() + possibleComercio.substring(1);
       }
     }
 

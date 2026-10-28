@@ -557,6 +557,12 @@ void main() {
       tester.view.resetDevicePixelRatio();
     });
 
+    SharedPreferences.setMockInitialValues({
+      'cached_rate_usd': 0.0,
+      'cached_rate_eur': 0.0,
+      'cached_rate_usdt': 0.0,
+    });
+
     settingsProvider.tasaUsd = 0.0;
     settingsProvider.monedaPref = 'VES';
 
@@ -566,6 +572,15 @@ void main() {
     // Escribir monto 500 Bs
     final inputVesFinder = find.widgetWithText(TextFormField, 'Monto en Bolívares (VES)');
     await tester.enterText(inputVesFinder, '500.00');
+    await tester.pumpAndSettle();
+
+    // Ajustar tasa a 1.0 (invalida para VES)
+    await tester.ensureVisible(find.byKey(const Key('btn_ajustar_tasas_ves')));
+    await tester.tap(find.byKey(const Key('btn_ajustar_tasas_ves')));
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.byKey(const Key('input_tasa_ves')));
+    await tester.enterText(find.byKey(const Key('input_tasa_ves')), '1.0');
     await tester.pumpAndSettle();
 
     // Tocar Guardar Gasto
