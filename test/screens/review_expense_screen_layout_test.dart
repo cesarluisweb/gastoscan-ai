@@ -8,6 +8,7 @@ import 'package:gastoscan_ai/data/models/gemini_extraction_result.dart';
 import 'package:gastoscan_ai/providers/gasto_provider.dart';
 import 'package:gastoscan_ai/providers/scan_queue_provider.dart';
 import 'package:gastoscan_ai/providers/settings_provider.dart';
+import 'package:gastoscan_ai/core/constants/app_colors.dart';
 import 'package:gastoscan_ai/ui/screens/review_expense_screen.dart';
 
 class FakeDatabaseHelper extends DatabaseHelper {
@@ -122,6 +123,23 @@ void main() {
     expect(buttonFinder, findsOneWidget);
     final Size buttonSize = tester.getSize(buttonFinder);
     expect(buttonSize.height, inInclusiveRange(40, 60));
+
+    // Verify ¿Cómo pagaste? title and styling
+    expect(find.text('¿Cómo pagaste?'), findsOneWidget);
+    final comoPagasteText = tester.widget<Text>(find.text('¿Cómo pagaste?'));
+    expect(comoPagasteText.style?.fontSize, 16);
+    expect(comoPagasteText.style?.fontWeight, FontWeight.bold);
+
+    // Verify Agregar producto button (without +) and icon color
+    await tester.ensureVisible(find.byKey(const Key('review_expense_add_item_btn')));
+    await tester.pumpAndSettle();
+    final addBtnFinder = find.byKey(const Key('review_expense_add_item_btn'));
+    expect(addBtnFinder, findsOneWidget);
+    expect(find.widgetWithText(OutlinedButton, 'Agregar producto'), findsOneWidget);
+    final addIconFinder = find.descendant(of: addBtnFinder, matching: find.byIcon(Icons.add));
+    expect(addIconFinder, findsOneWidget);
+    final addIcon = tester.widget<Icon>(addIconFinder);
+    expect(addIcon.color, AppColors.primaryDark);
   });
 
   testWidgets('ReviewExpenseScreen en USD y EUR selecciona En divisa por defecto y en primera posicion', (tester) async {
@@ -592,5 +610,99 @@ void main() {
 
     // Verificar que aparece el SnackBar de error
     expect(find.textContaining('No hay una tasa de cambio válida'), findsOneWidget);
+  });
+
+  testWidgets('ReviewExpenseScreen en USD pagado en Bs permite ajuste bidireccional entre tasa cobrada y monto en Bs', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.5;
+
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    SharedPreferences.setMockInitialValues({
+      'cached_rate_usd': 881.88,
+      'cached_rate_eur': 950.0,
+      'cached_rate_usdt': 900.0,
+    });
+
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pumpAndSettle();
+
+    // 1. Escribir 10.00 en monto total (USD)
+    final inputTotalFinder = find.byKey(const Key('input_monto_total'));
+    await tester.enterText(inputTotalFinder, '10.00');
+    await tester.pumpAndSettle();
+
+    // 2. Seleccionar forma de pago "En Bs. a tasa BCV"
+    await tester.ensureVisible(find.byKey(const Key('btn_pagado_en_bs')));
+    await tester.tap(find.byKey(const Key('btn_pagado_en_bs')));
+    await tester.pumpAndSettle();
+
+    // 3. Verificar que por defecto calcula 10 * 881.88 = 8818.80
+    final bsManualFieldFinder = find.byKey(const Key('input_total_bs_manual'));
+    expect(bsManualFieldFinder, findsOneWidget);
+    var bsField = tester.widget<TextFormField>(bsManualFieldFinder);
+    expect(bsField.controller?.text, '8818.80');
+
+    // 4. El campo de ajuste de tasa está oculto por defecto
+    expect(find.byKey(const Key('input_tasa_liquidacion')), findsNothing);
+
+    // 5. Tocar el botón "Ajustar tasa ▾"
+    await tester.ensureVisible(find.byKey(const Key('btn_ajustar_tasa_liquidacion')));
+    await tester.tap(find.byKey(const Key('btn_ajustar_tasa_liquidacion')));
+    await tester.pumpAndSettle();
+
+    // 6. El campo input_tasa_liquidacion se despliega con la tasa oficial
+    final rateFieldFinder = find.byKey(const Key('input_tasa_liquidacion'));
+    expect(rateFieldFinder, findsOneWidget);
+    var rateField = tester.widget<TextFormField>(rateFieldFinder);
+    expect(rateField.controller?.text, '881.88');
+
+    // 7. Modificar tasa cobrada en caja a 900.00 -> el monto en Bs se actualiza a 9000.00
+    await tester.enterText(rateFieldFinder, '900.00');
+    await tester.pumpAndSettle();
+    bsField = tester.widget<TextFormField>(bsManualFieldFinder);
+    expect(bsField.controller?.text, '9000.00');
+
+    // 8. Modificar monto en Bs directamente a 8500.00 -> la tasa cobrada se recalcula a 850.00 (8500 / 10)
+    await tester.enterText(bsManualFieldFinder, '8500.00');
+    await tester.pumpAndSettle();
+    rateField = tester.widget<TextFormField>(rateFieldFinder);
+    expect(rateField.controller?.text, '850.00');
+
+    // 9. Restaurar tasa oficial con el botón Icons.restart_alt
+    final restoreBtnFinder = find.byKey(const Key('btn_restore_official_liquidation_rate'));
+    expect(restoreBtnFinder, findsOneWidget);
+    await tester.tap(restoreBtnFinder);
+    await tester.pumpAndSettle();
+
+    // 10. La tasa vuelve a 881.88 y el monto en Bs a 8818.80
+    rateField = tester.widget<TextFormField>(rateFieldFinder);
+    expect(rateField.controller?.text, '881.88');
+    bsField = tester.widget<TextFormField>(bsManualFieldFinder);
+    expect(bsField.controller?.text, '8818.80');
+  });
+
+  testWidgets('ReviewExpenseScreen muestra icono de billetera para USDT y no bitcoin', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.5;
+
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pumpAndSettle();
+
+    // Cambiar a USDT
+    await tester.tap(find.byKey(const Key('expense_currency_usdt_btn')));
+    await tester.pumpAndSettle();
+
+    // Verificar que no existe icono de bitcoin y existe account_balance_wallet_outlined
+    expect(find.byIcon(Icons.currency_bitcoin), findsNothing);
+    expect(find.byIcon(Icons.account_balance_wallet_outlined), findsWidgets);
   });
 }

@@ -117,6 +117,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
   double? _tasaOficialUsdt;
   bool _bolivaresAjustadosManualmente = false;
   bool _mostrarAjusteTasasVes = false;
+  bool _mostrarAjusteTasaLiquidacion = false;
   MetodoLiquidacionUsd _metodoLiquidacionUsd = MetodoLiquidacionUsd.pagadoEnDivisa;
 
   late String _selectedFecha;
@@ -525,7 +526,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       case 'EUR':
         return Icons.euro;
       case 'USDT':
-        return Icons.currency_bitcoin;
+        return Icons.account_balance_wallet_outlined;
       case 'VES':
         return Icons.payments_outlined;
       case 'USD':
@@ -1996,33 +1997,47 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 14),
-                  TextFormField(
-                    key: const Key('input_monto_total'),
-                    controller: _totalOriginalCtrl,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                    decoration: InputDecoration(
-                      labelText: 'Monto total (${_symbolForMoneda(_selectedMoneda)})',
-                      prefixText: '${_symbolForMoneda(_selectedMoneda)} ',
-                      prefixStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
-                      prefixIcon: Icon(
-                        _getMonedaIcon(_selectedMoneda),
-                        color: AppColors.textSecondary,
-                      ),
+                  Container(
+                    margin: const EdgeInsets.only(top: 14, bottom: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.cardLighter,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.border),
                     ),
-                    onChanged: (val) {
-                      _bolivaresAjustadosManualmente = false;
-                      _totalUsdCtrl.text = val;
-                      _recalcularTotalUsd();
-                    },
-                    validator: (val) => validatePositiveAmount(val),
+                    child: TextFormField(
+                      key: const Key('input_monto_total'),
+                      controller: _totalOriginalCtrl,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        isDense: true,
+                        labelText: 'Monto total (${_symbolForMoneda(_selectedMoneda)})',
+                        labelStyle: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                        prefixText: '${_symbolForMoneda(_selectedMoneda)} ',
+                        prefixStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                      ),
+                      onChanged: (val) {
+                        _bolivaresAjustadosManualmente = false;
+                        _totalUsdCtrl.text = val;
+                        _recalcularTotalUsd();
+                      },
+                      validator: (val) => validatePositiveAmount(val),
+                    ),
                   ),
                   if (_selectedMoneda == 'USD' || _selectedMoneda == 'EUR') ...[
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 10),
+                    const Divider(height: 24, thickness: 1, color: AppColors.border),
+                    const SizedBox(height: 4),
                     const Text(
                       '¿Cómo pagaste?',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                    ),
+                    const SizedBox(height: 2),
+                    const Text(
+                      'Selecciona la forma en que liquidaste la cuenta.',
+                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                     ),
                     const SizedBox(height: 8),
                     Row(
@@ -2081,6 +2096,17 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                         final bool isBcv = _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsBcv;
                         final tRate = isBcv ? _effectiveBcvRate(settings) : ((_tasaUsdtFecha != null && _tasaUsdtFecha! > 0) ? _tasaUsdtFecha! : (tryParseAmount(_tasaUsdtCtrl.text, isPrice: false) ?? settings.tasaCambioVesUsdt));
                         final rateLabel = isBcv ? 'Tasa BCV' : 'Tasa P2P';
+                        final double officialRate = isBcv
+                            ? (_selectedMoneda == 'EUR'
+                                ? (_tasaOficialEur ?? (_tasaEurFecha ?? settings.tasaCambioVesEur))
+                                : (_tasaOficialUsd ?? (_tasaUsdFecha ?? settings.tasaCambioVesUsd)))
+                            : (_tasaOficialUsdt ?? (_tasaUsdtFecha ?? settings.tasaCambioVesUsdt));
+                        final activeCtrl = isBcv
+                            ? (_selectedMoneda == 'EUR' ? _tasaEurCtrl : _tasaCambioCtrl)
+                            : _tasaUsdtCtrl;
+                        final double totalOrig = tryParseAmount(_totalOriginalCtrl.text, isPrice: false) ?? 0.0;
+                        final double currentRateVal = tryParseAmount(activeCtrl.text, isPrice: false) ?? tRate;
+                        final bool isRateModified = officialRate > 0 && (currentRateVal - officialRate).abs() > 0.009;
 
                         return Container(
                           margin: const EdgeInsets.only(top: 12),
@@ -2093,11 +2119,88 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                '$rateLabel: Bs. ${tRate.toStringAsFixed(2)} por ${_selectedMoneda == 'EUR' ? 'euro' : 'dólar'}',
-                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      '$rateLabel: Bs. ${tRate.toStringAsFixed(2)} por ${_selectedMoneda == 'EUR' ? 'euro' : 'dólar'}',
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  InkWell(
+                                    key: const Key('btn_ajustar_tasa_liquidacion'),
+                                    borderRadius: BorderRadius.circular(6),
+                                    onTap: () {
+                                      setState(() {
+                                        _mostrarAjusteTasaLiquidacion = !_mostrarAjusteTasaLiquidacion;
+                                      });
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            _mostrarAjusteTasaLiquidacion ? 'Ocultar tasa' : 'Ajustar tasa',
+                                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                                          ),
+                                          Icon(
+                                            _mostrarAjusteTasaLiquidacion ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+                                            size: 16,
+                                            color: AppColors.textPrimary,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 8),
+                              if (_mostrarAjusteTasaLiquidacion) ...[
+                                const SizedBox(height: 8),
+                                TextFormField(
+                                  key: const Key('input_tasa_liquidacion'),
+                                  controller: activeCtrl,
+                                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                                  decoration: InputDecoration(
+                                    isDense: true,
+                                    labelText: 'Tasa cobrada en caja (Bs./${_selectedMoneda == 'EUR' ? 'EUR' : 'USD'})',
+                                    labelStyle: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                                    prefixText: 'Bs. ',
+                                    prefixStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                    suffixIcon: isRateModified
+                                        ? IconButton(
+                                            key: const Key('btn_restore_official_liquidation_rate'),
+                                            icon: const Icon(Icons.restart_alt, size: 18, color: AppColors.textSecondary),
+                                            tooltip: 'Restaurar tasa oficial (Bs. ${officialRate.toStringAsFixed(2)})',
+                                            onPressed: () {
+                                              setState(() {
+                                                activeCtrl.text = officialRate.toStringAsFixed(2);
+                                                if (totalOrig > 0) {
+                                                  _totalBsManualCtrl.text = (totalOrig * officialRate).toStringAsFixed(2);
+                                                  _bolivaresAjustadosManualmente = false;
+                                                }
+                                                _recalcularTotalUsd();
+                                              });
+                                            },
+                                          )
+                                        : null,
+                                  ),
+                                  onChanged: (valRate) {
+                                    final parsedR = tryParseAmount(valRate, isPrice: false);
+                                    if (parsedR != null && parsedR > 0 && totalOrig > 0) {
+                                      _totalBsManualCtrl.text = (totalOrig * parsedR).toStringAsFixed(2);
+                                      _bolivaresAjustadosManualmente = true;
+                                    }
+                                    _recalcularTotalUsd();
+                                  },
+                                ),
+                              ],
+                              const SizedBox(height: 10),
                               TextFormField(
                                 key: const Key('input_total_bs_manual'),
                                 controller: _totalBsManualCtrl,
@@ -2112,8 +2215,13 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                   contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                                 ),
-                                onChanged: (_) {
+                                onChanged: (valBs) {
                                   _bolivaresAjustadosManualmente = true;
+                                  final parsedBs = tryParseAmount(valBs, isPrice: false);
+                                  if (parsedBs != null && parsedBs > 0 && totalOrig > 0) {
+                                    final effectiveRate = parsedBs / totalOrig;
+                                    activeCtrl.text = effectiveRate.toStringAsFixed(2);
+                                  }
                                   _recalcularTotalUsd();
                                 },
                               ),
@@ -2718,9 +2826,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                   OutlinedButton.icon(
                     key: const Key('review_expense_add_item_btn'),
                     onPressed: _addItem,
-                    icon: const Icon(Icons.add, size: 18, color: AppColors.textPrimary),
+                    icon: const Icon(Icons.add, size: 18, color: AppColors.primaryDark),
                     label: Text(
-                      _items.isEmpty ? '+ Agregar producto' : '+ Agregar otro producto',
+                      _items.isEmpty ? 'Agregar producto' : 'Agregar otro producto',
                       style: const TextStyle(
                         color: AppColors.textPrimary,
                         fontWeight: FontWeight.w600,
