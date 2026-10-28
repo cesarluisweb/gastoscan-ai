@@ -88,6 +88,7 @@ class FakeGeminiService extends GeminiService {
   Future<Map<String, dynamic>> chatWithAnalyst({
     required List<Map<String, String>> messages,
     required Map<String, dynamic> contextData,
+    String? modo,
   }) async {
     callCount++;
     lastContextData = contextData;
