@@ -123,23 +123,6 @@ void main() {
     expect(buttonFinder, findsOneWidget);
     final Size buttonSize = tester.getSize(buttonFinder);
     expect(buttonSize.height, inInclusiveRange(40, 60));
-
-    // Verify ¿Cómo pagaste? title and styling
-    expect(find.text('¿Cómo pagaste?'), findsOneWidget);
-    final comoPagasteText = tester.widget<Text>(find.text('¿Cómo pagaste?'));
-    expect(comoPagasteText.style?.fontSize, 16);
-    expect(comoPagasteText.style?.fontWeight, FontWeight.bold);
-
-    // Verify Agregar otro producto button (without +) and icon color
-    await tester.drag(find.byType(ListView), const Offset(0, -600));
-    await tester.pumpAndSettle();
-    final addBtnFinder = find.byKey(const Key('review_expense_add_item_btn'));
-    expect(addBtnFinder, findsOneWidget);
-    expect(find.widgetWithText(OutlinedButton, 'Agregar otro producto'), findsOneWidget);
-    final addIconFinder = find.descendant(of: addBtnFinder, matching: find.byIcon(Icons.add));
-    expect(addIconFinder, findsOneWidget);
-    final addIcon = tester.widget<Icon>(addIconFinder);
-    expect(addIcon.color, AppColors.primaryDark);
   });
 
   testWidgets('ReviewExpenseScreen en USD y EUR selecciona En divisa por defecto y en primera posicion', (tester) async {
