@@ -260,7 +260,11 @@ void main() {
   });
 
   group('GeminiService Local Fallback Tests', () {
-    final geminiService = GeminiService();
+    late GeminiService geminiService;
+
+    setUp(() {
+      geminiService = GeminiService();
+    });
 
     test('extrae compra sin precio aislando comercio, producto limpio, cantidad y categoría', () async {
       // Sin API key o corte de red cae al fallback local
