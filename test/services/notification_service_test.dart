@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:gastoscan_ai/core/constants/app_constants.dart';
 import 'package:gastoscan_ai/services/notification_service.dart';
 import 'package:gastoscan_ai/data/datasources/local/database_helper.dart';
