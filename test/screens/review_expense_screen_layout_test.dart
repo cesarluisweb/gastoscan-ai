@@ -713,9 +713,9 @@ void main() {
     expect(comoPagasteText.style?.fontWeight, FontWeight.bold);
 
     // Verify Agregar otro producto button
-    final addBtnFinder = find.byKey(const Key('review_expense_add_item_btn'));
-    await tester.ensureVisible(addBtnFinder);
+    await tester.drag(find.byType(ListView), const Offset(0, -600));
     await tester.pumpAndSettle();
+    final addBtnFinder = find.byKey(const Key('review_expense_add_item_btn'));
 
     expect(addBtnFinder, findsOneWidget);
     expect(find.widgetWithText(OutlinedButton, 'Agregar otro producto'), findsOneWidget);
