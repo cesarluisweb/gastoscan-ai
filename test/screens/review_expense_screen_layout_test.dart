@@ -111,6 +111,8 @@ void main() {
     // Verify body form fields are visible and rendered
     expect(find.text('Información General'), findsOneWidget);
     expect(find.text('¿Dónde compraste? (opcional)'), findsOneWidget);
+    expect(find.text('¿En qué moneda están los precios?'), findsOneWidget);
+    expect(find.text('¿Cuánto gastaste en total?'), findsOneWidget);
 
     // Ensure the ListView in body has non-zero height
     final listViewFinder = find.byType(ListView);
@@ -253,7 +255,10 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    // 1. Por defecto (estado colapsado): Las 3 columnas de equivalencias son visibles de inmediato
+    // 1. Por defecto: En VES la tarjeta de ¿Cómo pagaste? no existe
+    expect(find.text('¿Cómo pagaste?'), findsNothing);
+
+    // Las 3 columnas de equivalencias son visibles de inmediato
     expect(find.text('Equiv. USD (BCV)'), findsWidgets);
     expect(find.text('Equiv. EUR (BCV)'), findsOneWidget);
     expect(find.text('Equiv. USDT (P2P)'), findsOneWidget);
