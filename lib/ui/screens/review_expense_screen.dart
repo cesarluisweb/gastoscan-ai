@@ -2607,6 +2607,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                     Expanded(
                                       flex: 65,
                                       child: DropdownButtonFormField<String>(
+                                        isExpanded: true,
                                         value: AppConstants.categorias.contains(item.categoria) ? item.categoria : 'Otros',
                                         decoration: const InputDecoration(
                                           labelText: 'Categoría',
@@ -2632,7 +2633,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                                   child: Icon(catIcon, size: 13, color: catColor),
                                                 ),
                                                 const SizedBox(width: 6),
-                                                Text(cat, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13)),
+                                                Expanded(
+                                                  child: Text(cat, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13)),
+                                                ),
                                               ],
                                             ),
                                           );

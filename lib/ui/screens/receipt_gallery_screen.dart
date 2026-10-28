@@ -50,28 +50,24 @@ class _ReceiptGalleryScreenState extends State<ReceiptGalleryScreen> {
 
     if (_lastGastos != gastos) {
       _lastGastos = gastos;
-      _filterReceiptsAsync(gastos);
+      _filterReceipts(gastos);
     }
   }
 
-  Future<void> _filterReceiptsAsync(List<GastoModel> gastos) async {
+  void _filterReceipts(List<GastoModel> gastos) {
     final withPath = gastos.where((g) => g.rutaFotoLocal != null && g.rutaFotoLocal!.isNotEmpty).toList();
     final List<GastoModel> valid = [];
     for (final g in withPath) {
-      final exists = await File(g.rutaFotoLocal!).exists();
-      if (exists) {
-        valid.add(g);
-      }
-    }
-    if (mounted) {
-      setState(() {
-        _validReceipts = valid;
-        // Limpiar selecciones de fotos que ya no existan
-        _selectedGastoUuids.removeWhere((uuid) => !valid.any((g) => g.uuid == uuid));
-        if (_validReceipts.isEmpty && _isSelectionMode) {
-          _isSelectionMode = false;
+      try {
+        if (File(g.rutaFotoLocal!).existsSync()) {
+          valid.add(g);
         }
-      });
+      } catch (_) {}
+    }
+    _validReceipts = valid;
+    _selectedGastoUuids.removeWhere((uuid) => !valid.any((g) => g.uuid == uuid));
+    if (_validReceipts.isEmpty && _isSelectionMode) {
+      _isSelectionMode = false;
     }
   }
 
@@ -405,7 +401,7 @@ class _ReceiptGalleryScreenState extends State<ReceiptGalleryScreen> {
                                     ).then((_) {
                                       if (mounted) {
                                         final currentGastos = Provider.of<GastoProvider>(context, listen: false).gastos;
-                                        _filterReceiptsAsync(currentGastos);
+                                        setState(() => _filterReceipts(currentGastos));
                                       }
                                     });
                                   }
