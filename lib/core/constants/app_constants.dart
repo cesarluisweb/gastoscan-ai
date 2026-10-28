@@ -210,6 +210,7 @@ class AppConstants {
   static const String prefAnunciosActivos = 'anuncios_notificaciones_activos';
   static const String prefIndiceMensajeRotativo = 'indice_mensaje_quincenal_rotativo';
   static const String prefCachedMensajesQuincenalesJson = 'cached_mensajes_quincenales_json';
+  static const String prefUltimoRecordatorioFinDeSemanaTs = 'ultimo_recordatorio_fin_de_semana_ts';
 
   // Mensaje por defecto para inactividad (30 días)
   static const String defaultInactivityTitle = 'Tus cuentas al día';
