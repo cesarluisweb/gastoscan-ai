@@ -122,7 +122,6 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
   late String _selectedFecha;
   late String _selectedMoneda;
   String _monedaItems = 'USD';
-  double? _indexedRefAmount;
 
   File? _pickedImage;
   bool _imageDeleted = false;
@@ -340,7 +339,6 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
             : (isIndexedEur && tasa > 0
                 ? (gasto.totalOriginalDisplay / tasa)
                 : gasto.totalUsdDisplay);
-        _indexedRefAmount = indexedAmount;
         _totalOriginalCtrl = TextEditingController(text: _formatDouble(indexedAmount));
         _totalBsManualCtrl = TextEditingController(text: gasto.totalOriginalDisplay.toStringAsFixed(2));
         _bolivaresAjustadosManualmente = true;
@@ -2060,13 +2058,8 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     ),
                     if (_metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsBcv || _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsUsdt)
                       Builder(builder: (context) {
-                        final val = tryParseAmount(_totalOriginalCtrl.text, isPrice: false) ?? 0.0;
                         final bool isBcv = _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsBcv;
                         final tRate = isBcv ? _effectiveBcvRate(settings) : ((_tasaUsdtFecha != null && _tasaUsdtFecha! > 0) ? _tasaUsdtFecha! : (tryParseAmount(_tasaUsdtCtrl.text, isPrice: false) ?? settings.tasaCambioVesUsdt));
-                        final manualBs = _bolivaresAjustadosManualmente
-                            ? tryParseAmount(_totalBsManualCtrl.text, isPrice: false)
-                            : null;
-                        final totalBs = (manualBs != null && manualBs > 0) ? manualBs : (val * (tRate > 0 ? tRate : 1.0));
                         final rateLabel = isBcv ? 'Tasa BCV' : 'Tasa P2P';
 
                         return Container(
