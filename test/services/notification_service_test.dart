@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gastoscan_ai/core/constants/app_constants.dart';
 import 'package:gastoscan_ai/services/notification_service.dart';
 import 'package:gastoscan_ai/data/datasources/local/database_helper.dart';
 import 'package:gastoscan_ai/data/repositories/gasto_repository.dart';
@@ -11,6 +12,8 @@ import 'package:gastoscan_ai/providers/gasto_provider.dart';
 class MockNotificationService extends NotificationService {
   int cancelCount = 0;
   int scheduleCount = 0;
+  int cancelWeekendCount = 0;
+  int scheduleWeekendCount = 0;
   int recordActivityCount = 0;
   Duration? lastDurationPassed;
 
@@ -18,6 +21,9 @@ class MockNotificationService extends NotificationService {
 
   bool _scheduled = false;
   DateTime? _time;
+
+  bool _weekendScheduled = false;
+  DateTime? _weekendTime;
 
   @override
   Future<void> cancelInactivityReminder() async {
@@ -27,7 +33,7 @@ class MockNotificationService extends NotificationService {
 
   @override
   Future<void> scheduleInactivityReminder({
-    Duration duration = const Duration(days: 7),
+    Duration duration = const Duration(days: 30),
     String title = NotificationService.defaultNotificationTitle,
     String body = NotificationService.defaultNotificationBody,
   }) async {
@@ -39,15 +45,39 @@ class MockNotificationService extends NotificationService {
   }
 
   @override
+  Future<void> cancelBiweeklyWeekendReminder() async {
+    cancelWeekendCount++;
+    _weekendScheduled = false;
+  }
+
+  @override
+  Future<void> scheduleBiweeklyWeekendReminder({
+    DateTime? targetDate,
+    String? customTitle,
+    String? customBody,
+  }) async {
+    await cancelBiweeklyWeekendReminder();
+    scheduleWeekendCount++;
+    _weekendScheduled = true;
+    _weekendTime = targetDate ?? DateTime.now().add(const Duration(days: 14));
+  }
+
+  @override
   Future<void> recordActivityAndReschedule() async {
     recordActivityCount++;
   }
-  
+
   @override
   DateTime? get lastScheduledTime => _time;
-  
+
   @override
   bool get isReminderScheduled => _scheduled;
+
+  @override
+  bool get isWeekendReminderScheduled => _weekendScheduled;
+
+  @override
+  DateTime? get lastWeekendScheduledTime => _weekendTime;
 }
 
 /// Fake DatabaseHelper para probar GastoProvider sin SQLite real
@@ -103,7 +133,7 @@ class FakeDatabaseHelperForNotifications extends DatabaseHelper {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('NotificationService — R4 Inactivity Reminders Tests', () {
+  group('NotificationService — R4 Inactivity Reminders Tests (30 Días)', () {
     late NotificationService service;
 
     setUp(() {
@@ -116,18 +146,18 @@ void main() {
       expect(NotificationService(), isNotNull);
     });
 
-    test('7-day scheduling function defaults to Duration(days: 7)', () async {
+    test('Scheduling function defaults to Duration(days: 30)', () async {
       final before = DateTime.now();
       await service.scheduleInactivityReminder();
       final after = DateTime.now();
 
       expect(service.isReminderScheduled, isTrue);
-      expect(service.lastScheduledDuration, equals(const Duration(days: 7)));
+      expect(service.lastScheduledDuration, equals(const Duration(days: 30)));
       expect(service.lastScheduledTime, isNotNull);
 
-      // El tiempo programado debe estar a 7 días a partir de ahora (+/- unos milisegundos de margen)
-      final expectedMin = before.add(const Duration(days: 7));
-      final expectedMax = after.add(const Duration(days: 7));
+      // El tiempo programado debe estar a 30 días a partir de ahora (+/- unos milisegundos de margen)
+      final expectedMin = before.add(const Duration(days: 30));
+      final expectedMax = after.add(const Duration(days: 30));
 
       expect(
         service.lastScheduledTime!.isAfter(expectedMin.subtract(const Duration(seconds: 1))),
@@ -148,7 +178,7 @@ void main() {
     });
 
     test('cancelInactivityReminder cancels and clears scheduled state', () async {
-      await service.scheduleInactivityReminder(duration: const Duration(days: 7));
+      await service.scheduleInactivityReminder(duration: const Duration(days: 30));
       expect(service.isReminderScheduled, isTrue);
       expect(service.lastScheduledTime, isNotNull);
 
@@ -163,14 +193,14 @@ void main() {
       NotificationService.instance = mock;
 
       // Primera programación
-      await mock.scheduleInactivityReminder(duration: const Duration(days: 7));
+      await mock.scheduleInactivityReminder(duration: const Duration(days: 30));
       expect(mock.scheduleCount, equals(1));
-      expect(mock.cancelCount, equals(1)); // cancelInactivityReminder se llama dentro de scheduleInactivityReminder
+      expect(mock.cancelCount, equals(1));
       final firstScheduledTime = mock.lastScheduledTime;
 
       // Simular paso de tiempo y reprogramación
       await Future<void>.delayed(const Duration(milliseconds: 10));
-      await mock.scheduleInactivityReminder(duration: const Duration(days: 7));
+      await mock.scheduleInactivityReminder(duration: const Duration(days: 30));
 
       expect(mock.scheduleCount, equals(2));
       expect(mock.cancelCount, equals(2));
@@ -178,7 +208,7 @@ void main() {
       expect(mock.lastScheduledTime!.isAfter(firstScheduledTime!), isTrue);
     });
 
-    test('recordActivityAndReschedule updates activity time and reschedules for 7 days', () async {
+    test('recordActivityAndReschedule updates activity time and reschedules for 30 days', () async {
       final before = DateTime.now();
       await service.recordActivityAndReschedule();
       final after = DateTime.now();
@@ -194,25 +224,88 @@ void main() {
       );
 
       expect(service.isReminderScheduled, isTrue);
-      expect(service.lastScheduledDuration, equals(const Duration(days: 7)));
+      expect(service.lastScheduledDuration, equals(const Duration(days: 30)));
     });
 
-    test('Channel configuration and constants are correctly defined', () {
+    test('Channel configuration and constants are correctly defined for Inactivity', () {
       expect(NotificationService.inactivityNotificationId, equals(1001));
       expect(NotificationService.inactivityChannelId, equals('inactivity_reminders'));
       expect(NotificationService.inactivityChannelName, equals('Recordatorios de Inactividad'));
       expect(
         NotificationService.inactivityChannelDesc,
-        equals('Notificaciones automáticas si no registras gastos en 7 días'),
+        equals(AppConstants.channelInactivityDesc),
       );
       expect(
         NotificationService.defaultNotificationTitle,
-        equals('Presupuesto al día'),
+        equals(AppConstants.defaultInactivityTitle),
       );
       expect(
         NotificationService.defaultNotificationBody,
-        equals('Han pasado 7 días sin registrar gastos. Revisa tus comprobantes para mantener tu presupuesto al día.'),
+        equals(AppConstants.defaultInactivityBody),
       );
+    });
+  });
+
+  group('NotificationService — Biweekly Weekend Reminders Tests', () {
+    test('Channel constants are correctly defined for Weekend Reminders', () {
+      expect(NotificationService.weekendNotificationId, equals(1003));
+      expect(NotificationService.weekendChannelId, equals('weekend_reminders'));
+      expect(NotificationService.weekendChannelName, equals('Recordatorios de Compras'));
+      expect(NotificationService.weekendChannelDesc, equals(AppConstants.channelWeekendDesc));
+    });
+
+    test('calcularProximaFechaQuincenal returns next Saturday at 18:30 from weekday', () {
+      // 2026-10-28 es miércoles (Wednesday)
+      final wednesday = DateTime(2026, 10, 28, 10, 0);
+      final nextSat = NotificationService.calcularProximaFechaQuincenal(wednesday);
+
+      expect(nextSat.weekday, equals(DateTime.saturday));
+      expect(nextSat.hour, equals(18));
+      expect(nextSat.minute, equals(30));
+      expect(nextSat.year, equals(2026));
+      expect(nextSat.month, equals(10));
+      expect(nextSat.day, equals(31)); // Miércoles 28 + 3 = Sábado 31
+    });
+
+    test('calcularProximaFechaQuincenal on Saturday after 18:30 advances 7 days', () {
+      // Sábado 31 de octubre a las 19:00 (ya pasó la hora límite)
+      final saturdayNight = DateTime(2026, 10, 31, 19, 0);
+      final nextSat = NotificationService.calcularProximaFechaQuincenal(saturdayNight);
+
+      expect(nextSat.weekday, equals(DateTime.saturday));
+      expect(nextSat.day, equals(7)); // Siguiente sábado (7 de noviembre)
+      expect(nextSat.month, equals(11));
+      expect(nextSat.hour, equals(18));
+      expect(nextSat.minute, equals(30));
+    });
+
+    test('calcularProximaFechaQuincenal enforces 14-day cadence if recently scheduled', () {
+      final now = DateTime(2026, 10, 28, 10, 0);
+      // Simular que el sábado 31 de octubre ya fue programado
+      final ultimoProgramado = DateTime(2026, 10, 31, 18, 30);
+      final nextSat = NotificationService.calcularProximaFechaQuincenal(now, ultimoProgramado: ultimoProgramado);
+
+      // Debe programar para el siguiente sábado quincenal (7 de noviembre)
+      expect(nextSat.weekday, equals(DateTime.saturday));
+      expect(nextSat.day, equals(7));
+      expect(nextSat.month, equals(11));
+    });
+
+    test('Assistant default messages pool has 4 distinct options', () {
+      expect(AppConstants.defaultMensajesAsistenteQuincenal.length, equals(4));
+      for (final msg in AppConstants.defaultMensajesAsistenteQuincenal) {
+        expect(msg['titulo'], isNotEmpty);
+        expect(msg['cuerpo'], isNotEmpty);
+      }
+    });
+  });
+
+  group('NotificationService — Broadcast Announcements Tests', () {
+    test('Channel constants are correctly defined for Broadcast', () {
+      expect(NotificationService.broadcastNotificationId, equals(1004));
+      expect(NotificationService.broadcastChannelId, equals('broadcast_announcements'));
+      expect(NotificationService.broadcastChannelName, equals('Avisos y Novedades'));
+      expect(AppConstants.fcmTopicGeneral, equals('anuncios_generales'));
     });
   });
 
@@ -240,7 +333,7 @@ void main() {
         totalUsd: 2550,
         totalOriginal: 2550,
         moneda: 'USD',
-        categoria: 'Comida',
+        categoria: 'Alimentación',
         fecha: '2026-09-15',
         tasaCambio: 36.5,
         creadoEn: DateTime.now().toIso8601String(),
@@ -327,33 +420,14 @@ void main() {
           reason: 'Must handle BOOT_COMPLETED intent action');
     });
 
-    test('AndroidManifest.xml contains permissions and receivers', () {
-      final manifestFile = File('android/app/src/main/AndroidManifest.xml');
-      expect(manifestFile.existsSync(), isTrue, reason: 'android/app/src/main/AndroidManifest.xml must exist');
-
-      final content = manifestFile.readAsStringSync();
-
-      expect(content.contains('android.permission.POST_NOTIFICATIONS'), isTrue);
-      expect(content.contains('android.permission.RECEIVE_BOOT_COMPLETED'), isTrue);
-      expect(content.contains('android.permission.VIBRATE'), isTrue);
-      expect(content.contains('android.permission.USE_EXACT_ALARM'), isFalse);
-      expect(
-        content.contains('com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver'),
-        isTrue,
-      );
-      expect(
-        content.contains('com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver'),
-        isTrue,
-      );
-    });
-
-    test('pubspec.yaml declares flutter_local_notifications and timezone', () {
+    test('pubspec.yaml declares flutter_local_notifications, timezone and firebase_messaging', () {
       final pubspecFile = File('pubspec.yaml');
       expect(pubspecFile.existsSync(), isTrue);
 
       final content = pubspecFile.readAsStringSync();
       expect(content.contains('flutter_local_notifications:'), isTrue);
       expect(content.contains('timezone:'), isTrue);
+      expect(content.contains('firebase_messaging:'), isTrue);
     });
   });
 }

@@ -1,9 +1,13 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../core/constants/app_constants.dart';
 import '../services/exchange_rate_service.dart';
+import '../services/notification_service.dart';
 
 class SettingsProvider with ChangeNotifier {
   final FlutterSecureStorage _secureStorage;
@@ -23,7 +27,15 @@ class SettingsProvider with ChangeNotifier {
   bool _isSyncingRate = false;
   bool _isInitialized = false;
   double _presupuestoMensual = 0.0;
-  bool _recordatoriosActivos = true;
+
+  // Notificaciones y Recordatorios
+  bool _recordatoriosActivos = true; // Inactividad a 30 días
+  bool _recordatorioFinDeSemana = true; // Quincenal sábados 18:30
+  bool _anunciosActivos = true; // Broadcast masivo de novedades
+
+  List<Map<String, String>> _mensajesQuincenales = AppConstants.defaultMensajesAsistenteQuincenal;
+  String _tituloInactividad = AppConstants.defaultInactivityTitle;
+  String _cuerpoInactividad = AppConstants.defaultInactivityBody;
 
   String get apiKey => _apiKey;
   String get effectiveApiKey => _apiKey.trim().isNotEmpty ? _apiKey.trim() : AppConstants.defaultApiKey.trim();
@@ -38,7 +50,13 @@ class SettingsProvider with ChangeNotifier {
   bool get isSyncingRate => _isSyncingRate;
   bool get isInitialized => _isInitialized;
   double get presupuestoMensual => _presupuestoMensual;
+
   bool get recordatoriosActivos => _recordatoriosActivos;
+  bool get recordatorioFinDeSemana => _recordatorioFinDeSemana;
+  bool get anunciosActivos => _anunciosActivos;
+  List<Map<String, String>> get mensajesQuincenales => _mensajesQuincenales;
+  String get tituloInactividad => _tituloInactividad;
+  String get cuerpoInactividad => _cuerpoInactividad;
 
   SettingsProvider({FlutterSecureStorage? secureStorage, bool autoLoad = true})
       : _secureStorage = secureStorage ?? const FlutterSecureStorage() {
@@ -75,12 +93,32 @@ class SettingsProvider with ChangeNotifier {
     _monedaPrincipal = prefs.getString(AppConstants.prefMonedaPrincipal) ?? AppConstants.defaultMoneda;
     _tipoTasa = prefs.getString('tipo_tasa') ?? 'oficial';
     _presupuestoMensual = prefs.getDouble('presupuesto_mensual') ?? 0.0;
+
+    // Preferencias de notificaciones
     _recordatoriosActivos = prefs.getBool(AppConstants.prefRecordatoriosActivos) ?? true;
+    _recordatorioFinDeSemana = prefs.getBool(AppConstants.prefRecordatorioFinDeSemana) ?? true;
+    _anunciosActivos = prefs.getBool(AppConstants.prefAnunciosActivos) ?? true;
+
+    // Cargar caché local de mensajes de recordatorios si existe
+    final cachedQuincenalJson = prefs.getString(AppConstants.prefCachedMensajesQuincenalesJson);
+    if (cachedQuincenalJson != null && cachedQuincenalJson.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(cachedQuincenalJson) as List;
+        final list = decoded.map((e) => Map<String, String>.from(e as Map)).toList();
+        if (list.isNotEmpty) {
+          _mensajesQuincenales = list;
+        }
+      } catch (_) {}
+    }
+
     _isInitialized = true;
     notifyListeners();
 
     // Sincroniza las tasas automáticamente en segundo plano de inmediato
     actualizarTasaAutomatica();
+
+    // Sincronizar textos remotos de recordatorios desde Firestore en segundo plano
+    sincronizarRecordatoriosRemotos();
 
     // 2. Cargar API Key exclusivamente desde el almacenamiento seguro local del dispositivo
     final int revBeforeRead = _apiKeyRevision;
@@ -105,6 +143,43 @@ class SettingsProvider with ChangeNotifier {
       }
     } catch (e) {
       debugPrint("Error leyendo API Key desde SecureStorage en loadSettings: $e");
+    }
+  }
+
+  /// Sincroniza la configuración y banco de mensajes de recordatorios desde Firestore.
+  /// Permite modificar textos online sin lanzar nuevas versiones en Google Play.
+  Future<void> sincronizarRecordatoriosRemotos({FirebaseFirestore? firestore}) async {
+    try {
+      final fs = firestore ?? (Firebase.apps.isNotEmpty ? FirebaseFirestore.instance : null);
+      if (fs == null) return;
+
+      final doc = await fs.collection('config').doc('recordatorios').get();
+      if (!doc.exists || doc.data() == null) return;
+
+      final data = doc.data()!;
+      final prefs = await SharedPreferences.getInstance();
+
+      if (data['mensajes_quincenales'] is List) {
+        final rawList = data['mensajes_quincenales'] as List;
+        final parsed = rawList.map((e) => Map<String, String>.from(e as Map)).toList();
+        if (parsed.isNotEmpty) {
+          _mensajesQuincenales = parsed;
+          await prefs.setString(
+            AppConstants.prefCachedMensajesQuincenalesJson,
+            jsonEncode(parsed),
+          );
+        }
+      }
+
+      if (data['inactividad_titulo'] is String && (data['inactividad_titulo'] as String).trim().isNotEmpty) {
+        _tituloInactividad = data['inactividad_titulo'];
+      }
+      if (data['inactividad_cuerpo'] is String && (data['inactividad_cuerpo'] as String).trim().isNotEmpty) {
+        _cuerpoInactividad = data['inactividad_cuerpo'];
+      }
+      notifyListeners();
+    } catch (e) {
+      debugPrint("SettingsProvider: Sincronización remota de recordatorios omitida: $e");
     }
   }
 
@@ -214,6 +289,42 @@ class SettingsProvider with ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(AppConstants.prefRecordatoriosActivos, _recordatoriosActivos);
     notifyListeners();
+
+    if (!value) {
+      await NotificationService.instance.cancelInactivityReminder();
+    } else {
+      await NotificationService.instance.scheduleInactivityReminder(
+        duration: const Duration(days: 30),
+        title: _tituloInactividad,
+        body: _cuerpoInactividad,
+      );
+    }
+  }
+
+  Future<void> setRecordatorioFinDeSemana(bool value) async {
+    _recordatorioFinDeSemana = value;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(AppConstants.prefRecordatorioFinDeSemana, _recordatorioFinDeSemana);
+    notifyListeners();
+
+    if (!value) {
+      await NotificationService.instance.cancelBiweeklyWeekendReminder();
+    } else {
+      await NotificationService.instance.scheduleBiweeklyWeekendReminder();
+    }
+  }
+
+  Future<void> setAnunciosActivos(bool value) async {
+    _anunciosActivos = value;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(AppConstants.prefAnunciosActivos, _anunciosActivos);
+    notifyListeners();
+
+    if (value) {
+      await NotificationService.instance.subscribeToBroadcastTopic();
+    } else {
+      await NotificationService.instance.unsubscribeFromBroadcastTopic();
+    }
   }
 
   bool _disposed = false;

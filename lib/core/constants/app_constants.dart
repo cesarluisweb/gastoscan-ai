@@ -182,6 +182,64 @@ class AppConstants {
   static final DateTime fechaMinimaHistoricoTasas = DateTime(2023, 1, 3);
   static const String fechaMinimaHistoricoTasasIso = '2023-01-03';
 
+  // Notificaciones y Canales de Android
+  static const int inactivityNotificationId = 1001;
+  static const int pendingReviewNotificationId = 1002;
+  static const int weekendReminderNotificationId = 1003;
+  static const int broadcastNotificationId = 1004;
+
+  static const String channelInactivityId = 'inactivity_reminders';
+  static const String channelInactivityName = 'Recordatorios de Inactividad';
+  static const String channelInactivityDesc =
+      'Aviso suave tras 30 días sin registrar gastos para mantener tu presupuesto al día';
+
+  static const String channelWeekendId = 'weekend_reminders';
+  static const String channelWeekendName = 'Recordatorios de Compras';
+  static const String channelWeekendDesc =
+      'Avisos los sábados cada dos semanas para fotografiar facturas y comprobantes';
+
+  static const String channelBroadcastId = 'broadcast_announcements';
+  static const String channelBroadcastName = 'Avisos y Novedades';
+  static const String channelBroadcastDesc =
+      'Notificaciones sobre nuevas funciones y mejoras importantes de Rinde Más';
+
+  static const String fcmTopicGeneral = 'anuncios_generales';
+
+  // Claves de SharedPreferences para Notificaciones
+  static const String prefRecordatorioFinDeSemana = 'recordatorio_fin_de_semana_activo';
+  static const String prefAnunciosActivos = 'anuncios_notificaciones_activos';
+  static const String prefIndiceMensajeRotativo = 'indice_mensaje_quincenal_rotativo';
+  static const String prefCachedMensajesQuincenalesJson = 'cached_mensajes_quincenales_json';
+
+  // Mensaje por defecto para inactividad (30 días)
+  static const String defaultInactivityTitle = 'Tus cuentas al día';
+  static const String defaultInactivityBody =
+      'Ha pasado un mes desde tu último registro. Si tienes comprobantes acumulados, aquí estoy para ayudarte a ordenar tus números cuando quieras.';
+
+  // Banco Base del Asistente IA para fin de semana (Offline / Fallback)
+  static const List<Map<String, String>> defaultMensajesAsistenteQuincenal = [
+    {
+      'titulo': 'Mantén tu presupuesto al día',
+      'cuerpo':
+          'Aquí estoy para ayudarte: si hiciste compras hoy, tómale foto a los comprobantes y yo me encargo de ordenar los números.',
+    },
+    {
+      'titulo': '¿Compras de fin de semana?',
+      'cuerpo':
+          'Pásame una foto de tus facturas de hoy antes de que se borre el papel térmico y extraigo los precios en segundos.',
+    },
+    {
+      'titulo': 'Tus cuentas claras',
+      'cuerpo':
+          'Sube tus tickets del mercado o díctame tus gastos de hoy para cuadrar la quincena sin estrés.',
+    },
+    {
+      'titulo': 'Que no se te acumulen los tickets',
+      'cuerpo':
+          'Una foto rápida a tus comprobantes de hoy y dejo tus gastos organizados por categoría de una vez.',
+    },
+  ];
+
   // Soporte y Contacto
   static const String soporteWhatsAppNumero = '+58 414-8431543';
   static const String soporteWhatsAppUrl = 'https://wa.me/584148431543?text=Hola,%20tengo%20una%20consulta%20sobre%20Rinde%20M%C3%A1s';

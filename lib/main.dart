@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'firebase_options.dart';
 import 'core/theme/app_theme.dart';
 import 'providers/gasto_provider.dart';
@@ -12,7 +13,6 @@ import 'providers/scan_queue_provider.dart';
 import 'providers/chat_provider.dart';
 import 'services/notification_service.dart';
 import 'ui/screens/main_screen.dart';
-
 import 'services/sync_service.dart';
 
 /// Punto de entrada oficial de Rinde Más.
@@ -30,10 +30,12 @@ void main() async {
       systemNavigationBarDividerColor: Colors.transparent,
     ),
   );
+
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   } catch (e) {
     debugPrint("Firebase initialize error: $e");
   }
@@ -50,9 +52,10 @@ void main() async {
     debugPrint("Error signing in: $e");
   }
 
-  // Inicializar Notificaciones Locales y programar recordatorio de inactividad
+  // Inicializar Notificaciones Locales, Broadcast FCM y programar recordatorios
   try {
     await NotificationService.instance.initialize();
+    await NotificationService.instance.initializeFirebaseMessaging();
     await NotificationService.instance.recordActivityAndReschedule();
   } catch (e) {
     debugPrint("Error initializing notifications: $e");

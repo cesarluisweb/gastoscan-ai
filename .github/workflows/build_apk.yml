@@ -124,6 +124,9 @@ jobs:
           -keep class com.it_nomads.fluttersecurestorage.** { *; }
           -keep class com.tekartik.sqflite.** { *; }
           -keep class com.dexterous.flutterlocalnotifications.** { *; }
+          -dontwarn com.google.firebase.messaging.**
+          -keep class com.google.firebase.messaging.** { *; }
+          -keep class com.google.firebase.iid.** { *; }
           -keep class * implements io.flutter.plugin.common.MethodChannel$MethodCallHandler { *; }
           -keep class * implements io.flutter.plugin.common.PluginRegistry$PluginRegistrantCallback { *; }
 
