@@ -260,9 +260,16 @@ Este marco sintetiza la experiencia y aprendizajes reales del caso de estudio de
     - 45 a 54 años: 28%
     - 55+ años: 15%
     - *Conclusión demográfica:* El **77% tiene entre 25 y 54 años** (pico del 57% entre 35 y 54 años). La audiencia no son adolescentes: son mujeres adultas que gestionan el hogar, hacen las compras del supermercado y cuidan el presupuesto familiar.
-* **Métricas en Instagram Reels:**
-  - El *skip rate* cayó drásticamente de 74.2% (Video #1) a **44.4%** (mejora de casi 30 puntos en retención).
-  - Tiempo promedio de reproducción: 6 segundos.
+* **Métricas Consolidadas en Instagram Reels (Insights - 28/10/2026):**
+  - **Visualizaciones:** **209 vistas** (más del doble que Video #1) con **104 espectadores únicos**.
+  - **Tiempo de reproducción promedio:** **21 segundos** (en video de 37s = **56.7% de retención total**).
+  - **Tasa de salto (*Skip rate*):** **41.4%** (el 58.6% continuó viendo tras los primeros segundos).
+  - **Tasa de me gusta (*Like rate*):** **21.6%** (24 likes de 104 espectadores).
+  - **Seguidores nuevos ganados:** **+7 seguidores directos** en Instagram.
+  - **Comentarios:** 3. **Reposts:** 6. **Compartidos:** 1.
+  - **Fuentes de tráfico:** **84.8% Feed** (impulsado por colaboración con `lili9077p`), 8.6% pestaña Reels, 3.5% Perfil, 2.0% Historias.
+  - **Alcance en frío:** **71.8% no-seguidores** apalancados sobre el 28.2% de seguidores de la cuenta colaboradora.
+  - **Actividad en el perfil:** **17 visitas al perfil** y **2 toques en el enlace de la bio**.
 * **Consultas de búsqueda orgánica captadas en TikTok Studio:**
   1. *«pero como se ahorra si uno no compra dólares sino bolívares»* (33.3%)
   2. *«tutorial de cómo contar bolivares venezolanos»* (33.3%)
@@ -276,6 +283,9 @@ Este marco sintetiza la experiencia y aprendizajes reales del caso de estudio de
   5. **Incorporación del Formato F (dilema del bolívar):** Capitalizar las búsquedas orgánicas sobre ahorro en bolívares.
   6. **Cierre visual activo:** Señalar físicamente al perfil en los últimos segundos para mantener la conversión hacia la lista de espera.
   7. **Horario óptimo medido:** Publicar entre 5:30 PM y 6:00 PM (pico entre 6:00 PM y 7:00 PM).
+  8. **Colaboración en Instagram Reels:** La función "Invitar a colaborador" con una cuenta personal activa (`lili9077p`) impulsó el 84.8% del tráfico al Feed principal, elevando la retención al 56.7% (21s promedio) y aportando 7 seguidores y 17 visitas al perfil.
+  9. **Zona segura y limpieza en Historias:** Los stickers de enlace deben situarse a más de 3 cm del borde inferior para evitar toques falsos con la barra de mensaje/reacciones. No añadir texto en "Add a caption" si la imagen ya tiene diseño.
+  10. **Notas de Instagram como gancho pasivo:** Microestado de hasta 60 caracteres en la bandeja de DMs para mantener curiosidad y dirigir al perfil sin enlaces directos.
 
 ---
 

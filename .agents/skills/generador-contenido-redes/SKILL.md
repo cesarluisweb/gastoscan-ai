@@ -41,6 +41,8 @@ Esta habilidad guía la creación de contenidos orgánicos de alto impacto (vide
 > 6. **Horario Óptimo de Publicación:** Publicar entre 5:30 PM y 6:00 PM para aprovechar el pico de actividad medido de 6:00 PM a 7:00 PM.
 > 7. **Audiencia Real Medida (Buyer Persona):** El 77% de la audiencia en TikTok son mujeres adultas (57% entre 35 y 54 años) en Venezuela (92.7%). Son quienes administran las compras familiares y el presupuesto del hogar. Los ejemplos deben conectar con compras de comida, farmacia, colegios y rendir la quincena. Rostro humano femenino al aire libre genera confianza y pico de likes en el segundo 0:01.
 > 8. **Filtro del Segundo 0:02:** La analítica marca que el abandono principal ocurre a los 2 segundos. Las primeras 3 palabras deben formular la pregunta o el dilema directamente sin rodeos.
+> 9. **Colaboración Cruzada en Instagram Reels:** En cuentas nuevas, publicar siempre invitando como colaborador a una cuenta personal establecida (familiar o socia con audiencia local activa en Venezuela). Los datos validaron que el 84.8% de las visualizaciones provinieron del Feed gracias a la colaboración, duplicando el alcance y elevando la retención al 56.7% (21 segundos promedio) con un 21.6% de tasa de me gusta.
+> 10. **Zona Segura y Limpieza en Historias (Stories):** En historias con stickers de enlace (WhatsApp o web), posicionar el sticker siempre en el tercio medio, al menos 3 cm por encima del borde inferior para evitar toques falsos con la barra de mensaje. Dejar el pie de foto vacío (*caption*) si la imagen ya contiene el diseño, y destacar que el enlace es seguro y gratis.
 
 ### Formato A: La Factura Arrugada ("Escaneando Facturas Random")
 * **Objetivo:** Mostrar la magia del OCR y la extracción automática.
