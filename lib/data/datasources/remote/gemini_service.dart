@@ -5,7 +5,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import '../../../core/constants/app_constants.dart';
-import '../../../core/utils/amount_parser.dart';
 import '../../models/gemini_extraction_result.dart';
 import '../../models/item_gasto_model.dart';
 import '../../models/shopping_item_model.dart';

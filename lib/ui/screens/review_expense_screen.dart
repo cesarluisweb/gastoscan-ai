@@ -395,7 +395,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       _comercioCtrl = TextEditingController(text: data?.comercio ?? '');
       _selectedFecha = data?.fecha ?? DateTime.now().toIso8601String().substring(0, 10);
       
-      final detectedMoneda = data?.moneda?.trim();
+      final detectedMoneda = data?.moneda.trim();
       if (detectedMoneda != null && detectedMoneda.isNotEmpty && AppConstants.monedas.contains(detectedMoneda)) {
         _selectedMoneda = detectedMoneda;
       } else if (settings.monedaPrincipal.isNotEmpty && AppConstants.monedas.contains(settings.monedaPrincipal)) {
