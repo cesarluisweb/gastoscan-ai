@@ -296,6 +296,8 @@ void main() {
     expect(find.byKey(const Key('input_tasa_ves')), findsOneWidget);
 
     // 3. Al tocar el chip 'Euro BCV' y editar manualmente la tasa, aparece el botón Icons.restart_alt
+    await tester.ensureVisible(find.byKey(const Key('chip_rate_eur_bcv')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('chip_rate_eur_bcv')));
     await tester.pumpAndSettle();
 
