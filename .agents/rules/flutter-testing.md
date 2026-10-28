@@ -11,14 +11,20 @@ description: "Convenciones para pruebas unitarias y de widgets, configuración d
 - **Búsqueda de Texto en Widgets Enriquecidos:** Cuando se use `find.textContaining` para evaluar montos o textos renderizados mediante `RichText` o `Text.rich`, especificar obligatoriamente `findRichText: true` para evitar falsos negativos por renderizado compuesto.
 
 ## 2. Configuración de Viewport y Renderizado en Pruebas
-- **Pantallas con Scroll (Vertical y Horizontal):** En widget tests de pantallas con `ListView`, carruseles o chips desplazables (`Axis.horizontal`), definir siempre en `setUp()` un viewport amplio:
+- **Sintaxis Moderna de Viewport (Flutter 3.16+):** Prohibido usar la API obsoleta `binding.window`. En widget tests de pantallas con `ListView`, formularios extensos o chips horizontales, definir un viewport amplio en el cuerpo del test o en `setUp()`:
   ```dart
-  binding.window.physicalSizeTestValue = const Size(2500, 4000);
-  binding.window.devicePixelRatioTestValue = 1.0;
+  tester.view.physicalSize = const Size(1080, 4000);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(() {
+    tester.view.resetPhysicalSize();
+    tester.view.resetDevicePixelRatio();
+  });
   ```
-  Limpiar el valor en `tearDown()` con `binding.window.clearPhysicalSizeTestValue()`.
 - **Renderizado Fuera de Pantalla:** Usar `skipOffstage: false` en los `find.text(...)` o `find.byKey(...)` para evitar falsos negativos ocasionados por renderizado perezoso fuera del viewport.
-- **Visibilidad Explícita en Formularios con Scroll (`ensureVisible`):** En pruebas sobre pantallas extensas (`ReviewExpenseScreen`, formularios con múltiples tarjetas), antes de invocar `tester.tap()` o `tester.enterText()` sobre campos, botones o chips secundarios, invocar obligatoriamente `await tester.ensureVisible(finder)` seguido de `await tester.pumpAndSettle()`. Esto evita fallos de hit-test cuando los widgets quedan desplazados fuera de los límites de la pantalla del árbol de renderizado.
+- **Prevención de `Bad state: No element` en `ListView` Perezosos:**
+  - `tester.ensureVisible(finder)` requiere que el elemento **ya esté instanciado** en el árbol de widgets. En un `ListView` con viewport corto, los widgets fuera de pantalla no existen y `ensureVisible` falla con `StateError: Bad state: No element`.
+  - Con un viewport alto (`Size(1080, 4000)` y `devicePixelRatio = 1.0`), todos los componentes del formulario se construyen de inmediato y quedan evaluables directamente sin necesidad de scrolls artificiales.
+  - Si una prueba requiere validar expresamente el comportamiento de scroll dinámico en viewports pequeños, usar `await tester.drag(find.byType(ListView), const Offset(0, -500))` o `tester.scrollUntilVisible(...)`, nunca `ensureVisible` sin previo scroll.
 
 ## 3. Resiliencia y Aislamiento de Firebase
 - **Validación de Instancia Activa:** Todo widget o servicio que interactúe con `FirebaseAuth` o Firestore debe validar `Firebase.apps.isNotEmpty` antes de instanciar streams o métodos, garantizando que los tests de widgets se ejecuten limpiamente sin requerir un backend simulado.

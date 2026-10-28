@@ -189,6 +189,10 @@ AlertDialog(
 5. **Reutilización y Homologación de Componentes Transversales:**
    - Cualquier control interactivo o componente visual compartido por más de una pantalla (ej. `MonthSelectorBar`, filtros, selectores de fecha) DEBE residir como widget modular reutilizable en `lib/ui/widgets/`. Queda prohibido duplicar árboles de widgets equivalentes entre pantallas.
    - Estos componentes comunes compartidos entre pantallas de primer nivel (Inicio, Gastos, Análisis, Comprobantes) DEBEN ubicarse directamente sobre el fondo de la pantalla (`AppColors.background`), sin envoltorios redundantes (`Container(color: AppColors.surface)`) ni bordes locales que generen franjas inconsistentes.
+6. **Ergonomía y Anti-Redundancia en Visores de Pantalla Completa (Modales Multimedia):**
+   - **Acciones Principales al Alcance del Pulgar:** En visores a pantalla completa (`ReceiptViewerDialog` o modales multimedia), las acciones primarias, de edición o destructivas («Ver o editar gasto», «Eliminar foto») DEBEN ubicarse en una barra inferior fija (`bottomNavigationBar`).
+   - **Barra Superior Limpia y Despejada:** El `AppBar` se reserva exclusivamente para el botón de cerrar (`X`), título del comercio, fecha/monto y, a lo sumo, una única acción de salida (`Compartir`). Queda prohibido duplicar en el `AppBar` acciones que ya están presentes abajo, evitando saturación visual y el truncamiento del título.
+   - **Cero Acciones Superfluas en Archivos Locales:** Prohibido incluir botones como "Descargar" o "Guardar en galería" para imágenes o documentos que ya se encuentran almacenados localmente en el teléfono.
 
 ---
 
