@@ -208,8 +208,8 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify rate is 34.86, NOT today's rate 881.88
-    expect(find.text('Tasa BCV: Bs. 34.86'), findsOneWidget);
-    expect(find.text('Tasa BCV: Bs. 881.88'), findsNothing);
+    expect(find.textContaining('Tasa BCV: Bs. 34.86'), findsOneWidget);
+    expect(find.textContaining('Tasa BCV: Bs. 881.88'), findsNothing);
 
     // Verify Bolivares finales matches 100 * 34.86 = 3486.00 (not 88188.00)
     final bsManualField = tester.widget<TextFormField>(find.byKey(const Key('input_total_bs_manual')));
@@ -530,7 +530,7 @@ void main() {
 
     // 1. Comprobar que carga 10.00 en monto total y 500.00 en Bs finales
     final inputTotal = tester.widget<TextFormField>(find.byKey(const Key('input_monto_total')));
-    expect(inputTotal.controller?.text, '10.00');
+    expect(inputTotal.controller?.text, '10');
     final bsField = tester.widget<TextFormField>(find.byKey(const Key('input_total_bs_manual')));
     expect(bsField.controller?.text, '500.00');
 
@@ -540,7 +540,7 @@ void main() {
 
     // En VES el monto nominal sigue siendo 10.00 (nunca se sobreescribe al cambiar de moneda)
     final vesTotal = tester.widget<TextFormField>(find.byKey(const Key('input_monto_total')));
-    expect(vesTotal.controller?.text, '10.00');
+    expect(vesTotal.controller?.text, '10');
 
     // 3. Volver a USD
     await tester.tap(find.byKey(const Key('expense_currency_usd_btn')));

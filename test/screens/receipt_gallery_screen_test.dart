@@ -205,7 +205,7 @@ void main() {
       );
 
       // Confirm deletion
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Eliminar 2 fotos'));
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Eliminar 2 fotos').last);
       await tester.pumpAndSettle();
 
       expect(gastoProvider.eliminarFotosLoteLlamadas, equals(2));
