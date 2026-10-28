@@ -3,8 +3,6 @@ Analyzing gastoscan-ai...
    info • Use 'const' for final variables initialized to a constant value. Try replacing 'final' with 'const' • lib/data/models/gemini_extraction_result.dart:69:5 • prefer_const_declarations
    info • The import of 'package:flutter/foundation.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart'. Try removing the import directive • lib/main.dart:1:8 • unnecessary_import
    info • Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter • lib/main.dart:65:9 • use_super_parameters
-  error • The method 'File' isn't defined for the type 'GastoProvider'. Try correcting the name to the name of an existing method, or defining a method named 'File' • lib/providers/gasto_provider.dart:268:22 • undefined_method
-  error • The method 'File' isn't defined for the type 'GastoProvider'. Try correcting the name to the name of an existing method, or defining a method named 'File' • lib/providers/gasto_provider.dart:294:24 • undefined_method
    info • Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter • lib/ui/screens/analysis_screen.dart:21:9 • use_super_parameters
    info • Parameter 'key' could be a super parameter. Trying converting 'key' to a super parameter • lib/ui/screens/chat_screen.dart:56:9 • use_super_parameters
    info • 'localeId' is deprecated and shouldn't be used. Use SpeechListenOptions.localeId instead. Try replacing the use of the deprecated member with the replacement • lib/ui/screens/chat_screen.dart:190:11 • deprecated_member_use
