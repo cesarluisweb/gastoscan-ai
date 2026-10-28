@@ -4,7 +4,7 @@
 ## Estado Actual Inmediato
 - **Rama:** `main`.
 - **Fase 5 (Google Play):** Closed Testing activo con 20 evaluadores (período de 14 días).
-- **UI-08 (ReviewExpenseScreen: Moneda & Monto Superior, Rediseño Visual):** Rediseño visual sin textos amarillos sobre blanco, input total único unificado bajo selector de moneda, preservación nominal estricta al alternar monedas, productos compactos en 3 filas y sticky footer anclado.
+- **UI-08 (ReviewExpenseScreen: Moneda & Monto Superior, Rediseño Visual):** `Pendiente de validación 🧪`. CI verde (Android build 590, commit `4539170`). 407 pruebas unitarias y de widgets pasando. Rediseño visual sin textos amarillos sobre blanco, input total único unificado bajo selector de moneda, preservación nominal estricta al alternar monedas, productos compactos en 3 filas y sticky footer anclado. Listo para pruebas en *Rinde Más Dev*.
 - **UI-06, Desglose Bimonetario & Alineación Visual:** `Pendiente de validación 🧪`. CI verde (Android build 582, commit `9df2ada`). Web validada en vivo vía HTTP 200 en `https://rindemas.cesarluis.com/panel/`.
 
 ## Decisiones Técnicas y de Negocio Recientes
@@ -25,4 +25,4 @@
 - Monitoreo de CI por proceso dormido único (`scripts/wait_ci.ps1`) con `BypassSandbox: true`.
 
 ## Próximo Paso Inmediato
-- Monitorear CI con `scripts/wait_ci.ps1` tras el push de los cambios de ReviewExpenseScreen y comprobantes/galería, y notificar a César para prueba en *Rinde Más Dev*.
+- Esperar validación de César en *Rinde Más Dev* (build 590) con el formulario de revisión rediseñado, comprobantes y flujo de voz.
