@@ -703,8 +703,10 @@ void main() {
 
     // Verificar que no existe icono de bitcoin ni prefixIcon redundante
     expect(find.byIcon(Icons.currency_bitcoin), findsNothing);
-    final inputTotalField = tester.widget<TextFormField>(find.byKey(const Key('input_monto_total')));
-    expect(inputTotalField.decoration?.prefixIcon, isNull);
-    expect(inputTotalField.decoration?.prefixText, 'USDT ');
+    final textField = tester.widget<TextField>(
+      find.descendant(of: find.byKey(const Key('input_monto_total')), matching: find.byType(TextField)),
+    );
+    expect(textField.decoration?.prefixIcon, isNull);
+    expect(textField.decoration?.prefixText, 'USDT ');
   });
 }
