@@ -80,5 +80,23 @@ void main() {
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.getString(AppConstants.prefApiKey), isNull);
     });
+    test('defaultGuardarFotos is true by default when no preference is saved', () async {
+      final provider = TestableSettingsProvider(secureStorage: fakeSecureStorage);
+      await provider.loadSettings();
+
+      expect(AppConstants.defaultGuardarFotos, isTrue);
+      expect(provider.guardarFotos, isTrue);
+    });
+
+    test('preserves explicit false preference if user had previously disabled it', () async {
+      SharedPreferences.setMockInitialValues({
+        AppConstants.prefGuardarFotos: false,
+      });
+
+      final provider = TestableSettingsProvider(secureStorage: fakeSecureStorage);
+      await provider.loadSettings();
+
+      expect(provider.guardarFotos, isFalse);
+    });
   });
 }

@@ -30,12 +30,17 @@ Esta habilidad guía la creación de contenidos orgánicos de alto impacto (vide
 
 ---
 
-## 2. Los 5 Formatos de Video Clave (TikTok / Reels)
+## 2. Los 6 Formatos de Video Clave (TikTok / Reels)
 
 > **Reglas de oro de video:**
 > 1. **Gancho 100% Real y Crudo (0-3s):** Prohibido usar clips generados por IA, animaciones o metraje de stock en los primeros 3 segundos. Los datos analíticos demuestran que activan rechazo inmediato (skip rate >70%). El hook debe ser físico y contextual: factura arrugada de supermercado en mano, dinero en efectivo o pantalla real del teléfono.
 > 2. **Formato y Duración:** Vertical (9:16), entre 15 y 30 segundos. Hook sin saludos ("hola amigos") ni intros de marca.
 > 3. **Publicación Nativa Manual:** Prohibido usar APIs externas o herramientas automáticas (MCP) para publicar. Subir siempre desde la app oficial en el teléfono para conservar audios en tendencia, stickers interactivos y máximo alcance algorítmico.
+> 4. **Cierre Activo y Prevención de Fuga (últimos 3s):** Señalar físicamente con la mano hacia el perfil del creador y decir textualmente: *"El link para anotarte gratis está en mi perfil"*. Evita que el 98% del tráfico de "Para ti" se pierda sin visitar el perfil.
+> 5. **Comentario Disparador Fijado:** Inmediatamente tras publicar, dejar un comentario propio con pregunta abierta (ej. *"¿Cómo llevas tus cuentas hoy: libreta o calculadora?"*) y fijarlo para forzar respuestas que reactiven la distribución algorítmica.
+> 6. **Horario Óptimo de Publicación:** Publicar entre 5:30 PM y 6:00 PM para aprovechar el pico de actividad medido de 6:00 PM a 7:00 PM.
+> 7. **Audiencia Real Medida (Buyer Persona):** El 77% de la audiencia en TikTok son mujeres adultas (57% entre 35 y 54 años) en Venezuela (92.7%). Son quienes administran las compras familiares y el presupuesto del hogar. Los ejemplos deben conectar con compras de comida, farmacia, colegios y rendir la quincena. Rostro humano femenino al aire libre genera confianza y pico de likes en el segundo 0:01.
+> 8. **Filtro del Segundo 0:02:** La analítica marca que el abandono principal ocurre a los 2 segundos. Las primeras 3 palabras deben formular la pregunta o el dilema directamente sin rodeos.
 
 ### Formato A: La Factura Arrugada ("Escaneando Facturas Random")
 * **Objetivo:** Mostrar la magia del OCR y la extracción automática.
@@ -68,6 +73,12 @@ Esta habilidad guía la creación de contenidos orgánicos de alto impacto (vide
 * **Objetivo:** Desarmar la desconfianza sobre seguridad.
 * **Hook (0-2s):** *"Una app de finanzas que no te pide tus claves de banco ni contraseñas"*.
 * **Desarrollo:** Mostrar cómo abres la app y la usas de inmediato, sin vincular bancos ni rellenar formularios interminables.
+
+### Formato F: El Dilema del Bolívar ("¿Cómo ahorrar si solo ganas en bolívares?")
+* **Objetivo:** Resolver la duda #1 buscada orgánicamente en TikTok por venezolanos.
+* **Hook (0-2s):** *"¿Cómo haces para ahorrar en Venezuela si lo que te pagan son bolívares y todo sube?"*
+* **Desarrollo:** Mostrar cómo Rinde Más te fija presupuestos por categorías y calcula la equivalencia inmediata a tasa BCV diaria para saber exactamente cuánto poder de compra te queda sin tener que comprar divisas a ciegas.
+* **CTA:** *"Aprende a cuidar tus bolívares. Enlace de descarga anticipada en el perfil"*.
 
 ---
 

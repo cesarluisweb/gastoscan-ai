@@ -15,7 +15,7 @@ class FakeGeminiVoiceService extends GeminiService {
   List<GeminiExtractionResult>? customResults;
 
   @override
-  Future<List<GeminiExtractionResult>> parseVoiceExpense(String spokenText) async {
+  Future<List<GeminiExtractionResult>> parseVoiceExpense(String spokenText, {String monedaPrincipal = 'USD'}) async {
     parseCount++;
     parsedText = spokenText;
     if (customResults != null) return customResults!;
@@ -230,7 +230,7 @@ void main() {
       );
     });
 
-    test('normaliza "X y medio" o "X y media" a ".50"', () {
+    test('normaliza "X y medio" o "X y media" a ".50" sin alterar unidades de peso', () {
       expect(
         GeminiService.normalizeVoiceText('Pagué 12 y medio de pasaje'),
         equals('Pagué 12.50 de pasaje'),
@@ -239,6 +239,16 @@ void main() {
         GeminiService.normalizeVoiceText('Fueron 4 y media manzanas'),
         equals('Fueron 4.50 manzanas'),
       );
+      // Preserva "medio kilo" intacto para Gemini
+      expect(
+        GeminiService.normalizeVoiceText('Compré medio kilo de queso'),
+        equals('Compré medio kilo de queso'),
+      );
+      // Preserva "500 gramos" intacto para Gemini
+      expect(
+        GeminiService.normalizeVoiceText('Compré 500 gramos de jamón'),
+        equals('Compré 500 gramos de jamón'),
+      );
     });
 
     test('normaliza "X coma Y" a "X.Y"', () {
@@ -246,6 +256,66 @@ void main() {
         GeminiService.normalizeVoiceText('El refresco costó 2 coma 25'),
         equals('El refresco costó 2.25'),
       );
+    });
+  });
+
+  group('GeminiService Local Fallback Tests', () {
+    final geminiService = GeminiService();
+
+    test('extrae compra sin precio aislando comercio, producto limpio, cantidad y categoría', () async {
+      // Sin API key o corte de red cae al fallback local
+      final results = await geminiService.parseVoiceExpense(
+        'Compré 5 kg de queso en New Market',
+        monedaPrincipal: 'USD',
+      );
+
+      expect(results.length, 1);
+      final r = results.first;
+      expect(r.comercio, equals('New Market'));
+      expect(r.moneda, equals('USD'));
+      expect(r.totalOriginal, equals(0.0));
+      expect(r.items.length, 1);
+      expect(r.items.first.descripcion, equals('Queso'));
+      expect(r.items.first.cantidad, equals(5.0));
+      expect(r.items.first.precioUnitario, equals(0));
+      expect(r.items.first.total, equals(0));
+      expect(r.items.first.categoria, equals('Alimentación'));
+    });
+
+    test('calcula precio unitario por kilo en fracciones de peso (medio kilo en 4 dólares)', () async {
+      final results = await geminiService.parseVoiceExpense(
+        'Medio kilo de jamón por 4 dólares',
+        monedaPrincipal: 'USD',
+      );
+
+      expect(results.length, 1);
+      final r = results.first;
+      expect(r.totalOriginal, equals(4.0));
+      expect(r.items.length, 1);
+      expect(r.items.first.descripcion, equals('Jamón'));
+      expect(r.items.first.cantidad, equals(0.5));
+      // 4$ / 0.5 kg = 8$/kg -> 800 centavos
+      expect(r.items.first.precioUnitario, equals(800));
+      expect(r.items.first.total, equals(400));
+      expect(r.items.first.categoria, equals('Alimentación'));
+    });
+
+    test('normaliza gramos a decimales de kilo (500 gramos de carne en 3 dólares)', () async {
+      final results = await geminiService.parseVoiceExpense(
+        'Compré 500 gramos de carne por 3 dólares',
+        monedaPrincipal: 'USD',
+      );
+
+      expect(results.length, 1);
+      final r = results.first;
+      expect(r.totalOriginal, equals(3.0));
+      expect(r.items.length, 1);
+      expect(r.items.first.descripcion, equals('Carne'));
+      expect(r.items.first.cantidad, equals(0.5));
+      // 3$ / 0.5 kg = 6$/kg -> 600 centavos
+      expect(r.items.first.precioUnitario, equals(600));
+      expect(r.items.first.total, equals(300));
+      expect(r.items.first.categoria, equals('Alimentación'));
     });
   });
 }

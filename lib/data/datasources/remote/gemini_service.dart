@@ -201,18 +201,24 @@ class GeminiService {
   Future<Map<String, dynamic>> chatWithAnalyst({
     required List<Map<String, String>> messages,
     required Map<String, dynamic> contextData,
+    String? modo,
   }) async {
     try {
       final headers = await _buildHeaders();
       final uri = Uri.parse('$_baseUrl/chat-analyst');
 
+      final bodyMap = <String, dynamic>{
+        'messages': messages,
+        'contextData': contextData,
+      };
+      if (modo != null) {
+        bodyMap['modo'] = modo;
+      }
+
       final response = await _client.post(
         uri,
         headers: headers,
-        body: jsonEncode({
-          'messages': messages,
-          'contextData': contextData,
-        }),
+        body: jsonEncode(bodyMap),
       ).timeout(const Duration(seconds: 45));
 
       if (response.statusCode == 200) {
@@ -264,7 +270,8 @@ class GeminiService {
   }
 
   /// Normaliza expresiones coloquiales venezolanas de voz para números y decimales
-  /// (ej. "11 con 56" -> "11.56", "12 y medio" -> "12.50", "3 coma 20" -> "3.20")
+  /// (ej. "11 con 56" -> "11.56", "3 coma 20" -> "3.20")
+  /// Preserva intactas las unidades de peso ("500 gramos", "medio kilo", "2 litros") para Gemini.
   static String normalizeVoiceText(String text) {
     if (text.isEmpty) return text;
     String normalized = text;
@@ -273,9 +280,9 @@ class GeminiService {
       RegExp(r'\b(\d+)\s+con\s+(\d{1,2})\b', caseSensitive: false),
       (m) => '${m.group(1)}.${m.group(2)}',
     );
-    // 2. "X y medio" / "X y media" -> "X.50"
+    // 2. "X y medio" / "X y media" -> "X.50" (solo si NO va seguido de kilo/gramo/litro)
     normalized = normalized.replaceAllMapped(
-      RegExp(r'\b(\d+)\s+y\s+medi[ao]\b', caseSensitive: false),
+      RegExp(r'\b(\d+)\s+y\s+medi[ao]\b(?!\s*(?:kilo|kg|gramo|gr|litro|lt))', caseSensitive: false),
       (m) => '${m.group(1)}.50',
     );
     // 3. "X coma Y" -> "X.Y"
@@ -286,7 +293,11 @@ class GeminiService {
     return normalized;
   }
 
-  GeminiExtractionResult _mapArgsToExtractionResult(Map args, String spokenText) {
+  GeminiExtractionResult _mapArgsToExtractionResult(
+    Map args,
+    String spokenText, {
+    String fallbackMoneda = 'USD',
+  }) {
     final double totalUsd = (args['total_usd'] as num?)?.toDouble() ?? 0.0;
     final double montoOriginalArg = (args['monto_original'] as num?)?.toDouble() ?? totalUsd;
     final String comercio = args['comercio']?.toString().trim().isNotEmpty == true
@@ -298,7 +309,7 @@ class GeminiService {
     final String categoriaRaw = args['categoria']?.toString().trim() ?? 'Otros';
     final String categoria = AppConstants.normalizarCategoria(categoriaRaw);
     final String monedaArg = args['moneda']?.toString() ?? '';
-    final String monedaDetectadaTexto = AppConstants.detectarMonedaDeTexto(spokenText, fallback: 'USD');
+    final String monedaDetectadaTexto = AppConstants.detectarMonedaDeTexto(spokenText, fallback: fallbackMoneda);
     String moneda = AppConstants.normalizarMoneda(
       monedaArg.isNotEmpty ? monedaArg : null,
       fallback: monedaDetectadaTexto,
@@ -315,22 +326,32 @@ class GeminiService {
 
     List<ItemGastoModel> itemsGasto = itemsList.whereType<Map>().map((item) {
       final double cant = (item['cantidad'] as num?)?.toDouble() ?? 1.0;
-      double precioUnit = (item['precio_unitario'] as num?)?.toDouble() ?? (cant > 0 && rawTotalOriginal > 0 ? rawTotalOriginal / cant : rawTotalOriginal);
+      double precioUnit = (item['precio_unitario'] as num?)?.toDouble() ?? 0.0;
 
-      // Trampa del subtotal vs precio unitario en dictado (ej. "3 harinas en 4 dólares"):
-      // Si la IA asigna cantidad 3 y precio_unitario 4, el total del renglón daría 12$ en vez de 4$.
-      // Si el precio unitario multiplicado supera el total general dictado pero precioUnit == rawTotalOriginal,
-      // significa que el usuario dictó el subtotal de la línea y no el precio unitario.
-      if (cant > 1 && rawTotalOriginal > 0) {
-        if ((precioUnit * cant) > rawTotalOriginal * 1.05 &&
+      // Si no trajo precio_unitario pero sí un total original general y es el único ítem
+      if (precioUnit <= 0 && itemsList.length == 1 && rawTotalOriginal > 0 && cant > 0) {
+        precioUnit = rawTotalOriginal / cant;
+      }
+
+      // Trampa del subtotal vs precio unitario en dictado (ej. "3 harinas en 4 dólares" o "medio kilo de jamón en 4$"):
+      if (cant > 0 && cant != 1.0 && rawTotalOriginal > 0) {
+        if (cant > 1.0 &&
+            (precioUnit * cant) > rawTotalOriginal * 1.05 &&
             (precioUnit - rawTotalOriginal).abs() <= rawTotalOriginal * 0.05) {
+          precioUnit = rawTotalOriginal / cant;
+        } else if (cant < 1.0 && (precioUnit - rawTotalOriginal).abs() <= 0.05) {
           precioUnit = rawTotalOriginal / cant;
         }
       }
 
+      // Limpieza de descripción para asegurar que no contenga verbos residuales ni comercios
+      String desc = item['descripcion']?.toString().trim() ?? 'Artículo';
+      desc = desc.replaceAll(RegExp(r'^(?:compr[eé]|gast[eé]|pagu[eé]|traje)\s+', caseSensitive: false), '').trim();
+      if (desc.isEmpty) desc = 'Artículo';
+
       final String catItemRaw = item['categoria']?.toString().trim() ?? categoria;
       return ItemGastoModel(
-        descripcion: item['descripcion']?.toString() ?? 'Artículo',
+        descripcion: desc,
         cantidad: cant,
         precioUnitario: (precioUnit * 100).round(),
         total: (precioUnit * cant * 100).round(),
@@ -348,7 +369,7 @@ class GeminiService {
     if (itemsGasto.isEmpty) {
       itemsGasto = [
         ItemGastoModel(
-          descripcion: comercio != 'Varios' ? 'Compra en $comercio' : spokenText,
+          descripcion: comercio != 'Varios' ? 'Compra en $comercio' : 'Gasto general',
           cantidad: 1.0,
           precioUnitario: (totalOriginal * 100).round(),
           total: (totalOriginal * 100).round(),
@@ -407,19 +428,24 @@ class GeminiService {
     );
   }
 
-  Future<List<GeminiExtractionResult>> parseVoiceExpense(String spokenText) async {
+  Future<List<GeminiExtractionResult>> parseVoiceExpense(
+    String spokenText, {
+    String monedaPrincipal = 'USD',
+  }) async {
     final cleanSpokenText = normalizeVoiceText(spokenText);
     try {
       final responseMap = await chatWithAnalyst(
         messages: [
           {
             'role': 'user',
-            'text': 'Registra este gasto o compras: "$cleanSpokenText". Asume que la fecha es hoy si no la menciono. Si menciono compras en múltiples lugares o comercios distintos, extrae cada una por separado en la lista "gastos". Extrae los productos, precios y la categoría adecuada para cada uno. REGLA DE PRECIOS Y CANTIDADES: Expresa los precios usando siempre punto decimal (ej. 11.56 y nunca 1156). Si digo "3 harinas en 4 dólares", el precio_unitario es 4 / 3 = 1.33 (el monto es el subtotal del renglón, no unitario). REGLA CRÍTICA DE MONEDA: Si menciono un monto explícito en Bolívares (ej. "Pagué 4.000 Bs por gasolina; eran unos 20 dólares"), el dato original obligatorio e inmutable es 4000 con moneda: "VES" (el monto en dólares es solo contexto y no debe sobreescribir los bolívares). Si el gasto es en USD o EUR: si fue a tasa paralelo/USDT/Binance especifica metodo_liquidacion: "BS_USDT"; si fue en efectivo/Zelle/Zinli/divisa directa especifica "DIVISA"; en cualquier otro caso (pago móvil, punto, BCV o sin especificar tasa) especifica "BS_BCV".',
+            'text': cleanSpokenText,
           }
         ],
         contextData: {
           'fecha_hoy': DateTime.now().toIso8601String().substring(0, 10),
+          'moneda_principal': monedaPrincipal,
         },
+        modo: 'dictado_gasto',
       );
 
       if (responseMap.containsKey('functionCall')) {
@@ -432,7 +458,7 @@ class GeminiService {
             final List<GeminiExtractionResult> results = [];
             for (final g in gastosList) {
               if (g is Map) {
-                results.add(_mapArgsToExtractionResult(g, cleanSpokenText));
+                results.add(_mapArgsToExtractionResult(g, cleanSpokenText, fallbackMoneda: monedaPrincipal));
               }
             }
             if (results.isNotEmpty) {
@@ -440,75 +466,143 @@ class GeminiService {
             }
           }
 
-          return [_mapArgsToExtractionResult(args, cleanSpokenText)];
+          return [_mapArgsToExtractionResult(args, cleanSpokenText, fallbackMoneda: monedaPrincipal)];
         }
       }
     } catch (e) {
       // Fallback si falla la llamada de red
     }
 
-    // Fallback básico si la IA no devolvió functionCall o hubo un corte
-    double montoFallback = 0.0;
-    final regexMonto = RegExp(r'(\d+([.,]\d+)?)');
-    final match = regexMonto.firstMatch(cleanSpokenText);
-    if (match != null) {
-      montoFallback = tryParseAmount(match.group(1)!, isPrice: false) ?? 0.0;
+    // Fallback inteligente local si la IA no devolvió functionCall o hubo un corte de red
+    return _parseVoiceExpenseLocalFallback(cleanSpokenText, fallbackMoneda: monedaPrincipal);
+  }
+
+  static List<GeminiExtractionResult> _parseVoiceExpenseLocalFallback(
+    String text, {
+    String fallbackMoneda = 'USD',
+  }) {
+    String comercio = 'Varios';
+    // 1. Detección de comercio tras "en ..."
+    final matchEn = RegExp(r'\ben\s+([A-Za-z0-9ÁÉÍÓÚáéíóúñÑ\s]+)$', caseSensitive: false).firstMatch(text);
+    if (matchEn != null) {
+      final possibleComercio = matchEn.group(1)!.trim();
+      if (possibleComercio.isNotEmpty &&
+          !possibleComercio.toLowerCase().startsWith('dolar') &&
+          !possibleComercio.toLowerCase().startsWith('bolivar') &&
+          !possibleComercio.toLowerCase().startsWith('bs')) {
+        comercio = possibleComercio;
+      }
     }
 
-    if (montoFallback <= 0.0) {
-      throw Exception('No se detectó el monto en el dictado. Por favor incluye el precio de la compra.');
-    }
-
-    final String monedaFallback = AppConstants.detectarMonedaDeTexto(cleanSpokenText, fallback: 'USD');
-    String? metodoFallback;
-    if (monedaFallback == 'USD' || monedaFallback == 'EUR') {
-      final textLower = cleanSpokenText.toLowerCase();
-      if (textLower.contains('bcv') ||
-          textLower.contains('banco central') ||
-          textLower.contains('oficial') ||
-          textLower.contains('pago movil') ||
-          textLower.contains('pago móvil') ||
-          textLower.contains('punto') ||
-          textLower.contains('debito') ||
-          textLower.contains('débito') ||
-          textLower.contains('biopago') ||
-          textLower.contains('en bolivares') ||
-          textLower.contains('en bolívares') ||
-          textLower.contains('en bs')) {
-        metodoFallback = 'BS_BCV';
-      } else if (textLower.contains('paralelo') ||
-          textLower.contains('usdt') ||
-          textLower.contains('binance') ||
-          textLower.contains('p2p')) {
-        metodoFallback = 'BS_USDT';
-      } else if (textLower.contains('efectivo') ||
-          textLower.contains('billete') ||
-          textLower.contains('zelle') ||
-          textLower.contains('wally') ||
-          textLower.contains('zinli') ||
-          textLower.contains('divisa')) {
-        metodoFallback = 'DIVISA';
+    // 2. Detección de cantidad y fracciones de peso (gramos/kilos)
+    double cantidad = 1.0;
+    final lower = text.toLowerCase();
+    if (lower.contains('medio kilo') || lower.contains('media docena')) {
+      cantidad = 0.5;
+    } else if (lower.contains('un cuarto de kilo') || lower.contains('un cuarto')) {
+      cantidad = 0.25;
+    } else if (lower.contains('tres cuartos de kilo') || lower.contains('tres cuartos')) {
+      cantidad = 0.75;
+    } else if (lower.contains('kilo y medio')) {
+      cantidad = 1.5;
+    } else {
+      final matchGramos = RegExp(r'(\d+)\s*(?:g|gr|gramos)\b', caseSensitive: false).firstMatch(lower);
+      if (matchGramos != null) {
+        final g = double.tryParse(matchGramos.group(1)!) ?? 0.0;
+        if (g > 0) cantidad = g / 1000.0;
       } else {
-        metodoFallback = 'BS_BCV';
+        final matchKg = RegExp(r'(\d+(?:[.,]\d+)?)\s*(?:kg|kilos?|litros?|lts?|paquetes?|latas?|unidades?)\b', caseSensitive: false).firstMatch(lower);
+        if (matchKg != null) {
+          cantidad = double.tryParse(matchKg.group(1)!.replaceAll(',', '.')) ?? 1.0;
+        }
+      }
+    }
+
+    // 3. Detección de monto/precio explícito (asociado a moneda o palabra precio)
+    double monto = 0.0;
+    final matchPrecio = RegExp(
+      r'(?:por|en|de|\$)\s*(\d+(?:[.,]\d+)?)\s*(?:\$|d[oó]lares|bol[ií]vares|bs\.?|ves|euros?|€|usdt)?\b',
+      caseSensitive: false,
+    ).firstMatch(text);
+
+    if (matchPrecio != null) {
+      final parsed = double.tryParse(matchPrecio.group(1)!.replaceAll(',', '.')) ?? 0.0;
+      final matchCantNum = RegExp(r'(\d+(?:[.,]\d+)?)\s*(?:kg|kilos|g|gr|gramos|litros|paquetes)', caseSensitive: false).firstMatch(lower);
+      if (matchCantNum == null || matchPrecio.group(1) != matchCantNum.group(1)) {
+        monto = parsed;
+      }
+    }
+
+    double precioUnit = (cantidad > 0 && monto > 0) ? (monto / cantidad) : 0.0;
+
+    // 4. Limpieza del nombre del producto
+    String producto = text;
+    producto = producto.replaceAll(RegExp(r'^(?:compr[eé]|gast[eé]|pagu[eé]|traje|anota|pon)\s+', caseSensitive: false), '');
+    if (comercio != 'Varios') {
+      producto = producto.replaceAll(RegExp(r'\s+en\s+' + RegExp.escape(comercio) + r'\b', caseSensitive: false), '');
+    }
+    producto = producto.replaceAll(RegExp(r'\b(?:medio kilo|un cuarto de kilo|tres cuartos de kilo|kilo y medio)\s*(?:de\s+)?', caseSensitive: false), '');
+    producto = producto.replaceAll(RegExp(r'\b\d+(?:[.,]\d+)?\s*(?:kg|kilos?|g|gr|gramos|litros?|lts?|paquetes?|latas?|unidades?)\s*(?:de\s+)?', caseSensitive: false), '');
+    producto = producto.replaceAll(RegExp(r'\s*(?:por|en|de)?\s*\$?\s*\d+(?:[.,]\d+)?\s*(?:\$|d[oó]lares|bol[ií]vares|bs\.?|ves|euros?|€|usdt)?', caseSensitive: false), '');
+    producto = producto.trim();
+    if (producto.isEmpty) {
+      producto = 'Artículo';
+    } else {
+      producto = producto[0].toUpperCase() + producto.substring(1);
+    }
+
+    // 5. Inferencia de categoría
+    String categoria = 'Otros';
+    final pLower = producto.toLowerCase();
+    if (RegExp(r'\b(queso|carne|pollo|pan|leche|huevos|cafe|café|arroz|harina|comida|verduras|frutas|pasta|jamon|jamón|charcuteria|charcutería|mercado)\b').hasMatch(pLower)) {
+      categoria = 'Alimentación';
+    } else if (RegExp(r'\b(medicina|pastillas?|jarabe|dolor|farmacia|remedio|salud)\b').hasMatch(pLower)) {
+      categoria = 'Salud';
+    } else if (RegExp(r'\b(jabon|jabón|champu|champú|desodorante|papel|aseo|higiene)\b').hasMatch(pLower)) {
+      categoria = 'Higiene';
+    } else if (RegExp(r'\b(gasolina|pasaje|taxi|transporte|camioneta|metro)\b').hasMatch(pLower)) {
+      categoria = 'Transporte';
+    } else if (RegExp(r'\b(luz|agua|cantv|internet|servicio|saldo|recarga)\b').hasMatch(pLower)) {
+      categoria = 'Servicios';
+    } else if (RegExp(r'\b(ropa|pantalon|pantalón|camisa|zapatos|medias|franela)\b').hasMatch(pLower)) {
+      categoria = 'Ropa';
+    } else if (RegExp(r'\b(cuaderno|utiles|útiles|libro|colegio|escuela|educacion|educación)\b').hasMatch(pLower)) {
+      categoria = 'Educación';
+    } else if (RegExp(r'\b(bombillo|detergente|cloro|reparacion|reparación|hogar)\b').hasMatch(pLower)) {
+      categoria = 'Hogar';
+    } else if (RegExp(r'\b(cine|salida|restaurante|chucheria|chuchería|snack|fiesta)\b').hasMatch(pLower)) {
+      categoria = 'Entretenimiento';
+    }
+
+    // 6. Moneda y liquidación
+    final String moneda = AppConstants.detectarMonedaDeTexto(text, fallback: fallbackMoneda);
+    String? metodoLiquidacion;
+    if (moneda == 'USD' || moneda == 'EUR') {
+      if (lower.contains('efectivo') || lower.contains('billete') || lower.contains('zelle') || lower.contains('divisa')) {
+        metodoLiquidacion = 'DIVISA';
+      } else if (lower.contains('paralelo') || lower.contains('usdt') || lower.contains('binance') || lower.contains('p2p')) {
+        metodoLiquidacion = 'BS_USDT';
+      } else {
+        metodoLiquidacion = 'BS_BCV';
       }
     }
 
     return [
       GeminiExtractionResult(
-        comercio: 'Gasto por voz',
+        comercio: comercio,
         fecha: DateTime.now().toIso8601String().substring(0, 10),
-        moneda: monedaFallback,
-        totalOriginal: montoFallback,
+        moneda: moneda,
+        totalOriginal: monto,
         tasaCambioDetectada: null,
         impuestoIva: 0.0,
-        metodoLiquidacion: metodoFallback,
+        metodoLiquidacion: metodoLiquidacion,
         items: [
           ItemGastoModel(
-            descripcion: spokenText,
-            cantidad: 1.0,
-            precioUnitario: (montoFallback * 100).round(),
-            total: (montoFallback * 100).round(),
-            categoria: 'Otros',
+            descripcion: producto,
+            cantidad: cantidad,
+            precioUnitario: (precioUnit * 100).round(),
+            total: (monto * 100).round(),
+            categoria: categoria,
           ),
         ],
       ),

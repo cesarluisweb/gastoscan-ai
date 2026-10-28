@@ -40,6 +40,7 @@ class FakeSettingsProvider extends SettingsProvider {
   double tasaUsd = 881.88;
   double tasaEur = 950.0;
   double tasaUsdt = 900.0;
+  String monedaPref = 'USD';
 
   @override
   double get tasaCambioVesUsd => tasaUsd;
@@ -51,7 +52,7 @@ class FakeSettingsProvider extends SettingsProvider {
   double get tasaCambioVesUsdt => tasaUsdt;
 
   @override
-  String get monedaPrincipal => 'USD';
+  String get monedaPrincipal => monedaPref;
 
   @override
   Future<void> loadSettings() async {}
@@ -329,5 +330,247 @@ void main() {
     expect(find.byKey(const Key('cintillo_usdt_info')), findsOneWidget);
     expect(find.textContaining('Se guardará en USDT'), findsOneWidget);
     expect(find.textContaining('USD 1:1'), findsOneWidget);
+  });
+
+  testWidgets('ReviewExpenseScreen selecciona monedaPrincipal de Settings para nuevo gasto manual', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.5;
+
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    settingsProvider.monedaPref = 'VES';
+
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Monto en Bolívares (VES)'), findsOneWidget);
+    expect(find.text('Equiv. USD (BCV)'), findsOneWidget);
+  });
+
+  testWidgets('ReviewExpenseScreen preserva moneda de GeminiExtractionResult sobre monedaPrincipal', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.5;
+
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    settingsProvider.monedaPref = 'VES';
+
+    await tester.pumpWidget(MultiProvider(
+      providers: [
+        ChangeNotifierProvider<GastoProvider>.value(value: gastoProvider),
+        ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+        ChangeNotifierProvider<ScanQueueProvider>.value(value: scanQueueProvider),
+      ],
+      child: MaterialApp(
+        home: ReviewExpenseScreen(
+          extractedData: GeminiExtractionResult(
+            comercio: 'Café Paris',
+            fecha: DateTime.now().toIso8601String().substring(0, 10),
+            moneda: 'EUR',
+            totalOriginal: 25.0,
+            impuestoIva: 0.0,
+            items: const [],
+          ),
+        ),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Se guardará en EUR'), findsOneWidget);
+    expect(find.text('Monto en Bolívares (VES)'), findsNothing);
+  });
+
+  testWidgets('ReviewExpenseScreen re-tap en moneda activa es un no-op idempotente', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.5;
+
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pumpAndSettle();
+
+    // 1. En USD, seleccionar "En Bs. a tasa BCV"
+    await tester.tap(find.byKey(const Key('btn_pagado_en_bs')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('input_total_bs_manual')), findsOneWidget);
+
+    // 2. Modificar el campo de bolívares finales
+    await tester.enterText(find.byKey(const Key('input_total_bs_manual')), '750.50');
+    await tester.pumpAndSettle();
+
+    // 3. Volver a pulsar el botón de moneda activa (USD)
+    await tester.tap(find.byKey(const Key('expense_currency_usd_btn')));
+    await tester.pumpAndSettle();
+
+    // 4. Verificar que no se restableció el método de pago ni se borraron los bolívares
+    expect(find.byKey(const Key('input_total_bs_manual')), findsOneWidget);
+    final bsManualField = tester.widget<TextFormField>(find.byKey(const Key('input_total_bs_manual')));
+    expect(bsManualField.controller?.text, '750.50');
+  });
+
+  testWidgets('ReviewExpenseScreen alternar entre USD y EUR conserva el metodo de liquidacion seleccionado', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.5;
+
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pumpAndSettle();
+
+    // 1. En USD, seleccionar "En Bs. a tasa BCV"
+    await tester.tap(find.byKey(const Key('btn_pagado_en_bs')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('input_total_bs_manual')), findsOneWidget);
+
+    // 2. Cambiar moneda a EUR
+    await tester.tap(find.byKey(const Key('expense_currency_eur_btn')));
+    await tester.pumpAndSettle();
+
+    // 3. En EUR debe seguir activo "En Bs. a tasa BCV" (no restablecer a "En divisa")
+    expect(find.byKey(const Key('input_total_bs_manual')), findsOneWidget);
+    expect(find.byKey(const Key('cintillo_divisa_info')), findsNothing);
+  });
+
+  testWidgets('ReviewExpenseScreen conserva el valor nominal introducido al cambiar de moneda', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.5;
+
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pumpAndSettle();
+
+    // 1. Escribir 100 en el campo de monto total en USD
+    final inputTotalFinder = find.widgetWithText(TextFormField, 'Monto Total (USD)');
+    expect(inputTotalFinder, findsOneWidget);
+    await tester.enterText(inputTotalFinder, '100.00');
+    await tester.pumpAndSettle();
+
+    // 2. Cambiar a VES
+    await tester.tap(find.byKey(const Key('expense_currency_ves_btn')));
+    await tester.pumpAndSettle();
+
+    // 3. El valor nominal sigue siendo 100.00, no convertido a 100 * tasa
+    final inputVesFinder = find.widgetWithText(TextFormField, 'Monto en Bolívares (VES)');
+    expect(inputVesFinder, findsOneWidget);
+    final vesField = tester.widget<TextFormField>(inputVesFinder);
+    expect(vesField.controller?.text, '100.00');
+  });
+
+  testWidgets('ReviewExpenseScreen formulario vacio no escribe 0.00 en controladores derivados', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.5;
+
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pumpAndSettle();
+
+    final inputTotalFinder = find.widgetWithText(TextFormField, 'Monto Total (USD)');
+    expect(inputTotalFinder, findsOneWidget);
+    final totalField = tester.widget<TextFormField>(inputTotalFinder);
+    expect(totalField.controller?.text, isEmpty);
+    expect(totalField.controller?.text, isNot('0.00'));
+  });
+
+  testWidgets('ReviewExpenseScreen gasto indexado existente preserva bolivares reales cobrados', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.5;
+
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    final gastoIndexado = GastoModel(
+      id: 99,
+      comercio: 'Supermercado Central',
+      categoria: 'Alimentación',
+      montoOriginal: 50000, // 500.00 Bs
+      totalUsd: 1000,      // 10.00 USD
+      tasaCambio: 50.0,
+      fuenteTasaCambio: 'BCV (Pago en Bs. indexado a USD)',
+      moneda: 'VES',
+      fecha: '2024-05-10',
+      items: const [],
+    );
+
+    await tester.pumpWidget(MultiProvider(
+      providers: [
+        ChangeNotifierProvider<GastoProvider>.value(value: gastoProvider),
+        ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+        ChangeNotifierProvider<ScanQueueProvider>.value(value: scanQueueProvider),
+      ],
+      child: MaterialApp(
+        home: ReviewExpenseScreen(existingGasto: gastoIndexado),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    // 1. Comprobar que carga 10.00 en etiqueta y 500.00 en Bs finales
+    final bsField = tester.widget<TextFormField>(find.byKey(const Key('input_total_bs_manual')));
+    expect(bsField.controller?.text, '500.00');
+
+    // 2. Alternar a VES
+    await tester.tap(find.byKey(const Key('expense_currency_ves_btn')));
+    await tester.pumpAndSettle();
+
+    // En VES debe mostrar los 500.00 Bs reales
+    final vesField = tester.widget<TextFormField>(find.widgetWithText(TextFormField, 'Monto en Bolívares (VES)'));
+    expect(vesField.controller?.text, '500.00');
+
+    // 3. Volver a USD
+    await tester.tap(find.byKey(const Key('expense_currency_usd_btn')));
+    await tester.pumpAndSettle();
+
+    // En USD restaura los 10.00 de referencia y conserva los 500.00 Bs cobrados
+    final bsFieldRestored = tester.widget<TextFormField>(find.byKey(const Key('input_total_bs_manual')));
+    expect(bsFieldRestored.controller?.text, '500.00');
+  });
+
+  testWidgets('ReviewExpenseScreen bloquea guardado si tasa en bolivares no es valida', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.5;
+
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    settingsProvider.tasaUsd = 0.0;
+    settingsProvider.monedaPref = 'VES';
+
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pumpAndSettle();
+
+    // Escribir monto 500 Bs
+    final inputVesFinder = find.widgetWithText(TextFormField, 'Monto en Bolívares (VES)');
+    await tester.enterText(inputVesFinder, '500.00');
+    await tester.pumpAndSettle();
+
+    // Tocar Guardar Gasto
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Guardar Gasto'));
+    await tester.pump();
+
+    // Verificar que aparece el SnackBar de error
+    expect(find.textContaining('No hay una tasa de cambio válida'), findsOneWidget);
   });
 }

@@ -759,7 +759,7 @@ class MoreScreenState extends State<MoreScreen> {
           ),
           const SizedBox(height: 16),
 
-          // Sección de Almacenamiento y Fotos
+          // Sección de Almacenamiento de fotos
           Material(
             color: AppColors.card,
             shape: RoundedRectangleBorder(
@@ -777,7 +777,7 @@ class MoreScreenState extends State<MoreScreen> {
                       Icon(Icons.storage_outlined, color: AppColors.primaryDark, size: 20),
                       SizedBox(width: 8),
                       Text(
-                        'Almacenamiento y Fotos',
+                        'Almacenamiento de fotos',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,

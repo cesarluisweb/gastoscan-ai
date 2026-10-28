@@ -229,7 +229,52 @@ Este marco sintetiza la experiencia y aprendizajes reales del caso de estudio de
   - Cierre con logo de Rinde Más y animación sutil.
   - Locución grabada por la esposa de César, edición de César y música de fondo suave.
 * **Objetivo:** Primer impacto orgánico, presentación visual de la app y llamado a la lista de espera / versión anticipada.
-* **Hipótesis a evaluar:** Medir retención en los primeros 3 segundos (impacto de clips IA vs. gancho con factura real).
+* **Hipótesis evaluada y resultado:** Los clips de IA generaron una caída masiva inicial: *skip rate* de 74.2% en Instagram. En TikTok alcanzó 507 vistas y 29 likes tras 3 días. Confirmó la necesidad de apertura 100% física y humana.
+
+### Video #2: Presentación Humana de la App (Rostro + Teléfono)
+* **Fecha:** 27 de Octubre de 2026.
+* **Plataformas:** TikTok (`@rindemas.app`) e Instagram Reels (`@rindemas.app`).
+* **Estructura del video:**
+  - Apertura directa con rostro a cámara (esposa de César) explicando qué es Rinde Más en espacio abierto (parque).
+  - Cortes intercalados con pantalla grabada del teléfono en mano mostrando la app clasificando gastos en bolívares y dólares, y el asistente.
+  - Portada con teléfono visible y texto legible.
+* **Métricas Consolidadas (TikTok Studio - 28/10/2026):**
+  - **Visualizaciones:** **1.1K (1.131 vistas)** — hito de superación de las 1.000 vistas orgánicas.
+  - **Likes:** 44 likes (pico máximo de likes en el segundo 0:01 al ver a la presentadora).
+  - **Seguidores nuevos:** **+9 seguidores** ganados directamente por este video.
+  - **Guardados (Favoritos):** 7 guardados (alta intención de uso futuro).
+  - **Compartidos:** 2.
+  - **Comentarios:** 1.
+  - **Tiempo de reproducción total:** 3 horas, 56 minutos, 16 segundos.
+  - **Tiempo promedio de reproducción:** **11.41 segundos** (30.8% de retención promedio en video de 37s).
+  - **Visto completo:** 5.9%.
+  - **Fuentes de tráfico:** 96.5% "Para ti" (FYP frío), 2.7% Perfil personal (subió desde 0% tras optimización de bio), 0.6% Otros, 0.2% Búsqueda.
+* **Demografía Real de Audiencia (TikTok Studio Analytics):**
+  - **Género:** **77% Mujeres** / 23% Hombres.
+  - **País:** **92.7% Venezuela** (quirúrgico), 1.3% EE. UU., <1% Colombia/Brasil.
+  - **Rangos de Edad:**
+    - 18 a 24 años: 8%
+    - 25 a 34 años: 20%
+    - 35 a 44 años: 29%
+    - 45 a 54 años: 28%
+    - 55+ años: 15%
+    - *Conclusión demográfica:* El **77% tiene entre 25 y 54 años** (pico del 57% entre 35 y 54 años). La audiencia no son adolescentes: son mujeres adultas que gestionan el hogar, hacen las compras del supermercado y cuidan el presupuesto familiar.
+* **Métricas en Instagram Reels:**
+  - El *skip rate* cayó drásticamente de 74.2% (Video #1) a **44.4%** (mejora de casi 30 puntos en retención).
+  - Tiempo promedio de reproducción: 6 segundos.
+* **Consultas de búsqueda orgánica captadas en TikTok Studio:**
+  1. *«pero como se ahorra si uno no compra dólares sino bolívares»* (33.3%)
+  2. *«tutorial de cómo contar bolivares venezolanos»* (33.3%)
+  3. *«de que comierso se saca las cuentas»* (33.3%)
+* **Afinidad de audiencia confirmada:** Audiencia ve a José Gabriel Arapé (finanzas Venezuela) y LopezTips (tips de apps).
+* **Aprendizajes permanentes consolidados:**
+  1. **El avatar real es femenino y de 30 a 55 años:** La presentadora mujer genera empatía inmediata con el 77% de la audiencia. Los ejemplos deben ser el mercado del hogar, compras de alimentos, farmacia y quincenas.
+  2. **El Like ocurre en el segundo 0:01:** El primer segundo con rostro humano real genera confianza inmediata antes de que empiece la explicación técnica.
+  3. **Caída típica en el segundo 0:02:** Los que no se interesan deslizan a los 2 segundos; el gancho debe plantear el beneficio o dolor en las primeras 3 palabras.
+  4. **El tráfico al perfil convirtió a seguidores (+9):** El enlace en la bio y la optimización del perfil convirtieron 2.7% de visitas en 9 nuevos seguidores orgánicos.
+  5. **Incorporación del Formato F (dilema del bolívar):** Capitalizar las búsquedas orgánicas sobre ahorro en bolívares.
+  6. **Cierre visual activo:** Señalar físicamente al perfil en los últimos segundos para mantener la conversión hacia la lista de espera.
+  7. **Horario óptimo medido:** Publicar entre 5:30 PM y 6:00 PM (pico entre 6:00 PM y 7:00 PM).
 
 ---
 

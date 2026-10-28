@@ -149,7 +149,7 @@ void main() {
       expect(find.text('Dólar BCV'), findsOneWidget);
       expect(find.text('Euro BCV'), findsOneWidget);
       expect(find.text('USDT P2P'), findsOneWidget);
-      expect(find.text('Almacenamiento y Fotos', skipOffstage: false), findsOneWidget);
+      expect(find.text('Almacenamiento de fotos', skipOffstage: false), findsOneWidget);
       expect(find.text('Exportar a Excel (.csv)', skipOffstage: false), findsOneWidget);
       expect(find.text('Exportar como Texto (.md)', skipOffstage: false), findsOneWidget);
       expect(find.text('Escribir a soporte', skipOffstage: false), findsOneWidget);
@@ -240,7 +240,7 @@ void main() {
 
       // We should be back in MoreScreen hub
       expect(find.text('Más'), findsOneWidget);
-      expect(find.text('Almacenamiento y Fotos', skipOffstage: false), findsOneWidget);
+      expect(find.text('Almacenamiento de fotos', skipOffstage: false), findsOneWidget);
     });
 
     testWidgets('tapping currency calculator navigates internally and back button returns to hub', (tester) async {

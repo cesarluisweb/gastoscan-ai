@@ -648,7 +648,9 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
 async function handleChatAnalyst(request, geminiKey, isCustomKey = false) {
   try {
     const data = await readJsonBodyWithLimit(request, MAX_CHAT_BODY_BYTES);
-    const { messages, contextData } = data;
+    const { messages, contextData, modo } = data;
+    const isDictadoGasto = modo === "dictado_gasto";
+    const defaultMoneda = (contextData && contextData.moneda_principal) ? contextData.moneda_principal : "USD";
 
     if (!messages || !Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: "Faltan los mensajes o formato inválido." }), {
@@ -666,7 +668,41 @@ async function handleChatAnalyst(request, geminiKey, isCustomKey = false) {
 
     let modelIndex = 0;
 
-    const systemPrompt = `Eres un asistente financiero y de compras experto y amigable para un usuario en Venezuela dentro de la app Rinde Más.
+    let systemPrompt;
+    if (isDictadoGasto) {
+      systemPrompt = `Eres un extractor experto de gastos estructurados para la app Rinde Más en Venezuela.
+Tu ÚNICA tarea es extraer con total fidelidad los datos de las compras o gastos dictados por el usuario y llamar obligatoriamente a la función "registrar_gasto".
+
+REGLAS DE EXTRACCIÓN DE PRODUCTOS (ESTRICTO):
+1. Limpieza de descripción: El campo "descripcion" de cada ítem debe contener ÚNICAMENTE el nombre limpio del producto (ejemplo: "Queso", "Harina pan", "Café", "Papas"). Queda estrictamente PROHIBIDO incluir frases como "Compré", "Gasté en", "Pagué por", cantidades ("5 kg"), unidades ("litros") o nombres de comercios ("en New Market") en la descripción.
+2. Cantidades y Unidades: El campo "cantidad" debe ser un número decimal. Si el usuario dictó gramos o fracciones coloquiales de peso/volumen, DEBES convertirlos a decimales de kilogramo o litro:
+   - "500 gramos" o "medio kilo" -> cantidad: 0.5
+   - "250 gramos" o "un cuarto de kilo" -> cantidad: 0.25
+   - "750 gramos" o "tres cuartos de kilo" -> cantidad: 0.75
+   - "kilo y medio" -> cantidad: 1.5
+   - "5 kg" o "5 kilos" -> cantidad: 5.0
+   - Si no mencionó cantidad ni peso, usa cantidad: 1.0.
+3. Precios y Subtotales:
+   - Si el usuario dice el precio total pagado por una fracción o cantidad (ej. "medio kilo de jamón por 4 dólares"), el "precio_unitario" es el precio POR KILO o por unidad: monto / cantidad (4.00 / 0.5 = 8.00). Así, cantidad * precio_unitario da exactamente los 4.00 dólares.
+   - Si dice "3 harinas en 4 dólares", el subtotal del renglón es 4 y precio_unitario = 4 / 3 = 1.33.
+   - Si el usuario NO mencionó precio o monto para un producto (ej. "Compré 5 kg de queso en New Market"): DEBES colocar precio_unitario = 0 y monto_original = 0 (o total_usd = 0). NUNCA inventes un precio ni asumas la cantidad o el peso como si fuera dinero.
+4. Categorización Canónica:
+   - Asigna a cada ítem y al gasto general una de las 10 categorías canónicas oficiales: "Alimentación", "Salud", "Higiene", "Educación", "Hogar", "Servicios", "Transporte", "Ropa", "Entretenimiento", "Otros".
+   - Por ejemplo: queso, carne, pollo, pan, leche, comida, víveres -> "Alimentación"; medicinas, pastillas -> "Salud"; champú, jabón -> "Higiene"; pasaje, gasolina -> "Transporte".
+5. Moneda y Liquidación:
+   - Si el usuario menciona explícitamente "bolívares" o "Bs", moneda = "VES".
+   - Si menciona "dólares", "$", "USD", moneda = "USD".
+   - Si menciona "euros" o "€", moneda = "EUR".
+   - Si menciona "USDT", moneda = "USDT".
+   - Si NO menciona ninguna moneda, usa por defecto "${defaultMoneda}".
+   - Si la moneda es USD o EUR: si pagó a paralelo/USDT/p2p usa metodo_liquidacion = "BS_USDT"; si pagó en efectivo/Zelle/divisa directa usa "DIVISA"; en cualquier otro caso (pago móvil, punto, BCV o sin especificar) usa "BS_BCV".
+6. Comercio:
+   - Extrae el nombre del establecimiento (ej. "New Market", "Farmatodo"). Si no mencionó comercio, usa "Varios".
+7. Múltiples Comercios:
+   - Si el dictado incluye compras en comercios distintos (ej. "compré medicinas en Farmatodo y luego comida en Central Madeirense"), desglosa cada comercio independiente en el array "gastos".
+`;
+    } else {
+      systemPrompt = `Eres un asistente financiero y de compras experto y amigable para un usuario en Venezuela dentro de la app Rinde Más.
 Tu objetivo es analizar los gastos mensuales del usuario, responder sus dudas con base en los datos proporcionados y gestionar su lista de compras.
 Da respuestas cortas, directas y prácticas en español venezolano natural.
 Evita usar saludos largos o excesos de formalidad, ve directo al grano.
@@ -678,9 +714,9 @@ REGLAS FISCALES Y DE GASTOS HORMIGA (ESTRICTO):
 
 REGLA DE DESAMBIGUACIÓN (ESTRICTA Y OBLIGATORIA):
 - NUNCA inventes precios o montos si el usuario no los mencionó explícitamente.
-- Si el usuario dice claramente que ya gastó, compró o pagó algo Y menciona montos/precios o un comercio (ej. "gasté 10$ en el mercado", "pagué 200 bolívares de pasaje"), regístralo como gasto con la función "registrar_gasto".
+- Si el usuario dice claramente que ya gastó, compró o pagó algo Y menciona montos/precios o un comercio (ej. "gasté 10$ en el mercado", "pagué 200 bolívares de pasaje", "compré queso en New Market"): regístralo como gasto con la función "registrar_gasto". Si no mencionó precio, pon precio_unitario = 0 y monto_original = 0.
 - Si el usuario dice claramente que lo anote en la "lista de compras", "tengo que comprar", "para comprar" o similar, usa las funciones de lista de compras ("agregar_items_lista_compras", etc.).
-- Si el usuario NO menciona un monto ni precio y la frase es ambigua (ejemplos: "anota una harina pan", "anota un champú", "agrega café", "pon 2 leches", "guarda champú"): TIENES ESTRICTAMENTE PROHIBIDO LLAMAR A registrar_gasto O INVENTAR UN PRECIO. En este caso NO EJECUTES NINGUNA FUNCIÓN y responde EXACTAMENTE con este texto:
+- Si el usuario NO menciona un monto ni precio ni comercio y la frase es ambigua (ejemplos: "anota una harina pan", "anota un champú", "agrega café", "pon 2 leches", "guarda champú"): TIENES ESTRICTAMENTE PROHIBIDO LLAMAR A registrar_gasto O INVENTAR UN PRECIO. En este caso NO EJECUTES NINGUNA FUNCIÓN y responde EXACTAMENTE con este texto:
 "¿Deseas agregarlo a tu lista de compras o registrarlo como un gasto realizado?"
 
 REGLAS PARA LISTA DE COMPRAS:
@@ -693,16 +729,16 @@ REGLAS PARA LISTA DE COMPRAS:
 Regla para registrar gastos por voz:
 - Identifica la moneda en que el usuario realizó la compra: "VES" (si menciona bolívares, bs, o montos en moneda nacional), "USD" (si menciona dólares, $, verdes), "EUR" (si menciona euros, €) o "USDT".
 - PRIORIDAD INMUTABLE DEL BOLÍVAR: Si el usuario menciona un monto explícito en Bolívares (ej. "Pagué 4.000 Bs por gasolina; eran unos 20 dólares"), el dato original obligatorio e inmutable es 4.000 VES (moneda = "VES", monto_original = 4000); el monto en USD es solo contexto y NUNCA debe sobreescribir los 4.000 Bs.
-- Si no menciona ninguna moneda, usa "USD" por defecto.
+- Si no menciona ninguna moneda, usa por defecto "${defaultMoneda}".
 - Si la compra es en "USD" (o "EUR"), identifica cómo liquidó o pagó el usuario e incluye "metodo_liquidacion":
   * "BS_BCV": Si pagó en bolívares a tasa oficial BCV, banco central, tasa oficial, pago móvil, tarjeta de débito, biopago, punto de venta, o si menciona un gasto en dólares en Venezuela sin especificar efectivo ni tasa paralela (por defecto "BS_BCV").
   * "BS_USDT": Si cobraron en bolívares calculados a tasa paralelo, USDT, Binance o P2P.
   * "DIVISA": Si pagó directamente en dólares/divisas (efectivo, billetes, Zelle, Wally, Zinli, Binance Pay, suscripción digital).
 - Si el usuario dicta directamente en bolívares (ej. "4000 bolívares"), mantén "moneda": "VES".
 - En "monto_original" envía el monto numérico exacto en la moneda indicada (ej. si dice "1500 bolívares", monto_original: 1500, moneda: "VES").
-- Cantidades y Subtotales: Si el usuario dice "3 harinas en 4 dólares", el total de esa compra es 4 dólares y el precio_unitario es 4 / 3 = 1.33 (el monto mencionado por el usuario es el subtotal del renglón, no el precio unitario).
+- Cantidades y Subtotales: Si el usuario dice "3 harinas en 4 dólares", el total de esa compra es 4 dólares y el precio_unitario es 4 / 3 = 1.33 (el monto mencionado por el usuario es el subtotal del renglón, no el precio unitario). Si dice "medio kilo de jamón en 4$", cantidad = 0.5 y precio_unitario = 8.00 (4 / 0.5).
 - Decimales exactos: Usa siempre punto decimal en los montos (ej. 11.56 y nunca 1156). Si el usuario dice "11 con 56" o "11 y medio", interpreta 11.56 o 11.50.
-- En "total_usd" envía el equivalente estimado en dólares (si fue en bolívares, puedes dividirlo por la tasa BCV aproximada del contexto o enviarlo igual para que el cliente lo convierta).
+- En "total_usd" envía el equivalente estimado en dólares (si fue en bolívares, puedes dividirlo por la tasa BCV aproximada del contexto o enviarlo igual para que el cliente lo convierta). Si no se mencionó precio, usa 0.
 - Si el usuario te dicta registrar un gasto con precios en múltiples monedas mezcladas, unifica todos los precios a una sola moneda antes de llamar a registrar_gasto.
 - Si el usuario menciona o dicta compras realizadas en MÚLTIPLES comercios, establecimientos o lugares distintos (ejemplo: "compré en la farmacia tal cosa en tanto y compré en el supermercado tal cosa en tanto"): DEBES desglosar cada compra por separado en el array "gastos". Cada elemento en "gastos" debe contener su propio comercio, fecha, moneda, monto_original, total_usd, metodo_liquidacion (si aplica), categoría adecuada e items.
 - Si el usuario menciona múltiples productos dentro del MISMO comercio o compra general, regístralo como un solo gasto con los productos en "items".
@@ -717,6 +753,7 @@ Contexto de Lentes Financieros del usuario:
 - 'total_ves': Total acumulado en bolívares.
 Nota de análisis cambiario: La diferencia entre total_usd_bcv y total_usdt_p2p en pagos en bolívares refleja cuánto rindió el dinero del usuario pagando a tasa oficial BCV en comparación con la tasa P2P. Explícalo con naturalidad si el usuario consulta sobre comparativas o ahorro entre divisas.
 `;
+    }
 
     const geminiMessages = [
       { role: "user", parts: [{ text: systemPrompt }] },
@@ -730,143 +767,157 @@ Nota de análisis cambiario: La diferencia entre total_usd_bcv y total_usdt_p2p 
       });
     }
 
+    const registrarGastoDeclaration = {
+      name: "registrar_gasto",
+      description: "Registra uno o varios gastos en la app. Si incluye compras en múltiples lugares o comercios distintos (ej. farmacia y supermercado), desglosa cada compra en el array 'gastos'.",
+      parameters: {
+        type: "object",
+        properties: {
+          comercio: { type: "string", description: "Nombre del local o 'Varios' si no se especifica." },
+          fecha: { type: "string", description: "Fecha en formato YYYY-MM-DD. Usa la fecha actual si no dice otra." },
+          moneda: { type: "string", description: "Moneda de la compra: VES, USD, EUR o USDT. Si no se especificó divisa, usa '" + defaultMoneda + "'." },
+          monto_original: { type: "number", description: "Monto total pagado en la moneda original (o 0 si no se mencionó precio)." },
+          total_usd: { type: "number", description: "Monto total estimado en dólares (o 0 si no se mencionó precio)." },
+          metodo_liquidacion: {
+            type: "string",
+            enum: ["BS_BCV", "BS_USDT", "DIVISA"],
+            description: "Para compras en USD o EUR: 'BS_BCV' si pagó en bolívares a tasa oficial/BCV/pago móvil/punto; 'BS_USDT' si cobraron a tasa paralelo/USDT; 'DIVISA' si pagó en efectivo/Zelle/divisa directa."
+          },
+          categoria: { type: "string", description: "Una de: Alimentación, Salud, Higiene, Educación, Hogar, Servicios, Transporte, Ropa, Entretenimiento, Otros." },
+          items: {
+            type: "array",
+            description: "Lista de productos comprados y sus precios en la moneda original.",
+            items: {
+              type: "object",
+              properties: {
+                descripcion: { type: "string", description: "Nombre limpio del producto (ej. 'Queso', 'Harina pan', 'Café', 'Carne'), sin incluir cantidades, unidades ni verbos como 'compré' o 'gasté'." },
+                cantidad: { type: "number", description: "Cantidad numérica. Si se dictaron gramos o fracciones de kilo/litro, conviértelo a decimales de kilogramo/litro (ej. '500 gramos' o 'medio kilo' -> 0.5, '250 gramos' o 'un cuarto' -> 0.25, 'kilo y medio' -> 1.5). Si no se dijo cantidad, usa 1.0." },
+                precio_unitario: { type: "number", description: "Precio unitario o precio por kilo/litro si se compró por peso o volumen: monto_pagado / cantidad. Si no se mencionó precio, usa 0." }
+              },
+              required: ["descripcion", "cantidad"]
+            }
+          },
+          gastos: {
+            type: "array",
+            description: "Lista de compras o gastos independientes si el usuario dictó compras en múltiples lugares o comercios distintos (ej. farmacia y supermercado). Cada objeto representa una compra completa.",
+            items: {
+              type: "object",
+              properties: {
+                comercio: { type: "string", description: "Nombre del establecimiento de esta compra." },
+                fecha: { type: "string", description: "Fecha en formato YYYY-MM-DD." },
+                moneda: { type: "string", description: "Moneda de esta compra: VES, USD, EUR o USDT." },
+                monto_original: { type: "number", description: "Monto total pagado en la moneda de esta compra (o 0 si no se mencionó)." },
+                total_usd: { type: "number", description: "Monto total estimado en USD (o 0 si no se mencionó)." },
+                metodo_liquidacion: {
+                  type: "string",
+                  enum: ["BS_BCV", "BS_USDT", "DIVISA"],
+                  description: "Método de liquidación si la compra fue en USD o EUR: 'BS_BCV', 'BS_USDT' o 'DIVISA'."
+                },
+                categoria: { type: "string", description: "Una de: Alimentación, Salud, Higiene, Educación, Hogar, Servicios, Transporte, Ropa, Entretenimiento, Otros." },
+                items: {
+                  type: "array",
+                  description: "Lista de productos comprados en este establecimiento.",
+                  items: {
+                    type: "object",
+                    properties: {
+                      descripcion: { type: "string", description: "Nombre limpio del producto sin verbos, cantidades ni unidades." },
+                      cantidad: { type: "number", description: "Cantidad numérica en unidades, kg o litros." },
+                      precio_unitario: { type: "number", description: "Precio unitario o por kilo/litro (monto_pagado / cantidad). Si no se mencionó, usa 0." }
+                    },
+                    required: ["descripcion", "cantidad"]
+                  }
+                }
+              },
+              required: ["comercio", "fecha", "categoria", "items"]
+            }
+          }
+        },
+        required: ["comercio", "fecha", "categoria", "items"]
+      }
+    };
+
     const payload = {
       contents: geminiMessages,
       tools: [
         {
-          functionDeclarations: [
-            {
-              name: "registrar_gasto",
-              description: "Registra uno o varios gastos en la app ÚNICAMENTE si el usuario especifica un monto/precio pagado y confirma que es un gasto realizado. Si incluye compras en múltiples lugares o comercios distintos (ej. farmacia y supermercado), desglosa cada compra en el array 'gastos'.",
-              parameters: {
-                type: "object",
-                properties: {
-                  comercio: { type: "string", description: "Nombre del local o 'Compra general' si no se especifica." },
-                  fecha: { type: "string", description: "Fecha en formato YYYY-MM-DD. Usa la fecha actual si no dice otra." },
-                  moneda: { type: "string", description: "Moneda de la compra: VES, USD, EUR o USDT. Si dijo bolívares o Bs, usa 'VES'." },
-                  monto_original: { type: "number", description: "Monto total pagado en la moneda original (ej. 1500 si pagó 1500 bolívares)." },
-                  total_usd: { type: "number", description: "Monto total estimado en dólares." },
-                  metodo_liquidacion: {
-                    type: "string",
-                    enum: ["BS_BCV", "BS_USDT", "DIVISA"],
-                    description: "Para compras en USD o EUR: 'BS_BCV' si pagó en bolívares a tasa oficial/BCV/pago móvil/punto; 'BS_USDT' si cobraron a tasa paralelo/USDT; 'DIVISA' si pagó en efectivo/Zelle/divisa directa."
-                  },
-                  categoria: { type: "string", description: "Una de: Alimentación, Salud, Higiene, Educación, Hogar, Servicios, Transporte, Ropa, Entretenimiento, Otros." },
-                  items: {
-                    type: "array",
-                    description: "Lista de productos comprados y sus precios estimados en la moneda original.",
-                    items: {
-                      type: "object",
-                      properties: {
-                        descripcion: { type: "string" },
-                        cantidad: { type: "number" },
-                        precio_unitario: { type: "number" }
+          functionDeclarations: isDictadoGasto
+            ? [registrarGastoDeclaration]
+            : [
+                registrarGastoDeclaration,
+                {
+                  name: "agregar_items_lista_compras",
+                  description: "Agrega uno o varios productos a la lista de compras del usuario.",
+                  parameters: {
+                    type: "object",
+                    properties: {
+                      nombres: {
+                        type: "array",
+                        description: "Lista de nombres de los productos a agregar a la lista de compras.",
+                        items: { type: "string" }
                       }
-                    }
-                  },
-                  gastos: {
-                    type: "array",
-                    description: "Lista de compras o gastos independientes si el usuario dictó compras en múltiples lugares o comercios distintos (ej. farmacia y supermercado). Cada objeto representa una compra completa.",
-                    items: {
-                      type: "object",
-                      properties: {
-                        comercio: { type: "string", description: "Nombre del establecimiento de esta compra (ej. Farmacia, Supermercado)." },
-                        fecha: { type: "string", description: "Fecha en formato YYYY-MM-DD." },
-                        moneda: { type: "string", description: "Moneda de esta compra: VES, USD, EUR o USDT." },
-                        monto_original: { type: "number", description: "Monto total pagado en la moneda de esta compra." },
-                        total_usd: { type: "number", description: "Monto total estimado en USD." },
-                        metodo_liquidacion: {
-                          type: "string",
-                          enum: ["BS_BCV", "BS_USDT", "DIVISA"],
-                          description: "Método de liquidación si la compra fue en USD o EUR: 'BS_BCV', 'BS_USDT' o 'DIVISA'."
-                        },
-                        categoria: { type: "string", description: "Una de: Alimentación, Salud, Higiene, Educación, Hogar, Servicios, Transporte, Ropa, Entretenimiento, Otros." },
-                        items: {
-                          type: "array",
-                          description: "Lista de productos comprados en este establecimiento.",
-                          items: {
-                            type: "object",
-                            properties: {
-                              descripcion: { type: "string" },
-                              cantidad: { type: "number" },
-                              precio_unitario: { type: "number" }
-                            }
-                          }
-                        }
+                    },
+                    required: ["nombres"]
+                  }
+                },
+                {
+                  name: "modificar_item_lista_compras",
+                  description: "Modifica o renombra un producto en la lista de compras del usuario.",
+                  parameters: {
+                    type: "object",
+                    properties: {
+                      nombre_actual: { type: "string", description: "Nombre del producto actual a modificar." },
+                      nuevo_nombre: { type: "string", description: "Nuevo nombre para el producto." }
+                    },
+                    required: ["nombre_actual", "nuevo_nombre"]
+                  }
+                },
+                {
+                  name: "eliminar_items_lista_compras",
+                  description: "Elimina uno o varios productos de la lista de compras del usuario.",
+                  parameters: {
+                    type: "object",
+                    properties: {
+                      nombres: {
+                        type: "array",
+                        description: "Lista de nombres de los productos a eliminar.",
+                        items: { type: "string" }
+                      }
+                    },
+                    required: ["nombres"]
+                  }
+                },
+                {
+                  name: "marcar_items_lista_compras",
+                  description: "Marca productos de la lista de compras como comprados o pendientes.",
+                  parameters: {
+                    type: "object",
+                    properties: {
+                      nombres: {
+                        type: "array",
+                        description: "Lista de nombres de los productos a marcar.",
+                        items: { type: "string" }
                       },
-                      required: ["comercio", "fecha", "total_usd", "categoria", "items"]
-                    }
+                      comprado: {
+                        type: "boolean",
+                        description: "true si fue comprado, false si está pendiente."
+                      }
+                    },
+                    required: ["nombres", "comprado"]
                   }
-                },
-                required: ["comercio", "fecha", "total_usd", "categoria", "items"]
-              }
-            },
-            {
-              name: "agregar_items_lista_compras",
-              description: "Agrega uno o varios productos a la lista de compras del usuario.",
-              parameters: {
-                type: "object",
-                properties: {
-                  nombres: {
-                    type: "array",
-                    description: "Lista de nombres de los productos a agregar a la lista de compras.",
-                    items: { type: "string" }
-                  }
-                },
-                required: ["nombres"]
-              }
-            },
-            {
-              name: "modificar_item_lista_compras",
-              description: "Modifica o renombra un producto en la lista de compras del usuario.",
-              parameters: {
-                type: "object",
-                properties: {
-                  nombre_actual: { type: "string", description: "Nombre del producto actual a modificar." },
-                  nuevo_nombre: { type: "string", description: "Nuevo nombre para el producto." }
-                },
-                required: ["nombre_actual", "nuevo_nombre"]
-              }
-            },
-            {
-              name: "eliminar_items_lista_compras",
-              description: "Elimina uno o varios productos de la lista de compras del usuario.",
-              parameters: {
-                type: "object",
-                properties: {
-                  nombres: {
-                    type: "array",
-                    description: "Lista de nombres de los productos a eliminar.",
-                    items: { type: "string" }
-                  }
-                },
-                required: ["nombres"]
-              }
-            },
-            {
-              name: "marcar_items_lista_compras",
-              description: "Marca productos de la lista de compras como comprados o pendientes.",
-              parameters: {
-                type: "object",
-                properties: {
-                  nombres: {
-                    type: "array",
-                    description: "Lista de nombres de los productos a marcar.",
-                    items: { type: "string" }
-                  },
-                  comprado: {
-                    type: "boolean",
-                    description: "true si fue comprado, false si está pendiente."
-                  }
-                },
-                required: ["nombres", "comprado"]
-              }
-            }
-          ]
+                }
+              ]
         }
       ],
+      ...(isDictadoGasto ? {
+        toolConfig: {
+          functionCallingConfig: {
+            mode: "ANY",
+            allowedFunctionNames: ["registrar_gasto"]
+          }
+        }
+      } : {}),
       generationConfig: {
-        temperature: 0.5,
+        temperature: isDictadoGasto ? 0.1 : 0.5,
       },
     };
 

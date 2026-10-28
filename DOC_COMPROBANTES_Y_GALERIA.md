@@ -6,7 +6,7 @@ En respuesta directa a la experiencia de usuario y requerimientos funcionales so
 1. **Adjuntar y Eliminar Comprobantes Manuales:** En el formulario de registro y edición de gastos (`ReviewExpenseScreen`), ahora es posible adjuntar fotos desde la cámara o galería en transacciones manuales, así como sustituirlas o eliminarlas en cualquier momento.
 2. **Visor de Comprobante a Pantalla Completa (`ReceiptViewerDialog`):** Los gastos con comprobante muestran un icono discreto de foto junto a la fecha (no cliqueable). Al pulsar el menú contextual de opciones (tres puntos), el orden es: *Editar*, *Ver comprobante* y *Eliminar*. Al seleccionar *Ver comprobante*, se abre de inmediato el visor a pantalla completa con zoom interactivo (`InteractiveViewer`), detalles del comercio/monto/fecha, opción de compartir y guardado directo en galería.
 3. **Filtro Rápido de Comprobantes en Historial de Gastos (`ExpenseHistoryScreen`):** Se integró un botón de acción con icono de galería (`Icons.photo_library_outlined`) en la barra superior. Con un solo toque, el usuario puede filtrar toda la lista para ver exclusivamente los gastos que cuentan con foto de comprobante adjunta.
-4. **Galería Mensual de Comprobantes (`ReceiptGalleryScreen`):** Dentro de la tarjeta existente de *"Almacenamiento y Fotos"* en la pantalla *"Más"*, se agregó la opción *"Ver comprobantes guardados"*, que muestra el conteo mensual y abre una cuadrícula organizada por mes y año con todas las fotos guardadas en el dispositivo.
+4. **Galería Mensual de Comprobantes (`ReceiptGalleryScreen`):** Dentro de la tarjeta existente de *"Almacenamiento de fotos"* en la pantalla *"Más"*, se agregó la opción *"Ver comprobantes guardados"*, que muestra el conteo mensual y abre una cuadrícula organizada por mes y año con todas las fotos guardadas en el dispositivo.
 5. **Cero Duplicidad y Álbum "Rinde Más" (`gal`):** Cuando la opción de guardar fotos está activa, las fotos se guardan en el álbum "Rinde Más" de la galería del teléfono sin duplicar almacenamiento ni consumir doble espacio.
 
 ---
@@ -19,7 +19,7 @@ En respuesta directa a la experiencia de usuario y requerimientos funcionales so
 - **`lib/ui/screens/receipt_gallery_screen.dart`** *(Nuevo)*: Cuadrícula mensual de comprobantes con navegación entre meses y acceso directo al visor.
 - **`lib/ui/widgets/expense_card.dart`**: Chip "Foto" interactivo y opción en menú contextual para abrir el comprobante en un toque.
 - **`lib/ui/screens/review_expense_screen.dart`**: Soporte completo para adjuntar fotos a gastos manuales, cambiar o eliminar comprobantes existentes.
-- **`lib/ui/screens/more_screen.dart`**: Navegación integrada a la galería mensual dentro de la tarjeta "Almacenamiento y Fotos" con subvista segura (`PopScope`).
+- **`lib/ui/screens/more_screen.dart`**: Navegación integrada a la galería mensual dentro de la tarjeta "Almacenamiento de fotos" con subvista segura (`PopScope`).
 - **`lib/ui/screens/expense_history_screen.dart`**: Filtro rápido por comprobantes con icono `Icons.photo_library_outlined` en la barra superior.
 - **`test/screens/receipt_gallery_screen_test.dart`** *(Nuevo)*: Pruebas unitarias de la pantalla de galería y navegación mensual.
 - **`test/widgets/receipt_viewer_dialog_test.dart`** *(Nuevo)*: Pruebas de renderizado y estados de error del visor de comprobantes.
@@ -56,7 +56,7 @@ En respuesta directa a la experiencia de usuario y requerimientos funcionales so
 
 ### 4. Galería mensual en Más
 1. Ir a la pestaña **Más**.
-2. En la tarjeta **"Almacenamiento y Fotos"**, verificar que debajo del switch aparece **"Ver comprobantes guardados"** con el conteo de fotos del mes.
+2. En la tarjeta **"Almacenamiento de fotos"**, verificar que debajo del switch aparece **"Ver comprobantes guardados"** con el conteo de fotos del mes.
 3. Tocar la opción para entrar en la galería mensual.
 4. Navegar entre meses con las flechas superiores (< >) para revisar los comprobantes de meses pasados o futuros.
 5. Tocar cualquier comprobante de la cuadrícula para abrirlo en el visor completo.

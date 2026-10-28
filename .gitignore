@@ -35,6 +35,7 @@
 # Local builds & tokens
 *.apk
 *.zip
+*.mp4
 token.txt
 firebase_functions/node_modules/
 firebase_functions/package-lock.json

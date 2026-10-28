@@ -4,6 +4,7 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../../core/constants/app_colors.dart';
 import '../../data/datasources/remote/gemini_service.dart';
 import '../../providers/scan_queue_provider.dart';
+import '../../providers/settings_provider.dart';
 import '../screens/review_expense_screen.dart';
 
 class VoiceExpenseSheet extends StatefulWidget {
@@ -173,7 +174,11 @@ class _VoiceExpenseSheetState extends State<VoiceExpenseSheet> {
     });
 
     try {
-      final extractionResults = await _geminiService.parseVoiceExpense(text);
+      final settings = Provider.of<SettingsProvider>(context, listen: false);
+      final extractionResults = await _geminiService.parseVoiceExpense(
+        text,
+        monedaPrincipal: settings.monedaPrincipal,
+      );
 
       if (mounted) {
         if (extractionResults.length > 1) {

@@ -8,7 +8,7 @@
 ## 1. Decisiones de Diseño Acordadas
 
 1. **Ubicación en UI:**
-   - Sección "Más", tarjeta dedicada ubicada inmediatamente debajo de **Almacenamiento y Fotos**.
+   - Sección "Más", tarjeta dedicada ubicada inmediatamente debajo de **Almacenamiento de fotos**.
    - Título: **"API Key de Gemini (Opcional)"**.
    - Descripción clara indicando que es para usuarios avanzados que deseen usar su propia cuota gratuita o de pago de Google AI Studio.
    - Enlace directo a Google AI Studio (`https://aistudio.google.com/`) para facilitar la obtención de la clave.

@@ -163,7 +163,7 @@ class AppConstants {
   static const String prefRecordatoriosActivos = 'recordatorios_activos';
 
   // Valores por defecto
-  static const bool defaultGuardarFotos = false;
+  static const bool defaultGuardarFotos = true;
   // Último recurso cuando no hay caché ni red. NUNCA presentarlo como tasa
   // vigente: `SettingsProvider.tasasSonReferencia` lo señala en la UI.
   static const double defaultTasaCambio = 850.0;

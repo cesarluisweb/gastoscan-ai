@@ -491,10 +491,25 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
             if (totalUsd <= 0 || (!hasExplicitNumber && !hasExpenseKeyword)) {
               if (!mounted) return;
-              chatProvider.addMessage({
-                'role': 'assistant',
-                'text': '¿Deseas agregarlo a tu lista de compras o registrarlo como un gasto realizado?',
-              });
+              if (hasExpenseKeyword) {
+                final String comercio = args['comercio']?.toString().trim() ?? '';
+                final List items = args['items'] as List? ?? [];
+                final String itemDesc = items.isNotEmpty && items.first is Map && items.first['descripcion'] != null
+                    ? items.first['descripcion'].toString().trim()
+                    : 'tu compra';
+                final String comStr = (comercio.isNotEmpty && comercio != 'Varios' && comercio != 'Compra general')
+                    ? ' en $comercio'
+                    : '';
+                chatProvider.addMessage({
+                  'role': 'assistant',
+                  'text': 'Entendido, registré $itemDesc$comStr. ¿Cuánto te costó en total?',
+                });
+              } else {
+                chatProvider.addMessage({
+                  'role': 'assistant',
+                  'text': '¿Deseas agregarlo a tu lista de compras o registrarlo como un gasto realizado?',
+                });
+              }
               return;
             }
 

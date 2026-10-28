@@ -20,6 +20,7 @@ Al redactar propuestas de respuestas para Reddit (ej. r/vzla), redes sociales, s
 7. **Terminología en Español Descriptivo:** Preferir términos descriptivos sobre siglas crudas (ej. *"doble verificación"* en lugar de *"2FA"*).
 8. **Evitar el Anclaje Restrictivo en Títulos:** Nunca titular publicaciones en comunidades destacando "escanear facturas" como valor único o primario. En Venezuela, la mayoría de los gastos cotidianos no generan factura impresa (camionetas, comercio informal, pago móvil), lo que activa rechazo inmediato. Titular siempre enfocando el dolor central (control bimonetario VES/USD, tasas oficiales/P2P, registrar por voz o sin tipear) y presentar el escaneo de facturas como una alternativa complementaria.
 9. **Autenticidad Visual en Redes Sociales:** En videos cortos (TikTok/Reels), priorizar siempre la demostración física y realista sobre representaciones artificiales. No abrir videos con personajes o escenas generadas por IA que desvíen la atención del problema financiero cotidiano venezolano.
+10. **Activación de Comentarios y Cierre Visual:** En todo video corto, el llamado a la acción final debe indicar explícitamente el perfil físico y acompañarse de un primer comentario propio fijado con pregunta abierta para estimular respuestas orgánicas inmediatas.
 
 ## 3. Voz de Marca Canónica de Rinde Más (Guiones y Publicidad)
 Toda propuesta de contenido audiovisual, guion de redes o anuncio publicitario debe regirse estrictamente por estos principios:

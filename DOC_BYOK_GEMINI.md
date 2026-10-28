@@ -28,7 +28,7 @@
 - **Eliminación y retorno:** `SettingsProvider.removeApiKey()` borra la clave del Keystore seguro, actualiza el estado en Firestore y notifica a los listeners, revirtiendo la app inmediatamente al servicio estándar.
 
 ### 1.3 Interfaz de Usuario (`more_screen.dart`)
-- **Ubicación:** Tarjeta dedicada situada inmediatamente debajo de la sección **Almacenamiento y Fotos**.
+- **Ubicación:** Tarjeta dedicada situada inmediatamente debajo de la sección **Almacenamiento de fotos**.
 - **Estado dinámico:**
   - Si no hay clave: muestra descripción explicativa y chevron para configurar.
   - Si hay clave activa: muestra badge verde **"Activa"**, miniatura enmascarada (`AIzaSy...****`) y botón "Gestionar".
@@ -48,7 +48,7 @@ Sigue estos pasos en la aplicación para verificar el funcionamiento de la nueva
 
 ### Prueba A: Visualización y apertura del enlace en el navegador
 1. Abre la app y navega a la pestaña **Más** (última pestaña de la barra inferior).
-2. Haz scroll hasta pasar la tarjeta de **Almacenamiento y Fotos**.
+2. Haz scroll hasta pasar la tarjeta de **Almacenamiento de fotos**.
 3. Verifica que inmediatamente debajo aparece la tarjeta: **"API Key de Gemini (Opcional)"**.
 4. Pulsa sobre la tarjeta para desplegar el modal.
 5. Toca el enlace azul **"Obtener API Key gratis en Google AI Studio"**.
