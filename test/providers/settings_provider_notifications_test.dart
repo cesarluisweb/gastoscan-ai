@@ -9,7 +9,12 @@ import 'package:gastoscan_ai/services/notification_service.dart';
 
 class FakeSecureStorageForNotifications extends Fake implements FlutterSecureStorage {
   @override
-  Future<String?> read({required String key, AppleOptions? aOptions, AndroidOptions? aOptions2}) async => null;
+  dynamic noSuchMethod(Invocation invocation) {
+    if (invocation.memberName == #read) {
+      return Future<String?>.value(null);
+    }
+    return super.noSuchMethod(invocation);
+  }
 }
 
 class MockNotificationServiceForSettings extends NotificationService {
