@@ -4,8 +4,8 @@
 ## Estado Actual Inmediato
 - **Rama:** `main`.
 - **Fase 5 (Google Play):** Closed Testing activo con 20 evaluadores (período de 14 días).
-- **UI-08 (ReviewExpenseScreen: Moneda & Monto Superior, Rediseño Visual):** `Pendiente de validación 🧪`. CI verde (Android build 590, commit `4539170`). 407 pruebas unitarias y de widgets pasando. Rediseño visual sin textos amarillos sobre blanco, input total único unificado bajo selector de moneda, preservación nominal estricta al alternar monedas, productos compactos en 3 filas y sticky footer anclado. Listo para pruebas en *Rinde Más Dev*.
-- **UI-06, Desglose Bimonetario & Alineación Visual:** `Pendiente de validación 🧪`. CI verde (Android build 582, commit `9df2ada`). Web validada en vivo vía HTTP 200 en `https://rindemas.cesarluis.com/panel/`.
+- **UI-08 & Comprobantes (Visor Simplificado, Galería & ReviewExpenseScreen):** `Pendiente de validación 🧪`. CI verde (Android build 598, commit `343d640`). 409 pruebas unitarias y de widgets pasando. Visor simplificado a solo compartir en barra superior con acciones ergonómicas abajo («Ver o editar gasto» y «Eliminar foto»), selección múltiple en galería y rediseño de revisión. Listo para pruebas en *Rinde Más Dev*.
+- **UI-06, Desglose Bimonetario & Alineación Visual:** `Pendiente de validación 🧪`. CI verde (Android build 601, commit `3375324`). Dona reescalada con separación de 16dp, columna de porcentajes de ancho fijo (28dp) alineada a la izquierda entre categoría y monto, montos a la derecha (58dp) y cochino en amarillo (`AppColors.primaryDark`). Web validada en vivo vía HTTP 200 en `https://rindemas.cesarluis.com/panel/`.
 
 ## Decisiones Técnicas y de Negocio Recientes
 - Modelo de Negocio & Anti-patrón Rial: Descartadas cuotas mensuales bajas artificiales (10-15 facturas/mes). La app ofrece escaneo abierto para compras familiares protegido únicamente por el límite anti-abuso de 50 facturas/día en Cloudflare Gateway (`SEC-13`). Rinde Más Pro se enfoca en valor agregado (cero ads, PDF/Excel contable, fotos en la nube, categorías libres, BYOK).
@@ -25,4 +25,4 @@
 - Monitoreo de CI por proceso dormido único (`scripts/wait_ci.ps1`) con `BypassSandbox: true`.
 
 ## Próximo Paso Inmediato
-- Esperar validación de César en *Rinde Más Dev* (build 590) con el formulario de revisión rediseñado, comprobantes y flujo de voz.
+- Esperar validación de César en *Rinde Más Dev* (build 601) con la columna alineada de porcentajes en la dona, separación visual y cochino amarillo.
