@@ -197,15 +197,15 @@ class _CategoryChartState extends State<CategoryChart> {
         children: [
           // Dona con Total al Centro
           SizedBox(
-            width: 140,
-            height: 140,
+            width: 125,
+            height: 125,
             child: Stack(
               alignment: Alignment.center,
               children: [
                 PieChart(
                   PieChartData(
                     sections: sections,
-                    centerSpaceRadius: 40,
+                    centerSpaceRadius: 36,
                     sectionsSpace: 2,
                   ),
                 ),
@@ -216,7 +216,7 @@ class _CategoryChartState extends State<CategoryChart> {
                       _fmt(totalDisplayMonto),
                       style: const TextStyle(
                         color: AppColors.textPrimary,
-                        fontSize: 13,
+                        fontSize: 12,
                         fontWeight: FontWeight.bold,
                       ),
                       maxLines: 1,
@@ -235,7 +235,7 @@ class _CategoryChartState extends State<CategoryChart> {
               ],
             ),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 10),
           // Lista de Categorías con icono circular, % y monto alineados
           Expanded(
             child: Column(
@@ -251,15 +251,15 @@ class _CategoryChartState extends State<CategoryChart> {
                   child: Row(
                     children: [
                       Container(
-                        width: 24,
-                        height: 24,
+                        width: 22,
+                        height: 22,
                         decoration: BoxDecoration(
                           color: color.withValues(alpha: 0.12),
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(icon, size: 13, color: color),
+                        child: Icon(icon, size: 12, color: color),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       Expanded(
                         child: Text(
                           entry.key,
@@ -279,9 +279,9 @@ class _CategoryChartState extends State<CategoryChart> {
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 70),
+                        constraints: const BoxConstraints(maxWidth: 58),
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
                           alignment: Alignment.centerRight,
