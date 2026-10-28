@@ -43,7 +43,6 @@ You must call `databaseFactory = databaseFactoryFfi;` before using global openDa
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/currency_calculator_screen_test.dart: CurrencyCalculatorScreen Tests typing in ves field updates divisa field in real time
 Aviso: no se pudo resetear ítems en procesamiento: Bad state: databaseFactory not initialized
 databaseFactory is only initialized when using sqflite. When using `sqflite_common_ffi`
@@ -52,9 +51,7 @@ You must call `databaseFactory = databaseFactoryFfi;` before using global openDa
 ::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) R3 Acceptance Criteria: Asignar $50 a Alimentación, y registrar un gasto de $60 en Alimentación hace que se dibuje un indicador visual de exceso (color rojo) en la UI de esa categoría
-::endgroup::
+NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/currency_calculator_screen_test.dart: CurrencyCalculatorScreen Tests selecting Euro BCV chip recalculates with EUR rate
 Aviso: no se pudo resetear ítems en procesamiento: Bad state: databaseFactory not initialized
 databaseFactory is only initialized when using sqflite. When using `sqflite_common_ffi`
@@ -63,22 +60,19 @@ You must call `databaseFactory = databaseFactoryFfi;` before using global openDa
 ::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Category within budget does NOT render the red excess alert
-::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/currency_calculator_screen_test.dart: CurrencyCalculatorScreen Tests selecting custom rate chip allows entering custom rate
 Aviso: no se pudo resetear ítems en procesamiento: Bad state: databaseFactory not initialized
 databaseFactory is only initialized when using sqflite. When using `sqflite_common_ffi`
 You must call `databaseFactory = databaseFactoryFfi;` before using global openDatabase API
 
 ::endgroup::
+NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/currency_calculator_screen_test.dart: CurrencyCalculatorScreen Tests tapping copiar Bs. button copies amount to clipboard and shows snackbar
 Aviso: no se pudo resetear ítems en procesamiento: Bad state: databaseFactory not initialized
 databaseFactory is only initialized when using sqflite. When using `sqflite_common_ffi`
 You must call `databaseFactory = databaseFactoryFfi;` before using global openDatabase API
 
 ::endgroup::
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
@@ -97,6 +91,9 @@ You must call `databaseFactory = databaseFactoryFfi;` before using global openDa
 
 ::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) R3 Acceptance Criteria: Asignar $50 a Alimentación, y registrar un gasto de $60 en Alimentación hace que se dibuje un indicador visual de exceso (color rojo) en la UI de esa categoría
+::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/currency_calculator_screen_test.dart: CurrencyCalculatorScreen Tests renders BCV legal disclaimer card and official source link
 Aviso: no se pudo resetear ítems en procesamiento: Bad state: databaseFactory not initialized
@@ -107,7 +104,7 @@ You must call `databaseFactory = databaseFactoryFfi;` before using global openDa
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Initial empty state displays analysis empty state and allows adding budget
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Category within budget does NOT render the red excess alert
 ::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/currency_calculator_screen_test.dart: CurrencyCalculatorScreen Tests tapping clear icon clears divisa input field
 Aviso: no se pudo resetear ítems en procesamiento: Bad state: databaseFactory not initialized
@@ -116,12 +113,17 @@ You must call `databaseFactory = databaseFactoryFfi;` before using global openDa
 
 ::endgroup::
 ::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Initial empty state displays analysis empty state and allows adding budget
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Editing budget to amount greater than expense clears red excess alert
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) Validation: categories exceeding general budget shows alert and blocks save
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) General budget exceeded shows general excess alert in AnalysisScreen
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) AnalysisScreen month selector opens picker dialog and changes month
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_category_budget_test.dart: AnalysisScreen Category Budget & Red Excess Alert Tests (R3) SummaryCard shows Presupuesto mensual and edit button opens budget bottom sheet
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests renders all hub sections in main view
+::endgroup::
+NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping shopping list navigates internally and back button returns to hub
 ::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
@@ -131,32 +133,30 @@ NotificationService: Excepción al cancelar recordatorio de pendientes: MissingP
 ::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests calling openChat navigates directly to chat view
 ::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/expense_history_screen_test.dart: ExpenseHistoryScreen Tests renders monthly summary strip and filter chips
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping view receipts navigates to ReceiptGalleryScreen and back button returns to hub
 ::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/expense_history_screen_test.dart: ExpenseHistoryScreen Tests tapping receipt filter chip filters only expenses with photo
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/expense_history_screen_test.dart: ExpenseHistoryScreen Tests renders monthly summary strip and filter chips
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping currency calculator navigates internally and back button returns to hub
 ::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/expense_history_screen_test.dart: ExpenseHistoryScreen Tests tapping category chip filters only expenses in that category
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests renders email auth button and opens email auth modal
 ::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/expense_history_screen_test.dart: ExpenseHistoryScreen Tests tapping receipt filter chip filters only expenses with photo
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/expense_history_screen_test.dart: ExpenseHistoryScreen Tests tapping category chip filters only expenses in that category
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping vincular con google shows loading state and disables buttons while in progress
 ::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
@@ -165,10 +165,10 @@ NotificationService: Excepción al cancelar recordatorio de pendientes: MissingP
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping eliminar cuenta and confirming shows success snackbar on success
 ::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests tapping eliminar cuenta and confirming shows error snackbar on failure
 ::endgroup::
-NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 ::group::✅ Passing tests
@@ -189,134 +189,22 @@ NotificationService: Excepción al cancelar recordatorio de pendientes: MissingP
 ::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/more_screen_test.dart: MoreScreen Navigation & Hub Tests al tocar refresh_rates_btn ejecuta actualizacion silenciosa
 ::endgroup::
-::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_screen_layout_test.dart: ReviewExpenseScreen renders form and does not collapse body due to bottomNavigationBar (failed)
-══╡ EXCEPTION CAUGHT BY RENDERING LIBRARY ╞═════════════════════════════════════════════════════════
-The following assertion was thrown during layout:
-A RenderFlex overflowed by 163 pixels on the right.
-
-The relevant error-causing widget was:
-  Row
-  Row:file:///home/runner/work/gastoscan-ai/gastoscan-ai/lib/ui/screens/review_expense_screen.dart:2467:19
-
-The overflowing RenderFlex has an orientation of Axis.horizontal.
-The edge of the RenderFlex that is overflowing has been marked in the rendering with a yellow and
-black striped pattern. This is usually caused by the contents being too big for the RenderFlex.
-Consider applying a flex factor (e.g. using an Expanded widget) to force the children of the
-RenderFlex to fit within the available space instead of being sized to their natural size.
-This is considered an error condition because it indicates that there is content that cannot be
-seen. If the content is legitimately bigger than the available space, consider clipping it with a
-ClipRect widget before putting it in the flex, or using a scrollable container rather than a Flex,
-like a ListView.
-The specific RenderFlex in question is: RenderFlex#c5662 relayoutBoundary=up8 OVERFLOWING:
-  creator: Row ← Column ← Padding ← DecoratedBox ← Container ← RepaintBoundary ← IndexedSemantics ←
-    _SelectionKeepAlive ← NotificationListener<KeepAliveNotification> ← KeepAlive ← AutomaticKeepAlive
-    ← KeyedSubtree ← ⋯
-  parentData: offset=Offset(0.0, 0.0); flex=null; fit=null (can use size)
-  constraints: BoxConstraints(0.0<=w<=366.0, 0.0<=h<=Infinity)
-  size: Size(366.0, 23.0)
-  direction: horizontal
-  mainAxisAlignment: spaceBetween
-  mainAxisSize: max
-  crossAxisAlignment: center
-  textDirection: ltr
-  verticalDirection: down
-  spacing: 0.0
-◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
-════════════════════════════════════════════════════════════════════════════════════════════════════
-Warning: At least one test in this suite creates an HttpClient. When running a test suite that uses
-TestWidgetsFlutterBinding, all HTTP requests will return status code 400, and no network request
-will actually be made. Any test expecting a real network connection and status code will fail.
-To test code that needs an HttpClient, provide your own HttpClient implementation to the code under
-test, so that your test can consistently provide a testable response to the code under test.
-Test failed. See exception logs above.
-The test description was: ReviewExpenseScreen renders form and does not collapse body due to bottomNavigationBar
-
+NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
+::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_screen_layout_test.dart: ReviewExpenseScreen renders form and does not collapse body due to bottomNavigationBar
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_screen_layout_test.dart: ReviewExpenseScreen en USD y EUR selecciona En divisa por defecto y en primera posicion
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_screen_layout_test.dart: ReviewExpenseScreen uses historical BCV rate (< 50.0) for 2023 dates and calculates VES properly
 ::endgroup::
-::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_screen_layout_test.dart: ReviewExpenseScreen en USD y EUR selecciona En divisa por defecto y en primera posicion (failed)
-══╡ EXCEPTION CAUGHT BY RENDERING LIBRARY ╞═════════════════════════════════════════════════════════
-The following assertion was thrown during layout:
-A RenderFlex overflowed by 163 pixels on the right.
-
-The relevant error-causing widget was:
-  Row
-  Row:file:///home/runner/work/gastoscan-ai/gastoscan-ai/lib/ui/screens/review_expense_screen.dart:2467:19
-
-The overflowing RenderFlex has an orientation of Axis.horizontal.
-The edge of the RenderFlex that is overflowing has been marked in the rendering with a yellow and
-black striped pattern. This is usually caused by the contents being too big for the RenderFlex.
-Consider applying a flex factor (e.g. using an Expanded widget) to force the children of the
-RenderFlex to fit within the available space instead of being sized to their natural size.
-This is considered an error condition because it indicates that there is content that cannot be
-seen. If the content is legitimately bigger than the available space, consider clipping it with a
-ClipRect widget before putting it in the flex, or using a scrollable container rather than a Flex,
-like a ListView.
-The specific RenderFlex in question is: RenderFlex#844a5 relayoutBoundary=up8 OVERFLOWING:
-  creator: Row ← Column ← Padding ← DecoratedBox ← Container ← RepaintBoundary ← IndexedSemantics ←
-    _SelectionKeepAlive ← NotificationListener<KeepAliveNotification> ← KeepAlive ← AutomaticKeepAlive
-    ← KeyedSubtree ← ⋯
-  parentData: offset=Offset(0.0, 0.0); flex=null; fit=null (can use size)
-  constraints: BoxConstraints(0.0<=w<=366.0, 0.0<=h<=Infinity)
-  size: Size(366.0, 23.0)
-  direction: horizontal
-  mainAxisAlignment: spaceBetween
-  mainAxisSize: max
-  crossAxisAlignment: center
-  textDirection: ltr
-  verticalDirection: down
-  spacing: 0.0
-◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
-════════════════════════════════════════════════════════════════════════════════════════════════════
-Test failed. See exception logs above.
-The test description was: ReviewExpenseScreen en USD y EUR selecciona En divisa por defecto y en primera posicion
-
-::endgroup::
-::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_screen_layout_test.dart: ReviewExpenseScreen uses historical BCV rate (< 50.0) for 2023 dates and calculates VES properly (failed)
-══╡ EXCEPTION CAUGHT BY RENDERING LIBRARY ╞═════════════════════════════════════════════════════════
-The following assertion was thrown during layout:
-A RenderFlex overflowed by 163 pixels on the right.
-
-The relevant error-causing widget was:
-  Row
-  Row:file:///home/runner/work/gastoscan-ai/gastoscan-ai/lib/ui/screens/review_expense_screen.dart:2467:19
-
-The overflowing RenderFlex has an orientation of Axis.horizontal.
-The edge of the RenderFlex that is overflowing has been marked in the rendering with a yellow and
-black striped pattern. This is usually caused by the contents being too big for the RenderFlex.
-Consider applying a flex factor (e.g. using an Expanded widget) to force the children of the
-RenderFlex to fit within the available space instead of being sized to their natural size.
-This is considered an error condition because it indicates that there is content that cannot be
-seen. If the content is legitimately bigger than the available space, consider clipping it with a
-ClipRect widget before putting it in the flex, or using a scrollable container rather than a Flex,
-like a ListView.
-The specific RenderFlex in question is: RenderFlex#922f0 relayoutBoundary=up8 OVERFLOWING:
-  creator: Row ← Column ← Padding ← DecoratedBox ← Container ← RepaintBoundary ← IndexedSemantics ←
-    _SelectionKeepAlive ← NotificationListener<KeepAliveNotification> ← KeepAlive ← AutomaticKeepAlive
-    ← KeyedSubtree ← ⋯
-  parentData: offset=Offset(0.0, 0.0); flex=null; fit=null (can use size)
-  constraints: BoxConstraints(0.0<=w<=366.0, 0.0<=h<=Infinity)
-  size: Size(366.0, 23.0)
-  direction: horizontal
-  mainAxisAlignment: spaceBetween
-  mainAxisSize: max
-  crossAxisAlignment: center
-  textDirection: ltr
-  verticalDirection: down
-  spacing: 0.0
-◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
-════════════════════════════════════════════════════════════════════════════════════════════════════
-Test failed. See exception logs above.
-The test description was: ReviewExpenseScreen uses historical BCV rate (< 50.0) for 2023 dates and calculates VES properly
-
-::endgroup::
-::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_screen_layout_test.dart: ReviewExpenseScreen en VES aplica divulgacion progresiva: muestra 3 columnas y despliega chips al tocar Ajustar tasas (failed)
+::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_screen_layout_test.dart: ReviewExpenseScreen en VES aplica divulgacion progresiva: muestra 3 columnas y despliega chips al tocar Ajustar tasas
 
 Warning: A call to tap() with finder "Found 1 widget with key [<'chip_rate_eur_bcv'>]: [
-  ChoiceChip-[<'chip_rate_eur_bcv'>](dependencies: [InheritedCupertinoTheme, MediaQuery, _InheritedTheme, _LocalizationsScope-[GlobalKey#4190c]]),
-]" derived an Offset (Offset(461.1, 472.0)) that would not hit test on the specified widget.
+  ChoiceChip-[<'chip_rate_eur_bcv'>](dependencies: [InheritedCupertinoTheme, MediaQuery, _InheritedTheme, _LocalizationsScope-[GlobalKey#64c65]]),
+]" derived an Offset (Offset(461.1, 449.0)) that would not hit test on the specified widget.
 Maybe the widget is actually off-screen, or another widget is obscuring it, or the widget cannot receive pointer events.
-Indeed, Offset(461.1, 472.0) is outside the bounds of the root of the render tree, Size(432.0, 960.0).
-The finder corresponds to this RenderBox: RenderSemanticsAnnotations#c78f9 relayoutBoundary=up19
-The hit test result at that offset is: HitTestResult(HitTestEntry<HitTestTarget>#6a002(_ReusableRenderView#28a94), HitTestEntry<HitTestTarget>#cfb92(<AutomatedTestWidgetsFlutterBinding>))
+Indeed, Offset(461.1, 449.0) is outside the bounds of the root of the render tree, Size(432.0, 960.0).
+The finder corresponds to this RenderBox: RenderSemanticsAnnotations#4690c relayoutBoundary=up19
+The hit test result at that offset is: HitTestResult(HitTestEntry<HitTestTarget>#21fd1(_ReusableRenderView#74fe8), HitTestEntry<HitTestTarget>#eab5c(<AutomatedTestWidgetsFlutterBinding>))
 #0      WidgetController._getElementPoint (package:flutter_test/src/controller.dart:2165:25)
 #1      WidgetController.getCenter (package:flutter_test/src/controller.dart:1947:12)
 #2      WidgetController.tap (package:flutter_test/src/controller.dart:1080:7)
@@ -331,413 +219,33 @@ The hit test result at that offset is: HitTestResult(HitTestEntry<HitTestTarget>
 To silence this warning, pass "warnIfMissed: false" to "tap()".
 To make this warning fatal, set WidgetController.hitTestWarningShouldBeFatal to true.
 
-══╡ EXCEPTION CAUGHT BY RENDERING LIBRARY ╞═════════════════════════════════════════════════════════
-The following assertion was thrown during layout:
-A RenderFlex overflowed by 163 pixels on the right.
-
-The relevant error-causing widget was:
-  Row
-  Row:file:///home/runner/work/gastoscan-ai/gastoscan-ai/lib/ui/screens/review_expense_screen.dart:2467:19
-
-The overflowing RenderFlex has an orientation of Axis.horizontal.
-The edge of the RenderFlex that is overflowing has been marked in the rendering with a yellow and
-black striped pattern. This is usually caused by the contents being too big for the RenderFlex.
-Consider applying a flex factor (e.g. using an Expanded widget) to force the children of the
-RenderFlex to fit within the available space instead of being sized to their natural size.
-This is considered an error condition because it indicates that there is content that cannot be
-seen. If the content is legitimately bigger than the available space, consider clipping it with a
-ClipRect widget before putting it in the flex, or using a scrollable container rather than a Flex,
-like a ListView.
-The specific RenderFlex in question is: RenderFlex#1b422 relayoutBoundary=up8 OVERFLOWING:
-  creator: Row ← Column ← Padding ← DecoratedBox ← Container ← RepaintBoundary ← IndexedSemantics ←
-    _SelectionKeepAlive ← NotificationListener<KeepAliveNotification> ← KeepAlive ← AutomaticKeepAlive
-    ← KeyedSubtree ← ⋯
-  parentData: offset=Offset(0.0, 0.0); flex=null; fit=null (can use size)
-  constraints: BoxConstraints(0.0<=w<=366.0, 0.0<=h<=Infinity)
-  size: Size(366.0, 23.0)
-  direction: horizontal
-  mainAxisAlignment: spaceBetween
-  mainAxisSize: max
-  crossAxisAlignment: center
-  textDirection: ltr
-  verticalDirection: down
-  spacing: 0.0
-◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
-════════════════════════════════════════════════════════════════════════════════════════════════════
-Test failed. See exception logs above.
-The test description was: ReviewExpenseScreen en VES aplica divulgacion progresiva: muestra 3 columnas y despliega chips al tocar Ajustar tasas
-
 ::endgroup::
 ::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_screen_layout_test.dart: ReviewExpenseScreen en USDT muestra cintillo informativo multimoneda limpio
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests renders welcoming initial greeting from assistant
-::endgroup::
-::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_screen_layout_test.dart: ReviewExpenseScreen en USDT muestra cintillo informativo multimoneda limpio (failed)
-══╡ EXCEPTION CAUGHT BY RENDERING LIBRARY ╞═════════════════════════════════════════════════════════
-The following assertion was thrown during layout:
-A RenderFlex overflowed by 175 pixels on the right.
-
-The relevant error-causing widget was:
-  Row
-  Row:file:///home/runner/work/gastoscan-ai/gastoscan-ai/lib/ui/screens/review_expense_screen.dart:2467:19
-
-The overflowing RenderFlex has an orientation of Axis.horizontal.
-The edge of the RenderFlex that is overflowing has been marked in the rendering with a yellow and
-black striped pattern. This is usually caused by the contents being too big for the RenderFlex.
-Consider applying a flex factor (e.g. using an Expanded widget) to force the children of the
-RenderFlex to fit within the available space instead of being sized to their natural size.
-This is considered an error condition because it indicates that there is content that cannot be
-seen. If the content is legitimately bigger than the available space, consider clipping it with a
-ClipRect widget before putting it in the flex, or using a scrollable container rather than a Flex,
-like a ListView.
-The specific RenderFlex in question is: RenderFlex#c0291 relayoutBoundary=up8 OVERFLOWING:
-  creator: Row ← Column ← Padding ← DecoratedBox ← Container ← RepaintBoundary ← IndexedSemantics ←
-    _SelectionKeepAlive ← NotificationListener<KeepAliveNotification> ← KeepAlive ← AutomaticKeepAlive
-    ← KeyedSubtree ← ⋯
-  parentData: offset=Offset(0.0, 0.0); flex=null; fit=null (can use size)
-  constraints: BoxConstraints(0.0<=w<=366.0, 0.0<=h<=Infinity)
-  size: Size(366.0, 23.0)
-  direction: horizontal
-  mainAxisAlignment: spaceBetween
-  mainAxisSize: max
-  crossAxisAlignment: center
-  textDirection: ltr
-  verticalDirection: down
-  spacing: 0.0
-◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
-════════════════════════════════════════════════════════════════════════════════════════════════════
-Test failed. See exception logs above.
-The test description was: ReviewExpenseScreen en USDT muestra cintillo informativo multimoneda limpio
-
-::endgroup::
-::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_screen_layout_test.dart: ReviewExpenseScreen selecciona monedaPrincipal de Settings para nuevo gasto manual
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests renders all 5 predefined chat suggestions in horizontal bar
-::endgroup::
-::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_screen_layout_test.dart: ReviewExpenseScreen selecciona monedaPrincipal de Settings para nuevo gasto manual (failed)
-══╡ EXCEPTION CAUGHT BY RENDERING LIBRARY ╞═════════════════════════════════════════════════════════
-The following assertion was thrown during layout:
-A RenderFlex overflowed by 163 pixels on the right.
-
-The relevant error-causing widget was:
-  Row
-  Row:file:///home/runner/work/gastoscan-ai/gastoscan-ai/lib/ui/screens/review_expense_screen.dart:2467:19
-
-The overflowing RenderFlex has an orientation of Axis.horizontal.
-The edge of the RenderFlex that is overflowing has been marked in the rendering with a yellow and
-black striped pattern. This is usually caused by the contents being too big for the RenderFlex.
-Consider applying a flex factor (e.g. using an Expanded widget) to force the children of the
-RenderFlex to fit within the available space instead of being sized to their natural size.
-This is considered an error condition because it indicates that there is content that cannot be
-seen. If the content is legitimately bigger than the available space, consider clipping it with a
-ClipRect widget before putting it in the flex, or using a scrollable container rather than a Flex,
-like a ListView.
-The specific RenderFlex in question is: RenderFlex#9e1a4 relayoutBoundary=up8 OVERFLOWING:
-  creator: Row ← Column ← Padding ← DecoratedBox ← Container ← RepaintBoundary ← IndexedSemantics ←
-    _SelectionKeepAlive ← NotificationListener<KeepAliveNotification> ← KeepAlive ← AutomaticKeepAlive
-    ← KeyedSubtree ← ⋯
-  parentData: offset=Offset(0.0, 0.0); flex=null; fit=null (can use size)
-  constraints: BoxConstraints(0.0<=w<=366.0, 0.0<=h<=Infinity)
-  size: Size(366.0, 23.0)
-  direction: horizontal
-  mainAxisAlignment: spaceBetween
-  mainAxisSize: max
-  crossAxisAlignment: center
-  textDirection: ltr
-  verticalDirection: down
-  spacing: 0.0
-◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
-════════════════════════════════════════════════════════════════════════════════════════════════════
-Test failed. See exception logs above.
-The test description was: ReviewExpenseScreen selecciona monedaPrincipal de Settings para nuevo gasto manual
-
-::endgroup::
-::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_screen_layout_test.dart: ReviewExpenseScreen preserva moneda de GeminiExtractionResult sobre monedaPrincipal (failed)
-══╡ EXCEPTION CAUGHT BY RENDERING LIBRARY ╞═════════════════════════════════════════════════════════
-The following assertion was thrown during layout:
-A RenderFlex overflowed by 163 pixels on the right.
-
-The relevant error-causing widget was:
-  Row
-  Row:file:///home/runner/work/gastoscan-ai/gastoscan-ai/lib/ui/screens/review_expense_screen.dart:2467:19
-
-The overflowing RenderFlex has an orientation of Axis.horizontal.
-The edge of the RenderFlex that is overflowing has been marked in the rendering with a yellow and
-black striped pattern. This is usually caused by the contents being too big for the RenderFlex.
-Consider applying a flex factor (e.g. using an Expanded widget) to force the children of the
-RenderFlex to fit within the available space instead of being sized to their natural size.
-This is considered an error condition because it indicates that there is content that cannot be
-seen. If the content is legitimately bigger than the available space, consider clipping it with a
-ClipRect widget before putting it in the flex, or using a scrollable container rather than a Flex,
-like a ListView.
-The specific RenderFlex in question is: RenderFlex#05a2d relayoutBoundary=up8 OVERFLOWING:
-  creator: Row ← Column ← Padding ← DecoratedBox ← Container ← RepaintBoundary ← IndexedSemantics ←
-    _SelectionKeepAlive ← NotificationListener<KeepAliveNotification> ← KeepAlive ← AutomaticKeepAlive
-    ← KeyedSubtree ← ⋯
-  parentData: offset=Offset(0.0, 0.0); flex=null; fit=null (can use size)
-  constraints: BoxConstraints(0.0<=w<=366.0, 0.0<=h<=Infinity)
-  size: Size(366.0, 23.0)
-  direction: horizontal
-  mainAxisAlignment: spaceBetween
-  mainAxisSize: max
-  crossAxisAlignment: center
-  textDirection: ltr
-  verticalDirection: down
-  spacing: 0.0
-◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
-════════════════════════════════════════════════════════════════════════════════════════════════════
-Test failed. See exception logs above.
-The test description was: ReviewExpenseScreen preserva moneda de GeminiExtractionResult sobre monedaPrincipal
-
-::endgroup::
-::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_screen_layout_test.dart: ReviewExpenseScreen preserva moneda de GeminiExtractionResult sobre monedaPrincipal
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests tapping a suggestion chip sends it immediately as a user message
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests tapping shopping list suggestion chip sends request directly
-::endgroup::
-::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_screen_layout_test.dart: ReviewExpenseScreen re-tap en moneda activa es un no-op idempotente (failed)
-══╡ EXCEPTION CAUGHT BY RENDERING LIBRARY ╞═════════════════════════════════════════════════════════
-The following assertion was thrown during layout:
-A RenderFlex overflowed by 163 pixels on the right.
-
-The relevant error-causing widget was:
-  Row
-  Row:file:///home/runner/work/gastoscan-ai/gastoscan-ai/lib/ui/screens/review_expense_screen.dart:2467:19
-
-The overflowing RenderFlex has an orientation of Axis.horizontal.
-The edge of the RenderFlex that is overflowing has been marked in the rendering with a yellow and
-black striped pattern. This is usually caused by the contents being too big for the RenderFlex.
-Consider applying a flex factor (e.g. using an Expanded widget) to force the children of the
-RenderFlex to fit within the available space instead of being sized to their natural size.
-This is considered an error condition because it indicates that there is content that cannot be
-seen. If the content is legitimately bigger than the available space, consider clipping it with a
-ClipRect widget before putting it in the flex, or using a scrollable container rather than a Flex,
-like a ListView.
-The specific RenderFlex in question is: RenderFlex#ef979 relayoutBoundary=up8 OVERFLOWING:
-  creator: Row ← Column ← Padding ← DecoratedBox ← Container ← RepaintBoundary ← IndexedSemantics ←
-    _SelectionKeepAlive ← NotificationListener<KeepAliveNotification> ← KeepAlive ← AutomaticKeepAlive
-    ← KeyedSubtree ← ⋯
-  parentData: offset=Offset(0.0, 0.0); flex=null; fit=null (can use size)
-  constraints: BoxConstraints(0.0<=w<=366.0, 0.0<=h<=Infinity)
-  size: Size(366.0, 23.0)
-  direction: horizontal
-  mainAxisAlignment: spaceBetween
-  mainAxisSize: max
-  crossAxisAlignment: center
-  textDirection: ltr
-  verticalDirection: down
-  spacing: 0.0
-◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
-════════════════════════════════════════════════════════════════════════════════════════════════════
-Test failed. See exception logs above.
-The test description was: ReviewExpenseScreen re-tap en moneda activa es un no-op idempotente
-
-::endgroup::
-::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_screen_layout_test.dart: ReviewExpenseScreen re-tap en moneda activa es un no-op idempotente
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests renders review expense button when assistant extracts an expense
-::endgroup::
-::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_screen_layout_test.dart: ReviewExpenseScreen alternar entre USD y EUR conserva el metodo de liquidacion seleccionado (failed)
-══╡ EXCEPTION CAUGHT BY RENDERING LIBRARY ╞═════════════════════════════════════════════════════════
-The following assertion was thrown during layout:
-A RenderFlex overflowed by 163 pixels on the right.
-
-The relevant error-causing widget was:
-  Row
-  Row:file:///home/runner/work/gastoscan-ai/gastoscan-ai/lib/ui/screens/review_expense_screen.dart:2467:19
-
-The overflowing RenderFlex has an orientation of Axis.horizontal.
-The edge of the RenderFlex that is overflowing has been marked in the rendering with a yellow and
-black striped pattern. This is usually caused by the contents being too big for the RenderFlex.
-Consider applying a flex factor (e.g. using an Expanded widget) to force the children of the
-RenderFlex to fit within the available space instead of being sized to their natural size.
-This is considered an error condition because it indicates that there is content that cannot be
-seen. If the content is legitimately bigger than the available space, consider clipping it with a
-ClipRect widget before putting it in the flex, or using a scrollable container rather than a Flex,
-like a ListView.
-The specific RenderFlex in question is: RenderFlex#fae24 relayoutBoundary=up8 NEEDS-PAINT OVERFLOWING:
-  creator: Row ← Column ← Padding ← DecoratedBox ← Container ← RepaintBoundary ← IndexedSemantics ←
-    _SelectionKeepAlive ← NotificationListener<KeepAliveNotification> ← KeepAlive ← AutomaticKeepAlive
-    ← KeyedSubtree ← ⋯
-  parentData: offset=Offset(0.0, 0.0); flex=null; fit=null (can use size)
-  constraints: BoxConstraints(0.0<=w<=366.0, 0.0<=h<=Infinity)
-  size: Size(366.0, 23.0)
-  direction: horizontal
-  mainAxisAlignment: spaceBetween
-  mainAxisSize: max
-  crossAxisAlignment: center
-  textDirection: ltr
-  verticalDirection: down
-  spacing: 0.0
-◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
-════════════════════════════════════════════════════════════════════════════════════════════════════
-Test failed. See exception logs above.
-The test description was: ReviewExpenseScreen alternar entre USD y EUR conserva el metodo de liquidacion seleccionado
-
-::endgroup::
-::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_screen_layout_test.dart: ReviewExpenseScreen alternar entre USD y EUR conserva el metodo de liquidacion seleccionado
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests tapping textfield while listening stops microphone
-::endgroup::
-::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_screen_layout_test.dart: ReviewExpenseScreen conserva el valor nominal introducido al cambiar de moneda (failed)
-══╡ EXCEPTION CAUGHT BY RENDERING LIBRARY ╞═════════════════════════════════════════════════════════
-The following assertion was thrown during layout:
-A RenderFlex overflowed by 163 pixels on the right.
-
-The relevant error-causing widget was:
-  Row
-  Row:file:///home/runner/work/gastoscan-ai/gastoscan-ai/lib/ui/screens/review_expense_screen.dart:2467:19
-
-The overflowing RenderFlex has an orientation of Axis.horizontal.
-The edge of the RenderFlex that is overflowing has been marked in the rendering with a yellow and
-black striped pattern. This is usually caused by the contents being too big for the RenderFlex.
-Consider applying a flex factor (e.g. using an Expanded widget) to force the children of the
-RenderFlex to fit within the available space instead of being sized to their natural size.
-This is considered an error condition because it indicates that there is content that cannot be
-seen. If the content is legitimately bigger than the available space, consider clipping it with a
-ClipRect widget before putting it in the flex, or using a scrollable container rather than a Flex,
-like a ListView.
-The specific RenderFlex in question is: RenderFlex#7b76b relayoutBoundary=up8 OVERFLOWING:
-  creator: Row ← Column ← Padding ← DecoratedBox ← Container ← RepaintBoundary ← IndexedSemantics ←
-    _SelectionKeepAlive ← NotificationListener<KeepAliveNotification> ← KeepAlive ← AutomaticKeepAlive
-    ← KeyedSubtree ← ⋯
-  parentData: offset=Offset(0.0, 0.0); flex=null; fit=null (can use size)
-  constraints: BoxConstraints(0.0<=w<=366.0, 0.0<=h<=Infinity)
-  size: Size(366.0, 23.0)
-  direction: horizontal
-  mainAxisAlignment: spaceBetween
-  mainAxisSize: max
-  crossAxisAlignment: center
-  textDirection: ltr
-  verticalDirection: down
-  spacing: 0.0
-◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
-════════════════════════════════════════════════════════════════════════════════════════════════════
-Test failed. See exception logs above.
-The test description was: ReviewExpenseScreen conserva el valor nominal introducido al cambiar de moneda
-
-::endgroup::
-::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_screen_layout_test.dart: ReviewExpenseScreen conserva el valor nominal introducido al cambiar de moneda
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests sending message while listening stops microphone
-::endgroup::
-::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_screen_layout_test.dart: ReviewExpenseScreen formulario vacio no escribe 0.00 en controladores derivados (failed)
-══╡ EXCEPTION CAUGHT BY RENDERING LIBRARY ╞═════════════════════════════════════════════════════════
-The following assertion was thrown during layout:
-A RenderFlex overflowed by 163 pixels on the right.
-
-The relevant error-causing widget was:
-  Row
-  Row:file:///home/runner/work/gastoscan-ai/gastoscan-ai/lib/ui/screens/review_expense_screen.dart:2467:19
-
-The overflowing RenderFlex has an orientation of Axis.horizontal.
-The edge of the RenderFlex that is overflowing has been marked in the rendering with a yellow and
-black striped pattern. This is usually caused by the contents being too big for the RenderFlex.
-Consider applying a flex factor (e.g. using an Expanded widget) to force the children of the
-RenderFlex to fit within the available space instead of being sized to their natural size.
-This is considered an error condition because it indicates that there is content that cannot be
-seen. If the content is legitimately bigger than the available space, consider clipping it with a
-ClipRect widget before putting it in the flex, or using a scrollable container rather than a Flex,
-like a ListView.
-The specific RenderFlex in question is: RenderFlex#3aad0 relayoutBoundary=up8 OVERFLOWING:
-  creator: Row ← Column ← Padding ← DecoratedBox ← Container ← RepaintBoundary ← IndexedSemantics ←
-    _SelectionKeepAlive ← NotificationListener<KeepAliveNotification> ← KeepAlive ← AutomaticKeepAlive
-    ← KeyedSubtree ← ⋯
-  parentData: offset=Offset(0.0, 0.0); flex=null; fit=null (can use size)
-  constraints: BoxConstraints(0.0<=w<=366.0, 0.0<=h<=Infinity)
-  size: Size(366.0, 23.0)
-  direction: horizontal
-  mainAxisAlignment: spaceBetween
-  mainAxisSize: max
-  crossAxisAlignment: center
-  textDirection: ltr
-  verticalDirection: down
-  spacing: 0.0
-◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
-════════════════════════════════════════════════════════════════════════════════════════════════════
-Test failed. See exception logs above.
-The test description was: ReviewExpenseScreen formulario vacio no escribe 0.00 en controladores derivados
-
-::endgroup::
-::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_screen_layout_test.dart: ReviewExpenseScreen formulario vacio no escribe 0.00 en controladores derivados
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests multiple expenses in chat are registered and display correct currencies
-::endgroup::
-::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_screen_layout_test.dart: ReviewExpenseScreen gasto indexado existente preserva bolivares reales cobrados (failed)
-══╡ EXCEPTION CAUGHT BY RENDERING LIBRARY ╞═════════════════════════════════════════════════════════
-The following assertion was thrown during layout:
-A RenderFlex overflowed by 163 pixels on the right.
-
-The relevant error-causing widget was:
-  Row
-  Row:file:///home/runner/work/gastoscan-ai/gastoscan-ai/lib/ui/screens/review_expense_screen.dart:2467:19
-
-The overflowing RenderFlex has an orientation of Axis.horizontal.
-The edge of the RenderFlex that is overflowing has been marked in the rendering with a yellow and
-black striped pattern. This is usually caused by the contents being too big for the RenderFlex.
-Consider applying a flex factor (e.g. using an Expanded widget) to force the children of the
-RenderFlex to fit within the available space instead of being sized to their natural size.
-This is considered an error condition because it indicates that there is content that cannot be
-seen. If the content is legitimately bigger than the available space, consider clipping it with a
-ClipRect widget before putting it in the flex, or using a scrollable container rather than a Flex,
-like a ListView.
-The specific RenderFlex in question is: RenderFlex#11f20 relayoutBoundary=up8 OVERFLOWING:
-  creator: Row ← Column ← Padding ← DecoratedBox ← Container ← RepaintBoundary ← IndexedSemantics ←
-    _SelectionKeepAlive ← NotificationListener<KeepAliveNotification> ← KeepAlive ← AutomaticKeepAlive
-    ← KeyedSubtree ← ⋯
-  parentData: offset=Offset(0.0, 0.0); flex=null; fit=null (can use size)
-  constraints: BoxConstraints(0.0<=w<=366.0, 0.0<=h<=Infinity)
-  size: Size(366.0, 23.0)
-  direction: horizontal
-  mainAxisAlignment: spaceBetween
-  mainAxisSize: max
-  crossAxisAlignment: center
-  textDirection: ltr
-  verticalDirection: down
-  spacing: 0.0
-◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
-════════════════════════════════════════════════════════════════════════════════════════════════════
-Test failed. See exception logs above.
-The test description was: ReviewExpenseScreen gasto indexado existente preserva bolivares reales cobrados
-
-::endgroup::
-::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_screen_layout_test.dart: ReviewExpenseScreen gasto indexado existente preserva bolivares reales cobrados
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests sends precalculated semantic context and trims messages to sliding window
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests preserves chat conversation in ChatProvider across screen rebuilds
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests reset conversation dialog cancels without clearing or confirms and clears
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests excludes tax and IVA items from top_productos_mes in semantic context
 ::endgroup::
 ::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_screen_layout_test.dart: ReviewExpenseScreen bloquea guardado si tasa en bolivares no es valida (failed)
 Error cotejando lista de compras: Bad state: databaseFactory not initialized
 databaseFactory is only initialized when using sqflite. When using `sqflite_common_ffi`
 You must call `databaseFactory = databaseFactoryFfi;` before using global openDatabase API
 
-══╡ EXCEPTION CAUGHT BY RENDERING LIBRARY ╞═════════════════════════════════════════════════════════
-The following assertion was thrown during layout:
-A RenderFlex overflowed by 163 pixels on the right.
-
-The relevant error-causing widget was:
-  Row
-  Row:file:///home/runner/work/gastoscan-ai/gastoscan-ai/lib/ui/screens/review_expense_screen.dart:2467:19
-
-The overflowing RenderFlex has an orientation of Axis.horizontal.
-The edge of the RenderFlex that is overflowing has been marked in the rendering with a yellow and
-black striped pattern. This is usually caused by the contents being too big for the RenderFlex.
-Consider applying a flex factor (e.g. using an Expanded widget) to force the children of the
-RenderFlex to fit within the available space instead of being sized to their natural size.
-This is considered an error condition because it indicates that there is content that cannot be
-seen. If the content is legitimately bigger than the available space, consider clipping it with a
-ClipRect widget before putting it in the flex, or using a scrollable container rather than a Flex,
-like a ListView.
-The specific RenderFlex in question is: RenderFlex#6d36a relayoutBoundary=up8 OVERFLOWING:
-  creator: Row ← Column ← Padding ← DecoratedBox ← Container ← RepaintBoundary ← IndexedSemantics ←
-    _SelectionKeepAlive ← NotificationListener<KeepAliveNotification> ← KeepAlive ← AutomaticKeepAlive
-    ← KeyedSubtree ← ⋯
-  parentData: offset=Offset(0.0, 0.0); flex=null; fit=null (can use size)
-  constraints: BoxConstraints(0.0<=w<=366.0, 0.0<=h<=Infinity)
-  size: Size(366.0, 23.0)
-  direction: horizontal
-  mainAxisAlignment: spaceBetween
-  mainAxisSize: max
-  crossAxisAlignment: center
-  textDirection: ltr
-  verticalDirection: down
-  spacing: 0.0
-◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
-════════════════════════════════════════════════════════════════════════════════════════════════════
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following TestFailure was thrown running a test:
 Expected: exactly one matching candidate
@@ -760,102 +268,56 @@ This was caught by the test expectation on the following line:
 The test description was:
   ReviewExpenseScreen bloquea guardado si tasa en bolivares no es valida
 ════════════════════════════════════════════════════════════════════════════════════════════════════
-══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
-The following message was thrown:
-Multiple exceptions (2) were detected during the running of the current test, and at least one was
-unexpected.
-════════════════════════════════════════════════════════════════════════════════════════════════════
 Test failed. See exception logs above.
 The test description was: ReviewExpenseScreen bloquea guardado si tasa en bolivares no es valida
 
 ::endgroup::
 ::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/chat_screen_test.dart: ChatScreen Predefined Suggestions Tests excludes tax and IVA items from top_productos_mes in semantic context
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_token_test.dart: ReviewExpenseScreen mounts and loads rates without error under token guard
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/receipt_gallery_screen_test.dart: ReceiptGalleryScreen Widget Tests displays empty state when there are no receipts with existing files
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/receipt_gallery_screen_test.dart: ReceiptGalleryScreen Widget Tests month navigation buttons update selected month and year
-::endgroup::
-::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/review_expense_token_test.dart: ReviewExpenseScreen mounts and loads rates without error under token guard (failed)
-══╡ EXCEPTION CAUGHT BY RENDERING LIBRARY ╞═════════════════════════════════════════════════════════
-The following assertion was thrown during layout:
-A RenderFlex overflowed by 163 pixels on the right.
-
-The relevant error-causing widget was:
-  Row
-  Row:file:///home/runner/work/gastoscan-ai/gastoscan-ai/lib/ui/screens/review_expense_screen.dart:2467:19
-
-The overflowing RenderFlex has an orientation of Axis.horizontal.
-The edge of the RenderFlex that is overflowing has been marked in the rendering with a yellow and
-black striped pattern. This is usually caused by the contents being too big for the RenderFlex.
-Consider applying a flex factor (e.g. using an Expanded widget) to force the children of the
-RenderFlex to fit within the available space instead of being sized to their natural size.
-This is considered an error condition because it indicates that there is content that cannot be
-seen. If the content is legitimately bigger than the available space, consider clipping it with a
-ClipRect widget before putting it in the flex, or using a scrollable container rather than a Flex,
-like a ListView.
-The specific RenderFlex in question is: RenderFlex#49b32 relayoutBoundary=up8 OVERFLOWING:
-  creator: Row ← Column ← Padding ← DecoratedBox ← Container ← RepaintBoundary ← IndexedSemantics ←
-    _SelectionKeepAlive ← NotificationListener<KeepAliveNotification> ← KeepAlive ← AutomaticKeepAlive
-    ← KeyedSubtree ← ⋯
-  parentData: offset=Offset(0.0, 0.0); flex=null; fit=null (can use size)
-  constraints: BoxConstraints(0.0<=w<=366.0, 0.0<=h<=Infinity)
-  size: Size(366.0, 23.0)
-  direction: horizontal
-  mainAxisAlignment: spaceBetween
-  mainAxisSize: max
-  crossAxisAlignment: center
-  textDirection: ltr
-  verticalDirection: down
-  spacing: 0.0
-◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
-════════════════════════════════════════════════════════════════════════════════════════════════════
-Warning: At least one test in this suite creates an HttpClient. When running a test suite that uses
-TestWidgetsFlutterBinding, all HTTP requests will return status code 400, and no network request
-will actually be made. Any test expecting a real network connection and status code will fail.
-To test code that needs an HttpClient, provide your own HttpClient implementation to the code under
-test, so that your test can consistently provide a testable response to the code under test.
-Test failed. See exception logs above.
-The test description was: ReviewExpenseScreen mounts and loads rates without error under token guard
-
-::endgroup::
-::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/receipt_gallery_screen_test.dart: ReceiptGalleryScreen Widget Tests invokes onBack callback when back button is pressed
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests does not show local processing banner in DashboardScreen (delegated to GlobalScanQueueBanner)
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests displays ready queue item card when items are ready for review
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests displays "Por revisar" badge when pending item has zero total
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests CategoryChart in Dashboard expresses budgets in VES when viewing in VES
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests CategoryChart in Dashboard keeps USD when viewing in USD
 ::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart: ScanScreen Multi-Image Selection Tests multi-image selection enqueues all images and pops back to Dashboard
 [ScanScreen] pickMultiImage returned 3 files
 [ScanScreen] Enqueueing multiple paths: [/tmp/receipt1.jpg, /tmp/receipt2.jpg, /tmp/receipt3.jpg]
 [ScanScreen] Finished enqueueMultiple. Provider pendingCount: 3
 ::endgroup::
-::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests CategoryChart in Dashboard expresses budgets in VES when viewing in VES
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_screen_test.dart: DashboardScreen Scan Queue Banners Tests CategoryChart in Dashboard keeps USD when viewing in USD
-::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/scan_screen_test.dart: ScanScreen Multi-Image Selection Tests empty selection from gallery does not enqueue or pop
 [ScanScreen] pickMultiImage returned 0 files
 ::endgroup::
 ::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) tapping search icon reveals search text field with hint
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests renders 4 navigation destinations and center FAB
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) entering search query immediately filters out non-matching expenses
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) expenses matching by commerce are included
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests switching tabs changes current active screen
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests renders 4 navigation destinations and center FAB
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) expenses matching by product name are included
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping center FAB opens bottom sheet with 4 add options
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) clearing search query via close button restores all expenses
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests switching tabs changes current active screen
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) clearing search text restores all expenses while keeping search open
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping AI chat button on Inicio navigates to Chat keeping bottom navigation and back returns to Inicio
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping center FAB opens bottom sheet with 4 add options
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) displays friendly empty state message when search yields 0 matches
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) case-insensitive and diacritic-insensitive search works
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping Asistente IA in Mas and pressing back returns to Mas hub
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) filtering by receipt only shows expenses that have receipt image
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping AI chat button on Inicio navigates to Chat keeping bottom navigation and back returns to Inicio
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/dashboard_search_test.dart: ExpenseHistoryScreen Search Tests (R2) cross-month global search finds expenses from other months (UX-03)
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping Asistente IA in Mas and pressing back returns to Mas hub
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests system back on non-home tab returns to Inicio
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests system back on Inicio tab shows exit confirmation snackbar
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping search button on Inicio navigates to Gastos and activates search
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests tapping search button on Analisis navigates to Gastos and activates search
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests system back while searching on Gastos cancels search and stays on Gastos
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/navigation_test.dart: MainScreen Navigation Tests all 4 screens render persistent AI chat button and search button
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/analysis_screen_redesign_test.dart: AnalysisScreen Redesign & Enrichment Tests 1. Cabecera global: no tiene pestañas de moneda segmentadas y aloja CurrencyLensDropdown en Tarjeta 1
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/analysis_screen_redesign_test.dart: AnalysisScreen Redesign & Enrichment Tests 2. Tarjeta 1: Total gastado en [Mes], límite editable, equivalente secundario y recuadro inferior analítico
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/analysis_screen_redesign_test.dart: AnalysisScreen Redesign & Enrichment Tests 3. Tarjeta 2: Evolución Diaria renderiza curva acumulativa y ritmo dinámico
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/analysis_screen_redesign_test.dart: AnalysisScreen Redesign & Enrichment Tests 4. Tarjeta 3 y Tarjeta 4: Dona y Control de Presupuestos desacoplados en tarjetas independientes
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests initial state has empty category budgets and totals
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests setPresupuestoGeneral updates general budget
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests guardarTodoElPresupuesto updates general and category budgets and filters zero budgets
@@ -869,12 +331,9 @@ The test description was: ReviewExpenseScreen mounts and loads rates without err
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests isCategoryOverBudget works correctly in VES when budget is set in VES
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests isCategoryOverBudget works correctly with explicit moneda parameter
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/gasto_provider_budget_test.dart: GastoProvider Budget Logic Tests presupuestoEsAdoptado default is false and resets when budget is set
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/analysis_screen_redesign_test.dart: AnalysisScreen Redesign & Enrichment Tests 1. Cabecera global: no tiene pestañas de moneda segmentadas y aloja CurrencyLensDropdown en Tarjeta 1
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/analysis_screen_redesign_test.dart: AnalysisScreen Redesign & Enrichment Tests 2. Tarjeta 1: Total gastado en [Mes], límite editable, equivalente secundario y recuadro inferior analítico
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/analysis_screen_redesign_test.dart: AnalysisScreen Redesign & Enrichment Tests 3. Tarjeta 2: Evolución Diaria renderiza curva acumulativa y ritmo dinámico
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/analysis_screen_redesign_test.dart: AnalysisScreen Redesign & Enrichment Tests 4. Tarjeta 3 y Tarjeta 4: Dona y Control de Presupuestos desacoplados en tarjetas independientes
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/analysis_screen_redesign_test.dart: AnalysisScreen Redesign & Enrichment Tests 5. Tarjeta 5: ¿En qué moneda se va tu dinero? agrupa por moneda de origen
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/analysis_screen_redesign_test.dart: AnalysisScreen Redesign & Enrichment Tests 6. Tarjeta 6: Radiografía de Compras clasifica hormiga/medias/fuertes y mayor gasto
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/analysis_screen_redesign_test.dart: AnalysisScreen Redesign & Enrichment Tests 7. ListView de AnalysisScreen tiene padding inferior seguro de al menos 100dp
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests initial state has empty pending and ready items
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests enqueue inserts single image and updates pendingCount
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests enqueueMultiple enqueues all images and updates pendingItems
@@ -887,9 +346,6 @@ NotificationService: Excepción al cancelar recordatorio de pendientes: MissingP
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests offline enqueue marks queue as waiting for connection without crashing
 ::endgroup::
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
-::group::✅ Passing tests
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/screens/analysis_screen_redesign_test.dart: AnalysisScreen Redesign & Enrichment Tests 7. ListView de AnalysisScreen tiene padding inferior seguro de al menos 100dp
-::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests reconnection stream triggers processing of pending offline items
 Reconexión detectada: reanudando procesamiento de cola de escaneo.
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
@@ -912,7 +368,7 @@ Error en LocalOcrService.processImage: MissingPluginException(No implementation 
 Error en LocalOcrService.processImage: MissingPluginException(No implementation found for method vision#startTextRecognizer on channel google_mlkit_text_recognizer)
 NotificationService: Excepción al cancelar recordatorio de pendientes: MissingPluginException(No implementation found for method cancel on channel dexterous.com/flutter/local_notifications)
 NotificationService: Excepción al programar recordatorio de pendientes: LateInitializationError: Field '_local@718310200' has not been initialized.
-Fallo al procesar item en cola: PathNotFoundException: Cannot open file, path = '/tmp/scan_queue_test_RCVFQB/ready_shared.jpg' (OS Error: No such file or directory, errno = 2)
+Fallo al procesar item en cola: PathNotFoundException: Cannot open file, path = '/tmp/scan_queue_test_MQCNKS/ready_shared.jpg' (OS Error: No such file or directory, errno = 2)
 ::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: ScanQueueProvider Tests loadQueue recovers stale processing items back to pending
 ::endgroup::
@@ -937,7 +393,7 @@ Error en LocalOcrService.processImage: MissingPluginException(No implementation 
 ::endgroup::
 ::group::✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/providers/scan_queue_provider_test.dart: GeminiExtractionResult.listFromJson Tests enqueueMultiple drops duplicate receipts within same batch (OCR-01)
 Error en LocalOcrService.processImage: MissingPluginException(No implementation found for method vision#startTextRecognizer on channel google_mlkit_text_recognizer)
-[ScanQueue] Comprobante duplicado en el mismo lote ignorado: /tmp/WHDJEE/recibo_a_dup.jpg
+[ScanQueue] Comprobante duplicado en el mismo lote ignorado: /tmp/ZZDLRF/recibo_a_dup.jpg
 Error en LocalOcrService.processImage: MissingPluginException(No implementation found for method vision#startTextRecognizer on channel google_mlkit_text_recognizer)
 ::endgroup::
 ::group::✅ Passing tests
@@ -1106,8 +562,8 @@ SyncService: Push de presupuestos bloqueado por reemplazo pendiente
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/auth_dialog_test.dart: AuthEmailDialog Tests (Geometría flotante, ciclo de vida y teclado) Geometría: se renderiza como Dialog centrado y flotante sobre scrim
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/auth_dialog_test.dart: AuthEmailDialog Tests (Geometría flotante, ciclo de vida y teclado) Ciclo de vida: abrir y cerrar dos veces seguidas no genera excepciones ni fugas
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/auth_dialog_test.dart: AuthEmailDialog Tests (Geometría flotante, ciclo de vida y teclado) Teclado abierto (300dp): sin desbordamientos de RenderFlex
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/more_screen_copy_and_dialogs_test.dart: Cerrar sesión shows linked copy when user is linked
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/auth_dialog_test.dart: AuthEmailDialog Tests (Geometría flotante, ciclo de vida y teclado) Bloqueo de cierre tocando el barrier durante la carga
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/more_screen_copy_and_dialogs_test.dart: Cerrar sesión shows linked copy when user is linked
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/more_screen_copy_and_dialogs_test.dart: Eliminar cuenta dialog includes eliminarFotos switch and passes value to provider
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/expense_card_test.dart: AppConstants.getCategoryIcon Canonical Tests returns canonical icons for all standard categories
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/expense_card_test.dart: AppConstants.getCategoryIcon Canonical Tests normalizes synonyms to canonical icons
@@ -1116,8 +572,8 @@ SyncService: Push de presupuestos bloqueado por reemplazo pendiente
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/expense_card_test.dart: ExpenseCard Widget Tests (UX-07 & Refinements) single item purchase shows item row with category icon, quantity and price consistently
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/expense_card_test.dart: ExpenseCard Widget Tests (UX-07 & Refinements) compact mode allows expanding 1-item purchase on tap
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/expense_card_test.dart: ExpenseCard Widget Tests (UX-07 & Refinements) proportional currency calculation aligns EUR expense items with USD header
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/category_chart_test.dart: CategoryChart moneda del presupuesto gastado y presupuesto en la misma moneda (VES)
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/expense_card_test.dart: ExpenseCard Widget Tests (UX-07 & Refinements) bimonetary item breakdown shows primary in VES and secondary in USD when lens is VES
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/category_chart_test.dart: CategoryChart moneda del presupuesto gastado y presupuesto en la misma moneda (VES)
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/category_chart_test.dart: CategoryChart moneda del presupuesto sin presupuesto no muestra ratio gastado/presupuesto
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/category_chart_test.dart: CategoryChart moneda del presupuesto presupuesto USD se muestra sin conversión artificial
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/category_chart_test.dart: CategoryChart UX-06 Grouping Tests consolidates categories after top 4 with +X categorias in Dashboard view
@@ -1131,11 +587,11 @@ SyncService: Push de presupuestos bloqueado por reemplazo pendiente
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/budget_bottom_sheet_test.dart: BudgetBottomSheet preserves 2 decimals on non-integer amounts >= 100 ([F1-I01])
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/lote_4_ui_resilience_and_performance_test.dart: Lote 4: UI Resilience & Performance Tests SummaryCard resists 360dp width with million Bolivares amounts without RenderFlex overflow
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/lote_4_ui_resilience_and_performance_test.dart: Lote 4: UI Resilience & Performance Tests AnalysisScreen analytical box resists 360dp width with million Bolivares amounts
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/sheet_geometry_test.dart: Pruebas de Geometría Real y Anclaje de Bottom Sheets (Edge-to-Edge) VoiceExpenseSheet: anclada abajo y con scrim visible arriba
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/lote_4_ui_resilience_and_performance_test.dart: Lote 4: UI Resilience & Performance Tests CategoryChart category budget rows resist 360dp width with million Bolivares amounts
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/lote_4_ui_resilience_and_performance_test.dart: Lote 4: UI Resilience & Performance Tests PendingExpenseCard date and amount row resists 360dp width with million Bolivares
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/lote_4_ui_resilience_and_performance_test.dart: Lote 4: UI Resilience & Performance Tests ExpenseHistoryScreen virtualizes list with ListView.builder and shows summary strip at 360dp
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/lote_4_ui_resilience_and_performance_test.dart: Lote 4: UI Resilience & Performance Tests LocalOcrService.evaluateRawText unifies OCR evaluation for text pipeline
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/sheet_geometry_test.dart: Pruebas de Geometría Real y Anclaje de Bottom Sheets (Edge-to-Edge) VoiceExpenseSheet: anclada abajo y con scrim visible arriba
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/sheet_geometry_test.dart: Pruebas de Geometría Real y Anclaje de Bottom Sheets (Edge-to-Edge) BudgetBottomSheet: anclada abajo, shrink-wrapped y con botón visible sobre la barra
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/sheet_geometry_test.dart: Pruebas de Geometría Real y Anclaje de Bottom Sheets (Edge-to-Edge) ReviewExpenseScreen selector de comprobante: anclada abajo y shrink-wrapped
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/sheet_geometry_test.dart: Pruebas de Geometría Real y Anclaje de Bottom Sheets (Edge-to-Edge) MainScreen menú central (+): anclado abajo y shrink-wrapped
@@ -1156,11 +612,11 @@ SyncService: Push de presupuestos bloqueado por reemplazo pendiente
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: ExpenseCard Currency Preference Tests displays EUR as primary with converted amount when monedaPrincipal is EUR
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: ExpenseCard Currency Preference Tests displays USDT as primary with 1:1 parity when monedaPrincipal is USDT
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: ExpenseCard Currency Preference Tests displays USDT as primary with P2P rate when gasto is in VES
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/daily_evolution_card_test.dart: DailyEvolutionCard no solapa d30 con d31 en meses de 31 dias
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/daily_evolution_card_test.dart: DailyEvolutionCard muestra d30 en meses de 30 dias
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CategoryChart Currency Preference Tests renders category totals and budgets in the budget currency (VES)
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CategoryChart Currency Preference Tests renders EUR symbol and converted amounts when monedaPrincipal is EUR
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/currency_display_test.dart: CategoryChart Currency Preference Tests renders USDT symbol and amounts when monedaPrincipal is USDT
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/daily_evolution_card_test.dart: DailyEvolutionCard no solapa d30 con d31 en meses de 31 dias
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/daily_evolution_card_test.dart: DailyEvolutionCard muestra d30 en meses de 30 dias
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays welcome prompt when expenses are empty
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays over budget warning when spent exceeds budget
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays daily pace recommendation when budget is healthy
@@ -1168,40 +624,26 @@ SyncService: Push de presupuestos bloqueado por reemplazo pendiente
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays new month motivational insight when in first days with budget
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays compromised savings goal alert when spent exceeds spending limit
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests displays pace and protected savings goal when healthy with savings goal
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/receipt_viewer_dialog_test.dart: ReceiptViewerDialog Tests renders title and non-existing image fallback gracefully
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/ai_insight_card_test.dart: AiInsightCard Tests does not double-multiply VES amounts by tasaCambio ([F1-C03])
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/receipt_viewer_dialog_test.dart: ReceiptViewerDialog Tests renders title and non-existing image fallback gracefully
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: VoiceExpenseSheet Editable Tests renders title, input field, mic button and cancel button
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/summary_card_test.dart: SummaryCard - Rediseño Modelo Mental V2 y FIN-07 Meses Históricos muestra Te sobraron para meses pasados y oculta disponible para gastar
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/summary_card_test.dart: SummaryCard - Rediseño Modelo Mental V2 y FIN-07 Meses Históricos muestra Disponible para gastar y Gastado vs Presupuesto para el mes actual
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: VoiceExpenseSheet Editable Tests allows editing text in TextField and enables process button
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: VoiceExpenseSheet Editable Tests clear button removes text and disables process button
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/summary_card_test.dart: SummaryCard - Rediseño Modelo Mental V2 y FIN-07 Meses Históricos al presionar botones de lente invoca onMonedaChanged con la moneda correcta
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/summary_card_test.dart: SummaryCard - Rediseño Modelo Mental V2 y FIN-07 Meses Históricos cuando no hay presupuesto muestra botón para definirlo y oculta disponible
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/summary_card_test.dart: SummaryCard - Rediseño Modelo Mental V2 y FIN-07 Meses Históricos con meta de ahorro muestra límite, meta de ahorro y estado protegida
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/summary_card_test.dart: SummaryCard - Rediseño Modelo Mental V2 y FIN-07 Meses Históricos cuando el gasto supera el 85% del límite muestra barra en ámbar
-✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/summary_card_test.dart: SummaryCard - Rediseño Modelo Mental V2 y FIN-07 Meses Históricos cuando se supera el límite muestra estado excedido en rojo
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/summary_card_test.dart: SummaryCard - Rediseño Modelo Mental V2 y FIN-07 Meses Históricos muestra Te sobraron para meses pasados y oculta disponible para gastar
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/summary_card_test.dart: SummaryCard - Rediseño Modelo Mental V2 y FIN-07 Meses Históricos muestra Disponible para gastar y Gastado vs Presupuesto para el mes actual
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: VoiceExpenseSheet Editable Tests submitting edited text calls parseVoiceExpense with updated content
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: VoiceExpenseSheet Editable Tests multiple voice expenses enqueue into ScanQueueProvider and navigate to ReviewExpenseScreen
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: GeminiService.normalizeVoiceText Tests normaliza decimales venezolanos hablados "X con Y" a formato con punto
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: GeminiService.normalizeVoiceText Tests normaliza "X y medio" o "X y media" a ".50" sin alterar unidades de peso
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: GeminiService.normalizeVoiceText Tests normaliza "X coma Y" a "X.Y"
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/summary_card_test.dart: SummaryCard - Rediseño Modelo Mental V2 y FIN-07 Meses Históricos al presionar botones de lente invoca onMonedaChanged con la moneda correcta
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: GeminiService Local Fallback Tests extrae compra sin precio aislando comercio, producto limpio, cantidad y categoría
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: GeminiService Local Fallback Tests calcula precio unitario por kilo en fracciones de peso (medio kilo en 4 dólares)
-::endgroup::
-::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: GeminiService Local Fallback Tests normaliza gramos a decimales de kilo (500 gramos de carne en 3 dólares) (failed)
-Expected: 'Carne'
-  Actual: 'Ramos de carne'
-   Which: is different.
-          Expected: Carne
-            Actual: Ramos de c ...
-                    ^
-           Differ at offset 0
-
-package:matcher                                     expect
-package:flutter_test/src/widget_tester.dart 473:18  expect
-test/widgets/voice_expense_sheet_test.dart 317:7    main.<fn>.<fn>
-::endgroup::
-::group::✅ Passing tests
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/voice_expense_sheet_test.dart: GeminiService Local Fallback Tests normaliza gramos a decimales de kilo (500 gramos de carne en 3 dólares)
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/summary_card_test.dart: SummaryCard - Rediseño Modelo Mental V2 y FIN-07 Meses Históricos cuando no hay presupuesto muestra botón para definirlo y oculta disponible
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/summary_card_test.dart: SummaryCard - Rediseño Modelo Mental V2 y FIN-07 Meses Históricos con meta de ahorro muestra límite, meta de ahorro y estado protegida
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/summary_card_test.dart: SummaryCard - Rediseño Modelo Mental V2 y FIN-07 Meses Históricos cuando el gasto supera el 85% del límite muestra barra en ámbar
+✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/widgets/summary_card_test.dart: SummaryCard - Rediseño Modelo Mental V2 y FIN-07 Meses Históricos cuando se supera el límite muestra estado excedido en rojo
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/constants/app_colors_budget_progress_test.dart: AppColors.getBudgetProgressColor Tests returns success (green) for consumption below 85%
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/constants/app_colors_budget_progress_test.dart: AppColors.getBudgetProgressColor Tests returns warning (amber) for consumption between 85% and 99.9%
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/constants/app_colors_budget_progress_test.dart: AppColors.getBudgetProgressColor Tests returns error (red) for consumption at or exceeding 100%
@@ -1226,14 +668,18 @@ test/widgets/voice_expense_sheet_test.dart 317:7    main.<fn>.<fn>
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_batch_and_async_test.dart: Bloque 2: Database & Async Unit Tests GastoProvider adopts previous month budget in memory when month is unconfigured
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_batch_and_async_test.dart: Bloque 2: Database & Async Unit Tests GastoProvider mutators return false and map friendly error on failure
 ::endgroup::
-::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_batch_and_async_test.dart: Bloque 2: Database & Async Unit Tests GeminiService.parseVoiceExpense throws when speech contains no amounts (failed)
-Expected: throws <Instance of 'Exception'>
-  Actual: <Closure: () => Future<List<GeminiExtractionResult>>>
-   Which: returned a Future that emitted [Instance of 'GeminiExtractionResult']
+::group::❌ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_batch_and_async_test.dart: Bloque 2: Database & Async Unit Tests GeminiService.parseVoiceExpense returns 0.0 amount for review when speech contains no amounts (failed)
+Expected: 'Panadería'
+  Actual: 'la panadería'
+   Which: is different.
+          Expected: Panadería
+            Actual: la panader ...
+                    ^
+           Differ at offset 0
 
 package:matcher                                                   expect
 package:flutter_test/src/widget_tester.dart 473:18                expect
-test/datasources/database_helper_batch_and_async_test.dart 171:7  main.<fn>.<fn>
+test/datasources/database_helper_batch_and_async_test.dart 174:7  main.<fn>.<fn>
 ::endgroup::
 ::group::✅ Passing tests
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/datasources/database_helper_savings_test.dart: DatabaseHelper Monthly Budget & Savings Goal Tests initial state has zero general budget and zero savings goal
@@ -1256,4 +702,4 @@ test/datasources/database_helper_batch_and_async_test.dart 171:7  main.<fn>.<fn>
 ✅ /home/runner/work/gastoscan-ai/gastoscan-ai/test/domain/savings_health_calculator_test.dart: SavingsHealthCalculator Tests handles February with 28 days correctly
 ::endgroup::
 
-::error::387 tests passed, 16 failed.
+::error::401 tests passed, 2 failed.
