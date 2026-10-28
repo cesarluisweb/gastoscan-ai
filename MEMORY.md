@@ -4,8 +4,8 @@
 ## Estado Actual Inmediato
 - **Rama:** `main`.
 - **Fase 5 (Google Play):** Closed Testing activo con 20 evaluadores (período de 14 días).
-- **UI-06, Desglose Bimonetario & Web:** `Pendiente de validación 🧪`. CI verde (Android build 573, commit `c68a7a3`, y Web build 11, commit `9f4c7b3`). Web validada en vivo vía HTTP 200 en `https://rindemas.cesarluis.com/panel/`.
-- **ReviewExpenseScreen (Moneda & Monto Reordenado):** Completada reorganización visual (Moneda y Monto arriba, Ítems abajo). Preservación de valor nominal al cambiar moneda, re-tap idempotente, preservación de método de liquidación entre USD/EUR, protección estricta de bolívares reales e importe de referencia en gastos indexados existentes, bloqueo de guardado sin tasa válida (sin fallback 1.0) y suite de pruebas widget en `review_expense_screen_layout_test.dart`.
+- **UI-08 (ReviewExpenseScreen: Moneda & Monto Superior):** `Pendiente de validación 🧪`. CI verde (Android build 580, commit `15a0af4`). 403 pruebas unitarias y de widgets pasando. APK compilado y listo para pruebas en *Rinde Más Dev*.
+- **UI-06, Desglose Bimonetario & Web:** `Pendiente de validación 🧪`. Web validada en vivo vía HTTP 200 en `https://rindemas.cesarluis.com/panel/`.
 
 ## Decisiones Técnicas y de Negocio Recientes
 - Redes Sociales & Video #2: Consolidado en TikTok a 1.1K vistas, 44 likes, 7 guardados y +9 seguidores ganados. Retención media 11.41s. Demografía validada: 77% mujeres (57% de 35 a 54 años), 92.7% Venezuela. Mayor interacción al seg 0:01 (rostro humano) y abandono típico al seg 0:02. Instagram skip rate 44.4%. Consultas orgánicas graduadas a Formato F. Reglas de oro: avatar femenino de compras del hogar, gancho directo al seg 0:02, cierre señalando al perfil y comentario fijado.
@@ -22,4 +22,4 @@
 - Monitoreo de CI por proceso dormido único (`scripts/wait_ci.ps1`) con `BypassSandbox: true`.
 
 ## Próximo Paso Inmediato
-- Esperar validación visual de César en *Rinde Más Dev* (build 573) y en el panel web (`rindemas.cesarluis.com/panel/`).
+- Esperar validación visual de César en *Rinde Más Dev* (build 580) de la nueva pantalla de registro y edición de gastos (`ReviewExpenseScreen`).

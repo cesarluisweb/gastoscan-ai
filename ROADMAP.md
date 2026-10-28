@@ -83,6 +83,16 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 - `UI-07` **Anclaje Canónico de Hojas Desplegables (Bottom Sheets) y Diálogo de Autenticación Flotante:** `Pendiente de validación 🧪`
   - *Problema:* Las hojas modales (`VoiceExpenseSheet`, `BudgetBottomSheet`) flotaban en el centro vertical de la pantalla en lugar de anclarse abajo; la hoja de presupuesto mostraba un espacio en blanco excesivo bajo "Guardar Presupuestos"; la modal de vinculación con correo cubría la pantalla de blanco en pantallas estrechas con `Center` y carecía de `dispose()` en controladores.
   - *Solución:* Patrón canónico shrink-wrapped (`Material` + `SafeArea(top: false)` sin `Center` ni `Align` vertical) aplicado en `VoiceExpenseSheet`, `BudgetBottomSheet`, `ReviewExpenseScreen` y `MainScreen`. Migración del modal de autenticación a `AuthEmailDialog` (`Dialog` nativo centrado sobre scrim, con `PopScope`, `dispose()`, textos flexibles sin desborde y sanitización de errores). Pruebas de geometría y ciclo de vida unitarias implementadas (`sheet_geometry_test.dart` y `auth_dialog_test.dart`). (Verificado en CI build 555, commit `7fbbe3d`).
+- `UI-08` **Reorganización de ReviewExpenseScreen (Moneda & Monto Superior) e Idempotencia Monetaria:** `Pendiente de validación 🧪`
+  - *Problema:* El formulario de registro y edición de gastos colocaba la selección de moneda y el monto al final de la pantalla, forzando al usuario a deslizarse verticalmente tras los artículos para definir la moneda. Cambiar de moneda podía alterar importes nominales o descalzar los bolívares reales cobrados en compras indexadas.
+  - *Solución:*
+    1. Reordenamiento visual del formulario: Comercio y Fecha $\rightarrow$ Moneda del importe y forma de pago $\rightarrow$ Monto total y equivalencias $\rightarrow$ Desglose opcional de artículos $\rightarrow$ Botón inferior de guardar.
+    2. Preservación estricta del valor nominal al alternar entre monedas (`USD`, `VES`, `USDT`, `EUR`) sin conversiones imprevistas ni alteración de números introducidos.
+    3. Re-tap idempotente: pulsar la moneda activa no modifica montos, tasas ni forma de pago.
+    4. Preservación del método de liquidación entre divisas (`USD` $\leftrightarrow$ `EUR`).
+    5. Protección de gastos indexados existentes: preservación de bolívares cobrados y montos de referencia.
+    6. Bloqueo determinista de guardado si la tasa en bolívares no es válida (`<= 1.0`), eliminando fallbacks silenciosos a 1.0.
+    7. Suite de pruebas exhaustiva: 12 casos en `review_expense_screen_layout_test.dart` y suite completa de 403 pruebas en verde. (Verificado en CI build 580, commit `15a0af4`).
 
 ### Bloque B: Finanzas Bimonetarias y Lentes Multimoneda (Finanzas / UX)
 - `FIN-09` **Equivalencias Multimoneda Inmutables (`USD`, `VES`, `USDT`, `EUR`) y Migración SQLite v18:** `Pendiente de validación 🧪`
