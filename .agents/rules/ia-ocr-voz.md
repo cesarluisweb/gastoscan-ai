@@ -20,9 +20,14 @@ description: "Consultar al modificar extracción OCR con Gemini, prompts de IA, 
 - **Borrado Seguro de Imágenes Temporales:** Cuando múltiples registros provengan de una misma fotografía física, queda prohibido invocar `ImageService.deleteTempFile` sin antes verificar que no existan otros registros pendientes en `scan_queue` o en SQLite que dependan de dicho archivo.
 
 ## 3. Asistente Financiero y Desambiguación de Intenciones
-- **Desambiguación Obligatoria (Gasto vs. Lista de Compras):** Si el usuario solicita anotar productos sin monto (ej. *"anota una harina pan"*), el asistente NUNCA debe asumir la intención. Debe preguntar textualmente:
-  > *"¿Deseas agregarlo a tu lista de compras o registrarlo como un gasto realizado?"*
-- **Doble Capa de Protección en Código:** En `chat_screen.dart`, cualquier ejecución de la herramienta `registrar_gasto` con monto cero o sin números en el mensaje del usuario debe ser interceptada localmente para formular la pregunta antes de guardar.
+- **Matriz Canónica de Desambiguación de Intenciones:** El Asistente IA debe clasificar las frases del usuario en 4 casos mutuamente excluyentes:
+  1. *Caso 1 (Compra realizada con precio explícito):* Invocar la herramienta `registrar_gasto`.
+  2. *Caso 2 (Compra en pasado sin precio - ej. "Compré 10 kg de queso en Unimarket", "Gasté en la farmacia"):* El usuario expresa con certeza en pasado que ya gastó o compró (`compré`, `gasté`, `pagué`). No es ambiguo ni es lista de compras. Queda prohibido invocar funciones o inventar precios; debe responder como texto conversacional:
+     > *"Entendido, compraste [producto] en [comercio si aplica]. Antes de registrarlo, dime: ¿cuánto te costó en total?"*
+  3. *Caso 3 (Lista de compras explícita - ej. "anota en la lista de compras leche", "tengo que comprar pan"):* Invocar `agregar_items_lista_compras`.
+  4. *Caso 4 (Frase neutra ambigua sin precio ni verbo en pasado - ej. "anota una harina pan", "pon champú", "queso blanco"):* En este caso (y ÚNICAMENTE en este) responder textualmente:
+     > *"¿Deseas agregarlo a tu lista de compras o registrarlo como un gasto realizado?"*
+- **Doble Capa de Intercepción en Código:** En `chat_screen.dart`, si `registrar_gasto` retorna con monto cero o sin números en el mensaje del usuario, la interfaz intercepta localmente la respuesta: si detecta intención de gasto en pasado formula la pregunta de confirmación de monto del Caso 2, y si es neutra formula la pregunta de desambiguación del Caso 4.
 - **Cotejo Universal con Lista de Compras:** Todo gasto registrado en la app (vía formulario manual, escáner, voz o chat) DEBE contrastar sus productos contra los pendientes en `getPendingShoppingItems()`, marcando automáticamente como comprados los ítems coincidentes.
 - **Optimización de Contexto de Chat (Protección de Tokens):** Prohibido volcar toda la base de datos de gastos crudos (`toMap()`) o todo el historial ilimitado al llamar a Gemini. Debe construirse siempre un resumen semántico precalculado (`_buildSemanticChatContext` con totales por categoría, top 10 productos del mes, últimas 5 compras y presupuesto) y limitar el historial enviado a la API a una ventana deslizante de los últimos 5 mensajes.
 - **Tratamiento Fiscal del IVA y Gastos Hormiga:** El IVA (16%) y tributos fiscales venezolanos son costos fijos legales obligatorios de las transacciones comerciales. Queda estrictamente PROHIBIDO que el Asistente IA sugiera recortar el IVA, lo catalogue como producto comprado, gasto hormiga o fuga de dinero. La función `_buildSemanticChatContext` debe filtrar siempre con `DatabaseHelper.isTaxItem` para excluir cualquier renglón impositivo de los productos más comprados, y enfocar el análisis de gastos pequeños exclusivamente en consumos discrecionales.
@@ -42,3 +47,12 @@ description: "Consultar al modificar extracción OCR con Gemini, prompts de IA, 
   - `"BS_USDT"`: Si pagó en bolívares a tasa paralelo, USDT, Binance o P2P.
   - `"DIVISA"`: Si pagó directamente en dólares o divisas en efectivo, Zelle o Binance Pay.
   Esta propiedad se transmite a `ReviewExpenseScreen` para preseleccionar la pastilla correspondiente de forma transparente.
+- **Aislamiento de Descripción Limpia de Ítems:** En `modo: "dictado_gasto"` y extracción estructurada, `descripcion` debe contener **únicamente el nombre limpio del producto** (ej. `"Queso"`), descartando verbos carrier (*"Compré"*, *"Gasté"*), cantidades (*"5 kg"*) y nombres de comercios (*"en New Market"*).
+- **Normalización de Pesos y Unidades de Medida:** Mantener intactas las unidades de peso y volumen en el texto enviado a Gemini (no purgarlas con Regex en el cliente para no distorsionar la interpretación). Instruir a Gemini en el Worker para normalizar gramos y fracciones coloquiales a decimales de kilogramo/litro (`500g` -> `0.5`, `un cuarto` -> `0.25`, `5 kg` -> `5.0`).
+- **Cálculo de Precio Unitario en Fracciones/Múltiplos:** Si el usuario dictó el precio total pagado por una fracción o cantidad (ej. *"medio kilo en 4$"*), el precio unitario DEBE ser `monto / cantidad` (`4.00 / 0.5 = 8.00`), asegurando que `cantidad * precio_unitario` concuerde exactamente con el desembolso real.
+- **Tolerancia a Compras Dictadas sin Precio:** Si se dicta una compra sin monto (ej. *"Compré 5 kg de queso en New Market"*), `registrar_gasto` debe fijar `precio_unitario: 0.0` y `monto_original: 0.0` (o `total_usd: 0.0`), abriendo `ReviewExpenseScreen` con el total en `0.00` y el cursor listo para la entrada manual sin bloquear el flujo.
+- **Prevención de Condición de Carrera en `SpeechToText` (Flutter):** Al enviar un mensaje de voz mientras el micrófono está activo:
+  1. Invocar `await _speech.cancel()` (no `stop()`) para que el motor nativo de voz de Android/iOS descarte resultados rezagados.
+  2. Marcar sincrónicamente `_isListening = false`.
+  3. En el callback `onResult`, condicionar la actualización de la interfaz a `if (mounted && _isListening)`.
+  4. Agregar un callback post-frame para asegurar que la caja de texto permanezca vacía tras el envío.

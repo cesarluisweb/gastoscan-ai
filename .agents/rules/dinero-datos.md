@@ -32,6 +32,7 @@ description: "Consultar al modificar montos, monedas (VES/USD/EUR/USDT), tasas d
   final double itemConverted = totalConverted * itemRatio;
   ```
   Esto garantiza que la suma de los ítems coincida exactamente al céntimo con el total mostrado en el encabezado de la tarjeta.
+- **Protección de Total Dictado en Compras Mixtas:** En `ReviewExpenseScreen._recalcularTotal()`, si existen ítems incompletos con precio o total en `0.0` y el total general actual es mayor que la suma de los ítems con precio (ej. el usuario dictó *"Gasté 15$ en Farmatodo: pastillas en 10 y champú"*), el total general (`_totalOriginalCtrl`) **no debe sobreescribirse** con la suma parcial incompleta (`10.00`). Debe preservarse el total dictado (`15.00`) mientras el usuario completa o revisa los precios faltantes.
 
 ## 3. Catálogo Canónico e Invariante de Categorías
 - **Catálogo Oficial Único (10 Categorías):** Móvil y web deben utilizar estrictamente las 10 categorías canónicas de `AppConstants.categorias`:
