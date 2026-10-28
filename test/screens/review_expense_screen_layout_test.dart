@@ -109,7 +109,7 @@ void main() {
 
     // Verify body form fields are visible and rendered
     expect(find.text('Información General'), findsOneWidget);
-    expect(find.text('Comercio o Beneficiario (opcional)'), findsOneWidget);
+    expect(find.text('¿Dónde compraste? (opcional)'), findsOneWidget);
 
     // Ensure the ListView in body has non-zero height
     final listViewFinder = find.byType(ListView);
@@ -346,7 +346,7 @@ void main() {
     await tester.pumpWidget(createWidgetUnderTest());
     await tester.pumpAndSettle();
 
-    expect(find.text('Monto en Bolívares (VES)'), findsOneWidget);
+    expect(find.text('Monto total (Bs.)'), findsOneWidget);
     expect(find.text('Equiv. USD (BCV)'), findsOneWidget);
   });
 
@@ -383,7 +383,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Se guardará en EUR'), findsOneWidget);
-    expect(find.text('Monto en Bolívares (VES)'), findsNothing);
+    expect(find.text('Monto total (Bs.)'), findsNothing);
+    expect(find.text('Monto total (€)'), findsOneWidget);
   });
 
   testWidgets('ReviewExpenseScreen re-tap en moneda activa es un no-op idempotente', (tester) async {
@@ -456,7 +457,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // 1. Escribir 100 en el campo de monto total en USD
-    final inputTotalFinder = find.widgetWithText(TextFormField, 'Monto Total (USD)');
+    final inputTotalFinder = find.byKey(const Key('input_monto_total'));
     expect(inputTotalFinder, findsOneWidget);
     await tester.enterText(inputTotalFinder, '100.00');
     await tester.pumpAndSettle();
@@ -466,10 +467,10 @@ void main() {
     await tester.pumpAndSettle();
 
     // 3. El valor nominal sigue siendo 100.00, no convertido a 100 * tasa
-    final inputVesFinder = find.widgetWithText(TextFormField, 'Monto en Bolívares (VES)');
-    expect(inputVesFinder, findsOneWidget);
-    final vesField = tester.widget<TextFormField>(inputVesFinder);
+    expect(inputTotalFinder, findsOneWidget);
+    final vesField = tester.widget<TextFormField>(inputTotalFinder);
     expect(vesField.controller?.text, '100.00');
+    expect(find.text('Monto total (Bs.)'), findsOneWidget);
   });
 
   testWidgets('ReviewExpenseScreen formulario vacio no escribe 0.00 en controladores derivados', (tester) async {
@@ -484,7 +485,7 @@ void main() {
     await tester.pumpWidget(createWidgetUnderTest());
     await tester.pumpAndSettle();
 
-    final inputTotalFinder = find.widgetWithText(TextFormField, 'Monto Total (USD)');
+    final inputTotalFinder = find.byKey(const Key('input_monto_total'));
     expect(inputTotalFinder, findsOneWidget);
     final totalField = tester.widget<TextFormField>(inputTotalFinder);
     expect(totalField.controller?.text, isEmpty);
@@ -527,7 +528,9 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    // 1. Comprobar que carga 10.00 en etiqueta y 500.00 en Bs finales
+    // 1. Comprobar que carga 10.00 en monto total y 500.00 en Bs finales
+    final inputTotal = tester.widget<TextFormField>(find.byKey(const Key('input_monto_total')));
+    expect(inputTotal.controller?.text, '10.00');
     final bsField = tester.widget<TextFormField>(find.byKey(const Key('input_total_bs_manual')));
     expect(bsField.controller?.text, '500.00');
 
@@ -535,15 +538,15 @@ void main() {
     await tester.tap(find.byKey(const Key('expense_currency_ves_btn')));
     await tester.pumpAndSettle();
 
-    // En VES debe mostrar los 500.00 Bs reales
-    final vesField = tester.widget<TextFormField>(find.widgetWithText(TextFormField, 'Monto en Bolívares (VES)'));
-    expect(vesField.controller?.text, '500.00');
+    // En VES el monto nominal sigue siendo 10.00 (nunca se sobreescribe al cambiar de moneda)
+    final vesTotal = tester.widget<TextFormField>(find.byKey(const Key('input_monto_total')));
+    expect(vesTotal.controller?.text, '10.00');
 
     // 3. Volver a USD
     await tester.tap(find.byKey(const Key('expense_currency_usd_btn')));
     await tester.pumpAndSettle();
 
-    // En USD restaura los 10.00 de referencia y conserva los 500.00 Bs cobrados
+    // En USD mantiene los 10.00 y conserva los 500.00 Bs cobrados en su campo
     final bsFieldRestored = tester.widget<TextFormField>(find.byKey(const Key('input_total_bs_manual')));
     expect(bsFieldRestored.controller?.text, '500.00');
   });
@@ -570,7 +573,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Escribir monto 500 Bs
-    final inputVesFinder = find.widgetWithText(TextFormField, 'Monto en Bolívares (VES)');
+    final inputVesFinder = find.byKey(const Key('input_monto_total'));
     await tester.enterText(inputVesFinder, '500.00');
     await tester.pumpAndSettle();
 

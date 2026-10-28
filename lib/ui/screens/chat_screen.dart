@@ -130,15 +130,18 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  Future<void> _stopListening() async {
-    if (_isListening) {
-      try {
-        await _speech.stop();
-      } catch (_) {}
-      if (mounted) {
-        setState(() => _isListening = false);
-      }
+  Future<void> _stopListening({bool cancel = false}) async {
+    _isListening = false;
+    if (mounted) {
+      setState(() {});
     }
+    try {
+      if (cancel) {
+        await _speech.cancel();
+      } else {
+        await _speech.stop();
+      }
+    } catch (_) {}
   }
 
   Future<void> _initSpeech() async {
@@ -186,7 +189,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         await _speech.listen(
           localeId: _spanishLocaleId,
           onResult: (val) {
-            if (mounted) {
+            if (mounted && _isListening) {
               setState(() {
                 _textCtrl.text = previousText + val.recognizedWords;
                 _textCtrl.selection = TextSelection.fromPosition(
@@ -421,16 +424,22 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _sendMessage([String? textOverride]) async {
-    if (_isListening) {
-      await _stopListening();
-    }
     final text = (textOverride ?? _textCtrl.text).trim();
     if (text.isEmpty) return;
+
+    if (_isListening || _speech.isListening) {
+      await _stopListening(cancel: true);
+    }
 
     final chatProvider = _getChatProvider(context);
     chatProvider.addMessage({'role': 'user', 'text': text});
     if (textOverride == null) {
       _textCtrl.clear();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_isListening && _textCtrl.text.isNotEmpty) {
+          _textCtrl.clear();
+        }
+      });
     }
     chatProvider.setLoading(true);
     _scrollToBottom();
@@ -502,7 +511,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     : '';
                 chatProvider.addMessage({
                   'role': 'assistant',
-                  'text': 'Entendido, registré $itemDesc$comStr. ¿Cuánto te costó en total?',
+                  'text': 'Entendido, antes de registrar $itemDesc$comStr, dime: ¿cuánto te costó en total?',
                 });
               } else {
                 chatProvider.addMessage({

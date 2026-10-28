@@ -174,6 +174,35 @@ class GastoModel {
     );
   }
 
+  /// Devuelve una copia del gasto sin la foto local desvinculada
+  GastoModel sinFoto() {
+    return GastoModel(
+      id: id,
+      uuid: uuid,
+      fecha: fecha,
+      comercio: comercio,
+      moneda: moneda,
+      totalOriginal: totalOriginal,
+      totalUsd: totalUsd,
+      totalUsdt: totalUsdt,
+      totalEur: totalEur,
+      tasaCambio: tasaCambio,
+      tasaUsdt: tasaUsdt,
+      tasaEur: tasaEur,
+      fuenteTasaCambio: fuenteTasaCambio,
+      fechaTasaCambio: fechaTasaCambio,
+      categoria: categoria,
+      rutaFotoLocal: null,
+      creadoEn: creadoEn,
+      actualizadoEn: DateTime.now().toIso8601String(),
+      eliminadoEn: eliminadoEn,
+      items: items,
+      firestoreId: firestoreId,
+      synced: synced,
+      ocrText: ocrText,
+    );
+  }
+
   double get totalOriginalDisplay => totalOriginal / 100.0;
   double get totalUsdDisplay => totalUsd / 100.0;
   double get totalUsdtDisplay => (totalUsdt ?? totalUsd) / 100.0;

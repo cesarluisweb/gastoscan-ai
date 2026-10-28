@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gastoscan_ai/data/models/gasto_model.dart';
 import 'package:gastoscan_ai/ui/widgets/receipt_viewer_dialog.dart';
 
 void main() {
@@ -20,6 +22,100 @@ void main() {
       expect(find.text('Farmatodo'), findsOneWidget);
       expect(find.text('07/10/2026 • \$ 15.00'), findsOneWidget);
       expect(find.text('No se encontró el archivo de imagen.'), findsOneWidget);
+    });
+
+    testWidgets('shows edit button and triggers onEdit callback', (tester) async {
+      bool editCalled = false;
+      final dummyGasto = GastoModel(
+        id: 1,
+        uuid: 'gasto-123',
+        fecha: '2026-10-28',
+        comercio: 'Automercado Plaza',
+        moneda: 'USD',
+        totalOriginal: 2500,
+        totalUsd: 2500,
+        tasaCambio: 1.0,
+        categoria: 'Alimentación',
+        items: [],
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ReceiptViewerDialog(
+            imagePath: '/non/existent/path/receipt.jpg',
+            title: 'Automercado Plaza',
+            amount: '\$ 25.00',
+            gasto: dummyGasto,
+            onEdit: () {
+              editCalled = true;
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Ver o editar gasto'), findsOneWidget);
+      await tester.tap(find.text('Ver o editar gasto'));
+      await tester.pumpAndSettle();
+
+      expect(editCalled, isTrue);
+    });
+
+    testWidgets('delete button displays confirmation dialog explaining expense is kept', (tester) async {
+      final tempDir = Directory.systemTemp.createTempSync('viewer_test_');
+      final tempFile = File('${tempDir.path}/test_rec.jpg')..writeAsBytesSync([1, 2, 3]);
+
+      bool deleteCalled = false;
+      final dummyGasto = GastoModel(
+        id: 1,
+        uuid: 'gasto-456',
+        fecha: '2026-10-28',
+        comercio: 'Traki',
+        moneda: 'USD',
+        totalOriginal: 1000,
+        totalUsd: 1000,
+        tasaCambio: 1.0,
+        categoria: 'Hogar',
+        items: [],
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ReceiptViewerDialog(
+            imagePath: tempFile.path,
+            title: 'Traki',
+            amount: '\$ 10.00',
+            gasto: dummyGasto,
+            onDelete: () {
+              deleteCalled = true;
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Tap delete button in bottom bar
+      final btnDelete = find.byKey(const Key('btn_eliminar_foto_viewer_bottom'));
+      expect(btnDelete, findsOneWidget);
+      await tester.tap(btnDelete);
+      await tester.pumpAndSettle();
+
+      // Check dialog explanation
+      expect(find.text('¿Eliminar foto del comprobante?'), findsOneWidget);
+      expect(
+        find.textContaining('El registro del gasto, sus montos y detalles se conservarán intactos'),
+        findsOneWidget,
+      );
+
+      // Confirm deletion
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Eliminar foto'));
+      await tester.pumpAndSettle();
+
+      expect(deleteCalled, isTrue);
+
+      try {
+        tempDir.deleteSync(recursive: true);
+      } catch (_) {}
     });
   });
 }

@@ -133,7 +133,7 @@ class _VoiceExpenseSheetState extends State<VoiceExpenseSheet> {
     await _speech.listen(
       localeId: _spanishLocaleId,
       onResult: (val) {
-        if (mounted) {
+        if (mounted && _isListening) {
           setState(() {
             _textCtrl.text = previousText + val.recognizedWords;
             _textCtrl.selection = TextSelection.fromPosition(

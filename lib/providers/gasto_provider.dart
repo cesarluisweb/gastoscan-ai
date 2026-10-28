@@ -260,6 +260,56 @@ class GastoProvider with ChangeNotifier {
     }
   }
 
+  /// Elimina el archivo de la foto del comprobante en el teléfono y desvincula la ruta del gasto.
+  /// El registro contable del gasto (montos, comercio, fecha, items) se conserva intacto.
+  Future<bool> eliminarFotoComprobante(GastoModel gasto) async {
+    try {
+      if (gasto.rutaFotoLocal != null && gasto.rutaFotoLocal!.isNotEmpty) {
+        final file = File(gasto.rutaFotoLocal!);
+        if (await file.exists()) {
+          await file.delete();
+        }
+      }
+      if (gasto.id != null) {
+        await _repository.eliminarRutaFotoLocal(gasto.id!);
+      }
+      await cargarDatos();
+      return true;
+    } catch (e) {
+      debugPrint('Error al eliminar foto del comprobante: $e');
+      return false;
+    }
+  }
+
+  /// Elimina en lote los archivos de fotos de comprobantes en el teléfono y desvincula las rutas.
+  /// Los registros de gastos se conservan intactos.
+  Future<int> eliminarFotosComprobantes(List<GastoModel> gastos) async {
+    if (gastos.isEmpty) return 0;
+    final List<int> idsToUpdate = [];
+    int deletedCount = 0;
+
+    for (final gasto in gastos) {
+      if (gasto.rutaFotoLocal != null && gasto.rutaFotoLocal!.isNotEmpty) {
+        try {
+          final file = File(gasto.rutaFotoLocal!);
+          if (await file.exists()) {
+            await file.delete();
+          }
+        } catch (_) {}
+      }
+      if (gasto.id != null) {
+        idsToUpdate.add(gasto.id!);
+        deletedCount++;
+      }
+    }
+
+    if (idsToUpdate.isNotEmpty) {
+      await _repository.eliminarRutasFotosLocales(idsToUpdate);
+    }
+    await cargarDatos();
+    return deletedCount;
+  }
+
   Future<bool> actualizarGasto(GastoModel gasto, List<ItemGastoModel> items) async {
     _errorMessage = null;
     try {

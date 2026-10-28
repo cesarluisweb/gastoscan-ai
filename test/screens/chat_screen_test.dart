@@ -274,7 +274,7 @@ void main() {
       expect(fakeSpeech.stopCallCount, greaterThanOrEqualTo(1));
     });
 
-    testWidgets('sending message while listening stops microphone', (tester) async {
+    testWidgets('sending message while listening stops microphone and clears textfield', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
@@ -295,6 +295,37 @@ void main() {
 
       expect(find.byIcon(Icons.mic_none), findsOneWidget);
       expect(fakeSpeech.stopCallCount, greaterThanOrEqualTo(1));
+      expect((tester.widget(inputFinder) as TextField).controller!.text, isEmpty);
+    });
+
+    testWidgets('asking to register purchase without price asks for total cost with clarifying message', (tester) async {
+      fakeGeminiService.customResponse = {
+        'functionCall': {
+          'name': 'registrar_gasto',
+          'args': {
+            'comercio': 'Unimarket',
+            'total_usd': 0.0,
+            'items': [
+              {'descripcion': 'Queso', 'cantidad': 10.0, 'precio_unitario': 0.0}
+            ],
+          },
+        },
+      };
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      final inputFinder = find.byType(TextField);
+      await tester.enterText(inputFinder, 'Compré 10 kilos de queso en Unimarket');
+      await tester.pumpAndSettle();
+
+      final sendButtonFinder = find.byIcon(Icons.send);
+      await tester.tap(sendButtonFinder);
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(find.text('Entendido, antes de registrar Queso en Unimarket, dime: ¿cuánto te costó en total?', skipOffstage: false), findsOneWidget);
+      expect((tester.widget(inputFinder) as TextField).controller!.text, isEmpty);
     });
 
     testWidgets('multiple expenses in chat are registered and display correct currencies', (tester) async {

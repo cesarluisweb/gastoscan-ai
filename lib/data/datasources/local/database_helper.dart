@@ -494,6 +494,42 @@ class DatabaseHelper {
     return count;
   }
 
+  /// Desvincula la ruta de la foto local de un gasto en SQLite (cuando el usuario borra la foto para liberar espacio).
+  Future<int> clearRutaFotoLocal(int gastoId) async {
+    final db = await instance.database;
+    return await db.update(
+      'gastos',
+      {
+        'ruta_foto_local': null,
+        'actualizado_en': DateTime.now().toIso8601String(),
+      },
+      where: 'id = ?',
+      whereArgs: [gastoId],
+    );
+  }
+
+  /// Desvincula en lote las rutas de fotos locales de una lista de IDs de gastos.
+  Future<int> clearRutasFotosLocales(List<int> gastoIds) async {
+    if (gastoIds.isEmpty) return 0;
+    final db = await instance.database;
+    return await db.transaction((txn) async {
+      int count = 0;
+      final now = DateTime.now().toIso8601String();
+      for (final id in gastoIds) {
+        count += await txn.update(
+          'gastos',
+          {
+            'ruta_foto_local': null,
+            'actualizado_en': now,
+          },
+          where: 'id = ?',
+          whereArgs: [id],
+        );
+      }
+      return count;
+    });
+  }
+
   /// Elimina un gasto. Los ítems se eliminan automáticamente gracias a ON DELETE CASCADE
   Future<int> deleteGasto(int id) async {
     final db = await instance.database;

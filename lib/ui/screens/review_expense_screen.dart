@@ -71,7 +71,7 @@ class ReviewExpenseScreen extends StatefulWidget {
                     ),
                     const SizedBox(height: 12),
                     ListTile(
-                      leading: const Icon(Icons.camera_alt, color: AppColors.primaryDark),
+                      leading: const Icon(Icons.camera_alt, color: AppColors.textPrimary),
                       title: const Text('Tomar foto con la cámara'),
                       onTap: () {
                         Navigator.pop(ctx);
@@ -79,7 +79,7 @@ class ReviewExpenseScreen extends StatefulWidget {
                       },
                     ),
                     ListTile(
-                      leading: const Icon(Icons.photo_library, color: AppColors.primaryDark),
+                      leading: const Icon(Icons.photo_library, color: AppColors.textPrimary),
                       title: const Text('Elegir de la galería'),
                       onTap: () {
                         Navigator.pop(ctx);
@@ -507,6 +507,34 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
   }
 
   IconData _getCategoryIcon(String categoria) => AppConstants.getCategoryIcon(categoria);
+
+  String _symbolForMoneda(String moneda) {
+    switch (moneda) {
+      case 'VES':
+        return 'Bs.';
+      case 'EUR':
+        return '€';
+      case 'USDT':
+        return 'USDT';
+      case 'USD':
+      default:
+        return r'$';
+    }
+  }
+
+  IconData _getMonedaIcon(String moneda) {
+    switch (moneda) {
+      case 'EUR':
+        return Icons.euro;
+      case 'USDT':
+        return Icons.currency_bitcoin;
+      case 'VES':
+        return Icons.payments_outlined;
+      case 'USD':
+      default:
+        return Icons.attach_money;
+    }
+  }
 
   double _effectiveBcvRate(SettingsProvider settings) {
     if (_selectedMoneda == 'EUR') {
@@ -1395,7 +1423,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                               SizedBox(
                                 width: double.infinity,
                                 child: OutlinedButton.icon(
-                                  icon: const Icon(Icons.alternate_email, size: 18, color: AppColors.primaryDark),
+                                  icon: const Icon(Icons.alternate_email, size: 18, color: AppColors.textSecondary),
                                   label: const Text(
                                     'Vincular con correo',
                                     style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600),
@@ -1579,54 +1607,138 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         }
       },
       child: Scaffold(
-      bottomNavigationBar: SafeArea(
-        child: Align(
-          alignment: Alignment.bottomCenter,
-          heightFactor: 1.0,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 600),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-          child: hasMoreInQueue
-              ? Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: const Size.fromHeight(50),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 10,
+              offset: const Offset(0, -3),
+            ),
+          ],
+          border: const Border(top: BorderSide(color: AppColors.border)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Align(
+            alignment: Alignment.bottomCenter,
+            heightFactor: 1.0,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 600),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                child: Builder(builder: (context) {
+                  final settings = Provider.of<SettingsProvider>(context);
+                  final totalVal = tryParseAmount(_totalOriginalCtrl.text, isPrice: false) ?? 0.0;
+
+                  String secLabel = '';
+                  String secValue = '';
+                  if (_selectedMoneda == 'VES') {
+                    secLabel = 'Equiv. USD (BCV)';
+                    final usdVal = tryParseAmount(_totalUsdCtrl.text, isPrice: false) ?? 0.0;
+                    secValue = '\$ ${_formatDouble(usdVal)}';
+                  } else if (_metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsBcv || _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsUsdt) {
+                    secLabel = 'Pagaste';
+                    final bool isBcv = _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsBcv;
+                    final tRate = isBcv ? _effectiveBcvRate(settings) : ((_tasaUsdtFecha != null && _tasaUsdtFecha! > 0) ? _tasaUsdtFecha! : (tryParseAmount(_tasaUsdtCtrl.text, isPrice: false) ?? settings.tasaCambioVesUsdt));
+                    final manualBs = _bolivaresAjustadosManualmente ? tryParseAmount(_totalBsManualCtrl.text, isPrice: false) : null;
+                    final totalBs = (manualBs != null && manualBs > 0) ? manualBs : (totalVal * (tRate > 0 ? tRate : 1.0));
+                    secValue = 'Bs. ${_formatDouble(totalBs)}';
+                  } else {
+                    secLabel = 'Forma de pago';
+                    secValue = 'Divisa directa';
+                  }
+
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text(
+                                'Total de la compra',
+                                style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '${_symbolForMoneda(_selectedMoneda)} ${_formatDouble(totalVal)}',
+                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                              ),
+                            ],
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                secLabel,
+                                style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                secValue,
+                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                      onPressed: _isSaving ? null : () => _guardarGasto(revisarSiguiente: true),
-                      icon: const Icon(Icons.arrow_forward, color: Colors.black),
-                      label: _isSaving
-                          ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
-                          : Text(
-                              'Guardar y revisar siguiente (${readyCount - 1} más)',
-                              style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                    ),
-                    const SizedBox(height: 8),
-                    OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size.fromHeight(44),
-                        side: const BorderSide(color: AppColors.border),
-                      ),
-                      onPressed: _isSaving ? null : () => _guardarGasto(revisarSiguiente: false),
-                      child: const Text(
-                        'Guardar y salir al inicio',
-                        style: TextStyle(color: AppColors.textPrimary, fontSize: 14),
-                      ),
-                    ),
-                  ],
-                )
-              : ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(50),
-                  ),
-                  onPressed: _isSaving ? null : () => _guardarGasto(revisarSiguiente: false),
-                  child: _isSaving
-                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
-                      : const Text('Guardar Gasto', style: TextStyle(color: Colors.black, fontSize: 16)),
-                ),
+                      const SizedBox(height: 10),
+                      if (hasMoreInQueue) ...[
+                        ElevatedButton.icon(
+                          key: const Key('btn_guardar_gasto'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.black,
+                            minimumSize: const Size.fromHeight(48),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          onPressed: _isSaving ? null : () => _guardarGasto(revisarSiguiente: true),
+                          icon: const Icon(Icons.arrow_forward, color: Colors.black),
+                          label: _isSaving
+                              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
+                              : Text(
+                                  'Guardar y revisar siguiente (${readyCount - 1} más)',
+                                  style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold),
+                                ),
+                        ),
+                        const SizedBox(height: 8),
+                        OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size.fromHeight(44),
+                            side: const BorderSide(color: AppColors.border),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          onPressed: _isSaving ? null : () => _guardarGasto(revisarSiguiente: false),
+                          child: const Text(
+                            'Guardar y salir al inicio',
+                            style: TextStyle(color: AppColors.textPrimary, fontSize: 14),
+                          ),
+                        ),
+                      ] else ...[
+                        ElevatedButton(
+                          key: const Key('btn_guardar_gasto'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.black,
+                            minimumSize: const Size.fromHeight(48),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          onPressed: _isSaving ? null : () => _guardarGasto(revisarSiguiente: false),
+                          child: _isSaving
+                              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
+                              : const Text('Guardar Gasto', style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ],
+                  );
+                }),
+              ),
             ),
           ),
         ),
@@ -1732,8 +1844,8 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                   TextFormField(
                     controller: _comercioCtrl,
                     decoration: const InputDecoration(
-                      labelText: 'Comercio o Beneficiario (opcional)',
-                      hintText: 'Ej. Automercado Plaza',
+                      labelText: '¿Dónde compraste? (opcional)',
+                      hintText: 'Ej. Automercado, Farmacia...',
                       prefixIcon: Icon(Icons.storefront_outlined, color: AppColors.textSecondary),
                     ),
                   ),
@@ -1742,7 +1854,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     onTap: _selectDate,
                     child: InputDecorator(
                       decoration: const InputDecoration(
-                        labelText: 'Fecha de gasto',
+                        labelText: 'Fecha de la compra',
                         prefixIcon: Icon(Icons.calendar_today_outlined, color: AppColors.textSecondary),
                       ),
                       child: Text(
@@ -1751,6 +1863,19 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                       ),
                     ),
                   ),
+                  if (_selectedFecha != DateTime.now().toIso8601String().substring(0, 10)) ...[
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        const Icon(Icons.info_outline, size: 14, color: AppColors.textSecondary),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Se usará la tasa oficial del ${DateFormatter.formatDate(_selectedFecha)}',
+                          style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ],
 
                 ],
               ),
@@ -1767,12 +1892,15 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Moneda y Monto',
+                    '¿En qué moneda están los precios?',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                   ),
-                  const SizedBox(height: 16),
-                  const Text('Moneda del precio o referencia', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'La moneda en la que vas a anotar cada producto.',
+                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                  ),
+                  const SizedBox(height: 12),
                   Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
@@ -1790,21 +1918,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                               onTap: () {
                                 if (_selectedMoneda == m) return;
                                 setState(() {
-                                  final prevMoneda = _selectedMoneda;
                                   _selectedMoneda = m;
-
-                                  final isIndexedExpense = widget.existingGasto != null && _totalBsManualCtrl.text.isNotEmpty;
-                                  if (isIndexedExpense) {
-                                    if (m == 'VES' && (prevMoneda == 'USD' || prevMoneda == 'EUR' || prevMoneda == 'USDT')) {
-                                      final curRef = tryParseAmount(_totalOriginalCtrl.text, isPrice: false);
-                                      if (curRef != null && curRef > 0) _indexedRefAmount = curRef;
-                                      _totalOriginalCtrl.text = _totalBsManualCtrl.text;
-                                    } else if ((m == 'USD' || m == 'EUR') && prevMoneda == 'VES') {
-                                      if (_indexedRefAmount != null && _indexedRefAmount! > 0) {
-                                        _totalOriginalCtrl.text = _formatDouble(_indexedRefAmount!);
-                                      }
-                                    }
-                                  }
 
                                   final today = DateTime.now().toIso8601String().substring(0, 10);
                                   final isToday = _selectedFecha == today;
@@ -1864,18 +1978,168 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  if (_selectedMoneda == 'VES') ...[
-                    TextFormField(
-                      controller: _totalOriginalCtrl,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      decoration: const InputDecoration(
-                        labelText: 'Monto en Bolívares (VES)',
-                        prefixIcon: Icon(Icons.payments_outlined, color: AppColors.textSecondary),
+                  const SizedBox(height: 14),
+                  TextFormField(
+                    key: const Key('input_monto_total'),
+                    controller: _totalOriginalCtrl,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                    decoration: InputDecoration(
+                      labelText: 'Monto total (${_symbolForMoneda(_selectedMoneda)})',
+                      prefixText: '${_symbolForMoneda(_selectedMoneda)} ',
+                      prefixStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+                      prefixIcon: Icon(
+                        _getMonedaIcon(_selectedMoneda),
+                        color: AppColors.textSecondary,
                       ),
-                      onChanged: (_) => _recalcularTotalUsd(),
-                      validator: (val) => validatePositiveAmount(val),
                     ),
+                    onChanged: (val) {
+                      _bolivaresAjustadosManualmente = false;
+                      _totalUsdCtrl.text = val;
+                      _recalcularTotalUsd();
+                    },
+                    validator: (val) => validatePositiveAmount(val),
+                  ),
+                  if (_selectedMoneda == 'USD' || _selectedMoneda == 'EUR') ...[
+                    const SizedBox(height: 14),
+                    const Text(
+                      '¿Cómo pagaste?',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildLiquidacionPill(
+                            key: const Key('btn_pagado_en_divisa'),
+                            title: 'En divisa',
+                            subtitle: 'Directa',
+                            isSelected: _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnDivisa,
+                            onTap: () {
+                              setState(() {
+                                _metodoLiquidacionUsd = MetodoLiquidacionUsd.pagadoEnDivisa;
+                                _bolivaresAjustadosManualmente = false;
+                                _recalcularTotalUsd();
+                              });
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: _buildLiquidacionPill(
+                            key: const Key('btn_pagado_en_bs'),
+                            title: 'En Bs.',
+                            subtitle: 'A tasa BCV',
+                            isSelected: _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsBcv,
+                            onTap: () {
+                              setState(() {
+                                _metodoLiquidacionUsd = MetodoLiquidacionUsd.pagadoEnBsBcv;
+                                _bolivaresAjustadosManualmente = false;
+                                _recalcularTotalUsd();
+                              });
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: _buildLiquidacionPill(
+                            key: const Key('btn_pagado_en_bs_usdt'),
+                            title: 'En Bs.',
+                            subtitle: 'A tasa P2P',
+                            isSelected: _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsUsdt,
+                            onTap: () {
+                              setState(() {
+                                _metodoLiquidacionUsd = MetodoLiquidacionUsd.pagadoEnBsUsdt;
+                                _bolivaresAjustadosManualmente = false;
+                                _recalcularTotalUsd();
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (_metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsBcv || _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsUsdt)
+                      Builder(builder: (context) {
+                        final val = tryParseAmount(_totalOriginalCtrl.text, isPrice: false) ?? 0.0;
+                        final bool isBcv = _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsBcv;
+                        final tRate = isBcv ? _effectiveBcvRate(settings) : ((_tasaUsdtFecha != null && _tasaUsdtFecha! > 0) ? _tasaUsdtFecha! : (tryParseAmount(_tasaUsdtCtrl.text, isPrice: false) ?? settings.tasaCambioVesUsdt));
+                        final manualBs = _bolivaresAjustadosManualmente
+                            ? tryParseAmount(_totalBsManualCtrl.text, isPrice: false)
+                            : null;
+                        final totalBs = (manualBs != null && manualBs > 0) ? manualBs : (val * (tRate > 0 ? tRate : 1.0));
+                        final rateLabel = isBcv ? 'Tasa BCV' : 'Tasa P2P';
+
+                        return Container(
+                          margin: const EdgeInsets.only(top: 12),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.cardLighter,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '$rateLabel: Bs. ${tRate.toStringAsFixed(2)} por ${_selectedMoneda == 'EUR' ? 'euro' : 'dólar'}',
+                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                              ),
+                              const SizedBox(height: 8),
+                              TextFormField(
+                                key: const Key('input_total_bs_manual'),
+                                controller: _totalBsManualCtrl,
+                                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                                decoration: InputDecoration(
+                                  isDense: true,
+                                  labelText: 'Total pagado en bolívares',
+                                  labelStyle: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                  prefixText: 'Bs. ',
+                                  prefixStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                                onChanged: (_) {
+                                  _bolivaresAjustadosManualmente = true;
+                                  _recalcularTotalUsd();
+                                },
+                              ),
+                              const SizedBox(height: 6),
+                              const Text(
+                                'Calculado automáticamente. Ajústalo si pagaste otro monto en caja.',
+                                style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                              ),
+                            ],
+                          ),
+                        );
+                      })
+                    else ...[
+                      const SizedBox(height: 10),
+                      Container(
+                        key: const Key('cintillo_divisa_info'),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.cardLighter,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.check_circle_outline, size: 16, color: AppColors.success),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _selectedMoneda == 'EUR'
+                                    ? 'Se guardará en EUR (Divisa directa).'
+                                    : 'Se guardará en USD (Divisa directa).',
+                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.textSecondary),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ] else if (_selectedMoneda == 'VES') ...[
                     const SizedBox(height: 12),
                     // Tarjeta con las 3 equivalencias simultáneas + botón de Divulgación Progresiva (Ajustar tasas)
                     Builder(builder: (context) {
@@ -1962,19 +2226,27 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                             children: [
                               Expanded(
                                 child: anyRateModified
-                                    ? Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: const [
-                                          Icon(Icons.edit_note, size: 14, color: AppColors.primaryDark),
-                                          SizedBox(width: 4),
-                                          Flexible(
-                                            child: Text(
-                                              'Tasa personalizada activa',
-                                              overflow: TextOverflow.ellipsis,
-                                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.primaryDark),
+                                    ? Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFFEF9C3),
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(color: const Color(0xFFFEF08A)),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: const [
+                                            Icon(Icons.edit_note, size: 14, color: Color(0xFF92400E)),
+                                            SizedBox(width: 4),
+                                            Flexible(
+                                              child: Text(
+                                                'Tasa personalizada activa',
+                                                overflow: TextOverflow.ellipsis,
+                                                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                                              ),
                                             ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       )
                                     : Text(
                                         'Tasas del $_selectedFecha',
@@ -2021,7 +2293,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                 children: [
                                   ChoiceChip(
                                     key: const Key('chip_rate_usd_bcv'),
-                                    avatar: const Icon(Icons.attach_money, size: 14, color: AppColors.primaryDark),
+                                    avatar: const Icon(Icons.attach_money, size: 14, color: AppColors.textSecondary),
                                     selected: _monedaTasaSeleccionadaVes == 'USD',
                                     selectedColor: AppColors.primary.withValues(alpha: 0.15),
                                     label: Text(
@@ -2040,7 +2312,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                   const SizedBox(width: 8),
                                   ChoiceChip(
                                     key: const Key('chip_rate_eur_bcv'),
-                                    avatar: const Icon(Icons.euro, size: 14, color: AppColors.primaryDark),
+                                    avatar: const Icon(Icons.euro, size: 14, color: AppColors.textSecondary),
                                     selected: _monedaTasaSeleccionadaVes == 'EUR',
                                     selectedColor: AppColors.primary.withValues(alpha: 0.15),
                                     label: Text(
@@ -2059,7 +2331,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                   const SizedBox(width: 8),
                                   ChoiceChip(
                                     key: const Key('chip_rate_usdt_binance'),
-                                    avatar: const Icon(Icons.currency_bitcoin, size: 14, color: AppColors.primaryDark),
+                                    avatar: const Icon(Icons.currency_bitcoin, size: 14, color: AppColors.textSecondary),
                                     selected: _monedaTasaSeleccionadaVes == 'USDT',
                                     selectedColor: AppColors.primary.withValues(alpha: 0.15),
                                     label: Text(
@@ -2116,7 +2388,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                   suffixIcon: isModified
                                       ? IconButton(
                                           key: const Key('btn_restore_official_rate'),
-                                          icon: const Icon(Icons.restart_alt, color: AppColors.primaryDark),
+                                          icon: const Icon(Icons.restart_alt, color: AppColors.textSecondary),
                                           tooltip: 'Restaurar tasa oficial (Bs. ${officialRate.toStringAsFixed(2)})',
                                           onPressed: () {
                                             setState(() {
@@ -2129,10 +2401,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                   helperText: isModified
                                       ? 'Tasa modificada manualmente (Sugerida: Bs. ${officialRate.toStringAsFixed(2)})'
                                       : 'Tasa oficial correspondiente al $_selectedFecha',
-                                  helperStyle: TextStyle(
-                                    color: isModified ? AppColors.primaryDark : AppColors.textSecondary,
+                                  helperStyle: const TextStyle(
+                                    color: AppColors.textSecondary,
                                     fontSize: 10,
-                                    fontWeight: isModified ? FontWeight.bold : FontWeight.normal,
                                   ),
                                 ),
                                 onChanged: (_) => _recalcularTotalUsd(),
@@ -2142,290 +2413,8 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                         ],
                       );
                     }),
-                  ] else if (_selectedMoneda == 'USD' || _selectedMoneda == 'EUR') ...[
-                    // Selector: 3 opciones de liquidación para USD / EUR (1. En divisa, 2. En Bs. a tasa BCV, 3. En Bs. a tasa P2P)
-                    const Padding(
-                      padding: EdgeInsets.only(bottom: 6),
-                      child: Text(
-                        'Forma de pago en Venezuela',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildLiquidacionPill(
-                            key: const Key('btn_pagado_en_divisa'),
-                            title: 'En divisa',
-                            subtitle: 'directa',
-                            isSelected: _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnDivisa,
-                            onTap: () {
-                              setState(() {
-                                _metodoLiquidacionUsd = MetodoLiquidacionUsd.pagadoEnDivisa;
-                                _bolivaresAjustadosManualmente = false;
-                                _recalcularTotalUsd();
-                              });
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: _buildLiquidacionPill(
-                            key: const Key('btn_pagado_en_bs'),
-                            title: 'En Bs.',
-                            subtitle: 'a tasa BCV',
-                            isSelected: _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsBcv,
-                            onTap: () {
-                              setState(() {
-                                _metodoLiquidacionUsd = MetodoLiquidacionUsd.pagadoEnBsBcv;
-                                _bolivaresAjustadosManualmente = false;
-                                _recalcularTotalUsd();
-                              });
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: _buildLiquidacionPill(
-                            key: const Key('btn_pagado_en_bs_usdt'),
-                            title: 'En Bs.',
-                            subtitle: 'a tasa P2P',
-                            isSelected: _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsUsdt,
-                            onTap: () {
-                              setState(() {
-                                _metodoLiquidacionUsd = MetodoLiquidacionUsd.pagadoEnBsUsdt;
-                                _bolivaresAjustadosManualmente = false;
-                                _recalcularTotalUsd();
-                              });
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
+                  ] else if (_selectedMoneda == 'USDT') ...[
                     const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _totalOriginalCtrl,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      decoration: InputDecoration(
-                        labelText: _metodoLiquidacionUsd != MetodoLiquidacionUsd.pagadoEnDivisa
-                            ? 'Monto en etiqueta o referencia ($_selectedMoneda)'
-                            : 'Monto Total ($_selectedMoneda)',
-                        prefixIcon: Icon(
-                          _selectedMoneda == 'EUR' ? Icons.euro : Icons.attach_money,
-                          color: AppColors.primaryDark,
-                        ),
-                      ),
-                      onChanged: (val) {
-                        _bolivaresAjustadosManualmente = false;
-                        _totalUsdCtrl.text = val;
-                        _recalcularTotalUsd();
-                      },
-                      validator: (val) => validatePositiveAmount(val),
-                    ),
-                    if (_metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsBcv) ...[
-                      const SizedBox(height: 10),
-                      Builder(builder: (context) {
-                        final val = tryParseAmount(_totalOriginalCtrl.text, isPrice: false) ?? 0.0;
-                        final tBcv = _effectiveBcvRate(settings);
-                        final manualBs = _bolivaresAjustadosManualmente
-                            ? tryParseAmount(_totalBsManualCtrl.text, isPrice: false)
-                            : null;
-                        final totalBs = (manualBs != null && manualBs > 0) ? manualBs : (val * (tBcv > 0 ? tBcv : 1.0));
-                        final equivUsdOficial = tBcv > 0 ? (totalBs / tBcv) : val;
-                        return Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppColors.cardLighter,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.border),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SizedBox(
-                                width: double.infinity,
-                                child: Wrap(
-                                  alignment: WrapAlignment.spaceBetween,
-                                  crossAxisAlignment: WrapCrossAlignment.center,
-                                  runSpacing: 4,
-                                  children: [
-                                    const Text('Se guardará en Bolívares (VES):', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                                    Text('Tasa BCV: Bs. ${tBcv.toStringAsFixed(2)}', style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                                  ],
-                                ),
-                              ),
-                              if (settings.tasasSonReferencia) ...[
-                                const SizedBox(height: 2),
-                                const Text(
-                                  'Tasa estimada en caché (sin conexión)',
-                                  style: TextStyle(fontSize: 10, color: AppColors.textSecondary),
-                                ),
-                              ],
-                              const SizedBox(height: 8),
-                              TextFormField(
-                                key: const Key('input_total_bs_manual'),
-                                controller: _totalBsManualCtrl,
-                                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                                decoration: InputDecoration(
-                                  isDense: true,
-                                  labelText: 'Bolívares finales cobrados (editable)',
-                                  labelStyle: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
-                                  prefixText: 'Bs. ',
-                                  prefixStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                                ),
-                                onChanged: (_) {
-                                  _bolivaresAjustadosManualmente = true;
-                                  _recalcularTotalUsd();
-                                },
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                _selectedMoneda == 'EUR'
-                                    ? '≈ €${(tBcv > 0 ? (totalBs / tBcv) : val).toStringAsFixed(2)} EUR Oficial  •  \$${(settings.tasaCambioVesUsd > 0 ? (totalBs / settings.tasaCambioVesUsd) : val).toStringAsFixed(2)} USD  •  ${_totalUsdtCalculado.toStringAsFixed(2)} USDT'
-                                    : '≈ \$${equivUsdOficial.toStringAsFixed(2)} USD Oficial  •  €${_totalEurCalculado.toStringAsFixed(2)} EUR  •  ${_totalUsdtCalculado.toStringAsFixed(2)} USDT',
-                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
-                              ),
-                            ],
-                          ),
-                        );
-                      }),
-                    ] else if (_metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsUsdt) ...[
-                      const SizedBox(height: 10),
-                      Builder(builder: (context) {
-                        final val = tryParseAmount(_totalOriginalCtrl.text, isPrice: false) ?? 0.0;
-                        final tUsdt = (_tasaUsdtFecha != null && _tasaUsdtFecha! > 0)
-                            ? _tasaUsdtFecha!
-                            : (tryParseAmount(_tasaUsdtCtrl.text, isPrice: false) ?? settings.tasaCambioVesUsdt);
-                        final tBcv = _effectiveBcvRate(settings);
-                        final manualBs = _bolivaresAjustadosManualmente
-                            ? tryParseAmount(_totalBsManualCtrl.text, isPrice: false)
-                            : null;
-                        final totalBs = (manualBs != null && manualBs > 0) ? manualBs : (val * (tUsdt > 0 ? tUsdt : 1.0));
-                        final equivUsdBcv = tBcv > 0 ? (totalBs / tBcv) : val;
-                        final equivUsdt = tUsdt > 0 ? (totalBs / tUsdt) : val;
-                        return Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppColors.cardLighter,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.border),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SizedBox(
-                                width: double.infinity,
-                                child: Wrap(
-                                  alignment: WrapAlignment.spaceBetween,
-                                  crossAxisAlignment: WrapCrossAlignment.center,
-                                  runSpacing: 4,
-                                  children: [
-                                    const Text('Se guardará en Bolívares (VES):', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                                    Text('Tasa P2P: Bs. ${tUsdt.toStringAsFixed(2)}', style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                                  ],
-                                ),
-                              ),
-                              if (settings.tasasSonReferencia) ...[
-                                const SizedBox(height: 2),
-                                const Text(
-                                  'Tasa estimada en caché (sin conexión)',
-                                  style: TextStyle(fontSize: 10, color: AppColors.textSecondary),
-                                ),
-                              ],
-                              const SizedBox(height: 8),
-                              TextFormField(
-                                key: const Key('input_total_bs_manual'),
-                                controller: _totalBsManualCtrl,
-                                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                                decoration: InputDecoration(
-                                  isDense: true,
-                                  labelText: 'Bolívares finales cobrados (editable)',
-                                  labelStyle: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
-                                  prefixText: 'Bs. ',
-                                  prefixStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                                ),
-                                onChanged: (_) {
-                                  _bolivaresAjustadosManualmente = true;
-                                  _recalcularTotalUsd();
-                                },
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                _selectedMoneda == 'EUR'
-                                    ? '≈ ${equivUsdt.toStringAsFixed(2)} USDT P2P  •  €${(tUsdt > 0 ? (totalBs / tUsdt) : val).toStringAsFixed(2)} EUR  •  \$${equivUsdBcv.toStringAsFixed(2)} USD'
-                                    : '≈ ${equivUsdt.toStringAsFixed(2)} USDT P2P  •  \$${equivUsdBcv.toStringAsFixed(2)} USD Oficial  •  €${_totalEurCalculado.toStringAsFixed(2)} EUR',
-                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
-                              ),
-                            ],
-                          ),
-                        );
-                      }),
-                    ] else ...[
-                      const SizedBox(height: 10),
-                      Builder(builder: (context) {
-                        final val = tryParseAmount(_totalOriginalCtrl.text, isPrice: false) ?? 0.0;
-                        final tUsd = (_tasaUsdFecha != null && _tasaUsdFecha! > 0) ? _tasaUsdFecha! : settings.tasaCambioVesUsd;
-                        final tEur = (_tasaEurFecha != null && _tasaEurFecha! > 0) ? _tasaEurFecha! : settings.tasaCambioVesEur;
-                        final bsEquiv = _selectedMoneda == 'EUR'
-                            ? (val * (tEur > 0 ? tEur : tUsd))
-                            : (val * (tUsd > 0 ? tUsd : 1.0));
-                        final usdEquiv = _selectedMoneda == 'EUR'
-                            ? (tUsd > 0 ? (bsEquiv / tUsd) : val)
-                            : val;
-                        final eurEquiv = _selectedMoneda == 'EUR'
-                            ? val
-                            : (tEur > 0 ? (bsEquiv / tEur) : val);
-                        return Container(
-                          key: const Key('cintillo_divisa_info'),
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppColors.cardLighter,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.border),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.check_circle_outline, size: 16, color: AppColors.success),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  _selectedMoneda == 'EUR'
-                                      ? 'Se guardará en EUR (≈ \$${usdEquiv.toStringAsFixed(2)} USD  •  ${usdEquiv.toStringAsFixed(2)} USDT  •  Bs. ${bsEquiv.toStringAsFixed(2)})'
-                                      : 'Se guardará en USD (1:1 con USDT  •  ≈ €${eurEquiv.toStringAsFixed(2)} EUR  •  Bs. ${bsEquiv.toStringAsFixed(2)})',
-                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.textSecondary),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }),
-                    ],
-                  ] else ...[
-                    TextFormField(
-                      controller: _totalOriginalCtrl,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      decoration: InputDecoration(
-                        labelText: 'Monto Total ($_selectedMoneda)',
-                        prefixIcon: const Icon(Icons.currency_bitcoin, color: AppColors.primaryDark),
-                        helperText: 'Paridad 1:1 con USD',
-                      ),
-                      onChanged: (val) {
-                        _totalUsdCtrl.text = val;
-                        _recalcularTotalUsd();
-                      },
-                      validator: (val) => validatePositiveAmount(val),
-                    ),
-                    const SizedBox(height: 10),
                     Container(
                       key: const Key('cintillo_usdt_info'),
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -2435,22 +2424,14 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                         border: Border.all(color: AppColors.border),
                       ),
                       child: Row(
-                        children: [
-                          const Icon(Icons.check_circle_outline, size: 16, color: AppColors.success),
-                          const SizedBox(width: 8),
+                        children: const [
+                          Icon(Icons.check_circle_outline, size: 16, color: AppColors.success),
+                          SizedBox(width: 8),
                           Expanded(
-                            child: Builder(builder: (context) {
-                              final val = tryParseAmount(_totalOriginalCtrl.text, isPrice: false) ?? 0.0;
-                              final tUsd = (_tasaUsdFecha != null && _tasaUsdFecha! > 0) ? _tasaUsdFecha! : settings.tasaCambioVesUsd;
-                              final tEur = (_tasaEurFecha != null && _tasaEurFecha! > 0) ? _tasaEurFecha! : settings.tasaCambioVesEur;
-                              final tUsdt = (_tasaUsdtFecha != null && _tasaUsdtFecha! > 0) ? _tasaUsdtFecha! : settings.tasaCambioVesUsdt;
-                              final bsEquiv = val * (tUsdt > 0 ? tUsdt : (tUsd > 0 ? tUsd : 1.0));
-                              final eurEquiv = (tEur > 0 && bsEquiv > 0) ? (bsEquiv / tEur) : (tEur > 0 && tUsd > 0 ? (val * tUsd / tEur) : val);
-                              return Text(
-                                'Se guardará en USDT (≈ \$${val.toStringAsFixed(2)} USD 1:1  •  €${eurEquiv.toStringAsFixed(2)} EUR  •  Bs. ${bsEquiv.toStringAsFixed(2)})',
-                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.textSecondary),
-                              );
-                            }),
+                            child: Text(
+                              '1 USDT = \$1.00 USD  •  Contravalor en Bs. a tasa P2P guardado en segundo plano.',
+                              style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                            ),
                           ),
                         ],
                       ),
@@ -2473,15 +2454,15 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Expanded(
+                      Expanded(
                         child: Text(
-                          'Desglose de Ítems (opcional)',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                          'Productos (${_items.length})',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                         ),
                       ),
                       Text(
-                        'En $_selectedMoneda',
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.primaryDark),
+                        'Precios en ${_symbolForMoneda(_selectedMoneda)}',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
                       ),
                     ],
                   ),
@@ -2489,7 +2470,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                   if (_items.isEmpty)
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 8),
-                      child: Text('No hay ítems detallados.', style: TextStyle(color: AppColors.textMuted)),
+                      child: Text('Sin productos detallados.', style: TextStyle(color: AppColors.textMuted)),
                     )
                   else
                       ..._items.asMap().entries.map((entry) {
@@ -2556,6 +2537,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                // Fila 1: Descripción + Papelera
                                 Row(
                                   children: [
                                     Expanded(
@@ -2574,16 +2556,18 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 12),
+                                const SizedBox(height: 10),
+                                // Fila 2: Cantidad (35%) y Precio (65%)
                                 Row(
                                   children: [
                                     Expanded(
+                                      flex: 35,
                                       child: TextFormField(
                                         initialValue: _formatDouble(item.cantidad),
                                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                                         decoration: const InputDecoration(
                                           labelText: 'Cant.',
-                                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                          contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                                         ),
                                         onChanged: (v) {
                                           final cant = tryParseAmount(v, isPrice: false) ?? 1.0;
@@ -2599,12 +2583,15 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                     ),
                                     const SizedBox(width: 8),
                                     Expanded(
+                                      flex: 65,
                                       child: TextFormField(
                                         initialValue: _formatDouble(item.precioUnitarioDisplay),
                                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                        decoration: const InputDecoration(
+                                        decoration: InputDecoration(
                                           labelText: 'Precio',
-                                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                          prefixText: '${_symbolForMoneda(_selectedMoneda)} ',
+                                          prefixStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+                                          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                                         ),
                                         onChanged: (v) {
                                           final prec = tryParseAmount(v, isPrice: false) ?? 0.0;
@@ -2618,71 +2605,89 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                         },
                                       ),
                                     ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                    child: InputDecorator(
-                                      decoration: const InputDecoration(
-                                        labelText: 'Total',
-                                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                      ),
-                                      child: Text(
-                                        _formatDouble(_items[idx].totalDisplay),
-                                        style: const TextStyle(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.textPrimary,
-                                        ),
-                                      ),
-                                    ),
-                                    ),
                                   ],
                                 ),
-                                const SizedBox(height: 12),
-                                DropdownButtonFormField<String>(
-                                  value: AppConstants.categorias.contains(item.categoria) ? item.categoria : 'Otros',
-                                  decoration: const InputDecoration(
-                                    labelText: 'Categoría',
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                  ),
-                                  dropdownColor: AppColors.surface,
-                                  items: AppConstants.categorias.map((cat) {
-                                    final catColor = AppColors.categoryColors[cat] ?? AppColors.textSecondary;
-                                    final catIcon = _getCategoryIcon(cat);
-                                    return DropdownMenuItem(
-                                      value: cat,
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Container(
-                                            width: 24,
-                                            height: 24,
-                                            decoration: BoxDecoration(
-                                              color: catColor.withValues(alpha: 0.15),
-                                              shape: BoxShape.circle,
+                                const SizedBox(height: 10),
+                                // Fila 3: Categoría (65%) y Total calculado (35%)
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      flex: 65,
+                                      child: DropdownButtonFormField<String>(
+                                        value: AppConstants.categorias.contains(item.categoria) ? item.categoria : 'Otros',
+                                        decoration: const InputDecoration(
+                                          labelText: 'Categoría',
+                                          isDense: true,
+                                          contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                        ),
+                                        dropdownColor: AppColors.surface,
+                                        items: AppConstants.categorias.map((cat) {
+                                          final catColor = AppColors.categoryColors[cat] ?? AppColors.textSecondary;
+                                          final catIcon = _getCategoryIcon(cat);
+                                          return DropdownMenuItem(
+                                            value: cat,
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Container(
+                                                  width: 22,
+                                                  height: 22,
+                                                  decoration: BoxDecoration(
+                                                    color: catColor.withValues(alpha: 0.15),
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                  child: Icon(catIcon, size: 13, color: catColor),
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Text(cat, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13)),
+                                              ],
                                             ),
-                                            child: Icon(catIcon, size: 14, color: catColor),
+                                          );
+                                        }).toList(),
+                                        onChanged: (val) {
+                                          if (val != null) {
+                                            setState(() {
+                                              _items[idx] = _items[idx].copyWith(categoria: val);
+                                              if (!ItemGastoModel.isTaxDescription(_items[idx].descripcion)) {
+                                                final domCat = ItemGastoModel.calcularCategoriaDominante(_items);
+                                                for (int i = 0; i < _items.length; i++) {
+                                                  if (ItemGastoModel.isTaxDescription(_items[i].descripcion)) {
+                                                    _items[i] = _items[i].copyWith(categoria: domCat);
+                                                  }
+                                                }
+                                              }
+                                            });
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      flex: 35,
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          const Text(
+                                            'Total',
+                                            style: TextStyle(fontSize: 10, color: AppColors.textSecondary),
                                           ),
-                                          const SizedBox(width: 8),
-                                          Text(cat, overflow: TextOverflow.ellipsis),
+                                          const SizedBox(height: 2),
+                                          FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            child: Text(
+                                              '${_symbolForMoneda(_selectedMoneda)} ${_formatDouble(_items[idx].totalDisplay)}',
+                                              style: const TextStyle(
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.bold,
+                                                color: AppColors.textPrimary,
+                                              ),
+                                            ),
+                                          ),
                                         ],
                                       ),
-                                    );
-                                  }).toList(),
-                                  onChanged: (val) {
-                                    if (val != null) {
-                                      setState(() {
-                                        _items[idx] = _items[idx].copyWith(categoria: val);
-                                        if (!ItemGastoModel.isTaxDescription(_items[idx].descripcion)) {
-                                          final domCat = ItemGastoModel.calcularCategoriaDominante(_items);
-                                          for (int i = 0; i < _items.length; i++) {
-                                            if (ItemGastoModel.isTaxDescription(_items[i].descripcion)) {
-                                              _items[i] = _items[i].copyWith(categoria: domCat);
-                                            }
-                                          }
-                                        }
-                                      });
-                                    }
-                                  },
+                                    ),
+                                  ],
                                 ),
                                 if (priceWarning != null) ...[
                                   const SizedBox(height: 8),
@@ -2697,9 +2702,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                   OutlinedButton.icon(
                     key: const Key('review_expense_add_item_btn'),
                     onPressed: _addItem,
-                    icon: const Icon(Icons.add, size: 18, color: AppColors.primaryDark),
+                    icon: const Icon(Icons.add, size: 18, color: AppColors.textPrimary),
                     label: Text(
-                      _items.isEmpty ? 'Agregar ítem' : 'Agregar otro ítem',
+                      _items.isEmpty ? '+ Agregar producto' : '+ Agregar otro producto',
                       style: const TextStyle(
                         color: AppColors.textPrimary,
                         fontWeight: FontWeight.w600,
@@ -2757,7 +2762,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         padding: const EdgeInsets.only(bottom: 16.0),
         child: OutlinedButton.icon(
           onPressed: _showImagePickerOptions,
-          icon: const Icon(Icons.add_a_photo, color: AppColors.primaryDark),
+          icon: const Icon(Icons.add_a_photo, color: AppColors.textSecondary),
           label: const Text(
             'Adjuntar comprobante (Opcional)',
             style: TextStyle(color: AppColors.textPrimary),

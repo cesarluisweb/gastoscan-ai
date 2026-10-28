@@ -32,6 +32,14 @@ class GastoRepository {
     return _dbHelper.deleteGasto(id);
   }
 
+  Future<int> eliminarRutaFotoLocal(int gastoId) {
+    return _dbHelper.clearRutaFotoLocal(gastoId);
+  }
+
+  Future<int> eliminarRutasFotosLocales(List<int> gastoIds) {
+    return _dbHelper.clearRutasFotosLocales(gastoIds);
+  }
+
   Future<List<GastoModel>> obtenerGastos() {
     return _dbHelper.getAllGastos();
   }

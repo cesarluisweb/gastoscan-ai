@@ -4,7 +4,7 @@
 ## Estado Actual Inmediato
 - **Rama:** `main`.
 - **Fase 5 (Google Play):** Closed Testing activo con 20 evaluadores (período de 14 días).
-- **UI-08 (ReviewExpenseScreen: Moneda & Monto Superior):** `Pendiente de validación 🧪`. CI verde (Android build 580, commit `15a0af4`). 403 pruebas unitarias y de widgets pasando. APK compilado y listo para pruebas en *Rinde Más Dev*.
+- **UI-08 (ReviewExpenseScreen: Moneda & Monto Superior, Rediseño Visual):** Rediseño visual sin textos amarillos sobre blanco, input total único unificado bajo selector de moneda, preservación nominal estricta al alternar monedas, productos compactos en 3 filas y sticky footer anclado.
 - **UI-06, Desglose Bimonetario & Alineación Visual:** `Pendiente de validación 🧪`. CI verde (Android build 582, commit `9df2ada`). Web validada en vivo vía HTTP 200 en `https://rindemas.cesarluis.com/panel/`.
 
 ## Decisiones Técnicas y de Negocio Recientes
@@ -17,11 +17,12 @@
 - Web Fase 5: Edición de compras, desglose dinámico y reactividad de facturas al lente multimoneda corregida en `panel.astro`.
 - Desglose Bimonetario y Corrección de Alineación Global: Erradicado el antipatrón de envolver montos de la derecha en `Flexible` en `ExpenseCard`, `CategoryChart` (dona reescalada a 125dp con `ConstrainedBox(maxWidth: 58)` y presupuestos con `160`), `CurrencyRadiographyCard`, `PurchaseRadiographyCard` y `AnalysisScreen`. En `ExpenseCard`, monto secundario cambiado a gris (`textSecondary`). En `SummaryCard`, eliminado texto '· Protegida' en verde, dejando solo 'Meta de ahorro: $ X' limpia.
 - Almacenamiento de Fotos: Título de tarjeta en `MoreScreen` renombrado a `Almacenamiento de fotos`. Guardado local activado por defecto (`defaultGuardarFotos = true`), respetando ajustes explícitos previos. Listo para el próximo push.
-- Entrada por Voz y Asistente IA: Modo especializado `dictado_gasto` con `toolConfig` forzado (`mode: "ANY"`), aislamiento de descripciones limpias de ítems (sin verbos ni comercios), normalización de fracciones/kilos (`500g` -> 0.5), cálculo de precio unitario por kilo (`monto / cant`), soporte de compras sin precio (`monto = 0.00` para revisión), respeto a `monedaPrincipal` por defecto, protección de `_totalOriginalCtrl` en `ReviewExpenseScreen` y fallback heurístico local sin bloqueos.
+- Comprobantes y Galería: Selección múltiple en lote y borrado individual en `ReceiptGalleryScreen` y `ReceiptViewerDialog` (elimina solo el archivo físico en el teléfono preservando intactos los registros de gastos). Añadido enlace directo «Ver o editar gasto» en visor a pantalla completa.
+- Entrada por Voz y Asistente IA: Modo especializado `dictado_gasto` con `toolConfig` forzado (`mode: "ANY"`), aislamiento de descripciones limpias de ítems (sin verbos ni comercios), normalización de fracciones/kilos (`500g` -> 0.5), cálculo de precio unitario por kilo (`monto / cant`), soporte de compras sin precio (`monto = 0.00` para revisión), respeto a `monedaPrincipal` por defecto, protección de `_totalOriginalCtrl` en `ReviewExpenseScreen`, fallback heurístico local sin bloqueos, limpieza inmediata del campo de texto al enviar nota de voz y frase aclaratoria «Antes de registrarlo, dime: ¿cuánto te costó en total?».
 
 ## Errores y Fricciones a Evitar
 - No encadenar comandos con `&&` ni usar redirección `>` en PowerShell.
 - Monitoreo de CI por proceso dormido único (`scripts/wait_ci.ps1`) con `BypassSandbox: true`.
 
 ## Próximo Paso Inmediato
-- Esperar validación visual de César en *Rinde Más Dev* (build 582) con los ajustes de alineación, secundario en gris y meta de ahorro limpia.
+- Monitorear CI con `scripts/wait_ci.ps1` tras el push de los cambios de ReviewExpenseScreen y comprobantes/galería, y notificar a César para prueba en *Rinde Más Dev*.
