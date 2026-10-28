@@ -5,8 +5,8 @@
 - **Rama:** `main`.
 - **Fase 5 (Google Play):** Closed Testing activo con 20 evaluadores (período de 14 días).
 - **UI-08 & Comprobantes (Visor Simplificado, Galería & ReviewExpenseScreen):** `Pendiente de validación 🧪`. CI verde (Android build 598, commit `343d640`). 409 pruebas unitarias y de widgets pasando. Visor simplificado a solo compartir en barra superior con acciones ergonómicas abajo («Ver o editar gasto» y «Eliminar foto»), selección múltiple en galería y rediseño de revisión. Listo para pruebas en *Rinde Más Dev*.
-- **UI-06, Desglose Bimonetario & ReviewExpenseScreen:** `Pendiente de validación 🧪`. CI verde (Android build 602, commit `40f0be3`). 409 pruebas unitarias y de widgets pasando. Incluye: Opción B en revisión de gastos (hero container para monto total, divisor sutil, título `¿Cómo pagaste?` en 16sp bold, ajuste bidireccional de tasa al pagar en Bs, icono amarillo y sin `+` en «Agregar otro producto», sin iconos redundantes de divisa), dona contenida en 104dp (`radius: 20`, `centerSpaceRadius: 32`) con 16dp de margen izquierdo y 16dp de separación con la lista, columna alineada de porcentajes (28dp) y montos a la derecha (58dp), y cochino amarillo (`AppColors.primaryDark`).
-- **Artefacto para pruebas:** Descargar `rindemas-dev-apk` desde el run de CI 40762776608.
+- **UI-06, Desglose Bimonetario & ReviewExpenseScreen:** `Pendiente de validación 🧪`. CI verde (Android build 604, commit `2f14526`). 410 pruebas unitarias y de widgets pasando. Tarjetas independientes para Moneda (`¿En qué moneda están los precios?`), Monto Total (`¿Cuánto gastaste en total?`) y Forma de pago (`¿Cómo pagaste?`, solo para USD y EUR). Selector fijo de 3 tasas en VES (`Dólar BCV`, `Euro BCV`, `USDT P2P`) sin scroll ni chips solapados, icono de billetera para USDT y ajuste bidireccional de tasa al liquidar en bolívares.
+- **Artefacto para pruebas:** Descargar `rindemas-dev-apk` desde el run de CI 40766510282.
 
 ## Decisiones Técnicas y de Negocio Recientes
 - Modelo de Negocio & Anti-patrón Rial: Descartadas cuotas mensuales bajas artificiales (10-15 facturas/mes). La app ofrece escaneo abierto para compras familiares protegido únicamente por el límite anti-abuso de 50 facturas/día en Cloudflare Gateway (`SEC-13`). Rinde Más Pro se enfoca en valor agregado (cero ads, PDF/Excel contable, fotos en la nube, categorías libres, BYOK).
@@ -26,4 +26,4 @@
 - Monitoreo de CI por proceso dormido único (`scripts/wait_ci.ps1`) con `BypassSandbox: true`.
 
 ## Próximo Paso Inmediato
-- Esperar validación de César en *Rinde Más Dev* (build 602) con el espaciado corregido en la dona (16dp a ambos lados), columna alineada de porcentajes y cochino amarillo.
+- Esperar validación de César en *Rinde Más Dev* (build 604) con las tarjetas divididas, selector fijo de 3 tasas en VES y ajuste bidireccional de bolívares.
