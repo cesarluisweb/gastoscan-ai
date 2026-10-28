@@ -165,13 +165,13 @@ void main() {
       );
     });
 
-    test('GeminiService.parseVoiceExpense throws when speech contains no amounts', () async {
+    test('GeminiService.parseVoiceExpense returns 0.0 amount for review when speech contains no amounts', () async {
       final geminiService = GeminiService();
 
-      expect(
-        () async => await geminiService.parseVoiceExpense('compré varias cosas en la panadería'),
-        throwsA(isA<Exception>()),
-      );
+      final results = await geminiService.parseVoiceExpense('compré varias cosas en la panadería');
+      expect(results, isNotEmpty);
+      expect(results.first.totalOriginal, equals(0.0));
+      expect(results.first.comercio, equals('Panadería'));
     });
   });
 }

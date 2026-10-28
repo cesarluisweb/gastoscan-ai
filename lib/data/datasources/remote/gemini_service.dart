@@ -505,12 +505,12 @@ class GeminiService {
     } else if (lower.contains('kilo y medio')) {
       cantidad = 1.5;
     } else {
-      final matchGramos = RegExp(r'(\d+)\s*(?:g|gr|gramos)\b', caseSensitive: false).firstMatch(lower);
+      final matchGramos = RegExp(r'(\d+)\s*(?:gramos|gr|g)\b', caseSensitive: false).firstMatch(lower);
       if (matchGramos != null) {
         final g = double.tryParse(matchGramos.group(1)!) ?? 0.0;
         if (g > 0) cantidad = g / 1000.0;
       } else {
-        final matchKg = RegExp(r'(\d+(?:[.,]\d+)?)\s*(?:kg|kilos?|litros?|lts?|paquetes?|latas?|unidades?)\b', caseSensitive: false).firstMatch(lower);
+        final matchKg = RegExp(r'(\d+(?:[.,]\d+)?)\s*(?:kilos?|kg|litros?|lts?|paquetes?|latas?|unidades?)\b', caseSensitive: false).firstMatch(lower);
         if (matchKg != null) {
           cantidad = double.tryParse(matchKg.group(1)!.replaceAll(',', '.')) ?? 1.0;
         }
@@ -526,7 +526,7 @@ class GeminiService {
 
     if (matchPrecio != null) {
       final parsed = double.tryParse(matchPrecio.group(1)!.replaceAll(',', '.')) ?? 0.0;
-      final matchCantNum = RegExp(r'(\d+(?:[.,]\d+)?)\s*(?:kg|kilos|g|gr|gramos|litros|paquetes)', caseSensitive: false).firstMatch(lower);
+      final matchCantNum = RegExp(r'(\d+(?:[.,]\d+)?)\s*(?:gramos|gr|g|kilos?|kg|litros?|paquetes?)\b', caseSensitive: false).firstMatch(lower);
       if (matchCantNum == null || matchPrecio.group(1) != matchCantNum.group(1)) {
         monto = parsed;
       }
@@ -541,7 +541,7 @@ class GeminiService {
       producto = producto.replaceAll(RegExp(r'\s+en\s+' + RegExp.escape(comercio) + r'\b', caseSensitive: false), '');
     }
     producto = producto.replaceAll(RegExp(r'\b(?:medio kilo|un cuarto de kilo|tres cuartos de kilo|kilo y medio)\s*(?:de\s+)?', caseSensitive: false), '');
-    producto = producto.replaceAll(RegExp(r'\b\d+(?:[.,]\d+)?\s*(?:kg|kilos?|g|gr|gramos|litros?|lts?|paquetes?|latas?|unidades?)\s*(?:de\s+)?', caseSensitive: false), '');
+    producto = producto.replaceAll(RegExp(r'\b\d+(?:[.,]\d+)?\s*(?:gramos|gr|g|kilos?|kg|litros?|lts?|paquetes?|latas?|unidades?)\b\s*(?:de\s+)?', caseSensitive: false), '');
     producto = producto.replaceAll(RegExp(r'\s*(?:por|en|de)?\s*\$?\s*\d+(?:[.,]\d+)?\s*(?:\$|d[oó]lares|bol[ií]vares|bs\.?|ves|euros?|€|usdt)?', caseSensitive: false), '');
     producto = producto.trim();
     if (producto.isEmpty) {

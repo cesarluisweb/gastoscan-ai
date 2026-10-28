@@ -2467,9 +2467,11 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Desglose de Ítems (opcional)',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                      const Expanded(
+                        child: Text(
+                          'Desglose de Ítems (opcional)',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                        ),
                       ),
                       Text(
                         'En $_selectedMoneda',
