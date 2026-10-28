@@ -5,7 +5,7 @@
 - **Rama:** `main`.
 - **Fase 5 (Google Play):** Closed Testing activo con 20 evaluadores (período de 14 días).
 - **UI-08 (ReviewExpenseScreen: Moneda & Monto Superior):** `Pendiente de validación 🧪`. CI verde (Android build 580, commit `15a0af4`). 403 pruebas unitarias y de widgets pasando. APK compilado y listo para pruebas en *Rinde Más Dev*.
-- **UI-06, Desglose Bimonetario & Web:** `Pendiente de validación 🧪`. Web validada en vivo vía HTTP 200 en `https://rindemas.cesarluis.com/panel/`.
+- **UI-06, Desglose Bimonetario & Alineación Visual:** `Pendiente de validación 🧪`. CI verde (Android build 582, commit `9df2ada`). Web validada en vivo vía HTTP 200 en `https://rindemas.cesarluis.com/panel/`.
 
 ## Decisiones Técnicas y de Negocio Recientes
 - Modelo de Negocio & Anti-patrón Rial: Descartadas cuotas mensuales bajas artificiales (10-15 facturas/mes). La app ofrece escaneo abierto para compras familiares protegido únicamente por el límite anti-abuso de 50 facturas/día en Cloudflare Gateway (`SEC-13`). Rinde Más Pro se enfoca en valor agregado (cero ads, PDF/Excel contable, fotos en la nube, categorías libres, BYOK).
@@ -15,7 +15,7 @@
 - Nomenclatura canónica de 4 lentes establecida: `USD BCV`, `VES Bolívares`, `USDT P2P` y `EUR BCV` (sin paréntesis decorativos). En vistas compactas: `USD`, `VES`, `USDT`, `EUR`. Removida mención «Binance» de UI de tasas y calculadora cambiaria a favor de `USDT P2P`.
 - Web Fase 4: Autenticación por correo/contraseña (`signInWithEmailAndPassword`, `createUserWithEmailAndPassword`, `sendPasswordResetEmail`) integrada en `panel.astro` con mensajes traducidos.
 - Web Fase 5: Edición de compras, desglose dinámico y reactividad de facturas al lente multimoneda corregida en `panel.astro`.
-- Desglose Bimonetario y Corrección de Alineación Global: Erradicado el antipatrón de envolver montos de la derecha en `Flexible` en `ExpenseCard`, `CategoryChart` (leyenda de dona con `ConstrainedBox(maxWidth: 70)` y presupuestos con `160`), `CurrencyRadiographyCard`, `PurchaseRadiographyCard` y `AnalysisScreen`. En `ExpenseCard`, monto secundario cambiado a gris (`textSecondary`). En `SummaryCard`, eliminado texto '· Protegida' en verde, dejando solo 'Meta de ahorro: $ X' limpia.
+- Desglose Bimonetario y Corrección de Alineación Global: Erradicado el antipatrón de envolver montos de la derecha en `Flexible` en `ExpenseCard`, `CategoryChart` (dona reescalada a 125dp con `ConstrainedBox(maxWidth: 58)` y presupuestos con `160`), `CurrencyRadiographyCard`, `PurchaseRadiographyCard` y `AnalysisScreen`. En `ExpenseCard`, monto secundario cambiado a gris (`textSecondary`). En `SummaryCard`, eliminado texto '· Protegida' en verde, dejando solo 'Meta de ahorro: $ X' limpia.
 - Almacenamiento de Fotos: Título de tarjeta en `MoreScreen` renombrado a `Almacenamiento de fotos`. Guardado local activado por defecto (`defaultGuardarFotos = true`), respetando ajustes explícitos previos. Listo para el próximo push.
 - Entrada por Voz y Asistente IA: Modo especializado `dictado_gasto` con `toolConfig` forzado (`mode: "ANY"`), aislamiento de descripciones limpias de ítems (sin verbos ni comercios), normalización de fracciones/kilos (`500g` -> 0.5), cálculo de precio unitario por kilo (`monto / cant`), soporte de compras sin precio (`monto = 0.00` para revisión), respeto a `monedaPrincipal` por defecto, protección de `_totalOriginalCtrl` en `ReviewExpenseScreen` y fallback heurístico local sin bloqueos.
 
@@ -24,4 +24,4 @@
 - Monitoreo de CI por proceso dormido único (`scripts/wait_ci.ps1`) con `BypassSandbox: true`.
 
 ## Próximo Paso Inmediato
-- Esperar validación visual de César en *Rinde Más Dev* (build 580) de la nueva pantalla de registro y edición de gastos (`ReviewExpenseScreen`).
+- Esperar validación visual de César en *Rinde Más Dev* (build 582) con los ajustes de alineación, secundario en gris y meta de ahorro limpia.
