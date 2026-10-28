@@ -694,4 +694,34 @@ void main() {
     expect(textField.decoration?.prefixIcon, isNull);
     expect(textField.decoration?.prefixText, 'USDT ');
   });
+  testWidgets('ReviewExpenseScreen boton agregar producto muestra icono amarillo y sin signo plus en texto', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.5;
+
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pumpAndSettle();
+
+    // Verify ¿Cómo pagaste? title and styling
+    expect(find.text('¿Cómo pagaste?'), findsOneWidget);
+    final comoPagasteText = tester.widget<Text>(find.text('¿Cómo pagaste?'));
+    expect(comoPagasteText.style?.fontSize, 16);
+    expect(comoPagasteText.style?.fontWeight, FontWeight.bold);
+
+    // Verify Agregar otro producto button
+    final addBtnFinder = find.byKey(const Key('review_expense_add_item_btn'));
+    await tester.ensureVisible(addBtnFinder);
+    await tester.pumpAndSettle();
+
+    expect(addBtnFinder, findsOneWidget);
+    expect(find.widgetWithText(OutlinedButton, 'Agregar otro producto'), findsOneWidget);
+    final addIconFinder = find.descendant(of: addBtnFinder, matching: find.byIcon(Icons.add));
+    expect(addIconFinder, findsOneWidget);
+    final addIcon = tester.widget<Icon>(addIconFinder);
+    expect(addIcon.color, AppColors.primaryDark);
+  });
 }
