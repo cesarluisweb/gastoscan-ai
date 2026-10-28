@@ -121,9 +121,17 @@ Para desarrolladores en solitario que no desean aparecer en cámara ni grabar lo
 * **Rol de las Redes Sociales (TikTok / Instagram):** Crear los perfiles estrictamente para reservar el nombre de usuario (`@rindemasapp`), enlazar la ficha de Google Play en la biografía y alojar los videos demostrativos. Prohibido desgastarse diseñando carruseles estáticos o publicaciones de relleno sin tracción algorítmica.
 * **Objetivo:** 40 a 60 descargas directas impulsadas por la búsqueda del nombre en la tienda.
 
-### Canal 3: Círculo Inmediato y Boca a Boca
-* Compartir el enlace directo en estados de WhatsApp personales y de los primeros 20 testers.
+### Canal 3: Círculo Inmediato, Referidos por WhatsApp y Boca a Boca
+* Compartir el enlace directo en estados de WhatsApp personales y de los primeros evaluadores.
+* Incorporar el botón nativo en la app (`Más > Compartir Rinde Más con un familiar`) para facilitar que los usuarios recomienden la app por WhatsApp a familiares que administran las compras de la casa.
 * **Objetivo:** 20 a 30 usuarios recurrentes.
+
+### Canal 4: Micro-Creadores de Nicho (Comparativas y Compras Familiares)
+* **Público objetivo:** Creadores de 5K a 40K seguidores en TikTok/Instagram en dos categorías:
+  1. Comparativas de compras en supermercados (Forum, Farmatodo, Makro, Central Madeirense).
+  2. Creadoras de organización del hogar, maternidad y recetas/mercado familiar (25 a 54 años).
+* **Pitch directo (cero comercial):** Ofrecer la app como herramienta práctica para sacar la cuenta exacta en bolívares y dólares a tasa BCV en sus videos sin calculadora.
+* **Objetivo:** 30 a 50 descargas directas por mención orgánica en video.
 
 ---
 
@@ -134,8 +142,8 @@ Para desarrolladores en solitario que no desean aparecer en cámara ni grabar lo
 ```
 
 1. **Activación Temprana:** Guiar al usuario a escanear su primera factura en los primeros 60 segundos de uso.
-2. **Subvención Cruzada:** Usuarios gratuitos consumen cuota de 15-20 facturas/mes viendo anuncios en transiciones.
-3. **Conversión a Rinde Más Pro ($1.99/mes o $19.99/año):** Disparador contextual al agotar cuota mensual o al solicitar reporte contable en PDF/Excel.
+2. **Subvención Cruzada y Prevención del Anti-patrón Rial:** El escaneo básico se mantiene generoso y abierto para el uso cotidiano familiar, protegido únicamente por el cerrojo anti-abuso de 50 facturas/día en Cloudflare Gateway (`SEC-13`). Se evita estrictamente imponer cuotas bajas prematuras (10-15 facturas) que espanten a los usuarios. Los anuncios intersticiales discretos en pausas naturales (tras guardar el gasto) subvencionan el costo de API.
+3. **Conversión a Rinde Más Pro ($1.99/mes o $19.99/año):** Propuesta de valor basada en utilidades avanzadas reales (cero publicidad, exportación contable en PDF/Excel desglosado, respaldo de fotos de comprobantes en la nube, categorías ilimitadas y BYOK).
 
 ---
 

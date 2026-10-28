@@ -52,7 +52,10 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
   - *Solución:* Habilitado Edge-to-Edge nativo en `MainActivity.kt` (`WindowCompat.setDecorFitsSystemWindows`) y estilos transparentes en `styles.xml`. Invocado `SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge)` en Flutter. Aplicado contenedor responsivo con ancho máximo centrado (`maxWidth: 600`) en pantallas y modales principales para evitar deformación o desbordes en modo horizontal y tablets. (Verificado en CI build 525, commit `6a9e804`).
 - **Código QR de Descarga en Landing (Desktop):** (Pendiente) Incorporar tarjeta con código QR dinámico en `rindemas.cesarluis.com` para escanear e instalar directamente desde una PC.
 - **Correo de Bienvenida Automatizado:** (Pendiente) Disparar correo de bienvenida y guía de primeros pasos cuando el usuario vincule su cuenta de Google (vía trigger de Cloud Functions o Firestore).
-- **Ejecución del Plan de Crecimiento (Primeros 100 Usuarios):** (Pendiente) Despliegue de tácticas comunitarias y orgánicas en grupos venezolanos según `marketing_plan.md` y `.agents/skills/growth-first-100-users/SKILL.md`.
+- **Ejecución del Plan de Crecimiento (Primeros 100 Usuarios):** (Pendiente) Despliegue de tácticas comunitarias y orgánicas en grupos venezolanos según `DOC_BITACORA_MARKETING.md` y `.agents/skills/growth-first-100-users/SKILL.md`:
+  - *Post de Victoria en Reddit:* Lanzamiento en `r/vzla` y `r/AskVenezuela` agradeciendo el apoyo de los evaluadores y compartiendo el enlace oficial de Google Play.
+  - *Outreach a Micro-Creadores:* Acercamiento directo (cero comercial) a creadores de comparativas de supermercado (Forum, Farmatodo, Makro) y creadoras de gestión del hogar / compras familiares (25-54 años).
+  - *Videos Formato F (Dilema del Bolívar):* Capitalizar búsquedas orgánicas de TikTok (*"cómo ahorrar si uno gana en bolívares"*).
 
 ---
 
@@ -93,6 +96,10 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
     5. Protección de gastos indexados existentes: preservación de bolívares cobrados y montos de referencia.
     6. Bloqueo determinista de guardado si la tasa en bolívares no es válida (`<= 1.0`), eliminando fallbacks silenciosos a 1.0.
     7. Suite de pruebas exhaustiva: 12 casos en `review_expense_screen_layout_test.dart` y suite completa de 403 pruebas en verde. (Verificado en CI build 580, commit `15a0af4`).
+- `UX-06` **Botón y Flujo de Referidos Simple ("Compartir Rinde Más con un familiar por WhatsApp"):** `Pendiente`
+  - *Ubicación:* En `MoreScreen` (pantalla Más).
+  - *Propósito:* Capitalizar la recomendación familiar boca a boca (hijos que le instalan la app a sus madres o se comparte entre quienes administran el hogar).
+  - *Acción:* Botón accesible que abre el diálogo nativo de compartir (`Share.share`) con texto predeterminado sin rodeos y enlace directo a la ficha de Google Play.
 
 ### Bloque B: Finanzas Bimonetarias y Lentes Multimoneda (Finanzas / UX)
 - `FIN-09` **Equivalencias Multimoneda Inmutables (`USD`, `VES`, `USDT`, `EUR`) y Migración SQLite v18:** `Pendiente de validación 🧪`
@@ -294,16 +301,16 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 
 ## Fase 9: Modelo de Monetización y Suscripción Premium (Rinde Más Pro)
 *Diseño de experiencia de pago, embudo de conversión y monetización:*
-- **Cuota Gratuita Base:** 15 a 20 facturas escaneadas por cámara al mes (registro manual y voz siempre ilimitados).
+- **Cuota Gratuita Base y Prevención del Anti-patrón Rial:** Prohibido imponer cuotas mensuales artificialmente bajas (ej. 10 a 15 facturas al mes) en la etapa de lanzamiento. La experiencia local de competidores (caso Rial) demostró que bloquear o limitar tempranamente el escaneo básico genera rechazo y abandono masivo. El escaneo con cámara opera de forma abierta y generosa para el uso cotidiano familiar, protegido exclusivamente por el cerrojo de seguridad anti-abuso de 50 peticiones/día por UID en Cloudflare Gateway (`SEC-13`). El registro manual y por voz se mantienen siempre 100% ilimitados y gratuitos.
 - **Publicidad en Transiciones Naturales:** Anuncios discretos tras guardar gastos para cubrir el costo de tokens de usuarios gratuitos, cumpliendo Better Ads Standards.
 - **Rinde Más Pro ($1,99/mes o $19,99/año):**
-  - Cuotas de IA y OCR ilimitadas.
   - Experiencia Cero Publicidad (Zero Ads).
   - Categorías personalizadas ilimitadas (icono y color propio).
   - Exportación contable avanzada (PDF mensual con balance y diseño limpio; Excel/CSV con desglose completo ítem por ítem).
   - Sincronización y respaldo de fotos de comprobantes en la nube (Cloudflare R2 / Storage / Plan Pro: en la versión gratuita las fotos se mantienen 100% locales en el dispositivo por privacidad y contención de costos).
   - Consultas analíticas profundas al Asistente IA con comparativa de meses previos.
   - Modo Contable y Desglose Tributario Formal: Selector en Más para alternar entre Modo Anaquel (con IVA) y Modo Fiscal (base imponible desglosada), con exportación de libro fiscal de compras en Excel/PDF.
+  - Soporte BYOK (*Bring Your Own Key*): Opción en Más para usuarios técnicos que prefieran conectar su propia clave de Google AI Studio / Gemini sin costo de servidor.
 - **Optimización del Embudo de Conversión (Funnel):** Medición de fugas con Firebase Analytics (Impresión → Descarga → Onboarding → Activación → Retención → Pago) y Paywalls contextuales.
 - **Métrica de Validación Financiera:** Meta de generar los primeros $50 USD en 30-60 días con 500-1.000 usuarios activos.
 - **Alertas Proactivas de Inflación y Desvío:** Notificaciones inteligentes cuando productos frecuentes suban de precio o el ritmo de gasto comprometa el mes.

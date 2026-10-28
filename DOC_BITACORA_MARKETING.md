@@ -140,6 +140,7 @@ Este documento registra la estrategia real ejecutada en comunidades, los textos 
 10. **Suscripción como blindaje para costos de IA:** Aunque los usuarios prefieran pagos únicos de por vida ("no me metas suscripción"), una app con consumo de tokens por escaneo requiere un modelo recurrente para funciones avanzadas Pro, manteniendo el registro manual y por voz siempre gratuito.
 11. **El modelo BYOK (Bring Your Own Key) para IA intensiva:** Para usuarios avanzados o cuando hay saturación de cuota en el backend, permitir ingresar una clave propia de Google AI Studio / Gemini elimina los costos del desarrollador y empodera al usuario técnico.
 12. **Privacidad de identidad (Alias y Google Drive):** Para usuarios celosos de su privacidad, obligar a Google Sign-In genera fricción por el temor a exponer su correo principal. Soportar alias (Addy.io) o respaldo directo en su Google Drive personal (tipo 2FAS/WhatsApp) es el estándar de oro en transparencia.
+13. **El anti-patrón de monetización prematura (Lección Rial):** Intentar recortar o cobrar tempranamente por la función central de escaneo o imponer cuotas artificialmente bajas (ej. 10 a 15 facturas al mes) destruye la adopción inicial y provoca éxodo masivo, tal como le ocurrió a la app Rial. La extracción básica para compras familiares debe mantenerse abierta y generosa, protegida únicamente por el cerrojo anti-abuso de 50 facturas/día (`SEC-13`). La monetización Pro debe basarse en valor añadido avanzado (reportes PDF/Excel, fotos en la nube, categorías ilimitadas, sin publicidad) y no en estrangular el uso cotidiano.
 
 ---
 
@@ -289,6 +290,45 @@ Este marco sintetiza la experiencia y aprendizajes reales del caso de estudio de
   3. Automatización: categorización y equivalencia Bs/$ sin cálculos manuales.
   4. Asistente proactivo: recomendaciones diarias para estirar y cuidar el dinero.
   5. Oferta irresistible: lista de espera Google Play y 100% gratis.
+
+---
+
+## 11. Estrategias Tácticas de Tracción Post-Lanzamiento (Aprobación Google Play)
+
+### A. Outreach a Micro-Creadores de Contenido (Enfoque Práctico, Cero Comercial)
+Prohibido contratar influencers tradicionales o figuras de entretenimiento: costo prohibitivo y cero conversión a descargas de utilidad. La estrategia se basa en micro-creadores (5.000 a 40.000 seguidores) en dos verticales comprobadas por la analítica:
+
+1. **Creadores de Comparativas de Precios y Supermercados:**
+   - Creadores en TikTok / Instagram que visitan Forum, Farmatodo, Makro o Central Madeirense mostrando qué rinde más con \$20 o 500 Bs.
+   - **Plantilla de Mensaje Directo (Voz de César):**
+     > *"Hola [Nombre]. Vi tu video comparando compras en Forum. Desarrollé una app venezolana que le toma foto a la factura y te saca la cuenta exacta en bolívares y dólares a tasa oficial sin calculadora. Si te sirve para tus comparativas, te doy acceso antes del lanzamiento para que la uses en tus videos."*
+2. **Creadoras de Contenido de Hogar y Maternidad (25 a 54 años):**
+   - El 77% de la audiencia medida en TikTok son mujeres adultas que administran el presupuesto familiar.
+   - Mostrar cómo dictar por voz los gastos del mercado o la feria en 3 segundos sin guardar papelitos arrugados.
+
+### B. Post de Victoria en Comunidades Técnicas y Locales (`r/vzla` y `r/AskVenezuela`)
+Apenas Google Play apruebe el pase a producción, publicar un post de cierre y agradecimiento con alta carga de empatía y cero tono publicitario:
+* **Título sugerido:**
+  > *Ya Google Play aprobó Rinde Más (la app para facturas y gastos en Bs/$ a tasa BCV que les compartí hace unas semanas)*
+* **Cuerpo del post:**
+  > *Hace unas semanas publiqué por acá pidiendo testers y feedback para una app que empecé por necesidad personal: escanear facturas arrugadas y llevar las cuentas en bolívares y dólares a tasa oficial.*
+  > 
+  > *Gracias a los evaluadores de la comunidad que la probaron y me reportaron fallos (especialmente con tasas históricas y márgenes de pantalla), Google Play acaba de aprobarla oficialmente en la tienda.*
+  > 
+  > *La app es 100% gratis, guarda los datos en el teléfono sin pedir bancos y ya se puede descargar directo desde la tienda: https://play.google.com/store/apps/details?id=com.cesarluis.rindemas*
+  > 
+  > *Muchísimas gracias a todos los que me dieron una mano para hacerla realidad.*
+
+### C. Estrategia de Referidos por WhatsApp ("Pasa la app por WhatsApp")
+La analítica y el perfil demográfico demuestran que las recomendaciones entre familiares (hijos que le configuran la app a sus madres o se comparte entre quienes pagan los servicios del hogar) es el canal más fuerte de retención.
+* **Mecanismo:** Incorporar un botón en la pantalla *Más* (`UX-06`): *"Compartir Rinde Más con un familiar"* que abra WhatsApp con texto directo predeterminado:
+  > *"Te paso esta app que estoy usando para llevar las cuentas del mercado y los gastos de la casa en bolívares y dólares a tasa BCV: https://play.google.com/store/apps/details?id=com.cesarluis.rindemas"*
+
+### D. Contenido Enfocado en el "Formato F" (Dilema del Bolívar)
+Capitalizar las consultas orgánicas medidas en TikTok Studio (*"cómo se ahorra si uno no compra dólares sino bolívares"*):
+* **Hook (0-2s):** *"¿Cómo haces para ahorrar en Venezuela si lo que te pagan son bolívares y todo sube?"*
+* **Desarrollo:** Mostrar cómo fijar presupuestos mensuales en Rinde Más con equivalencia automática a tasa oficial BCV diaria para conocer en tiempo real el poder de compra restante.
+
 
 
 

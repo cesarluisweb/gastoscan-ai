@@ -455,68 +455,35 @@ class SummaryCard extends StatelessWidget {
                 color: AppColors.border.withValues(alpha: 0.6),
               ),
               const SizedBox(height: 10),
-              Builder(
-                builder: (context) {
-                  final bool isInvading = effectiveSpent > limiteParaGastar;
-                  final bool isEnRiesgo = snapshot?.status == SavingsGoalStatus.enRiesgo;
-
-                  final Color dotColor;
-                  final String statusText;
-                  final Color statusTextColor;
-
-                  if (isInvading || snapshot?.status == SavingsGoalStatus.comprometida) {
-                    dotColor = AppColors.error;
-                    statusText = 'En riesgo';
-                    statusTextColor = AppColors.error;
-                  } else if (isEnRiesgo) {
-                    dotColor = const Color(0xFFD97706);
-                    statusText = 'En riesgo';
-                    statusTextColor = const Color(0xFFD97706);
-                  } else {
-                    dotColor = const Color(0xFFF59E0B);
-                    statusText = 'Protegida';
-                    statusTextColor = const Color(0xFF16A34A);
-                  }
-
-                  return FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.savings_outlined,
-                          size: 16,
-                          color: dotColor,
-                        ),
-                        const SizedBox(width: 6),
-                        const Text(
-                          'Meta de ahorro: ',
-                          style: TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        Text(
-                          metaFormatted,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Text(
-                          ' · $statusText',
-                          style: TextStyle(
-                            color: statusTextColor,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.savings_outlined,
+                      size: 16,
+                      color: Color(0xFFD97706),
                     ),
-                  );
-                },
+                    const SizedBox(width: 6),
+                    const Text(
+                      'Meta de ahorro: ',
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Text(
+                      metaFormatted,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ],

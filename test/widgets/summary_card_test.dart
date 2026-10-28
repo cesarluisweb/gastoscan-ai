@@ -152,9 +152,9 @@ void main() {
       // Debe mostrar el límite de gasto en la fila de contexto (600 - 100 = 500)
       expect(find.textContaining('Límite:'), findsOneWidget);
       expect(find.textContaining('\$ 500,00'), findsWidgets);
-      // Fila inferior con la meta
+      // Fila inferior con la meta limpia (sin texto redundante 'Protegida')
       expect(find.textContaining('Meta de ahorro:'), findsOneWidget);
-      expect(find.textContaining('Protegida'), findsOneWidget);
+      expect(find.textContaining('Protegida'), findsNothing);
 
       // Barra de progreso en estado normal: color neutro pizarra sobre fondo gris claro
       final progressFinder = find.byKey(const Key('summary_card_progress_indicator'));

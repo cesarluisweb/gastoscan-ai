@@ -243,8 +243,8 @@ class _ExpenseCardState extends State<ExpenseCard> {
                           child: Text(
                             secondaryFormatted,
                             style: const TextStyle(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w600,
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w500,
                               fontSize: 13,
                             ),
                             maxLines: 1,
