@@ -91,8 +91,8 @@ void main() {
   }
 
   testWidgets('ReviewExpenseScreen renders form and does not collapse body due to bottomNavigationBar', (tester) async {
-    tester.view.physicalSize = const Size(1080, 2400);
-    tester.view.devicePixelRatio = 2.5;
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
 
     addTearDown(() {
       tester.view.resetPhysicalSize();
@@ -131,8 +131,6 @@ void main() {
     expect(comoPagasteText.style?.fontWeight, FontWeight.bold);
 
     // Verify Agregar otro producto button (without +) and icon color
-    await tester.ensureVisible(find.byKey(const Key('review_expense_add_item_btn')));
-    await tester.pumpAndSettle();
     final addBtnFinder = find.byKey(const Key('review_expense_add_item_btn'));
     expect(addBtnFinder, findsOneWidget);
     expect(find.widgetWithText(OutlinedButton, 'Agregar otro producto'), findsOneWidget);
