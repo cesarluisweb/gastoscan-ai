@@ -126,10 +126,10 @@ class _CategoryChartState extends State<CategoryChart> {
           PieChartSectionData(
             color: color,
             value: entry.value,
-            title: porcentaje >= 8 ? '${porcentaje.toStringAsFixed(0)}%' : '',
-            radius: 40,
+            title: porcentaje >= 12 ? '${porcentaje.toStringAsFixed(0)}%' : '',
+            radius: 20,
             titleStyle: TextStyle(
-              fontSize: 12,
+              fontSize: 9,
               fontWeight: FontWeight.bold,
               color: color.computeLuminance() > 0.45 ? Colors.black : Colors.white,
             ),
@@ -197,8 +197,8 @@ class _CategoryChartState extends State<CategoryChart> {
         children: [
           // Dona con Total al Centro
           SizedBox(
-            width: 112,
-            height: 112,
+            width: 104,
+            height: 104,
             child: Stack(
               alignment: Alignment.center,
               children: [
