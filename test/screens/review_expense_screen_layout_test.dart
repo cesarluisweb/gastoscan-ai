@@ -128,8 +128,8 @@ void main() {
   });
 
   testWidgets('ReviewExpenseScreen en USD y EUR selecciona En divisa por defecto y en primera posicion', (tester) async {
-    tester.view.physicalSize = const Size(1080, 2400);
-    tester.view.devicePixelRatio = 2.5;
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
 
     addTearDown(() {
       tester.view.resetPhysicalSize();
@@ -160,8 +160,8 @@ void main() {
   });
 
   testWidgets('ReviewExpenseScreen uses historical BCV rate (< 50.0) for 2023 dates and calculates VES properly', (tester) async {
-    tester.view.physicalSize = const Size(1080, 2400);
-    tester.view.devicePixelRatio = 2.5;
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
 
     addTearDown(() {
       tester.view.resetPhysicalSize();
@@ -220,8 +220,8 @@ void main() {
   });
 
   testWidgets('ReviewExpenseScreen en VES aplica divulgacion progresiva: muestra 3 columnas y despliega chips al tocar Ajustar tasas', (tester) async {
-    tester.view.physicalSize = const Size(1080, 2400);
-    tester.view.devicePixelRatio = 2.5;
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
 
     addTearDown(() {
       tester.view.resetPhysicalSize();
@@ -306,8 +306,8 @@ void main() {
   });
 
   testWidgets('ReviewExpenseScreen en USDT muestra cintillo informativo multimoneda limpio', (tester) async {
-    tester.view.physicalSize = const Size(1080, 2400);
-    tester.view.devicePixelRatio = 2.5;
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
 
     addTearDown(() {
       tester.view.resetPhysicalSize();
@@ -341,8 +341,8 @@ void main() {
   });
 
   testWidgets('ReviewExpenseScreen selecciona monedaPrincipal de Settings para nuevo gasto manual', (tester) async {
-    tester.view.physicalSize = const Size(1080, 2400);
-    tester.view.devicePixelRatio = 2.5;
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
 
     addTearDown(() {
       tester.view.resetPhysicalSize();
@@ -359,8 +359,8 @@ void main() {
   });
 
   testWidgets('ReviewExpenseScreen preserva moneda de GeminiExtractionResult sobre monedaPrincipal', (tester) async {
-    tester.view.physicalSize = const Size(1080, 2400);
-    tester.view.devicePixelRatio = 2.5;
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
 
     addTearDown(() {
       tester.view.resetPhysicalSize();
@@ -396,8 +396,8 @@ void main() {
   });
 
   testWidgets('ReviewExpenseScreen re-tap en moneda activa es un no-op idempotente', (tester) async {
-    tester.view.physicalSize = const Size(1080, 2400);
-    tester.view.devicePixelRatio = 2.5;
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
 
     addTearDown(() {
       tester.view.resetPhysicalSize();
@@ -408,6 +408,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // 1. En USD, seleccionar "En Bs. a tasa BCV"
+    await tester.ensureVisible(find.byKey(const Key('btn_pagado_en_bs')));
     await tester.tap(find.byKey(const Key('btn_pagado_en_bs')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('input_total_bs_manual')), findsOneWidget);
@@ -427,8 +428,8 @@ void main() {
   });
 
   testWidgets('ReviewExpenseScreen alternar entre USD y EUR conserva el metodo de liquidacion seleccionado', (tester) async {
-    tester.view.physicalSize = const Size(1080, 2400);
-    tester.view.devicePixelRatio = 2.5;
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
 
     addTearDown(() {
       tester.view.resetPhysicalSize();
@@ -439,6 +440,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // 1. En USD, seleccionar "En Bs. a tasa BCV"
+    await tester.ensureVisible(find.byKey(const Key('btn_pagado_en_bs')));
     await tester.tap(find.byKey(const Key('btn_pagado_en_bs')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('input_total_bs_manual')), findsOneWidget);
@@ -453,8 +455,8 @@ void main() {
   });
 
   testWidgets('ReviewExpenseScreen conserva el valor nominal introducido al cambiar de moneda', (tester) async {
-    tester.view.physicalSize = const Size(1080, 2400);
-    tester.view.devicePixelRatio = 2.5;
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
 
     addTearDown(() {
       tester.view.resetPhysicalSize();
@@ -482,8 +484,8 @@ void main() {
   });
 
   testWidgets('ReviewExpenseScreen formulario vacio no escribe 0.00 en controladores derivados', (tester) async {
-    tester.view.physicalSize = const Size(1080, 2400);
-    tester.view.devicePixelRatio = 2.5;
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
 
     addTearDown(() {
       tester.view.resetPhysicalSize();
@@ -501,8 +503,8 @@ void main() {
   });
 
   testWidgets('ReviewExpenseScreen gasto indexado existente preserva bolivares reales cobrados', (tester) async {
-    tester.view.physicalSize = const Size(1080, 2400);
-    tester.view.devicePixelRatio = 2.5;
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
 
     addTearDown(() {
       tester.view.resetPhysicalSize();
@@ -560,8 +562,8 @@ void main() {
   });
 
   testWidgets('ReviewExpenseScreen bloquea guardado si tasa en bolivares no es valida', (tester) async {
-    tester.view.physicalSize = const Size(1080, 2400);
-    tester.view.devicePixelRatio = 2.5;
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
 
     addTearDown(() {
       tester.view.resetPhysicalSize();
@@ -603,8 +605,8 @@ void main() {
   });
 
   testWidgets('ReviewExpenseScreen en USD pagado en Bs permite ajuste bidireccional entre tasa cobrada y monto en Bs', (tester) async {
-    tester.view.physicalSize = const Size(1080, 2400);
-    tester.view.devicePixelRatio = 2.5;
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
 
     addTearDown(() {
       tester.view.resetPhysicalSize();
@@ -676,8 +678,8 @@ void main() {
   });
 
   testWidgets('ReviewExpenseScreen campo de monto no muestra iconos redundantes ni bitcoin', (tester) async {
-    tester.view.physicalSize = const Size(1080, 2400);
-    tester.view.devicePixelRatio = 2.5;
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
 
     addTearDown(() {
       tester.view.resetPhysicalSize();
@@ -700,8 +702,8 @@ void main() {
     expect(textField.decoration?.prefixText, 'USDT ');
   });
   testWidgets('ReviewExpenseScreen boton agregar producto muestra icono amarillo y sin signo plus en texto', (tester) async {
-    tester.view.physicalSize = const Size(1080, 2400);
-    tester.view.devicePixelRatio = 2.5;
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
 
     addTearDown(() {
       tester.view.resetPhysicalSize();
