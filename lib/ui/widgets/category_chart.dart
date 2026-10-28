@@ -197,15 +197,15 @@ class _CategoryChartState extends State<CategoryChart> {
         children: [
           // Dona con Total al Centro
           SizedBox(
-            width: 125,
-            height: 125,
+            width: 112,
+            height: 112,
             child: Stack(
               alignment: Alignment.center,
               children: [
                 PieChart(
                   PieChartData(
                     sections: sections,
-                    centerSpaceRadius: 36,
+                    centerSpaceRadius: 32,
                     sectionsSpace: 2,
                   ),
                 ),
@@ -235,8 +235,8 @@ class _CategoryChartState extends State<CategoryChart> {
               ],
             ),
           ),
-          const SizedBox(width: 10),
-          // Lista de Categorías con icono circular, % y monto alineados
+          const SizedBox(width: 16),
+          // Lista de Categorías con icono circular, columna de % y monto alineados
           Expanded(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -271,17 +271,22 @@ class _CategoryChartState extends State<CategoryChart> {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      Text(
-                        '$pct%',
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
+                      const SizedBox(width: 6),
+                      SizedBox(
+                        width: 28,
+                        child: Text(
+                          '$pct%',
+                          textAlign: TextAlign.left,
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 6),
-                      ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 58),
+                      SizedBox(
+                        width: 58,
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
                           alignment: Alignment.centerRight,

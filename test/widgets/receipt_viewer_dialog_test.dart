@@ -6,7 +6,7 @@ import 'package:gastoscan_ai/ui/widgets/receipt_viewer_dialog.dart';
 
 void main() {
   group('ReceiptViewerDialog Tests', () {
-    testWidgets('renders title and non-existing image fallback gracefully', (tester) async {
+    testWidgets('renders title, share action and non-existing image fallback gracefully', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: ReceiptViewerDialog(
@@ -22,9 +22,13 @@ void main() {
       expect(find.text('Farmatodo'), findsOneWidget);
       expect(find.text('07/10/2026 • \$ 15.00'), findsOneWidget);
       expect(find.text('No se encontró el archivo de imagen.'), findsOneWidget);
+      expect(find.byIcon(Icons.download_outlined), findsNothing);
     });
 
-    testWidgets('shows edit button and triggers onEdit callback', (tester) async {
+    testWidgets('shows bottom bar with edit button and only share icon on top bar', (tester) async {
+      final tempDir = Directory.systemTemp.createTempSync('viewer_test_top_');
+      final tempFile = File('${tempDir.path}/test_rec_top.jpg')..writeAsBytesSync([1, 2, 3]);
+
       bool editCalled = false;
       final dummyGasto = GastoModel(
         id: 1,
@@ -43,7 +47,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: ReceiptViewerDialog(
-            imagePath: '/non/existent/path/receipt.jpg',
+            imagePath: tempFile.path,
             title: 'Automercado Plaza',
             amount: '\$ 25.00',
             gasto: dummyGasto,
@@ -55,11 +59,22 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      // Top bar only has share icon (no download, no redundant edit/delete on top)
+      expect(find.byIcon(Icons.share_outlined), findsOneWidget);
+      expect(find.byIcon(Icons.download_outlined), findsNothing);
+
+      // Bottom bar has "Ver o editar gasto" and delete
       expect(find.text('Ver o editar gasto'), findsOneWidget);
+      expect(find.byKey(const Key('btn_eliminar_foto_viewer_bottom')), findsOneWidget);
+
       await tester.tap(find.text('Ver o editar gasto'));
       await tester.pumpAndSettle();
 
       expect(editCalled, isTrue);
+
+      try {
+        tempDir.deleteSync(recursive: true);
+      } catch (_) {}
     });
 
     testWidgets('delete button displays confirmation dialog explaining expense is kept', (tester) async {

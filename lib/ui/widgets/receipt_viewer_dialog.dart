@@ -5,7 +5,6 @@ import 'package:share_plus/share_plus.dart';
 import '../../core/constants/app_colors.dart';
 import '../../data/models/gasto_model.dart';
 import '../../providers/gasto_provider.dart';
-import '../../services/image_service.dart';
 import '../screens/review_expense_screen.dart';
 
 class ReceiptViewerDialog extends StatelessWidget {
@@ -140,6 +139,8 @@ class ReceiptViewerDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final file = File(imagePath);
     final fileExists = file.existsSync();
+    final hasEditAction = gasto != null || onEdit != null;
+    final hasDeleteAction = fileExists && (gasto != null || onDelete != null);
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -173,39 +174,7 @@ class ReceiptViewerDialog extends StatelessWidget {
           ],
         ),
         actions: [
-          if (gasto != null || onEdit != null)
-            IconButton(
-              icon: const Icon(Icons.edit_outlined, color: Colors.white),
-              tooltip: 'Ver o editar gasto',
-              onPressed: () => _abrirEdicionGasto(context),
-            ),
-          if (fileExists && (gasto != null || onDelete != null))
-            IconButton(
-              icon: const Icon(Icons.delete_outline, color: Colors.white),
-              tooltip: 'Eliminar foto',
-              onPressed: () => _confirmarYEliminarFoto(context),
-            ),
-          if (fileExists) ...[
-            IconButton(
-              icon: const Icon(Icons.download_outlined, color: Colors.white),
-              tooltip: 'Guardar en galería',
-              onPressed: () async {
-                final success = await ImageService.saveToGallery(imagePath);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        success
-                            ? 'Comprobante guardado en el álbum "Rinde Más" de tu galería.'
-                            : 'No se pudo guardar en la galería.',
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                      backgroundColor: success ? Colors.green.shade800 : AppColors.error,
-                    ),
-                  );
-                }
-              },
-            ),
+          if (fileExists)
             IconButton(
               icon: const Icon(Icons.share_outlined, color: Colors.white),
               tooltip: 'Compartir comprobante',
@@ -224,37 +193,37 @@ class ReceiptViewerDialog extends StatelessWidget {
                 }
               },
             ),
-          ],
         ],
       ),
-      bottomNavigationBar: (gasto != null || onEdit != null)
+      bottomNavigationBar: (hasEditAction || hasDeleteAction)
           ? Container(
               color: Colors.black.withOpacity(0.85),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               child: SafeArea(
                 child: Row(
                   children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        key: const Key('btn_ver_editar_gasto_viewer'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          side: const BorderSide(color: Colors.white38),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                    if (hasEditAction)
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          key: const Key('btn_ver_editar_gasto_viewer'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            side: const BorderSide(color: Colors.white38),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
+                          icon: const Icon(Icons.edit_outlined, size: 18),
+                          label: const Text(
+                            'Ver o editar gasto',
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                          ),
+                          onPressed: () => _abrirEdicionGasto(context),
                         ),
-                        icon: const Icon(Icons.edit_outlined, size: 18),
-                        label: const Text(
-                          'Ver o editar gasto',
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                        ),
-                        onPressed: () => _abrirEdicionGasto(context),
                       ),
-                    ),
-                    if (fileExists && (gasto != null || onDelete != null)) ...[
-                      const SizedBox(width: 12),
+                    if (hasDeleteAction) ...[
+                      if (hasEditAction) const SizedBox(width: 12),
                       IconButton.filledTonal(
                         key: const Key('btn_eliminar_foto_viewer_bottom'),
                         style: IconButton.styleFrom(

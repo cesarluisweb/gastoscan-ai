@@ -463,7 +463,7 @@ class SummaryCard extends StatelessWidget {
                     const Icon(
                       Icons.savings_outlined,
                       size: 16,
-                      color: Color(0xFFD97706),
+                      color: AppColors.primaryDark,
                     ),
                     const SizedBox(width: 6),
                     const Text(
