@@ -14,7 +14,10 @@ import 'package:gastoscan_ai/ui/widgets/voice_expense_sheet.dart';
 
 class FakeGeminiVoiceService extends GeminiService {
   @override
-  Future<List<GeminiExtractionResult>> parseVoiceExpense(String spokenText) async {
+  Future<List<GeminiExtractionResult>> parseVoiceExpense(
+    String spokenText, {
+    String monedaPrincipal = 'USD',
+  }) async {
     return [
       GeminiExtractionResult(
         comercio: 'Automercado',

@@ -502,14 +502,16 @@ void main() {
 
     final gastoIndexado = GastoModel(
       id: 99,
+      uuid: 'test-uuid-indexed-99',
       comercio: 'Supermercado Central',
       categoria: 'Alimentación',
-      montoOriginal: 50000, // 500.00 Bs
+      totalOriginal: 50000, // 500.00 Bs
       totalUsd: 1000,      // 10.00 USD
       tasaCambio: 50.0,
       fuenteTasaCambio: 'BCV (Pago en Bs. indexado a USD)',
       moneda: 'VES',
       fecha: '2024-05-10',
+      creadoEn: '2024-05-10T10:00:00Z',
       items: const [],
     );
 
