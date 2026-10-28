@@ -137,6 +137,7 @@ void main() {
     late NotificationService service;
 
     setUp(() {
+      SharedPreferences.setMockInitialValues({});
       service = NotificationService.test();
       NotificationService.instance = service;
     });
@@ -247,6 +248,9 @@ void main() {
   });
 
   group('NotificationService — Biweekly Weekend Reminders Tests', () {
+    setUp(() {
+      SharedPreferences.setMockInitialValues({});
+    });
     test('Channel constants are correctly defined for Weekend Reminders', () {
       expect(NotificationService.weekendNotificationId, equals(1003));
       expect(NotificationService.weekendChannelId, equals('weekend_reminders'));

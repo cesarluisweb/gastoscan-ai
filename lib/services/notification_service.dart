@@ -83,13 +83,21 @@ class NotificationService {
 
   NotificationService._internal({FlutterLocalNotificationsPlugin? plugin, FirebaseMessaging? messaging})
       : _notificationsPlugin = plugin ?? FlutterLocalNotificationsPlugin(),
-        _firebaseMessaging = messaging;
+        _firebaseMessaging = messaging {
+    try {
+      tz.initializeTimeZones();
+    } catch (_) {}
+  }
 
   /// Constructor visible para pruebas unitarias.
   @visibleForTesting
   NotificationService.test({FlutterLocalNotificationsPlugin? plugin, FirebaseMessaging? messaging})
       : _notificationsPlugin = plugin ?? FlutterLocalNotificationsPlugin(),
-        _firebaseMessaging = messaging;
+        _firebaseMessaging = messaging {
+    try {
+      tz.initializeTimeZones();
+    } catch (_) {}
+  }
 
   /// Constructor fábrica que retorna la instancia compartida o una con plugin personalizado.
   factory NotificationService({FlutterLocalNotificationsPlugin? plugin, FirebaseMessaging? messaging}) {
@@ -457,7 +465,8 @@ class NotificationService {
     String? customTitle,
     String? customBody,
   }) async {
-    await cancelBiweeklyWeekendReminder();
+    try {
+      await cancelBiweeklyWeekendReminder();
 
     final habilitado = await _esRecordatorioFinDeSemanaHabilitado();
     if (!habilitado) return;
@@ -510,7 +519,6 @@ class NotificationService {
     }
 
     // 3. Programar la notificación local
-    try {
       final scheduledTzDate = tz.TZDateTime.from(scheduledDate, tz.local);
 
       const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
