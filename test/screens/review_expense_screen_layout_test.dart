@@ -685,7 +685,7 @@ void main() {
     expect(bsField.controller?.text, '8818.80');
   });
 
-  testWidgets('ReviewExpenseScreen muestra icono de billetera para USDT y no bitcoin', (tester) async {
+  testWidgets('ReviewExpenseScreen campo de monto no muestra iconos redundantes ni bitcoin', (tester) async {
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 2.5;
 
@@ -701,8 +701,10 @@ void main() {
     await tester.tap(find.byKey(const Key('expense_currency_usdt_btn')));
     await tester.pumpAndSettle();
 
-    // Verificar que no existe icono de bitcoin y existe account_balance_wallet_outlined
+    // Verificar que no existe icono de bitcoin ni prefixIcon redundante
     expect(find.byIcon(Icons.currency_bitcoin), findsNothing);
-    expect(find.byIcon(Icons.account_balance_wallet_outlined), findsWidgets);
+    final inputTotalField = tester.widget<TextFormField>(find.byKey(const Key('input_monto_total')));
+    expect(inputTotalField.decoration?.prefixIcon, isNull);
+    expect(inputTotalField.decoration?.prefixText, 'USDT ');
   });
 }

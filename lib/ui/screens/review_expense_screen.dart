@@ -521,20 +521,6 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     }
   }
 
-  IconData _getMonedaIcon(String moneda) {
-    switch (moneda) {
-      case 'EUR':
-        return Icons.euro;
-      case 'USDT':
-        return Icons.account_balance_wallet_outlined;
-      case 'VES':
-        return Icons.payments_outlined;
-      case 'USD':
-      default:
-        return Icons.attach_money;
-    }
-  }
-
   double _effectiveBcvRate(SettingsProvider settings) {
     if (_selectedMoneda == 'EUR') {
       final parsedEur = tryParseAmount(_tasaEurCtrl.text, isPrice: false);
