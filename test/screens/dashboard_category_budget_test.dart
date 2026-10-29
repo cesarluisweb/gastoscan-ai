@@ -378,5 +378,23 @@ void main() {
 
       expect(find.byKey(const Key('input_presupuesto_general')), findsOneWidget);
     });
+
+    testWidgets('Tapping category item or assign prompt opens budget sheet directly on selected category', (tester) async {
+      gastoProvider.setPresupuestoGeneralVal(500.0);
+      gastoProvider.setTotalesPorCategoria({'Educación': 50.0});
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      final assignPromptFinder = find.byKey(const Key('assign_budget_prompt_Educación'));
+      expect(assignPromptFinder, findsOneWidget);
+
+      await tester.tap(assignPromptFinder);
+      await tester.pumpAndSettle();
+
+      // BudgetBottomSheet should be displayed and input for Educación exists
+      expect(find.byKey(const Key('input_presupuesto_categoria_Educación')), findsOneWidget);
+      final inputWidget = tester.widget<TextField>(find.byKey(const Key('input_presupuesto_categoria_Educación')));
+      expect(inputWidget.focusNode?.hasFocus, isTrue);
+    });
   });
 }

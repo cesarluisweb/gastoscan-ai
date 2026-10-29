@@ -75,9 +75,13 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 - `UI-03` **Semántica de Color Unificada en Progreso de Presupuesto:** `Completada ✅`
   - *Problema:* El mismo porcentaje (ej. 29%) se muestra verde en Inicio pero amarillo en Análisis.
   - *Solución:* Unificar la escala semafórica en toda la app: Verde (`AppColors.success` / `#10B981` para $<85\%$), Amarillo/Ámbar (`AppColors.warning` / `#F59E0B` para $\ge 85\%$) y Rojo (`AppColors.error` / `#EF4444` para $\ge 100\%$ o sobregiro), con paridad exacta en Inicio, Análisis y Web.
-- `UI-04` **Rediseño de Enlaces en Presupuesto por Categoría:**
-  - *Problema:* El texto `+ Asignar presupuesto mensual` con subrayado web clásico desentona con el diseño móvil.
-  - *Solución:* Transformar la acción en botón tipo *pill* sutil o hacer la tarjeta completa pulsable con indicador de acento.
+- `UI-04` **Rediseño de Ícono, Enlaces y Enfoque Directo en Presupuesto por Categoría:** `Pendiente de validación 🧪`
+  - *Problema:* Cuando una categoría tenía presupuesto, el ícono de editar en la fila superior comprimía el ancho disponible y partía los nombres de categorías largas en dos líneas (ej. «Alimentaci» / «ón»). Además, el enlace «+ Asignar presupuesto mensual» usaba un subrayado web clásico poco estético, y al hacer clic en cualquier categoría para asignar/editar presupuesto se abría la hoja modal en la cabecera general obligando a buscar y desplazarse manualmente hasta la categoría.
+  - *Solución:*
+    1. **Fila Superior Limpia:** Eliminado el ícono de editar de la fila superior, garantizando `maxLines: 1` y `overflow: TextOverflow.ellipsis` para el nombre de categoría y un `FittedBox` generoso para los montos gastado/presupuesto sin quiebres de texto.
+    2. **Acción de Edición Integrada:** Reubicado el botón sutil «Editar» (`Key('edit_budget_$cat')`) en la fila inferior junto a la barra de progreso y el porcentaje consumido (o alerta de exceso).
+    3. **Chip Sutil de Asignación:** Reemplazado el enlace subrayado por un chip/pill moderno y sobrio con ícono `+` y texto «Asignar presupuesto» (`Key('assign_budget_prompt_$cat')`), sin subrayado y con paleta neutral.
+    4. **Navegación y Enfoque Directo (`initialCategory`):** Toda la tarjeta es táctil. Al pulsar cualquier categoría (o sus botones de editar/asignar), `BudgetBottomSheet.show(context, initialCategory: cat)` se desplaza automáticamente (`Scrollable.ensureVisible`) hacia la categoría seleccionada, resalta su borde con acento activo y enfoca de inmediato su campo numérico con el texto preseleccionado para edición instantánea. Pruebas de widgets añadidas en `category_chart_test.dart` y `dashboard_category_budget_test.dart`.
 - `UI-05` **Ícono Superior de Asistente IA en Inicio:** `Completada ✅`
   - *Problema:* La burbuja con interrogación `[?]` en el AppBar de Inicio se confunde universalmente con "Soporte / Ayuda".
   - *Solución:* Reemplazar por ícono de destellos (`✨` / `Icons.auto_awesome`), coherente con las tarjetas del Asistente IA.

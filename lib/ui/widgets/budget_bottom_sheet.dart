@@ -10,14 +10,16 @@ import '../../providers/settings_provider.dart';
 import 'category_chart.dart';
 
 class BudgetBottomSheet extends StatefulWidget {
-  const BudgetBottomSheet({Key? key}) : super(key: key);
+  final String? initialCategory;
 
-  static Future<void> show(BuildContext context) {
+  const BudgetBottomSheet({Key? key, this.initialCategory}) : super(key: key);
+
+  static Future<void> show(BuildContext context, {String? initialCategory}) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => const BudgetBottomSheet(),
+      builder: (ctx) => BudgetBottomSheet(initialCategory: initialCategory),
     );
   }
 
@@ -26,9 +28,12 @@ class BudgetBottomSheet extends StatefulWidget {
 }
 
 class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
+  late final ScrollController _scrollController;
   late TextEditingController _generalBudgetCtrl;
   late TextEditingController _savingsGoalCtrl;
   final Map<String, TextEditingController> _categoryControllers = {};
+  final Map<String, FocusNode> _categoryFocusNodes = {};
+  final Map<String, GlobalKey> _categoryKeys = {};
   String _selectedMoneda = 'USD';
 
   double? _baseGeneralAmount;
@@ -42,6 +47,7 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
     final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
     _selectedMoneda = gastoProvider.monedaPresupuesto;
     _baseGeneralMoneda = _selectedMoneda;
@@ -70,6 +76,8 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
     _savingsGoalCtrl.addListener(_onSavingsChanged);
 
     for (final cat in AppConstants.categorias) {
+      _categoryFocusNodes[cat] = FocusNode();
+      _categoryKeys[cat] = GlobalKey();
       final currentBudget = gastoProvider.getPresupuestoCategoria(cat);
       _baseCategoryAmounts[cat] = currentBudget > 0 ? currentBudget : null;
       _baseCategoryMonedas[cat] = _selectedMoneda;
@@ -83,6 +91,44 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
       ctrl.addListener(() => _onCategoryChanged(cat));
       _categoryControllers[cat] = ctrl;
     }
+
+    if (widget.initialCategory != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final targetCat = _canonicalCategory(widget.initialCategory);
+        if (targetCat != null) {
+          final key = _categoryKeys[targetCat];
+          if (key?.currentContext != null) {
+            Scrollable.ensureVisible(
+              key!.currentContext!,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              alignment: 0.2,
+            );
+          }
+          final focusNode = _categoryFocusNodes[targetCat];
+          if (focusNode != null) {
+            focusNode.requestFocus();
+            final ctrl = _categoryControllers[targetCat];
+            if (ctrl != null && ctrl.text.isNotEmpty) {
+              ctrl.selection = TextSelection(
+                baseOffset: 0,
+                extentOffset: ctrl.text.length,
+              );
+            }
+          }
+        }
+      });
+    }
+  }
+
+  String? _canonicalCategory(String? cat) {
+    if (cat == null) return null;
+    final trimmed = cat.trim().toLowerCase();
+    for (final c in AppConstants.categorias) {
+      if (c.trim().toLowerCase() == trimmed) return c;
+    }
+    return null;
   }
 
   void _onGeneralChanged() {
@@ -224,6 +270,10 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
     for (final ctrl in _categoryControllers.values) {
       ctrl.dispose();
     }
+    for (final fn in _categoryFocusNodes.values) {
+      fn.dispose();
+    }
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -525,6 +575,7 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
             Flexible(
               fit: FlexFit.loose,
               child: ListView(
+                controller: _scrollController,
                 shrinkWrap: true,
                 children: [
                   // Sección 1: Presupuesto General y Meta de Ahorro
@@ -729,14 +780,20 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                   ...AppConstants.categorias.map((cat) {
                     final color = AppColors.categoryColors[cat] ?? AppColors.primary;
                     final ctrl = _categoryControllers[cat]!;
+                    final targetCat = _canonicalCategory(widget.initialCategory);
+                    final isInitialSelected = targetCat == cat;
 
                     return Container(
+                      key: _categoryKeys[cat],
                       margin: const EdgeInsets.only(bottom: 8),
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
                         color: AppColors.surface,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.border),
+                        border: Border.all(
+                          color: isInitialSelected ? AppColors.primaryDark : AppColors.border,
+                          width: isInitialSelected ? 1.5 : 1.0,
+                        ),
                       ),
                       child: Row(
                         children: [
@@ -769,6 +826,7 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                             child: TextField(
                               key: Key('input_presupuesto_categoria_$cat'),
                               controller: ctrl,
+                              focusNode: _categoryFocusNodes[cat],
                               keyboardType: const TextInputType.numberWithOptions(decimal: true),
                               decoration: InputDecoration(
                                 prefixText: prefix,

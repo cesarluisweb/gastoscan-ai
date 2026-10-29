@@ -69,6 +69,49 @@ void main() {
         findsOneWidget,
       );
     });
+
+    testWidgets('sin presupuesto muestra botón sutil Asignar presupuesto sin subrayado', (tester) async {
+      await pumpChart(
+        tester,
+        const CategoryChart(
+          categoryTotals: {'Educación': 1500.0},
+          monedaPrincipal: 'VES',
+        ),
+      );
+
+      final promptFinder = find.byKey(const Key('assign_budget_prompt_Educación'));
+      expect(promptFinder, findsOneWidget);
+      expect(find.text('Asignar presupuesto'), findsOneWidget);
+
+      final textWidget = tester.widget<Text>(find.descendant(
+        of: promptFinder,
+        matching: find.text('Asignar presupuesto'),
+      ));
+      expect(textWidget.style?.decoration, isNot(TextDecoration.underline));
+    });
+
+    testWidgets('con presupuesto el nombre de la categoría tiene maxLines 1 y botón editar existe', (tester) async {
+      await pumpChart(
+        tester,
+        const CategoryChart(
+          categoryTotals: {'Alimentación': 136388.0},
+          categoryBudgets: {'Alimentación': 177778.18},
+          presupuestoGeneral: 500000.0,
+          totalGastadoMes: 136388.0,
+          monedaPrincipal: 'VES',
+        ),
+      );
+
+      final nameFinder = find.text('Alimentación');
+      expect(nameFinder, findsOneWidget);
+      final textWidget = tester.widget<Text>(nameFinder);
+      expect(textWidget.maxLines, 1);
+      expect(textWidget.overflow, TextOverflow.ellipsis);
+
+      expect(find.byKey(const Key('edit_budget_Alimentación')), findsOneWidget);
+      expect(find.text('Editar'), findsOneWidget);
+      expect(find.textContaining('consumido'), findsOneWidget);
+    });
   });
 
   group('CategoryChart UX-06 Grouping Tests', () {
