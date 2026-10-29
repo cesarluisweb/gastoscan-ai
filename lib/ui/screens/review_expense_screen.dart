@@ -898,6 +898,30 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     }
 
     double totalOrig = tryParseAmount(_totalOriginalCtrl.text, isPrice: false) ?? 0.0;
+
+    // Si solo hay 1 artículo y el usuario colocó el monto total pero dejó el artículo en 0,
+    // o al revés (colocó el precio del artículo y dejó el monto total en 0):
+    if (_items.length == 1) {
+      final singleItemTotal = _items[0].totalDisplay;
+      if (totalOrig > 0 && singleItemTotal <= 0) {
+        _items[0] = _items[0].copyWith(
+          precioUnitario: (totalOrig * 100).round(),
+          total: (totalOrig * 100).round(),
+        );
+      } else if (totalOrig <= 0 && singleItemTotal > 0) {
+        totalOrig = singleItemTotal;
+        _totalOriginalCtrl.text = _formatDouble(totalOrig);
+        _totalUsdCtrl.text = _totalOriginalCtrl.text;
+      }
+    } else if (totalOrig <= 0 && _items.isNotEmpty) {
+      final sumItems = _items.fold(0.0, (acc, it) => acc + it.totalDisplay);
+      if (sumItems > 0) {
+        totalOrig = sumItems;
+        _totalOriginalCtrl.text = _formatDouble(totalOrig);
+        _totalUsdCtrl.text = _totalOriginalCtrl.text;
+      }
+    }
+
     final totalUsd = tryParseAmount(_totalUsdCtrl.text, isPrice: false) ?? 0.0;
     final tasa = tryParseAmount(_tasaCambioCtrl.text, isPrice: false) ?? 1.0;
 
@@ -912,7 +936,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       return;
     }
 
-    // Alerta de discrepancia entre Monto Total y Suma de Ítems (Punto 5)
+    // Alerta de discrepancia entre Monto Total y Suma de Ítems
     final bool sameCurrency = (_monedaItems == _selectedMoneda);
     final double sumItems = _items.fold(0.0, (acc, it) => acc + it.totalDisplay);
     if (sameCurrency && _items.isNotEmpty && sumItems > 0 && (sumItems - totalOrig).abs() > 0.05) {
@@ -927,30 +951,33 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
             style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary, fontSize: 16),
           ),
           content: Text(
-            'La suma de los productos (${sumItems.toStringAsFixed(2)} $_selectedMoneda) no coincide con el Monto Total (${totalOrig.toStringAsFixed(2)} $_selectedMoneda).\n\nDiferencia: ${(sumItems - totalOrig).abs().toStringAsFixed(2)} $_selectedMoneda.',
+            'La suma de los artículos (${_symbolForMoneda(_selectedMoneda)} ${sumItems.toStringAsFixed(2)}) no coincide con el Monto Total (${_symbolForMoneda(_selectedMoneda)} ${totalOrig.toStringAsFixed(2)}).\n\nDiferencia: ${_symbolForMoneda(_selectedMoneda)} ${(sumItems - totalOrig).abs().toStringAsFixed(2)}.\n\n¿Deseas revisar los artículos o guardar con el monto total?',
             style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, 'cancel'),
-              child: const Text('Cancelar / Revisar', style: TextStyle(color: AppColors.textSecondary)),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, 'keep'),
-              child: const Text(
-                'Guardar con el monto actual',
-                style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
-              ),
-            ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
+                backgroundColor: AppColors.primaryDark,
                 foregroundColor: Colors.black,
                 elevation: 0,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
+              onPressed: () => Navigator.pop(ctx, 'cancel'),
+              child: const Text('Revisar artículos', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, 'keep'),
+              child: Text(
+                'Guardar con el total (${_symbolForMoneda(_selectedMoneda)} ${totalOrig.toStringAsFixed(2)})',
+                style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+              ),
+            ),
+            TextButton(
               onPressed: () => Navigator.pop(ctx, 'adjust'),
-              child: const Text('Ajustar total a la suma de ítems', style: TextStyle(fontWeight: FontWeight.bold)),
+              child: Text(
+                'Ajustar total a la suma (${_symbolForMoneda(_selectedMoneda)} ${sumItems.toStringAsFixed(2)})',
+                style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+              ),
             ),
           ],
         ),
@@ -1129,7 +1156,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     final itemsFinal = <ItemGastoModel>[];
     for (int idx = 0; idx < _items.length; idx++) {
       final it = _items[idx];
-      final desc = it.descripcion.trim().isEmpty ? 'Producto ${unnamedCounter++}' : it.descripcion.trim();
+      final desc = it.descripcion.trim().isEmpty ? 'Artículo ${unnamedCounter++}' : it.descripcion.trim();
       if (ratioConversionItems != 1.0) {
         final bool canPreserveOriginalBsCents = widget.existingGasto != null &&
             (ratioConversionItems - _initialRateForItems).abs() < 0.0001 &&
@@ -1881,6 +1908,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
           padding: const EdgeInsets.all(16),
           children: [
             _buildImageHeader(),
+            // TARJETA 1: COMERCIO
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -1892,17 +1920,38 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Información General',
+                    '¿Dónde compraste?',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   TextFormField(
                     controller: _comercioCtrl,
                     decoration: const InputDecoration(
-                      labelText: '¿Dónde compraste? (opcional)',
-                      hintText: 'Ej. Automercado, Farmacia...',
+                      labelText: 'Nombre del comercio',
+                      hintText: 'Ej. Farmatodo, Panadería...',
                       prefixIcon: Icon(Icons.storefront_outlined, color: AppColors.textSecondary),
+                      helperText: 'Puedes dejarlo en blanco si fue un gasto informal.',
+                      helperStyle: TextStyle(fontSize: 11, color: AppColors.textSecondary),
                     ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            // TARJETA 2: FECHA DE LA COMPRA
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.card,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '¿Cuándo compraste?',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                   ),
                   const SizedBox(height: 12),
                   InkWell(
@@ -1934,7 +1983,6 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                       ],
                     ),
                   ],
-
                 ],
               ),
             ),
@@ -2041,7 +2089,299 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            // TARJETA 3: MONTO TOTAL DE LA COMPRA
+            // TARJETA 4: DETALLE DE ARTÍCULOS
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.card,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          _items.length > 1 ? '¿Qué compraste? (${_items.length} artículos)' : '¿Qué compraste?',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                        ),
+                      ),
+                      Text(
+                        'Precios en ${_symbolForMoneda(_selectedMoneda)}',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Detalle del gasto para clasificarlo y comparar precios.',
+                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                  ),
+                  const SizedBox(height: 12),
+                  if (_items.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      child: Text('Sin artículos detallados.', style: TextStyle(color: AppColors.textMuted)),
+                    )
+                  else
+                    ..._items.asMap().entries.map((entry) {
+                      final idx = entry.key;
+                      final item = entry.value;
+
+                      Widget? priceWarning;
+                      if (_priceComparisons.containsKey(idx)) {
+                        final prevData = _priceComparisons[idx]!;
+                        final prevUsd = (prevData['precio_usd'] as num?)?.toDouble() ?? 0.0;
+                        final prevComercio = prevData['comercio'] as String? ?? '';
+
+                        final cant = item.cantidad > 0 ? item.cantidad : 1.0;
+                        double unitPrice = item.precioUnitarioDisplay;
+                        if (item.totalDisplay > 0) {
+                          unitPrice = item.totalDisplay / cant;
+                        }
+
+                        double currentUsd = unitPrice;
+                        final tasa = tryParseAmount(_tasaCambioCtrl.text, isPrice: false) ?? 1.0;
+                        if (_selectedMoneda == 'VES') {
+                          if (tasa > 0) currentUsd = unitPrice / tasa;
+                        } else {
+                          double sumItems = _items.fold(0.0, (prev, it) => prev + it.totalDisplay);
+                          final totalOrig = tryParseAmount(_totalOriginalCtrl.text, isPrice: false) ?? 0.0;
+                          if (totalOrig > 0 && sumItems > totalOrig * 5 && tasa > 0) {
+                            currentUsd = unitPrice / tasa;
+                          }
+                        }
+
+                        if (prevUsd > 0 && currentUsd > 0) {
+                          if (currentUsd > (prevUsd * 1.05)) {
+                            final diff = ((currentUsd / prevUsd) - 1) * 100;
+                            priceWarning = Padding(
+                              padding: const EdgeInsets.only(top: 4, left: 4),
+                              child: Text(
+                                '🔺 Está ${diff.toStringAsFixed(0)}% más caro por unidad que en $prevComercio',
+                                style: const TextStyle(color: AppColors.error, fontSize: 11, fontWeight: FontWeight.w600),
+                              ),
+                            );
+                          } else if (currentUsd < (prevUsd * 0.95)) {
+                            final diff = (1 - (currentUsd / prevUsd)) * 100;
+                            priceWarning = Padding(
+                              padding: const EdgeInsets.only(top: 4, left: 4),
+                              child: Text(
+                                '🟢 Te salió un ${diff.toStringAsFixed(0)}% más económico por unidad que en $prevComercio',
+                                style: const TextStyle(color: AppColors.textPrimary, fontSize: 11, fontWeight: FontWeight.w600),
+                              ),
+                            );
+                          }
+                        }
+                      }
+
+                      return Card(
+                        margin: const EdgeInsets.symmetric(vertical: 6),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: const BorderSide(color: AppColors.border),
+                        ),
+                        elevation: 0,
+                        color: AppColors.surface,
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Fila 1: Descripción + Papelera
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextFormField(
+                                      initialValue: item.descripcion,
+                                      decoration: const InputDecoration(
+                                        labelText: '¿Qué fue?',
+                                        hintText: 'Ej. Harina PAN, Taxi...',
+                                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                      ),
+                                      onChanged: (v) => _items[idx] = _items[idx].copyWith(descripcion: v),
+                                    ),
+                                  ),
+                                  if (_items.length > 1)
+                                    IconButton(
+                                      icon: const Icon(Icons.delete_outline, color: AppColors.error),
+                                      onPressed: () => _removeItem(idx),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              // Fila 2: Cantidad (35%) y Precio (65%)
+                              Row(
+                                children: [
+                                  Expanded(
+                                    flex: 35,
+                                    child: TextFormField(
+                                      initialValue: _formatDouble(item.cantidad),
+                                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                      decoration: const InputDecoration(
+                                        labelText: 'Cant.',
+                                        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                                      ),
+                                      onChanged: (v) {
+                                        final cant = tryParseAmount(v, isPrice: false) ?? 1.0;
+                                        setState(() {
+                                          _items[idx] = _items[idx].copyWith(
+                                            cantidad: cant,
+                                            total: (cant * _items[idx].precioUnitarioDisplay * 100).round(),
+                                          );
+                                        });
+                                        _recalcularTotal();
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    flex: 65,
+                                    child: TextFormField(
+                                      initialValue: _formatDouble(item.precioUnitarioDisplay),
+                                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                      decoration: InputDecoration(
+                                        labelText: 'Precio',
+                                        prefixText: '${_symbolForMoneda(_selectedMoneda)} ',
+                                        prefixStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+                                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                                      ),
+                                      onChanged: (v) {
+                                        final prec = tryParseAmount(v, isPrice: false) ?? 0.0;
+                                        setState(() {
+                                          _items[idx] = _items[idx].copyWith(
+                                            precioUnitario: (prec * 100).round(),
+                                            total: (_items[idx].cantidad * prec * 100).round(),
+                                          );
+                                        });
+                                        _recalcularTotal();
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              // Fila 3: Categoría (65%) y Total calculado (35%)
+                              Row(
+                                children: [
+                                  Expanded(
+                                    flex: 65,
+                                    child: DropdownButtonFormField<String>(
+                                      isExpanded: true,
+                                      value: AppConstants.categorias.contains(item.categoria) ? item.categoria : 'Otros',
+                                      decoration: const InputDecoration(
+                                        labelText: 'Categoría',
+                                        isDense: true,
+                                        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                      ),
+                                      dropdownColor: AppColors.surface,
+                                      items: AppConstants.categorias.map((cat) {
+                                        final catColor = AppColors.categoryColors[cat] ?? AppColors.textSecondary;
+                                        final catIcon = _getCategoryIcon(cat);
+                                        return DropdownMenuItem(
+                                          value: cat,
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Container(
+                                                width: 22,
+                                                height: 22,
+                                                decoration: BoxDecoration(
+                                                  color: catColor.withValues(alpha: 0.15),
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: Icon(catIcon, size: 13, color: catColor),
+                                              ),
+                                              const SizedBox(width: 6),
+                                              Expanded(
+                                                child: Text(cat, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13)),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      }).toList(),
+                                      onChanged: (val) {
+                                        if (val != null) {
+                                          setState(() {
+                                            _items[idx] = _items[idx].copyWith(categoria: val);
+                                            if (!ItemGastoModel.isTaxDescription(_items[idx].descripcion)) {
+                                              final domCat = ItemGastoModel.calcularCategoriaDominante(_items);
+                                              for (int i = 0; i < _items.length; i++) {
+                                                if (ItemGastoModel.isTaxDescription(_items[i].descripcion)) {
+                                                  _items[i] = _items[i].copyWith(categoria: domCat);
+                                                }
+                                              }
+                                            }
+                                          });
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    flex: 35,
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        const Text(
+                                          'Total',
+                                          style: TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          child: Text(
+                                            '${_symbolForMoneda(_selectedMoneda)} ${_formatDouble(_items[idx].totalDisplay)}',
+                                            style: const TextStyle(
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.bold,
+                                              color: AppColors.textPrimary,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (priceWarning != null) ...[
+                                const SizedBox(height: 8),
+                                priceWarning,
+                              ],
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    key: const Key('review_expense_add_item_btn'),
+                    onPressed: _addItem,
+                    icon: const Icon(Icons.add, size: 18, color: AppColors.primaryDark),
+                    label: Text(
+                      _items.isEmpty ? 'Agregar artículo' : 'Agregar otro artículo',
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(44),
+                      side: const BorderSide(color: AppColors.border, width: 1.5),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      backgroundColor: AppColors.cardLighter,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            // TARJETA 5: MONTO TOTAL DE LA COMPRA
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -2053,43 +2393,61 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    '¿Cuánto gastaste en total?',
+                    'Monto total',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                   ),
                   const SizedBox(height: 4),
                   const Text(
-                    'Indica el monto total de la compra.',
+                    'Total general cobrado por la compra.',
                     style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                   ),
                   const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: AppColors.cardLighter,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.border),
+                  TextFormField(
+                    key: const Key('input_monto_total'),
+                    controller: _totalOriginalCtrl,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                    decoration: InputDecoration(
+                      labelText: 'Monto total (${_symbolForMoneda(_selectedMoneda)})',
+                      prefixText: '${_symbolForMoneda(_selectedMoneda)} ',
+                      prefixStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                     ),
-                    child: TextFormField(
-                      key: const Key('input_monto_total'),
-                      controller: _totalOriginalCtrl,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                      decoration: InputDecoration(
-                        border: InputBorder.none,
-                        isDense: true,
-                        labelText: 'Monto total (${_symbolForMoneda(_selectedMoneda)})',
-                        labelStyle: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                        prefixText: '${_symbolForMoneda(_selectedMoneda)} ',
-                        prefixStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                      ),
-                      onChanged: (val) {
-                        _bolivaresAjustadosManualmente = false;
-                        _totalUsdCtrl.text = val;
-                        _recalcularTotalUsd();
-                      },
-                      validator: (val) => validatePositiveAmount(val),
-                    ),
+                    onChanged: (val) {
+                      _bolivaresAjustadosManualmente = false;
+                      _totalUsdCtrl.text = val;
+                      _recalcularTotalUsd();
+                    },
+                    validator: (val) => validatePositiveAmount(val),
                   ),
+                  Builder(builder: (context) {
+                    final totalOrig = tryParseAmount(_totalOriginalCtrl.text, isPrice: false) ?? 0.0;
+                    final sumItems = _items.fold(0.0, (acc, it) => acc + it.totalDisplay);
+                    final diff = (sumItems - totalOrig).abs();
+                    if (_items.isNotEmpty && sumItems > 0 && totalOrig > 0 && diff > 0.05) {
+                      return Container(
+                        margin: const EdgeInsets.only(top: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFEF9C3),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFFFEF08A)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.warning_amber_rounded, size: 16, color: Color(0xFF92400E)),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'La suma de los artículos (${_symbolForMoneda(_selectedMoneda)} ${_formatDouble(sumItems)}) no coincide con el total (${_symbolForMoneda(_selectedMoneda)} ${_formatDouble(totalOrig)}). Diferencia: ${_symbolForMoneda(_selectedMoneda)} ${_formatDouble(diff)}.',
+                                style: const TextStyle(fontSize: 11, color: Color(0xFF92400E), fontWeight: FontWeight.w500),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  }),
                   if (_selectedMoneda == 'VES') ...[
                     const SizedBox(height: 14),
                     // Tarjeta con las 3 equivalencias simultáneas + botón de Divulgación Progresiva (Ajustar tasas)
@@ -2607,290 +2965,6 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                 ),
               ),
             ],
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.card,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Productos (${_items.length})',
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                        ),
-                      ),
-                      Text(
-                        'Precios en ${_symbolForMoneda(_selectedMoneda)}',
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  if (_items.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 8),
-                      child: Text('Sin productos detallados.', style: TextStyle(color: AppColors.textMuted)),
-                    )
-                  else
-                      ..._items.asMap().entries.map((entry) {
-                        final idx = entry.key;
-                        final item = entry.value;
-                        
-                        Widget? priceWarning;
-                        if (_priceComparisons.containsKey(idx)) {
-                          final prevData = _priceComparisons[idx]!;
-                          final prevUsd = (prevData['precio_usd'] as num?)?.toDouble() ?? 0.0;
-                          final prevComercio = prevData['comercio'] as String? ?? '';
-                          
-                          final cant = item.cantidad > 0 ? item.cantidad : 1.0;
-                          double unitPrice = item.precioUnitarioDisplay;
-                          if (item.totalDisplay > 0) {
-                            unitPrice = item.totalDisplay / cant;
-                          }
-
-                          double currentUsd = unitPrice;
-                          final tasa = tryParseAmount(_tasaCambioCtrl.text, isPrice: false) ?? 1.0;
-                          if (_selectedMoneda == 'VES') {
-                            if (tasa > 0) currentUsd = unitPrice / tasa;
-                          } else {
-                            double sumItems = _items.fold(0.0, (prev, it) => prev + it.totalDisplay);
-                            final totalOrig = tryParseAmount(_totalOriginalCtrl.text, isPrice: false) ?? 0.0;
-                            if (totalOrig > 0 && sumItems > totalOrig * 5 && tasa > 0) {
-                              currentUsd = unitPrice / tasa;
-                            }
-                          }
-
-                          if (prevUsd > 0 && currentUsd > 0) {
-                            if (currentUsd > (prevUsd * 1.05)) { // 5% de tolerancia
-                              final diff = ((currentUsd / prevUsd) - 1) * 100;
-                              priceWarning = Padding(
-                                padding: const EdgeInsets.only(top: 4, left: 4),
-                                child: Text(
-                                  '🔺 Está ${diff.toStringAsFixed(0)}% más caro por unidad que en $prevComercio',
-                                  style: const TextStyle(color: AppColors.error, fontSize: 11, fontWeight: FontWeight.w600),
-                                ),
-                              );
-                            } else if (currentUsd < (prevUsd * 0.95)) {
-                              final diff = (1 - (currentUsd / prevUsd)) * 100;
-                              priceWarning = Padding(
-                                padding: const EdgeInsets.only(top: 4, left: 4),
-                                child: Text(
-                                  '🟢 Te salió un ${diff.toStringAsFixed(0)}% más económico por unidad que en $prevComercio',
-                                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 11, fontWeight: FontWeight.w600),
-                                ),
-                              );
-                            }
-                          }
-                        }
-
-                        return Card(
-                          margin: const EdgeInsets.symmetric(vertical: 6),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            side: const BorderSide(color: AppColors.border),
-                          ),
-                          elevation: 0,
-                          color: AppColors.surface,
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Fila 1: Descripción + Papelera
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: TextFormField(
-                                        initialValue: item.descripcion,
-                                        decoration: const InputDecoration(
-                                          labelText: 'Descripción del Producto',
-                                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                        ),
-                                        onChanged: (v) => _items[idx] = _items[idx].copyWith(descripcion: v),
-                                      ),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.delete_outline, color: AppColors.error),
-                                      onPressed: () => _removeItem(idx),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 10),
-                                // Fila 2: Cantidad (35%) y Precio (65%)
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      flex: 35,
-                                      child: TextFormField(
-                                        initialValue: _formatDouble(item.cantidad),
-                                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                        decoration: const InputDecoration(
-                                          labelText: 'Cant.',
-                                          contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                                        ),
-                                        onChanged: (v) {
-                                          final cant = tryParseAmount(v, isPrice: false) ?? 1.0;
-                                          setState(() {
-                                            _items[idx] = _items[idx].copyWith(
-                                              cantidad: cant,
-                                              total: (cant * _items[idx].precioUnitarioDisplay * 100).round(),
-                                            );
-                                          });
-                                          _recalcularTotal();
-                                        },
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      flex: 65,
-                                      child: TextFormField(
-                                        initialValue: _formatDouble(item.precioUnitarioDisplay),
-                                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                        decoration: InputDecoration(
-                                          labelText: 'Precio',
-                                          prefixText: '${_symbolForMoneda(_selectedMoneda)} ',
-                                          prefixStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
-                                          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                                        ),
-                                        onChanged: (v) {
-                                          final prec = tryParseAmount(v, isPrice: false) ?? 0.0;
-                                          setState(() {
-                                            _items[idx] = _items[idx].copyWith(
-                                              precioUnitario: (prec * 100).round(),
-                                              total: (_items[idx].cantidad * prec * 100).round(),
-                                            );
-                                          });
-                                          _recalcularTotal();
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 10),
-                                // Fila 3: Categoría (65%) y Total calculado (35%)
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      flex: 65,
-                                      child: DropdownButtonFormField<String>(
-                                        isExpanded: true,
-                                        value: AppConstants.categorias.contains(item.categoria) ? item.categoria : 'Otros',
-                                        decoration: const InputDecoration(
-                                          labelText: 'Categoría',
-                                          isDense: true,
-                                          contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                        ),
-                                        dropdownColor: AppColors.surface,
-                                        items: AppConstants.categorias.map((cat) {
-                                          final catColor = AppColors.categoryColors[cat] ?? AppColors.textSecondary;
-                                          final catIcon = _getCategoryIcon(cat);
-                                          return DropdownMenuItem(
-                                            value: cat,
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Container(
-                                                  width: 22,
-                                                  height: 22,
-                                                  decoration: BoxDecoration(
-                                                    color: catColor.withValues(alpha: 0.15),
-                                                    shape: BoxShape.circle,
-                                                  ),
-                                                  child: Icon(catIcon, size: 13, color: catColor),
-                                                ),
-                                                const SizedBox(width: 6),
-                                                Expanded(
-                                                  child: Text(cat, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13)),
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        }).toList(),
-                                        onChanged: (val) {
-                                          if (val != null) {
-                                            setState(() {
-                                              _items[idx] = _items[idx].copyWith(categoria: val);
-                                              if (!ItemGastoModel.isTaxDescription(_items[idx].descripcion)) {
-                                                final domCat = ItemGastoModel.calcularCategoriaDominante(_items);
-                                                for (int i = 0; i < _items.length; i++) {
-                                                  if (ItemGastoModel.isTaxDescription(_items[i].descripcion)) {
-                                                    _items[i] = _items[i].copyWith(categoria: domCat);
-                                                  }
-                                                }
-                                              }
-                                            });
-                                          }
-                                        },
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      flex: 35,
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.end,
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          const Text(
-                                            'Total',
-                                            style: TextStyle(fontSize: 10, color: AppColors.textSecondary),
-                                          ),
-                                          const SizedBox(height: 2),
-                                          FittedBox(
-                                            fit: BoxFit.scaleDown,
-                                            child: Text(
-                                              '${_symbolForMoneda(_selectedMoneda)} ${_formatDouble(_items[idx].totalDisplay)}',
-                                              style: const TextStyle(
-                                                fontSize: 15,
-                                                fontWeight: FontWeight.bold,
-                                                color: AppColors.textPrimary,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                if (priceWarning != null) ...[
-                                  const SizedBox(height: 8),
-                                  priceWarning,
-                                ],
-                              ],
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                  const SizedBox(height: 12),
-                  OutlinedButton.icon(
-                    key: const Key('review_expense_add_item_btn'),
-                    onPressed: _addItem,
-                    icon: const Icon(Icons.add, size: 18, color: AppColors.primaryDark),
-                    label: Text(
-                      _items.isEmpty ? 'Agregar producto' : 'Agregar otro producto',
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(44),
-                      side: const BorderSide(color: AppColors.border, width: 1.5),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      backgroundColor: AppColors.cardLighter,
-                    ),
-                  ),
-                ],
-              ),
-            ),
             const SizedBox(height: 24),
           ],
         ),

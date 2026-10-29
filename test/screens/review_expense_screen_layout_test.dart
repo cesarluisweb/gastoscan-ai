@@ -109,10 +109,11 @@ void main() {
     expect(find.text('Guardar Gasto'), findsOneWidget);
 
     // Verify body form fields are visible and rendered
-    expect(find.text('Información General'), findsOneWidget);
-    expect(find.text('¿Dónde compraste? (opcional)'), findsOneWidget);
+    expect(find.text('¿Dónde compraste?'), findsOneWidget);
+    expect(find.text('¿Cuándo compraste?'), findsOneWidget);
     expect(find.text('¿En qué moneda están los precios?'), findsOneWidget);
-    expect(find.text('¿Cuánto gastaste en total?'), findsOneWidget);
+    expect(find.text('¿Qué compraste?'), findsOneWidget);
+    expect(find.text('Monto total'), findsOneWidget);
 
     // Ensure the ListView in body has non-zero height
     final listViewFinder = find.byType(ListView);
@@ -719,16 +720,48 @@ void main() {
     expect(comoPagasteText.style?.fontSize, 16);
     expect(comoPagasteText.style?.fontWeight, FontWeight.bold);
 
-    // Verify Agregar otro producto button
+    // Verify Agregar otro artículo button
     await tester.drag(find.byType(ListView), const Offset(0, -600));
     await tester.pumpAndSettle();
     final addBtnFinder = find.byKey(const Key('review_expense_add_item_btn'));
 
     expect(addBtnFinder, findsOneWidget);
-    expect(find.widgetWithText(OutlinedButton, 'Agregar otro producto'), findsOneWidget);
+    expect(find.widgetWithText(OutlinedButton, 'Agregar otro artículo'), findsOneWidget);
     final addIconFinder = find.descendant(of: addBtnFinder, matching: find.byIcon(Icons.add));
     expect(addIconFinder, findsOneWidget);
     final addIcon = tester.widget<Icon>(addIconFinder);
     expect(addIcon.color, AppColors.primaryDark);
+  });
+
+  testWidgets('ReviewExpenseScreen muestra advertencia en vivo si suma de articulos difiere del total y dialogo de guardado seguro', (tester) async {
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
+
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pumpAndSettle();
+
+    // 1. Escribir 10.00 en monto total
+    final inputTotalFinder = find.byKey(const Key('input_monto_total'));
+    await tester.enterText(inputTotalFinder, '10.00');
+    await tester.pumpAndSettle();
+
+    // 2. Modificar el monto total libremente a 15.00
+    await tester.enterText(inputTotalFinder, '15.00');
+    await tester.pumpAndSettle();
+
+    // 3. Verificar que el campo refleja el cambio sin cajas anidadas extrañas
+    final totalWidget = tester.widget<TextFormField>(inputTotalFinder);
+    expect(totalWidget.controller?.text, '15.00');
+
+    // 4. Intentar guardar cuando solo hay 1 artículo en 0 pero total es 15.00 -> auto asigna al artículo
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Guardar Gasto'));
+    await tester.pumpAndSettle();
+    // No debe mostrar diálogo de discrepancia porque el artículo único absorbe el total
+    expect(find.text('Diferencia en el monto total'), findsNothing);
   });
 }

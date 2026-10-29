@@ -103,6 +103,9 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
   - *Ubicación:* En `MoreScreen` (pantalla Más).
   - *Propósito:* Capitalizar la recomendación familiar boca a boca (hijos que le instalan la app a sus madres o se comparte entre quienes administran el hogar).
   - *Acción:* Botón accesible que abre el diálogo nativo de compartir (`Share.share`) con texto predeterminado sin rodeos y enlace directo a la ficha de Google Play.
+- `UX-12` **Selector y Autocompletado de Comercios Frecuentes:** `Pendiente`
+  - *Problema:* El usuario debe teclear repetidamente los mismos nombres de comercios habituales (ej. Farmatodo, Automercado Plaza's, Central Madeirense, panadería local).
+  - *Solución:* Al pulsar o enfocar el campo `¿Dónde compraste?`, desplegar una lista o chips de sugerencias rápidas con los comercios más frecuentes previamente registrados por el usuario una vez que acumule compras recurrentes, permitiendo seleccionarlo con un toque sin tener que escribirlo completo.
 
 ### Bloque B: Finanzas Bimonetarias y Lentes Multimoneda (Finanzas / UX)
 - `FIN-09` **Equivalencias Multimoneda Inmutables (`USD`, `VES`, `USDT`, `EUR`) y Migración SQLite v18:** `Pendiente de validación 🧪`
