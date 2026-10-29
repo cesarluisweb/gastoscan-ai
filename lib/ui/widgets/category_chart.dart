@@ -126,10 +126,10 @@ class _CategoryChartState extends State<CategoryChart> {
           PieChartSectionData(
             color: color,
             value: entry.value,
-            title: porcentaje >= 12 ? '${porcentaje.toStringAsFixed(0)}%' : '',
-            radius: 20,
+            title: porcentaje >= 10 ? '${porcentaje.toStringAsFixed(0)}%' : '',
+            radius: 24,
             titleStyle: TextStyle(
-              fontSize: 9,
+              fontSize: 10,
               fontWeight: FontWeight.bold,
               color: color.computeLuminance() > 0.45 ? Colors.black : Colors.white,
             ),
@@ -197,15 +197,15 @@ class _CategoryChartState extends State<CategoryChart> {
         children: [
           // Dona con Total al Centro
           SizedBox(
-            width: 104,
-            height: 104,
+            width: 130,
+            height: 130,
             child: Stack(
               alignment: Alignment.center,
               children: [
                 PieChart(
                   PieChartData(
                     sections: sections,
-                    centerSpaceRadius: 32,
+                    centerSpaceRadius: 41,
                     sectionsSpace: 2,
                   ),
                 ),
@@ -235,7 +235,7 @@ class _CategoryChartState extends State<CategoryChart> {
               ],
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 14),
           // Lista de Categorías con icono circular, columna de % y monto alineados
           Expanded(
             child: Column(
@@ -247,7 +247,7 @@ class _CategoryChartState extends State<CategoryChart> {
                 final icon = getCategoryIcon(entry.key);
 
                 return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  padding: const EdgeInsets.symmetric(vertical: 3),
                   child: Row(
                     children: [
                       Container(
@@ -271,7 +271,7 @@ class _CategoryChartState extends State<CategoryChart> {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 4),
                       SizedBox(
                         width: 28,
                         child: Text(
@@ -284,7 +284,7 @@ class _CategoryChartState extends State<CategoryChart> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 4),
                       SizedBox(
                         width: 58,
                         child: FittedBox(

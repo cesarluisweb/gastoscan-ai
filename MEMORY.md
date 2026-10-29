@@ -13,7 +13,9 @@
 - Recordatorios Quincenales Dinámicos: Sábados 18:30 con banco de 4 mensajes del Asistente IA. Sincroniza desde Firestore (`config/recordatorios`) con fallback offline local.
 - Inactividad a 30 días: Rediseñado el recordatorio de inactividad de 7 a 30 días para evitar fatiga de alertas; toque único sin reprogramación en bucle si el usuario no entra.
 - UI Despejada en Más: Una sola fila `Notificaciones` con icono y flecha que abre una hoja modal inferior con los 3 interruptores independientes.
+- Distribución de Gastos (Dona a 130px): Diámetro de 130px (`centerSpaceRadius: 41`, `radius: 24`) con 14px de separación hacia la lista para llegar a un poco menos de la mitad de la tarjeta (lista comienza al 48.6%), manteniendo márgenes exactos y columna alineada de porcentajes.
 - Nomenclatura canónica de 4 lentes: `USD BCV`, `VES Bolívares`, `USDT P2P` y `EUR BCV` (sin paréntesis decorativos).
+- Gamificación y Retención (RET-01): Registrado en Roadmap sistema de recompensas ("Puntos Rinde"), rachas protegidas con salvavidas, botón "Día sin gastos", calibración mensual sin culpa y canje por días de prueba de Rinde Más Pro.
 - Almacenamiento de Fotos: Título de tarjeta en `MoreScreen` renombrado a `Almacenamiento de fotos`. Guardado local activado por defecto (`defaultGuardarFotos = true`).
 
 ## Errores y Fricciones a Evitar

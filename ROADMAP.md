@@ -252,6 +252,29 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
     3. **Mapeo Inteligente a las 8 Categorías Canónicas:** Traducir las categorías libres de la app de origen hacia las 8 categorías oficiales mediante `AppConstants.normalizarCategoria` y conservar el nombre de la categoría o cuenta original como `#etiqueta` o en el concepto para no perder contexto ni alterar la filosofía sin múltiples cuentas bancarias.
     4. **Vista Previa y Deduplicación en Lote:** Mostrar resumen previo a la inserción (`X gastos listos para importar, Y omitidos por ingresos/transferencias`) y ejecutar inserción transaccional por lotes (`batch`) en SQLite y Firestore.
 
+### Bloque F: Retención, Hábitos y Gamificación (Sistema de Rachas y Recompensas Rinde)
+- `RET-01` **Sistema de Hábitos Financieros, Rachas Protegidas y Puntos de Lealtad ("Puntos Rinde"):** `Pendiente`
+  - *Problema Psicológico y de Retención:*
+    1. **Fricción del Registro y Fatiga:** El registro de gastos requiere alta disciplina. Cuando un usuario olvida registrar 2 o 3 días, experimenta culpa y abandona la aplicación (sesgo de todo o nada).
+    2. **Trampa del Fin de Mes y Falsos Positivos:** Premiar únicamente al llegar a fin de mes bajo presupuesto genera incentivos perversos: quien olvida registrar parece haber ahorrado (falso éxito), mientras que quien se sobregira en la primera quincena pierde toda motivación para los 15 días restantes.
+    3. **Descuento Hiperbólico:** El cerebro humano no sostiene un hábito diario por una recompensa abstracta a 30 días; requiere refuerzo positivo inmediato en cada micro-acción.
+  - *Solución Basada en Psicología del Comportamiento (Modelo Hook / Loss Aversion / Duolingo & Yummy):*
+    1. **Bucle de Refuerzo Inmediato (Puntos Rinde):**
+       - Micro-recompensa táctil (vibración háptica placentera) y visual (`+10 Puntos Rinde`) inmediatamente al guardar una compra (foto, voz o manual) o al consultar la Calculadora Cambiaria antes de pagar.
+       - Tope diario anti-abuso (máximo 5 acciones premiadas al día) para evitar registros basura.
+    2. **Rachas Protegidas y Botón "Día sin gastos" (Loss Aversion sin culpa):**
+       - Contador de racha semanal enfocado en consistencia (ej. registrar al menos 3 o 4 días por semana), no en un perfeccionismo punitivo de 30 días seguidos.
+       - Acción rápida en Inicio: `Hoy no gasté nada 👍` que suma a la racha con un toque, validando el autocontrol financiero y manteniendo el hábito vivo los días sin compras.
+       - *Salvavidas de Racha (Streak Freeze):* Permite congelar la racha si el usuario no pudo entrar, evitando la desmotivación por quiebre de racha.
+    3. **Puesta al Día Semanal y Pregunta de Calibración Mensual:**
+       - Recordatorio amigable de fin de semana: *"¿Compras pendientes? Ponte al día en 30 segundos con el escáner"*.
+       - Modal de Cierre de Mes con pregunta de honestidad: *"¿Registraste todo este mes? [Sí, todo al día] [Se me pasaron algunas]"*. Si se le pasaron, cero reproches: se le ofrece un ajuste rápido de saldo estimado y borrón y cuenta nueva para el nuevo mes.
+    4. **Embudo de Conversión a Rinde Más Pro (Incentivo de Venta):**
+       - Los puntos acumulados se canjean por valor dentro de la app:
+         - Canje de puntos por **Días de Rinde Más Pro (Sin Anuncios)** (ej. 100 puntos = 3 días Pro gratis). Funciona como degustación comercial para que el usuario pruebe la experiencia premium y luego compre la suscripción.
+         - Canje por Salvavidas de Racha y tokens de escaneo adicionales.
+       - Cada apertura de app para cuidar la racha o ganar puntos eleva el DAU (usuarios activos diarios) y multiplica las impresiones publicitarias en transiciones naturales de guardado.
+
 ---
 
 ## Fase 6.1 (Remanente): Catálogo de Categorías
