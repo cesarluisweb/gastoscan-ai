@@ -236,6 +236,35 @@ class ScanQueueProvider with ChangeNotifier {
     return ids;
   }
 
+  /// Guarda o actualiza un borrador en estado 'ready' en SQLite y actualiza la cola.
+  /// Si [queueItemId] es provisto, actualiza el registro existente; de lo contrario inserta uno nuevo.
+  Future<int> saveDraft({
+    int? queueItemId,
+    required String imagePath,
+    required String extractedData,
+    String? ocrText,
+  }) async {
+    int id;
+    if (queueItemId != null) {
+      await _dbHelper.updateScanQueueItem(
+        queueItemId,
+        'ready',
+        extractedData: extractedData,
+        imagePath: imagePath,
+        ocrText: ocrText,
+      );
+      id = queueItemId;
+    } else {
+      id = await _dbHelper.insertReadyScanQueueItem(
+        imagePath,
+        extractedData,
+        ocrText: ocrText,
+      );
+    }
+    await loadReadyItems();
+    return id;
+  }
+
   void setProcessing(bool value) {
     _isProcessing = value;
     notifyListeners();

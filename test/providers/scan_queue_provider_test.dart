@@ -54,12 +54,14 @@ class FakeDatabaseHelper extends DatabaseHelper {
     String? ocrText,
     int? attemptCount,
     String? lastError,
+    String? imagePath,
   }) async {
     final index = pendingDb.indexWhere((it) => it['id'] == id);
     if (index != -1) {
       final item = Map<String, dynamic>.from(pendingDb.removeAt(index));
       item['status'] = status;
       if (extractedData != null) item['extracted_data'] = extractedData;
+      if (imagePath != null) item['image_path'] = imagePath;
       if (ocrText != null) item['ocr_text'] = ocrText;
       if (attemptCount != null) item['attempt_count'] = attemptCount;
       if (lastError != null) item['last_error'] = lastError;
@@ -68,6 +70,16 @@ class FakeDatabaseHelper extends DatabaseHelper {
       } else {
         pendingDb.insert(index, item);
       }
+      return 1;
+    }
+    final readyIdx = readyDb.indexWhere((it) => it['id'] == id);
+    if (readyIdx != -1) {
+      final item = Map<String, dynamic>.from(readyDb[readyIdx]);
+      item['status'] = status;
+      if (extractedData != null) item['extracted_data'] = extractedData;
+      if (imagePath != null) item['image_path'] = imagePath;
+      if (ocrText != null) item['ocr_text'] = ocrText;
+      readyDb[readyIdx] = item;
       return 1;
     }
     return 0;
@@ -541,6 +553,44 @@ void main() {
       expect(provider.pendingCount, equals(2));
 
       tempDir.deleteSync(recursive: true);
+    });
+
+    test('saveDraft inserts new ready item when queueItemId is null', () async {
+      final fakeDb = FakeDatabaseHelper();
+      final provider = ScanQueueProvider(dbHelper: fakeDb, autoProcess: false);
+
+      final draftJson = '{"comercio":"Comercio no especificado","total_original":15.0}';
+      final id = await provider.saveDraft(
+        queueItemId: null,
+        imagePath: '',
+        extractedData: draftJson,
+      );
+
+      expect(id, isNotNull);
+      expect(provider.readyItems.length, equals(1));
+      expect(provider.readyItems.first['extracted_data'], equals(draftJson));
+      expect(provider.readyItems.first['status'], equals('ready'));
+    });
+
+    test('saveDraft updates existing ready item when queueItemId is provided', () async {
+      final fakeDb = FakeDatabaseHelper();
+      final provider = ScanQueueProvider(dbHelper: fakeDb, autoProcess: false);
+
+      final initialId = await fakeDb.insertReadyScanQueueItem('/path/recibo.jpg', '{"comercio":"Farmatodo"}');
+      await provider.loadReadyItems();
+      expect(provider.readyItems.length, equals(1));
+
+      final updatedJson = '{"comercio":"Farmatodo Las Mercedes","total_original":25.5}';
+      final updatedId = await provider.saveDraft(
+        queueItemId: initialId,
+        imagePath: '/path/recibo_nuevo.jpg',
+        extractedData: updatedJson,
+      );
+
+      expect(updatedId, equals(initialId));
+      expect(provider.readyItems.length, equals(1));
+      expect(provider.readyItems.first['extracted_data'], equals(updatedJson));
+      expect(provider.readyItems.first['image_path'], equals('/path/recibo_nuevo.jpg'));
     });
   });
 }

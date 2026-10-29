@@ -1007,11 +1007,15 @@ class DatabaseHelper {
     String? ocrText,
     int? attemptCount,
     String? lastError,
+    String? imagePath,
   }) async {
     final db = await instance.database;
     final data = <String, dynamic>{'status': status};
     if (extractedData != null) {
       data['extracted_data'] = extractedData;
+    }
+    if (imagePath != null) {
+      data['image_path'] = imagePath;
     }
     if (ocrText != null) {
       data['ocr_text'] = ocrText;

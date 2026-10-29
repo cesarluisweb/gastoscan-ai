@@ -206,6 +206,20 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     return false;
   }
 
+  bool _hasUnsavedData() {
+    if (_isSaving) return false;
+    if (widget.existingGasto != null) return _isDirty();
+    if (widget.queueItemId != null) return _isDirty();
+    if (_isDirty()) return true;
+    if (widget.extractedData != null) return true;
+    if ((_pickedImage != null && !_initialHasImage) || (_imageDeleted && _initialHasImage)) return true;
+    if (_comercioCtrl.text.trim().isNotEmpty) return true;
+    final total = tryParseAmount(_totalOriginalCtrl.text, isPrice: false) ?? 0.0;
+    if (total > 0) return true;
+    if (_items.any((it) => it.descripcion.trim().isNotEmpty || it.precioUnitario > 0 || it.total > 0)) return true;
+    return false;
+  }
+
   Future<void> _cargarTasasChips(String fecha) async {
     final requestId = ++_tasaRequestId;
     final today = DateTime.now().toIso8601String().substring(0, 10);
@@ -391,7 +405,10 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       _monedaItems = _selectedMoneda;
     } else {
       final data = widget.extractedData;
-      _comercioCtrl = TextEditingController(text: data?.comercio ?? '');
+      final rawComercio = data?.comercio?.trim() ?? '';
+      final bool esComercioGenerico = rawComercio.toLowerCase() == 'comercio no especificado' ||
+          rawComercio.toLowerCase() == 'comercio desconocido';
+      _comercioCtrl = TextEditingController(text: esComercioGenerico ? '' : rawComercio);
       _selectedFecha = data?.fecha ?? DateTime.now().toIso8601String().substring(0, 10);
       
       final detectedMoneda = data?.moneda.trim();
@@ -1519,6 +1536,114 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     }
   }
 
+  Future<void> _guardarComoBorrador() async {
+    if (_isSaving) return;
+
+    String imagePathToSave = '';
+    if (!_imageDeleted) {
+      if (_pickedImage != null) {
+        imagePathToSave = _pickedImage!.path;
+      } else if (widget.imageFile != null) {
+        imagePathToSave = widget.imageFile!.path;
+      }
+    }
+
+    final itemsToSave = _items.where((it) {
+      final hasDesc = it.descripcion.trim().isNotEmpty;
+      final hasVal = it.precioUnitario > 0 || it.total > 0;
+      return hasDesc || hasVal;
+    }).toList();
+
+    double totalParsed = tryParseAmount(_totalOriginalCtrl.text, isPrice: false) ?? 0.0;
+    if (totalParsed <= 0 && itemsToSave.isNotEmpty) {
+      final sumCentavos = itemsToSave.fold<int>(0, (sum, it) => sum + it.total);
+      totalParsed = sumCentavos / 100.0;
+    }
+
+    final String comercioInput = _comercioCtrl.text.trim();
+    final bool hasData = comercioInput.isNotEmpty ||
+        itemsToSave.isNotEmpty ||
+        totalParsed > 0 ||
+        imagePathToSave.isNotEmpty;
+
+    if (!hasData) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No hay información para guardar como borrador'),
+          backgroundColor: AppColors.surface,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
+    try {
+      final String comercioFinal = comercioInput.isEmpty
+          ? 'Comercio no especificado'
+          : comercioInput;
+
+      final double? tasaDetectada = double.tryParse(_tasaCambioCtrl.text.replaceAll(',', '.'));
+
+      String metodoLiqStr;
+      switch (_metodoLiquidacionUsd) {
+        case MetodoLiquidacionUsd.pagadoEnBsBcv:
+          metodoLiqStr = 'BS_BCV';
+          break;
+        case MetodoLiquidacionUsd.pagadoEnBsUsdt:
+          metodoLiqStr = 'BS_USDT';
+          break;
+        case MetodoLiquidacionUsd.pagadoEnDivisa:
+        default:
+          metodoLiqStr = 'DIVISA';
+          break;
+      }
+
+      final draftResult = GeminiExtractionResult(
+        comercio: comercioFinal,
+        fecha: _selectedFecha,
+        moneda: _selectedMoneda,
+        totalOriginal: totalParsed,
+        impuestoIva: 0.0,
+        tasaCambioDetectada: tasaDetectada,
+        items: itemsToSave,
+        metodoLiquidacion: metodoLiqStr,
+      );
+
+      final String jsonStr = jsonEncode(draftResult.toMap());
+      final queueProvider = Provider.of<ScanQueueProvider>(context, listen: false);
+
+      await queueProvider.saveDraft(
+        queueItemId: widget.queueItemId,
+        imagePath: imagePathToSave,
+        extractedData: jsonStr,
+      );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Guardado como borrador (por revisar)', style: TextStyle(color: Colors.black)),
+          backgroundColor: AppColors.primary,
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      Navigator.pop(context);
+    } catch (e) {
+      debugPrint('Error al guardar borrador: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al guardar borrador: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        setState(() => _isSaving = false);
+      }
+    }
+  }
+
   Widget _buildLiquidacionPill({
     required Key key,
     required String title,
@@ -1645,29 +1770,72 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     final hasMoreInQueue = isQueueItem && readyCount > 1;
 
     return PopScope(
-      canPop: !_isDirty() || _isSaving,
+      canPop: !_hasUnsavedData() || _isSaving,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-        final confirm = await showDialog<bool>(
+        if (widget.existingGasto != null) {
+          final confirm = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              backgroundColor: AppColors.card,
+              title: const Text('Descartar cambios', style: TextStyle(color: AppColors.textPrimary)),
+              content: const Text('¿Quieres descartar las modificaciones hechas a este gasto?', style: TextStyle(color: AppColors.textSecondary)),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: const Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: const Text('Descartar', style: TextStyle(color: AppColors.error)),
+                ),
+              ],
+            ),
+          );
+          if (confirm == true && mounted) {
+            Navigator.pop(context);
+          }
+          return;
+        }
+
+        final action = await showDialog<String>(
           context: context,
           builder: (ctx) => AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             backgroundColor: AppColors.card,
-            title: const Text('Descartar cambios', style: TextStyle(color: AppColors.textPrimary)),
-            content: const Text('¿Quieres descartar el formulario?', style: TextStyle(color: AppColors.textSecondary)),
+            title: const Text('¿Guardar como borrador?', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+            content: Text(
+              widget.queueItemId != null
+                  ? '¿Deseas guardar las modificaciones realizadas en este borrador antes de salir?'
+                  : 'Tienes datos en este gasto. Puedes guardarlo para completarlo después desde Inicio o Gastos.',
+              style: const TextStyle(color: AppColors.textSecondary, height: 1.4),
+            ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
+                onPressed: () => Navigator.pop(ctx, 'discard'),
+                child: const Text('Descartar', style: TextStyle(color: AppColors.error)),
               ),
               TextButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('Descartar', style: TextStyle(color: AppColors.error)),
+                onPressed: () => Navigator.pop(ctx, 'cancel'),
+                child: const Text('Seguir editando', style: TextStyle(color: AppColors.textSecondary)),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                onPressed: () => Navigator.pop(ctx, 'draft'),
+                child: const Text('Guardar borrador', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ],
           ),
         );
-        if (confirm == true && mounted) {
+
+        if (action == 'draft') {
+          await _guardarComoBorrador();
+        } else if (action == 'discard' && mounted) {
           Navigator.pop(context);
         }
       },
@@ -1836,6 +2004,13 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                   : 'Registrar gasto'),
         ),
         actions: [
+          if (widget.existingGasto == null)
+            IconButton(
+              key: const Key('btn_guardar_borrador_appbar'),
+              icon: const Icon(Icons.bookmark_border_rounded, color: AppColors.textSecondary),
+              tooltip: 'Guardar borrador',
+              onPressed: _isSaving ? null : _guardarComoBorrador,
+            ),
           if (widget.queueItemId != null)
             IconButton(
               icon: const Icon(Icons.delete_outline, color: AppColors.error),

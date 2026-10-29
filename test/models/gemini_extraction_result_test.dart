@@ -219,5 +219,42 @@ void main() {
       expect(result.totalOriginal, equals(1350.00));
       expect(result.items[1].precioUnitarioDisplay, equals(1200.00));
     });
+
+    test('Serialización toMap y fromJson preserva montos e ítems sin descalces (Round-trip)', () {
+      final initialJson = {
+        'comercio': 'Supermercado Central',
+        'fecha': '2026-10-28',
+        'moneda': 'USD',
+        'total_original': 15.50,
+        'impuesto_iva': 0.0,
+        'items': [
+          {'descripcion': 'Harina Pan', 'cantidad': 2, 'precio_unitario': 1.50, 'total': 3.00, 'categoria': 'Alimentos'},
+          {'descripcion': 'Queso Paisa', 'cantidad': 1, 'precio_unitario': 12.50, 'total': 12.50, 'categoria': 'Alimentos'},
+        ],
+      };
+
+      final result1 = GeminiExtractionResult.fromJson(initialJson);
+      final mapped = result1.toMap();
+      final result2 = GeminiExtractionResult.fromJson(mapped);
+
+      expect(result2.comercio, equals('Supermercado Central'));
+      expect(result2.totalOriginal, equals(15.50));
+      expect(result2.items.length, equals(2));
+      expect(result2.items[0].precioUnitarioDisplay, equals(1.50));
+      expect(result2.items[0].totalDisplay, equals(3.00));
+      expect(result2.items[1].precioUnitarioDisplay, equals(12.50));
+      expect(result2.items[1].totalDisplay, equals(12.50));
+    });
+
+    test('Fallback cuando comercio es nulo o vacío es "Comercio no especificado"', () {
+      final json = {
+        'fecha': '2026-10-28',
+        'moneda': 'USD',
+        'total_original': 10.0,
+      };
+
+      final result = GeminiExtractionResult.fromJson(json);
+      expect(result.comercio, equals('Comercio no especificado'));
+    });
   });
 }

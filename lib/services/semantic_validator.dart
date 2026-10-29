@@ -24,6 +24,7 @@ class SemanticValidator {
       // 1. Plausibilidad básica: Debe tener al menos comercio o un monto total válido
       final hasComercio = factura.comercio.trim().isNotEmpty &&
           factura.comercio.toLowerCase() != 'comercio desconocido' &&
+          factura.comercio.toLowerCase() != 'comercio no especificado' &&
           factura.comercio.toLowerCase() != 'null';
 
       final hasValidTotal = factura.totalOriginal > 0;

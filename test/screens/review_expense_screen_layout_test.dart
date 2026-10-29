@@ -12,13 +12,52 @@ import 'package:gastoscan_ai/core/constants/app_colors.dart';
 import 'package:gastoscan_ai/ui/screens/review_expense_screen.dart';
 
 class FakeDatabaseHelper extends DatabaseHelper {
+  final List<Map<String, dynamic>> readyDb = [];
+  int _nextId = 1;
+
   FakeDatabaseHelper() : super.test();
 
   @override
   Future<List<Map<String, dynamic>>> getPendingScanQueueItems() async => [];
 
   @override
-  Future<List<Map<String, dynamic>>> getReadyScanQueueItems() async => [];
+  Future<List<Map<String, dynamic>>> getReadyScanQueueItems() async => List.from(readyDb);
+
+  @override
+  Future<int> insertReadyScanQueueItem(String imagePath, String extractedData, {String? ocrText}) async {
+    final id = _nextId++;
+    readyDb.add({
+      'id': id,
+      'image_path': imagePath,
+      'status': 'ready',
+      'extracted_data': extractedData,
+      'ocr_text': ocrText,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+    return id;
+  }
+
+  @override
+  Future<int> updateScanQueueItem(
+    int id,
+    String status, {
+    String? extractedData,
+    String? ocrText,
+    int? attemptCount,
+    String? lastError,
+    String? imagePath,
+  }) async {
+    final idx = readyDb.indexWhere((it) => it['id'] == id);
+    if (idx != -1) {
+      final item = Map<String, dynamic>.from(readyDb[idx]);
+      item['status'] = status;
+      if (extractedData != null) item['extracted_data'] = extractedData;
+      if (imagePath != null) item['image_path'] = imagePath;
+      readyDb[idx] = item;
+      return 1;
+    }
+    return 0;
+  }
 }
 
 class FakeGastoProvider extends GastoProvider {
@@ -763,5 +802,173 @@ void main() {
     await tester.pumpAndSettle();
     // No debe mostrar diálogo de discrepancia porque el artículo único absorbe el total
     expect(find.text('Diferencia en el monto total'), findsNothing);
+  });
+
+  testWidgets('ReviewExpenseScreen botón sutil en AppBar guarda como borrador directo', (tester) async {
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<GastoProvider>.value(value: gastoProvider),
+          ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+          ChangeNotifierProvider<ScanQueueProvider>.value(value: scanQueueProvider),
+        ],
+        child: MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (ctx) => ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    ctx,
+                    MaterialPageRoute(
+                      builder: (_) => const ReviewExpenseScreen(),
+                    ),
+                  );
+                },
+                child: const Text('Abrir'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Abrir'));
+    await tester.pumpAndSettle();
+
+    // Escribir monto pero sin comercio
+    final inputTotalFinder = find.byKey(const Key('input_monto_total'));
+    await tester.enterText(inputTotalFinder, '45.00');
+    await tester.pumpAndSettle();
+
+    // Tocar icono sutil de borrador en el AppBar
+    final btnBorrador = find.byKey(const Key('btn_guardar_borrador_appbar'));
+    expect(btnBorrador, findsOneWidget);
+    await tester.tap(btnBorrador);
+    await tester.pumpAndSettle();
+
+    // Debe haberse guardado en readyDb con 'Comercio no especificado' y salido
+    expect(fakeDb.readyDb.length, equals(1));
+    expect(fakeDb.readyDb.first['status'], equals('ready'));
+    expect(fakeDb.readyDb.first['extracted_data'], contains('Comercio no especificado'));
+    expect(fakeDb.readyDb.first['extracted_data'], contains('45.0'));
+    expect(find.text('Abrir'), findsOneWidget); // Volvió a la pantalla anterior
+  });
+
+  testWidgets('ReviewExpenseScreen al presionar Atrás con datos muestra diálogo de borrador y permite guardar', (tester) async {
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<GastoProvider>.value(value: gastoProvider),
+          ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+          ChangeNotifierProvider<ScanQueueProvider>.value(value: scanQueueProvider),
+        ],
+        child: MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (ctx) => ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    ctx,
+                    MaterialPageRoute(
+                      builder: (_) => const ReviewExpenseScreen(),
+                    ),
+                  );
+                },
+                child: const Text('Abrir'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Abrir'));
+    await tester.pumpAndSettle();
+
+    // Ingresar comercio
+    await tester.enterText(find.byType(TextFormField).first, 'Automercado Plaza');
+    final inputTotalFinder = find.byKey(const Key('input_monto_total'));
+    await tester.enterText(inputTotalFinder, '18.50');
+    await tester.pumpAndSettle();
+
+    // Presionar botón Atrás en AppBar
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+
+    // Verificar diálogo
+    expect(find.text('¿Guardar como borrador?'), findsOneWidget);
+    expect(find.text('Descartar'), findsOneWidget);
+    expect(find.text('Seguir editando'), findsOneWidget);
+    expect(find.text('Guardar borrador'), findsOneWidget);
+
+    // Tocar 'Guardar borrador'
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Guardar borrador'));
+    await tester.pumpAndSettle();
+
+    // Debe guardarse en la cola y volver a la pantalla de origen
+    expect(fakeDb.readyDb.length, equals(1));
+    expect(fakeDb.readyDb.first['extracted_data'], contains('Automercado Plaza'));
+    expect(find.text('Abrir'), findsOneWidget);
+  });
+
+  testWidgets('ReviewExpenseScreen al presionar Atrás y Descartar no guarda en cola', (tester) async {
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<GastoProvider>.value(value: gastoProvider),
+          ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+          ChangeNotifierProvider<ScanQueueProvider>.value(value: scanQueueProvider),
+        ],
+        child: MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (ctx) => ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    ctx,
+                    MaterialPageRoute(
+                      builder: (_) => const ReviewExpenseScreen(),
+                    ),
+                  );
+                },
+                child: const Text('Abrir'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Abrir'));
+    await tester.pumpAndSettle();
+
+    // Ingresar datos
+    final inputTotalFinder = find.byKey(const Key('input_monto_total'));
+    await tester.enterText(inputTotalFinder, '20.00');
+    await tester.pumpAndSettle();
+
+    // Presionar Atrás
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+
+    // Tocar 'Descartar'
+    await tester.tap(find.text('Descartar'));
+    await tester.pumpAndSettle();
+
+    // No debe haber guardado nada en la cola y debió salir
+    expect(fakeDb.readyDb.isEmpty, isTrue);
+    expect(find.text('Abrir'), findsOneWidget);
   });
 }

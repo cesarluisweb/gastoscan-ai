@@ -80,7 +80,12 @@ class PendingExpenseCard extends StatelessWidget {
     }
 
     final hasAmount = amount > 0;
-    final String storeName = gasto.comercio.trim().isEmpty ? 'Comercio Desconocido' : gasto.comercio;
+    final String trimmed = gasto.comercio.trim();
+    final String storeName = (trimmed.isEmpty ||
+            trimmed.toLowerCase() == 'comercio desconocido' ||
+            trimmed.toLowerCase() == 'comercio no especificado')
+        ? 'Comercio no especificado'
+        : gasto.comercio;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),

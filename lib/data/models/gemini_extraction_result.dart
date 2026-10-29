@@ -49,7 +49,7 @@ class GeminiExtractionResult {
     final comercioRaw = json['comercio'];
     final comercio = (comercioRaw != null && comercioRaw.toString().trim().isNotEmpty)
         ? comercioRaw.toString().trim()
-        : 'Comercio Desconocido';
+        : 'Comercio no especificado';
 
     // Fecha con fallback a hoy si es null o inválida
     final fechaRaw = json['fecha']?.toString();
@@ -306,7 +306,15 @@ class GeminiExtractionResult {
       'total_original': totalOriginal,
       'impuesto_iva': impuestoIva,
       'tasa_cambio': tasaCambioDetectada,
-      'items': items.map((i) => i.toMap()).toList(),
+      'items': items.map((i) => {
+        if (i.id != null) 'id': i.id,
+        if (i.gastoId != null) 'gasto_id': i.gastoId,
+        'descripcion': i.descripcion,
+        'cantidad': i.cantidad,
+        'precio_unitario': i.precioUnitarioDisplay,
+        'total': i.totalDisplay,
+        'categoria': i.categoria,
+      }).toList(),
       'items_comprados_ids': matchedShoppingItemIds,
       'metodo_liquidacion': metodoLiquidacion,
     };
