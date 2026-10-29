@@ -405,7 +405,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       _monedaItems = _selectedMoneda;
     } else {
       final data = widget.extractedData;
-      final rawComercio = data?.comercio?.trim() ?? '';
+      final rawComercio = data?.comercio.trim() ?? '';
       final bool esComercioGenerico = rawComercio.toLowerCase() == 'comercio no especificado' ||
           rawComercio.toLowerCase() == 'comercio desconocido';
       _comercioCtrl = TextEditingController(text: esComercioGenerico ? '' : rawComercio);
@@ -1595,7 +1595,6 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
           metodoLiqStr = 'BS_USDT';
           break;
         case MetodoLiquidacionUsd.pagadoEnDivisa:
-        default:
           metodoLiqStr = 'DIVISA';
           break;
       }
