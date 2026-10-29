@@ -5,8 +5,8 @@
 - **Rama:** `main`.
 - **Fase 5 (Google Play):** Closed Testing activo con 20 evaluadores (período de 14 días).
 - **Notificaciones v1.4.0 (Broadcast FCM & Quincenal IA):** `Pendiente de validación 🧪`. CI verde (Android build 609, commit `6c83b5c`). 420 pruebas unitarias y de widgets pasando. Integrado `firebase_messaging: ^15.1.3`, topic `anuncios_generales`, recordatorio quincenal de compras (sábados 18:30) con 4 mensajes rotativos del Asistente IA sincronizables online desde Firestore (`/config/recordatorios`), inactividad a 30 días, modal limpio en pantalla *Más* y guía en `docs/GUIA_BROADCAST_FIREBASE.md`.
-- **UI-06, Desglose Bimonetario & ReviewExpenseScreen:** `Pendiente de validación 🧪`. CI verde (Android build 604, commit `2f14526`). 410 pruebas unitarias y de widgets pasando. Tarjetas independientes para Moneda, Monto Total y Forma de pago (USD/EUR). Selector fijo de 3 tasas en VES (`Dólar BCV`, `Euro BCV`, `USDT P2P`) y ajuste bidireccional de tasa al liquidar en bolívares.
-- **Artefacto para pruebas:** Descargar `rindemas-dev-apk` desde el run de CI 40775534107.
+- **UI-06, Desglose Bimonetario & Dona Reescalada:** `Pendiente de validación 🧪`. CI verde (Android build 610, commit `1e32344`). 420 pruebas unitarias y de widgets pasando. Dona de gastos ampliada a 130px de diámetro (`centerSpaceRadius: 41`, `radius: 24`), lista de categorías comenzando en el centro (48.6%), columnas de porcentaje (28px) y precio (58px) alineadas, y cochino amarillo (`AppColors.primaryDark`).
+- **Artefacto para pruebas:** Descargar `rindemas-dev-apk` desde el run de CI 40802067421.
 
 ## Decisiones Técnicas y de Negocio Recientes
 - Notificaciones Masivas (Broadcast): Implementado con Firebase Cloud Messaging suscrito anónimamente a `anuncios_generales`. César puede emitir mensajes desde la consola web de Firebase sin servidor ni costos.
