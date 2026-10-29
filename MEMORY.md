@@ -6,8 +6,8 @@
 - **Fase 5 (Google Play):** Closed Testing activo con 20 evaluadores (período de 14 días).
 - **Notificaciones v1.4.0 (Broadcast FCM & Quincenal IA):** `Pendiente de validación 🧪`. CI verde (Android build 609, commit `6c83b5c`). 420 pruebas unitarias y de widgets pasando. Integrado `firebase_messaging: ^15.1.3`, topic `anuncios_generales`, recordatorio quincenal de compras (sábados 18:30) con 4 mensajes rotativos del Asistente IA sincronizables online desde Firestore (`/config/recordatorios`), inactividad a 30 días, modal limpio en pantalla *Más* y guía en `docs/GUIA_BROADCAST_FIREBASE.md`.
 - **UI-08, Flujo de Compra en ReviewExpenseScreen & UX-12:** `Pendiente de validación 🧪`. CI verde (Android build 611, commit `68c670c`). 421 pruebas pasando. Reordenado el formulario de compra: ¿Dónde compraste? $\rightarrow$ ¿Cuándo compraste? $\rightarrow$ ¿En qué moneda están los precios? $\rightarrow$ ¿Qué compraste? $\rightarrow$ Monto total $\rightarrow$ ¿Cómo pagaste? (solo en USD/EUR). Eliminado el recuadro gris anidado en el total, advertencia en vivo de discrepancia, autoasignación al guardar para gastos de un solo artículo y diálogo seguro con «Revisar artículos» como acción primaria. Registrado `UX-12` en `ROADMAP.md`.
-- **UX-13 (Guardar Gasto como Borrador / Por revisar):** `Implementada 🔧`. Diálogo con 3 opciones al dar atrás con datos (`Guardar borrador`, `Descartar`, `Seguir editando`), botón sutil en AppBar (`Icons.bookmark_border_rounded`), persistencia en `scan_queue` SQLite (`ready`), nombre `Comercio no especificado` si comercio está vacío y preservación de decimales en round-trip JSON. Descartar un borrador en cola solo revierte cambios de la sesión. 7 pruebas unitarias y de widgets añadidas (428 pruebas en total).
-- **Artefacto para pruebas:** Descargar `rindemas-dev-apk` desde el run de CI en curso tras push.
+- **UX-13 (Guardar Gasto como Borrador / Por revisar):** `Pendiente de validación 🧪`. CI verde (Android build 613, commit `0e7df32`). 428 pruebas pasando. Diálogo con 3 opciones al dar atrás con datos (`Guardar borrador`, `Descartar`, `Seguir editando`), botón sutil en AppBar (`Icons.bookmark_border_rounded`), persistencia en `scan_queue` SQLite (`ready`), nombre `Comercio no especificado` si comercio está vacío y preservación de decimales en round-trip JSON. Descartar un borrador en cola solo revierte cambios de la sesión.
+- **Artefacto para pruebas:** Descargar `rindemas-dev-apk` desde el run de CI 40816058529.
 
 ## Decisiones Técnicas y de Negocio Recientes
 - Notificaciones Masivas (Broadcast): Implementado con Firebase Cloud Messaging suscrito anónimamente a `anuncios_generales`. César puede emitir mensajes desde la consola web de Firebase sin servidor ni costos.
@@ -24,4 +24,4 @@
 - Monitoreo de CI por proceso dormido único (`scripts/wait_ci.ps1`) con `BypassSandbox: true`.
 
 ## Próximo Paso Inmediato
-- Probar en *Rinde Más Dev* (build 611) el nuevo flujo de registro y revisión de compras, la ausencia del recuadro anidado en el total, la advertencia en vivo de discrepancia y el guardado con un solo artículo.
+- Probar en *Rinde Más Dev* (build 613) la opción de guardar como borrador al dar atrás en un gasto manual, por voz o factura, el botón de marcador sutil en la barra superior y la visualización como «Por revisar» con «Comercio no especificado».
