@@ -81,12 +81,14 @@ void main() {
 
       final promptFinder = find.byKey(const Key('assign_budget_prompt_Educación'));
       expect(promptFinder, findsOneWidget);
-      expect(find.text('Asignar presupuesto'), findsOneWidget);
 
-      final textWidget = tester.widget<Text>(find.descendant(
+      final textFinder = find.descendant(
         of: promptFinder,
         matching: find.text('Asignar presupuesto'),
-      ));
+      );
+      expect(textFinder, findsOneWidget);
+
+      final textWidget = tester.widget<Text>(textFinder);
       expect(textWidget.style?.decoration, isNot(TextDecoration.underline));
     });
 
@@ -102,7 +104,13 @@ void main() {
         ),
       );
 
-      final nameFinder = find.text('Alimentación');
+      final itemFinder = find.byKey(const Key('category_budget_item_Alimentación'));
+      expect(itemFinder, findsOneWidget);
+
+      final nameFinder = find.descendant(
+        of: itemFinder,
+        matching: find.text('Alimentación'),
+      );
       expect(nameFinder, findsOneWidget);
       final textWidget = tester.widget<Text>(nameFinder);
       expect(textWidget.maxLines, 1);

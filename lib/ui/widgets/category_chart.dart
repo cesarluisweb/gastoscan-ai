@@ -593,7 +593,7 @@ class _CategoryChartState extends State<CategoryChart> {
                             decoration: BoxDecoration(
                               color: AppColors.error.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(5),
-                              border: Border.all(color: AppColors.error.withValues(alpha: 0.5)),
+                              border: Border.all(color: AppColors.error),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
