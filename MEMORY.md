@@ -5,10 +5,10 @@
 - **Rama:** `main`.
 - **Fase 5 (Google Play):** Closed Testing activo con 20 evaluadores (período de 14 días).
 - **Notificaciones v1.4.0 (Broadcast FCM & Quincenal IA):** `Completada ✅`. Validado en dispositivo por César (envío masivo probado con éxito). Graduadas reglas a `privacidad-seguridad.md`, `flutter-testing.md` y `flutter-desarrollo.md`.
-- **UI-08, Flujo de Compra en ReviewExpenseScreen & UX-12:** `Pendiente de validación 🧪`. CI verde (Android build 611, commit `68c670c`). 421 pruebas pasando. Formulario de compra reordenado, eliminado recuadro gris anidado en el total, advertencia en vivo de discrepancia y diálogo seguro con «Revisar artículos».
+- **UI-08, Flujo de Compra en ReviewExpenseScreen & UX-12:** `Pendiente de validación 🧪`. CI verde (Android build 617, commit `b5e00c5`). 431 pruebas pasando. Tarjeta única «Información General» (comercio, fecha y selector de moneda con borde amarillo activo), label «Concepto» en artículos, formato formal `0,00` sin símbolos sueltos y diálogo seguro de ajuste.
 - **UX-13 (Guardar Gasto como Borrador / Por revisar):** `Pendiente de validación 🧪`. CI verde (Android build 613, commit `0e7df32`). 428 pruebas pasando. Diálogo con 3 opciones al dar atrás con datos (`Guardar borrador`, `Descartar`, `Seguir editando`), botón sutil en AppBar (`Icons.bookmark_border_rounded`), persistencia en `scan_queue` SQLite (`ready`), y «Comercio no especificado» si comercio está vacío.
 - **UI-04 (Control de Presupuestos por Categoría & Enfoque Directo):** `Pendiente de validación 🧪`. CI verde (Android build 616, commit `13b828a`). 430 pruebas unitarias y de widgets pasando. Fila superior limpia (`maxLines: 1`), botón «Editar» reubicado junto a barra, chip «Asignar presupuesto» sutil sin subrayado, scroll/enfoque automático (`initialCategory`) con cursor negro (`textSelectionTheme`), borde enfocado en input, contenedor neutral y copy conciso.
-- **Artefacto para pruebas:** Descargar `rindemas-dev-apk` desde el run de CI 41068153224.
+- **Artefacto para pruebas:** Descargar `rindemas-dev-apk` desde el run de CI 41069713566.
 
 ## Decisiones Técnicas y de Negocio Recientes
 - Distribución de Gastos (Dona a 130px): Diámetro de 130px (`centerSpaceRadius: 41`, `radius: 24`) con 14px de separación hacia la lista para llegar a un poco menos de la mitad de la tarjeta (lista comienza al 48.6%), manteniendo márgenes exactos y columna alineada de porcentajes (graduado a `DESIGN.md`).
@@ -21,4 +21,4 @@
 - Monitoreo de CI por proceso dormido único (`scripts/wait_ci.ps1`) con `BypassSandbox: true`.
 
 ## Próximo Paso Inmediato
-- Probar en *Rinde Más Dev* (build 616) el flujo de edición directa de presupuestos por categoría (`UI-04`) y el guardado de borradores (`UX-13`).
+- Probar en *Rinde Más Dev* (build 617) la pantalla unificada de revisión de gastos (tarjeta Información General, Concepto y formato 0,00), presupuestos directos (UI-04) y guardado de borradores (UX-13).
