@@ -43,6 +43,7 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
   final Map<String, double?> _baseCategoryAmounts = {};
   final Map<String, String> _baseCategoryMonedas = {};
   bool _isConverting = false;
+  bool _hasScrolledOnKeyboardOpen = false;
 
   @override
   void initState() {
@@ -97,15 +98,6 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
         if (!mounted) return;
         final targetCat = _canonicalCategory(widget.initialCategory);
         if (targetCat != null) {
-          final key = _categoryKeys[targetCat];
-          if (key?.currentContext != null) {
-            Scrollable.ensureVisible(
-              key!.currentContext!,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-              alignment: 0.2,
-            );
-          }
           final focusNode = _categoryFocusNodes[targetCat];
           if (focusNode != null) {
             focusNode.requestFocus();
@@ -117,8 +109,32 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
               );
             }
           }
+          _scrollToCategory(targetCat);
         }
       });
+
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted && widget.initialCategory != null) {
+          _scrollToCategory(widget.initialCategory!);
+        }
+      });
+    }
+  }
+
+  void _scrollToCategory(String category) {
+    if (!mounted) return;
+    final targetCat = _canonicalCategory(category);
+    if (targetCat == null) return;
+
+    final key = _categoryKeys[targetCat];
+    final targetContext = key?.currentContext;
+    if (targetContext != null && targetContext.mounted) {
+      Scrollable.ensureVisible(
+        targetContext,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        alignment: 0.3,
+      );
     }
   }
 
@@ -457,6 +473,15 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
     final mediaQuery = MediaQuery.of(context);
     final bottomInset = mediaQuery.viewInsets.bottom;
 
+    if (widget.initialCategory != null && bottomInset > 0 && !_hasScrolledOnKeyboardOpen) {
+      _hasScrolledOnKeyboardOpen = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && widget.initialCategory != null) {
+          _scrollToCategory(widget.initialCategory!);
+        }
+      });
+    }
+
     return Padding(
       padding: EdgeInsets.only(
         bottom: bottomInset,
@@ -574,11 +599,12 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
 
             Flexible(
               fit: FlexFit.loose,
-              child: ListView(
+              child: SingleChildScrollView(
                 controller: _scrollController,
-                shrinkWrap: true,
-                children: [
-                  // Sección 1: Presupuesto General y Meta de Ahorro
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Sección 1: Presupuesto General y Meta de Ahorro
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
@@ -873,6 +899,7 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                       ),
                     );
                   }).toList(),
+                  const SizedBox(height: 20),
                 ],
               ),
             ),

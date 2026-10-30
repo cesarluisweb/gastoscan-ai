@@ -165,6 +165,17 @@ void main() {
     expect(find.text('Monto total'), findsOneWidget);
     expect(find.text('\$ 0,00'), findsWidgets);
 
+    // Verify TextCapitalization on store and concept fields
+    final storeFormField = tester.widget<TextFormField>(
+      find.byWidgetPredicate((w) => w is TextFormField && w.decoration?.labelText == '¿Dónde compraste?'),
+    );
+    expect(storeFormField.textCapitalization, TextCapitalization.words);
+
+    final conceptFormField = tester.widget<TextFormField>(
+      find.byWidgetPredicate((w) => w is TextFormField && w.decoration?.labelText == 'Concepto'),
+    );
+    expect(conceptFormField.textCapitalization, TextCapitalization.sentences);
+
     // Ensure the ListView in body has non-zero height
     final listViewFinder = find.byType(ListView);
     expect(listViewFinder, findsOneWidget);

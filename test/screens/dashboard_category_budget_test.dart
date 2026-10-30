@@ -414,5 +414,26 @@ void main() {
       final focusedBorder = inputDecoration?.focusedBorder as OutlineInputBorder?;
       expect(focusedBorder?.borderSide.color, AppColors.primaryDark);
     });
+
+    testWidgets('Tapping assign prompt on Otros (last category) opens budget sheet and focuses/scrolls to Otros', (tester) async {
+      gastoProvider.setPresupuestoGeneralVal(500.0);
+      gastoProvider.setTotalesPorCategoria({'Otros': 30.0});
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      final assignPromptFinder = find.byKey(const Key('assign_budget_prompt_Otros'));
+      expect(assignPromptFinder, findsOneWidget);
+
+      await tester.tap(assignPromptFinder);
+      await tester.pumpAndSettle();
+
+      // BudgetBottomSheet should be displayed and input for Otros exists and is focused
+      expect(find.byKey(const Key('input_presupuesto_categoria_Otros')), findsOneWidget);
+      final inputWidget = tester.widget<TextField>(find.byKey(const Key('input_presupuesto_categoria_Otros')));
+      expect(inputWidget.focusNode?.hasFocus, isTrue);
+
+      // Verify SingleChildScrollView is present and handles scrolling
+      expect(find.byType(SingleChildScrollView), findsWidgets);
+    });
   });
 }

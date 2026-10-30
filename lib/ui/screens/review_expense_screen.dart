@@ -2142,6 +2142,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _comercioCtrl,
+                    textCapitalization: TextCapitalization.words,
                     decoration: const InputDecoration(
                       labelText: '¿Dónde compraste?',
                       hintText: 'Ej. Farmatodo, Panadería...',
@@ -2383,6 +2384,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                   Expanded(
                                     child: TextFormField(
                                       initialValue: item.descripcion,
+                                      textCapitalization: TextCapitalization.sentences,
                                       decoration: const InputDecoration(
                                         labelText: 'Concepto',
                                         hintText: 'Ej. Harina PAN, Taxi...',
