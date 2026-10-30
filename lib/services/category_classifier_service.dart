@@ -34,6 +34,9 @@ class CategoryClassifierService {
     'bateria carro': 'Transporte',
     'bateria vehiculo': 'Transporte',
     'gas vehicular': 'Transporte',
+    'viaje en ridery': 'Transporte',
+    'viaje en yummy': 'Transporte',
+    'viaje en taxi': 'Transporte',
 
     // Alimentación
     'aceite de maiz': 'Alimentación',
@@ -111,6 +114,11 @@ class CategoryClassifierService {
     // Ropa
     'ropa interior': 'Ropa',
     'traje de bano': 'Ropa',
+
+    // Entretenimiento
+    'almuerzo en restaurante': 'Entretenimiento',
+    'cena en restaurante': 'Entretenimiento',
+    'salida a restaurante': 'Entretenimiento',
   };
 
   /// Catálogo temático curado por categoría canónica oficial.

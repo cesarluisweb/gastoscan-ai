@@ -89,6 +89,18 @@ void main() {
   });
 
   group('CategoryClassifierService - Frases Compuestas y Desambiguación', () {
+    test('desambigua viaje en ridery o taxi (Transporte) vs viaje vacacional (Entretenimiento)', () {
+      expect(CategoryClassifierService.clasificar('Viaje en ridery'), 'Transporte');
+      expect(CategoryClassifierService.clasificar('Viaje en taxi'), 'Transporte');
+      expect(CategoryClassifierService.clasificar('Viaje a la playa'), 'Entretenimiento');
+    });
+
+    test('desambigua almuerzo o cena en restaurante (Entretenimiento) vs almuerzo normal (Alimentación)', () {
+      expect(CategoryClassifierService.clasificar('Almuerzo en restaurante'), 'Entretenimiento');
+      expect(CategoryClassifierService.clasificar('Cena en restaurante'), 'Entretenimiento');
+      expect(CategoryClassifierService.clasificar('Almuerzo ejecutivo'), 'Alimentación');
+    });
+
     test('desambigua aceite de motor (Transporte) vs aceite de maíz (Alimentación)', () {
       expect(CategoryClassifierService.clasificar('Aceite de motor 20w50'), 'Transporte');
       expect(CategoryClassifierService.clasificar('Aceite motor sellado'), 'Transporte');
