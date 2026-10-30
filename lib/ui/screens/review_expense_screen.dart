@@ -148,6 +148,11 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     return rounded.truncateToDouble() == rounded ? rounded.toInt().toString() : rounded.toString();
   }
 
+  String _formatDisplayMonto(double value) {
+    if (value <= 0) return '0,00';
+    return _formatDouble(value);
+  }
+
   String _normalizeText(String text) {
     return text
         .toLowerCase()
@@ -1869,14 +1874,14 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                   if (_selectedMoneda == 'VES') {
                     secLabel = 'Equiv. USD (BCV)';
                     final usdVal = tryParseAmount(_totalUsdCtrl.text, isPrice: false) ?? 0.0;
-                    secValue = '\$ ${_formatDouble(usdVal)}';
+                    secValue = '\$ ${_formatDisplayMonto(usdVal)}';
                   } else if (_metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsBcv || _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsUsdt) {
                     secLabel = 'Pagaste';
                     final bool isBcv = _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsBcv;
                     final tRate = isBcv ? _effectiveBcvRate(settings) : ((_tasaUsdtFecha != null && _tasaUsdtFecha! > 0) ? _tasaUsdtFecha! : (tryParseAmount(_tasaUsdtCtrl.text, isPrice: false) ?? settings.tasaCambioVesUsdt));
                     final manualBs = _bolivaresAjustadosManualmente ? tryParseAmount(_totalBsManualCtrl.text, isPrice: false) : null;
                     final totalBs = (manualBs != null && manualBs > 0) ? manualBs : (totalVal * (tRate > 0 ? tRate : 1.0));
-                    secValue = 'Bs. ${_formatDouble(totalBs)}';
+                    secValue = 'Bs. ${_formatDisplayMonto(totalBs)}';
                   } else {
                     secLabel = 'Forma de pago';
                     secValue = 'Divisa directa';
@@ -1904,7 +1909,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                   fit: BoxFit.scaleDown,
                                   alignment: Alignment.centerLeft,
                                   child: Text(
-                                    '${_symbolForMoneda(_selectedMoneda)} ${_formatDouble(totalVal)}',
+                                    '${_symbolForMoneda(_selectedMoneda)} ${_formatDisplayMonto(totalVal)}',
                                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                                   ),
                                 ),
@@ -2082,7 +2087,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
           padding: const EdgeInsets.all(16),
           children: [
             _buildImageHeader(),
-            // TARJETA 1: COMERCIO
+            // TARJETA 1: INFORMACIÓN GENERAL
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -2094,45 +2099,26 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    '¿Dónde compraste?',
+                    'Información General',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
                   TextFormField(
                     controller: _comercioCtrl,
                     decoration: const InputDecoration(
-                      labelText: 'Nombre del comercio',
+                      labelText: '¿Dónde compraste?',
                       hintText: 'Ej. Farmatodo, Panadería...',
                       prefixIcon: Icon(Icons.storefront_outlined, color: AppColors.textSecondary),
                       helperText: 'Puedes dejarlo en blanco si fue un gasto informal.',
                       helperStyle: TextStyle(fontSize: 11, color: AppColors.textSecondary),
                     ),
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            // TARJETA 2: FECHA DE LA COMPRA
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.card,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    '¿Cuándo compraste?',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                  ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
                   InkWell(
                     onTap: _selectDate,
                     child: InputDecorator(
                       decoration: const InputDecoration(
-                        labelText: 'Fecha de la compra',
+                        labelText: '¿Cuándo compraste?',
                         prefixIcon: Icon(Icons.calendar_today_outlined, color: AppColors.textSecondary),
                       ),
                       child: Text(
@@ -2157,31 +2143,17 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                       ],
                     ),
                   ],
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            // TARJETA 2: MONEDA DE LA COMPRA
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.card,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                  const SizedBox(height: 18),
                   const Text(
                     '¿En qué moneda están los precios?',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 3),
                   const Text(
                     'La moneda de la factura o de los productos.',
-                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                    style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
                   Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
@@ -2241,6 +2213,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                 decoration: BoxDecoration(
                                   color: _selectedMoneda == m ? AppColors.surface : Colors.transparent,
                                   borderRadius: BorderRadius.circular(8),
+                                  border: _selectedMoneda == m
+                                      ? Border.all(color: AppColors.primaryDark, width: 1.5)
+                                      : null,
                                   boxShadow: _selectedMoneda == m
                                       ? [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 4)]
                                       : null,
@@ -2372,7 +2347,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                     child: TextFormField(
                                       initialValue: item.descripcion,
                                       decoration: const InputDecoration(
-                                        labelText: '¿Qué fue?',
+                                        labelText: 'Concepto',
                                         hintText: 'Ej. Harina PAN, Taxi...',
                                         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                                       ),
@@ -2509,7 +2484,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                         FittedBox(
                                           fit: BoxFit.scaleDown,
                                           child: Text(
-                                            '${_symbolForMoneda(_selectedMoneda)} ${_formatDouble(_items[idx].totalDisplay)}',
+                                            '${_symbolForMoneda(_selectedMoneda)} ${_formatDisplayMonto(_items[idx].totalDisplay)}',
                                             style: const TextStyle(
                                               fontSize: 15,
                                               fontWeight: FontWeight.bold,

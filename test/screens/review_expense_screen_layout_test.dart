@@ -148,11 +148,14 @@ void main() {
     expect(find.text('Guardar Gasto'), findsOneWidget);
 
     // Verify body form fields are visible and rendered
+    expect(find.text('Información General'), findsOneWidget);
     expect(find.text('¿Dónde compraste?'), findsOneWidget);
     expect(find.text('¿Cuándo compraste?'), findsOneWidget);
     expect(find.text('¿En qué moneda están los precios?'), findsOneWidget);
     expect(find.text('¿Qué compraste?'), findsOneWidget);
+    expect(find.text('Concepto'), findsOneWidget);
     expect(find.text('Monto total'), findsOneWidget);
+    expect(find.text('\$ 0,00'), findsWidgets);
 
     // Ensure the ListView in body has non-zero height
     final listViewFinder = find.byType(ListView);
