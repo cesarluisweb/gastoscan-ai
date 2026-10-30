@@ -96,6 +96,7 @@ class GeminiExtractionResult {
             precioUnitario: (precio * 100).round(),
             total: (totalCalculado * 100).round(),
             categoria: catItem,
+            origenCategoria: catItem != 'Otros' ? OrigenCategoria.ia : OrigenCategoria.predeterminada,
           ));
         }
       }
@@ -124,6 +125,7 @@ class GeminiExtractionResult {
           precioUnitario: (impuestoIva * 100).round(),
           total: (impuestoIva * 100).round(),
           categoria: dominantCat,
+          origenCategoria: dominantCat != 'Otros' ? OrigenCategoria.ia : OrigenCategoria.predeterminada,
         ));
       }
     }
@@ -135,6 +137,7 @@ class GeminiExtractionResult {
         cantidad: 1.0,
         precioUnitario: (totalOriginal * 100).round(),
         total: (totalOriginal * 100).round(),
+        origenCategoria: OrigenCategoria.predeterminada,
       ));
     }
 

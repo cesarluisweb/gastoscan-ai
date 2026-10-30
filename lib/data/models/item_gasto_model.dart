@@ -1,6 +1,10 @@
 import '../../core/constants/app_constants.dart';
 
+enum OrigenCategoria { predeterminada, ia, automatica, manual }
+
 class ItemGastoModel {
+  static int _clientKeySeq = 0;
+
   final int? id;
   final int? gastoId;
   final String descripcion;
@@ -8,6 +12,8 @@ class ItemGastoModel {
   final int precioUnitario;
   final int total;
   final String categoria;
+  final OrigenCategoria origenCategoria;
+  final String clientKey;
 
   ItemGastoModel({
     this.id,
@@ -17,7 +23,9 @@ class ItemGastoModel {
     required this.precioUnitario,
     required this.total,
     this.categoria = 'Otros',
-  });
+    this.origenCategoria = OrigenCategoria.predeterminada,
+    String? clientKey,
+  }) : clientKey = clientKey ?? 'it_${++_clientKeySeq}';
 
   Map<String, dynamic> toMap() {
     return {
@@ -40,6 +48,7 @@ class ItemGastoModel {
       precioUnitario: (map['precio_unitario'] as num?)?.toInt() ?? 0,
       total: (map['total'] as num?)?.toInt() ?? 0,
       categoria: AppConstants.normalizarCategoria(map['categoria'] as String?),
+      origenCategoria: OrigenCategoria.manual,
     );
   }
 
@@ -51,6 +60,8 @@ class ItemGastoModel {
     int? precioUnitario,
     int? total,
     String? categoria,
+    OrigenCategoria? origenCategoria,
+    String? clientKey,
   }) {
     return ItemGastoModel(
       id: id ?? this.id,
@@ -60,6 +71,8 @@ class ItemGastoModel {
       precioUnitario: precioUnitario ?? this.precioUnitario,
       total: total ?? this.total,
       categoria: categoria ?? this.categoria,
+      origenCategoria: origenCategoria ?? this.origenCategoria,
+      clientKey: clientKey ?? this.clientKey,
     );
   }
 

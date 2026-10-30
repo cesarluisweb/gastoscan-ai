@@ -1175,4 +1175,63 @@ void main() {
     expect(gastoProvider.actualizarGastoLlamado, isFalse);
     expect(find.text('Abrir Edicion 2'), findsOneWidget);
   });
+
+  testWidgets('ReviewExpenseScreen autocategoriza concepto, actualiza entre categorias y respeta seleccion manual', (tester) async {
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
+
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pumpAndSettle();
+
+    // Localizar el campo Concepto
+    final conceptFinder = find.byWidgetPredicate(
+      (w) => w is TextField && w.decoration?.labelText == 'Concepto',
+    );
+    expect(conceptFinder, findsOneWidget);
+
+    // Inicialmente está en Otros
+    expect(find.text('Otros'), findsWidgets);
+
+    // 1. Escribir 'Harina PAN' -> Se reclasifica automáticamente a Alimentación
+    await tester.enterText(conceptFinder, 'Harina PAN');
+    await tester.pumpAndSettle();
+    expect(find.text('Alimentación'), findsWidgets);
+
+    // 2. Cambiar concepto a 'Carrera de taxi' -> Cambia automáticamente a Transporte (no se queda atrapado)
+    await tester.enterText(conceptFinder, 'Carrera de taxi');
+    await tester.pumpAndSettle();
+    expect(find.text('Transporte'), findsWidgets);
+
+    // 3. Borrar el concepto -> Regresa automáticamente a Otros
+    await tester.enterText(conceptFinder, '');
+    await tester.pumpAndSettle();
+    expect(find.text('Otros'), findsWidgets);
+
+    // 4. Escribir 'Medicina' -> Cambia a Salud
+    await tester.enterText(conceptFinder, 'Medicina');
+    await tester.pumpAndSettle();
+    expect(find.text('Salud'), findsWidgets);
+
+    // 5. Seleccionar manualmente 'Hogar' en el Dropdown
+    final dropdownFinder = find.byType(DropdownButtonFormField<String>).first;
+    await tester.tap(dropdownFinder);
+    await tester.pumpAndSettle();
+
+    // Tocar la opción 'Hogar' en el menú abierto
+    final hogarItemFinder = find.widgetWithText(DropdownMenuItem<String>, 'Hogar').last;
+    await tester.tap(hogarItemFinder);
+    await tester.pumpAndSettle();
+    expect(find.text('Hogar'), findsWidgets);
+
+    // 6. Cambiar concepto a 'Pollo beneficiado' -> Como fue manual, DEBE PERMANECER en Hogar
+    await tester.enterText(conceptFinder, 'Pollo beneficiado');
+    await tester.pumpAndSettle();
+    expect(find.text('Hogar'), findsWidgets);
+    expect(find.text('Alimentación'), findsNothing);
+  });
 }

@@ -17,6 +17,7 @@ import '../../providers/settings_provider.dart';
 import '../../providers/chat_provider.dart';
 import '../../services/image_service.dart';
 import '../../services/exchange_rate_service.dart';
+import '../../services/category_classifier_service.dart';
 import '../../providers/scan_queue_provider.dart';
 import '../../core/utils/uuid_generator.dart';
 import '../widgets/receipt_viewer_dialog.dart';
@@ -455,6 +456,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
           precioUnitario: 0,
           total: 0,
           categoria: 'Otros',
+          origenCategoria: OrigenCategoria.predeterminada,
         ));
       }
 
@@ -870,6 +872,15 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     }
   }
 
+  void _sincronizarCategoriaImpuestos() {
+    final domCat = ItemGastoModel.calcularCategoriaDominante(_items);
+    for (int i = 0; i < _items.length; i++) {
+      if (ItemGastoModel.isTaxDescription(_items[i].descripcion)) {
+        _items[i] = _items[i].copyWith(categoria: domCat);
+      }
+    }
+  }
+
   void _addItem() {
     setState(() {
       _items.add(ItemGastoModel(
@@ -877,13 +888,17 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         cantidad: 1.0,
         precioUnitario: 0,
         total: 0,
+        categoria: 'Otros',
+        origenCategoria: OrigenCategoria.predeterminada,
       ));
+      _sincronizarCategoriaImpuestos();
     });
   }
 
   void _removeItem(int index) {
     setState(() {
       _items.removeAt(index);
+      _sincronizarCategoriaImpuestos();
     });
   }
 
@@ -2366,6 +2381,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                       }
 
                       return Card(
+                        key: ValueKey('item_card_${item.clientKey}'),
                         margin: const EdgeInsets.symmetric(vertical: 6),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -2390,7 +2406,31 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                         hintText: 'Ej. Harina PAN, Taxi...',
                                         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                                       ),
-                                      onChanged: (v) => _items[idx] = _items[idx].copyWith(descripcion: v),
+                                      onChanged: (v) {
+                                        _items[idx] = _items[idx].copyWith(descripcion: v);
+                                        if (_items[idx].origenCategoria != OrigenCategoria.manual && !ItemGastoModel.isTaxDescription(v)) {
+                                          final sugerida = CategoryClassifierService.clasificar(v);
+                                          if (sugerida != null) {
+                                            if (sugerida != _items[idx].categoria) {
+                                              setState(() {
+                                                _items[idx] = _items[idx].copyWith(
+                                                  categoria: sugerida,
+                                                  origenCategoria: OrigenCategoria.automatica,
+                                                );
+                                                _sincronizarCategoriaImpuestos();
+                                              });
+                                            }
+                                          } else if (_items[idx].origenCategoria == OrigenCategoria.automatica) {
+                                            setState(() {
+                                              _items[idx] = _items[idx].copyWith(
+                                                categoria: 'Otros',
+                                                origenCategoria: OrigenCategoria.predeterminada,
+                                              );
+                                              _sincronizarCategoriaImpuestos();
+                                            });
+                                          }
+                                        }
+                                      },
                                     ),
                                   ),
                                   if (_items.length > 1)
@@ -2494,15 +2534,11 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                       onChanged: (val) {
                                         if (val != null) {
                                           setState(() {
-                                            _items[idx] = _items[idx].copyWith(categoria: val);
-                                            if (!ItemGastoModel.isTaxDescription(_items[idx].descripcion)) {
-                                              final domCat = ItemGastoModel.calcularCategoriaDominante(_items);
-                                              for (int i = 0; i < _items.length; i++) {
-                                                if (ItemGastoModel.isTaxDescription(_items[i].descripcion)) {
-                                                  _items[i] = _items[i].copyWith(categoria: domCat);
-                                                }
-                                              }
-                                            }
+                                            _items[idx] = _items[idx].copyWith(
+                                              categoria: val,
+                                              origenCategoria: OrigenCategoria.manual,
+                                            );
+                                            _sincronizarCategoriaImpuestos();
                                           });
                                         }
                                       },

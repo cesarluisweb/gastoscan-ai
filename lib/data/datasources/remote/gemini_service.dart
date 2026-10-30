@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import '../../../core/constants/app_constants.dart';
+import '../../../services/category_classifier_service.dart';
 import '../../models/gemini_extraction_result.dart';
 import '../../models/item_gasto_model.dart';
 import '../../models/shopping_item_model.dart';
@@ -552,27 +553,7 @@ class GeminiService {
     }
 
     // 5. Inferencia de categoría
-    String categoria = 'Otros';
-    final pLower = producto.toLowerCase();
-    if (RegExp(r'\b(queso|carne|pollo|pan|leche|huevos|cafe|café|arroz|harina|comida|verduras|frutas|pasta|jamon|jamón|charcuteria|charcutería|mercado)\b').hasMatch(pLower)) {
-      categoria = 'Alimentación';
-    } else if (RegExp(r'\b(medicina|pastillas?|jarabe|dolor|farmacia|remedio|salud)\b').hasMatch(pLower)) {
-      categoria = 'Salud';
-    } else if (RegExp(r'\b(jabon|jabón|champu|champú|desodorante|papel|aseo|higiene)\b').hasMatch(pLower)) {
-      categoria = 'Higiene';
-    } else if (RegExp(r'\b(gasolina|pasaje|taxi|transporte|camioneta|metro)\b').hasMatch(pLower)) {
-      categoria = 'Transporte';
-    } else if (RegExp(r'\b(luz|agua|cantv|internet|servicio|saldo|recarga)\b').hasMatch(pLower)) {
-      categoria = 'Servicios';
-    } else if (RegExp(r'\b(ropa|pantalon|pantalón|camisa|zapatos|medias|franela)\b').hasMatch(pLower)) {
-      categoria = 'Ropa';
-    } else if (RegExp(r'\b(cuaderno|utiles|útiles|libro|colegio|escuela|educacion|educación)\b').hasMatch(pLower)) {
-      categoria = 'Educación';
-    } else if (RegExp(r'\b(bombillo|detergente|cloro|reparacion|reparación|hogar)\b').hasMatch(pLower)) {
-      categoria = 'Hogar';
-    } else if (RegExp(r'\b(cine|salida|restaurante|chucheria|chuchería|snack|fiesta)\b').hasMatch(pLower)) {
-      categoria = 'Entretenimiento';
-    }
+    final String categoria = CategoryClassifierService.clasificar(producto) ?? 'Otros';
 
     // 6. Moneda y liquidación
     final String moneda = AppConstants.detectarMonedaDeTexto(text, fallback: fallbackMoneda);

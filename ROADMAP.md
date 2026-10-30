@@ -116,6 +116,15 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
     1. Diálogo con opción "Guardar borrador" al salir con datos en gastos nuevos, botón sutil de guardado directo en AppBar (`Icons.bookmark_border_rounded`), persistencia en cola SQLite (`scan_queue`) con estado `ready`, visualización en Inicio e Historial con badge "Por revisar" y denominación "Comercio no especificado". Descartar un borrador existente solo revierte los cambios de la sesión sin eliminarlo de la cola.
     2. En edición de gasto existente (`existingGasto != null`): título dinámico «Editar gasto» en AppBar, diálogo al retroceder «¿Guardar modificaciones?» con opciones «Guardar gasto» (actualiza y valida), «Descartar» (revierte cambios) y «Cancelar» (continúa editando), y notificación de confirmación «Gasto actualizado con éxito».
     3. Suite de pruebas: 6 casos en `review_expense_screen_layout_test.dart`, 2 en `scan_queue_provider_test.dart` y 2 en `gemini_extraction_result_test.dart`. (Verificado en CI build 620, commit `9d946da`).
+- `UI-14` **Autocategorización Semántica Local de Conceptos:** `Implementada 🔧`
+  - *Problema:* El usuario debía seleccionar manualmente la categoría en el menú desplegable para cada artículo ingresado a mano, provocando que la mayoría de los gastos quedaran acumulados en «Otros» por descuido o fatiga.
+  - *Solución:*
+    1. Servicio estático y 100% offline (`CategoryClassifierService`) con catálogo de más de 250 términos venezolanos y generales curados y desambiguados.
+    2. Máquina de estados no invasiva (`OrigenCategoria`: `predeterminada`, `ia`, `automatica`, `manual`). La selección manual del usuario jamás se sobreescribe y las categorías de IA no se degradan.
+    3. Unificación con el fallback de voz en `GeminiService`, eliminando código duplicado.
+    4. Sincronización automática de renglones impositivos (`IVA`/`IGTF`) con la categoría dominante.
+    5. Claves estables por artículo (`clientKey`) para preservar el estado visual ante inserción o borrado.
+    6. Detallado en `docs/DOC_AUTOCATEGORIZACION_LOCAL.md`.
 
 ### Bloque B: Finanzas Bimonetarias y Lentes Multimoneda (Finanzas / UX)
 - `FIN-09` **Equivalencias Multimoneda Inmutables (`USD`, `VES`, `USDT`, `EUR`) y Migración SQLite v18:** `Pendiente de validación 🧪`
