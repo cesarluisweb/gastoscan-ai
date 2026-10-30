@@ -6,9 +6,9 @@
 - **Fase 5 (Google Play):** Closed Testing activo con 20 evaluadores (período de 14 días).
 - **Notificaciones v1.4.0 (Broadcast FCM & Quincenal IA):** `Completada ✅`. Validado en dispositivo por César (envío masivo probado con éxito). Graduadas reglas a `privacidad-seguridad.md`, `flutter-testing.md` y `flutter-desarrollo.md`.
 - **UI-08, Flujo de Compra en ReviewExpenseScreen & UX-12:** `Pendiente de validación 🧪`. CI verde (Android build 617, commit `b5e00c5`). 431 pruebas pasando. Tarjeta única «Información General» (comercio, fecha y selector de moneda con borde amarillo activo), label «Concepto» en artículos, formato formal `0,00` sin símbolos sueltos y diálogo seguro de ajuste.
-- **UX-13 (Guardar Gasto como Borrador y Flujo Seguro al Editar):** `Implementada 🔧`. Diálogo al dar atrás al editar gasto existente («¿Guardar modificaciones?» con «Guardar gasto», «Descartar», «Cancelar»), título «Editar gasto» en AppBar y notificación «Gasto actualizado con éxito». 3 pruebas adicionales en `review_expense_screen_layout_test.dart` (434 pruebas pasando).
+- **UX-13 (Guardar Gasto como Borrador y Flujo Seguro al Editar):** `Pendiente de validación 🧪`. CI verde (Android build 620, commit `9d946da`). 434 pruebas pasando. Título dinámico «Editar gasto» en AppBar, diálogo al retroceder «¿Guardar modificaciones?» con «Guardar gasto», «Descartar» y «Cancelar», y aviso «Gasto actualizado con éxito».
 - **UI-04 (Control de Presupuestos por Categoría & Enfoque Directo):** `Pendiente de validación 🧪`. CI verde (Android build 616, commit `13b828a`). 430 pruebas unitarias y de widgets pasando. Fila superior limpia (`maxLines: 1`), botón «Editar» reubicado junto a barra, chip «Asignar presupuesto» sutil sin subrayado, scroll/enfoque automático (`initialCategory`) con cursor negro (`textSelectionTheme`), borde enfocado en input, contenedor neutral y copy conciso.
-- **Artefacto para pruebas:** Descargar `rindemas-dev-apk` desde el run de CI en curso tras push.
+- **Artefacto para pruebas:** Descargar `rindemas-dev-apk` desde el run de CI 41074514604.
 
 ## Decisiones Técnicas y de Negocio Recientes
 - Distribución de Gastos (Dona a 130px): Diámetro de 130px (`centerSpaceRadius: 41`, `radius: 24`) con 14px de separación hacia la lista para llegar a un poco menos de la mitad de la tarjeta (lista comienza al 48.6%), manteniendo márgenes exactos y columna alineada de porcentajes (graduado a `DESIGN.md`).
@@ -21,4 +21,4 @@
 - Monitoreo de CI por proceso dormido único (`scripts/wait_ci.ps1`) con `BypassSandbox: true`.
 
 ## Próximo Paso Inmediato
-- Probar en *Rinde Más Dev* (build 617) la pantalla unificada de revisión de gastos (tarjeta Información General, Concepto y formato 0,00), presupuestos directos (UI-04) y guardado de borradores (UX-13).
+- Probar en *Rinde Más Dev* (build 620) la edición de gastos guardados (título «Editar gasto», diálogo «¿Guardar modificaciones?» al dar atrás con cambios y mensaje «Gasto actualizado con éxito»).
