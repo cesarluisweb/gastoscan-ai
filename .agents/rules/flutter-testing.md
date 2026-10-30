@@ -35,6 +35,7 @@ description: "Convenciones para pruebas unitarias y de widgets, configuración d
 
 ## 3. Resiliencia y Aislamiento de Firebase
 - **Validación de Instancia Activa:** Todo widget o servicio que interactúe con `FirebaseAuth` o Firestore debe validar `Firebase.apps.isNotEmpty` antes de instanciar streams o métodos, garantizando que los tests de widgets se ejecuten limpiamente sin requerir un backend simulado.
+- **Consumo Seguro de `FirebaseAuth` en Formularios:** En callbacks de guardado que verifiquen el estado anónimo del usuario (ej. para sugerir vinculación de cuenta), NO invocar `FirebaseAuth.instance.currentUser` si la operación no lo requiere (ej. al editar gastos ya registrados), y proteger siempre la llamada dentro de un bloque `try / catch` con fallback defensivo (`isAnon = false`) para evitar excepciones `FirebaseException: [core/no-app]` en runners de pruebas y CI.
 
 ## 4. Mocks y Fakes de Arquitectura
 - **Firmas Exactas en Fakes:** Al implementar clases simuladas (`FakeGastoProvider`, `FakeSettingsProvider`), replicar con exactitud la firma de los métodos reales, respetando si los parámetros son posicionales o nombrados.

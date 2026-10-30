@@ -45,6 +45,15 @@ description: "Convenciones de código Dart, maquetación de widgets, imports obl
   5. Si ya se está en `Inicio`, exigir doble pulsación de atrás en un lapso de 2 segundos con mensaje flotante breve (*"Presiona de nuevo para salir"*), invocando `SystemNavigator.pop()` únicamente en el segundo toque.
 - **Consistencia Simétrica de AppBars Principales:** Las cabeceras (`AppBar.actions`) de las 4 pantallas principales (`Inicio`, `Gastos`, `Análisis`, `Más`) DEBEN mantener de forma idéntica la dupla `[🔍 Buscar, ✨ Asistente IA]`. La acción de búsqueda redirige de inmediato a la pestaña `Gastos` activando el campo con teclado desplegado (`autofocus`).
 - **Ergonomía en Pestaña "Más" (Agrupación en Hojas Modales):** Para evitar la saturación visual con múltiples tarjetas o interruptores en la pantalla principal de *Más*, las configuraciones compuestas (ej. preferencias de notificaciones, opciones avanzadas) deben presentarse mediante una sola fila compacta (`ListTile` con icono y flecha `chevron_right`). Al pulsarla, se despliega una hoja modal inferior (`showModalBottomSheet`) con el patrón canónico shrink-wrapped.
+- **Evaluación Dinámica de Cambios en Formularios con `PopScope(canPop: false)`:** Prohibido condicionar `canPop: !_hasUnsavedData()` directamente en la propiedad del widget `PopScope` en pantallas con formularios extensos. Si los controladores de texto (`TextEditingController`) no disparan `setState()` en cada pulsación, el valor de `canPop` permanece congelado en `true` y Flutter descarta la pantalla sin mostrar el diálogo de confirmación. El patrón canónico obligatorio es:
+  1. Configurar siempre `canPop: false`.
+  2. En `onPopInvokedWithResult: (didPop, result) async`:
+     - Si `didPop` es `true`, retornar de inmediato.
+     - Evaluar la condición en tiempo real (`if (!_hasUnsavedData() || _isSaving) { Navigator.pop(context); return; }`).
+     - Si hay cambios pendientes, desplegar el diálogo modal de confirmación correspondiente.
+- **Flujo Canónico de Salida y Títulos en Formularios de Gastos (`ReviewExpenseScreen`):**
+  1. **En registro nuevo o escaneo:** Barra superior muestra «Registrar gasto» (o «Revisar Factura / Gasto (N en cola)»). El diálogo al retroceder con datos ofrece: «Guardar borrador» (guarda en cola SQLite `ready`), «Descartar» y «Seguir editando».
+  2. **En edición de gasto existente (`existingGasto != null`):** La barra superior DEBE mostrar dinámicamente «Editar gasto». El diálogo al retroceder con modificaciones ofrece: «Guardar gasto» (valida el formulario y actualiza la base de datos), «Descartar» (revierte los cambios de la sesión actual preservando el gasto en base de datos) y «Cancelar» (permanece en la pantalla). Al actualizar con éxito, notificar con «Gasto actualizado con éxito».
 
 ## 3. Modelos y Servicios
 - **Instanciación de Modelos con Campos Requeridos:** Al crear instancias de `GastoModel` (para borradores, colas o pruebas), proveer siempre todos los campos obligatorios, incluyendo `creadoEn: DateTime.now().toIso8601String()`.
