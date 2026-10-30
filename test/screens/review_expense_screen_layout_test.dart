@@ -62,6 +62,7 @@ class FakeDatabaseHelper extends DatabaseHelper {
 
 class FakeGastoProvider extends GastoProvider {
   final List<GastoModel> _gastos = [];
+  bool actualizarGastoLlamado = false;
 
   @override
   List<GastoModel> get gastos => _gastos;
@@ -74,6 +75,12 @@ class FakeGastoProvider extends GastoProvider {
 
   @override
   Future<Map<String, dynamic>?> buscarPrecioAnterior(String descripcion, {int? excludeGastoId}) async => null;
+
+  @override
+  Future<bool> actualizarGasto(GastoModel gasto, List<ItemGastoModel> items) async {
+    actualizarGastoLlamado = true;
+    return true;
+  }
 }
 
 class FakeSettingsProvider extends SettingsProvider {
@@ -973,5 +980,181 @@ void main() {
     // No debe haber guardado nada en la cola y debió salir
     expect(fakeDb.readyDb.isEmpty, isTrue);
     expect(find.text('Abrir'), findsOneWidget);
+  });
+
+  testWidgets('ReviewExpenseScreen con existingGasto muestra "Editar gasto" en AppBar y "Guardar Gasto" en boton inferior', (tester) async {
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
+
+    final existing = GastoModel(
+      id: 99,
+      uuid: 'uuid-existing-1',
+      fecha: '2026-10-25',
+      comercio: 'Automercado Plaza',
+      moneda: 'USD',
+      totalOriginal: 2500,
+      totalUsd: 2500,
+      tasaCambio: 880.0,
+      categoria: 'Alimentos',
+      creadoEn: '2026-10-25T10:00:00',
+    );
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<GastoProvider>.value(value: gastoProvider),
+          ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+          ChangeNotifierProvider<ScanQueueProvider>.value(value: scanQueueProvider),
+        ],
+        child: MaterialApp(
+          home: ReviewExpenseScreen(existingGasto: existing),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Editar gasto'), findsOneWidget);
+    expect(find.text('Registrar gasto'), findsNothing);
+    expect(find.widgetWithText(ElevatedButton, 'Guardar Gasto'), findsOneWidget);
+    // Boton de borrador debe estar oculto para gasto ya existente
+    expect(find.byKey(const Key('btn_guardar_borrador_appbar')), findsNothing);
+  });
+
+  testWidgets('ReviewExpenseScreen al editar existingGasto y presionar Atrás muestra diálogo "¿Guardar modificaciones?" y permite guardar', (tester) async {
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
+
+    final existing = GastoModel(
+      id: 99,
+      uuid: 'uuid-existing-2',
+      fecha: '2026-10-25',
+      comercio: 'Automercado Plaza',
+      moneda: 'USD',
+      totalOriginal: 2500,
+      totalUsd: 2500,
+      tasaCambio: 880.0,
+      categoria: 'Alimentos',
+      creadoEn: '2026-10-25T10:00:00',
+    );
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<GastoProvider>.value(value: gastoProvider),
+          ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+          ChangeNotifierProvider<ScanQueueProvider>.value(value: scanQueueProvider),
+        ],
+        child: MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (ctx) => ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    ctx,
+                    MaterialPageRoute(
+                      builder: (_) => ReviewExpenseScreen(existingGasto: existing),
+                    ),
+                  );
+                },
+                child: const Text('Abrir Edicion'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Abrir Edicion'));
+    await tester.pumpAndSettle();
+
+    // Modificar el monto
+    final inputTotalFinder = find.byKey(const Key('input_monto_total'));
+    await tester.enterText(inputTotalFinder, '35.00');
+    await tester.pumpAndSettle();
+
+    // Presionar Atrás
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+
+    // Verificar diálogo
+    expect(find.text('¿Guardar modificaciones?'), findsOneWidget);
+    expect(find.text('Descartar'), findsOneWidget);
+    expect(find.text('Cancelar'), findsOneWidget);
+    expect(find.widgetWithText(ElevatedButton, 'Guardar gasto'), findsOneWidget);
+
+    // Tocar 'Guardar gasto'
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Guardar gasto'));
+    await tester.pumpAndSettle();
+
+    // Debe llamar a actualizarGasto y salir
+    expect(gastoProvider.actualizarGastoLlamado, isTrue);
+    expect(find.text('Abrir Edicion'), findsOneWidget);
+  });
+
+  testWidgets('ReviewExpenseScreen al editar existingGasto y presionar Descartar no actualiza y sale', (tester) async {
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
+    gastoProvider.actualizarGastoLlamado = false;
+
+    final existing = GastoModel(
+      id: 100,
+      uuid: 'uuid-existing-3',
+      fecha: '2026-10-25',
+      comercio: 'Automercado Plaza',
+      moneda: 'USD',
+      totalOriginal: 2500,
+      totalUsd: 2500,
+      tasaCambio: 880.0,
+      categoria: 'Alimentos',
+      creadoEn: '2026-10-25T10:00:00',
+    );
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<GastoProvider>.value(value: gastoProvider),
+          ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+          ChangeNotifierProvider<ScanQueueProvider>.value(value: scanQueueProvider),
+        ],
+        child: MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (ctx) => ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    ctx,
+                    MaterialPageRoute(
+                      builder: (_) => ReviewExpenseScreen(existingGasto: existing),
+                    ),
+                  );
+                },
+                child: const Text('Abrir Edicion 2'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Abrir Edicion 2'));
+    await tester.pumpAndSettle();
+
+    // Modificar el comercio
+    await tester.enterText(find.byType(TextFormField).first, 'Nuevo Comercio');
+    await tester.pumpAndSettle();
+
+    // Presionar Atrás
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+
+    // Tocar 'Descartar'
+    await tester.tap(find.text('Descartar'));
+    await tester.pumpAndSettle();
+
+    // No debe haber actualizado y debió salir
+    expect(gastoProvider.actualizarGastoLlamado, isFalse);
+    expect(find.text('Abrir Edicion 2'), findsOneWidget);
   });
 }

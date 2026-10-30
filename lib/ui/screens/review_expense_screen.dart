@@ -1511,17 +1511,26 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
           }
         }
       } else {
+        final isEdit = widget.existingGasto != null;
         if (matchedIds.isNotEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Gasto registrado y ${matchedIds.length} ítem(s) de tu lista marcados como comprados.', style: const TextStyle(color: Colors.black)),
+              content: Text(
+                isEdit
+                    ? 'Gasto actualizado y ${matchedIds.length} ítem(s) de tu lista marcados como comprados.'
+                    : 'Gasto registrado y ${matchedIds.length} ítem(s) de tu lista marcados como comprados.',
+                style: const TextStyle(color: Colors.black),
+              ),
               backgroundColor: AppColors.primaryDark,
             ),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Gasto registrado con éxito', style: TextStyle(color: Colors.black)),
+            SnackBar(
+              content: Text(
+                isEdit ? 'Gasto actualizado con éxito' : 'Gasto registrado con éxito',
+                style: const TextStyle(color: Colors.black),
+              ),
               backgroundColor: AppColors.primaryDark,
             ),
           );
@@ -1778,26 +1787,41 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
         if (widget.existingGasto != null) {
-          final confirm = await showDialog<bool>(
+          final action = await showDialog<String>(
             context: context,
             builder: (ctx) => AlertDialog(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               backgroundColor: AppColors.card,
-              title: const Text('Descartar cambios', style: TextStyle(color: AppColors.textPrimary)),
-              content: const Text('¿Quieres descartar las modificaciones hechas a este gasto?', style: TextStyle(color: AppColors.textSecondary)),
+              title: const Text('¿Guardar modificaciones?', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+              content: const Text(
+                'Tienes modificaciones sin guardar en este gasto. ¿Deseas guardarlas antes de salir?',
+                style: TextStyle(color: AppColors.textSecondary, height: 1.4),
+              ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(ctx, false),
-                  child: const Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
+                  onPressed: () => Navigator.pop(ctx, 'discard'),
+                  child: const Text('Descartar', style: TextStyle(color: AppColors.error)),
                 ),
                 TextButton(
-                  onPressed: () => Navigator.pop(ctx, true),
-                  child: const Text('Descartar', style: TextStyle(color: AppColors.error)),
+                  onPressed: () => Navigator.pop(ctx, 'cancel'),
+                  child: const Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  onPressed: () => Navigator.pop(ctx, 'save'),
+                  child: const Text('Guardar gasto', style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
           );
-          if (confirm == true && mounted) {
+
+          if (action == 'save') {
+            await _guardarGasto(revisarSiguiente: false);
+          } else if (action == 'discard' && mounted) {
             Navigator.pop(context);
           }
           return;
@@ -1999,13 +2023,15 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       ),
       appBar: AppBar(
         title: Text(
-          isQueueItem && readyCount > 1
-              ? (widget.imageFile != null
-                  ? 'Revisar Factura ($readyCount en cola)'
-                  : 'Revisar Gasto ($readyCount en cola)')
-              : (widget.queueItemId != null || widget.imageFile != null
-                  ? (widget.imageFile != null ? 'Revisar Factura' : 'Revisar Gasto')
-                  : 'Registrar gasto'),
+          widget.existingGasto != null
+              ? 'Editar gasto'
+              : (isQueueItem && readyCount > 1
+                  ? (widget.imageFile != null
+                      ? 'Revisar Factura ($readyCount en cola)'
+                      : 'Revisar Gasto ($readyCount en cola)')
+                  : (widget.queueItemId != null || widget.imageFile != null
+                      ? (widget.imageFile != null ? 'Revisar Factura' : 'Revisar Gasto')
+                      : 'Registrar gasto')),
         ),
         actions: [
           if (widget.existingGasto == null)

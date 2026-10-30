@@ -110,9 +110,12 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 - `UX-12` **Selector y Autocompletado de Comercios Frecuentes:** `Pendiente`
   - *Problema:* El usuario debe teclear repetidamente los mismos nombres de comercios habituales (ej. Farmatodo, Automercado Plaza's, Central Madeirense, panadería local).
   - *Solución:* Al pulsar o enfocar el campo `¿Dónde compraste?`, desplegar una lista o chips de sugerencias rápidas con los comercios más frecuentes previamente registrados por el usuario una vez que acumule compras recurrentes, permitiendo seleccionarlo con un toque sin tener que escribirlo completo.
-- `UX-13` **Guardado de Gastos como Borrador (Por Revisar):** `Pendiente de validación 🧪`
-  - *Problema:* Al registrar un gasto manual, dictado o revisar una factura, presionar "Atrás" solo ofrecía descartar o cancelar, destruyendo el progreso si el usuario salía para consultar otra sección (ej. lista de compras o chat).
-  - *Solución:* Diálogo con opción "Guardar borrador" al salir con datos, botón sutil de guardado directo en AppBar (`Icons.bookmark_border_rounded`), persistencia en cola SQLite (`scan_queue`) con estado `ready`, visualización en Inicio e Historial con badge "Por revisar" y denominación "Comercio no especificado" ante ausencia de comercio. Descartar un borrador existente solo revierte los cambios de la sesión sin eliminarlo de la cola. Testeado con 3 pruebas nuevas en `review_expense_screen_layout_test.dart`, 2 en `scan_queue_provider_test.dart` y 2 en `gemini_extraction_result_test.dart`. (Verificado en CI build 613, commit `0e7df32`).
+- `UX-13` **Guardado de Gastos como Borrador y Flujo Seguro al Editar:** `Implementada 🔧`
+  - *Problema:* Al registrar un gasto nuevo o editar uno existente, presionar "Atrás" solo ofrecía descartar o cancelar; además, al entrar a editar un gasto guardado la barra superior seguía diciendo "Registrar gasto", generando confusión sobre el estado de la operación.
+  - *Solución:* 
+    1. Diálogo con opción "Guardar borrador" al salir con datos en gastos nuevos, botón sutil de guardado directo en AppBar (`Icons.bookmark_border_rounded`), persistencia en cola SQLite (`scan_queue`) con estado `ready`, visualización en Inicio e Historial con badge "Por revisar" y denominación "Comercio no especificado". Descartar un borrador existente solo revierte los cambios de la sesión sin eliminarlo de la cola.
+    2. En edición de gasto existente (`existingGasto != null`): título dinámico «Editar gasto» en AppBar, diálogo al retroceder «¿Guardar modificaciones?» con opciones «Guardar gasto» (actualiza y valida), «Descartar» (revierte cambios) y «Cancelar» (continúa editando), y notificación de confirmación «Gasto actualizado con éxito».
+    3. Suite de pruebas: 6 casos en `review_expense_screen_layout_test.dart`, 2 en `scan_queue_provider_test.dart` y 2 en `gemini_extraction_result_test.dart`.
 
 ### Bloque B: Finanzas Bimonetarias y Lentes Multimoneda (Finanzas / UX)
 - `FIN-09` **Equivalencias Multimoneda Inmutables (`USD`, `VES`, `USDT`, `EUR`) y Migración SQLite v18:** `Pendiente de validación 🧪`
