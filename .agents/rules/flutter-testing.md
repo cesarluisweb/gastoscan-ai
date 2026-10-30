@@ -25,11 +25,12 @@ description: "Convenciones para pruebas unitarias y de widgets, configuración d
   - `tester.ensureVisible(finder)` requiere que el elemento **ya esté instanciado** en el árbol de widgets. En un `ListView` con viewport corto, los widgets fuera de pantalla no existen y `ensureVisible` falla con `StateError: Bad state: No element`.
   - Con un viewport alto (`Size(1080, 4000)` y `devicePixelRatio = 1.0`), todos los componentes del formulario se construyen de inmediato y quedan evaluables directamente sin necesidad de scrolls artificiales.
   - Si una prueba requiere validar expresamente el comportamiento de scroll dinámico en viewports pequeños o buscar botones al fondo (ej. "Agregar otro producto"), usar `await tester.drag(find.byType(ListView), const Offset(0, -600)); await tester.pumpAndSettle();` antes de evaluar, nunca `ensureVisible` sin previo scroll.
-- **Inspección de `decoration` en Campos de Texto (`TextField` vs `TextFormField`):** `TextFormField` no expone el getter `decoration` directamente en su interfaz tipada de Flutter. Para inspeccionar `prefixText`, `prefixIcon` o `hintText` en pruebas sin errores de análisis estático (`undefined_getter`), castear al widget interno `TextField`:
+- **Inspección de `decoration` y `textCapitalization` en Campos de Texto (`TextField` vs `TextFormField`):** `TextFormField` no expone directamente los getters `decoration` ni `textCapitalization`. Para inspeccionar etiquetas, prefijos, hints o capitalización en pruebas sin errores de análisis estático (`undefined_getter`), buscar y tipar siempre el widget interno `TextField`:
   ```dart
   final textField = tester.widget<TextField>(
     find.descendant(of: find.byKey(const Key('id_campo')), matching: find.byType(TextField)),
   );
+  expect(textField.textCapitalization, TextCapitalization.words);
   expect(textField.decoration?.prefixText, 'USDT ');
   ```
 

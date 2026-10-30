@@ -50,11 +50,22 @@ Sobre fondos blancos o claros (`AppColors.card`, `AppColors.surface`, `AppColors
   - Fechas, horas, tasas de cambio informativas y notas secundarias.
   - Mensajes de ayuda (`helperText`) y estados complementarios.
 
+### 2.2.1 Cursor de Texto (`cursorColor` y `textSelectionTheme`)
+- Sobre fondos blancos o claros (`AppColors.card`, `AppColors.surface`, campos de texto), el cursor titilante `|` **DEBE SER SIEMPRE NEGRO** (`AppColors.textPrimary` o `Colors.black`).
+- Queda terminantemente prohibido el cursor amarillo en campos de texto (evita la herencia automática del `primary` de Material 3). Se configura globalmente en `ThemeData.textSelectionTheme`:
+  ```dart
+  textSelectionTheme: const TextSelectionThemeData(
+    cursorColor: AppColors.textPrimary,
+    selectionColor: Color(0x33FFE600),
+    selectionHandleColor: AppColors.primaryDark,
+  ),
+  ```
+
 ### 2.3 Uso Exclusivo del Amarillo
 El color amarillo (`AppColors.primaryDark` preferiblemente) queda reservado de forma estricta y exclusiva para:
 1. **Iconos:** Símbolos visuales al inicio de tarjetas o botones (`prefixIcon`, `leading`).
 2. **Contenedores de fondo:** Cajas de acento o badges gráficos (con texto explícito en negro).
-3. **Bordes activos:** Indicadores de selección o foco en tarjetas y chips.
+3. **Bordes activos de campos:** Indicador de selección o foco en inputs (`TextField.focusedBorder`), **NUNCA en el contenedor o tarjeta exterior que envuelve la fila** (el contenedor debe mantener `AppColors.border`).
 4. **Iconos Temáticos de Ahorro:** El icono de cochino (`Icons.savings_outlined`) en metas y tarjetas de balance debe ser explícitamente `AppColors.primaryDark` (amarillo marca de alto contraste en fondo blanco), nunca marrón ni ámbar tostado.
 
 ### 2.4 Tarjetas de Borrador y Estados Pendientes de Validación (IA)

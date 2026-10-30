@@ -75,7 +75,7 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 - `UI-03` **Semántica de Color Unificada en Progreso de Presupuesto:** `Completada ✅`
   - *Problema:* El mismo porcentaje (ej. 29%) se muestra verde en Inicio pero amarillo en Análisis.
   - *Solución:* Unificar la escala semafórica en toda la app: Verde (`AppColors.success` / `#10B981` para $<85\%$), Amarillo/Ámbar (`AppColors.warning` / `#F59E0B` para $\ge 85\%$) y Rojo (`AppColors.error` / `#EF4444` para $\ge 100\%$ o sobregiro), con paridad exacta en Inicio, Análisis y Web.
-- `UI-04` **Rediseño de Ícono, Enlaces y Enfoque Directo en Presupuesto por Categoría:** `Pendiente de validación 🧪`
+- `UI-04` **Rediseño de Ícono, Enlaces y Enfoque Directo en Presupuesto por Categoría:** `Completada ✅`
   - *Problema:* Cuando una categoría tenía presupuesto, el ícono de editar en la fila superior comprimía el ancho disponible y partía los nombres de categorías largas en dos líneas (ej. «Alimentaci» / «ón»). Además, el enlace «+ Asignar presupuesto mensual» usaba un subrayado web clásico poco estético, y al hacer clic en cualquier categoría para asignar/editar presupuesto se abría la hoja modal en la cabecera general obligando a buscar y desplazarse manualmente hasta la categoría.
   - *Solución:*
     1. **Fila Superior Limpia:** Eliminado el ícono de editar de la fila superior, garantizando `maxLines: 1` y `overflow: TextOverflow.ellipsis` para el nombre de categoría y un `FittedBox` generoso para los montos gastado/presupuesto sin quiebres de texto.
