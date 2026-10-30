@@ -166,15 +166,15 @@ void main() {
     expect(find.text('\$ 0,00'), findsWidgets);
 
     // Verify TextCapitalization on store and concept fields
-    final storeFormField = tester.widget<TextFormField>(
-      find.byWidgetPredicate((w) => w is TextFormField && w.decoration?.labelText == '¿Dónde compraste?'),
+    final storeField = tester.widget<TextField>(
+      find.byWidgetPredicate((w) => w is TextField && w.decoration?.labelText == '¿Dónde compraste?'),
     );
-    expect(storeFormField.textCapitalization, TextCapitalization.words);
+    expect(storeField.textCapitalization, TextCapitalization.words);
 
-    final conceptFormField = tester.widget<TextFormField>(
-      find.byWidgetPredicate((w) => w is TextFormField && w.decoration?.labelText == 'Concepto'),
+    final conceptField = tester.widget<TextField>(
+      find.byWidgetPredicate((w) => w is TextField && w.decoration?.labelText == 'Concepto'),
     );
-    expect(conceptFormField.textCapitalization, TextCapitalization.sentences);
+    expect(conceptField.textCapitalization, TextCapitalization.sentences);
 
     // Ensure the ListView in body has non-zero height
     final listViewFinder = find.byType(ListView);
