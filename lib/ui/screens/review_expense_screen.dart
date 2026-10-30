@@ -1309,8 +1309,15 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         return;
       }
 
-      final user = FirebaseAuth.instance.currentUser;
-      final isAnon = user == null || user.isAnonymous;
+      bool isAnon = false;
+      if (widget.existingGasto == null) {
+        try {
+          final user = FirebaseAuth.instance.currentUser;
+          isAnon = user == null || user.isAnonymous;
+        } catch (_) {
+          isAnon = false;
+        }
+      }
 
       if (isAnon && widget.existingGasto == null) {
         final rootMessenger = ScaffoldMessenger.of(context);
@@ -1783,9 +1790,13 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     final hasMoreInQueue = isQueueItem && readyCount > 1;
 
     return PopScope(
-      canPop: !_hasUnsavedData() || _isSaving,
+      canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
+        if (!_hasUnsavedData() || _isSaving) {
+          if (mounted) Navigator.pop(context);
+          return;
+        }
         if (widget.existingGasto != null) {
           final action = await showDialog<String>(
             context: context,

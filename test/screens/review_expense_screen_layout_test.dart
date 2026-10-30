@@ -974,6 +974,9 @@ void main() {
     await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
 
+    // Verificar diálogo
+    expect(find.text('¿Guardar como borrador?'), findsOneWidget);
+
     // Tocar 'Descartar'
     await tester.tap(find.text('Descartar'));
     await tester.pumpAndSettle();
@@ -1149,6 +1152,9 @@ void main() {
     // Presionar Atrás
     await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
+
+    // Verificar diálogo
+    expect(find.text('¿Guardar modificaciones?'), findsOneWidget);
 
     // Tocar 'Descartar'
     await tester.tap(find.text('Descartar'));
