@@ -903,6 +903,7 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                 ],
               ),
             ),
+          ),
 
             const SizedBox(height: 12),
 
