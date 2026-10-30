@@ -14,6 +14,11 @@ class AppTheme {
         surface: AppColors.surface,
         error: AppColors.error,
       ),
+      textSelectionTheme: const TextSelectionThemeData(
+        cursorColor: AppColors.textPrimary,
+        selectionColor: Color(0x33FFE600),
+        selectionHandleColor: AppColors.primaryDark,
+      ),
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.background,
         elevation: 0,

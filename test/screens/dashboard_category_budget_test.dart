@@ -395,6 +395,24 @@ void main() {
       expect(find.byKey(const Key('input_presupuesto_categoria_Educación')), findsOneWidget);
       final inputWidget = tester.widget<TextField>(find.byKey(const Key('input_presupuesto_categoria_Educación')));
       expect(inputWidget.focusNode?.hasFocus, isTrue);
+      expect(inputWidget.cursorColor, AppColors.textPrimary);
+
+      // Copy limpio y conciso
+      expect(find.text('Opcional: define un límite mensual para las categorías que quieras controlar.'), findsOneWidget);
+
+      // Borde del contenedor neutral (sin recuadro amarillo)
+      final containerFinder = find.ancestor(
+        of: find.byKey(const Key('input_presupuesto_categoria_Educación')),
+        matching: find.byType(Container),
+      ).first;
+      final containerWidget = tester.widget<Container>(containerFinder);
+      final boxDecoration = containerWidget.decoration as BoxDecoration;
+      expect(boxDecoration.border?.top.color, AppColors.border);
+
+      // Borde del campo de monto activo (amarillo sutil)
+      final inputDecoration = inputWidget.decoration;
+      final focusedBorder = inputDecoration?.focusedBorder as OutlineInputBorder?;
+      expect(focusedBorder?.borderSide.color, AppColors.primaryDark);
     });
   });
 }

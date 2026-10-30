@@ -601,6 +601,7 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                         TextField(
                           key: const Key('input_presupuesto_general'),
                           controller: _generalBudgetCtrl,
+                          cursorColor: AppColors.textPrimary,
                           keyboardType: const TextInputType.numberWithOptions(decimal: true),
                           decoration: InputDecoration(
                             prefixText: prefix,
@@ -608,7 +609,18 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                             filled: true,
                             fillColor: AppColors.cardLighter,
                             contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(color: AppColors.border),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(color: AppColors.border),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(color: AppColors.primaryDark, width: 1.5),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 14),
@@ -632,6 +644,7 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                         TextField(
                           key: const Key('input_meta_ahorro'),
                           controller: _savingsGoalCtrl,
+                          cursorColor: AppColors.textPrimary,
                           keyboardType: const TextInputType.numberWithOptions(decimal: true),
                           decoration: InputDecoration(
                             prefixText: prefix,
@@ -639,7 +652,18 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                             filled: true,
                             fillColor: AppColors.cardLighter,
                             contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(color: AppColors.border),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(color: AppColors.border),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(color: AppColors.primaryDark, width: 1.5),
+                            ),
                           ),
                         ),
                         if (meta > 0 && gen > 0 && !metaExceeded) ...[
@@ -771,17 +795,15 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    'Define un límite para cada categoría. Las que dejes vacías o en 0 no se mostrarán.',
-                    style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                  const Text(
+                    'Opcional: define un límite mensual para las categorías que quieras controlar.',
+                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                   ),
                   const SizedBox(height: 10),
 
                   ...AppConstants.categorias.map((cat) {
                     final color = AppColors.categoryColors[cat] ?? AppColors.primary;
                     final ctrl = _categoryControllers[cat]!;
-                    final targetCat = _canonicalCategory(widget.initialCategory);
-                    final isInitialSelected = targetCat == cat;
 
                     return Container(
                       key: _categoryKeys[cat],
@@ -790,10 +812,7 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                       decoration: BoxDecoration(
                         color: AppColors.surface,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isInitialSelected ? AppColors.primaryDark : AppColors.border,
-                          width: isInitialSelected ? 1.5 : 1.0,
-                        ),
+                        border: Border.all(color: AppColors.border),
                       ),
                       child: Row(
                         children: [
@@ -827,6 +846,7 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                               key: Key('input_presupuesto_categoria_$cat'),
                               controller: ctrl,
                               focusNode: _categoryFocusNodes[cat],
+                              cursorColor: AppColors.textPrimary,
                               keyboardType: const TextInputType.numberWithOptions(decimal: true),
                               decoration: InputDecoration(
                                 prefixText: prefix,
@@ -834,7 +854,18 @@ class _BudgetBottomSheetState extends State<BudgetBottomSheet> {
                                 filled: true,
                                 fillColor: AppColors.cardLighter,
                                 contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: const BorderSide(color: AppColors.border),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: const BorderSide(color: AppColors.border),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: const BorderSide(color: AppColors.primaryDark, width: 1.5),
+                                ),
                               ),
                             ),
                           ),
