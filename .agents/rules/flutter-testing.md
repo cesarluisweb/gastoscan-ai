@@ -24,7 +24,14 @@ description: "Convenciones para pruebas unitarias y de widgets, configuración d
 - **Prevención de `Bad state: No element` en `ListView` Perezosos:**
   - `tester.ensureVisible(finder)` requiere que el elemento **ya esté instanciado** en el árbol de widgets. En un `ListView` con viewport corto, los widgets fuera de pantalla no existen y `ensureVisible` falla con `StateError: Bad state: No element`.
   - Con un viewport alto (`Size(1080, 4000)` y `devicePixelRatio = 1.0`), todos los componentes del formulario se construyen de inmediato y quedan evaluables directamente sin necesidad de scrolls artificiales.
-  - Si una prueba requiere validar expresamente el comportamiento de scroll dinámico en viewports pequeños, usar `await tester.drag(find.byType(ListView), const Offset(0, -500))` o `tester.scrollUntilVisible(...)`, nunca `ensureVisible` sin previo scroll.
+  - Si una prueba requiere validar expresamente el comportamiento de scroll dinámico en viewports pequeños o buscar botones al fondo (ej. "Agregar otro producto"), usar `await tester.drag(find.byType(ListView), const Offset(0, -600)); await tester.pumpAndSettle();` antes de evaluar, nunca `ensureVisible` sin previo scroll.
+- **Inspección de `decoration` en Campos de Texto (`TextField` vs `TextFormField`):** `TextFormField` no expone el getter `decoration` directamente en su interfaz tipada de Flutter. Para inspeccionar `prefixText`, `prefixIcon` o `hintText` en pruebas sin errores de análisis estático (`undefined_getter`), castear al widget interno `TextField`:
+  ```dart
+  final textField = tester.widget<TextField>(
+    find.descendant(of: find.byKey(const Key('id_campo')), matching: find.byType(TextField)),
+  );
+  expect(textField.decoration?.prefixText, 'USDT ');
+  ```
 
 ## 3. Resiliencia y Aislamiento de Firebase
 - **Validación de Instancia Activa:** Todo widget o servicio que interactúe con `FirebaseAuth` o Firestore debe validar `Firebase.apps.isNotEmpty` antes de instanciar streams o métodos, garantizando que los tests de widgets se ejecuten limpiamente sin requerir un backend simulado.
@@ -44,6 +51,9 @@ description: "Convenciones para pruebas unitarias y de widgets, configuración d
   ```
   Evitar overrides manuales con parámetros `dynamic` que rompan tipado estricto.
 - **Desactivación de Carga en Fakes con Constructor Asíncrono:** Todo fake o mock de un proveedor que dispare carga asíncrona en su constructor (ej. `SettingsProvider`) DEBE invocar explícitamente `super(autoLoad: false)` en su constructor para evitar que la carga inicial altere los contadores de llamadas o compita de forma no determinista con las pruebas.
+- **Mocking Obligatorio de `SharedPreferences`:** Toda suite de pruebas (`test/**/*.dart`) que instancie o invoque servicios que accedan a preferencias (`NotificationService`, `SettingsProvider`, etc.) DEBE inicializar `SharedPreferences.setMockInitialValues({})` en su bloque `setUp()`. Omitirlo provoca excepciones `MissingPluginException(No implementation found for method getAll...)` en los runners de CI.
+- **Simulación Segura de `FlutterSecureStorage`:** Dado que `FlutterSecureStorage.read(...)` cuenta con argumentos nombrados por plataforma (`aOptions`, `iOptions`, etc.) que varían entre versiones, los fakes de prueba DEBEN extender `Fake implements FlutterSecureStorage` e interceptar las llamadas mediante `noSuchMethod(Invocation invocation)` evaluando `invocation.memberName == #read`, evitando sobrescrituras manuales rígidas que rompan el tipado estricto (`invalid_override`).
+- **Inicialización Defensiva de `timezone`:** En servicios con alarmas programadas, inicializar `tz.initializeTimeZones()` dentro de un bloque `try/catch` en constructores o `setUp()` de tests, garantizando que `tz.local` esté siempre disponible para `TZDateTime`.
 
 ## 5. Aserciones Robustas y Determinismo
 - **Aserciones de Moneda y Formato:** Evitar evaluar cadenas literales completas que combinen texto y montos formateados (ej. evitar `find.textContaining('de $100.00 está')`). Validar por separado las frases clave con `contains` independientes (ej. `find.textContaining('Tu meta de ahorro')` y `find.textContaining('comprometida')`), evitando falsos negativos por diferencias de separadores decimales (`.` vs `,`) o espacios de `NumberFormat`.

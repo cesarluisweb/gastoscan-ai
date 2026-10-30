@@ -55,6 +55,7 @@ El color amarillo (`AppColors.primaryDark` preferiblemente) queda reservado de f
 1. **Iconos:** Símbolos visuales al inicio de tarjetas o botones (`prefixIcon`, `leading`).
 2. **Contenedores de fondo:** Cajas de acento o badges gráficos (con texto explícito en negro).
 3. **Bordes activos:** Indicadores de selección o foco en tarjetas y chips.
+4. **Iconos Temáticos de Ahorro:** El icono de cochino (`Icons.savings_outlined`) en metas y tarjetas de balance debe ser explícitamente `AppColors.primaryDark` (amarillo marca de alto contraste en fondo blanco), nunca marrón ni ámbar tostado.
 
 ### 2.4 Tarjetas de Borrador y Estados Pendientes de Validación (IA)
 Para componentes que representen compras o facturas no confirmadas (`PendingExpenseCard`):
@@ -235,3 +236,12 @@ Para evitar saturación visual y fatiga cognitiva, las tarjetas de balance mensu
 - **Nivel 2 (Contexto Horizontal Equilibrado):** Fila sobre la barra con `Gastado: $ X` a la izquierda y `Límite: $ Y ✏️` (tocable) a la derecha.
 - **Nivel 3 (Barra con Asignación y Meta):** Barra lineal de 10dp con marcador vertical gris oscuro y pie con estado de meta (`Protegida` / `En riesgo`).
 - **Desacoplamiento Pedagógico:** El cálculo del ritmo diario permitido (`$ X/día durante Y días restantes`) y las sugerencias de moderación se delegan dinámicamente al componente del `Asistente IA` (`AiInsightCard`), manteniendo la tarjeta de resumen limpia y enfocada en los 3 números clave.
+
+### 6.6 Tarjeta de Distribución de Gastos (Dona y Lista Equilibrada)
+Para evitar que la dona se vea miniaturizada o que invada los márgenes de la tarjeta:
+1. **Diámetro y Escala:** La dona debe tener un diámetro de 130px (`width: 130`, `height: 130`, `centerSpaceRadius: 41`, `radius: 24`), ocupando aproximadamente el 44% del ancho útil de la tarjeta.
+2. **Inicio de la Lista en el Centro:** Con una separación de 14px tras la dona, la lista de categorías debe comenzar exactamente en el medio de la tarjeta (~48.6% del ancho).
+3. **Columna de Porcentajes Fija:** El porcentaje debe estar en una columna fija de 28px (`SizedBox(width: 28)`), con texto alineado a la izquierda (`TextAlign.left`) y en gris (`AppColors.textSecondary`), situada entre el nombre y el monto.
+4. **Columna de Montos a la Derecha:** Los montos se fijan a la derecha con `SizedBox(width: 58)` en `AppColors.textPrimary` (negro) mediante `FittedBox(alignment: Alignment.centerRight)`.
+5. **Densidad Vertical:** El padding vertical por fila de categoría debe ser de 3px para balancear la altura de las 5 categorías con la altura de la dona sin estirar la tarjeta.
+6. **Monto Secundario en Desgloses Bimonetarios:** En tarjetas con doble divisa (`ExpenseCard`, etc.), el monto secundario (ej. equivalente en Bs. bajo lente divisa) debe ir en gris (`AppColors.textSecondary`) y tamaño reducido, para que no compita jerárquicamente con el monto principal en negro.

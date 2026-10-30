@@ -30,3 +30,11 @@ Queda terminantemente prohibido utilizar las siguientes afirmaciones en la web, 
 2. **"Sin subir a ningún servidor":** Falsa, ya que las fotos de facturas y los textos del asistente transitan por Cloudflare y Google Gemini.
 3. **"Efímero" o "No se guarda":** Incorrecta, dado que Google retiene los datos de consultas hasta por 55 días bajo su política de prevención de abusos.
 4. **"No se usa para entrenar":** Prohibido afirmarlo hasta contar con verificación documental definitiva sobre el contrato y consola de Google AI Studio del proyecto.
+
+## 5. Notificaciones Push, Broadcast Anónimo y Configuración Remota
+- **Difusión Masiva por Temas (FCM Topic Broadcast):** Para enviar avisos o notificaciones masivas sin comprometer el modelo Local-First ni recopilar identificadores de dispositivo, la app suscribe al usuario anónimamente a un tema general (`anuncios_generales`). Queda prohibido almacenar tokens FCM o IDs de instalación en colecciones de usuarios en Firestore para envíos dirigidos.
+- **Canales Nativos Independientes de Android (`NotificationChannel`):** Toda notificación local o push DEBE asociarse a un canal nativo específico (`weekend_reminders`, `inactivity_reminders`, `broadcast_announcements`). Esto cumple las directrices de Google Play (Android 13+) y permite al usuario silenciar un tipo de aviso específico sin apagar el resto de la app.
+- **Textos y Recordatorios Dinámicos desde Firestore (`/config/recordatorios`):**
+  - La regla en `firestore.rules` permite lectura autenticada abierta (`allow read: if request.auth != null; allow write: if false;`).
+  - La app consulta esta colección en segundo plano y guarda los textos en `SharedPreferences`.
+  - Debe mantenerse siempre un banco de mensajes base local como fallback offline para que la app funcione plenamente sin conexión o si el documento aún no ha sido creado.
