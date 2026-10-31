@@ -10,6 +10,7 @@
 - **Codificación UTF-8 Obligatoria:** Al crear, modificar o leer archivos con PowerShell (`Get-Content`, `Set-Content`, `Out-File`), usar SIEMPRE el parámetro `-Encoding UTF8`. En PowerShell 5.1, `Get-Content` omite UTF-8 y asume ANSI/Windows-1252 por defecto, corrompiendo caracteres con acento (`artículo` → `artÃ­culo`) al reescribirlos. Para normalización de finales de línea (`\r\n` a `\n`), preferir Node.js (`fs.readFileSync(..., 'utf8')`) o las herramientas nativas del agente (`edit_file`, `write_file`).
 - **Prohibición del Operador `>`:** Prohibido usar el operador de redirección `>` en PowerShell (guarda en UTF-16 LE). Usar siempre tuberías: `... | Out-File archivo.ext -Encoding utf8`.
 - **Separador de Comandos en PowerShell 5.1:** Prohibido encadenar comandos con `&&` (provoca `ParserError`). Utilizar siempre el punto y coma `;` o invocar comandos en pasos independientes.
+- **Operaciones Git en Sandbox de Windows:** Los comandos Git de solo lectura (`status`, `diff`, `log`, `show`) deben ejecutarse en sandbox estándar (`BypassSandbox: false`). Los comandos que mutan el índice o crean archivos de bloqueo en `.git/` (`add`, `commit`, `checkout`, `restore`) y los que requieren red (`push`, `fetch`) deben ejecutarse con `BypassSandbox: true` para evitar fallos de permisos (`.git/index.lock: Permission denied`).
 
 ## 2. Semáforo Ejecutivo de Autonomía
 
@@ -89,7 +90,7 @@ Antes de ejecutar tareas en áreas específicas, consulta la regla modular o ski
 - **Pruebas unitarias, de widgets, fakes o mocks en Dart:** Consulta [`.agents/rules/flutter-testing.md`](./.agents/rules/flutter-testing.md).
 - **Landing page, panel web, Astro o `firebase.json`:** Consulta [`.agents/rules/web.md`](./.agents/rules/web.md).
 - **Compilar y publicar la landing o panel web:** Ejecuta la skill [`.agents/skills/desplegar-landing/SKILL.md`](./.agents/skills/desplegar-landing/SKILL.md).
-- **Pipeline de CI/CD, inyección en Android o BanaHosting FTP:** Consulta [`.agents/rules/ci-distribucion.md`](./.agents/rules/ci-distribucion.md).
+- **Pipeline de CI/CD, inyección en Android o distribución de artefactos:** Consulta [`.agents/rules/ci-distribucion.md`](./.agents/rules/ci-distribucion.md).
 - **Diagnosticar fallos de CI o leer reportes de tests remotos:** Ejecuta la skill [`.agents/skills/diagnosticar-ci/SKILL.md`](./.agents/skills/diagnosticar-ci/SKILL.md).
 - **Cloudflare Worker, autenticación JWT de Firebase o endpoints de IA:** Consulta [`.agents/rules/gateway-cloudflare.md`](./.agents/rules/gateway-cloudflare.md).
 - **Montos, monedas, tasas, presupuestos mensuales o categorías:** Consulta [`.agents/rules/dinero-datos.md`](./.agents/rules/dinero-datos.md).

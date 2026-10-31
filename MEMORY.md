@@ -22,6 +22,7 @@
 ## Errores y Fricciones a Evitar
 - No encadenar comandos con `&&` ni usar redirección `>` en PowerShell.
 - Monitoreo de CI por proceso dormido único (`scripts/wait_ci.ps1`) con `BypassSandbox: true`.
+- Comandos Git de mutación (`.git/index.lock`) o red requieren `BypassSandbox: true` en Windows.
 
 ## Próximo Paso Inmediato
 - Definir el siguiente ítem del Roadmap a abordar (ej. autocompletado de comercios frecuentes UX-12 o referidos simples por WhatsApp UX-06).
