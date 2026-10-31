@@ -36,32 +36,6 @@ jobs:
           cache: 'npm'
           cache-dependency-path: 'landing/package-lock.json'
 
-      - name: Preservar version.json activo de produccion
-        run: |
-          set -e
-          LIVE_URL="https://rindemas.cesarluis.com/version.json?t=$(date +%s)"
-          echo "Consultando version.json activo en produccion..."
-          if curl -fsSL --retry 3 --retry-delay 2 "$LIVE_URL" -o /tmp/live_version.json; then
-            BUILD_NUM=$(node -e '
-              try {
-                const fs = require("fs");
-                const data = JSON.parse(fs.readFileSync("/tmp/live_version.json", "utf8"));
-                if (data && Number(data.buildNumber) > 0 && data.version) {
-                  process.stdout.write(String(data.buildNumber));
-                }
-              } catch (_) {}
-            ')
-            if [ -n "$BUILD_NUM" ]; then
-              cp /tmp/live_version.json landing/public/version.json
-              echo "version.json sincronizado desde produccion (buildNumber=$BUILD_NUM):"
-              cat landing/public/version.json
-            else
-              echo "ADVERTENCIA: respuesta no valida en /tmp/live_version.json; se conserva landing/public/version.json local."
-            fi
-          else
-            echo "ADVERTENCIA: no se pudo descargar version.json de produccion; se conserva landing/public/version.json local."
-          fi
-
       - name: Instalar Dependencias de Landing
         run: |
           cd landing

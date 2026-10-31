@@ -1,6 +1,7 @@
 {
-  "version": "1.0.2",
-  "buildNumber": 3,
-  "releaseNotes": "Digitalización inteligente de facturas, control de gastos en bolívares y dólares a tasa oficial BCV, y asistente financiero con IA.",
-  "apkUrl": "https://rindemas.cesarluis.com/app-release.apk"
+  "version": "1.0.0",
+  "buildNumber": 1,
+  "isMajor": false,
+  "releaseNotes": "Rinde Más - Aplicación oficial de finanzas personales para Venezuela.",
+  "apkUrl": "https://rindemas.cesarluis.com"
 }

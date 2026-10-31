@@ -3,6 +3,7 @@
 
 ## Estado Actual Inmediato
 - **Rama:** `main`.
+- **Fase A (Cierre Controlado APK Directo):** Implementada e integrada en `main` (redirects en `firebase.json` hacia landing, `version.json` de transición 1.0.0/build 1 para neutralizar G1–G4, paso de preservación eliminado en `deploy_web.yml`, eliminación de QRs legados y actualización de reglas).
 - **Fase 5 (Google Play):** Closed Testing activo con 20 evaluadores (período de 14 días).
 - **Notificaciones v1.4.0 (Broadcast FCM & Quincenal IA):** `Completada ✅`. Validado en dispositivo por César (envío masivo probado con éxito). Graduadas reglas a `privacidad-seguridad.md`, `flutter-testing.md` y `flutter-desarrollo.md`.
 - **UI-08, Flujo de Compra en ReviewExpenseScreen & UX-12:** `Pendiente de validación 🧪`. CI verde (Android build 622, commit `cab03e0`). 435 pruebas pasando. Tarjeta única «Información General», label «Concepto», capitalización automática (palabras en comercio, frases en concepto), formato formal `0,00` y diálogo seguro de ajuste.

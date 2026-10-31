@@ -1,7 +1,7 @@
 ---
 trigger: glob
 globs: ".github/workflows/**, android/**"
-description: "Pipeline de CI/CD en GitHub Actions, inyección programática en Android y distribución automatizada de APK."
+description: "Pipeline de CI/CD en GitHub Actions, inyección programática en Android y distribución de artefactos móviles."
 ---
 
 # Integración Continua (CI/CD) y Distribución de Binarios
@@ -27,6 +27,7 @@ description: "Pipeline de CI/CD en GitHub Actions, inyección programática en A
 
 ## 3. Estrategia de Lanzamiento Web y Eliminación de APK Directo
 - **Canal Único de Adquisición Web (Lista de Espera WhatsApp):** La landing page (`rindemas.cesarluis.com`) no distribuye archivos APK directos para evitar advertencias de seguridad en Android y maximizar la conversión hacia el lanzamiento en la tienda. El tráfico web se canaliza exclusivamente hacia el Canal Oficial de WhatsApp (`channel/0029VbEPwHLDJ6H678QLlN1H`) y la insignia de *Próximamente en Google Play*.
+- **Cierre del Canal de APK Directo y Redirecciones:** Queda descontinuada la distribución de APKs vía FTP o descargas directas. Las rutas `/rindemas.apk` y `/app-release.apk` en `firebase.json` redirigen (HTTP 302) a la landing oficial (`https://rindemas.cesarluis.com`). El archivo `version.json` en `landing/public/` se fija con versión `1.0.0` y `buildNumber: 1` para neutralizar el actualizador automático en instalaciones legadas (G1–G4) durante la Prueba Cerrada sin generar modales falsos ni enlaces rotos.
 - **Transición Post-Prueba Cerrada:** Una vez concluido el período de 14 días y aprobada la app para producción abierta, el botón principal de la landing page enlazará directamente a la ficha oficial en Google Play Store (`https://play.google.com/store/apps/details?id=com.cesarluis.rindemas`).
 - **Numeración de Build vs. `run_number`:** El número de compilación interno (`buildNumber`) es **`BASE_BUILD + github.run_number`**, donde `BASE_BUILD` se extrae de `version: x.y.z+N` en `pubspec.yaml`.
 - **Incremento Obligatorio de Versión Semántica (pubspec.yaml):** Al cerrar una tarea o conjunto de cambios en Flutter, el agente DEBE evaluar si corresponde incrementar la versión semántica antes del commit y push:
@@ -37,7 +38,7 @@ description: "Pipeline de CI/CD en GitHub Actions, inyección programática en A
 
 ## 4. Gestión de Cuota y Desacoplamiento de Pipelines en GitHub Actions
 - **Pipelines Desacoplados (`build_apk.yml` vs `deploy_web.yml`):**
-  - `deploy_web.yml` (~50 s) se activa exclusivamente ante cambios en `landing/**`, `firebase.json`, `firestore.rules`, `firestore.indexes.json`, `.firebaserc` o el propio workflow web, preservando el `version.json` activo en producción antes de compilar Astro.
+  - `deploy_web.yml` (~50 s) se activa exclusivamente ante cambios en `landing/**`, `firebase.json`, `firestore.rules`, `firestore.indexes.json`, `.firebaserc` o el propio workflow web, desplegando el `version.json` controlado desde el repositorio.
   - `build_apk.yml` (~8–10 min) compila exclusivamente los artefactos móviles (`app-release-aab` y `rindemas-dev-apk`), excluyendo en `paths-ignore` documentación, scripts y rutas exclusivas de la web.
 - **Desbloqueo de Emergencia por Cuota:** Si la cuota mensual de 2.000 minutos de GitHub Actions se agota, el repositorio solo podrá pasarse a Público temporalmente con **autorización explícita previa de César** y tras verificar que no existan credenciales o datos expuestos. Una vez concluido el release en verde, debe retornarse inmediatamente a Privado.
 

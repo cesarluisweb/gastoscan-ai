@@ -41,12 +41,12 @@
     "redirects": [
       {
         "source": "/rindemas.apk",
-        "destination": "https://cesarluis.com/rindemas/rindemas.apk",
+        "destination": "https://rindemas.cesarluis.com",
         "type": 302
       },
       {
         "source": "/app-release.apk",
-        "destination": "https://cesarluis.com/rindemas/rindemas.apk",
+        "destination": "https://rindemas.cesarluis.com",
         "type": 302
       }
     ],

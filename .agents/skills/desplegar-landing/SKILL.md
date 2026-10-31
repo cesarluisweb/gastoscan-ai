@@ -8,8 +8,8 @@ description: "Procedimiento oficial para compilar, verificar y desplegar la land
 ## 1. Regla de Oro del Canal Único
 **GitHub Actions (`deploy_web.yml` para cambios web y `build_apk.yml` tras releases móviles) es el único canal autorizado para desplegar la web a producción en Firebase Hosting.**
 - **Pipeline Web Independiente (~50 s):** Todo cambio en `landing/**`, `firebase.json` o `firestore.rules` dispara exclusivamente `.github/workflows/deploy_web.yml` sin ejecutar la compilación de Android (`build_apk.yml` los ignora mediante `paths-ignore`).
-- **Preservación Automática de `version.json`:** Antes de compilar Astro, `deploy_web.yml` descarga el `https://rindemas.cesarluis.com/version.json` activo en producción y parcha el `href` de `#btn-download-apk` en `landing/src/pages/index.astro`, garantizando que el número de compilación del último APK y el chequeo de actualizaciones (`UpdateService`) nunca se pierdan ni se pisen con valores estáticos locales.
-- **Sobrescritura por CI:** Cualquier despliegue ejecutado manualmente desde la máquina local carecerá del paso de sincronización de `version.json` de CI y será sobrescrito en el siguiente `git push` a `main`.
+- **Fuente Única de `version.json` en Repositorio:** El archivo `landing/public/version.json` versionado en el repositorio Git es la única fuente del JSON publicado por Astro. Con el cierre del canal de APK directo, `version.json` se mantiene con `version: 1.0.0` y `buildNumber: 1` durante la Prueba Cerrada para neutralizar comprobaciones automáticas en clientes legados (G1–G4) sin sobreescrituras en caliente desde producción.
+- **Sobrescritura por CI:** Cualquier despliegue ejecutado manualmente desde la máquina local carecerá del pipeline de CI y será sobrescrito en el siguiente `git push` a `main`.
 
 ---
 
@@ -45,7 +45,7 @@ Una vez que el job finalice con éxito, validar mediante petición HTTP que el c
 # Verificar estado HTTP de la landing
 curl.exe -sI https://rindemas.cesarluis.com/ | Select-String "HTTP/"
 
-# Verificar redirección del APK
+# Verificar redirección de rutas de APK hacia la landing
 curl.exe -sI https://rindemas.cesarluis.com/rindemas.apk | Select-String "HTTP/"
 
 # Verificar integridad de version.json en producción
@@ -55,18 +55,15 @@ curl.exe -s https://rindemas.cesarluis.com/version.json
 ---
 
 ## 3. Despliegue de Emergencia Local (Solo con Autorización de César)
-Si la cuota de GitHub Actions está agotada o el CI presenta una caída global, y César ha dado **autorización explícita previa**, se puede ejecutar el despliegue manual asegurándose primero de sincronizar `version.json` desde producción:
+Si la cuota de GitHub Actions está agotada o el CI presenta una caída global, y César ha dado **autorización explícita previa**, se puede ejecutar el despliegue manual utilizando los archivos controlados por el repositorio:
 
 ```powershell
-# 1. Sincronizar version.json vivo antes de compilar
-Invoke-WebRequest -Uri "https://rindemas.cesarluis.com/version.json" -OutFile "landing/public/version.json"
-
-# 2. Compilar Astro
+# 1. Compilar Astro (genera landing/dist/ preservando el version.json del repositorio)
 Set-Location landing; $env:ASTRO_TELEMETRY_DISABLED="1"; npm run build; Set-Location ..
 
-# 3. Desplegar a Firebase Hosting (flag --non-interactive OBLIGATORIO en Windows)
+# 2. Desplegar a Firebase Hosting (flag --non-interactive OBLIGATORIO en Windows)
 firebase.cmd deploy --only hosting --non-interactive
 
-# 4. Validar producción
+# 3. Validar producción
 curl.exe -sI https://rindemas.cesarluis.com/
 ```
