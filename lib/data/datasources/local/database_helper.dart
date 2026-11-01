@@ -46,6 +46,7 @@ class DatabaseHelper {
         onCreate: instance._createDB,
         onUpgrade: instance._upgradeDB,
         onConfigure: instance._onConfigure,
+        singleInstance: false,
       ),
     );
     _database = db;

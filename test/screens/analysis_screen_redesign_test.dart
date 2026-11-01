@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:gastoscan_ai/core/utils/currency_formatter.dart';
+import 'package:gastoscan_ai/core/utils/date_formatter.dart';
 import 'package:gastoscan_ai/data/datasources/local/database_helper.dart';
 import 'package:gastoscan_ai/data/models/gasto_model.dart';
 import 'package:gastoscan_ai/providers/gasto_provider.dart';
@@ -232,7 +233,9 @@ void main() {
     });
 
     testWidgets('2. Tarjeta 1: Total gastado en [Mes], límite editable, equivalente secundario y recuadro inferior analítico', (tester) async {
-      gastoProvider.setSelectedDate(10, 2026);
+      final now = DateTime.now();
+      final monthName = DateFormatter.obtenerNombreMes(now.month);
+      gastoProvider.setSelectedDate(now.month, now.year);
       gastoProvider.setPresupuestoGeneralVal(550.0);
       gastoProvider.setMetaAhorroVal(50.0); // Límite = $500, Meta = $50
       gastoProvider.setGastos([gastoHormiga, gastoMedio]); // $3 + $15 = $18
@@ -242,7 +245,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Fila superior: Total gastado en Octubre
-      expect(find.text('Total gastado en Octubre'), findsOneWidget);
+      expect(find.text('Total gastado en ' + monthName), findsOneWidget);
 
       // Monto principal y límite en la misma fila: $ 18,00 y de $ 500,00
       expect(
