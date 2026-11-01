@@ -128,7 +128,7 @@ class SyncService {
   FlutterSecureStorage get _secureStorageInstance =>
       _customSecureStorage ?? const FlutterSecureStorage();
 
-  Future<void> syncBidirectional() async {
+  Future<void> syncBidirectional({bool dryRun = false}) async {
     try {
       final user = _auth?.currentUser;
       if (user == null || user.isAnonymous) return;
@@ -140,14 +140,16 @@ class SyncService {
 
       try {
         await syncFromFirestore(user);
-        await syncToFirestore(user);
+        await syncToFirestore(user, dryRun: dryRun);
       } catch (_) {
         debugPrint("SyncService: Error sincronizando gastos con Firestore");
       }
 
       try {
         await syncPresupuestosFromFirestore(user);
-        await syncPresupuestosToFirestore(user);
+        if (!dryRun) {
+          await syncPresupuestosToFirestore(user);
+        }
       } catch (_) {
         debugPrint("SyncService: Error sincronizando presupuestos con Firestore");
       }
@@ -156,9 +158,14 @@ class SyncService {
     }
   }
 
-  Future<void> syncToFirestore(User user) async {
+  Future<void> syncToFirestore(User user, {bool dryRun = false}) async {
     final rds = _remoteDataSource;
     if (rds == null) return;
+
+    if (dryRun) {
+      debugPrint("SyncService: Push de gastos a Firestore omitido (dryRun = true)");
+      return;
+    }
 
     if (await _isPendingReplace(user.uid)) {
       debugPrint("SyncService: Push de gastos bloqueado por reemplazo pendiente");
@@ -703,6 +710,9 @@ class SyncService {
                 }
               } else {
                 await _clearPendingReplaceFlag(activeUser.uid);
+                // [E0-05a] Las reparaciones monetarias automáticas (repararGastosTasa474 / repararGastosTasa850)
+                // están neutralizadas y configuradas con dryRun = true por defecto, bloqueando cualquier
+                // mutación de tasas que pudiera ser propagada a Firestore durante la vinculación de cuentas.
                 final gastos = await _repository.obtenerGastos();
                 for (var g in gastos) {
                   if (g.id != null) {
@@ -844,6 +854,9 @@ class SyncService {
                 }
               } else {
                 await _clearPendingReplaceFlag(activeUser.uid);
+                // [E0-05a] Las reparaciones monetarias automáticas (repararGastosTasa474 / repararGastosTasa850)
+                // están neutralizadas y configuradas con dryRun = true por defecto, bloqueando cualquier
+                // mutación de tasas que pudiera ser propagada a Firestore durante la vinculación de cuentas.
                 final gastos = await _repository.obtenerGastos();
                 for (var g in gastos) {
                   if (g.id != null) {

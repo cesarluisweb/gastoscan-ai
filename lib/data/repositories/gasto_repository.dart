@@ -64,8 +64,14 @@ class GastoRepository {
     return _dbHelper.getCategoryTotals(year, month, moneda: moneda);
   }
 
-  Future<int> repararTasasHistoricasIncompletas({double tasaFallback = 474.0}) {
-    return _dbHelper.repararTasasHistoricasIncompletas(tasaFallback: tasaFallback);
+  Future<int> repararTasasHistoricasIncompletas({
+    double tasaFallback = 474.0,
+    bool dryRun = true,
+  }) {
+    return _dbHelper.repararTasasHistoricasIncompletas(
+      tasaFallback: tasaFallback,
+      dryRun: dryRun,
+    );
   }
 
   Future<Map<String, dynamic>?> buscarPrecioAnterior(String descripcion, {int? excludeGastoId}) {

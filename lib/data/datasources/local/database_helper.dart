@@ -1634,8 +1634,13 @@ class DatabaseHelper {
     return await db.delete('categorias', where: 'id = ?', whereArgs: [id]);
   }
 
-  /// Repara gastos históricos que tengan tasa_cambio <= 1.0 para que cuadren en Bolívares
-  Future<int> repararTasasHistoricasIncompletas({double tasaFallback = AppConstants.defaultTasaCambio}) async {
+  /// [E0-05a] Repara gastos históricos que tengan tasa_cambio <= 1.0 para que cuadren en Bolívares.
+  /// Por defecto [dryRun] es true para neutralizar cualquier mutación automática no supervisada.
+  /// Si [dryRun] es true, calcula e identifica los registros afectados SIN modificar SQLite.
+  Future<int> repararTasasHistoricasIncompletas({
+    double tasaFallback = AppConstants.defaultTasaCambio,
+    bool dryRun = true,
+  }) async {
     final db = await instance.database;
     final rows = await db.query(
       'gastos',
@@ -1679,12 +1684,14 @@ class DatabaseHelper {
       }
 
       if (nuevaTasa > 1.0) {
-        await db.update(
-          'gastos',
-          {'tasa_cambio': nuevaTasa},
-          where: 'id = ?',
-          whereArgs: [id],
-        );
+        if (!dryRun) {
+          await db.update(
+            'gastos',
+            {'tasa_cambio': nuevaTasa},
+            where: 'id = ?',
+            whereArgs: [id],
+          );
+        }
         actualizados++;
       }
     }

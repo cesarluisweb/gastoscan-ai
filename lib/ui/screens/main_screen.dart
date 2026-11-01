@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../providers/gasto_provider.dart';
 import '../../providers/scan_queue_provider.dart';
 import '../../core/constants/app_colors.dart';
@@ -133,21 +132,9 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
       gastoProvider.sincronizarConFirestore();
 
-      // Auto-reparación transparente de tasas incompletas en gastos históricos (ejecutada una sola vez)
-      try {
-        final prefs = await SharedPreferences.getInstance();
-        if (!(prefs.getBool('pref_fixed_tasas_v1') ?? false)) {
-          final settings = Provider.of<SettingsProvider>(context, listen: false);
-          await gastoProvider.repararTasasHistoricas(
-            tasaFallback: settings.tasaCambioVesUsd > 0
-                ? settings.tasaCambioVesUsd
-                : 474.0,
-          );
-          await prefs.setBool('pref_fixed_tasas_v1', true);
-        }
-      } catch (e) {
-        debugPrint('Error en reparación de tasas: $e');
-      }
+      // [E0-05a] Auto-reparación automática neutralizada normativamente (RM-03 Fase 0A).
+      // Se neutraliza cualquier ejecución automática de repararGastosTasa474 y repararGastosTasa850
+      // para preservar intactos los registros de usuarios y evitar mutaciones monetarias no autorizadas.
 
       final initial = NotificationService.instance.initialPayload;
       if (initial != null) {
