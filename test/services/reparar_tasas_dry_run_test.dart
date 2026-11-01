@@ -134,6 +134,7 @@ void main() {
         totalUsd: 1000,
         tasaCambio: 474.0, // tasa sospechosa
         categoria: 'Otros',
+        creadoEn: '2026-10-26T12:00:00Z',
         synced: 0,
       );
 
