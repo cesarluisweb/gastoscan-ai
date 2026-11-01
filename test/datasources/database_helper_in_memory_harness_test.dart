@@ -88,15 +88,15 @@ void main() {
       final item1 = ItemGastoModel(
         descripcion: 'Leche Descremada',
         cantidad: 2.0,
-        precioUnitario: 1.5,
-        total: 3.0,
+        precioUnitario: 150,
+        total: 300,
         categoria: 'Alimentos',
       );
       final item2 = ItemGastoModel(
         descripcion: 'Pan Canilla',
         cantidad: 1.0,
-        precioUnitario: 1.0,
-        total: 1.0,
+        precioUnitario: 100,
+        total: 100,
         categoria: 'Alimentos',
       );
 

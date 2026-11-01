@@ -126,9 +126,7 @@ class SqliteTestHarness {
       eliminadoEn: eliminadoEn,
       synced: synced,
       ocrText: ocrText,
-      items: items.isNotEmpty
-          ? items.map((i) => i.toMap()).toList()
-          : null,
+      items: items,
     );
     return await dbHelper.insertGasto(gasto, items);
   }
