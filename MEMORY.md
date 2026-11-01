@@ -25,4 +25,4 @@
 - Comandos Git de mutación (`.git/index.lock`) o red requieren `BypassSandbox: true` en Windows.
 
 ## Próximo Paso Inmediato
-- Definir el siguiente ítem del Roadmap a abordar (ej. autocompletado de comercios frecuentes UX-12 o referidos simples por WhatsApp UX-06).
+- Unidades E0-05a y E0-01 de RM-03 Fase 0A implementadas en local (neutralización de auto-reparaciones 474/850 con dryRun = true por defecto, arnés SQLite real en memoria con sqflite_common_ffi y pruebas de infraestructura listas). Pendiente validación de César para autorizar E0-02.

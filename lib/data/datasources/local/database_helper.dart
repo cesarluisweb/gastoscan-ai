@@ -15,6 +15,43 @@ class DatabaseHelper {
   DatabaseHelper._init();
   DatabaseHelper.test();
 
+  /// [E0-01] Inyecta o sustituye la instancia de base de datos para pruebas unitarias.
+  @visibleForTesting
+  static void setTestDatabase(Database? db) {
+    _database = db;
+  }
+
+  /// [E0-01] Restablece la instancia de prueba a null.
+  @visibleForTesting
+  static void resetTestDatabase() {
+    _database = null;
+  }
+
+  /// [E0-01] Inspecciona la instancia de base de datos actualmente cargada.
+  @visibleForTesting
+  static Database? get testDatabase => _database;
+
+  /// [E0-01] Abre una base de datos SQLite de prueba en memoria utilizando el esquema
+  /// y las migraciones oficiales de produccion de DatabaseHelper (v18).
+  @visibleForTesting
+  static Future<Database> openTestDatabase({
+    required DatabaseFactory factory,
+    String? path,
+  }) async {
+    final dbPath = path ?? inMemoryDatabasePath;
+    final db = await factory.openDatabase(
+      dbPath,
+      options: OpenDatabaseOptions(
+        version: 18,
+        onCreate: instance._createDB,
+        onUpgrade: instance._upgradeDB,
+        onConfigure: instance._onConfigure,
+      ),
+    );
+    _database = db;
+    return db;
+  }
+
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDB('gastoscan.db');
@@ -1816,7 +1853,9 @@ class DatabaseHelper {
   }
 
   Future<void> close() async {
-    final db = await instance.database;
-    db.close();
+    if (_database != null) {
+      await _database!.close();
+      _database = null;
+    }
   }
 }
