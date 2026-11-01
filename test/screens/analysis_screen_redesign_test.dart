@@ -248,7 +248,9 @@ void main() {
       expect(
         find.descendant(
           of: find.byKey(const Key('general_budget_card')),
-          matching: find.text(CurrencyFormatter.formatUsd(18.0)),
+          matching: find.byWidgetPredicate(
+            (w) => w is Text && w.data == CurrencyFormatter.formatUsd(18.0) && w.style?.fontSize == 32,
+          ),
         ),
         findsOneWidget,
       );

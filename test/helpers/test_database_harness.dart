@@ -40,10 +40,6 @@ class SqliteTestHarness {
   Future<Database> setUp() async {
     ensureFfiInitialized();
 
-    // Cierre defensivo de conexiones previas en DatabaseHelper
-    await dbHelper.close();
-    DatabaseHelper.resetTestDatabase();
-
     // Apertura de base de datos fresca en memoria
     _db = await DatabaseHelper.openTestDatabase(
       factory: databaseFactoryFfi,
@@ -175,11 +171,15 @@ class SqliteTestHarness {
 
 /// Ejecuta un cuerpo de prueba determinista garantizando aislamiento SQLite completo.
 Future<T> withIsolatedSqlite<T>(Future<T> Function(SqliteTestHarness harness) testBody) async {
+  final previousDb = DatabaseHelper.testDatabase;
   final harness = SqliteTestHarness();
   await harness.setUp();
   try {
     return await testBody(harness);
   } finally {
     await harness.tearDown();
+    if (previousDb != null && previousDb.isOpen) {
+      DatabaseHelper.setTestDatabase(previousDb);
+    }
   }
 }
