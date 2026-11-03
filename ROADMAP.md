@@ -125,6 +125,9 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
     4. Sincronización automática de renglones impositivos (`IVA`/`IGTF`) con la categoría dominante.
     5. Claves estables por artículo (`clientKey`) para preservar el estado visual ante inserción o borrado.
     6. Detallado en `docs/DOC_AUTOCATEGORIZACION_LOCAL.md`. (Verificado en CI build 624, commit `fbaa166`).
+- `UI-15` **Modelo "Tanque que se Vacía" en Medidores de Presupuesto:** `Implementada 🔧`
+  - *Problema:* El medidor de gasto se llenaba hacia la derecha (0% a 100%), contradiciendo el número héroe superior en Inicio (`Disponible para gastar`, que baja al gastar) y generando confusión sobre el significado del avance hacia la meta de ahorro.
+  - *Solución:* Inversión completa a modelo de tanque o batería que se vacía (`100% → 0%`) sobre el presupuesto general en `SummaryCard`, `AnalysisScreen`, `CategoryChart` y `panel.astro`. Marcador vertical de ahorro posicionado a la izquierda (`meta / presupuesto`). Semáforo de batería físico (`Verde #16A34A` $\rightarrow$ `Ámbar #D97706` al quedar $\le 15\%$ $\rightarrow$ `Rojo #DC2626`). Al invadir el ahorro, toda la reserva entra en emergencia (rojo fuerte lo que queda y rojo suave `#FEE2E2` lo consumido). Al agotarse el presupuesto (`gasto >= presupuesto`), carril completo en rojo suave con borde rojo. En `CategoryChart`, las barras conservan el color de su categoría en estado normal con microcopy dual `X% consumido · Queda $Y` en `FittedBox`. Documentado en `DOC_BARRA_TANQUE_PRESUPUESTO.md`.
 
 ### Bloque B: Finanzas Bimonetarias y Lentes Multimoneda (Finanzas / UX)
 - `FIN-09` **Equivalencias Multimoneda Inmutables (`USD`, `VES`, `USDT`, `EUR`) y Migración SQLite v18:** `Pendiente de validación 🧪`

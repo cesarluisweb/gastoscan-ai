@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gastoscan_ai/core/constants/app_colors.dart';
 import 'package:gastoscan_ai/ui/widgets/summary_card.dart';
 
 void main() {
@@ -156,13 +157,16 @@ void main() {
       expect(find.textContaining('Meta de ahorro:'), findsOneWidget);
       expect(find.textContaining('Protegida'), findsNothing);
 
-      // Barra de progreso en estado normal: color neutro pizarra sobre fondo gris claro
+      // Barra de progreso en estado normal (Tanque que se vacía): 75% disponible en verde
       final progressFinder = find.byKey(const Key('summary_card_progress_indicator'));
       expect(progressFinder, findsOneWidget);
       final progressBar = tester.widget<LinearProgressIndicator>(progressFinder);
-      expect(progressBar.backgroundColor, equals(const Color(0xFFF1F5F9)));
-      expect((progressBar.valueColor as AlwaysStoppedAnimation<Color>).value, equals(const Color(0xFF1E293B)));
-      expect(progressBar.value, closeTo(0.25, 0.001));
+      expect(progressBar.backgroundColor, equals(Colors.transparent));
+      expect((progressBar.valueColor as AlwaysStoppedAnimation<Color>).value, equals(AppColors.balancePositive));
+      expect(progressBar.value, closeTo(0.75, 0.001));
+
+      // Marcador vertical de ahorro posicionado a la izquierda
+      expect(find.byKey(const Key('summary_card_savings_marker')), findsOneWidget);
     });
 
     testWidgets('cuando el gasto supera el 85% del límite muestra barra en ámbar', (tester) async {
@@ -185,14 +189,15 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // 430 / 500 = 86% (> 85%), debe mostrar color ámbar de precaución
+      // 430 / 500 = 86% (> 85%), tanque al 14%, debe mostrar color ámbar de precaución
       final progressFinder = find.byKey(const Key('summary_card_progress_indicator'));
       expect(progressFinder, findsOneWidget);
       final progressBar = tester.widget<LinearProgressIndicator>(progressFinder);
-      expect((progressBar.valueColor as AlwaysStoppedAnimation<Color>).value, equals(const Color(0xFFF59E0B)));
+      expect((progressBar.valueColor as AlwaysStoppedAnimation<Color>).value, equals(AppColors.caution));
+      expect(progressBar.value, closeTo(0.14, 0.001));
     });
 
-    testWidgets('cuando se supera el límite muestra estado excedido en rojo', (tester) async {
+    testWidgets('cuando se supera el límite muestra estado excedido en rojo y carril en rojo suave al agotarse', (tester) async {
       final now = DateTime.now();
       await tester.pumpWidget(
         MaterialApp(
@@ -215,11 +220,71 @@ void main() {
       expect(find.textContaining('Excedido del límite'), findsOneWidget);
       expect(find.textContaining('- \$ 100,00'), findsOneWidget);
 
-      // Barra de progreso en estado excedido: color rojo
+      // Barra de progreso en estado excedido/agotado: valor 0.0, color rojo y carril rojo suave
       final progressFinder = find.byKey(const Key('summary_card_progress_indicator'));
       expect(progressFinder, findsOneWidget);
       final progressBar = tester.widget<LinearProgressIndicator>(progressFinder);
-      expect((progressBar.valueColor as AlwaysStoppedAnimation<Color>).value, equals(const Color(0xFFDC2626)));
+      expect(progressBar.value, equals(0.0));
+      expect((progressBar.valueColor as AlwaysStoppedAnimation<Color>).value, equals(AppColors.errorStrong));
+      expect(progressBar.backgroundColor, equals(AppColors.errorTint));
+    });
+
+    testWidgets('cuando se invade el ahorro parcialmente muestra rojo fuerte y zona de reserva teñida', (tester) async {
+      final now = DateTime.now();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SummaryCard(
+              totalUsd: 450.0,
+              totalVes: 18000.0,
+              periodo: 'Mes Actual',
+              monedaPrincipal: 'USD',
+              presupuestoGeneral: 500.0,
+              metaAhorro: 100.0,
+              mes: now.month,
+              anio: now.year,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Excedido del límite'), findsOneWidget);
+      expect(find.textContaining('- \$ 50,00'), findsOneWidget);
+
+      final progressFinder = find.byKey(const Key('summary_card_progress_indicator'));
+      expect(progressFinder, findsOneWidget);
+      final progressBar = tester.widget<LinearProgressIndicator>(progressFinder);
+      // Queda 10% de ahorro vivo ((500 - 450) / 500)
+      expect(progressBar.value, closeTo(0.10, 0.001));
+      expect((progressBar.valueColor as AlwaysStoppedAnimation<Color>).value, equals(AppColors.errorStrong));
+
+      // La zona de reserva invadida se tiñe en rojo suave
+      expect(find.byKey(const Key('summary_card_savings_invaded_tint')), findsOneWidget);
+      expect(find.byKey(const Key('summary_card_savings_marker')), findsOneWidget);
+    });
+
+    testWidgets('sin meta de ahorro no renderiza el marcador vertical', (tester) async {
+      final now = DateTime.now();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SummaryCard(
+              totalUsd: 100.0,
+              totalVes: 4000.0,
+              periodo: 'Mes Actual',
+              monedaPrincipal: 'USD',
+              presupuestoGeneral: 500.0,
+              metaAhorro: 0.0,
+              mes: now.month,
+              anio: now.year,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('summary_card_savings_marker')), findsNothing);
     });
   });
 }

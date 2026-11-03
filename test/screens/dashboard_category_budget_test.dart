@@ -230,11 +230,12 @@ void main() {
       expect(find.byKey(const Key('excess_alert_Alimentación')), findsNothing);
       expect(find.textContaining('Presupuesto superado'), findsNothing);
 
-      // Progress bar should NOT be red (AppColors.error)
+      // Progress bar should NOT be red (AppColors.error) and should reflect remaining 40%
       final progressFinder = find.byKey(const Key('category_progress_Alimentación'));
       expect(progressFinder, findsOneWidget);
       final progressBar = tester.widget<LinearProgressIndicator>(progressFinder);
       expect(progressBar.color, isNot(AppColors.error));
+      expect(progressBar.value, closeTo(0.40, 0.001));
     });
 
     testWidgets('Initial empty state displays analysis empty state and allows adding budget',

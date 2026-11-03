@@ -494,53 +494,90 @@ class AnalysisScreen extends StatelessWidget {
 
           if (hasBudget) ...[
             const SizedBox(height: 12),
-            // Barra lineal limpia de 10dp con marcador vertical de ahorro
+            // Barra lineal limpia de 10dp con marcador vertical de ahorro (Tanque que se vacía)
             LayoutBuilder(
               builder: (context, constraints) {
                 final totalWidth = constraints.maxWidth;
-                final double rawLimiteRatio = budget > 0 ? (limiteParaGastar / budget) : 1.0;
-                final double savingsMarkerPos =
-                    (totalWidth * rawLimiteRatio).clamp(0.0, totalWidth);
-                final double barFillRatio = budget > 0 ? (spent / budget) : 0.0;
+                final bool isTankExhausted = hasBudget && budget > 0 && spent >= budget;
+                final bool isSavingsInvaded =
+                    hasBudget && hasSavingsGoal && budget > 0 && spent > limiteParaGastar;
+                final bool isOverLimitOrExhausted = isExceeded || isTankExhausted;
+                final bool isCaution = !isOverLimitOrExhausted && (percentUsed >= 0.85);
 
-                final bool isCaution = !isExceeded && percentUsed >= 0.85;
+                final double rawSavingsRatio =
+                    (hasSavingsGoal && budget > 0) ? (metaAhorro / budget).clamp(0.0, 1.0) : 0.0;
+                final double savingsMarkerPos = (totalWidth * rawSavingsRatio).clamp(0.0, totalWidth);
+                final double barFillRatio =
+                    budget > 0 ? ((budget - spent) / budget).clamp(0.0, 1.0) : 0.0;
 
                 final Color barColor;
-                if (isExceeded) {
-                  barColor = AppColors.error;
+                if (isOverLimitOrExhausted) {
+                  barColor = AppColors.errorStrong;
                 } else if (isCaution) {
-                  barColor = const Color(0xFFF59E0B);
+                  barColor = AppColors.caution;
                 } else {
-                  barColor = const Color(0xFF1E293B);
+                  barColor = AppColors.balancePositive;
                 }
 
-                return Stack(
-                  clipBehavior: Clip.none,
-                  alignment: Alignment.centerLeft,
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(5),
-                      child: LinearProgressIndicator(
-                        value: barFillRatio.clamp(0.0, 1.0),
-                        minHeight: 10,
-                        backgroundColor: AppColors.cardLighter,
-                        valueColor: AlwaysStoppedAnimation<Color>(barColor),
-                      ),
-                    ),
-                    if (hasSavingsGoal)
-                      Positioned(
-                        left: (savingsMarkerPos - 1.0).clamp(0.0, totalWidth - 2.0),
-                        top: -3,
-                        bottom: -3,
+                final Color trackColor = isTankExhausted ? AppColors.errorTint : AppColors.trackNeutral;
+
+                return Semantics(
+                  label: 'Saldo disponible del presupuesto',
+                  value: '${(barFillRatio * 100).round()}% disponible',
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    alignment: Alignment.centerLeft,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(5),
                         child: Container(
-                          width: 2,
+                          height: 10,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF4B5563),
-                            borderRadius: BorderRadius.circular(1),
+                            color: trackColor,
+                            borderRadius: BorderRadius.circular(5),
+                            border: isTankExhausted ? Border.all(color: AppColors.errorBorder, width: 1) : null,
+                          ),
+                          child: Stack(
+                            alignment: Alignment.centerLeft,
+                            children: [
+                              if (isSavingsInvaded && !isTankExhausted)
+                                Positioned(
+                                  left: 0,
+                                  top: 0,
+                                  bottom: 0,
+                                  width: savingsMarkerPos,
+                                  child: Container(
+                                    key: const Key('analysis_savings_invaded_tint'),
+                                    color: AppColors.errorTint,
+                                  ),
+                                ),
+                              LinearProgressIndicator(
+                                key: const Key('analysis_general_progress_indicator'),
+                                value: isTankExhausted ? 0.0 : barFillRatio,
+                                minHeight: 10,
+                                backgroundColor: isTankExhausted ? AppColors.errorTint : Colors.transparent,
+                                valueColor: AlwaysStoppedAnimation<Color>(barColor),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                  ],
+                      if (hasSavingsGoal)
+                        Positioned(
+                          left: (savingsMarkerPos - 1.0).clamp(0.0, totalWidth - 2.0),
+                          top: -3,
+                          bottom: -3,
+                          child: Container(
+                            key: const Key('analysis_savings_marker'),
+                            width: 2,
+                            decoration: BoxDecoration(
+                              color: isOverLimitOrExhausted ? AppColors.errorStrong : AppColors.markerNeutral,
+                              borderRadius: BorderRadius.circular(1),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 );
               },
             ),

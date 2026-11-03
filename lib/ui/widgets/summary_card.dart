@@ -391,57 +391,95 @@ class SummaryCard extends StatelessWidget {
               ],
             ),
 
-            // Barra de progreso con marcador vertical de ahorro
+            // Barra de progreso con marcador vertical de ahorro (Tanque que se vacía)
             const SizedBox(height: 10),
             LayoutBuilder(
               builder: (context, constraints) {
                 final totalWidth = constraints.maxWidth;
-                final double rawLimiteRatio = budgetInLens > 0 ? (limiteParaGastar / budgetInLens) : 1.0;
-                final double savingsMarkerPos = (totalWidth * rawLimiteRatio).clamp(0.0, totalWidth);
-                final double barFillRatio = budgetInLens > 0 ? (effectiveSpent / budgetInLens) : 0.0;
+                final bool isTankExhausted = hasBudget && budgetInLens > 0 && effectiveSpent >= budgetInLens;
+                final bool isSavingsInvaded =
+                    hasBudget && hasSavingsGoal && budgetInLens > 0 && effectiveSpent > limiteParaGastar;
+                final bool isOverLimitOrExhausted = isOverBudget || isTankExhausted;
+                final bool isCaution = !isOverLimitOrExhausted && (percentUsed >= 0.85);
 
-                final bool isCaution = !isOverBudget &&
-                    (percentUsed >= 0.85 || snapshot?.status == SavingsGoalStatus.enRiesgo);
+                final double rawSavingsRatio =
+                    (hasSavingsGoal && budgetInLens > 0) ? (metaInLens / budgetInLens).clamp(0.0, 1.0) : 0.0;
+                final double savingsMarkerPos = (totalWidth * rawSavingsRatio).clamp(0.0, totalWidth);
+                final double barFillRatio =
+                    budgetInLens > 0 ? ((budgetInLens - effectiveSpent) / budgetInLens).clamp(0.0, 1.0) : 0.0;
 
                 final Color barColor;
-                if (isOverBudget) {
-                  barColor = const Color(0xFFDC2626); // Rojo / AppColors.error
+                if (isOverLimitOrExhausted) {
+                  barColor = AppColors.errorStrong;
                 } else if (isCaution) {
-                  barColor = const Color(0xFFF59E0B); // Ámbar de precaución
+                  barColor = AppColors.caution;
                 } else {
-                  barColor = const Color(0xFF1E293B); // Tono pizarra oscuro de marca
+                  barColor = AppColors.balancePositive;
                 }
 
-                return Stack(
-                  clipBehavior: Clip.none,
-                  alignment: Alignment.centerLeft,
-                  children: [
-                    // Barra lineal redondeada de 10dp de alto
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(5),
-                      child: LinearProgressIndicator(
-                        key: const Key('summary_card_progress_indicator'),
-                        value: barFillRatio.clamp(0.0, 1.0),
-                        minHeight: 10,
-                        backgroundColor: const Color(0xFFF1F5F9), // Fondo gris claro
-                        valueColor: AlwaysStoppedAnimation<Color>(barColor),
-                      ),
-                    ),
-                    // Marcador vertical gris oscuro sobresaliendo 3dp arriba y abajo
-                    if (hasSavingsGoal)
-                      Positioned(
-                        left: (savingsMarkerPos - 1.0).clamp(0.0, totalWidth - 2.0),
-                        top: -3,
-                        bottom: -3,
+                final Color trackColor = isTankExhausted ? AppColors.errorTint : AppColors.trackNeutral;
+
+                return Semantics(
+                  label: 'Saldo disponible del presupuesto',
+                  value: '${(barFillRatio * 100).round()}% disponible',
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    alignment: Alignment.centerLeft,
+                    children: [
+                      // Carril base con soporte de reserva invadida y borde en tanque agotado
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(5),
                         child: Container(
-                          width: 2,
+                          height: 10,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF4B5563), // Gris oscuro nítido
-                            borderRadius: BorderRadius.circular(1),
+                            color: trackColor,
+                            borderRadius: BorderRadius.circular(5),
+                            border: isTankExhausted ? Border.all(color: AppColors.errorBorder, width: 1) : null,
+                          ),
+                          child: Stack(
+                            alignment: Alignment.centerLeft,
+                            children: [
+                              // Si el ahorro es invadido, teñir la zona de reserva en rojo suave
+                              if (isSavingsInvaded && !isTankExhausted)
+                                Positioned(
+                                  left: 0,
+                                  top: 0,
+                                  bottom: 0,
+                                  width: savingsMarkerPos,
+                                  child: Container(
+                                    key: const Key('summary_card_savings_invaded_tint'),
+                                    color: AppColors.errorTint,
+                                  ),
+                                ),
+                              // Barra lineal con fondo transparente para dejar ver las capas inferiores
+                              LinearProgressIndicator(
+                                key: const Key('summary_card_progress_indicator'),
+                                value: isTankExhausted ? 0.0 : barFillRatio,
+                                minHeight: 10,
+                                backgroundColor: isTankExhausted ? AppColors.errorTint : Colors.transparent,
+                                valueColor: AlwaysStoppedAnimation<Color>(barColor),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                  ],
+                      // Marcador vertical sobresaliendo 3dp arriba y abajo (Rojo si ahorro invadido o agotado)
+                      if (hasSavingsGoal)
+                        Positioned(
+                          left: (savingsMarkerPos - 1.0).clamp(0.0, totalWidth - 2.0),
+                          top: -3,
+                          bottom: -3,
+                          child: Container(
+                            key: const Key('summary_card_savings_marker'),
+                            width: 2,
+                            decoration: BoxDecoration(
+                              color: isOverLimitOrExhausted ? AppColors.errorStrong : AppColors.markerNeutral,
+                              borderRadius: BorderRadius.circular(1),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 );
               },
             ),

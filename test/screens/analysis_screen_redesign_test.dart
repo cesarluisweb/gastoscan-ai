@@ -274,6 +274,13 @@ void main() {
 
       // 3. Ritmo / Proyección fin de mes
       expect(find.textContaining('Si sigues a este ritmo gastarás en el mes'), findsOneWidget);
+
+      // Barra de tanque en Tarjeta 1: $18 gastados de $550 presupuesto general -> (550 - 18) / 550
+      final progressFinder = find.byKey(const Key('analysis_general_progress_indicator'));
+      expect(progressFinder, findsOneWidget);
+      final progressBar = tester.widget<LinearProgressIndicator>(progressFinder);
+      expect(progressBar.value, closeTo((550.0 - 18.0) / 550.0, 0.001));
+      expect(find.byKey(const Key('analysis_savings_marker')), findsOneWidget);
     });
 
     testWidgets('3. Tarjeta 2: Evolución Diaria renderiza curva acumulativa y ritmo dinámico', (tester) async {

@@ -19,6 +19,15 @@ class AppColors {
   static const Color warning = Color(0xFFF59E0B);
   static const Color info = Color(0xFF3B82F6);
 
+  // Tokens Semánticos para Tanque de Presupuesto y Saldo Disponible
+  static const Color balancePositive = Color(0xFF16A34A); // Verde saldo disponible (Green 600)
+  static const Color caution = Color(0xFFD97706);         // Ámbar de alto contraste (Amber 600)
+  static const Color errorStrong = Color(0xFFDC2626);     // Rojo intenso de exceso / reserva invadida (Red 600)
+  static const Color errorTint = Color(0xFFFEE2E2);       // Fondo rojo suave para zona invadida / tanque vacío (Red 100)
+  static const Color errorBorder = Color(0xFFFCA5A5);     // Borde rojo sutil para carril agotado (Red 300)
+  static const Color trackNeutral = Color(0xFFF1F5F9);    // Carril gris claro homologado (Slate 100)
+  static const Color markerNeutral = Color(0xFF4B5563);   // Divisor vertical de ahorro en estado normal
+
   /// Devuelve el color semafórico unificado para progreso de presupuesto:
   /// - Rojo (`AppColors.error`): Presupuesto superado (isExceeded o percent >= 1.0)
   /// - Amarillo / Ámbar (`AppColors.warning`): Advertencia (percent >= 0.85)

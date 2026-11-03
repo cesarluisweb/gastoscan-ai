@@ -482,6 +482,20 @@ class _CategoryChartState extends State<CategoryChart> {
     final double budget = _getBudget(cat);
     final bool hasBudget = budget > 0;
     final bool isExceeded = hasBudget && spent > budget;
+    final bool isExhaustedOrExceeded = hasBudget && spent >= budget;
+    final double usedRatio = hasBudget ? (spent / budget) : 0.0;
+    final double remainingRatio = hasBudget ? ((budget - spent) / budget).clamp(0.0, 1.0) : 0.0;
+    final bool isCaution = hasBudget && !isExhaustedOrExceeded && usedRatio >= 0.85;
+
+    final Color barColor;
+    if (isExhaustedOrExceeded) {
+      barColor = AppColors.error;
+    } else if (isCaution) {
+      barColor = AppColors.caution;
+    } else {
+      barColor = AppColors.categoryColors[cat] ?? AppColors.balancePositive;
+    }
+
     final Color categoryColor = isExceeded
         ? AppColors.error
         : (AppColors.categoryColors[cat] ?? AppColors.primary);
@@ -569,13 +583,9 @@ class _CategoryChartState extends State<CategoryChart> {
                     borderRadius: BorderRadius.circular(4),
                     child: LinearProgressIndicator(
                       key: Key('category_progress_$cat'),
-                      value: isExceeded
-                          ? 1.0
-                          : (budget > 0 ? (spent / budget).clamp(0.0, 1.0) : 0.0),
-                      color: isExceeded
-                          ? AppColors.error
-                          : (AppColors.categoryColors[cat] ?? AppColors.primary),
-                      backgroundColor: isExceeded
+                      value: isExhaustedOrExceeded ? 0.0 : remainingRatio,
+                      color: barColor,
+                      backgroundColor: isExhaustedOrExceeded
                           ? AppColors.error.withValues(alpha: 0.2)
                           : AppColors.border,
                       minHeight: 6,
@@ -621,12 +631,19 @@ class _CategoryChartState extends State<CategoryChart> {
                           ),
                         )
                       else
-                        Text(
-                          '${(budget > 0 ? ((spent / budget) * 100).clamp(0, 999).toStringAsFixed(0) : '0')}% consumido',
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
+                        Expanded(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              '${(budget > 0 ? ((spent / budget) * 100).clamp(0, 999).toStringAsFixed(0) : '0')}% consumido · Queda ${_fmt((budget - spent).clamp(0.0, double.infinity))}',
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              maxLines: 1,
+                            ),
                           ),
                         ),
                       const SizedBox(width: 8),

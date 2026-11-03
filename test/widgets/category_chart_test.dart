@@ -119,6 +119,12 @@ void main() {
       expect(find.byKey(const Key('edit_budget_Alimentación')), findsOneWidget);
       expect(find.text('Editar'), findsOneWidget);
       expect(find.textContaining('consumido'), findsOneWidget);
+      expect(find.textContaining('Queda'), findsOneWidget);
+
+      final progressFinder = find.byKey(const Key('category_progress_Alimentación'));
+      expect(progressFinder, findsOneWidget);
+      final progressBar = tester.widget<LinearProgressIndicator>(progressFinder);
+      expect(progressBar.value, closeTo((177778.18 - 136388.0) / 177778.18, 0.001));
     });
   });
 
