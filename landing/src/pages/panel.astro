@@ -283,8 +283,8 @@ import '../styles/global.css';
                     <span id="card-daily-pace" class="text-xs text-slate-500"></span>
                 </div>
                 <div id="progress-track" class="relative w-full bg-slate-100 rounded-full h-3 overflow-hidden transition-all duration-500">
-                    <div id="progress-savings-zone-tint" class="hidden absolute top-0 bottom-0 bg-rose-100 z-[2]"></div>
-                    <div id="progress-bar-fill" class="absolute top-0 bottom-0 right-0 z-[5] bg-emerald-600 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    <div id="progress-savings-zone-tint" class="hidden absolute top-0 bottom-0 left-0 bg-rose-100 z-0"></div>
+                    <div id="progress-bar-fill" class="relative z-[5] bg-emerald-600 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
                     <div id="progress-savings-marker" class="hidden absolute top-0 bottom-0 w-0.5 bg-slate-900 z-10" title="Reserva de meta de ahorro"></div>
                 </div>
             </div>
@@ -1510,25 +1510,22 @@ import '../styles/global.css';
                 progressPercentLabel.textContent = `${percentSpentVal}% consumido · ${percentAvailableVal}% en tanque`;
                 progressBarFill.style.width = `${remainingFullRatio * 100}%`;
 
-                // Posición de la rayita de ahorro en targetBudget / effectiveGeneralBudget (a la derecha)
+                // Posición de la rayita de ahorro en meta / presupuestoGeneral
                 if (progressSavingsMarker) {
-                    if (hasSavings && effectiveGeneralBudget > 0 && targetBudget > 0) {
-                        const markerPct = Math.min(Math.max((targetBudget / effectiveGeneralBudget) * 100, 2), 98);
+                    if (hasSavings && effectiveGeneralBudget > 0 && health.metaAhorro > 0) {
+                        const markerPct = Math.min(Math.max((health.metaAhorro / effectiveGeneralBudget) * 100, 2), 98);
                         progressSavingsMarker.style.left = `${markerPct}%`;
                         progressSavingsMarker.classList.remove('hidden');
                         if (isOverLimitOrExhausted) {
                             progressSavingsMarker.className = "absolute top-0 bottom-0 w-0.5 bg-rose-600 z-10";
                         } else {
-                            progressSavingsMarker.className = "absolute top-0 bottom-0 w-0.5 bg-slate-900 z-10";
+                            progressSavingsMarker.className = "absolute top-0 bottom-0 w-0.5 bg-slate-600 z-10";
                         }
 
-                        // Zona de ahorro invadida: tramo consumido entre markerPct y spentPct
+                        // Zona de ahorro invadida
                         if (progressSavingsZoneTint) {
                             if (isSavingsInvaded && !isTankExhausted) {
-                                const spentPct = Math.min((effectiveSpent / effectiveGeneralBudget) * 100, 100);
-                                const invadedWidth = Math.max(0, spentPct - markerPct);
-                                progressSavingsZoneTint.style.left = `${markerPct}%`;
-                                progressSavingsZoneTint.style.width = `${invadedWidth}%`;
+                                progressSavingsZoneTint.style.width = `${markerPct}%`;
                                 progressSavingsZoneTint.classList.remove('hidden');
                             } else {
                                 progressSavingsZoneTint.classList.add('hidden');
@@ -1550,11 +1547,11 @@ import '../styles/global.css';
                 }
 
                 if (isOverLimitOrExhausted) {
-                    progressBarFill.className = "absolute top-0 bottom-0 right-0 z-[5] bg-rose-600 h-3 rounded-full transition-all duration-500";
+                    progressBarFill.className = "relative z-[5] bg-rose-600 h-3 rounded-full transition-all duration-500";
                 } else if (isCaution) {
-                    progressBarFill.className = "absolute top-0 bottom-0 right-0 z-[5] bg-amber-600 h-3 rounded-full transition-all duration-500";
+                    progressBarFill.className = "relative z-[5] bg-amber-600 h-3 rounded-full transition-all duration-500";
                 } else {
-                    progressBarFill.className = "absolute top-0 bottom-0 right-0 z-[5] bg-emerald-600 h-3 rounded-full transition-all duration-500";
+                    progressBarFill.className = "relative z-[5] bg-emerald-600 h-3 rounded-full transition-all duration-500";
                 }
             } else {
                 if (progressTitleLabel) progressTitleLabel.textContent = "Saldo disponible del presupuesto";
@@ -1668,8 +1665,8 @@ import '../styles/global.css';
                         const trackClass = isExhaustedOrOver ? 'bg-rose-200' : 'bg-slate-200';
 
                         return `
-                        <div class="w-full ${trackClass} rounded-full h-1.5 overflow-hidden relative">
-                            <div class="h-1.5 rounded-full transition-all duration-300 absolute top-0 bottom-0 right-0" style="width: ${remainingPct}%; background-color: ${barColor}"></div>
+                        <div class="w-full ${trackClass} rounded-full h-1.5 overflow-hidden">
+                            <div class="h-1.5 rounded-full transition-all duration-300" style="width: ${remainingPct}%; background-color: ${barColor}"></div>
                         </div>
                         <div class="flex justify-between items-center text-[10px]">
                             <span class="${isOver ? 'text-rose-600 font-bold' : 'text-slate-500'}">${percent}% consumido</span>
