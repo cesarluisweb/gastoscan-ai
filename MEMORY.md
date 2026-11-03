@@ -4,8 +4,8 @@
 ## Estado Actual Inmediato
 - **Rama:** `main`.
 - **Fase A & Fase 5:** Integradas en `main`; Closed Testing activo en Google Play.
-- **P0 Detener commits automáticos CI:** Desacoplados reportes de Git en .github/workflows/build_apk.yml y scripts/wait_ci.ps1. Graduado a .agents/rules/ci-distribucion.md, .agents/skills/diagnosticar-ci/SKILL.md y AGENTS.md. Sin commit/push.
-- **UI-15 (Tanque que se Vacía en Medidores de Presupuesto):** `Pendiente de validación 🧪`. CI verde (Android build 640, commit `b40ce3d`, 587 pruebas pasando). Despliegue web verificado en producción HTTP 200 (`rindemas.cesarluis.com/panel`).
+- **P0 Detener commits automáticos CI:** `Completada ✅`. Integrado en `main` con CI verde (Build 641, commit `b5c4603`, run 41713145770). Cero commits automáticos generados en `origin/main`. Graduado a `.agents/rules/ci-distribucion.md`, `.agents/skills/diagnosticar-ci/SKILL.md` y `AGENTS.md`.
+- **UI-15 (Tanque que se Vacía en Medidores de Presupuesto):** `Pendiente de validación 🧪`. CI verde (Android build 641, commit `b5c4603`). Despliegue web verificado en producción HTTP 200 (`rindemas.cesarluis.com/panel`).
   - Invertidas barras de presupuesto en `SummaryCard`, `AnalysisScreen`, `CategoryChart` y `panel.astro` (escala `100% -> 0%`).
   - Divisor vertical de ahorro a la izquierda (`meta / presupuesto`).
   - Semáforo físico de batería (`#16A34A` verde -> `#D97706` ámbar al quedar <=15% -> `#DC2626` rojo).
@@ -14,7 +14,7 @@
   - Tokens semánticos en `AppColors` y `Semantics` de accesibilidad.
   - Documentación en `DOC_BARRA_TANQUE_PRESUPUESTO.md`.
 - **Triple Escudo Fechas Factura & DatePicker:** `Pendiente de validación 🧪`. CI verde (Android build 640, commit `b40ce3d`, 587 pruebas pasando). Gateway desplegado en producción en Cloudflare Workers (`rindemas-gateway`).
-- **Artefacto para pruebas en teléfono:** Descargar `rindemas-dev-apk` desde el run de CI 41703691768 (*Rinde Más Dev*).
+- **Artefacto para pruebas en teléfono:** Descargar `rindemas-dev-apk` desde el run de CI 41713145770 (*Rinde Más Dev*).
 
 ## Decisiones Técnicas y de Negocio Recientes
 - Fechas OCR y DatePicker: Triple escudo para fechas `DD/MM/YYYY` (Worker prompt + Gateway sanitizador + `GeminiExtractionResult.parseExtractionDate`).
