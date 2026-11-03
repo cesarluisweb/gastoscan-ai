@@ -388,6 +388,36 @@ export default {
   }
 };
 
+// Normaliza fechas ambiguas o en formato latinoamericano (DD/MM/YYYY) al estándar ISO YYYY-MM-DD
+function normalizeReceiptIsoDate(fechaStr) {
+  if (!fechaStr || typeof fechaStr !== "string") return null;
+  const trimmed = fechaStr.trim();
+  // 1. Formato ISO YYYY-MM-DD (con posible hora o timestamp)
+  const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    const y = parseInt(isoMatch[1], 10);
+    const m = parseInt(isoMatch[2], 10);
+    const d = parseInt(isoMatch[3], 10);
+    if (y >= 2000 && m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+      return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
+    }
+  }
+  // 2. Formato latinoamericano DD/MM/YYYY, DD-MM-YYYY o DD.MM.YYYY
+  const dmyMatch = trimmed.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})/);
+  if (dmyMatch) {
+    const d = parseInt(dmyMatch[1], 10);
+    const m = parseInt(dmyMatch[2], 10);
+    let y = parseInt(dmyMatch[3], 10);
+    if (y < 100) y += 2000;
+    if (y >= 2000 && m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+      const dStr = String(d).padStart(2, "0");
+      const mStr = String(m).padStart(2, "0");
+      return `${y}-${mStr}-${dStr}`;
+    }
+  }
+  return fechaStr;
+}
+
 // Controlador: Análisis de Facturas (OCR / Visión)
 async function handleAnalyzeReceipt(request, geminiKey, isCustomKey = false) {
   try {
@@ -427,6 +457,7 @@ Reglas estrictas para los productos de cada factura:
 3. Moneda Unificada: Todos los precios extraídos (ítems y total_original) DEBEN estar estrictamente en la misma moneda. Si los ítems están detallados en Bolívares (VES), extrae el total_original en Bolívares (ignorando el total Ref en USD) y coloca "moneda": "VES".
 4. "categoria": Asigna a cada ítem individual una de las categorías válidas ("Alimentación", "Salud", "Higiene", "Educación", "Hogar", "Servicios", "Transporte", "Ropa", "Entretenimiento", "Otros") según el tipo de producto.
 5. "impuesto_iva" y marcadores fiscales: En facturas fiscales venezolanas, los ítems suelen marcarse al final como (E) Exento o (G) Gravado al 16% (o alícuotas reducidas). En cada ítem, extrae "alicuota_fiscal": "E" para exento, o "G" para gravado. En el campo general "impuesto_iva", extrae el monto total del IVA liquidado (suele decir "Total IVA", "IVA 16%", "Impuesto"). Si toda la factura es exenta o no tiene IVA desglosado, coloca 0.00.
+6. Formato de Fecha: En facturas y recibos de Venezuela y Latinoamérica (con montos en VES, RIF o comercios locales), las fechas numéricas siguen estrictamente el formato DÍA/MES/AÑO (DD/MM/YYYY, DD-MM-YYYY o DD.MM.YYYY). Por ejemplo, si la factura dice '03/11/2026' o '03-11-2026', el día es 03 y el mes es 11 (noviembre), por lo que DEBES extraerla como "2026-11-03" en formato ISO YYYY-MM-DD (NUNCA como 11 de marzo "2026-03-11"). Si la fecha incluye el nombre del mes (ej. 'Nov', 'Noviembre') o viene en formato ISO (YYYY-MM-DD), respeta ese orden. Si el año tiene 2 dígitos (ej. '03/11/26'), completa al siglo 2000 ("2026-11-03"). Convierte siempre la fecha leída al formato ISO "YYYY-MM-DD".
 
 Devuelve EXCLUSIVAMENTE un objeto JSON válido con la siguiente estructura, sin texto adicional ni bloques markdown:
 {
@@ -603,6 +634,14 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
 
     const resultJson = JSON.parse(rawText);
     resultJson.modo_procesamiento = isTextMode ? "texto" : "vision";
+
+    if (Array.isArray(resultJson.facturas)) {
+      for (const f of resultJson.facturas) {
+        if (f && f.fecha) {
+          f.fecha = normalizeReceiptIsoDate(f.fecha) || f.fecha;
+        }
+      }
+    }
 
     const usage = parsedData.usageMetadata || {};
     const totalTokens = usage.totalTokenCount || 0;
@@ -784,7 +823,7 @@ Nota de análisis cambiario: La diferencia entre total_usd_bcv y total_usdt_p2p 
         type: "object",
         properties: {
           comercio: { type: "string", description: "Nombre del local o 'Varios' si no se especifica." },
-          fecha: { type: "string", description: "Fecha en formato YYYY-MM-DD. Usa la fecha actual si no dice otra." },
+          fecha: { type: "string", description: "Fecha en formato YYYY-MM-DD. Si el usuario indica una fecha numérica como 03/11/2026, interpreta estrictamente el formato latinoamericano DD/MM/YYYY (03 de noviembre de 2026 -> 2026-11-03). Usa la fecha actual si no dice otra." },
           moneda: { type: "string", description: "Moneda de la compra: VES, USD, EUR o USDT. Si no se especificó divisa, usa '" + defaultMoneda + "'." },
           monto_original: { type: "number", description: "Monto total pagado en la moneda original (o 0 si no se mencionó precio)." },
           total_usd: { type: "number", description: "Monto total estimado en dólares (o 0 si no se mencionó precio)." },
@@ -814,7 +853,7 @@ Nota de análisis cambiario: La diferencia entre total_usd_bcv y total_usdt_p2p 
               type: "object",
               properties: {
                 comercio: { type: "string", description: "Nombre del establecimiento de esta compra." },
-                fecha: { type: "string", description: "Fecha en formato YYYY-MM-DD." },
+                fecha: { type: "string", description: "Fecha en formato YYYY-MM-DD. Interpreta fechas numéricas como DD/MM/YYYY." },
                 moneda: { type: "string", description: "Moneda de esta compra: VES, USD, EUR o USDT." },
                 monto_original: { type: "number", description: "Monto total pagado en la moneda de esta compra (o 0 si no se mencionó)." },
                 total_usd: { type: "number", description: "Monto total estimado en USD (o 0 si no se mencionó)." },
@@ -1059,10 +1098,21 @@ Nota de análisis cambiario: La diferencia entre total_usd_bcv y total_usdt_p2p 
 
     const part = candidates[0]?.content?.parts?.[0];
     if (part?.functionCall) {
+      const callArgs = part.functionCall.args || {};
+      if (callArgs.fecha) {
+        callArgs.fecha = normalizeReceiptIsoDate(callArgs.fecha) || callArgs.fecha;
+      }
+      if (Array.isArray(callArgs.gastos)) {
+        for (const g of callArgs.gastos) {
+          if (g && g.fecha) {
+            g.fecha = normalizeReceiptIsoDate(g.fecha) || g.fecha;
+          }
+        }
+      }
       return new Response(JSON.stringify({
         functionCall: {
           name: part.functionCall.name,
-          args: part.functionCall.args
+          args: callArgs
         }
       }), {
         status: 200,

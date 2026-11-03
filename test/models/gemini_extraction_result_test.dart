@@ -257,4 +257,77 @@ void main() {
       expect(result.comercio, equals('Comercio no especificado'));
     });
   });
+
+  group('GeminiExtractionResult - Normalización de fechas (parseExtractionDate)', () {
+    test('Formato ISO YYYY-MM-DD se preserva exactamente', () {
+      expect(
+        GeminiExtractionResult.parseExtractionDate('2026-11-03'),
+        equals('2026-11-03'),
+      );
+    });
+
+    test('Formato ISO con timestamp o sufijo T se normaliza a YYYY-MM-DD', () {
+      expect(
+        GeminiExtractionResult.parseExtractionDate('2026-11-03T14:30:00Z'),
+        equals('2026-11-03'),
+      );
+    });
+
+    test('Formato venezolano DD/MM/YYYY ambiguo (03/11/2026) se normaliza a 2026-11-03 (3 de noviembre)', () {
+      expect(
+        GeminiExtractionResult.parseExtractionDate('03/11/2026'),
+        equals('2026-11-03'),
+      );
+    });
+
+    test('Formato con guiones DD-MM-YYYY (03-11-2026) se normaliza a 2026-11-03', () {
+      expect(
+        GeminiExtractionResult.parseExtractionDate('03-11-2026'),
+        equals('2026-11-03'),
+      );
+    });
+
+    test('Formato con puntos DD.MM.YYYY (03.11.2026) se normaliza a 2026-11-03', () {
+      expect(
+        GeminiExtractionResult.parseExtractionDate('03.11.2026'),
+        equals('2026-11-03'),
+      );
+    });
+
+    test('Día de un solo dígito (3/11/2026) se rellena con cero a 2026-11-03', () {
+      expect(
+        GeminiExtractionResult.parseExtractionDate('3/11/2026'),
+        equals('2026-11-03'),
+      );
+    });
+
+    test('Año de dos dígitos (03/11/26) se expande al siglo 2000 (2026-11-03)', () {
+      expect(
+        GeminiExtractionResult.parseExtractionDate('03/11/26'),
+        equals('2026-11-03'),
+      );
+    });
+
+    test('Factura procesada con json fecha 03/11/2026 se extrae como 2026-11-03 en fromJson', () {
+      final json = {
+        'comercio': 'Automercado',
+        'fecha': '03/11/2026',
+        'moneda': 'USD',
+        'total_original': 12.50,
+        'items': [
+          {'descripcion': 'Queso', 'cantidad': 1, 'precio_unitario': 12.50, 'total': 12.50},
+        ],
+      };
+
+      final result = GeminiExtractionResult.fromJson(json);
+      expect(result.fecha, equals('2026-11-03'));
+    });
+
+    test('Valor nulo o vacío cae en la fecha de hoy en formato ISO YYYY-MM-DD', () {
+      final todayIso = DateTime.now().toIso8601String().substring(0, 10);
+      expect(GeminiExtractionResult.parseExtractionDate(null), equals(todayIso));
+      expect(GeminiExtractionResult.parseExtractionDate(''), equals(todayIso));
+      expect(GeminiExtractionResult.parseExtractionDate('   '), equals(todayIso));
+    });
+  });
 }

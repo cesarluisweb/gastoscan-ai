@@ -15,6 +15,8 @@
 - **Artefacto para pruebas en teléfono:** Descargar `rindemas-dev-apk` desde el run de CI 41683506716 (*Rinde Más Dev*).
 
 ## Decisiones Técnicas y de Negocio Recientes
+- Fechas OCR y DatePicker: Triple escudo para fechas `DD/MM/YYYY` (Worker prompt + Gateway sanitizador + `GeminiExtractionResult.parseExtractionDate`).
+- DatePicker: Día actual con número negro (`Colors.black`) y relleno amarillo suave (`AppColors.primaryLight` inactivo / `primary` activo).
 - Tanque de presupuesto: `isCaution` depende exclusivamente del nivel físico (<=15% del límite), desacoplando `enRiesgo`.
 - ReviewExpenseScreen: `_userTouchedCurrency` evita sobrescribir preferencia cuando el usuario interactúa manualmente.
 - `_buildLiquidacionPill` y selector de divisas no mutan estado si la opción pulsada ya está activa.

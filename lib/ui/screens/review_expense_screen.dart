@@ -886,16 +886,6 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
               surface: AppColors.card,
               onSurface: AppColors.textPrimary,
             ),
-            datePickerTheme: DatePickerThemeData(
-              cancelButtonStyle: TextButton.styleFrom(
-                foregroundColor: AppColors.textPrimary,
-                textStyle: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              confirmButtonStyle: TextButton.styleFrom(
-                foregroundColor: AppColors.textPrimary,
-                textStyle: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
           ),
           child: child!,
         );

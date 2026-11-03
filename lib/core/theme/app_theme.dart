@@ -102,11 +102,47 @@ class AppTheme {
         thickness: 1,
       ),
       datePickerTheme: DatePickerThemeData(
+        backgroundColor: AppColors.card,
+        headerBackgroundColor: AppColors.surface,
+        headerForegroundColor: AppColors.textPrimary,
+        // Día actual (Hoy): Número estrictamente negro de alto contraste (Regla 2.1 y 2.2 DESIGN.md)
+        todayForegroundColor: WidgetStateProperty.resolveWith((states) {
+          return Colors.black;
+        }),
+        // Relleno amarillo: Suave si no está seleccionado, Sólido si está seleccionado
+        todayBackgroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.primary;
+          }
+          return AppColors.primaryLight;
+        }),
+        todayBorder: const BorderSide(
+          color: AppColors.primaryDark,
+          width: 1.5,
+        ),
+        // Días seleccionados generales
+        dayBackgroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.primary;
+          }
+          return null;
+        }),
+        dayForegroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return Colors.black;
+          }
+          if (states.contains(WidgetState.disabled)) {
+            return AppColors.textMuted;
+          }
+          return AppColors.textPrimary;
+        }),
         cancelButtonStyle: TextButton.styleFrom(
           foregroundColor: AppColors.textPrimary,
+          textStyle: const TextStyle(fontWeight: FontWeight.bold),
         ),
         confirmButtonStyle: TextButton.styleFrom(
           foregroundColor: AppColors.textPrimary,
+          textStyle: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
     );

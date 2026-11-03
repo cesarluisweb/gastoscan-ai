@@ -61,6 +61,11 @@ Sobre fondos blancos o claros (`AppColors.card`, `AppColors.surface`, `AppColors
   ),
   ```
 
+### 2.2.2 Selector de Fecha (`DatePickerDialog` y `datePickerTheme`)
+- En el calendario mensual de selección de fecha (`DatePickerThemeData`), el número del día actual (`todayForegroundColor`) **DEBE SER SIEMPRE NEGRO** (`Colors.black`).
+- Queda prohibido el número amarillo sobre fondo blanco o fondos claros por falta de contraste.
+- El círculo del día actual debe tener **relleno amarillo suave** (`AppColors.primaryLight` cuando no está seleccionado, y `AppColors.primary` cuando está seleccionado) con borde definido `AppColors.primaryDark` (ancho 1.5px), garantizando visibilidad inmediata y contraste 100% accesible.
+
 ### 2.3 Uso Exclusivo del Amarillo
 El color amarillo (`AppColors.primaryDark` preferiblemente) queda reservado de forma estricta y exclusiva para:
 1. **Iconos:** Símbolos visuales al inicio de tarjetas o botones (`prefixIcon`, `leading`).

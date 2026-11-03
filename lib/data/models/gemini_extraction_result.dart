@@ -31,6 +31,55 @@ class GeminiExtractionResult {
       return tryParseAmount(value, isPrice: isPrice) ?? 0.0;
     }
 
+  /// Normaliza defensivamente la fecha extraída por la IA a formato ISO (YYYY-MM-DD).
+  /// Soporta ISO ('2026-11-03'), formato venezolano/latinoamericano ('03/11/2026', '03-11-2026', '03.11.2026')
+  /// y años de dos dígitos ('03/11/26'), con fallback seguro a la fecha de hoy.
+  static String parseExtractionDate(dynamic raw) {
+    if (raw == null) {
+      return DateTime.now().toIso8601String().substring(0, 10);
+    }
+    final str = raw.toString().trim();
+    if (str.isEmpty) {
+      return DateTime.now().toIso8601String().substring(0, 10);
+    }
+
+    // 1. Formato ISO YYYY-MM-DD (ej: "2026-11-03" o "2026-11-03T...")
+    final isoMatch = RegExp(r'^(\d{4})-(\d{2})-(\d{2})').firstMatch(str);
+    if (isoMatch != null) {
+      final y = int.tryParse(isoMatch.group(1)!) ?? 0;
+      final m = int.tryParse(isoMatch.group(2)!) ?? 0;
+      final d = int.tryParse(isoMatch.group(3)!) ?? 0;
+      if (y >= 2000 && m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+        return '${isoMatch.group(1)}-${isoMatch.group(2)}-${isoMatch.group(3)}';
+      }
+    }
+
+    // 2. Formato venezolano / latinoamericano DD/MM/YYYY, DD-MM-YYYY, DD.MM.YYYY
+    final dmyMatch = RegExp(r'^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})').firstMatch(str);
+    if (dmyMatch != null) {
+      final d = int.tryParse(dmyMatch.group(1)!) ?? 0;
+      final m = int.tryParse(dmyMatch.group(2)!) ?? 0;
+      var y = int.tryParse(dmyMatch.group(3)!) ?? 0;
+      if (y < 100) y += 2000;
+
+      if (y >= 2000 && m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+        final dStr = d.toString().padLeft(2, '0');
+        final mStr = m.toString().padLeft(2, '0');
+        return '$y-$mStr-$dStr';
+      }
+    }
+
+    // 3. Fallback tolerante con DateTime.tryParse (por si viniera un formato ISO completo con offset)
+    final parsed = DateTime.tryParse(str);
+    if (parsed != null && parsed.year >= 2000) {
+      final dStr = parsed.day.toString().padLeft(2, '0');
+      final mStr = parsed.month.toString().padLeft(2, '0');
+      return '${parsed.year}-$mStr-$dStr';
+    }
+
+    return DateTime.now().toIso8601String().substring(0, 10);
+  }
+
   static List<GeminiExtractionResult> listFromJson(Map<String, dynamic> json) {
     if (json.containsKey('facturas') && json['facturas'] is List) {
       final list = json['facturas'] as List;
@@ -51,12 +100,8 @@ class GeminiExtractionResult {
         ? comercioRaw.toString().trim()
         : 'Comercio no especificado';
 
-    // Fecha con fallback a hoy si es null o inválida
-    final fechaRaw = json['fecha']?.toString();
-    String fecha = DateTime.now().toIso8601String().substring(0, 10);
-    if (fechaRaw != null && RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(fechaRaw)) {
-      fecha = fechaRaw;
-    }
+    // Fecha defensiva: tolera ISO YYYY-MM-DD y formato venezolano DD/MM/YYYY
+    final fecha = parseExtractionDate(json['fecha']);
 
     // Moneda (USD, VES, USDT, EUR)
     final moneda = AppConstants.normalizarMoneda(json['moneda']?.toString(), fallback: 'USD');
