@@ -207,6 +207,12 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
     3. **Sanitización de Comas Térmicas y Expresiones de Voz:** `LocalOcrService.sanitizeOcrLine` une comas partidas (`11 . 56` -> `11.56`) y `GeminiService.normalizeVoiceText` convierte "11 con 56" y "12 y medio", desarmando además la trampa del subtotal vs precio unitario en dictado múltiple.
     4. **Corrección de IVA en `SemanticValidator`:** Eliminada la doble suma de IVA cuando la lista de ítems ya incluye el renglón impositivo.
   - *Documentación:* Ver [DOC_CORRECCION_DECIMALES_Y_VOZ.md](DOC_CORRECCION_DECIMALES_Y_VOZ.md). Tarea crítica: CI Build 538 aprobado en verde y validada exitosamente en dispositivo físico por César.
+- `AI-09` **Triple Escudo de Fechas en Facturas (DD/MM/YYYY) y Contraste de DatePicker:** `Pendiente de validación 🧪`
+  - *Problema:* Facturas con días $\\le 12$ (como `03/11/2026`) se extraían erróneamente como 11 de marzo por el sesgo anglosajón (MM/DD/YYYY) de Gemini Flash-Lite en modo texto OCR. En fechas de octubre ($>12$) el error no ocurría por imposibilidad calendárica. Asimismo, en el selector de fecha (`showDatePicker`), el número del día actual heredaba amarillo sobre fondo blanco, resultando ilegible.
+  - *Solución:*
+    1. **Triple Escudo de Fechas:** Regla directiva N° 6 en prompt de Cloudflare Worker exigiendo formato local DÍA/MES/AÑO, función sanitizadora determinista `normalizeReceiptIsoDate()` en el Gateway, y parser tolerante `GeminiExtractionResult.parseExtractionDate()` en Flutter con soporte de ISO, DD/MM/YYYY, guiones, puntos y años de 2 dígitos.
+    2. **Contraste de DatePicker:** Configuración en `AppTheme.lightTheme` con número en negro (`Colors.black`), relleno amarillo suave (`AppColors.primaryLight`) inactivo, amarillo sólido (`AppColors.primary`) seleccionado y borde nítido `AppColors.primaryDark` (1.5 px).
+  - *Verificación:* CI build 638 en verde (commit `e70f847`), 587 pruebas unitarias aprobadas y Gateway desplegado en Cloudflare.
 
 
 ### Bloque D: Nueva Herramienta Financiera

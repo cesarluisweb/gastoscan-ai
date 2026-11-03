@@ -4,7 +4,7 @@
 ## Estado Actual Inmediato
 - **Rama:** `main`.
 - **Fase A & Fase 5:** Integradas en `main`; Closed Testing activo en Google Play.
-- **P0 Detener commits automáticos CI:** Desacoplados reportes de Git (.github/workflows/build_apk.yml sube artefactos test-results/aab/apk con if-no-files-found: ignore; scripts/wait_ci.ps1 lee via artefactos/API sin consultar origin/main). Sin commit/push.
+- **P0 Detener commits automáticos CI:** Desacoplados reportes de Git en .github/workflows/build_apk.yml y scripts/wait_ci.ps1. Graduado a .agents/rules/ci-distribucion.md, .agents/skills/diagnosticar-ci/SKILL.md y AGENTS.md. Sin commit/push.
 - **UI-15 (Tanque que se Vacía en Medidores de Presupuesto):** `Pendiente de validación 🧪`. CI verde (Android build 640, commit `b40ce3d`, 587 pruebas pasando). Despliegue web verificado en producción HTTP 200 (`rindemas.cesarluis.com/panel`).
   - Invertidas barras de presupuesto en `SummaryCard`, `AnalysisScreen`, `CategoryChart` y `panel.astro` (escala `100% -> 0%`).
   - Divisor vertical de ahorro a la izquierda (`meta / presupuesto`).

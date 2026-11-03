@@ -69,6 +69,8 @@ description: "Convenciones de código Dart, maquetación de widgets, imports obl
   3. Envolver la tarjeta o widget raíz del ítem en `key: ValueKey('item_card_${item.clientKey}')` para que el reconciliador de Flutter preserve intactos los controladores y el foco del elemento correcto.
   4. En todo método `copyWith`, arrastrar explícitamente `clientKey: clientKey ?? this.clientKey` para evitar que una reconstrucción regenere claves y destruya el estado de los campos.
 
+- **Contraste en Diálogos de Calendario (`datePickerTheme`):** En cualquier tema o builder que use `showDatePicker` o `DatePickerDialog`, queda terminantemente prohibido dejar que el número del día actual herede `colorScheme.primary` (amarillo sobre fondo blanco). Debe configurarse obligatoriamente `todayForegroundColor` en `Colors.black`, con `todayBackgroundColor` en amarillo (`AppColors.primaryLight` inactivo y `AppColors.primary` seleccionado) y borde definido en `AppColors.primaryDark` (1.5 px).
+
 ## 3. Modelos y Servicios
 - **Instanciación de Modelos con Campos Requeridos:** Al crear instancias de `GastoModel` (para borradores, colas o pruebas), proveer siempre todos los campos obligatorios, incluyendo `creadoEn: DateTime.now().toIso8601String()`.
 - **Determinismo Temporal:** Todo widget o servicio cuya lógica dependa de fechas o umbrales temporales (alertas de nuevo mes, proyecciones de gasto) DEBE aceptar un parámetro opcional `DateTime? currentDate` con fallback a `DateTime.now()`.

@@ -12,8 +12,9 @@
 #     concluyan o venza el tope.
 #   - Soporta flujos desacoplados: si el commit solo disparo el workflow ligero
 #     `deploy_web.yml` (~45 s), ajusta el intervalo a 30 s automaticamente.
-#   - Si falla, imprime SOLO los steps fallidos y la cola de test_results.txt,
-#     nunca el log completo del job (que ademas devuelve HTTP 403 en repo privado).
+#   - Si falla, imprime SOLO los steps fallidos y la cola de errores desde
+#     los artefactos de CI, sin depender de commits automaticos en main ni
+#     descargar el log completo del job (que devuelve HTTP 403 en repo privado).
 #
 # Presupuesto de API (importante):
 #   Sin token, GitHub limita a 60 peticiones/hora por IP. Por eso el intervalo por
@@ -92,6 +93,93 @@ function Get-SleepSeconds {
     $remaining = ($Deadline - (Get-Date)).TotalSeconds
     if ($remaining -lt $Seconds) { $Seconds = [int][Math]::Max(1, $remaining) }
     return $Seconds
+}
+
+function Get-CiArtifactLog {
+    param(
+        [int64]$RunId,
+        [string]$RunUrl,
+        [int]$TailLines = 40
+    )
+
+    $artifactsResp = Invoke-Api ($apiBase + '/actions/runs/' + $RunId + '/artifacts')
+    if ($null -eq $artifactsResp -or -not $artifactsResp.artifacts -or $artifactsResp.artifacts.Count -eq 0) {
+        return
+    }
+
+    $candidateNames = @('aab-build-failure-log', 'apk-build-failure-log', 'test-results')
+    $targetArt = $null
+    foreach ($cand in $candidateNames) {
+        $targetArt = $artifactsResp.artifacts | Where-Object { $_.name -eq $cand } | Select-Object -First 1
+        if ($targetArt) { break }
+    }
+
+    if (-not $targetArt) {
+        return
+    }
+
+    $tempDir = Join-Path ([System.IO.Path]::GetTempPath()) ('ci_art_' + $RunId + '_' + [System.Guid]::NewGuid().ToString('N').Substring(0, 8))
+    $zipPath = Join-Path ([System.IO.Path]::GetTempPath()) ('ci_art_' + $RunId + '.zip')
+    $downloadSuccess = $false
+
+    try {
+        # 1. Intentar con gh CLI si esta instalado
+        $hasGh = [bool](Get-Command gh -ErrorAction SilentlyContinue)
+        if ($hasGh) {
+            New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+            & gh run download $RunId -R $Repo -n $targetArt.name --dir $tempDir 2>$null
+            if ($LASTEXITCODE -eq 0) {
+                $downloadSuccess = $true
+            }
+        }
+
+        # 2. Si gh no esta disponible o fallo, intentar via API REST con token
+        if (-not $downloadSuccess) {
+            $headers = Get-ApiHeaders
+            if ($headers.ContainsKey('Authorization')) {
+                New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+                try {
+                    Invoke-WebRequest -Uri $targetArt.archive_download_url -Headers $headers -OutFile $zipPath -TimeoutSec 30 -UseBasicParsing -ErrorAction Stop
+                    if (Test-Path $zipPath) {
+                        Expand-Archive -Path $zipPath -DestinationPath $tempDir -Force
+                        $downloadSuccess = $true
+                    }
+                } catch {
+                    $downloadSuccess = $false
+                }
+            }
+        }
+
+        # 3. Si se descargo y extrajo, mostrar las ultimas lineas
+        if ($downloadSuccess) {
+            $logFile = Get-ChildItem -Path $tempDir -Filter '*.txt' -Recurse | Select-Object -First 1
+            if (-not $logFile) {
+                $logFile = Get-ChildItem -Path $tempDir -File -Recurse | Select-Object -First 1
+            }
+            if ($logFile -and (Test-Path $logFile.FullName)) {
+                $lines = Get-Content -Path $logFile.FullName -Encoding UTF8 -ErrorAction SilentlyContinue
+                if ($lines) {
+                    '  --- ' + $logFile.Name + ' [' + $targetArt.name + '] (ultimas ' + $TailLines + ' lineas) ---'
+                    @($lines) | Select-Object -Last $TailLines | ForEach-Object { '  ' + $_ }
+                    return
+                }
+            }
+        }
+
+        # 4. Diagnostico claro si no fue posible descargar automaticamente
+        '  --- Artefacto de error en CI: ' + $targetArt.name + ' (' + [Math]::Round($targetArt.size_in_bytes / 1024, 1) + ' KB) ---'
+        if (-not $hasGh -and -not ($env:GITHUB_TOKEN -or [System.Environment]::GetEnvironmentVariable('GITHUB_TOKEN', 'User'))) {
+            '  (gh CLI no instalado y GITHUB_TOKEN no configurado; se requiere autenticacion para descargar artefactos)'
+        }
+        if ($RunUrl) {
+            '  Descarga de reporte y logs: ' + $RunUrl
+        } else {
+            '  Descarga de reporte y logs: https://github.com/' + $Repo + '/actions/runs/' + $RunId
+        }
+    } finally {
+        if (Test-Path $zipPath) { Remove-Item -Path $zipPath -Force -ErrorAction SilentlyContinue }
+        if (Test-Path $tempDir) { Remove-Item -Path $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
+    }
 }
 
 # 1. Resolver el commit actual
@@ -190,6 +278,8 @@ while ((Get-Date) -lt $deadline) {
 $anyIncomplete = $false
 $anyFailed = $false
 $androidFailed = $false
+$failedAndroidRunId = 0
+$failedAndroidRunUrl = ''
 
 foreach ($rid in ($runStates.Keys | Sort-Object)) {
     $r = $runStates[$rid]
@@ -205,6 +295,8 @@ foreach ($rid in ($runStates.Keys | Sort-Object)) {
             $anyFailed = $true
             if ($r.path -like '*build_apk*' -or $wfName -like '*APK*') {
                 $androidFailed = $true
+                $failedAndroidRunId = $rid
+                $failedAndroidRunUrl = [string]$r.html_url
             }
             $jobs = Invoke-Api ($apiBase + '/actions/runs/' + $rid + '/jobs')
             if ($null -ne $jobs) {
@@ -222,18 +314,8 @@ if ($anyIncomplete) {
 }
 
 if ($anyFailed) {
-    if ($androidFailed) {
-        for ($i = 1; $i -le 3; $i++) {
-            git fetch origin $Branch --quiet 2>$null
-            $logRef = 'origin/' + $Branch + ':test_results.txt'
-            $log = git show $logRef 2>$null
-            if ($LASTEXITCODE -eq 0 -and $log) {
-                '  --- test_results.txt (ultimas ' + $TestLogTailLines + ' lineas) ---'
-                @($log) | Select-Object -Last $TestLogTailLines | ForEach-Object { '  ' + $_ }
-                break
-            }
-            Start-Sleep -Seconds 10
-        }
+    if ($androidFailed -and $failedAndroidRunId -gt 0) {
+        Get-CiArtifactLog -RunId $failedAndroidRunId -RunUrl $failedAndroidRunUrl -TailLines $TestLogTailLines
     }
     exit 1
 }

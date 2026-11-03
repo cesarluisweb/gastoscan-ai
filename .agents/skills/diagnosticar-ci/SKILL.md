@@ -44,53 +44,31 @@ Mientras el repositorio esté **Público** (etapa de desarrollo) la API REST res
 
 ---
 
-## 2. Lectura Remota Segura de `test_results.txt` (Canal Principal)
+## 2. Diagnóstico de Errores y Artefactos de CI (Canal Principal)
 
-Cuando los tests unitarios (`flutter test`) o el análisis estático (`flutter analyze`) fallan en CI, el workflow ejecuta el paso *"Guardar Logs de Error"*, commiteando automáticamente el archivo `test_results.txt` directamente en la rama remota (`origin/main`).
+Los workflows de GitHub Actions **NUNCA** realizan commits en `main` para reportar fallos. Todos los registros se publican exclusivamente como artefactos descargables de CI.
 
-**Procedimiento de Lectura Remota (Sin tocar el working tree local):**
+### Prioridad de Artefactos de Error:
+1. `aab-build-failure-log`: Fallos en la compilación del paquete AAB de producción (`aab_build_log.txt`).
+2. `apk-build-failure-log`: Fallos en la compilación, alineación o firma de Rinde Más Dev (`apk_dev_build_log.txt`).
+3. `test-results`: Fallos en pruebas unitarias (`flutter test`) o análisis estático (`flutter analyze`).
+
+### Diagnóstico Automatizado con `scripts/wait_ci.ps1`:
+Al finalizar la ejecución, si se detecta un fallo, `wait_ci.ps1` extrae automáticamente los pasos fallidos y descarga/muestra la cola del artefacto prioritario:
+- Si `gh` CLI está disponible, usa `gh run download`.
+- Si `GITHUB_TOKEN` está configurado en el entorno, lo descarga vía API REST y lo extrae con `Expand-Archive`.
+- Si no hay credenciales, informa el nombre del artefacto y el enlace directo al run en GitHub para su inspección manual.
+
+### Consulta Manual de Steps Fallidos vía API:
 ```powershell
-# 1. Traer los metadatos remotos más recientes sin mezclar
-git fetch origin main
-
-# 2. Leer directamente el reporte de fallos desde el commit remoto
-#    Limitado a las ultimas 60 lineas para no volcar el reporte completo
-git show origin/main:test_results.txt | Select-Object -Last 60
-
-# 3. Si falló el step "Analisis Estatico de Codigo" (flutter analyze), filtrar solo errores y warnings:
-git show origin/main:test_results.txt | Select-String -Pattern "error|warning"
-```
-*Ventajas:*
-- No genera conflictos de git.
-- No requiere `git stash` ni `git pull --rebase`.
-- Protege intactos todos los archivos sin seguimiento o modificaciones locales en curso.
-
-### Alternativa vía API de Contenidos de GitHub
-Si no se dispone de conexión git directa:
-```powershell
-gh api repos/:owner/:repo/contents/test_results.txt --jq '.content' | [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($input))
+$runId = <id_del_run>
+$jobs = Invoke-RestMethod "https://api.github.com/repos/cesarluisweb/gastoscan-ai/actions/runs/$runId/jobs"
+$jobs.jobs.steps | Where-Object { $_.conclusion -eq 'failure' } | Select-Object number, name
 ```
 
 ---
 
-## 3. Actualización Local Opcional (Manejo Seguro de Cambios)
-Si por alguna razón se requiere sincronizar el commit de logs en la copia de trabajo local:
-
-1. **Verificar estado limpio:**
-   ```powershell
-   git status --porcelain
-   ```
-2. **Si existen cambios locales pendientes (incluyendo archivos sin seguimiento):**
-   ```powershell
-   git stash -u -m "wip_antes_de_pull"
-   git pull --rebase origin main
-   git stash pop
-   ```
-3. Si ocurren conflictos durante el `stash pop`, resolver manualmente o descartar el commit de logs remoto con `git reset --soft HEAD~1`.
-
----
-
-## 4. Inspección Forense de Binarios (DEX / APK ante Fallos Nativos)
+## 3. Inspección Forense de Binarios (DEX / APK ante Fallos Nativos)
 
 Si una versión release falla en el dispositivo con `NoSuchMethodError`, `ClassNotFoundException` o `PlatformException(channel-error, ...)` que no ocurre en desarrollo:
 

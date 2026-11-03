@@ -41,6 +41,7 @@ description: "Pipeline de CI/CD en GitHub Actions, inyección programática en A
   - `deploy_web.yml` (~50 s) se activa exclusivamente ante cambios en `landing/**`, `firebase.json`, `firestore.rules`, `firestore.indexes.json`, `.firebaserc` o el propio workflow web, desplegando el `version.json` controlado desde el repositorio.
   - `build_apk.yml` (~8–10 min) compila exclusivamente los artefactos móviles (`app-release-aab` y `rindemas-dev-apk`), excluyendo en `paths-ignore` documentación, scripts y rutas exclusivas de la web.
 - **Desbloqueo de Emergencia por Cuota:** Si la cuota mensual de 2.000 minutos de GitHub Actions se agota, el repositorio solo podrá pasarse a Público temporalmente con **autorización explícita previa de César** y tras verificar que no existan credenciales o datos expuestos. Una vez concluido el release en verde, debe retornarse inmediatamente a Privado.
+- **Ejecución de `wait_ci.ps1` con Bypass de Sandbox:** Al requerir conexión HTTPS saliente hacia `https://api.github.com`, la invocación de `scripts/wait_ci.ps1` DEBE realizarse siempre con `BypassSandbox: true`. En sandbox estándar falla silenciosamente por falta de red arrojando falsos positivos de "CI: SIN RUN" tras cumplirse los 5 minutos de descubrimiento.
 
 ## 5. Entorno Paralelo de Pruebas (Rinde Más Dev) y Ciclo de Promoción a Producción
 - **Coexistencia en Dispositivo:** César mantiene instalada permanentemente la app oficial de Google Play (`com.cesarluis.rindemas`, nombre visible *"Rinde Más"*) para cumplir estrictamente el requisito de 14 días continuos de la Prueba Cerrada (y preservar su entorno estable). Queda terminantemente prohibido desinstalar o pisar esa app en su teléfono.
@@ -50,3 +51,16 @@ description: "Pipeline de CI/CD en GitHub Actions, inyección programática en A
   1. Cada push de código a `main` compila en paralelo el paquete oficial para la tienda (`app-release-aab`) y el paquete de pruebas (`rindemas-dev-apk`). La tarea en `ROADMAP.md` se coloca en `Pendiente de validación 🧪`.
   2. César instala/actualiza **`Rinde Más Dev`** desde el run de GitHub Actions y prueba los cambios en su teléfono.
   3. Tras el visto bueno explícito de César, la tarea se marca como `Completada ✅`. Para publicar la versión aprobada en Google Play Console (Prueba Cerrada hoy o Producción abierta mañana), **no se vuelve a compilar nada**: se descarga el artefacto **`app-release-aab`** generado en esa misma corrida de GitHub Actions y se sube a Play Console.
+
+## 6. Política de Cero Commits de CI y Gestión de Artefactos de Diagnóstico
+- **Prohibición de Commits Automáticos:** Queda terminantemente prohibido que cualquier paso de GitHub Actions ejecute `git add`, `git commit` o `git push` para almacenar reportes, logs o resultados de pruebas en ramas del repositorio.
+- **Artefactos Desacoplados y Rutas Propias:** Cada etapa debe generar su propio log sin sobreescribir ni depender de `test_results.txt`:
+  - Pruebas y análisis estático -> `test-results` (`test_results.txt`).
+  - Compilación AAB -> `aab-build-failure-log` (`aab_build_log.txt`).
+  - Compilación APK Dev -> `apk-build-failure-log` (`apk_dev_build_log.txt`).
+- **Condiciones Estrictas de Publicación:**
+  - Los reportes de pruebas solo deben publicarse si el paso de pruebas efectivamente se ejecutó (`steps.run_unit_tests.outcome == 'success' || steps.run_unit_tests.outcome == 'failure'`), previniendo publicar reportes viejos del checkout ante abortos tempranos.
+  - Los artefactos de fallo de compilación solo deben subirse si el paso correspondiente falló (`steps.<id>.outcome == 'failure'`).
+  - Todo paso `actions/upload-artifact@v4` debe incluir `if-no-files-found: ignore` para evitar fallos artificiales.
+- **Tuberías Bash Seguras con `pipefail`:**
+  - Cuando un paso de compilación ejecuta múltiples comandos (ej. Python, Flutter, zipalign, apksigner) canalizados a `tee`, debe encapsularse en una función con `set -e -o pipefail` (ej. `run_apk_dev_build 2>&1 | tee apk_dev_build_log.txt`). Esto garantiza que cualquier fallo intermedio aborte inmediatamente la ejecución y propague el código de salida fallido a GitHub Actions sin ocultar errores.

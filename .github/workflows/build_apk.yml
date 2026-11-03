@@ -77,21 +77,22 @@ jobs:
 
       - name: Analisis Estatico de Codigo
         run: |
+          rm -f test_results.txt
           touch test_results.txt
           flutter analyze --fatal-warnings --no-fatal-infos || (flutter analyze > test_results.txt && cat test_results.txt && exit 1)
 
       - name: Ejecutar Unit Tests
+        id: run_unit_tests
         run: flutter test > test_results.txt || (cat test_results.txt && exit 1)
 
-      - name: Guardar Logs de Error
-        if: failure()
-        run: |
-          git config --global user.name 'GitHub Actions'
-          git config --global user.email 'actions@github.com'
-          git add test_results.txt
-          git commit -m "chore: ci test failure logs"
-          git push || true
-          exit 1
+      - name: Subir Reporte de Pruebas como Artefacto
+        if: always() && (steps.run_unit_tests.outcome == 'success' || steps.run_unit_tests.outcome == 'failure')
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test_results.txt
+          retention-days: 7
+          if-no-files-found: ignore
 
       - name: Generar Iconos de App
         run: flutter pub run flutter_launcher_icons
@@ -156,22 +157,23 @@ jobs:
           cat android/app/build.gradle.kts
 
       - name: Compilar Android App Bundle (AAB de Produccion)
+        id: compile_aab
         run: |
           set -e -o pipefail
           APP_VERSION=$(grep "^version:" pubspec.yaml | sed -e 's/version:[[:space:]]*//' | cut -d '+' -f 1 | tr -d '[:space:]')
           BASE_BUILD=$(grep "^version:" pubspec.yaml | sed -e 's/version:[[:space:]]*//' | cut -d '+' -f 2 | tr -d '[:space:]')
           BUILD_NUM=$(( BASE_BUILD + ${{ github.run_number }} ))
           echo "Compilando AAB para Google Play v$APP_VERSION (Build $BUILD_NUM)..."
-          flutter build appbundle --release --no-tree-shake-icons --build-name="$APP_VERSION" --build-number="$BUILD_NUM" 2>&1 | tee -a build_log.txt || (tail -n 120 build_log.txt > test_results.txt && exit 1)
+          flutter build appbundle --release --no-tree-shake-icons --build-name="$APP_VERSION" --build-number="$BUILD_NUM" 2>&1 | tee aab_build_log.txt
 
-      - name: Guardar Logs de Error de AAB
-        if: failure()
-        run: |
-          git config --global user.name 'GitHub Actions'
-          git config --global user.email 'actions@github.com'
-          git add test_results.txt
-          git commit -m "chore: ci aab build failure logs" || true
-          git push || true
+      - name: Subir Log de Error de AAB como Artefacto
+        if: failure() && steps.compile_aab.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: aab-build-failure-log
+          path: aab_build_log.txt
+          retention-days: 7
+          if-no-files-found: ignore
 
       - name: Verificar Firma Oficial Unica del AAB
         run: |
@@ -185,43 +187,48 @@ jobs:
           retention-days: 14
 
       - name: Configurar y Compilar APK Dev (Rinde Más Dev)
+        id: compile_apk_dev
         run: |
           set -e -o pipefail
-          APP_VERSION=$(grep "^version:" pubspec.yaml | sed -e 's/version:[[:space:]]*//' | cut -d '+' -f 1 | tr -d '[:space:]')
-          BASE_BUILD=$(grep "^version:" pubspec.yaml | sed -e 's/version:[[:space:]]*//' | cut -d '+' -f 2 | tr -d '[:space:]')
-          BUILD_NUM=$(( BASE_BUILD + ${{ github.run_number }} ))
-          
-          # Inyectar applicationId .dev y nombre Rinde Mas Dev para coexistencia en dispositivo
-          python3 -c '
-          with open("android/app/build.gradle.kts", "r") as f:
-              content = f.read()
-          content = content.replace("applicationId = \"com.cesarluis.rindemas\"", "applicationId = \"com.cesarluis.rindemas.dev\"")
-          with open("android/app/build.gradle.kts", "w") as f:
-              f.write(content)
+          run_apk_dev_build() {
+            set -e -o pipefail
+            APP_VERSION=$(grep "^version:" pubspec.yaml | sed -e 's/version:[[:space:]]*//' | cut -d '+' -f 1 | tr -d '[:space:]')
+            BASE_BUILD=$(grep "^version:" pubspec.yaml | sed -e 's/version:[[:space:]]*//' | cut -d '+' -f 2 | tr -d '[:space:]')
+            BUILD_NUM=$(( BASE_BUILD + ${{ github.run_number }} ))
+            
+            # Inyectar applicationId .dev y nombre Rinde Mas Dev para coexistencia en dispositivo
+            python3 -c '
+            with open("android/app/build.gradle.kts", "r") as f:
+                content = f.read()
+            content = content.replace("applicationId = \"com.cesarluis.rindemas\"", "applicationId = \"com.cesarluis.rindemas.dev\"")
+            with open("android/app/build.gradle.kts", "w") as f:
+                f.write(content)
 
-          with open("android/app/src/main/AndroidManifest.xml", "r") as f:
-              manifest = f.read()
-          manifest = manifest.replace("android:label=\"Rinde Más\"", "android:label=\"Rinde Más Dev\"")
-          with open("android/app/src/main/AndroidManifest.xml", "w") as f:
-              f.write(manifest)
-          '
-          
-          echo "Compilando Rinde Más Dev v$APP_VERSION (Build $BUILD_NUM)..."
-          flutter build apk --release --no-tree-shake-icons --build-name="$APP_VERSION" --build-number="$BUILD_NUM" 2>&1 | tee build_log.txt || (tail -n 120 build_log.txt > test_results.txt && exit 1)
-          
-          # Firmar APK Dev con Keystore
-          BUILD_TOOLS=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1)
-          $BUILD_TOOLS/zipalign -v -p 4 build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/rindemas-dev-aligned.apk
-          $BUILD_TOOLS/apksigner sign --ks android_template/rindemas.jks --ks-pass pass:rindemas123 --ks-key-alias rindemas --key-pass pass:rindemas123 --out build/app/outputs/flutter-apk/rindemas-dev.apk build/app/outputs/flutter-apk/rindemas-dev-aligned.apk
+            with open("android/app/src/main/AndroidManifest.xml", "r") as f:
+                manifest = f.read()
+            manifest = manifest.replace("android:label=\"Rinde Más\"", "android:label=\"Rinde Más Dev\"")
+            with open("android/app/src/main/AndroidManifest.xml", "w") as f:
+                f.write(manifest)
+            '
+            
+            echo "Compilando Rinde Más Dev v$APP_VERSION (Build $BUILD_NUM)..."
+            flutter build apk --release --no-tree-shake-icons --build-name="$APP_VERSION" --build-number="$BUILD_NUM"
+            
+            # Firmar APK Dev con Keystore
+            BUILD_TOOLS=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1)
+            $BUILD_TOOLS/zipalign -v -p 4 build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/rindemas-dev-aligned.apk
+            $BUILD_TOOLS/apksigner sign --ks android_template/rindemas.jks --ks-pass pass:rindemas123 --ks-key-alias rindemas --key-pass pass:rindemas123 --out build/app/outputs/flutter-apk/rindemas-dev.apk build/app/outputs/flutter-apk/rindemas-dev-aligned.apk
+          }
+          run_apk_dev_build 2>&1 | tee apk_dev_build_log.txt
 
-      - name: Guardar Logs de Error de APK Dev
-        if: failure()
-        run: |
-          git config --global user.name 'GitHub Actions'
-          git config --global user.email 'actions@github.com'
-          git add test_results.txt
-          git commit -m "chore: ci dev apk build failure logs" || true
-          git push || true
+      - name: Subir Log de Error de APK Dev como Artefacto
+        if: failure() && steps.compile_apk_dev.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk-build-failure-log
+          path: apk_dev_build_log.txt
+          retention-days: 7
+          if-no-files-found: ignore
 
       - name: Subir APK Dev como Artefacto de GitHub Actions
         uses: actions/upload-artifact@v4
