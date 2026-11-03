@@ -636,7 +636,7 @@ class _CategoryChartState extends State<CategoryChart> {
                             fit: BoxFit.scaleDown,
                             alignment: Alignment.centerLeft,
                             child: Text(
-                              '${(budget > 0 ? ((spent / budget) * 100).clamp(0, 999).toStringAsFixed(0) : '0')}% consumido · Queda ${_fmt((budget - spent).clamp(0.0, double.infinity))}',
+                              'Disponible: ${_fmt((budget - spent).clamp(0.0, double.infinity))}',
                               style: const TextStyle(
                                 color: AppColors.textSecondary,
                                 fontSize: 11,

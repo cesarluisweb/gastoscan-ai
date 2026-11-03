@@ -276,10 +276,7 @@ import '../styles/global.css';
             <!-- Barra de Progreso General y Ritmo Diario -->
             <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 text-xs sm:text-sm font-medium">
-                    <div class="flex items-center gap-2">
-                        <span id="progress-title-label" class="text-slate-700">Saldo disponible del presupuesto</span>
-                        <span id="progress-percent-label" class="font-bold text-slate-900">0%</span>
-                    </div>
+                    <span id="progress-title-label" class="text-slate-700 font-semibold">Ritmo de gasto mensual</span>
                     <span id="card-daily-pace" class="text-xs text-slate-500"></span>
                 </div>
                 <div id="progress-track" class="relative w-full bg-slate-100 rounded-full h-3 overflow-hidden transition-all duration-500">
@@ -907,7 +904,6 @@ import '../styles/global.css';
         const progressSavingsZoneTint = document.getElementById('progress-savings-zone-tint');
         const progressBarFill = document.getElementById('progress-bar-fill');
         const progressSavingsMarker = document.getElementById('progress-savings-marker');
-        const progressPercentLabel = document.getElementById('progress-percent-label');
         const cardDailyPace = document.getElementById('card-daily-pace');
         const categoriesList = document.getElementById('categories-list');
         const billsList = document.getElementById('bills-list');
@@ -1503,11 +1499,8 @@ import '../styles/global.css';
                 const isCaution = !isOverLimitOrExhausted && limitRatio >= 0.85;
 
                 if (progressTitleLabel) {
-                    progressTitleLabel.textContent = hasSavings ? "Saldo disponible (con reserva de ahorro)" : "Saldo disponible del presupuesto";
+                    progressTitleLabel.textContent = "Ritmo de gasto mensual";
                 }
-                const percentSpentVal = Math.round(limitRatio * 100);
-                const percentAvailableVal = Math.round(remainingFullRatio * 100);
-                progressPercentLabel.textContent = `${percentSpentVal}% consumido · ${percentAvailableVal}% en tanque`;
                 progressBarFill.style.width = `${remainingFullRatio * 100}%`;
 
                 // Posición de la rayita de ahorro en meta / presupuestoGeneral
@@ -1554,8 +1547,7 @@ import '../styles/global.css';
                     progressBarFill.className = "relative z-[5] bg-emerald-600 h-3 rounded-full transition-all duration-500";
                 }
             } else {
-                if (progressTitleLabel) progressTitleLabel.textContent = "Saldo disponible del presupuesto";
-                progressPercentLabel.textContent = "0% (Sin presupuesto fijado)";
+                if (progressTitleLabel) progressTitleLabel.textContent = "Ritmo de gasto mensual";
                 progressBarFill.style.width = "0%";
                 if (progressSavingsMarker) progressSavingsMarker.classList.add('hidden');
                 if (progressSavingsZoneTint) progressSavingsZoneTint.classList.add('hidden');
@@ -1669,9 +1661,8 @@ import '../styles/global.css';
                             <div class="h-1.5 rounded-full transition-all duration-300" style="width: ${remainingPct}%; background-color: ${barColor}"></div>
                         </div>
                         <div class="flex justify-between items-center text-[10px]">
-                            <span class="${isOver ? 'text-rose-600 font-bold' : 'text-slate-500'}">${percent}% consumido</span>
-                            <span class="${isOver ? 'text-rose-600 font-semibold' : 'text-slate-400'}">
-                                ${isOver ? 'Excedido' : `Queda ${escapeHtml(formatMoney(Math.max(0, budget - spent), displayCurrency))}`}
+                            <span class="${isOver ? 'text-rose-600 font-bold' : 'text-slate-500'}">
+                                ${isOver ? `Superado por ${escapeHtml(formatMoney(spent - budget, displayCurrency))}` : `Disponible: ${escapeHtml(formatMoney(Math.max(0, budget - spent), displayCurrency))}`}
                             </span>
                         </div>
                         `;

@@ -118,8 +118,7 @@ void main() {
 
       expect(find.byKey(const Key('edit_budget_Alimentación')), findsOneWidget);
       expect(find.text('Editar'), findsOneWidget);
-      expect(find.textContaining('consumido'), findsOneWidget);
-      expect(find.textContaining('Queda'), findsOneWidget);
+      expect(find.textContaining('Disponible:'), findsOneWidget);
 
       final progressFinder = find.byKey(const Key('category_progress_Alimentación'));
       expect(progressFinder, findsOneWidget);

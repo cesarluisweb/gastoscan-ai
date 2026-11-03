@@ -33,7 +33,7 @@ Se unifica la representación visual en un modelo de **combustible o batería qu
 | **Tokens Semánticos** | `lib/core/constants/app_colors.dart` | Agregados `balancePositive`, `caution`, `errorStrong`, `errorTint`, `errorBorder`, `trackNeutral` y `markerNeutral`. |
 | **Resumen Principal** | `lib/ui/widgets/summary_card.dart` | Tanque que se vacía, reserva protegida a la izquierda, banda de ahorro invadida en doble rojo, carril rojo en tanque agotado y `Semantics`. |
 | **Tarjeta General Análisis** | `lib/ui/screens/analysis_screen.dart` | Homologación completa de la barra general con `SummaryCard`. |
-| **Control por Categorías** | `lib/ui/widgets/category_chart.dart` | Vaciado de categoría con color propio, microcopy dual `'X% consumido · Queda $Y'` en `FittedBox` y carril de alerta. |
+| **Control por Categorías** | `lib/ui/widgets/category_chart.dart` | Vaciado de categoría con color propio, texto limpio `'Disponible: $Y'` en `FittedBox` y carril de alerta. |
 | **Panel Web** | `landing/src/pages/panel.astro` | `progress-track` con `progress-savings-zone-tint`, rayita en meta, semáforo de tanque y barras por categoría con `CATEGORIA_BAR_COLORS`. |
 | **Sistema de Diseño** | `DESIGN.md` (§6.4 y §6.5) | Reescritura normativa: tanque de saldo vs barras de asignación/distribución. |
 | **Lógica Financiera** | `.agents/rules/dinero-datos.md` (§4) | Reescritura de la geometría física del divisor a la izquierda y vaciado de derecha a izquierda. |
@@ -68,9 +68,9 @@ Descarga el APK de desarrollo (**Rinde Más Dev**) generado en la corrida de CI 
 
 ### Caso 5: Control por Categorías en Análisis
 1. Asigna presupuesto a Alimentación de **$100**.
-2. Con **$30** gastados: la barra de Alimentación debe mostrar un 70% lleno con el color verde azulado propio de Alimentación, y el texto inferior debe indicar: `30% consumido · Queda $ 70,00`.
+2. Con **$30** gastados: la barra de Alimentación debe mostrar un 70% lleno con el color verde azulado propio de Alimentación, y el texto inferior debe indicar: `Disponible: $ 70,00`.
 3. Al superar los $100: la barra se vacía por completo con fondo rojo y alerta de exceso.
 
 ### Caso 6: Panel Web (`https://rindemas.cesarluis.com/panel`)
 1. Inicia sesión en el panel web con la misma cuenta.
-2. Comprueba que la barra principal refleje el porcentaje en tanque (`X% consumido · Y% en tanque`), la reserva a la izquierda y los colores de las categorías.
+2. Comprueba que la barra principal refleje el ritmo sugerido sin porcentajes redundantes, la reserva a la izquierda y los colores de las categorías.
