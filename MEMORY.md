@@ -4,11 +4,11 @@
 ## Estado Actual Inmediato
 - **Rama:** `main`.
 - **Fase A & Fase 5:** Integradas en `main`; Closed Testing activo en Google Play.
-- **UI-15 (Tanque que se Vacía en Medidores de Presupuesto):** `Pendiente de validación 🧪`. CI verde (Android build 636, commit `ab063da`, 579 pruebas pasando). Despliegue web verificado en producción HTTP 200 (`rindemas.cesarluis.com/panel`).
-  - Invertidas barras de presupuesto en `SummaryCard`, `AnalysisScreen`, `CategoryChart` y `panel.astro` (escala `100% -> 0%`).
-  - Divisor vertical de ahorro a la izquierda (`meta / presupuesto`).
-  - Semáforo físico de batería (`#16A34A` verde -> `#D97706` ámbar al quedar <=15% -> `#DC2626` rojo).
-  - Al invadir el ahorro, reserva teñida en rojo suave (`#FEE2E2`) con saldo vivo en rojo fuerte. Al agotarse, carril completo rojo suave.
+- **UI-15 (Tanque que se Vacía en Medidores de Presupuesto):** `Implementada 🔧`
+  - Invertidas barras de presupuesto en `SummaryCard`, `AnalysisScreen`, `CategoryChart` y `panel.astro` con desgaste de izquierda a derecha.
+  - Divisor vertical de ahorro a la derecha (`limiteParaGastar / presupuestoGeneral`).
+  - Dinámica: dinero consumido entra por la izquierda como tramo gris/consumido avanzando a la derecha; saldo restante vivo anclado a la derecha en verde/ámbar/rojo.
+  - Al invadir el ahorro, el tramo consumido dentro de la reserva se tiñe en rojo suave (`#FEE2E2`) con saldo vivo en rojo fuerte (`#DC2626`). Al agotarse, carril completo rojo suave.
   - En `CategoryChart`, barras conservan color propio en estado normal y microcopy dual `X% consumido · Queda $Y` en `FittedBox`.
   - Tokens semánticos en `AppColors` y `Semantics` de accesibilidad.
   - Documentación en `DOC_BARRA_TANQUE_PRESUPUESTO.md`.

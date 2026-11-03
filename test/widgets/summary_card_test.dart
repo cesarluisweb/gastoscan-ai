@@ -165,7 +165,7 @@ void main() {
       expect((progressBar.valueColor as AlwaysStoppedAnimation<Color>).value, equals(AppColors.balancePositive));
       expect(progressBar.value, closeTo(0.75, 0.001));
 
-      // Marcador vertical de ahorro posicionado a la izquierda
+      // Marcador vertical de ahorro posicionado a la derecha delimitando la reserva
       expect(find.byKey(const Key('summary_card_savings_marker')), findsOneWidget);
     });
 

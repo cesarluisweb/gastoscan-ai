@@ -504,9 +504,11 @@ class AnalysisScreen extends StatelessWidget {
                 final bool isOverLimitOrExhausted = isExceeded || isTankExhausted;
                 final bool isCaution = !isOverLimitOrExhausted && (percentUsed >= 0.85);
 
-                final double rawSavingsRatio =
-                    (hasSavingsGoal && budget > 0) ? (metaAhorro / budget).clamp(0.0, 1.0) : 0.0;
-                final double savingsMarkerPos = (totalWidth * rawSavingsRatio).clamp(0.0, totalWidth);
+                final double rawMarkerRatio =
+                    (hasSavingsGoal && budget > 0) ? (limiteParaGastar / budget).clamp(0.0, 1.0) : 0.0;
+                final double savingsMarkerPos = (totalWidth * rawMarkerRatio).clamp(0.0, totalWidth);
+                final double spentPos =
+                    budget > 0 ? (totalWidth * (spent / budget)).clamp(0.0, totalWidth) : 0.0;
                 final double barFillRatio =
                     budget > 0 ? ((budget - spent) / budget).clamp(0.0, 1.0) : 0.0;
 
@@ -542,21 +544,24 @@ class AnalysisScreen extends StatelessWidget {
                             children: [
                               if (isSavingsInvaded && !isTankExhausted)
                                 Positioned(
-                                  left: 0,
+                                  left: savingsMarkerPos,
                                   top: 0,
                                   bottom: 0,
-                                  width: savingsMarkerPos,
+                                  width: (spentPos - savingsMarkerPos).clamp(0.0, totalWidth - savingsMarkerPos),
                                   child: Container(
                                     key: const Key('analysis_savings_invaded_tint'),
                                     color: AppColors.errorTint,
                                   ),
                                 ),
-                              LinearProgressIndicator(
-                                key: const Key('analysis_general_progress_indicator'),
-                                value: isTankExhausted ? 0.0 : barFillRatio,
-                                minHeight: 10,
-                                backgroundColor: isTankExhausted ? AppColors.errorTint : Colors.transparent,
-                                valueColor: AlwaysStoppedAnimation<Color>(barColor),
+                              Directionality(
+                                textDirection: TextDirection.rtl,
+                                child: LinearProgressIndicator(
+                                  key: const Key('analysis_general_progress_indicator'),
+                                  value: isTankExhausted ? 0.0 : barFillRatio,
+                                  minHeight: 10,
+                                  backgroundColor: isTankExhausted ? AppColors.errorTint : Colors.transparent,
+                                  valueColor: AlwaysStoppedAnimation<Color>(barColor),
+                                ),
                               ),
                             ],
                           ),

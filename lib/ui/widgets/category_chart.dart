@@ -581,14 +581,17 @@ class _CategoryChartState extends State<CategoryChart> {
                   const SizedBox(height: 6),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      key: Key('category_progress_$cat'),
-                      value: isExhaustedOrExceeded ? 0.0 : remainingRatio,
-                      color: barColor,
-                      backgroundColor: isExhaustedOrExceeded
-                          ? AppColors.error.withValues(alpha: 0.2)
-                          : AppColors.border,
-                      minHeight: 6,
+                    child: Directionality(
+                      textDirection: TextDirection.rtl,
+                      child: LinearProgressIndicator(
+                        key: Key('category_progress_$cat'),
+                        value: isExhaustedOrExceeded ? 0.0 : remainingRatio,
+                        color: barColor,
+                        backgroundColor: isExhaustedOrExceeded
+                            ? AppColors.error.withValues(alpha: 0.2)
+                            : AppColors.border,
+                        minHeight: 6,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 6),

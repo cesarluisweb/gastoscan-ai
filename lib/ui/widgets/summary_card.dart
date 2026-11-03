@@ -387,9 +387,11 @@ class SummaryCard extends StatelessWidget {
                 final bool isOverLimitOrExhausted = isOverBudget || isTankExhausted;
                 final bool isCaution = !isOverLimitOrExhausted && (percentUsed >= 0.85);
 
-                final double rawSavingsRatio =
-                    (hasSavingsGoal && budgetInLens > 0) ? (metaInLens / budgetInLens).clamp(0.0, 1.0) : 0.0;
-                final double savingsMarkerPos = (totalWidth * rawSavingsRatio).clamp(0.0, totalWidth);
+                final double rawMarkerRatio =
+                    (hasSavingsGoal && budgetInLens > 0) ? (limiteParaGastar / budgetInLens).clamp(0.0, 1.0) : 0.0;
+                final double savingsMarkerPos = (totalWidth * rawMarkerRatio).clamp(0.0, totalWidth);
+                final double spentPos =
+                    budgetInLens > 0 ? (totalWidth * (effectiveSpent / budgetInLens)).clamp(0.0, totalWidth) : 0.0;
                 final double barFillRatio =
                     budgetInLens > 0 ? ((budgetInLens - effectiveSpent) / budgetInLens).clamp(0.0, 1.0) : 0.0;
 
@@ -424,25 +426,28 @@ class SummaryCard extends StatelessWidget {
                           child: Stack(
                             alignment: Alignment.centerLeft,
                             children: [
-                              // Si el ahorro es invadido, teñir la zona de reserva en rojo suave
+                              // Si el ahorro es invadido, teñir el tramo consumido de reserva en rojo suave
                               if (isSavingsInvaded && !isTankExhausted)
                                 Positioned(
-                                  left: 0,
+                                  left: savingsMarkerPos,
                                   top: 0,
                                   bottom: 0,
-                                  width: savingsMarkerPos,
+                                  width: (spentPos - savingsMarkerPos).clamp(0.0, totalWidth - savingsMarkerPos),
                                   child: Container(
                                     key: const Key('summary_card_savings_invaded_tint'),
                                     color: AppColors.errorTint,
                                   ),
                                 ),
-                              // Barra lineal con fondo transparente para dejar ver las capas inferiores
-                              LinearProgressIndicator(
-                                key: const Key('summary_card_progress_indicator'),
-                                value: isTankExhausted ? 0.0 : barFillRatio,
-                                minHeight: 10,
-                                backgroundColor: isTankExhausted ? AppColors.errorTint : Colors.transparent,
-                                valueColor: AlwaysStoppedAnimation<Color>(barColor),
+                              // Barra lineal en RTL: anclada a la derecha, desgastándose de izquierda a derecha
+                              Directionality(
+                                textDirection: TextDirection.rtl,
+                                child: LinearProgressIndicator(
+                                  key: const Key('summary_card_progress_indicator'),
+                                  value: isTankExhausted ? 0.0 : barFillRatio,
+                                  minHeight: 10,
+                                  backgroundColor: isTankExhausted ? AppColors.errorTint : Colors.transparent,
+                                  valueColor: AlwaysStoppedAnimation<Color>(barColor),
+                                ),
                               ),
                             ],
                           ),
