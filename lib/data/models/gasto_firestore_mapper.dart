@@ -4,9 +4,12 @@ import 'item_gasto_model.dart';
 
 /// Mapper estático puro para transformar entre [GastoModel] y los documentos de Firestore.
 /// - Excluye campos locales de SQLite: id, synced, firestore_id, ruta_foto_local.
+/// - Omite campos opcionales con valor null (ej. total_usdt, tasa_usdt, total_eur,
+///   tasa_eur, fuente_tasa_cambio, fecha_tasa_cambio, ocr_text, eliminado_en)
+///   para evitar que un merge ordinario en Firestore sobrescriba accidentalmente
+///   valores remotos existentes con null.
 /// - Limpia los items: elimina id y gasto_id para evitar colisiones en la base local.
 /// - Normaliza categorías canónicas usando [AppConstants.normalizarCategoria].
-/// - Omite 'eliminado_en' cuando sea null para no sobreescribir soft-deletes remotos.
 /// - Garantiza 'actualizado_en' (nunca null, usando actualizadoEn ?? creadoEn).
 class GastoFirestoreMapper {
   /// Convierte un [GastoModel] al mapa canónico para guardar en Firestore.
@@ -18,17 +21,10 @@ class GastoFirestoreMapper {
       'moneda': gasto.moneda,
       'total_original': gasto.totalOriginal,
       'total_usd': gasto.totalUsd,
-      'total_usdt': gasto.totalUsdt,
-      'total_eur': gasto.totalEur,
       'tasa_cambio': gasto.tasaCambio,
-      'tasa_usdt': gasto.tasaUsdt,
-      'tasa_eur': gasto.tasaEur,
-      'fuente_tasa_cambio': gasto.fuenteTasaCambio,
-      'fecha_tasa_cambio': gasto.fechaTasaCambio,
       'categoria': AppConstants.normalizarCategoria(gasto.categoria),
       'creado_en': gasto.creadoEn,
       'actualizado_en': gasto.actualizadoEn ?? gasto.creadoEn,
-      'ocr_text': gasto.ocrText,
       'items': gasto.items.map((item) {
         return <String, dynamic>{
           'descripcion': item.descripcion,
@@ -40,9 +36,14 @@ class GastoFirestoreMapper {
       }).toList(),
     };
 
-    if (gasto.eliminadoEn != null) {
-      payload['eliminado_en'] = gasto.eliminadoEn;
-    }
+    if (gasto.totalUsdt != null) payload['total_usdt'] = gasto.totalUsdt;
+    if (gasto.totalEur != null) payload['total_eur'] = gasto.totalEur;
+    if (gasto.tasaUsdt != null) payload['tasa_usdt'] = gasto.tasaUsdt;
+    if (gasto.tasaEur != null) payload['tasa_eur'] = gasto.tasaEur;
+    if (gasto.fuenteTasaCambio != null) payload['fuente_tasa_cambio'] = gasto.fuenteTasaCambio;
+    if (gasto.fechaTasaCambio != null) payload['fecha_tasa_cambio'] = gasto.fechaTasaCambio;
+    if (gasto.ocrText != null) payload['ocr_text'] = gasto.ocrText;
+    if (gasto.eliminadoEn != null) payload['eliminado_en'] = gasto.eliminadoEn;
 
     return payload;
   }

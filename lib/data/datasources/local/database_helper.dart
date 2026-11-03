@@ -7,6 +7,7 @@ import '../../models/presupuesto_remoto_model.dart';
 import '../../models/shopping_item_model.dart';
 import '../../models/categoria_model.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../domain/monetary/rate_market.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -1716,12 +1717,12 @@ class DatabaseHelper {
             }
           } catch (_) {}
         }
-        if (nuevaTasa <= 1.0) {
-          nuevaTasa = tasaFallback > 1.0 ? tasaFallback : AppConstants.defaultTasaCambio;
+        if (!isValidMonetaryRate(nuevaTasa)) {
+          nuevaTasa = isValidMonetaryRate(tasaFallback) ? tasaFallback : AppConstants.defaultTasaCambio;
         }
       }
 
-      if (nuevaTasa > 1.0) {
+      if (isValidMonetaryRate(nuevaTasa)) {
         if (!dryRun) {
           await db.update(
             'gastos',

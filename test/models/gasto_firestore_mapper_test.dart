@@ -89,6 +89,109 @@ void main() {
       expect(payload['actualizado_en'], equals('2026-10-26T11:00:00.000Z'));
     });
 
+    test('toPayload omite campos opcionales null y no los envia como null en el mapa', () {
+      final gasto = GastoModel(
+        uuid: 'test-uuid-null-fields',
+        fecha: '2026-10-26',
+        comercio: 'Panadería Central',
+        moneda: 'USD',
+        totalOriginal: 2500,
+        totalUsd: 2500,
+        totalUsdt: null,
+        totalEur: null,
+        tasaCambio: 40.0,
+        tasaUsdt: null,
+        tasaEur: null,
+        fuenteTasaCambio: null,
+        fechaTasaCambio: null,
+        categoria: 'Alimentación',
+        creadoEn: '2026-10-26T10:00:00.000Z',
+        actualizadoEn: null,
+        eliminadoEn: null,
+        ocrText: null,
+        items: [],
+      );
+
+      final payload = GastoFirestoreMapper.toPayload(gasto);
+
+      // Campos requeridos deben estar presentes
+      expect(payload['uuid'], equals('test-uuid-null-fields'));
+      expect(payload['fecha'], equals('2026-10-26'));
+      expect(payload['comercio'], equals('Panadería Central'));
+      expect(payload['moneda'], equals('USD'));
+      expect(payload['total_original'], equals(2500));
+      expect(payload['total_usd'], equals(2500));
+      expect(payload['tasa_cambio'], equals(40.0));
+      expect(payload['categoria'], equals('Alimentación'));
+      expect(payload['creado_en'], equals('2026-10-26T10:00:00.000Z'));
+      expect(payload['actualizado_en'], equals('2026-10-26T10:00:00.000Z'));
+      expect(payload['items'], isEmpty);
+
+      // Campos opcionales nulos DEBEN ser omitidos del mapa (no tener valor null)
+      expect(payload.containsKey('total_usdt'), isFalse);
+      expect(payload.containsKey('total_eur'), isFalse);
+      expect(payload.containsKey('tasa_usdt'), isFalse);
+      expect(payload.containsKey('tasa_eur'), isFalse);
+      expect(payload.containsKey('fuente_tasa_cambio'), isFalse);
+      expect(payload.containsKey('fecha_tasa_cambio'), isFalse);
+      expect(payload.containsKey('ocr_text'), isFalse);
+      expect(payload.containsKey('eliminado_en'), isFalse);
+    });
+
+    test('Conservacion de datos remotos no nulos ante simulacion de merge con campos locales nulos', () {
+      final remoteFirestoreDoc = <String, dynamic>{
+        'uuid': 'uuid-legacy-1',
+        'fecha': '2026-10-20',
+        'comercio': 'Automercados Plaza',
+        'moneda': 'USD',
+        'total_original': 5000,
+        'total_usd': 5000,
+        'total_usdt': 5000,
+        'total_eur': 4500,
+        'tasa_cambio': 40.0,
+        'tasa_usdt': 40.0,
+        'tasa_eur': 44.0,
+        'fuente_tasa_cambio': 'dolarapi',
+        'categoria': 'Alimentación',
+        'creado_en': '2026-10-20T10:00:00.000Z',
+        'actualizado_en': '2026-10-20T10:00:00.000Z',
+        'items': [],
+      };
+
+      // Registro local con totalUsdt y tasaUsdt nulos (ej. deserializado con fromMap conservador)
+      final localGasto = GastoModel(
+        uuid: 'uuid-legacy-1',
+        fecha: '2026-10-20',
+        comercio: 'Automercados Plaza Editado',
+        moneda: 'USD',
+        totalOriginal: 5000,
+        totalUsd: 5000,
+        totalUsdt: null, // Nulo local
+        tasaUsdt: null,  // Nulo local
+        tasaCambio: 40.0,
+        categoria: 'Alimentación',
+        creadoEn: '2026-10-20T10:00:00.000Z',
+        actualizadoEn: '2026-10-26T12:00:00.000Z',
+      );
+
+      final payload = GastoFirestoreMapper.toPayload(localGasto);
+
+      // Simulación de SetOptions(merge: true) en Firestore:
+      // Solo las claves presentes en payload sobrescriben el documento existente
+      final mergedDoc = Map<String, dynamic>.from(remoteFirestoreDoc)..addAll(payload);
+
+      // Los campos editados se actualizan
+      expect(mergedDoc['comercio'], equals('Automercados Plaza Editado'));
+      expect(mergedDoc['actualizado_en'], equals('2026-10-26T12:00:00.000Z'));
+
+      // Los campos remotos no nulos NO fueron borrados ni sobrescritos con null
+      expect(mergedDoc['total_usdt'], equals(5000));
+      expect(mergedDoc['tasa_usdt'], equals(40.0));
+      expect(mergedDoc['total_eur'], equals(4500));
+      expect(mergedDoc['tasa_eur'], equals(44.0));
+      expect(mergedDoc['fuente_tasa_cambio'], equals('dolarapi'));
+    });
+
     test('fromPayload reconstructs GastoModel with normalized categories and clean items', () {
       final remoteData = {
         'uuid': 'remote-uuid-777',

@@ -737,6 +737,7 @@ class MoreScreenState extends State<MoreScreen> {
                   ),
                   const SizedBox(height: 14),
                   DropdownButtonFormField<String>(
+                    isExpanded: true,
                     value: AppConstants.monedas.contains(settings.monedaPrincipal) ? settings.monedaPrincipal : 'USD',
                     decoration: const InputDecoration(
                       labelText: 'Moneda predeterminada',
@@ -744,10 +745,10 @@ class MoreScreenState extends State<MoreScreen> {
                     ),
                     dropdownColor: AppColors.surface,
                     items: const [
-                      DropdownMenuItem(value: 'USD', child: Text('USD BCV')),
-                      DropdownMenuItem(value: 'VES', child: Text('VES Bolívares')),
-                      DropdownMenuItem(value: 'USDT', child: Text('USDT P2P')),
-                      DropdownMenuItem(value: 'EUR', child: Text('EUR BCV')),
+                      DropdownMenuItem(value: 'USD', child: Text('USD BCV (Dólar oficial)', overflow: TextOverflow.ellipsis)),
+                      DropdownMenuItem(value: 'VES', child: Text('VES Bs. (Bolívares)', overflow: TextOverflow.ellipsis)),
+                      DropdownMenuItem(value: 'USDT', child: Text('USDT P2P (Dólar digital)', overflow: TextOverflow.ellipsis)),
+                      DropdownMenuItem(value: 'EUR', child: Text('EUR BCV (Euro oficial)', overflow: TextOverflow.ellipsis)),
                     ],
                     onChanged: (val) {
                       if (val != null) settings.setMonedaPrincipal(val);

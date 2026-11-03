@@ -10,6 +10,8 @@ import '../domain/finance/savings_health_models.dart';
 import '../domain/finance/savings_health_calculator.dart';
 import '../services/notification_service.dart';
 import '../services/sync_service.dart';
+import '../services/exchange_rate_service.dart';
+import '../domain/monetary/rate_market.dart';
 
 class GastoProvider with ChangeNotifier {
   final GastoRepository _repository;
@@ -65,8 +67,8 @@ class GastoProvider with ChangeNotifier {
   }
 
   void setTasasReferencia({double? tasaUsd, double? tasaEur}) {
-    if (tasaUsd != null && tasaUsd > 0) _tasaUsd = tasaUsd;
-    if (tasaEur != null && tasaEur > 0) _tasaEur = tasaEur;
+    if (isValidMonetaryRate(tasaUsd)) _tasaUsd = (tasaUsd as num).toDouble();
+    if (isValidMonetaryRate(tasaEur)) _tasaEur = (tasaEur as num).toDouble();
   }
 
   List<GastoModel> get gastos => _gastos;
@@ -127,20 +129,30 @@ class GastoProvider with ChangeNotifier {
     }
   }
 
-  Future<void> cargarDatos() async {
+  Future<void> cargarDatos({SharedPreferences? prefsInstance}) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
       try {
-        final prefs = await SharedPreferences.getInstance();
-        final cachedUsd = prefs.getDouble('cached_rate_usd') ??
-            prefs.getDouble(AppConstants.prefTasaCambio);
-        if (cachedUsd != null && cachedUsd > 1.0) _tasaUsd = cachedUsd;
-        final cachedEur = prefs.getDouble('cached_rate_eur');
-        if (cachedEur != null && cachedEur > 1.0) _tasaEur = cachedEur;
-      } catch (_) {}
+        final prefs = prefsInstance ?? await SharedPreferences.getInstance();
+        final purgeResult = await ExchangeRateService.ensureCacheHistoricaPurgada(prefsInstance: prefs);
+        if (purgeResult != -1) {
+          final rawUsd = prefs.get('cached_rate_usd') ?? prefs.get(AppConstants.prefTasaCambio);
+          if (isValidMonetaryRate(rawUsd)) {
+            _tasaUsd = (rawUsd as num).toDouble();
+          }
+          final rawEur = prefs.get('cached_rate_eur');
+          if (isValidMonetaryRate(rawEur)) {
+            _tasaEur = (rawEur as num).toDouble();
+          }
+        } else {
+          debugPrint('GastoProvider: Purga fallida (-1). Se omite caché local no verificada.');
+        }
+      } catch (e) {
+        debugPrint('GastoProvider: Error al cargar tasas desde SharedPreferences: $e');
+      }
 
       await checkPendingReplaceBlock();
       _gastos = await _repository.obtenerGastosPorMes(_selectedYear, _selectedMonth);

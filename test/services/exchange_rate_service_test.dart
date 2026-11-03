@@ -10,6 +10,11 @@ void main() {
   group('ExchangeRateService - getRateForDate Tests', () {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
+      ExchangeRateService.resetPendingPurgeOperationsForTesting();
+    });
+
+    tearDown(() {
+      ExchangeRateService.resetPendingPurgeOperationsForTesting();
     });
 
     // Históricos enlatados: sin depender de red. El sábado 2026-10-03 no
@@ -87,6 +92,11 @@ void main() {
   group('ExchangeRateService - esReferencia Tests', () {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
+      ExchangeRateService.resetPendingPurgeOperationsForTesting();
+    });
+
+    tearDown(() {
+      ExchangeRateService.resetPendingPurgeOperationsForTesting();
     });
 
     test('sin red ni cache: marca referencia y NO avanza el timestamp', () async {
@@ -155,7 +165,22 @@ void main() {
       expect(usdtRate, equals(155.0));
     });
 
-    test('ignora valores obsoletos <= 50.0 en cache previa', () async {
+    test('ignora valores no validos (<= 1.0, NaN) en cache previa bajo D-08', () async {
+      SharedPreferences.setMockInitialValues({
+        'cached_rate_usd': 0.5,
+        'cached_rate_eur': 1.0,
+        'cached_rate_usdt': double.nan,
+      });
+      final failing = MockClient((_) async => http.Response('error', 500));
+      final rates = await ExchangeRateService.getAllTodayRates(client: failing);
+
+      expect(rates.esReferencia, isTrue);
+      expect(rates.usd, equals(0.0));
+      expect(rates.eur, equals(0.0));
+      expect(rates.usdt, equals(0.0));
+    });
+
+    test('conserva tasas validas como 40.0 y 43.2 en cache previa bajo D-08 cuando red falla', () async {
       SharedPreferences.setMockInitialValues({
         'cached_rate_usd': 40.0,
         'cached_rate_eur': 43.2,
@@ -165,9 +190,9 @@ void main() {
       final rates = await ExchangeRateService.getAllTodayRates(client: failing);
 
       expect(rates.esReferencia, isTrue);
-      expect(rates.usd, equals(0.0));
-      expect(rates.eur, equals(0.0));
-      expect(rates.usdt, equals(0.0));
+      expect(rates.usd, equals(40.0));
+      expect(rates.eur, equals(43.2));
+      expect(rates.usdt, equals(40.0));
     });
 
     test('fallback exitoso a Yadio Oficial cuando DolarAPI falla', () async {

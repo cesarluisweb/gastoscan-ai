@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/constants/app_constants.dart';
+import '../domain/monetary/rate_market.dart';
 
 class ExchangeRatesData {
   final double usd;
@@ -30,13 +31,67 @@ class ExchangeRatesData {
     'esReferencia': esReferencia,
   };
 
-  factory ExchangeRatesData.fromJson(Map<String, dynamic> json) => ExchangeRatesData(
-    usd: (json['usd'] as num?)?.toDouble() ?? 0.0,
-    eur: (json['eur'] as num?)?.toDouble() ?? 0.0,
-    usdt: (json['usdt'] as num?)?.toDouble() ?? 0.0,
-    fecha: DateTime.tryParse(json['fecha'] ?? '') ?? DateTime.now(),
-    esReferencia: json['esReferencia'] as bool? ?? true,
-  );
+  factory ExchangeRatesData.fromJson(Map<String, dynamic> json) {
+    final rawUsd = json['usd'];
+    final rawEur = json['eur'];
+    final rawUsdt = json['usdt'];
+    final rawFecha = json['fecha'];
+    final rawEsReferencia = json['esReferencia'];
+
+    final double validUsd = isValidMonetaryRate(rawUsd) ? (rawUsd as num).toDouble() : 0.0;
+    final double validEur = isValidMonetaryRate(rawEur) ? (rawEur as num).toDouble() : 0.0;
+    final double validUsdt = isValidMonetaryRate(rawUsdt) ? (rawUsdt as num).toDouble() : 0.0;
+
+    final DateTime? maybeFecha = (rawFecha is String) ? DateTime.tryParse(rawFecha) : null;
+    final DateTime parsedFecha;
+    final bool parsedEsReferencia;
+
+    if (maybeFecha != null) {
+      parsedFecha = maybeFecha;
+      parsedEsReferencia = (rawEsReferencia is bool) ? rawEsReferencia : true;
+    } else {
+      parsedFecha = DateTime.fromMillisecondsSinceEpoch(0);
+      parsedEsReferencia = true;
+    }
+
+    return ExchangeRatesData(
+      usd: validUsd,
+      eur: validEur,
+      usdt: validUsdt,
+      fecha: parsedFecha,
+      esReferencia: parsedEsReferencia,
+    );
+  }
+}
+
+/// Tipo de mutación de caché pendiente de confirmación física en disco (U2 / NEW-1).
+enum PendingPurgeMutationType {
+  setString,
+  remove,
+}
+
+/// Registro inmutable de una mutación de purga pendiente de confirmación física en disco (U2 / NEW-1).
+class PendingPurgeOperation {
+  final String key;
+  final PendingPurgeMutationType type;
+  final String? stringPayload;
+  final int entriesCleanedCount;
+
+  const PendingPurgeOperation.setString({
+    required this.key,
+    required this.stringPayload,
+    this.entriesCleanedCount = 1,
+  }) : type = PendingPurgeMutationType.setString;
+
+  const PendingPurgeOperation.remove({
+    required this.key,
+    this.entriesCleanedCount = 1,
+  })  : type = PendingPurgeMutationType.remove,
+        stringPayload = null;
+
+  @override
+  String toString() =>
+      'PendingPurgeOperation(key: $key, type: $type, entriesCleanedCount: $entriesCleanedCount)';
 }
 
 class ExchangeRateService {
@@ -50,18 +105,37 @@ class ExchangeRateService {
 
   /// Obtiene las 3 tasas del día (USD BCV, EUR BCV, USDT P2P) en paralelo
   /// con respaldo automático (Gateway Cloudflare -> DolarAPI -> Yadio Oficial -> jsDelivr).
-  /// Descarta cualquier valor obsoleto <= 50.0 proveniente de semillas o pruebas previas.
-  static Future<ExchangeRatesData> getAllTodayRates({http.Client? client}) async {
-    final prefs = await SharedPreferences.getInstance();
+  /// Descarta cualquier valor no finito o fuera del dominio canónico [isValidMonetaryRate].
+  static Future<ExchangeRatesData> getAllTodayRates({
+    http.Client? client,
+    SharedPreferences? prefsInstance,
+  }) async {
+    final prefs = prefsInstance ?? await SharedPreferences.getInstance();
+    final purgeResult = await ensureCacheHistoricaPurgada(prefsInstance: prefs);
     final httpClient = client ?? http.Client();
 
-    // Semillas: solo caché real válida (> 50.0). null = "sin dato".
-    double? usdRate = prefs.getDouble('cached_rate_usd') ?? prefs.getDouble('cached_exchange_rate');
-    if (usdRate != null && usdRate <= 50.0) usdRate = null;
-    double? eurRate = prefs.getDouble('cached_rate_eur');
-    if (eurRate != null && eurRate <= 50.0) eurRate = null;
-    double? usdtRate = prefs.getDouble('cached_rate_usdt');
-    if (usdtRate != null && usdtRate <= 50.0) usdtRate = null;
+    // Semillas: solo caché real válida según el predicado canónico (D-08). null = "sin dato".
+    // Si la purga falló (purgeResult == -1), NO consumimos semillas de SharedPreferences (fail-closed).
+    double? usdRate;
+    double? eurRate;
+    double? usdtRate;
+
+    if (purgeResult != -1) {
+      final rawUsd = prefs.get('cached_rate_usd') ?? prefs.get('cached_exchange_rate');
+      if (isValidMonetaryRate(rawUsd)) {
+        usdRate = (rawUsd as num).toDouble();
+      }
+      final rawEur = prefs.get('cached_rate_eur');
+      if (isValidMonetaryRate(rawEur)) {
+        eurRate = (rawEur as num).toDouble();
+      }
+      final rawUsdt = prefs.get('cached_rate_usdt');
+      if (isValidMonetaryRate(rawUsdt)) {
+        usdtRate = (rawUsdt as num).toDouble();
+      }
+    } else {
+      debugPrint('ExchangeRateService: Purga fallida (-1). Se omiten semillas en getAllTodayRates.');
+    }
 
     // 1. Intento prioritario con el Gateway Cloudflare de Rinde Más
     try {
@@ -71,24 +145,37 @@ class ExchangeRateService {
       ).timeout(const Duration(seconds: 4));
       if (gwResp.statusCode == 200) {
         final gwData = jsonDecode(gwResp.body);
-        final gUsd = (gwData['usd'] as num?)?.toDouble();
-        final gEur = (gwData['eur'] as num?)?.toDouble();
-        final gUsdt = (gwData['usdt'] as num?)?.toDouble();
-        if (gUsd != null && gUsd > 50.0) {
+        final rawGwUsd = gwData['usd'];
+        final rawGwEur = gwData['eur'];
+        final rawGwUsdt = gwData['usdt'];
+        final gUsd = isValidMonetaryRate(rawGwUsd) ? (rawGwUsd as num).toDouble() : null;
+        final gEur = isValidMonetaryRate(rawGwEur) ? (rawGwEur as num).toDouble() : null;
+        final gUsdt = isValidMonetaryRate(rawGwUsdt) ? (rawGwUsdt as num).toDouble() : null;
+        if (gUsd != null) {
           final now = DateTime.now();
-          await prefs.setDouble('cached_rate_usd', gUsd);
-          await prefs.setDouble('cached_exchange_rate', gUsd);
-          if (gEur != null && gEur > 50.0) {
-            await prefs.setDouble('cached_rate_eur', gEur);
+          if (await prefs.setDouble('cached_rate_usd', gUsd)) {
+            _onKeyWriteConfirmed('cached_rate_usd');
           }
-          if (gUsdt != null && gUsdt > 50.0) {
-            await prefs.setDouble('cached_rate_usdt', gUsdt);
+          if (await prefs.setDouble('cached_exchange_rate', gUsd)) {
+            _onKeyWriteConfirmed('cached_exchange_rate');
           }
-          await prefs.setString('cached_exchange_rates_timestamp', now.toIso8601String());
+          if (gEur != null) {
+            if (await prefs.setDouble('cached_rate_eur', gEur)) {
+              _onKeyWriteConfirmed('cached_rate_eur');
+            }
+          }
+          if (gUsdt != null) {
+            if (await prefs.setDouble('cached_rate_usdt', gUsdt)) {
+              _onKeyWriteConfirmed('cached_rate_usdt');
+            }
+          }
+          if (await prefs.setString('cached_exchange_rates_timestamp', now.toIso8601String())) {
+            _onKeyWriteConfirmed('cached_exchange_rates_timestamp');
+          }
           return ExchangeRatesData(
             usd: gUsd,
-            eur: (gEur != null && gEur > 50.0) ? gEur : (eurRate ?? 0.0),
-            usdt: (gUsdt != null && gUsdt > 50.0) ? gUsdt : (usdtRate ?? gUsd),
+            eur: gEur ?? (eurRate ?? 0.0),
+            usdt: gUsdt ?? (usdtRate ?? gUsd),
             fecha: now,
           );
         }
@@ -105,24 +192,32 @@ class ExchangeRateService {
 
     bool fetchedAny = false;
 
-    if (results[0] != null && results[0]! > 50.0) {
+    if (isValidMonetaryRate(results[0])) {
       usdRate = results[0]!;
-      await prefs.setDouble('cached_rate_usd', usdRate);
-      await prefs.setDouble('cached_exchange_rate', usdRate);
+      if (await prefs.setDouble('cached_rate_usd', usdRate)) {
+        _onKeyWriteConfirmed('cached_rate_usd');
+      }
+      if (await prefs.setDouble('cached_exchange_rate', usdRate)) {
+        _onKeyWriteConfirmed('cached_exchange_rate');
+      }
       fetchedAny = true;
     }
 
-    if (results[1] != null && results[1]! > 50.0) {
+    if (isValidMonetaryRate(results[1])) {
       eurRate = results[1]!;
-      await prefs.setDouble('cached_rate_eur', eurRate);
+      if (await prefs.setDouble('cached_rate_eur', eurRate)) {
+        _onKeyWriteConfirmed('cached_rate_eur');
+      }
       fetchedAny = true;
     }
 
-    if (results[2] != null && results[2]! > 50.0) {
+    if (isValidMonetaryRate(results[2])) {
       usdtRate = results[2]!;
-      await prefs.setDouble('cached_rate_usdt', usdtRate);
+      if (await prefs.setDouble('cached_rate_usdt', usdtRate)) {
+        _onKeyWriteConfirmed('cached_rate_usdt');
+      }
       fetchedAny = true;
-    } else if ((usdtRate == null || usdtRate <= 50.0) && (usdRate != null && usdRate > 50.0)) {
+    } else if (!isValidMonetaryRate(usdtRate) && isValidMonetaryRate(usdRate)) {
       // Último recurso histórico: USDT ≈ USD. Queda señalado vía
       // `esReferencia` cuando nada se obtuvo en vivo.
       usdtRate = usdRate;
@@ -130,23 +225,27 @@ class ExchangeRateService {
 
     if (fetchedAny) {
       final now = DateTime.now();
-      await prefs.setString('cached_exchange_rates_timestamp', now.toIso8601String());
+      if (await prefs.setString('cached_exchange_rates_timestamp', now.toIso8601String())) {
+        _onKeyWriteConfirmed('cached_exchange_rates_timestamp');
+      }
       return ExchangeRatesData(
-        usd: usdRate ?? 0.0,
-        eur: eurRate ?? 0.0,
-        usdt: usdtRate ?? 0.0,
+        usd: isValidMonetaryRate(usdRate) ? usdRate! : 0.0,
+        eur: isValidMonetaryRate(eurRate) ? eurRate! : 0.0,
+        usdt: isValidMonetaryRate(usdtRate) ? usdtRate! : 0.0,
         fecha: now,
       );
     }
 
     // Sin dato en vivo: NO se escribe el timestamp. `fecha` es la última
     // actualización real conocida, no "ahora".
-    final prevTimestampStr = prefs.getString('cached_exchange_rates_timestamp');
+    // NEW-6: Comprobación segura de tipo antes de invocar tryParse
+    final rawPrevTimestamp = prefs.get('cached_exchange_rates_timestamp');
+    final prevTimestampStr = rawPrevTimestamp is String ? rawPrevTimestamp : null;
     final prevTimestamp = prevTimestampStr == null ? null : DateTime.tryParse(prevTimestampStr);
     return ExchangeRatesData(
-      usd: usdRate ?? 0.0,
-      eur: eurRate ?? 0.0,
-      usdt: usdtRate ?? 0.0,
+      usd: isValidMonetaryRate(usdRate) ? usdRate! : 0.0,
+      eur: isValidMonetaryRate(eurRate) ? eurRate! : 0.0,
+      usdt: isValidMonetaryRate(usdtRate) ? usdtRate! : 0.0,
       fecha: prevTimestamp ?? DateTime.fromMillisecondsSinceEpoch(0),
       esReferencia: true,
     );
@@ -158,7 +257,7 @@ class ExchangeRateService {
 
     // 1. DolarAPI Oficial
     final dolarApiVal = await _fetchUrlDouble(_dolarApiOficial, 'promedio', client: httpClient);
-    if (dolarApiVal != null && dolarApiVal > 50.0) return dolarApiVal;
+    if (isValidMonetaryRate(dolarApiVal)) return dolarApiVal;
 
     // 2. Fallback Yadio Oficial
     try {
@@ -166,8 +265,8 @@ class ExchangeRateService {
       final resp = await httpClient.get(yadioUrl).timeout(const Duration(seconds: 4));
       if (resp.statusCode == 200) {
         final data = jsonDecode(resp.body);
-        final officialRate = (data['USD']?['other']?['official']?['rate'] as num?)?.toDouble();
-        if (officialRate != null && officialRate > 50.0) return officialRate;
+        final rawOfficial = data['USD']?['other']?['official']?['rate'];
+        if (isValidMonetaryRate(rawOfficial)) return (rawOfficial as num).toDouble();
       }
     } catch (e) {
       debugPrint('ExchangeRateService: Fallback Yadio USD falló: $e');
@@ -179,8 +278,8 @@ class ExchangeRateService {
       final resp = await httpClient.get(jsdelivrUrl).timeout(const Duration(seconds: 4));
       if (resp.statusCode == 200) {
         final data = jsonDecode(resp.body);
-        final vesRate = (data['usd']?['ves'] as num?)?.toDouble();
-        if (vesRate != null && vesRate > 50.0) return vesRate;
+        final rawVes = data['usd']?['ves'];
+        if (isValidMonetaryRate(rawVes)) return (rawVes as num).toDouble();
       }
     } catch (e) {
       debugPrint('ExchangeRateService: Fallback jsDelivr USD falló: $e');
@@ -195,7 +294,7 @@ class ExchangeRateService {
 
     // 1. DolarAPI Euro Oficial
     final euroApiVal = await _fetchUrlDouble(_euroApiOficial, 'promedio', client: httpClient);
-    if (euroApiVal != null && euroApiVal > 50.0) return euroApiVal;
+    if (isValidMonetaryRate(euroApiVal)) return euroApiVal;
 
     // 2. Fallback jsDelivr Euro
     try {
@@ -203,8 +302,8 @@ class ExchangeRateService {
       final resp = await httpClient.get(jsdelivrUrl).timeout(const Duration(seconds: 4));
       if (resp.statusCode == 200) {
         final data = jsonDecode(resp.body);
-        final vesRate = (data['eur']?['ves'] as num?)?.toDouble();
-        if (vesRate != null && vesRate > 50.0) return vesRate;
+        final rawVes = data['eur']?['ves'];
+        if (isValidMonetaryRate(rawVes)) return (rawVes as num).toDouble();
       }
     } catch (e) {
       debugPrint('ExchangeRateService: Fallback jsDelivr EUR falló: $e');
@@ -216,11 +315,11 @@ class ExchangeRateService {
       final resp = await httpClient.get(yadioUrl).timeout(const Duration(seconds: 4));
       if (resp.statusCode == 200) {
         final data = jsonDecode(resp.body);
-        final officialRate = (data['USD']?['other']?['official']?['rate'] as num?)?.toDouble();
-        final eurRatio = (data['USD']?['EUR'] as num?)?.toDouble();
-        if (officialRate != null && officialRate > 50.0 && eurRatio != null && eurRatio > 0) {
-          final computedEur = officialRate / eurRatio;
-          if (computedEur > 50.0) return computedEur;
+        final rawOfficial = data['USD']?['other']?['official']?['rate'];
+        final rawRatio = data['USD']?['EUR'];
+        if (isValidMonetaryRate(rawOfficial) && rawRatio is num && rawRatio.isFinite && rawRatio > 0) {
+          final computedEur = (rawOfficial as num).toDouble() / rawRatio.toDouble();
+          if (isValidMonetaryRate(computedEur)) return computedEur;
         }
       }
     } catch (e) {
@@ -240,8 +339,8 @@ class ExchangeRateService {
       ).timeout(const Duration(seconds: 6));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final val = (data[fieldKey] as num?)?.toDouble();
-        if (val != null && val > 0) return val;
+        final rawVal = data[fieldKey];
+        if (isValidMonetaryRate(rawVal)) return (rawVal as num).toDouble();
       }
     } catch (e) {
       debugPrint('ExchangeRateService: Error en _fetchUrlDouble ($urlString): $e');
@@ -257,10 +356,10 @@ class ExchangeRateService {
       final resp = await httpClient.get(yadioUrl).timeout(const Duration(seconds: 4));
       if (resp.statusCode == 200) {
         final data = jsonDecode(resp.body);
-        final p2pUsdt = (data['USD']?['other']?['p2p_usdt']?['rate'] as num?)?.toDouble();
-        if (p2pUsdt != null && p2pUsdt > 50.0) return p2pUsdt;
-        final usdRate = (data['USD']?['rate'] as num?)?.toDouble();
-        if (usdRate != null && usdRate > 50.0) return usdRate;
+        final rawP2p = data['USD']?['other']?['p2p_usdt']?['rate'];
+        if (isValidMonetaryRate(rawP2p)) return (rawP2p as num).toDouble();
+        final rawUsd = data['USD']?['rate'];
+        if (isValidMonetaryRate(rawUsd)) return (rawUsd as num).toDouble();
       }
     } catch (e) {
       debugPrint('ExchangeRateService: Fallback Yadio USDT falló: $e');
@@ -268,7 +367,7 @@ class ExchangeRateService {
 
     // Fallback directo a DolarAPI paralelo
     final paraleloVal = await _fetchUrlDouble(_dolarApiParalelo, 'promedio', client: client);
-    if (paraleloVal != null && paraleloVal > 50.0) return paraleloVal;
+    if (isValidMonetaryRate(paraleloVal)) return paraleloVal;
     return null;
   }
 
@@ -287,6 +386,7 @@ class ExchangeRateService {
     String moneda = 'USD',
     String tipo = 'oficial',
     http.Client? client,
+    SharedPreferences? prefsInstance,
   }) async {
     final today = DateTime.now().toIso8601String().substring(0, 10);
     final monedaClean = moneda.toUpperCase();
@@ -294,18 +394,27 @@ class ExchangeRateService {
 
     // Si es hoy, consultar en vivo
     if (isoDate.isEmpty || isoDate == today) {
-      final allRates = await getAllTodayRates(client: client);
-      if (monedaClean == 'EUR') return allRates.eur;
-      if (monedaClean == 'USDT') return allRates.usdt;
-      return allRates.usd;
+      final allRates = await getAllTodayRates(client: client, prefsInstance: prefsInstance);
+      if (monedaClean == 'EUR') return isValidMonetaryRate(allRates.eur) ? allRates.eur : 0.0;
+      if (monedaClean == 'USDT') return isValidMonetaryRate(allRates.usdt) ? allRates.usdt : 0.0;
+      return isValidMonetaryRate(allRates.usd) ? allRates.usd : 0.0;
     }
 
     // 1. Revisar caché local por fecha y moneda
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = prefsInstance ?? await SharedPreferences.getInstance();
+    final purgeResult = await ensureCacheHistoricaPurgada(prefsInstance: prefs);
     final cacheKey = 'cached_rate_${monedaClean}_$isoDate';
-    final cachedRate = prefs.getDouble(cacheKey);
-    if (cachedRate != null && cachedRate > 0) {
-      return cachedRate;
+
+    // Comportamiento fail-closed (Objetivo 3 y N1):
+    // Si la purga falló (purgeResult == -1), la integridad de la caché no está verificada;
+    // se omite la lectura de la caché local para no consumir datos potencialmente corruptos.
+    if (purgeResult != -1) {
+      final rawCached = prefs.get(cacheKey);
+      if (isValidMonetaryRate(rawCached)) {
+        return (rawCached as num).toDouble();
+      }
+    } else {
+      debugPrint('ExchangeRateService: Purga fallida (-1). Se omite lectura de caché para $cacheKey.');
     }
 
     // Fechas anteriores al límite de histórico confiable no tienen datos
@@ -345,9 +454,12 @@ class ExchangeRateService {
         // Buscar coincidencia exacta
         for (final item in list) {
           if (item['fecha'] == isoDate) {
-            final rate = (item['promedio'] as num?)?.toDouble();
-            if (rate != null && rate > 0) {
-              await prefs.setDouble(cacheKey, rate);
+            final rawRate = item['promedio'];
+            if (isValidMonetaryRate(rawRate)) {
+              final rate = (rawRate as num).toDouble();
+              if (await prefs.setDouble(cacheKey, rate)) {
+                _onKeyWriteConfirmed(cacheKey);
+              }
               return rate;
             }
           }
@@ -359,8 +471,9 @@ class ExchangeRateService {
         for (final item in list) {
           final itemFecha = item['fecha']?.toString() ?? '';
           if (itemFecha.isNotEmpty && itemFecha.compareTo(isoDate) <= 0) {
-            final rate = (item['promedio'] as num?)?.toDouble();
-            if (rate != null && rate > 0) {
+            final rawRate = item['promedio'];
+            if (isValidMonetaryRate(rawRate)) {
+              final rate = (rawRate as num).toDouble();
               if (lastValidDate == null || itemFecha.compareTo(lastValidDate) >= 0) {
                 lastValidDate = itemFecha;
                 lastValidRate = rate;
@@ -369,8 +482,10 @@ class ExchangeRateService {
           }
         }
 
-        if (lastValidRate != null && lastValidRate > 0) {
-          await prefs.setDouble(cacheKey, lastValidRate);
+        if (lastValidRate != null) {
+          if (await prefs.setDouble(cacheKey, lastValidRate)) {
+            _onKeyWriteConfirmed(cacheKey);
+          }
           return lastValidRate;
         }
       }
@@ -388,9 +503,12 @@ class ExchangeRateService {
           final response = await httpClient.get(url).timeout(const Duration(seconds: 4));
           if (response.statusCode == 200) {
             final data = jsonDecode(response.body);
-            final vesRate = (data['usd']?['ves'] as num?)?.toDouble();
-            if (vesRate != null && vesRate > 0) {
-              await prefs.setDouble(cacheKey, vesRate);
+            final rawVes = data['usd']?['ves'];
+            if (isValidMonetaryRate(rawVes)) {
+              final vesRate = (rawVes as num).toDouble();
+              if (await prefs.setDouble(cacheKey, vesRate)) {
+                _onKeyWriteConfirmed(cacheKey);
+              }
               return vesRate;
             }
           }
@@ -402,9 +520,17 @@ class ExchangeRateService {
 
     // 4. Fallback de USDT a USD oficial de la misma fecha histórica si el histórico paralelo no existía
     if (monedaClean == 'USDT') {
-      final usdHistorical = await getRateForDate(isoDate, moneda: 'USD', tipo: 'oficial', client: httpClient);
-      if (usdHistorical > 0) {
-        await prefs.setDouble(cacheKey, usdHistorical);
+      final usdHistorical = await getRateForDate(
+        isoDate,
+        moneda: 'USD',
+        tipo: 'oficial',
+        client: httpClient,
+        prefsInstance: prefs,
+      );
+      if (isValidMonetaryRate(usdHistorical)) {
+        if (await prefs.setDouble(cacheKey, usdHistorical)) {
+          _onKeyWriteConfirmed(cacheKey);
+        }
         return usdHistorical;
       }
     }
@@ -419,5 +545,372 @@ class ExchangeRateService {
     final allRates = await getAllTodayRates();
     if (tipo == 'paralelo') return allRates.usdt;
     return allRates.usd;
+  }
+
+  /// Clave persistente para garantizar la ejecución única e idempotente de la purga de caché histórica.
+  static const String prefKeyCacheHistoricaPurgada = 'tasas_cache_historica_purgada_v1';
+
+  /// Registro en memoria de operaciones pendientes de persistencia física en disco (U2 / NEW-1).
+  /// Permite reintentar en el mismo proceso incluso si SharedPreferences ya mutó su caché en memoria.
+  static final Map<String, PendingPurgeOperation> _pendingPurgeOperations = {};
+
+  /// Indica si la persistencia física de la marca [prefKeyCacheHistoricaPurgada] está pendiente de confirmación (U2 / NEW-1).
+  static bool _purgeMarkPendingConfirmation = false;
+
+  /// Control de concurrencia para evitar purgas simultáneas.
+  static Future<int>? _activePurgeFuture;
+
+  /// Retorna si la marca de purga está pendiente de confirmación en disco (O2 / NEW-1).
+  @visibleForTesting
+  static bool get isPurgeMarkPendingConfirmation => _purgeMarkPendingConfirmation;
+
+  /// Retorna las operaciones pendientes de confirmación física (O2 / NEW-1).
+  @visibleForTesting
+  static Map<String, PendingPurgeOperation> get pendingPurgeOperations =>
+      Map.unmodifiable(_pendingPurgeOperations);
+
+  /// Limpia las operaciones pendientes en memoria y futuros activos (aislamiento de pruebas, M-08).
+  @visibleForTesting
+  static void resetPendingPurgeOperationsForTesting() {
+    _pendingPurgeOperations.clear();
+    _purgeMarkPendingConfirmation = false;
+    _activePurgeFuture = null;
+  }
+
+  /// Si una escritura física en disco de un valor válido para [key] se confirmó correctamente,
+  /// rescinde cualquier operación de purga pendiente obsoleta sobre esa misma clave (M-05).
+  static void _onKeyWriteConfirmed(String key) {
+    _pendingPurgeOperations.remove(key);
+  }
+
+  /// Valida si una cadena ISO 'YYYY-MM-DD' corresponde a una fecha real del calendario gregoriano.
+  static bool _isValidCalendarDate(String dateStr) {
+    final isoPattern = RegExp(r'^\d{4}-\d{2}-\d{2}$');
+    if (!isoPattern.hasMatch(dateStr)) return false;
+    final parts = dateStr.split('-');
+    final y = int.tryParse(parts[0]);
+    final m = int.tryParse(parts[1]);
+    final d = int.tryParse(parts[2]);
+    if (y == null || m == null || d == null) return false;
+    if (m < 1 || m > 12) return false;
+    if (d < 1 || d > 31) return false;
+    try {
+      final dt = DateTime(y, m, d);
+      return dt.year == y && dt.month == m && dt.day == d;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Garantiza la ejecución controlada de una sola vez de la purga selectiva de caché histórica.
+  /// Es idempotente: si la marca persistente ya existe y fue confirmada físicamente, retorna 0.
+  /// Si ocurre un fallo parcial o de persistencia, NO fija la marca persistente y retorna -1 para permitir reintentos.
+  /// Si existen llamadas concurrentes, ambas esperan y retornan el resultado de la misma purga en curso.
+  static Future<int> ensureCacheHistoricaPurgada({SharedPreferences? prefsInstance}) async {
+    final prefs = prefsInstance ?? await SharedPreferences.getInstance();
+
+    // Comprobación de marca persistente (Criterio 4.3):
+    // Solo consideramos confirmada la purga si:
+    // 1. La marca en SharedPreferences es true.
+    // 2. NO existe una confirmación física de marca pendiente (_purgeMarkPendingConfirmation == false).
+    // 3. NO existe ninguna mutación de caché pendiente en _pendingPurgeOperations.
+    final rawMark = prefs.get(prefKeyCacheHistoricaPurgada);
+    if (rawMark is bool) {
+      if (rawMark == true && !_purgeMarkPendingConfirmation && _pendingPurgeOperations.isEmpty) {
+        return 0; // Idempotente: purga ya completada y confirmada físicamente en disco
+      }
+    } else if (rawMark != null) {
+      debugPrint('ExchangeRateService: La marca $prefKeyCacheHistoricaPurgada tiene un tipo inesperado (${rawMark.runtimeType}). Se tratará como no purgada.');
+    }
+
+    if (_activePurgeFuture != null) {
+      return await _activePurgeFuture!;
+    }
+
+    final purgeTask = () async {
+      try {
+        final count = await purgarCacheHistoricaInvalida(prefsInstance: prefs);
+
+        // Si quedaron mutaciones pendientes sin confirmar físicamente, no marcar éxito
+        if (_pendingPurgeOperations.isNotEmpty) {
+          debugPrint('ExchangeRateService: Quedan ${_pendingPurgeOperations.length} mutaciones pendientes. No se fija la marca.');
+          return -1;
+        }
+
+        // Persistir la marca de purga. Si falla, registrar que la marca quedó pendiente (C. Marca pendiente)
+        _purgeMarkPendingConfirmation = true;
+        bool markSaved = false;
+        try {
+          markSaved = await prefs.setBool(prefKeyCacheHistoricaPurgada, true);
+        } catch (e) {
+          debugPrint('ExchangeRateService: Excepción al persistir marca $prefKeyCacheHistoricaPurgada: $e');
+          markSaved = false;
+        }
+
+        if (!markSaved) {
+          _purgeMarkPendingConfirmation = true;
+          debugPrint('ExchangeRateService: No se pudo persistir la marca $prefKeyCacheHistoricaPurgada (retornó false o lanzó).');
+          return -1;
+        }
+
+        // Éxito confirmado: todas las mutaciones confirmadas y marca persistida físicamente
+        _purgeMarkPendingConfirmation = false;
+        return count;
+      } catch (e) {
+        debugPrint('ExchangeRateService: Fallo en ensureCacheHistoricaPurgada: $e');
+        return -1;
+      }
+    }();
+
+    _activePurgeFuture = purgeTask;
+    try {
+      return await purgeTask;
+    } finally {
+      _activePurgeFuture = null;
+    }
+  }
+
+  /// Limpieza selectiva de la caché histórica de tasas en SharedPreferences.
+  /// Remueve únicamente:
+  /// 1) Entradas con valores <= 1.0, NaN o no finitos según [isValidMonetaryRate].
+  /// 2) Entradas en 'tasas_historico_v1' corruptas, con fechas no válidas en calendario o valores fuera de dominio o sin procedencia.
+  /// 3) Claves 'cached_rate_...' con fechas de calendario no válidas o valores fuera de dominio.
+  /// 4) Claves semillas 'cached_exchange_rate' y 'tasa_cambio_ves_usd' (AppConstants.prefTasaCambio) si contienen valores fuera de dominio.
+  /// 5) Metadato corrupto 'cached_exchange_rates_timestamp' si no es String o fecha válida.
+  /// No elimina entradas válidas por tener fecha anterior a 2023-01-03.
+  /// Retorna el número total de entradas eliminadas o depuradas confirmadas físicamente
+  /// en esta ejecución (contabilizando tanto las detectadas y persistidas en esta llamada
+  /// como las operaciones pendientes de reintentos previos cuya persistencia en disco se
+  /// confirmó exitosamente en esta llamada).
+  /// Lanza [StateError] si alguna operación de escritura o borrado falla (fallo parcial).
+  /// NO borra indiscriminadamente la caché histórica válida ante excepciones de persistencia (B1 y NEW-1).
+  static Future<int> purgarCacheHistoricaInvalida({SharedPreferences? prefsInstance}) async {
+    final prefs = prefsInstance ?? await SharedPreferences.getInstance();
+    int cleanedCount = 0;
+    bool allWritesSucceeded = true;
+
+    // 0. Reintentar operaciones pendientes previas (NEW-1: divergencia memoria/disco)
+    // Si una llamada anterior mutó memoria pero falló en plataforma, volvemos a persistir exactamente
+    // el payload o la eliminación pendiente aunque la memoria ya parezca limpia.
+    final previousPendingKeys = List<String>.from(_pendingPurgeOperations.keys);
+    for (final pk in previousPendingKeys) {
+      final op = _pendingPurgeOperations[pk];
+      if (op == null) continue;
+      if (op.type == PendingPurgeMutationType.setString) {
+        try {
+          final ok = await prefs.setString(op.key, op.stringPayload!);
+          if (ok) {
+            _pendingPurgeOperations.remove(pk);
+            cleanedCount += op.entriesCleanedCount;
+          } else {
+            allWritesSucceeded = false;
+            debugPrint('ExchangeRateService: Reintento de setString(${op.key}) retornó false.');
+          }
+        } catch (e) {
+          allWritesSucceeded = false;
+          debugPrint('ExchangeRateService: Excepción en reintento de setString(${op.key}): $e');
+        }
+      } else if (op.type == PendingPurgeMutationType.remove) {
+        try {
+          final ok = await prefs.remove(op.key);
+          if (ok) {
+            _pendingPurgeOperations.remove(pk);
+            cleanedCount += op.entriesCleanedCount;
+          } else {
+            allWritesSucceeded = false;
+            debugPrint('ExchangeRateService: Reintento de remove(${op.key}) retornó false.');
+          }
+        } catch (e) {
+          allWritesSucceeded = false;
+          debugPrint('ExchangeRateService: Excepción en reintento de remove(${op.key}): $e');
+        }
+      }
+    }
+
+    final allKeys = prefs.getKeys();
+    final keysToRemove = <String>[];
+
+    for (final key in allKeys) {
+      if (key == 'tasas_historico_v1') {
+        // Si ya hay una operación pendiente para esta clave que aún no se resolvió, no re-procesar
+        if (_pendingPurgeOperations.containsKey(key)) {
+          continue;
+        }
+
+        final rawVal = prefs.get(key);
+        if (rawVal == null) continue;
+        if (rawVal is! String) {
+          debugPrint('ExchangeRateService: $key tiene un tipo no esperado (${rawVal.runtimeType}); se marca para eliminación por corrupción de tipo.');
+          keysToRemove.add(key);
+          cleanedCount++;
+          continue;
+        }
+        if (rawVal.trim().isEmpty) {
+          keysToRemove.add(key);
+          cleanedCount++;
+          continue;
+        }
+
+        // 1. Decodificación aislada de JSON (B1: nunca mezclar con setString)
+        Map<String, dynamic>? decodedMap;
+        try {
+          final decoded = jsonDecode(rawVal);
+          if (decoded is Map) {
+            decodedMap = decoded.cast<String, dynamic>();
+          } else {
+            debugPrint('ExchangeRateService: $key no es un Map serializado. Se marca para eliminación.');
+            keysToRemove.add(key);
+            cleanedCount++;
+            continue;
+          }
+        } catch (e) {
+          debugPrint('ExchangeRateService: Error de sintaxis JSON en $key: $e. Se marca para eliminación.');
+          keysToRemove.add(key);
+          cleanedCount++;
+          continue;
+        }
+
+        // 2. Filtrado selectivo de entradas
+        final cleanedMap = <String, dynamic>{};
+        bool mapMutated = false;
+        int entriesCleanedInMap = 0;
+
+        decodedMap.forEach((dateKey, val) {
+          try {
+            final dateStr = dateKey.toString();
+            if (!_isValidCalendarDate(dateStr)) {
+              mapMutated = true;
+              entriesCleanedInMap++;
+              return;
+            }
+
+            if (isValidMonetaryRate(val)) {
+              cleanedMap[dateStr] = (val as num).toDouble();
+            } else if (val is Map) {
+              // Búsqueda del primer valor numérico válido conforme al predicado canónico (D-08)
+              num? validRate;
+              for (final field in const ['valor', 'rate', 'promedio']) {
+                final fVal = val[field];
+                if (isValidMonetaryRate(fVal)) {
+                  validRate = fVal as num;
+                  break;
+                }
+              }
+
+              // Búsqueda de procedencia válida (no vacía) conforme a RM-03 v1.2 §6.1
+              String? validSource;
+              for (final field in const ['source', 'fuente']) {
+                final fVal = val[field];
+                if (fVal is String && fVal.trim().isNotEmpty) {
+                  validSource = fVal.trim();
+                  break;
+                }
+              }
+
+              if (validRate != null && validSource != null) {
+                cleanedMap[dateStr] = val;
+              } else {
+                mapMutated = true;
+                entriesCleanedInMap++;
+              }
+            } else {
+              mapMutated = true;
+              entriesCleanedInMap++;
+            }
+          } catch (e) {
+            debugPrint('ExchangeRateService: Excepción procesando entrada $dateKey en $key: $e');
+            mapMutated = true;
+            entriesCleanedInMap++;
+          }
+        });
+
+        // 3. Persistencia aislada del mapa depurado (B1 & NEW-1)
+        if (mapMutated) {
+          cleanedCount += entriesCleanedInMap;
+          if (cleanedMap.isEmpty) {
+            keysToRemove.add(key);
+          } else {
+            final payload = jsonEncode(cleanedMap);
+            _pendingPurgeOperations[key] = PendingPurgeOperation.setString(
+              key: key,
+              stringPayload: payload,
+              entriesCleanedCount: entriesCleanedInMap,
+            );
+            try {
+              final saved = await prefs.setString(key, payload);
+              if (saved) {
+                _pendingPurgeOperations.remove(key);
+              } else {
+                debugPrint('ExchangeRateService: prefs.setString($key) retornó false. Se registra operación pendiente.');
+                allWritesSucceeded = false;
+              }
+            } catch (e) {
+              debugPrint('ExchangeRateService: Excepción al guardar $key depurado: $e. Se registra operación pendiente.');
+              allWritesSucceeded = false;
+            }
+          }
+        }
+      } else if (key == 'cached_exchange_rate' || key == AppConstants.prefTasaCambio) {
+        if (_pendingPurgeOperations.containsKey(key)) continue;
+        final rawVal = prefs.get(key);
+        if (rawVal == null) continue;
+        if (!isValidMonetaryRate(rawVal)) {
+          keysToRemove.add(key);
+          cleanedCount++;
+        }
+      } else if (key == 'cached_exchange_rates_timestamp') {
+        // NEW-6: Si el timestamp está corrupto (no String o fecha inválida), se purga selectivamente
+        if (_pendingPurgeOperations.containsKey(key)) continue;
+        final rawVal = prefs.get(key);
+        if (rawVal == null) continue;
+        if (rawVal is! String || DateTime.tryParse(rawVal) == null) {
+          debugPrint('ExchangeRateService: $key corrupto o no interpretable como fecha (${rawVal.runtimeType}); se marca para eliminación.');
+          keysToRemove.add(key);
+          cleanedCount++;
+        }
+      } else if (key.startsWith('cached_rate_')) {
+        if (_pendingPurgeOperations.containsKey(key)) continue;
+        final parts = key.split('_');
+        if (parts.length >= 4) {
+          final datePart = parts.sublist(3).join('_');
+          final rawVal = prefs.get(key);
+          final bool dateInvalid = !_isValidCalendarDate(datePart);
+          final bool valInvalid = !isValidMonetaryRate(rawVal);
+          if (dateInvalid || valInvalid) {
+            keysToRemove.add(key);
+            cleanedCount++;
+          }
+        } else {
+          // Claves de tasa del día (ej. cached_rate_usd, cached_rate_eur, cached_rate_usdt)
+          final rawVal = prefs.get(key);
+          if (!isValidMonetaryRate(rawVal)) {
+            keysToRemove.add(key);
+            cleanedCount++;
+          }
+        }
+      }
+    }
+
+    for (final k in keysToRemove) {
+      _pendingPurgeOperations[k] = PendingPurgeOperation.remove(key: k, entriesCleanedCount: 1);
+      try {
+        final removed = await prefs.remove(k);
+        if (removed) {
+          _pendingPurgeOperations.remove(k);
+        } else {
+          debugPrint('ExchangeRateService: prefs.remove($k) retornó false. Se registra operación pendiente.');
+          allWritesSucceeded = false;
+        }
+      } catch (e) {
+        debugPrint('ExchangeRateService: Excepción en prefs.remove($k): $e. Se registra operación pendiente.');
+        allWritesSucceeded = false;
+      }
+    }
+
+    if (!allWritesSucceeded || _pendingPurgeOperations.isNotEmpty) {
+      throw StateError('Fallo de persistencia al purgar la caché histórica en SharedPreferences (${_pendingPurgeOperations.length} pendientes)');
+    }
+
+    return cleanedCount;
   }
 }

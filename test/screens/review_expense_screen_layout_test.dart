@@ -64,6 +64,8 @@ class FakeDatabaseHelper extends DatabaseHelper {
 class FakeGastoProvider extends GastoProvider {
   final List<GastoModel> _gastos = [];
   bool actualizarGastoLlamado = false;
+  GastoModel? ultimoGastoGuardado;
+  List<ItemGastoModel>? ultimosItemsGuardados;
 
   @override
   List<GastoModel> get gastos => _gastos;
@@ -80,6 +82,15 @@ class FakeGastoProvider extends GastoProvider {
   @override
   Future<bool> actualizarGasto(GastoModel gasto, List<ItemGastoModel> items) async {
     actualizarGastoLlamado = true;
+    ultimoGastoGuardado = gasto;
+    ultimosItemsGuardados = items;
+    return true;
+  }
+
+  @override
+  Future<bool> agregarGasto(GastoModel gasto, List<ItemGastoModel> items, {List<int>? shoppingItemIds}) async {
+    ultimoGastoGuardado = gasto;
+    ultimosItemsGuardados = items;
     return true;
   }
 }
@@ -514,6 +525,7 @@ void main() {
     // 3. En EUR debe seguir activo "En Bs. a tasa BCV" (no restablecer a "En divisa")
     expect(find.byKey(const Key('input_total_bs_manual')), findsOneWidget);
     expect(find.byKey(const Key('cintillo_divisa_info')), findsNothing);
+    expect(find.byKey(const Key('btn_pagado_en_bs_usdt')), findsNothing);
   });
 
   testWidgets('ReviewExpenseScreen conserva el valor nominal introducido al cambiar de moneda', (tester) async {
@@ -1233,5 +1245,252 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Hogar'), findsWidgets);
     expect(find.text('Alimentación'), findsNothing);
+  });
+
+  group('Sprint Teléfono - Pruebas Obligatorias ReviewExpenseScreen', () {
+    testWidgets('1. Inicialización con moneda principal distinta de USD', (tester) async {
+      tester.view.physicalSize = const Size(1080, 4000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      settingsProvider.monedaPref = 'VES';
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Monto total (Bs.)'), findsOneWidget);
+      expect(find.text('Precios en Bs.'), findsOneWidget);
+      expect(find.text('Equiv. USD (BCV)'), findsOneWidget);
+    });
+
+    testWidgets('2. Re-selección de la moneda activa sin efectos secundarios', (tester) async {
+      tester.view.physicalSize = const Size(1080, 4000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      final totalInput = find.widgetWithText(TextFormField, r'Monto total ($)');
+      await tester.enterText(totalInput, '120');
+      await tester.pumpAndSettle();
+
+      expect(find.text('120'), findsWidgets);
+
+      await tester.tap(find.byKey(const Key('expense_currency_usd_btn')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('120'), findsWidgets);
+      expect(find.byKey(const Key('cintillo_divisa_info')), findsOneWidget);
+    });
+
+    testWidgets('3. Cambio USD a VES sin conversión del importe escrito', (tester) async {
+      tester.view.physicalSize = const Size(1080, 4000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      final totalInput = find.widgetWithText(TextFormField, r'Monto total ($)');
+      await tester.enterText(totalInput, '150');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('expense_currency_ves_btn')));
+      await tester.pumpAndSettle();
+
+      final totalInputVes = find.widgetWithText(TextFormField, 'Monto total (Bs.)');
+      expect(totalInputVes, findsOneWidget);
+      final formField = tester.widget<TextFormField>(totalInputVes);
+      expect(formField.controller?.text, equals('150'));
+    });
+
+    testWidgets('4. Cambio VES a EUR sin conversión de artículos', (tester) async {
+      tester.view.physicalSize = const Size(1080, 4000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      settingsProvider.monedaPref = 'VES';
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      final precioFinder = find.widgetWithText(TextFormField, 'Precio');
+      await tester.enterText(precioFinder, '75');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('expense_currency_eur_btn')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Precios en €'), findsOneWidget);
+      expect(find.text('75'), findsWidgets);
+    });
+
+    testWidgets('5. Conservación del importe original después de cambiar moneda', (tester) async {
+      tester.view.physicalSize = const Size(1080, 4000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      final totalInput = find.widgetWithText(TextFormField, r'Monto total ($)');
+      await tester.enterText(totalInput, '300');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('expense_currency_ves_btn')));
+      await tester.pumpAndSettle();
+      final vesField = tester.widget<TextFormField>(find.widgetWithText(TextFormField, 'Monto total (Bs.)'));
+      expect(vesField.controller?.text, equals('300'));
+
+      await tester.tap(find.byKey(const Key('expense_currency_eur_btn')));
+      await tester.pumpAndSettle();
+      final eurField = tester.widget<TextFormField>(find.widgetWithText(TextFormField, 'Monto total (€)'));
+      expect(eurField.controller?.text, equals('300'));
+
+      await tester.tap(find.byKey(const Key('expense_currency_usdt_btn')));
+      await tester.pumpAndSettle();
+      final usdtField = tester.widget<TextFormField>(find.widgetWithText(TextFormField, 'Monto total (USDT)'));
+      expect(usdtField.controller?.text, equals('300'));
+    });
+
+    testWidgets('6. Cambio de fecha en un gasto indexado sin perder el importe pagado', (tester) async {
+      tester.view.physicalSize = const Size(1080, 4000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      final gastoIndexado = GastoModel(
+        id: 12,
+        uuid: 'gasto-indexado-uuid',
+        fecha: '2026-02-10',
+        comercio: 'Automercado Indexado',
+        moneda: 'VES',
+        totalOriginal: 400000,
+        totalUsd: 10000,
+        tasaCambio: 40.0,
+        fuenteTasaCambio: 'BCV (Pago en Bs. indexado a USD)',
+        categoria: 'Alimentación',
+        items: [
+          ItemGastoModel(
+            descripcion: 'Compra semanal',
+            cantidad: 1.0,
+            precioUnitario: 400000,
+            total: 400000,
+            categoria: 'Alimentación',
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(MultiProvider(
+        providers: [
+          ChangeNotifierProvider<GastoProvider>.value(value: gastoProvider),
+          ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+          ChangeNotifierProvider<ScanQueueProvider>.value(value: scanQueueProvider),
+        ],
+        child: MaterialApp(
+          home: ReviewExpenseScreen(
+            existingGasto: gastoIndexado,
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      final bsManualInput = find.byKey(const Key('input_total_bs_manual'));
+      expect(bsManualInput, findsOneWidget);
+      final bsField = tester.widget<TextFormField>(bsManualInput);
+      expect(bsField.controller?.text, equals('4000.00'));
+
+      await tester.tap(find.text('¿Cuándo compraste?'));
+      await tester.pumpAndSettle();
+
+      final okButton = find.text('OK');
+      if (okButton.evaluate().isNotEmpty) {
+        await tester.tap(okButton);
+        await tester.pumpAndSettle();
+      }
+
+      final bsFieldAfter = tester.widget<TextFormField>(bsManualInput);
+      expect(bsFieldAfter.controller?.text, equals('4000.00'));
+    });
+
+    testWidgets('7. Conservación de la tasa manual al volver a seleccionar la moneda activa', (tester) async {
+      tester.view.physicalSize = const Size(1080, 4000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      settingsProvider.monedaPref = 'VES';
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('btn_ajustar_tasas_ves')));
+      await tester.pumpAndSettle();
+
+      final tasaInput = find.byKey(const Key('input_tasa_ves'));
+      await tester.enterText(tasaInput, '88.50');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('expense_currency_ves_btn')));
+      await tester.pumpAndSettle();
+
+      final tasaField = tester.widget<TextFormField>(find.byKey(const Key('input_tasa_ves')));
+      expect(tasaField.controller?.text, equals('88.50'));
+    });
+
+    testWidgets('8. Valores correctos en el objeto o comando final enviado al guardado', (tester) async {
+      tester.view.physicalSize = const Size(1080, 4000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      final storeField = find.widgetWithText(TextFormField, '¿Dónde compraste?');
+      await tester.enterText(storeField, 'Panadería El Sol');
+      await tester.pumpAndSettle();
+
+      final conceptField = find.widgetWithText(TextFormField, 'Concepto');
+      await tester.enterText(conceptField, 'Pan de jamón');
+      await tester.pumpAndSettle();
+
+      final totalInput = find.widgetWithText(TextFormField, r'Monto total ($)');
+      await tester.enterText(totalInput, '25.00');
+      await tester.pumpAndSettle();
+
+      final saveButton = find.widgetWithText(ElevatedButton, 'Guardar Gasto');
+      await tester.tap(saveButton);
+      await tester.pumpAndSettle();
+
+      expect(gastoProvider.ultimoGastoGuardado, isNotNull);
+      final guardado = gastoProvider.ultimoGastoGuardado!;
+      expect(guardado.comercio, equals('Panadería El Sol'));
+      expect(guardado.moneda, equals('USD'));
+      expect(guardado.totalOriginal, equals(2500));
+      expect(guardado.totalUsd, equals(2500));
+      expect(gastoProvider.ultimosItemsGuardados, isNotNull);
+      expect(gastoProvider.ultimosItemsGuardados!.first.descripcion, equals('Pan de jamón'));
+    });
   });
 }

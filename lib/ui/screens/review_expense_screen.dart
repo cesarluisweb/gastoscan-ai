@@ -124,6 +124,8 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
   late String _selectedFecha;
   late String _selectedMoneda;
   String _monedaItems = 'USD';
+  bool _userTouchedCurrency = false;
+  SettingsProvider? _settingsProvider;
 
   File? _pickedImage;
   bool _imageDeleted = false;
@@ -244,13 +246,13 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       tUsd = allRates.usd;
       tEur = allRates.eur;
       tUsdt = allRates.usdt;
-      if (tUsd <= 50.0 && settings.tasaCambioVesUsd > 50.0) {
+      if (!ExchangeRateService.isValidMonetaryRate(tUsd) && ExchangeRateService.isValidMonetaryRate(settings.tasaCambioVesUsd)) {
         tUsd = settings.tasaCambioVesUsd;
       }
-      if (tEur <= 50.0 && settings.tasaCambioVesEur > 50.0) {
+      if (!ExchangeRateService.isValidMonetaryRate(tEur) && ExchangeRateService.isValidMonetaryRate(settings.tasaCambioVesEur)) {
         tEur = settings.tasaCambioVesEur;
       }
-      if (tUsdt <= 50.0 && settings.tasaCambioVesUsdt > 50.0) {
+      if (!ExchangeRateService.isValidMonetaryRate(tUsdt) && ExchangeRateService.isValidMonetaryRate(settings.tasaCambioVesUsdt)) {
         tUsdt = settings.tasaCambioVesUsdt;
       }
       esUsdExacta = !allRates.esReferencia;
@@ -327,14 +329,17 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       _selectedFecha = gasto.fecha;
 
       final String fuente = gasto.fuenteTasaCambio ?? '';
-      final bool isIndexedEur = gasto.moneda == 'VES' && fuente.contains('indexado a EUR');
+      final bool isIndexedEur = gasto.moneda == 'VES' &&
+          (fuente.contains('indexado a EUR') || fuente == 'EUR_BCV_INDEXADO');
       final bool isIndexedBcv = gasto.moneda == 'VES' &&
           (fuente.contains('indexado a USD') ||
               isIndexedEur ||
-              fuente.contains('BCV (Pago en Bs.'));
+              fuente.contains('BCV (Pago en Bs.') ||
+              fuente == 'EUR_BCV_INDEXADO');
       final bool isIndexedUsdt = gasto.moneda == 'VES' &&
           (fuente.contains('indexado a USDT') ||
-              fuente.contains('Binance P2P'));
+              fuente.contains('Binance P2P') ||
+              fuente == 'USDT_INDEXADO');
 
       double tasa = gasto.tasaCambio;
       if (tasa <= 0 && gasto.moneda == 'VES' && gasto.totalUsd > 0) {
@@ -352,7 +357,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
 
       if (isIndexedBcv || isIndexedUsdt) {
         _selectedMoneda = isIndexedEur ? 'EUR' : 'USD';
-        _metodoLiquidacionUsd = isIndexedUsdt
+        _metodoLiquidacionUsd = (isIndexedUsdt && !isIndexedEur)
             ? MetodoLiquidacionUsd.pagadoEnBsUsdt
             : MetodoLiquidacionUsd.pagadoEnBsBcv;
         final double indexedAmount = isIndexedUsdt
@@ -447,6 +452,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         }
       } else {
         _metodoLiquidacionUsd = MetodoLiquidacionUsd.pagadoEnDivisa;
+      }
+      if (_selectedMoneda == 'EUR' && _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsUsdt) {
+        _metodoLiquidacionUsd = MetodoLiquidacionUsd.pagadoEnBsBcv;
       }
 
       if (_items.isEmpty) {
@@ -557,7 +565,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       if (parsed > 0) return parsed;
       return settings.tasaCambioVesEur > 0
           ? settings.tasaCambioVesEur
-          : (settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : AppConstants.defaultTasaCambio);
+          : (settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : 0.0);
     }
     final parsedUsd = tryParseAmount(_tasaCambioCtrl.text, isPrice: false);
     final offUsd = _tasaOficialUsd ?? (_tasaUsdFecha ?? settings.tasaCambioVesUsd);
@@ -566,7 +574,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     }
     if (_tasaUsdFecha != null && _tasaUsdFecha! > 0) return _tasaUsdFecha!;
     if (parsedUsd != null && parsedUsd > 0) return parsedUsd;
-    return settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : AppConstants.defaultTasaCambio;
+    return settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : 0.0;
   }
 
   double get _totalUsdtCalculado {
@@ -629,7 +637,39 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final settings = Provider.of<SettingsProvider>(context);
+    if (_settingsProvider != settings) {
+      _settingsProvider?.removeListener(_onSettingsChanged);
+      _settingsProvider = settings;
+      _settingsProvider?.addListener(_onSettingsChanged);
+    }
+  }
+
+  void _onSettingsChanged() {
+    if (!mounted) return;
+    if (!_userTouchedCurrency &&
+        widget.existingGasto == null &&
+        (widget.extractedData == null || widget.extractedData!.moneda.trim().isEmpty)) {
+      final newMoneda = _settingsProvider?.monedaPrincipal;
+      if (newMoneda != null &&
+          newMoneda.isNotEmpty &&
+          AppConstants.monedas.contains(newMoneda) &&
+          newMoneda != _selectedMoneda) {
+        setState(() {
+          _selectedMoneda = newMoneda;
+          _monedaItems = newMoneda;
+          _initialMoneda = newMoneda;
+          _recalcularTotalUsd();
+        });
+      }
+    }
+  }
+
+  @override
   void dispose() {
+    _settingsProvider?.removeListener(_onSettingsChanged);
     _comercioCtrl.dispose();
     _totalOriginalCtrl.dispose();
     _tasaCambioCtrl.dispose();
@@ -1108,6 +1148,16 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       tasaParaGasto = tasaBcv;
       fuenteFinal = 'BCV (Pago en Bs. indexado a $_selectedMoneda)';
     } else if ((_selectedMoneda == 'USD' || _selectedMoneda == 'EUR') && _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsUsdt) {
+      if (_selectedMoneda == 'EUR') {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('El pago en Bs. indexado a USDT solo aplica a precios en USD/USDT. Si el precio era en EUR, regístralo como Divisa directa o en Bolívares (VES).'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
       // Opción 2: En Bs. · precio a tasa P2P
       monedaFinal = 'VES';
       final tasaUsdtEfectiva = tasaUsdtFinal > 0 ? tasaUsdtFinal : settings.tasaCambioVesUsdt;
@@ -2223,8 +2273,14 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                               key: Key('expense_currency_${m.toLowerCase()}_btn'),
                               onTap: () {
                                 if (_selectedMoneda == m) return;
+                                _userTouchedCurrency = true;
                                 setState(() {
                                   _selectedMoneda = m;
+                                  _monedaItems = m;
+
+                                  if (m == 'EUR' && _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsUsdt) {
+                                    _metodoLiquidacionUsd = MetodoLiquidacionUsd.pagadoEnBsBcv;
+                                  }
 
                                   final today = DateTime.now().toIso8601String().substring(0, 10);
                                   final isToday = _selectedFecha == today;
@@ -2828,7 +2884,10 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                     title: 'Dólar BCV',
                                     rate: _tasaUsdFecha ?? settings.tasaCambioVesUsd,
                                     isSelected: _monedaTasaSeleccionadaVes == 'USD',
-                                    onTap: () => setState(() => _monedaTasaSeleccionadaVes = 'USD'),
+                                    onTap: () {
+                                      if (_monedaTasaSeleccionadaVes == 'USD') return;
+                                      setState(() => _monedaTasaSeleccionadaVes = 'USD');
+                                    },
                                   ),
                                 ),
                                 const SizedBox(width: 8),
@@ -2838,7 +2897,10 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                     title: 'Euro BCV',
                                     rate: _tasaEurFecha ?? settings.tasaCambioVesEur,
                                     isSelected: _monedaTasaSeleccionadaVes == 'EUR',
-                                    onTap: () => setState(() => _monedaTasaSeleccionadaVes = 'EUR'),
+                                    onTap: () {
+                                      if (_monedaTasaSeleccionadaVes == 'EUR') return;
+                                      setState(() => _monedaTasaSeleccionadaVes = 'EUR');
+                                    },
                                   ),
                                 ),
                                 const SizedBox(width: 8),
@@ -2848,7 +2910,10 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                     title: 'USDT P2P',
                                     rate: _tasaUsdtFecha ?? settings.tasaCambioVesUsdt,
                                     isSelected: _monedaTasaSeleccionadaVes == 'USDT',
-                                    onTap: () => setState(() => _monedaTasaSeleccionadaVes = 'USDT'),
+                                    onTap: () {
+                                      if (_monedaTasaSeleccionadaVes == 'USDT') return;
+                                      setState(() => _monedaTasaSeleccionadaVes = 'USDT');
+                                    },
                                   ),
                                 ),
                               ],
@@ -2975,6 +3040,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                             subtitle: 'Directa',
                             isSelected: _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnDivisa,
                             onTap: () {
+                              if (_metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnDivisa) return;
                               setState(() {
                                 _metodoLiquidacionUsd = MetodoLiquidacionUsd.pagadoEnDivisa;
                                 _bolivaresAjustadosManualmente = false;
@@ -2991,6 +3057,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                             subtitle: 'A tasa BCV',
                             isSelected: _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsBcv,
                             onTap: () {
+                              if (_metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsBcv) return;
                               setState(() {
                                 _metodoLiquidacionUsd = MetodoLiquidacionUsd.pagadoEnBsBcv;
                                 _bolivaresAjustadosManualmente = false;
@@ -2999,22 +3066,25 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                             },
                           ),
                         ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: _buildLiquidacionPill(
-                            key: const Key('btn_pagado_en_bs_usdt'),
-                            title: 'En Bs.',
-                            subtitle: 'A tasa P2P',
-                            isSelected: _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsUsdt,
-                            onTap: () {
-                              setState(() {
-                                _metodoLiquidacionUsd = MetodoLiquidacionUsd.pagadoEnBsUsdt;
-                                _bolivaresAjustadosManualmente = false;
-                                _recalcularTotalUsd();
-                              });
-                            },
+                        if (_selectedMoneda != 'EUR') ...[
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: _buildLiquidacionPill(
+                              key: const Key('btn_pagado_en_bs_usdt'),
+                              title: 'En Bs.',
+                              subtitle: 'A tasa P2P',
+                              isSelected: _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsUsdt,
+                              onTap: () {
+                                if (_metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsUsdt) return;
+                                setState(() {
+                                  _metodoLiquidacionUsd = MetodoLiquidacionUsd.pagadoEnBsUsdt;
+                                  _bolivaresAjustadosManualmente = false;
+                                  _recalcularTotalUsd();
+                                });
+                              },
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                     if (_metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsBcv || _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsUsdt)

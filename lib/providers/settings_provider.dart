@@ -6,6 +6,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../core/constants/app_constants.dart';
+import '../domain/monetary/rate_market.dart';
 import '../services/exchange_rate_service.dart';
 import '../services/notification_service.dart';
 
@@ -65,29 +66,59 @@ class SettingsProvider with ChangeNotifier {
     }
   }
 
-  Future<void> loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
+  Future<void> loadSettings({SharedPreferences? prefsInstance}) async {
+    final prefs = prefsInstance ?? await SharedPreferences.getInstance();
 
-    // 1. Lectura inmediata de preferencias y tasas en caché (primer milisegundo)
+    // 1. Lectura inmediata de preferencias (primer milisegundo)
     _guardarFotos = prefs.getBool(AppConstants.prefGuardarFotos) ?? AppConstants.defaultGuardarFotos;
 
-    // Descartar valores obsoletos <= 50.0 guardados en caché de pruebas previas
-    double? cachedUsd = prefs.getDouble('cached_rate_usd') ??
-        prefs.getDouble(AppConstants.prefTasaCambio);
-    if (cachedUsd != null && cachedUsd <= 50.0) cachedUsd = null;
-    _tasaCambioVesUsd = cachedUsd ?? AppConstants.defaultTasaCambio;
+    // Asegurar purga de caché histórica previa al consumo de semillas (A-07 & B2)
+    int purgeResult = -1;
+    try {
+      purgeResult = await ExchangeRateService.ensureCacheHistoricaPurgada(prefsInstance: prefs);
+    } catch (e) {
+      debugPrint('SettingsProvider: Error al asegurar purga de caché histórica: $e');
+      purgeResult = -1;
+    }
 
-    double? cachedEur = prefs.getDouble('cached_rate_eur');
-    if (cachedEur != null && cachedEur <= 50.0) cachedEur = null;
-    _tasaCambioVesEur = cachedEur ?? 0.0;
+    if (purgeResult != -1) {
+      // Purga exitosa: consumir semillas locales verificadas según validador canónico (D-08)
+      double? cachedUsd;
+      final rawUsd = prefs.get('cached_rate_usd') ?? prefs.get(AppConstants.prefTasaCambio);
+      if (isValidMonetaryRate(rawUsd)) {
+        cachedUsd = (rawUsd as num).toDouble();
+      }
+      _tasaCambioVesUsd = cachedUsd ?? AppConstants.defaultTasaCambio;
 
-    double? cachedUsdt = prefs.getDouble('cached_rate_usdt');
-    if (cachedUsdt != null && cachedUsdt <= 50.0) cachedUsdt = null;
-    _tasaCambioVesUsdt = cachedUsdt ?? _tasaCambioVesUsd;
+      double? cachedEur;
+      final rawEur = prefs.get('cached_rate_eur');
+      if (isValidMonetaryRate(rawEur)) {
+        cachedEur = (rawEur as num).toDouble();
+      }
+      _tasaCambioVesEur = cachedEur ?? 0.0;
 
-    final timestampStr = prefs.getString('cached_exchange_rates_timestamp');
-    if (timestampStr != null) {
-      _ultimaActualizacionTasas = DateTime.tryParse(timestampStr);
+      double? cachedUsdt;
+      final rawUsdt = prefs.get('cached_rate_usdt');
+      if (isValidMonetaryRate(rawUsdt)) {
+        cachedUsdt = (rawUsdt as num).toDouble();
+      }
+      // Preservar fallback semántico USD -> USDT (H-1 pendiente de E0-03)
+      _tasaCambioVesUsdt = cachedUsdt ?? _tasaCambioVesUsd;
+
+      // NEW-6: Comprobación segura de tipo String antes de leer timestamp
+      final rawTimestamp = prefs.get('cached_exchange_rates_timestamp');
+      if (rawTimestamp is String) {
+        _ultimaActualizacionTasas = DateTime.tryParse(rawTimestamp);
+      } else {
+        _ultimaActualizacionTasas = null;
+      }
+    } else {
+      // Purga fallida (-1): comportamiento fail-closed. No consumir semillas locales no verificadas
+      debugPrint('SettingsProvider: Purga fallida (-1). Se omite caché local no verificada.');
+      _tasaCambioVesUsd = AppConstants.defaultTasaCambio;
+      _tasaCambioVesEur = 0.0;
+      _tasaCambioVesUsdt = AppConstants.defaultTasaCambio;
+      _ultimaActualizacionTasas = null;
     }
 
     _monedaPrincipal = prefs.getString(AppConstants.prefMonedaPrincipal) ?? AppConstants.defaultMoneda;
@@ -192,18 +223,18 @@ class SettingsProvider with ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
 
       if (!allRates.esReferencia) {
-        // Solo se aplica lo que llegó en vivo válido (> 50.0); el resto conserva su
+        // Solo se aplica lo que llegó en vivo válido según validador canónico (D-08); el resto conserva su
         // valor previo en vez de pisarse con ceros o semillas obsoletas.
-        if (allRates.usd > 50.0) {
+        if (isValidMonetaryRate(allRates.usd)) {
           _tasaCambioVesUsd = allRates.usd;
           await prefs.setDouble(AppConstants.prefTasaCambio, _tasaCambioVesUsd);
           await prefs.setDouble('cached_rate_usd', _tasaCambioVesUsd);
         }
-        if (allRates.eur > 50.0) {
+        if (isValidMonetaryRate(allRates.eur)) {
           _tasaCambioVesEur = allRates.eur;
           await prefs.setDouble('cached_rate_eur', _tasaCambioVesEur);
         }
-        if (allRates.usdt > 50.0) {
+        if (isValidMonetaryRate(allRates.usdt)) {
           _tasaCambioVesUsdt = allRates.usdt;
           await prefs.setDouble('cached_rate_usdt', _tasaCambioVesUsdt);
         }
@@ -212,15 +243,15 @@ class SettingsProvider with ChangeNotifier {
         await prefs.setString('cached_exchange_rates_timestamp', _ultimaActualizacionTasas!.toIso8601String());
         exito = true;
       } else {
-        // Modo referencia: si allRates trajo tasas válidas (> 50.0) por caché o fallback, asignarlas
-        if (allRates.usd > 50.0) {
+        // Modo referencia: si allRates trajo tasas válidas por caché o fallback, asignarlas
+        if (isValidMonetaryRate(allRates.usd)) {
           _tasaCambioVesUsd = allRates.usd;
           await prefs.setDouble(AppConstants.prefTasaCambio, _tasaCambioVesUsd);
         }
-        if (allRates.eur > 50.0) {
+        if (isValidMonetaryRate(allRates.eur)) {
           _tasaCambioVesEur = allRates.eur;
         }
-        if (allRates.usdt > 50.0) {
+        if (isValidMonetaryRate(allRates.usdt)) {
           _tasaCambioVesUsdt = allRates.usdt;
         }
         _tasasSonReferencia = true;
@@ -264,6 +295,10 @@ class SettingsProvider with ChangeNotifier {
   }
 
   Future<void> setTasaCambio(double tasa) async {
+    if (!isValidMonetaryRate(tasa)) {
+      debugPrint("SettingsProvider: Tasa manual rechazada por fuera de dominio: $tasa");
+      return;
+    }
     _tasaCambioVesUsd = tasa;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble(AppConstants.prefTasaCambio, _tasaCambioVesUsd);
