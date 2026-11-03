@@ -109,7 +109,7 @@ void main() {
       expect(spent, equals(100.0));
     });
 
-    test('setTasasReferencia rechaza Infinity, NaN, 0.5, 1.0 y valores negativos', () {
+    test('setTasasReferencia rechaza Infinity, NaN, 0.5, 1.0 y valores negativos', () async {
       final provider = GastoProvider(repository: fakeRepo, autoLoad: false);
 
       // Intentar pasar Infinity
@@ -131,7 +131,7 @@ void main() {
       provider.prefsInstance = TestSharedPreferences({
         ExchangeRateService.prefKeyCacheHistoricaPurgada: true,
       });
-      provider.cargarDatos();
+      await provider.cargarDatos();
       provider.setTasasReferencia(tasaUsd: 45.0, tasaEur: 50.0);
 
       final spent = provider.getSpentForCategory('Alimentos', moneda: 'EUR');

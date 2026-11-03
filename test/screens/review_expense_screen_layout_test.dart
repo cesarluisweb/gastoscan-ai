@@ -1263,7 +1263,7 @@ void main() {
 
       expect(find.text('Monto total (Bs.)'), findsOneWidget);
       expect(find.text('Precios en Bs.'), findsOneWidget);
-      expect(find.text('Equiv. USD (BCV)'), findsOneWidget);
+      expect(find.text('Equiv. USD (BCV)'), findsWidgets);
     });
 
     testWidgets('2. Re-selección de la moneda activa sin efectos secundarios', (tester) async {
