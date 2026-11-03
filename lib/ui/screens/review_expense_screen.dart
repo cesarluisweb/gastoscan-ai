@@ -12,6 +12,7 @@ import '../../data/datasources/local/database_helper.dart';
 import '../../data/models/gasto_model.dart';
 import '../../data/models/gemini_extraction_result.dart';
 import '../../data/models/item_gasto_model.dart';
+import '../../domain/monetary/rate_market.dart';
 import '../../providers/gasto_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/chat_provider.dart';
@@ -246,13 +247,13 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       tUsd = allRates.usd;
       tEur = allRates.eur;
       tUsdt = allRates.usdt;
-      if (!ExchangeRateService.isValidMonetaryRate(tUsd) && ExchangeRateService.isValidMonetaryRate(settings.tasaCambioVesUsd)) {
+      if (!isValidMonetaryRate(tUsd) && isValidMonetaryRate(settings.tasaCambioVesUsd)) {
         tUsd = settings.tasaCambioVesUsd;
       }
-      if (!ExchangeRateService.isValidMonetaryRate(tEur) && ExchangeRateService.isValidMonetaryRate(settings.tasaCambioVesEur)) {
+      if (!isValidMonetaryRate(tEur) && isValidMonetaryRate(settings.tasaCambioVesEur)) {
         tEur = settings.tasaCambioVesEur;
       }
-      if (!ExchangeRateService.isValidMonetaryRate(tUsdt) && ExchangeRateService.isValidMonetaryRate(settings.tasaCambioVesUsdt)) {
+      if (!isValidMonetaryRate(tUsdt) && isValidMonetaryRate(settings.tasaCambioVesUsdt)) {
         tUsdt = settings.tasaCambioVesUsdt;
       }
       esUsdExacta = !allRates.esReferencia;

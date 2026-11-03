@@ -44,8 +44,8 @@ class FakeGastoRepositoryForProvider extends Fake implements GastoRepository {
 
   @override
   Future<Map<String, dynamic>?> obtenerUltimoPresupuestoConfigurado({
-    required int antesDeAnio,
-    required int antesDeMes,
+    int? antesDeAnio,
+    int? antesDeMes,
     bool estrictamenteAnterior = false,
   }) async => null;
 }
