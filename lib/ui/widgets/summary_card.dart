@@ -4,8 +4,6 @@ import 'budget_bottom_sheet.dart';
 import 'currency_lens_dropdown.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/currency_formatter.dart';
-import '../../domain/finance/savings_health_models.dart';
-import '../../domain/finance/savings_health_calculator.dart';
 
 class SummaryCard extends StatelessWidget {
   final double totalUsd;
@@ -127,17 +125,6 @@ class SummaryCard extends StatelessWidget {
         return CurrencyFormatter.formatVes(inVes);
       }
     }
-
-    final snapshot = hasSavingsGoal
-        ? SavingsHealthCalculator.calculate(
-            presupuestoGeneral: budgetInLens,
-            metaAhorro: metaInLens,
-            gastoAcumulado: effectiveSpent,
-            diaActual: isCurrentMonth ? now.day : DateTime(targetYear, targetMonth + 1, 0).day,
-            diasTotalesMes: DateTime(targetYear, targetMonth + 1, 0).day,
-            moneda: monedaPrincipal,
-          )
-        : null;
 
     return Container(
       width: double.infinity,
