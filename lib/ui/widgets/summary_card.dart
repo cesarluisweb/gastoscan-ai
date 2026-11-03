@@ -102,8 +102,6 @@ class SummaryCard extends StatelessWidget {
     final now = DateTime.now();
     final targetYear = anio ?? now.year;
     final targetMonth = mes ?? now.month;
-    final isCurrentMonth = (mes == null || anio == null) ||
-        (now.month == targetMonth && now.year == targetYear);
     final isPastMonth = targetYear < now.year ||
         (targetYear == now.year && targetMonth < now.month);
 

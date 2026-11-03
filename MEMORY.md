@@ -2,7 +2,7 @@
 > Regla de oro: Mantener en máximo ~50 líneas. Lo permanente se gradúa a AGENTS.md o DESIGN.md.
 
 ## Estado Actual Inmediato
-- **Rama:** `main` (Trabajo local de UI-15 completado, sin commit/push pendiente de revisión).
+- **Rama:** `main` (Trabajo de UI-15 en proceso de validación CI).
 - **Fase A & Fase 5:** Integradas en `main`; Closed Testing activo en Google Play.
 - **UI-15 (Tanque que se Vacía en Medidores de Presupuesto):** `Implementada 🔧`
   - Invertidas barras de presupuesto en `SummaryCard`, `AnalysisScreen`, `CategoryChart` y `panel.astro` (escala `100% -> 0%`).
