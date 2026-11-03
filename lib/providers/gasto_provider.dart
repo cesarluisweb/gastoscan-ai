@@ -129,14 +129,18 @@ class GastoProvider with ChangeNotifier {
     }
   }
 
-  Future<void> cargarDatos({SharedPreferences? prefsInstance}) async {
+  SharedPreferences? _prefsInstance;
+  @visibleForTesting
+  set prefsInstance(SharedPreferences? prefs) => _prefsInstance = prefs;
+
+  Future<void> cargarDatos() async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
       try {
-        final prefs = prefsInstance ?? await SharedPreferences.getInstance();
+        final prefs = _prefsInstance ?? await SharedPreferences.getInstance();
         final purgeResult = await ExchangeRateService.ensureCacheHistoricaPurgada(prefsInstance: prefs);
         if (purgeResult != -1) {
           final rawUsd = prefs.get('cached_rate_usd') ?? prefs.get(AppConstants.prefTasaCambio);

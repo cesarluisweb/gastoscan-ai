@@ -77,7 +77,8 @@ void main() {
       failingStore.returnFalseOnRemove = true;
 
       final provider = GastoProvider(repository: fakeRepo, autoLoad: false);
-      await provider.cargarDatos(prefsInstance: failingStore);
+      provider.prefsInstance = failingStore;
+      await provider.cargarDatos();
 
       // Los datos generales de gastos se cargan a pesar de la omisión de caché
       expect(fakeRepo.obtenerGastosCalled, isTrue);
@@ -98,7 +99,8 @@ void main() {
       });
 
       final provider = GastoProvider(repository: fakeRepo, autoLoad: false);
-      await provider.cargarDatos(prefsInstance: storeWithInfinity);
+      provider.prefsInstance = storeWithInfinity;
+      await provider.cargarDatos();
 
       // Intentar calcular gasto para categoría con EUR: al descartarse Infinity,
       // effEur permanece en 0.0 y devuelve el monto base USD (100.0), nunca 0.0 ni NaN
@@ -126,9 +128,10 @@ void main() {
       provider.setTasasReferencia(tasaUsd: 45.0, tasaEur: 50.0);
 
       // Con effEur = 50.0 y 4000.0 VES: 4000 / 50 = 80.0
-      provider.cargarDatos(prefsInstance: TestSharedPreferences({
+      provider.prefsInstance = TestSharedPreferences({
         ExchangeRateService.prefKeyCacheHistoricaPurgada: true,
-      }));
+      });
+      provider.cargarDatos();
       provider.setTasasReferencia(tasaUsd: 45.0, tasaEur: 50.0);
 
       final spent = provider.getSpentForCategory('Alimentos', moneda: 'EUR');
@@ -144,7 +147,8 @@ void main() {
       });
 
       final provider = GastoProvider(repository: fakeRepo, autoLoad: false);
-      await provider.cargarDatos(prefsInstance: validStore);
+      provider.prefsInstance = validStore;
+      await provider.cargarDatos();
 
       expect(fakeRepo.obtenerGastosCalled, isTrue);
       expect(provider.errorMessage, isNull);

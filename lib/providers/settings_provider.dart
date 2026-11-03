@@ -66,8 +66,12 @@ class SettingsProvider with ChangeNotifier {
     }
   }
 
-  Future<void> loadSettings({SharedPreferences? prefsInstance}) async {
-    final prefs = prefsInstance ?? await SharedPreferences.getInstance();
+  SharedPreferences? _prefsInstance;
+  @visibleForTesting
+  set prefsInstance(SharedPreferences? prefs) => _prefsInstance = prefs;
+
+  Future<void> loadSettings() async {
+    final prefs = _prefsInstance ?? await SharedPreferences.getInstance();
 
     // 1. Lectura inmediata de preferencias (primer milisegundo)
     _guardarFotos = prefs.getBool(AppConstants.prefGuardarFotos) ?? AppConstants.defaultGuardarFotos;

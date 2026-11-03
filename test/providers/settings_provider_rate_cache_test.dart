@@ -69,7 +69,8 @@ void main() {
       failingStore.returnFalseOnRemove = true;
 
       final provider = TestableSettingsProvider(secureStorage: fakeSecureStorage);
-      await provider.loadSettings(prefsInstance: failingStore);
+      provider.prefsInstance = failingStore;
+      await provider.loadSettings();
 
       // No debe consumir 88.0 ni 95.0 porque la purga falló (-1)
       expect(provider.tasaCambioVesUsd, equals(AppConstants.defaultTasaCambio));
@@ -86,7 +87,8 @@ void main() {
       });
 
       final provider = TestableSettingsProvider(secureStorage: fakeSecureStorage);
-      await provider.loadSettings(prefsInstance: validStore);
+      provider.prefsInstance = validStore;
+      await provider.loadSettings();
 
       expect(provider.tasaCambioVesUsd, equals(45.0));
       expect(provider.tasaCambioVesEur, equals(49.0));
@@ -102,7 +104,8 @@ void main() {
       });
 
       final provider = TestableSettingsProvider(secureStorage: fakeSecureStorage);
-      await provider.loadSettings(prefsInstance: storeWithBadValues);
+      provider.prefsInstance = storeWithBadValues;
+      await provider.loadSettings();
 
       // Todos los valores inválidos deben ser descartados, adoptando defaults
       expect(provider.tasaCambioVesUsd.isFinite, isTrue);
@@ -120,7 +123,8 @@ void main() {
       });
 
       final provider = TestableSettingsProvider(secureStorage: fakeSecureStorage);
-      await provider.loadSettings(prefsInstance: storeWithBadTimestamp);
+      provider.prefsInstance = storeWithBadTimestamp;
+      await provider.loadSettings();
 
       expect(provider.tasaCambioVesUsd, equals(45.0));
       expect(provider.ultimaActualizacionTasas, isNull);
@@ -132,7 +136,8 @@ void main() {
       });
 
       final provider = TestableSettingsProvider(secureStorage: fakeSecureStorage);
-      await provider.loadSettings(prefsInstance: store);
+      provider.prefsInstance = store;
+      await provider.loadSettings();
 
       // Intentar fijar NaN
       await provider.setTasaCambio(double.nan);

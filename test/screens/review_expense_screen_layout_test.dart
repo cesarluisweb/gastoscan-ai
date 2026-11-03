@@ -1380,6 +1380,7 @@ void main() {
         id: 12,
         uuid: 'gasto-indexado-uuid',
         fecha: '2026-02-10',
+        creadoEn: '2026-02-10T12:00:00Z',
         comercio: 'Automercado Indexado',
         moneda: 'VES',
         totalOriginal: 400000,
