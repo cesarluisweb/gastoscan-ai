@@ -2,6 +2,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:gastoscan_ai/core/utils/date_formatter.dart';
 import 'package:gastoscan_ai/data/datasources/local/database_helper.dart';
 import 'package:gastoscan_ai/data/models/gasto_model.dart';
 import 'package:gastoscan_ai/providers/gasto_provider.dart';
@@ -172,23 +173,88 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
+      final now = DateTime.now();
+      final pastYear = now.month == 1 ? now.year - 1 : now.year;
+      final pastMonth = now.month == 1 ? 12 : now.month - 1;
+      fakeGastoProvider.cambiarMes(now.year, now.month);
+      fakeGastoProvider.setUltimoMes({'year': pastYear, 'month': pastMonth});
+
       await tester.pumpWidget(createDashboardWidget());
       await tester.pumpAndSettle();
 
-      // Debe mostrar el botón para saltar al mes anterior con gastos (Octubre 2026)
       final jumpBtnFinder = find.byKey(const Key('empty_state_jump_to_latest_btn'));
       expect(jumpBtnFinder, findsOneWidget);
-      expect(find.textContaining('Octubre 2026'), findsWidgets);
+      expect(find.byKey(const Key('empty_state_return_to_current_month_btn')), findsNothing);
 
-      // Al pulsar el botón, debe cambiar el mes a Octubre 2026
       await tester.tap(jumpBtnFinder);
       await tester.pumpAndSettle();
 
-      expect(fakeGastoProvider.selectedYear, equals(2026));
-      expect(fakeGastoProvider.selectedMonth, equals(10));
+      expect(fakeGastoProvider.selectedYear, equals(pastYear));
+      expect(fakeGastoProvider.selectedMonth, equals(pastMonth));
     });
 
-    testWidgets('Dashboard: shows return to current month button when trapped in historical year (2025)',
+    testWidgets('Dashboard: deduplication - when ultimo is current month and viewing empty historical month, renders exactly 1 main button',
+        (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final now = DateTime.now();
+      fakeGastoProvider.cambiarMes(2025, 5);
+      fakeGastoProvider.setUltimoMes({'year': now.year, 'month': now.month});
+
+      await tester.pumpWidget(createDashboardWidget());
+      await tester.pumpAndSettle();
+
+      final returnBtnFinder = find.byKey(const Key('empty_state_return_to_current_month_btn'));
+      expect(returnBtnFinder, findsOneWidget);
+      expect(find.byKey(const Key('empty_state_jump_to_latest_btn')), findsNothing);
+      expect(find.byType(ElevatedButton), findsOneWidget);
+      expect(find.byType(OutlinedButton), findsNothing);
+      expect(find.textContaining('Volver al mes actual'), findsOneWidget);
+      expect(find.descendant(of: returnBtnFinder, matching: find.byIcon(Icons.arrow_forward)), findsOneWidget);
+
+      await tester.tap(returnBtnFinder);
+      await tester.pumpAndSettle();
+
+      expect(fakeGastoProvider.selectedYear, equals(now.year));
+      expect(fakeGastoProvider.selectedMonth, equals(now.month));
+    });
+
+    testWidgets('Dashboard: two buttons - when ultimo is different from current month and viewing empty historical month, renders both buttons with OutlinedButton below',
+        (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final now = DateTime.now();
+      final pastYear = now.month == 1 ? now.year - 1 : now.year;
+      final pastMonth = now.month == 1 ? 12 : now.month - 1;
+      fakeGastoProvider.cambiarMes(2025, 5);
+      fakeGastoProvider.setUltimoMes({'year': pastYear, 'month': pastMonth});
+
+      await tester.pumpWidget(createDashboardWidget());
+      await tester.pumpAndSettle();
+
+      final jumpBtnFinder = find.byKey(const Key('empty_state_jump_to_latest_btn'));
+      final returnBtnFinder = find.byKey(const Key('empty_state_return_to_current_month_btn'));
+      expect(jumpBtnFinder, findsOneWidget);
+      expect(returnBtnFinder, findsOneWidget);
+      expect(find.byType(ElevatedButton), findsOneWidget);
+      expect(find.byType(OutlinedButton), findsOneWidget);
+
+      expect(find.widgetWithText(ElevatedButton, 'Ver gastos de ${DateFormatter.getMonthName(pastMonth)} $pastYear'), findsOneWidget);
+      expect(find.descendant(of: jumpBtnFinder, matching: find.byIcon(Icons.arrow_forward)), findsOneWidget);
+      expect(find.widgetWithText(OutlinedButton, 'Volver a ${DateFormatter.getMonthName(now.month)} ${now.year} (Mes actual)'), findsOneWidget);
+
+      await tester.tap(jumpBtnFinder);
+      await tester.pumpAndSettle();
+
+      expect(fakeGastoProvider.selectedYear, equals(pastYear));
+      expect(fakeGastoProvider.selectedMonth, equals(pastMonth));
+    });
+
+    testWidgets('Dashboard: shows return to current month button when trapped in historical year (2025) with no records',
         (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 1.0;
@@ -202,6 +268,8 @@ void main() {
 
       final returnBtnFinder = find.byKey(const Key('empty_state_return_to_current_month_btn'));
       expect(returnBtnFinder, findsOneWidget);
+      expect(find.byKey(const Key('empty_state_jump_to_latest_btn')), findsNothing);
+      expect(find.byType(OutlinedButton), findsOneWidget);
       expect(find.text('Sin gastos en Noviembre 2025'), findsOneWidget);
 
       await tester.tap(returnBtnFinder);
@@ -212,23 +280,59 @@ void main() {
       expect(fakeGastoProvider.selectedMonth, equals(now.month));
     });
 
-    testWidgets('ExpenseHistory: shows jump to latest month button when empty with prior records',
+    testWidgets('ExpenseHistory: deduplication - when ultimo is current month and viewing empty historical month, renders 1 button',
         (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
+      final now = DateTime.now();
+      fakeGastoProvider.cambiarMes(2025, 5);
+      fakeGastoProvider.setUltimoMes({'year': now.year, 'month': now.month});
+
       await tester.pumpWidget(createExpenseHistoryWidget());
       await tester.pumpAndSettle();
 
-      final jumpBtnFinder = find.byKey(const Key('expense_history_jump_to_latest_btn'));
+      final returnBtnFinder = find.byKey(const Key('empty_state_return_to_current_month_btn'));
+      expect(returnBtnFinder, findsOneWidget);
+      expect(find.byKey(const Key('empty_state_jump_to_latest_btn')), findsNothing);
+      expect(find.byType(ElevatedButton), findsOneWidget);
+      expect(find.byType(OutlinedButton), findsNothing);
+
+      await tester.tap(returnBtnFinder);
+      await tester.pumpAndSettle();
+
+      expect(fakeGastoProvider.selectedYear, equals(now.year));
+      expect(fakeGastoProvider.selectedMonth, equals(now.month));
+    });
+
+    testWidgets('ExpenseHistory: two buttons - when ultimo is different from current month and viewing empty historical month, renders both buttons',
+        (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final now = DateTime.now();
+      final pastYear = now.month == 1 ? now.year - 1 : now.year;
+      final pastMonth = now.month == 1 ? 12 : now.month - 1;
+      fakeGastoProvider.cambiarMes(2025, 5);
+      fakeGastoProvider.setUltimoMes({'year': pastYear, 'month': pastMonth});
+
+      await tester.pumpWidget(createExpenseHistoryWidget());
+      await tester.pumpAndSettle();
+
+      final jumpBtnFinder = find.byKey(const Key('empty_state_jump_to_latest_btn'));
+      final returnBtnFinder = find.byKey(const Key('empty_state_return_to_current_month_btn'));
       expect(jumpBtnFinder, findsOneWidget);
+      expect(returnBtnFinder, findsOneWidget);
+      expect(find.byType(ElevatedButton), findsOneWidget);
+      expect(find.byType(OutlinedButton), findsOneWidget);
 
       await tester.tap(jumpBtnFinder);
       await tester.pumpAndSettle();
 
-      expect(fakeGastoProvider.selectedYear, equals(2026));
-      expect(fakeGastoProvider.selectedMonth, equals(10));
+      expect(fakeGastoProvider.selectedYear, equals(pastYear));
+      expect(fakeGastoProvider.selectedMonth, equals(pastMonth));
     });
   });
 }

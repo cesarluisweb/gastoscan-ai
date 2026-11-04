@@ -625,6 +625,11 @@ class ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
     final ultimo = gastoProvider.ultimoMesConGastos;
     final int? ultimoAnio = ultimo?['year'];
     final int? ultimoMes = ultimo?['month'];
+
+    final bool ultimoEsMesActual = ultimo != null &&
+        ultimoAnio == now.year &&
+        ultimoMes == now.month;
+
     final bool tieneGastosEnOtroMes = !isFiltered &&
         ultimo != null &&
         ultimoAnio != null &&
@@ -681,18 +686,13 @@ class ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
               textAlign: TextAlign.center,
               style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
             ),
-            if (tieneGastosEnOtroMes) ...[
+            if (!isCurrentMonth && !isFiltered && ultimoEsMesActual) ...[
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton.icon(
-                  key: const Key('expense_history_jump_to_latest_btn'),
-                  onPressed: () => gastoProvider.cambiarMes(ultimoAnio, ultimoMes),
-                  icon: const Icon(Icons.arrow_forward, size: 16),
-                  label: Text(
-                    'Ver facturas de $ultimoMesNombre $ultimoAnio',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                  ),
+                child: ElevatedButton(
+                  key: const Key('empty_state_return_to_current_month_btn'),
+                  onPressed: () => gastoProvider.resetearAMesActual(),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.black,
@@ -702,27 +702,74 @@ class ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
                     ),
                     elevation: 0,
                   ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Volver al mes actual ($mesActualNombre ${now.year})',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(Icons.arrow_forward, size: 16),
+                    ],
+                  ),
                 ),
               ),
             ],
-            if (!isCurrentMonth && !isFiltered) ...[
+            if (tieneGastosEnOtroMes && !ultimoEsMesActual) ...[
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  key: const Key('empty_state_jump_to_latest_btn'),
+                  onPressed: () => gastoProvider.cambiarMes(ultimoAnio, ultimoMes),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 11),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Ver gastos de $ultimoMesNombre $ultimoAnio',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(Icons.arrow_forward, size: 16),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+            if (!isCurrentMonth && !isFiltered && !ultimoEsMesActual) ...[
               const SizedBox(height: 8),
               SizedBox(
                 width: double.infinity,
-                child: TextButton.icon(
-                  key: const Key('expense_history_return_to_current_month_btn'),
+                child: OutlinedButton.icon(
+                  key: const Key('empty_state_return_to_current_month_btn'),
                   onPressed: () => gastoProvider.resetearAMesActual(),
                   icon: const Icon(Icons.today, size: 16, color: AppColors.textSecondary),
                   label: Text(
                     'Volver a $mesActualNombre ${now.year} (Mes actual)',
                     style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 12,
+                      color: AppColors.textPrimary,
+                      fontSize: 13,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Color(0xFFD1D5DB), width: 1.2),
+                    padding: const EdgeInsets.symmetric(vertical: 11),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                 ),
               ),

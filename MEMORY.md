@@ -5,10 +5,8 @@
 - **Rama:** `main`.
 - **Acceso a Producción Google Play:** Solicitud enviada el 04/11/2026 (07:42 AM). En revisión por Google (7 días o menos). 14 días cumplidos ininterrumpidos con 12 evaluadores activos. Registro completo en `DOC_CUESTIONARIO_PRODUCCION.md`.
 - **P0 Detener commits automáticos CI:** `Completada ✅`. Integrado en `main` con CI verde (Build 641, commit `b5c4603`, run 41713145770). Cero commits automáticos generados en `origin/main`.
-- **Depuración de Roadmap:** `Completada ✅`. Archivados en `ROADMAP_HISTORICO.md` todos los hitos completados y los 10 ítems validados por César. `ROADMAP.md` quedó limpio con las 5 tareas en validación activa y las iniciativas pendientes.
-- **UI-15 (Tanque de Presupuesto V2 Doble Tono & Muesca):** `Pendiente de validación 🧪`. CI verde (Android build 647, commit `24e73e4`, run 41881942689). Web en producción validada HTTP 200 (`rindemas.cesarluis.com/panel`).
-- **UX-14 (Estado Vacío Inteligente y Ciclo de Vida Temporal):** `Pendiente de validación 🧪`. CI verde (Android build 645, commit `d86e777`, run 41849026245). Botón directo al último mes con compras en estados vacíos, botón de regreso a hoy y reseteo automático al reanudar tras inactividad. Pruebas en `smart_empty_state_and_lifecycle_test.dart`.
-- **Triple Escudo Fechas Factura & DatePicker:** `Pendiente de validación 🧪`. CI verde (Android build 640, commit `b40ce3d`, 587 pruebas pasando). Gateway desplegado en producción en Cloudflare Workers (`rindemas-gateway`).
+- **Depuración de Roadmap:** `Completada ✅`. Archivados en `ROADMAP_HISTORICO.md` todos los hitos completados (incluidos UI-15, AI-09 y FIN-09 validados por César). `ROADMAP.md` limpio y sincronizado con el tablero de Deuda Técnica (P0-P3) en Fase 7 Bloque A.
+- **UX-14 (Estado Vacío Inteligente y Ciclo de Vida Temporal):** `Implementada 🔧` (en ajuste de botones). CI verde previo (Build 645). Deduplicación de botón único y estilo outline en curso.
 - **Artefacto para pruebas en teléfono:** Descargar `rindemas-dev-apk` desde el run de CI 41881942689 (*Rinde Más Dev*).
 
 ## Decisiones Técnicas y de Negocio Recientes
