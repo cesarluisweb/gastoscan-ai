@@ -164,8 +164,11 @@ class AppConstants {
 
   // Valores por defecto
   static const bool defaultGuardarFotos = true;
-  // Último recurso cuando no hay caché ni red. NUNCA presentarlo como tasa
-  // vigente: `SettingsProvider.tasasSonReferencia` lo señala en la UI.
+  // Obsoleto (D-01 / NEW-4): Queda estrictamente prohibido utilizar 850.0 como tasa
+  // efectiva de cálculo en proveedores o pantallas. La ausencia de tasa se modela con
+  // 0.0 o estado explícito de 'sin tasa' (D-03 / D-06). Se preserva únicamente para
+  // reparaciones históricas fuera de línea neutralizadas (A-10).
+  @Deprecated('No utilizar como tasa de cálculo efectiva (D-01). Usar 0.0 o estado sinTasa.')
   static const double defaultTasaCambio = 850.0;
   static const String defaultMoneda = 'USD';
   static const String defaultApiKey = String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');

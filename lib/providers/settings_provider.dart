@@ -16,9 +16,9 @@ class SettingsProvider with ChangeNotifier {
   String _apiKey = '';
   int _apiKeyRevision = 0;
   bool _guardarFotos = AppConstants.defaultGuardarFotos;
-  double _tasaCambioVesUsd = AppConstants.defaultTasaCambio;
+  double _tasaCambioVesUsd = 0.0;
   double _tasaCambioVesEur = 0.0;
-  double _tasaCambioVesUsdt = AppConstants.defaultTasaCambio;
+  double _tasaCambioVesUsdt = 0.0;
   DateTime? _ultimaActualizacionTasas;
   /// true mientras no se haya verificado una tasa en vivo: los valores
   /// pueden venir de caché antigua o de semillas. La UI lo muestra.
@@ -88,11 +88,19 @@ class SettingsProvider with ChangeNotifier {
     if (purgeResult != -1) {
       // Purga exitosa: consumir semillas locales verificadas según validador canónico (D-08)
       double? cachedUsd;
-      final rawUsd = prefs.get('cached_rate_usd') ?? prefs.get(AppConstants.prefTasaCambio);
-      if (isValidMonetaryRate(rawUsd)) {
-        cachedUsd = (rawUsd as num).toDouble();
+      final bool esTasaManual = prefs.getBool('pref_es_tasa_manual_usd') ?? false;
+      final rawManual = prefs.get(AppConstants.prefTasaCambio);
+      final rawAuto = prefs.get('cached_rate_usd');
+
+      if (esTasaManual && isValidMonetaryRate(rawManual)) {
+        // Tasa manual global prevalece al reiniciar mientras no haya conexión (D-05 / NEW-3b)
+        cachedUsd = (rawManual as num).toDouble();
+      } else if (isValidMonetaryRate(rawAuto)) {
+        cachedUsd = (rawAuto as num).toDouble();
+      } else if (isValidMonetaryRate(rawManual)) {
+        cachedUsd = (rawManual as num).toDouble();
       }
-      _tasaCambioVesUsd = cachedUsd ?? AppConstants.defaultTasaCambio;
+      _tasaCambioVesUsd = cachedUsd ?? 0.0;
 
       double? cachedEur;
       final rawEur = prefs.get('cached_rate_eur');
@@ -116,13 +124,18 @@ class SettingsProvider with ChangeNotifier {
       } else {
         _ultimaActualizacionTasas = null;
       }
+      // Si la tasa principal está en 0.0 o es manual/antigua, permanece como referencia
+      if (_tasaCambioVesUsd <= 1.0) {
+        _tasasSonReferencia = true;
+      }
     } else {
       // Purga fallida (-1): comportamiento fail-closed. No consumir semillas locales no verificadas
       debugPrint('SettingsProvider: Purga fallida (-1). Se omite caché local no verificada.');
-      _tasaCambioVesUsd = AppConstants.defaultTasaCambio;
+      _tasaCambioVesUsd = 0.0;
       _tasaCambioVesEur = 0.0;
-      _tasaCambioVesUsdt = AppConstants.defaultTasaCambio;
+      _tasaCambioVesUsdt = 0.0;
       _ultimaActualizacionTasas = null;
+      _tasasSonReferencia = true; // NEW-2: Reseteo obligatorio a modo referencia ante purga fallida
     }
 
     _monedaPrincipal = prefs.getString(AppConstants.prefMonedaPrincipal) ?? AppConstants.defaultMoneda;
@@ -192,7 +205,7 @@ class SettingsProvider with ChangeNotifier {
       if (!doc.exists || doc.data() == null) return;
 
       final data = doc.data()!;
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = _prefsInstance ?? await SharedPreferences.getInstance();
 
       if (data['mensajes_quincenales'] is List) {
         final rawList = data['mensajes_quincenales'] as List;
@@ -224,7 +237,7 @@ class SettingsProvider with ChangeNotifier {
     bool exito = false;
     try {
       final allRates = await ExchangeRateService.getAllTodayRates(client: client);
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = _prefsInstance ?? await SharedPreferences.getInstance();
 
       if (!allRates.esReferencia) {
         // Solo se aplica lo que llegó en vivo válido según validador canónico (D-08); el resto conserva su
@@ -233,6 +246,7 @@ class SettingsProvider with ChangeNotifier {
           _tasaCambioVesUsd = allRates.usd;
           await prefs.setDouble(AppConstants.prefTasaCambio, _tasaCambioVesUsd);
           await prefs.setDouble('cached_rate_usd', _tasaCambioVesUsd);
+          await prefs.setBool('pref_es_tasa_manual_usd', false);
         }
         if (isValidMonetaryRate(allRates.eur)) {
           _tasaCambioVesEur = allRates.eur;
@@ -304,8 +318,10 @@ class SettingsProvider with ChangeNotifier {
       return;
     }
     _tasaCambioVesUsd = tasa;
-    final prefs = await SharedPreferences.getInstance();
+    _tasasSonReferencia = true; // D-05 / D-06: Tasa manual tiene procedencia manual y se clasifica como referencia
+    final prefs = _prefsInstance ?? await SharedPreferences.getInstance();
     await prefs.setDouble(AppConstants.prefTasaCambio, _tasaCambioVesUsd);
+    await prefs.setBool('pref_es_tasa_manual_usd', true);
     notifyListeners();
   }
 

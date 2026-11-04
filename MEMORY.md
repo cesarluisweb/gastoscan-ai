@@ -2,23 +2,18 @@
 > Regla de oro: Mantener en máximo ~50 líneas. Lo permanente se gradúa a AGENTS.md o DESIGN.md.
 
 ## Estado Actual Inmediato
-- **Rama:** `main`.
-- **Acceso a Producción Google Play:** Solicitud enviada el 04/11/2026 (07:42 AM). En revisión por Google (7 días o menos). 14 días cumplidos ininterrumpidos con 12 evaluadores activos. Registro completo en `DOC_CUESTIONARIO_PRODUCCION.md`.
-- **P0 Detener commits automáticos CI:** `Completada ✅`. Integrado en `main` con CI verde (Build 641, commit `b5c4603`, run 41713145770). Cero commits automáticos generados en `origin/main`.
-- **Depuración de Roadmap:** `Completada ✅`. Archivados en `ROADMAP_HISTORICO.md` todos los hitos completados (incluidos UI-15, AI-09 y FIN-09 validados por César). `ROADMAP.md` limpio y sincronizado con el tablero de Deuda Técnica (P0-P3) en Fase 7 Bloque A.
-- **UX-14 (Estado Vacío Inteligente y Ciclo de Vida Temporal):** `Implementada 🔧` (en ajuste de botones). CI verde previo (Build 645). Deduplicación de botón único y estilo outline en curso.
-- **Selector de Mes en AppBar (Inicio, Gastos, Análisis, Más):** `Pendiente de validación 🧪`. CI verde (Android build 649, commit `0eb455a`, run 41896045290). Selector movido de cuerpo a AppBar, 3 modos responsivos intrínsecos protegidos con `FittedBox`, acciones compactas a 40 dp.
-- **Artefacto para pruebas en teléfono:** Descargar `rindemas-dev-apk` desde el run de CI 41896045290 (*Rinde Más Dev*).
+- **Rama:** `main` (commit de saneamiento E0-02 y specs documentadas; push y monitoreo CI en curso).
+- **Acceso a Producción Google Play:** Solicitud enviada el 04/11/2026. En revisión por Google.
+- **RM-03 Fase 0A (E0-02):** Saneamiento inicial commiteado (D-01/D-08, 0.0 en proveedores, purga A-07, B3-OBS). Especificación técnica consolidada documentada en `docs/rm-03/especificacion-consolidada-u1-u2.md`.
+- **ROADMAP.md:** Actualizado con Fase 0 (RM-03), E0-02 vinculada a su especificación técnica y archivo histórico en ROADMAP_HISTORICO.md.
+- **Próximo Paso Inmediato:** Validar CI en verde y planificar implementación de MonetaryPrefsCoordinator para sexta reauditoría.
 
 ## Decisiones Técnicas y de Negocio Recientes
-- AppBarMonthSelector: Selector responsivo en AppBar con 3 umbrales escalados (Completo >=236dp, Compacto >=146dp, Mínimo >=88dp) y `FittedBox(fit: BoxFit.scaleDown)` para tolerancia total a fuentes Ahem/Roboto y densidad variable.
-- Fechas OCR y DatePicker: Triple escudo para fechas `DD/MM/YYYY` (Worker prompt + Gateway sanitizador + `GeminiExtractionResult.parseExtractionDate`).
-- DatePicker: Día actual con número negro (`Colors.black`) y relleno amarillo suave (`AppColors.primaryLight` inactivo / `primary` activo).
-- Tanque de presupuesto: `isCaution` depende exclusivamente del nivel físico (<=15% del límite), desacoplando `enRiesgo`.
-- Tanque V2: `foregroundDecoration` en carril (evita desalinear muesca); banda cubre `min(fillEnd, markerPos)`; "Ahorro en riesgo" es exclusivo de proyección, invasión usa "Ahorro comprometido".
-- ReviewExpenseScreen: `_userTouchedCurrency` evita sobrescribir preferencia cuando el usuario interactúa manualmente.
-- `_buildLiquidacionPill` y selector de divisas no mutan estado si la opción pulsada ya está activa.
-- Coexistencia de revisión en teléfono: `com.cesarluis.rindemas.dev` (*Rinde Más Dev*), preservando app oficial.
+- La ausencia de tasa no se sustituye por 850.0; requiere estado explícito de «sin tasa» (0.0).
+- La marca de purga solo es válida si el disco quedó depurado físicamente (_pendingPurgeOperations).
+- Tasa manual global persiste al reiniciar sobre caché antigua y se actualiza ante tasa viva (D-05).
+- Los fakes de prueba reproducen TypeError por tipo incorrecto en getters de SharedPreferences.
+- Toda aceptación exige CI en verde; la inspección estática no sustituye pruebas.
 
 ## Errores y Fricciones a Evitar
 - No encadenar comandos con `&&` ni usar redirección `>` en PowerShell.

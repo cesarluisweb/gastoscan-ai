@@ -86,11 +86,47 @@ void main() {
       // Los datos generales de gastos se cargan a pesar de la omisión de caché
       expect(fakeRepo.obtenerGastosCalled, isTrue);
 
+      // Verificación directa y observable de estado interno (B4 / NEW-4 / NEW-5):
+      // Al fallar la purga (-1), las tasas se resetean a 0.0 y no consumen semillas ni 850.0
+      expect(provider.tasaUsd, equals(0.0));
+      expect(provider.tasaEur, equals(0.0));
+
       // Verificamos getSpentForCategory: al omitir la tasa EUR no verificada (95.0),
       // effEur permanece en 0.0 y el cálculo recurre a los totales en USD (100.0)
       // en vez de aplicar 4000.0 / 95.0 = 42.105...
       expect(provider.errorMessage, isNull);
       expect(provider.getSpentForCategory('Alimentos', moneda: 'EUR'), equals(100.0));
+    });
+
+    test('NEW-5: GastoProvider resetea tasas a 0.0 ante purga fallida posterior sin retener estado previo', () async {
+      // 1. Carga inicial con purga exitosa y tasas válidas
+      final initialValidStore = TestSharedPreferences({
+        ExchangeRateService.prefKeyCacheHistoricaPurgada: true,
+        'cached_rate_usd': 60.0,
+        'cached_rate_eur': 65.0,
+      });
+
+      final provider = GastoProvider(repository: fakeRepo, autoLoad: false);
+      provider.prefsInstance = initialValidStore;
+      await provider.cargarDatos();
+
+      expect(provider.tasaUsd, equals(60.0));
+      expect(provider.tasaEur, equals(65.0));
+
+      // 2. Recarga posterior donde la purga falla (-1)
+      final subsequentFailingStore = TestSharedPreferences({
+        'cached_rate_usdt': -10.0, // Inválida
+        'cached_rate_usd': 70.0,
+        'cached_rate_eur': 75.0,
+      });
+      subsequentFailingStore.returnFalseOnRemove = true;
+
+      provider.prefsInstance = subsequentFailingStore;
+      await provider.cargarDatos();
+
+      // NEW-5: Debe limpiarse a 0.0 deterministamente, nunca retener 60.0 / 65.0 previos
+      expect(provider.tasaUsd, equals(0.0));
+      expect(provider.tasaEur, equals(0.0));
     });
 
     test('Escenario 14: GastoProvider no asigna Infinity proveniente de cache local', () async {
@@ -104,6 +140,10 @@ void main() {
       final provider = GastoProvider(repository: fakeRepo, autoLoad: false);
       provider.prefsInstance = storeWithInfinity;
       await provider.cargarDatos();
+
+      // Verificación directa de estado interno: descartado Infinity, asignado 0.0
+      expect(provider.tasaUsd, equals(0.0));
+      expect(provider.tasaEur, equals(0.0));
 
       // Intentar calcular gasto para categoría con EUR: al descartarse Infinity,
       // effEur permanece en 0.0 y devuelve el monto base USD (100.0), nunca 0.0 ni NaN
@@ -155,6 +195,8 @@ void main() {
 
       expect(fakeRepo.obtenerGastosCalled, isTrue);
       expect(provider.errorMessage, isNull);
+      expect(provider.tasaUsd, equals(52.0));
+      expect(provider.tasaEur, equals(50.0));
 
       // 4000.0 VES / 50.0 EUR = 80.0 EUR
       final spent = provider.getSpentForCategory('Alimentos', moneda: 'EUR');

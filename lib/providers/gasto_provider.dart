@@ -37,7 +37,7 @@ class GastoProvider with ChangeNotifier {
   double _totalMesEur = 0.0;
   Map<String, double> _presupuestosPorCategoria = {};
   bool _presupuestoEsAdoptado = false;
-  double _tasaUsd = AppConstants.defaultTasaCambio;
+  double _tasaUsd = 0.0;
   double _tasaEur = 0.0;
   bool _hasPendingReplaceBlock = false;
   Map<String, int>? _ultimoMesConGastos;
@@ -101,6 +101,9 @@ class GastoProvider with ChangeNotifier {
     if (isValidMonetaryRate(tasaUsd)) _tasaUsd = (tasaUsd as num).toDouble();
     if (isValidMonetaryRate(tasaEur)) _tasaEur = (tasaEur as num).toDouble();
   }
+
+  double get tasaUsd => _tasaUsd;
+  double get tasaEur => _tasaEur;
 
   List<GastoModel> get gastos => _gastos;
   bool get isLoading => _isLoading;
@@ -175,18 +178,18 @@ class GastoProvider with ChangeNotifier {
         final purgeResult = await ExchangeRateService.ensureCacheHistoricaPurgada(prefsInstance: prefs);
         if (purgeResult != -1) {
           final rawUsd = prefs.get('cached_rate_usd') ?? prefs.get(AppConstants.prefTasaCambio);
-          if (isValidMonetaryRate(rawUsd)) {
-            _tasaUsd = (rawUsd as num).toDouble();
-          }
+          _tasaUsd = isValidMonetaryRate(rawUsd) ? (rawUsd as num).toDouble() : 0.0;
           final rawEur = prefs.get('cached_rate_eur');
-          if (isValidMonetaryRate(rawEur)) {
-            _tasaEur = (rawEur as num).toDouble();
-          }
+          _tasaEur = isValidMonetaryRate(rawEur) ? (rawEur as num).toDouble() : 0.0;
         } else {
           debugPrint('GastoProvider: Purga fallida (-1). Se omite caché local no verificada.');
+          _tasaUsd = 0.0;
+          _tasaEur = 0.0;
         }
       } catch (e) {
         debugPrint('GastoProvider: Error al cargar tasas desde SharedPreferences: $e');
+        _tasaUsd = 0.0;
+        _tasaEur = 0.0;
       }
 
       await checkPendingReplaceBlock();

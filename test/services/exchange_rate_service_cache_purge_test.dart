@@ -682,6 +682,22 @@ void main() {
       expect(dValid.usdt, equals(0.0));
     });
 
+    test('B3-OBS: ExchangeRatesData.fromJson no lanza TypeError ante tipos no numericos y degrada fail-closed', () {
+      final data = ExchangeRatesData.fromJson({
+        'usd': '45.0', // String en lugar de num
+        'eur': true, // bool en lugar de num
+        'usdt': {'valor': 42.0}, // Map en lugar de num
+        'fecha': 12345, // int en lugar de String
+        'esReferencia': 'false', // String en lugar de bool
+      });
+
+      expect(data.usd, equals(0.0));
+      expect(data.eur, equals(0.0));
+      expect(data.usdt, equals(0.0));
+      expect(data.esReferencia, isTrue);
+      expect(data.fecha, equals(DateTime.fromMillisecondsSinceEpoch(0)));
+    });
+
     // =========================================================================
     // PROTECCIÓN CONTRA LECTURAS CORRUPTAS DE SHAREDPREFERENCES
     // =========================================================================
@@ -816,20 +832,53 @@ void main() {
     // =========================================================================
 
     test('B4: getRateForDate descarta respuestas remotas con valores nulos o no finitos sin persistirlas', () async {
-      final clientNan = MockClient((request) async {
+      // Caso 1: respuesta con null
+      final clientNull = MockClient((request) async {
         return http.Response('[{"fecha":"2026-10-01","promedio":null}]', 200);
       });
-      final store = TestSharedPreferences({
+      final store1 = TestSharedPreferences({
         ExchangeRateService.prefKeyCacheHistoricaPurgada: true,
       });
 
-      final rateNan = await ExchangeRateService.getRateForDate(
+      final rateNull = await ExchangeRateService.getRateForDate(
         '2026-10-01',
-        client: clientNan,
-        prefsInstance: store,
+        client: clientNull,
+        prefsInstance: store1,
       );
-      expect(rateNan, equals(0.0));
-      expect(store.disk.containsKey('cached_rate_USD_2026-10-01'), isFalse);
+      expect(rateNull, equals(0.0));
+      expect(store1.disk.containsKey('cached_rate_USD_2026-10-01'), isFalse);
+
+      // Caso 2: respuesta con overflow 1e400 / no finito
+      final clientInf = MockClient((request) async {
+        return http.Response('[{"fecha":"2026-10-01","promedio":1e400}]', 200);
+      });
+      final store2 = TestSharedPreferences({
+        ExchangeRateService.prefKeyCacheHistoricaPurgada: true,
+      });
+
+      final rateInf = await ExchangeRateService.getRateForDate(
+        '2026-10-01',
+        client: clientInf,
+        prefsInstance: store2,
+      );
+      expect(rateInf, equals(0.0));
+      expect(store2.disk.containsKey('cached_rate_USD_2026-10-01'), isFalse);
+
+      // Caso 3: respuesta con tipo String corrupto
+      final clientStr = MockClient((request) async {
+        return http.Response('[{"fecha":"2026-10-01","promedio":"cuarenta"}]', 200);
+      });
+      final store3 = TestSharedPreferences({
+        ExchangeRateService.prefKeyCacheHistoricaPurgada: true,
+      });
+
+      final rateStr = await ExchangeRateService.getRateForDate(
+        '2026-10-01',
+        client: clientStr,
+        prefsInstance: store3,
+      );
+      expect(rateStr, equals(0.0));
+      expect(store3.disk.containsKey('cached_rate_USD_2026-10-01'), isFalse);
     });
 
     // =========================================================================
