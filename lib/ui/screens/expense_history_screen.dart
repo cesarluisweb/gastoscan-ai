@@ -11,7 +11,7 @@ import '../../providers/settings_provider.dart';
 import '../../providers/scan_queue_provider.dart';
 import '../../data/models/gasto_model.dart';
 import '../../data/models/gemini_extraction_result.dart';
-import '../widgets/month_selector_bar.dart';
+import '../widgets/app_bar_month_selector.dart';
 import '../widgets/expense_card.dart';
 import '../widgets/pending_expense_card.dart';
 import '../widgets/global_scan_queue_banner.dart';
@@ -246,12 +246,32 @@ class ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
                   });
                 },
               )
-            : const Text('Gastos'),
+            : Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const Text('Gastos'),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) => Align(
+                        alignment: Alignment.centerRight,
+                        child: AppBarMonthSelector(
+                          keyPrefix: 'expense_history_',
+                          maxWidth: constraints.maxWidth,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
         actions: [
           IconButton(
             key: const Key('expense_history_search_toggle'),
             icon: Icon(_isSearching ? Icons.close : Icons.search),
             tooltip: _isSearching ? 'Cerrar búsqueda' : 'Buscar',
+            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+            padding: EdgeInsets.zero,
+            visualDensity: VisualDensity.compact,
             onPressed: () {
               if (_isSearching) {
                 closeSearch();
@@ -268,6 +288,9 @@ class ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
               color: AppColors.textPrimary,
             ),
             tooltip: 'Asistente IA',
+            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+            padding: EdgeInsets.zero,
+            visualDensity: VisualDensity.compact,
             onPressed: widget.onNavigateToChat,
           ),
         ],
@@ -277,10 +300,6 @@ class ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
           const GlobalScanQueueBanner(),
           // Selector de Mes o indicador de búsqueda global
           if (!isSearchingGlobal) ...[
-            const MonthSelectorBar(
-              keyPrefix: 'expense_history_',
-              padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
-            ),
             _buildMonthlySummaryStrip(gastoProvider, settings, filteredGastos),
             _buildFilterChipsRow(),
             const SizedBox(height: 6),

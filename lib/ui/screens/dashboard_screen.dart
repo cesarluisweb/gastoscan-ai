@@ -1,4 +1,4 @@
-import '../widgets/month_selector_bar.dart';
+import '../widgets/app_bar_month_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
@@ -90,14 +90,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text(
+        title: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const Text(
               'Rinde Más',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 20,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) => Align(
+                  alignment: Alignment.centerRight,
+                  child: AppBarMonthSelector(
+                    maxWidth: constraints.maxWidth,
+                  ),
+                ),
               ),
             ),
           ],
@@ -111,6 +122,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               color: AppColors.textPrimary,
             ),
             tooltip: 'Buscar',
+            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+            padding: EdgeInsets.zero,
+            visualDensity: VisualDensity.compact,
             onPressed: widget.onNavigateToSearch,
           ),
           IconButton(
@@ -121,6 +135,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               color: AppColors.textPrimary,
             ),
             tooltip: 'Asistente IA',
+            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+            padding: EdgeInsets.zero,
+            visualDensity: VisualDensity.compact,
             onPressed: () {
               if (widget.onNavigateToChat != null) {
                 widget.onNavigateToChat!();
@@ -151,10 +168,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           children: [
-            const MonthSelectorBar(
-              padding: EdgeInsets.only(bottom: 12),
-            ),
-            const SizedBox(height: 8),
             if (gastoProvider.hasPendingReplaceBlock) ...[
               Container(
                 margin: const EdgeInsets.only(bottom: 12),

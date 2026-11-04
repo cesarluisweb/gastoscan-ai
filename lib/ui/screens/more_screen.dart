@@ -14,6 +14,7 @@ import '../../providers/scan_queue_provider.dart';
 import '../../services/export_service.dart';
 import '../../services/update_service.dart';
 import '../widgets/global_scan_queue_banner.dart';
+import '../widgets/app_bar_month_selector.dart';
 import '../widgets/auth_modal_sheet.dart';
 import 'shopping_list_screen.dart';
 import 'chat_screen.dart';
@@ -343,7 +344,24 @@ class MoreScreenState extends State<MoreScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Más'),
+        title: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const Text('Más'),
+            const SizedBox(width: 6),
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) => Align(
+                  alignment: Alignment.centerRight,
+                  child: AppBarMonthSelector(
+                    keyPrefix: 'more_',
+                    maxWidth: constraints.maxWidth,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
@@ -354,6 +372,9 @@ class MoreScreenState extends State<MoreScreen> {
               color: AppColors.textPrimary,
             ),
             tooltip: 'Buscar',
+            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+            padding: EdgeInsets.zero,
+            visualDensity: VisualDensity.compact,
             onPressed: widget.onNavigateToSearch,
           ),
           IconButton(
@@ -364,6 +385,9 @@ class MoreScreenState extends State<MoreScreen> {
               color: AppColors.textPrimary,
             ),
             tooltip: 'Asistente IA',
+            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+            padding: EdgeInsets.zero,
+            visualDensity: VisualDensity.compact,
             onPressed: () => openChat(),
           ),
         ],

@@ -12,7 +12,7 @@ import '../widgets/currency_lens_dropdown.dart';
 import '../widgets/currency_radiography_card.dart';
 import '../widgets/daily_evolution_card.dart';
 import '../widgets/global_scan_queue_banner.dart';
-import '../widgets/month_selector_bar.dart';
+import '../widgets/app_bar_month_selector.dart';
 import '../widgets/purchase_radiography_card.dart';
 
 class AnalysisScreen extends StatelessWidget {
@@ -68,7 +68,24 @@ class AnalysisScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Análisis'),
+        title: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const Text('Análisis'),
+            const SizedBox(width: 6),
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) => Align(
+                  alignment: Alignment.centerRight,
+                  child: AppBarMonthSelector(
+                    keyPrefix: 'analysis_',
+                    maxWidth: constraints.maxWidth,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
         actions: [
           IconButton(
             key: const Key('analysis_search_button'),
@@ -78,6 +95,9 @@ class AnalysisScreen extends StatelessWidget {
               color: AppColors.textPrimary,
             ),
             tooltip: 'Buscar',
+            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+            padding: EdgeInsets.zero,
+            visualDensity: VisualDensity.compact,
             onPressed: onNavigateToSearch,
           ),
           IconButton(
@@ -88,6 +108,9 @@ class AnalysisScreen extends StatelessWidget {
               color: AppColors.textPrimary,
             ),
             tooltip: 'Asistente IA',
+            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+            padding: EdgeInsets.zero,
+            visualDensity: VisualDensity.compact,
             onPressed: onNavigateToChat,
           ),
         ],
@@ -99,11 +122,6 @@ class AnalysisScreen extends StatelessWidget {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
               children: [
-                const MonthSelectorBar(
-                  keyPrefix: 'analysis_',
-                  padding: EdgeInsets.only(bottom: 12),
-                ),
-
                 if (gastoProvider.isLoading)
                   const Center(
                     child: Padding(
