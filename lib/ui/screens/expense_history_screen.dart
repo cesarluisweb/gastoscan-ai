@@ -597,9 +597,35 @@ class ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
   }
 
   Widget _buildEmptyState(bool isFiltered) {
+    final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
+    final now = DateTime.now();
+    final isCurrentMonth = (now.year == gastoProvider.selectedYear && now.month == gastoProvider.selectedMonth);
+    final mesActualNombre = DateFormatter.getMonthName(now.month);
+    final mesSeleccionadoNombre = DateFormatter.getMonthName(gastoProvider.selectedMonth);
+
+    final ultimo = gastoProvider.ultimoMesConGastos;
+    final bool tieneGastosEnOtroMes = !isFiltered && ultimo != null &&
+        (ultimo['year'] != gastoProvider.selectedYear || ultimo['month'] != gastoProvider.selectedMonth);
+    final String? ultimoMesNombre = tieneGastosEnOtroMes ? DateFormatter.getMonthName(ultimo['month']!) : null;
+    final int? ultimoAnio = tieneGastosEnOtroMes ? ultimo['year'] : null;
+
+    final String titulo = isFiltered
+        ? 'No se encontraron gastos'
+        : (isCurrentMonth
+            ? 'Sin facturas este mes'
+            : 'Sin facturas en $mesSeleccionadoNombre ${gastoProvider.selectedYear}');
+
+    final String subtitulo = isFiltered
+        ? 'Intenta con otro término o filtro de categoría.'
+        : (tieneGastosEnOtroMes
+            ? 'Tienes compras registradas en $ultimoMesNombre $ultimoAnio.'
+            : (!isCurrentMonth
+                ? 'Estás consultando un período histórico sin compras.'
+                : 'Presiona "+" para registrar tu primera compra.'));
+
     return Center(
       child: Container(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(28),
         margin: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: AppColors.card,
@@ -610,27 +636,74 @@ class ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              isFiltered ? Icons.search_off_rounded : Icons.receipt_long_outlined,
-              size: 48,
-              color: AppColors.textMuted,
+              isFiltered
+                  ? Icons.search_off_rounded
+                  : (tieneGastosEnOtroMes ? Icons.calendar_today_outlined : Icons.receipt_long_outlined),
+              size: 44,
+              color: tieneGastosEnOtroMes ? AppColors.primaryDark : AppColors.textMuted,
             ),
             const SizedBox(height: 12),
             Text(
-              isFiltered ? 'No se encontraron gastos' : 'Sin facturas este mes',
+              titulo,
+              textAlign: TextAlign.center,
               style: const TextStyle(
                 color: AppColors.textPrimary,
                 fontWeight: FontWeight.bold,
                 fontSize: 15,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
             Text(
-              isFiltered
-                  ? 'Intenta con otro término o filtro de categoría.'
-                  : 'Presiona "+" para registrar tu primera compra.',
+              subtitulo,
               textAlign: TextAlign.center,
               style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
             ),
+            if (tieneGastosEnOtroMes && ultimoAnio != null && ultimo != null) ...[
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  key: const Key('expense_history_jump_to_latest_btn'),
+                  onPressed: () => gastoProvider.cambiarMes(ultimoAnio, ultimo['month']!),
+                  icon: const Icon(Icons.arrow_forward, size: 16),
+                  label: Text(
+                    'Ver facturas de $ultimoMesNombre $ultimoAnio',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 11),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    elevation: 0,
+                  ),
+                ),
+              ),
+            ],
+            if (!isCurrentMonth && !isFiltered) ...[
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton.icon(
+                  key: const Key('expense_history_return_to_current_month_btn'),
+                  onPressed: () => gastoProvider.resetearAMesActual(),
+                  icon: const Icon(Icons.today, size: 16, color: AppColors.textSecondary),
+                  label: Text(
+                    'Volver a $mesActualNombre ${now.year} (Mes actual)',
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),

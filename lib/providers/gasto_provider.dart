@@ -40,8 +40,39 @@ class GastoProvider with ChangeNotifier {
   double _tasaUsd = AppConstants.defaultTasaCambio;
   double _tasaEur = 0.0;
   bool _hasPendingReplaceBlock = false;
+  Map<String, int>? _ultimoMesConGastos;
+  DateTime _lastUserActivityTime = DateTime.now();
 
   bool get hasPendingReplaceBlock => _hasPendingReplaceBlock;
+  Map<String, int>? get ultimoMesConGastos => _ultimoMesConGastos;
+
+  void registrarInteraccion() {
+    _lastUserActivityTime = DateTime.now();
+  }
+
+  /// Restablece el mes y año seleccionados al mes actual (DateTime.now())
+  void resetearAMesActual() {
+    final now = DateTime.now();
+    if (_selectedYear != now.year || _selectedMonth != now.month) {
+      cambiarMes(now.year, now.month);
+    }
+  }
+
+  /// Verifica y reajusta al mes actual cuando la app reanuda desde segundo plano.
+  /// Si pasaron más de 30 minutos desde la última interacción y el usuario estaba en un
+  /// mes sin gastos o en un año histórico, regresa de forma transparente al mes en curso.
+  void verificarReanudacionMesActual() {
+    final now = DateTime.now();
+    final minutosInactivo = now.difference(_lastUserActivityTime).inMinutes;
+    final esMesActual = (_selectedYear == now.year && _selectedMonth == now.month);
+
+    if (!esMesActual) {
+      if (_gastos.isEmpty || _selectedYear < now.year || minutosInactivo >= 30) {
+        cambiarMes(now.year, now.month);
+      }
+    }
+    _lastUserActivityTime = now;
+  }
 
   Future<void> checkPendingReplaceBlock() async {
     final user = _syncService.currentUser;
@@ -160,6 +191,7 @@ class GastoProvider with ChangeNotifier {
 
       await checkPendingReplaceBlock();
       _gastos = await _repository.obtenerGastosPorMes(_selectedYear, _selectedMonth);
+      _ultimoMesConGastos = await _repository.obtenerUltimoMesConGastos();
       
       final totales = await _repository.obtenerTotalesMes(_selectedYear, _selectedMonth);
       _totalMesUsd = totales['USD'] ?? 0.0;
@@ -481,6 +513,7 @@ class GastoProvider with ChangeNotifier {
   void cambiarMes(int year, int month) {
     _selectedYear = year;
     _selectedMonth = month;
+    _lastUserActivityTime = DateTime.now();
     cargarDatos();
   }
 

@@ -6,6 +6,7 @@
 - **Acceso a Producción Google Play:** Solicitud enviada el 04/11/2026 (07:42 AM). En revisión por Google (7 días o menos). 14 días cumplidos ininterrumpidos con 12 evaluadores activos. Registro completo en `DOC_CUESTIONARIO_PRODUCCION.md`.
 - **P0 Detener commits automáticos CI:** `Completada ✅`. Integrado en `main` con CI verde (Build 641, commit `b5c4603`, run 41713145770). Cero commits automáticos generados en `origin/main`.
 - **UI-15 (Tanque que se Vacía en Medidores de Presupuesto):** `Pendiente de validación 🧪`. CI verde (Android build 641, commit `b5c4603`). Despliegue web verificado en producción HTTP 200 (`rindemas.cesarluis.com/panel`). Documentación en `DOC_BARRA_TANQUE_PRESUPUESTO.md`.
+- **UX-14 (Estado Vacío Inteligente y Ciclo de Vida Temporal):** `Implementada 🔧`. Botón directo al último mes con compras en estados vacíos, botón de regreso a hoy y reseteo automático al reanudar tras inactividad. Pruebas en `smart_empty_state_and_lifecycle_test.dart`.
 - **Triple Escudo Fechas Factura & DatePicker:** `Pendiente de validación 🧪`. CI verde (Android build 640, commit `b40ce3d`, 587 pruebas pasando). Gateway desplegado en producción en Cloudflare Workers (`rindemas-gateway`).
 - **Artefacto para pruebas en teléfono:** Descargar `rindemas-dev-apk` desde el run de CI 41713145770 (*Rinde Más Dev*).
 

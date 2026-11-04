@@ -56,6 +56,10 @@ class GastoRepository {
     return _dbHelper.getGastosByMonth(year, month);
   }
 
+  Future<Map<String, int>?> obtenerUltimoMesConGastos() {
+    return _dbHelper.getLatestExpenseMonth();
+  }
+
   Future<Map<String, double>> obtenerTotalesMes(int year, int month) {
     return _dbHelper.getMonthlyTotals(year, month);
   }

@@ -643,6 +643,35 @@ class DatabaseHelper {
     );
   }
 
+  /// Obtiene el año y mes del gasto activo más reciente registrado en la base de datos.
+  /// Retorna un mapa {'year': int, 'month': int} o null si no hay gastos registrados.
+  Future<Map<String, int>?> getLatestExpenseMonth() async {
+    try {
+      final db = await database;
+      final result = await db.query(
+        'gastos',
+        columns: ['fecha'],
+        where: 'eliminado_en IS NULL',
+        orderBy: 'fecha DESC, id DESC',
+        limit: 1,
+      );
+      if (result.isEmpty) return null;
+      final fecha = result.first['fecha'] as String?;
+      if (fecha == null || fecha.length < 7) return null;
+      final parts = fecha.split('-');
+      if (parts.length >= 2) {
+        final y = int.tryParse(parts[0]);
+        final m = int.tryParse(parts[1]);
+        if (y != null && m != null && y >= 2000 && m >= 1 && m <= 12) {
+          return {'year': y, 'month': m};
+        }
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Obtiene los gastos de un mes y año específicos
   Future<List<GastoModel>> getGastosByMonth(int year, int month) async {
     final db = await instance.database;

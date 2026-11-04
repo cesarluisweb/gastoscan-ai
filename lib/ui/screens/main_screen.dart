@@ -189,6 +189,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       Provider.of<ScanQueueProvider>(context, listen: false).resumeQueueWhenOnline();
+      Provider.of<GastoProvider>(context, listen: false).verificarReanudacionMesActual();
     }
   }
 
