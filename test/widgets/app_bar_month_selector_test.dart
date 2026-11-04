@@ -60,6 +60,7 @@ Widget createWidgetUnderTest({
 Widget createRealLayoutHarness({
   required FakeGastoProvider provider,
   TextScaler? textScaler,
+  double titleFontSize = 10,
 }) {
   return ChangeNotifierProvider<GastoProvider>.value(
     value: provider,
@@ -73,11 +74,11 @@ Widget createRealLayoutHarness({
             title: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const Text(
+                Text(
                   'Rinde Más',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 20,
+                    fontSize: titleFontSize,
                   ),
                 ),
                 const SizedBox(width: 6),

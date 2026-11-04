@@ -147,13 +147,18 @@ class AppBarMonthSelector extends StatelessWidget {
       ),
     );
 
-    return Row(
+    final Widget content = Row(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         if (showArrows)
           IconButton(
-            constraints: BoxConstraints(minWidth: arrowWidth, minHeight: 32),
+            constraints: BoxConstraints(
+              minWidth: arrowWidth,
+              maxWidth: arrowWidth,
+              minHeight: 32,
+              maxHeight: 32,
+            ),
             padding: EdgeInsets.zero,
             visualDensity: VisualDensity.compact,
             tooltip: 'Mes anterior',
@@ -163,7 +168,12 @@ class AppBarMonthSelector extends StatelessWidget {
         pill,
         if (showArrows)
           IconButton(
-            constraints: BoxConstraints(minWidth: arrowWidth, minHeight: 32),
+            constraints: BoxConstraints(
+              minWidth: arrowWidth,
+              maxWidth: arrowWidth,
+              minHeight: 32,
+              maxHeight: 32,
+            ),
             padding: EdgeInsets.zero,
             visualDensity: VisualDensity.compact,
             tooltip: 'Mes siguiente',
@@ -172,6 +182,15 @@ class AppBarMonthSelector extends StatelessWidget {
           ),
         const SizedBox(width: 4),
       ],
+    );
+
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: maxWidth),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.centerRight,
+        child: content,
+      ),
     );
   }
 }
