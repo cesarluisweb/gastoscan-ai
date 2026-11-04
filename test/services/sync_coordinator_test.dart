@@ -103,6 +103,7 @@ void main() {
       // Iniciar la primera sincronización (se queda esperando el completer)
       final f1 = coordinator.request(SyncTrigger.manual, forzar: true);
       expect(coordinator.isSyncing, isTrue);
+      await Future<void>.delayed(Duration.zero);
       expect(mockSync.syncBidirectionalCalls, equals(1));
 
       // Disparar 3 peticiones adicionales mientras está en curso

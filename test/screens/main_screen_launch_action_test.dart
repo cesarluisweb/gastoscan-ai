@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:gastoscan_ai/data/datasources/local/database_helper.dart';
+import 'package:gastoscan_ai/data/repositories/gasto_repository.dart';
 import 'package:gastoscan_ai/providers/gasto_provider.dart';
 import 'package:gastoscan_ai/providers/scan_queue_provider.dart';
 import 'package:gastoscan_ai/providers/settings_provider.dart';
+import 'package:gastoscan_ai/services/connectivity_service.dart';
 import 'package:gastoscan_ai/services/notification_service.dart';
+import 'package:gastoscan_ai/services/sync_coordinator.dart';
+import 'package:gastoscan_ai/services/sync_service.dart';
 import 'package:gastoscan_ai/ui/screens/main_screen.dart';
 
 class FakeDatabaseHelperForMainScreenIntent extends DatabaseHelper {
@@ -18,6 +23,9 @@ class FakeDatabaseHelperForMainScreenIntent extends DatabaseHelper {
 
   @override
   Future<List<Map<String, dynamic>>> getReadyScanQueueItems() async => List.from(readyDb);
+
+  @override
+  Future<int> resetStaleProcessingScanQueueItems() async => 0;
 }
 
 class FakeGastoProviderForMainScreenIntent extends GastoProvider {
@@ -26,12 +34,22 @@ class FakeGastoProviderForMainScreenIntent extends GastoProvider {
 
   @override
   Future<void> sincronizarConFirestore() async {}
+
+  @override
+  void verificarReanudacionMesActual() {}
 }
 
 class FakeSettingsProviderForMainScreenIntent extends SettingsProvider {
   @override
   Future<void> loadSettings() async {}
 }
+
+class MockSyncServiceForMainScreenIntent extends Fake implements SyncService {
+  @override
+  User? get currentUser => null;
+}
+
+class MockGastoRepositoryForMainScreenIntent extends Fake implements GastoRepository {}
 
 void main() {
   group('MainScreen Launch Action (Intent Tray) Tests', () {
@@ -40,20 +58,29 @@ void main() {
     late FakeGastoProviderForMainScreenIntent gastoProvider;
     late FakeSettingsProviderForMainScreenIntent settingsProvider;
     late NotificationService notificationService;
+    late SyncCoordinator syncCoordinator;
 
     setUp(() {
       fakeDb = FakeDatabaseHelperForMainScreenIntent();
-      scanQueueProvider = ScanQueueProvider(dbHelper: fakeDb, autoProcess: true);
+      scanQueueProvider = ScanQueueProvider(dbHelper: fakeDb, autoProcess: false);
       gastoProvider = FakeGastoProviderForMainScreenIntent();
       settingsProvider = FakeSettingsProviderForMainScreenIntent();
       notificationService = NotificationService.test();
       NotificationService.instance = notificationService;
       notificationService.clearPendingAction();
+
+      syncCoordinator = SyncCoordinator(
+        syncService: MockSyncServiceForMainScreenIntent(),
+        repository: MockGastoRepositoryForMainScreenIntent(),
+        connectivityService: ConnectivityService(testConnected: false),
+      );
+      SyncCoordinator.instance = syncCoordinator;
     });
 
     tearDown(() {
       notificationService.clearPendingAction();
       NotificationService.instance = NotificationService();
+      SyncCoordinator.instance = SyncCoordinator();
     });
 
     Widget createWidgetUnderTest() {
@@ -73,13 +100,18 @@ void main() {
       notificationService.enqueueAction('pending_reviews', 'local_launch');
 
       await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle();
+      // Ejecutar callbacks post-frame y dar tiempo al SnackBar para aparecer
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
 
       // Debe mostrar el SnackBar de que no hay comprobantes pendientes
       expect(find.text('No hay comprobantes pendientes por revisar.'), findsOneWidget);
 
       // La intención en la bandeja debe quedar completamente atendida (null)
       expect(notificationService.pendingAction, isNull);
+
+      // Permitir que el SnackBar complete su temporizador de 3s para cerrar limpiamente
+      await tester.pumpAndSettle();
     });
   });
 }
