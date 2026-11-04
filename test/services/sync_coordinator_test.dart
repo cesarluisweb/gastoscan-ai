@@ -194,8 +194,11 @@ void main() {
           uuid: 'gasto-1',
           comercio: 'Panadería',
           fecha: '2026-11-04',
-          total: 10.0,
+          moneda: 'USD',
+          totalOriginal: 1000,
+          totalUsd: 1000,
           categoria: 'Alimentos',
+          creadoEn: '2026-11-04T12:00:00',
           synced: 0,
         ),
       ];

@@ -12,7 +12,7 @@ class FakeDatabaseHelperForIntentTray extends DatabaseHelper {
   FakeDatabaseHelperForIntentTray() : super.test();
 
   @override
-  Future<void> resetStaleProcessingScanQueueItems() async {}
+  Future<int> resetStaleProcessingScanQueueItems() async => 0;
 
   @override
   Future<List<Map<String, dynamic>>> getReadyScanQueueItems() async {
