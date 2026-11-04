@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:gastoscan_ai/data/datasources/local/database_helper.dart';
 import 'package:gastoscan_ai/data/repositories/gasto_repository.dart';
 import 'package:gastoscan_ai/providers/gasto_provider.dart';
@@ -61,6 +62,7 @@ void main() {
     late SyncCoordinator syncCoordinator;
 
     setUp(() {
+      SharedPreferences.setMockInitialValues({});
       fakeDb = FakeDatabaseHelperForMainScreenIntent();
       scanQueueProvider = ScanQueueProvider(dbHelper: fakeDb, autoProcess: false);
       gastoProvider = FakeGastoProviderForMainScreenIntent();
@@ -100,8 +102,11 @@ void main() {
       notificationService.enqueueAction('pending_reviews', 'local_launch');
 
       await tester.pumpWidget(createWidgetUnderTest());
-      // Ejecutar callbacks post-frame y dar tiempo al SnackBar para aparecer
+      // Disparar postFrameCallback
       await tester.pump();
+      // Procesar microtasks de scanQueue.ready y showSnackBar
+      await tester.pump();
+      // Animar la entrada del SnackBar
       await tester.pump(const Duration(milliseconds: 500));
 
       // Debe mostrar el SnackBar de que no hay comprobantes pendientes

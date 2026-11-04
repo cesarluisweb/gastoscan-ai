@@ -134,8 +134,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     NotificationService.instance.pendingActionNotifier.addListener(_drainLaunchActions);
     NotificationService.instance.selectedPayloadNotifier.addListener(_drainLaunchActions);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await _inicializarServiciosSegundoPlano();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _inicializarServiciosSegundoPlano();
       _drainLaunchActions();
     });
   }
