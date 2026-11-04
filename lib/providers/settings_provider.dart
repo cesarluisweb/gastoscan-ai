@@ -70,11 +70,26 @@ class SettingsProvider with ChangeNotifier {
   @visibleForTesting
   set prefsInstance(SharedPreferences? prefs) => _prefsInstance = prefs;
 
+  static bool _safeGetBool(SharedPreferences prefs, String key, bool defaultValue) {
+    final val = prefs.get(key);
+    return val is bool ? val : defaultValue;
+  }
+
+  static String _safeGetString(SharedPreferences prefs, String key, String defaultValue) {
+    final val = prefs.get(key);
+    return val is String ? val : defaultValue;
+  }
+
+  static double _safeGetDouble(SharedPreferences prefs, String key, double defaultValue) {
+    final val = prefs.get(key);
+    return val is num ? val.toDouble() : defaultValue;
+  }
+
   Future<void> loadSettings() async {
     final prefs = _prefsInstance ?? await SharedPreferences.getInstance();
 
     // 1. Lectura inmediata de preferencias (primer milisegundo)
-    _guardarFotos = prefs.getBool(AppConstants.prefGuardarFotos) ?? AppConstants.defaultGuardarFotos;
+    _guardarFotos = _safeGetBool(prefs, AppConstants.prefGuardarFotos, AppConstants.defaultGuardarFotos);
 
     // Asegurar purga de caché histórica previa al consumo de semillas (A-07 & B2)
     int purgeResult = -1;
@@ -88,7 +103,7 @@ class SettingsProvider with ChangeNotifier {
     if (purgeResult != -1) {
       // Purga exitosa: consumir semillas locales verificadas según validador canónico (D-08)
       double? cachedUsd;
-      final bool esTasaManual = prefs.getBool('pref_es_tasa_manual_usd') ?? false;
+      final bool esTasaManual = _safeGetBool(prefs, 'pref_es_tasa_manual_usd', false);
       final rawManual = prefs.get(AppConstants.prefTasaCambio);
       final rawAuto = prefs.get('cached_rate_usd');
 
@@ -138,20 +153,20 @@ class SettingsProvider with ChangeNotifier {
       _tasasSonReferencia = true; // NEW-2: Reseteo obligatorio a modo referencia ante purga fallida
     }
 
-    _monedaPrincipal = prefs.getString(AppConstants.prefMonedaPrincipal) ?? AppConstants.defaultMoneda;
-    _tipoTasa = prefs.getString('tipo_tasa') ?? 'oficial';
-    _presupuestoMensual = prefs.getDouble('presupuesto_mensual') ?? 0.0;
+    _monedaPrincipal = _safeGetString(prefs, AppConstants.prefMonedaPrincipal, AppConstants.defaultMoneda);
+    _tipoTasa = _safeGetString(prefs, 'tipo_tasa', 'oficial');
+    _presupuestoMensual = _safeGetDouble(prefs, 'presupuesto_mensual', 0.0);
 
     // Preferencias de notificaciones
-    _recordatoriosActivos = prefs.getBool(AppConstants.prefRecordatoriosActivos) ?? true;
-    _recordatorioFinDeSemana = prefs.getBool(AppConstants.prefRecordatorioFinDeSemana) ?? true;
-    _anunciosActivos = prefs.getBool(AppConstants.prefAnunciosActivos) ?? true;
+    _recordatoriosActivos = _safeGetBool(prefs, AppConstants.prefRecordatoriosActivos, true);
+    _recordatorioFinDeSemana = _safeGetBool(prefs, AppConstants.prefRecordatorioFinDeSemana, true);
+    _anunciosActivos = _safeGetBool(prefs, AppConstants.prefAnunciosActivos, true);
 
     // Cargar caché local de mensajes de recordatorios si existe
-    final cachedQuincenalJson = prefs.getString(AppConstants.prefCachedMensajesQuincenalesJson);
-    if (cachedQuincenalJson != null && cachedQuincenalJson.isNotEmpty) {
+    final rawCachedQuincenal = prefs.get(AppConstants.prefCachedMensajesQuincenalesJson);
+    if (rawCachedQuincenal is String && rawCachedQuincenal.isNotEmpty) {
       try {
-        final decoded = jsonDecode(cachedQuincenalJson) as List;
+        final decoded = jsonDecode(rawCachedQuincenal) as List;
         final list = decoded.map((e) => Map<String, String>.from(e as Map)).toList();
         if (list.isNotEmpty) {
           _mensajesQuincenales = list;
@@ -244,33 +259,43 @@ class SettingsProvider with ChangeNotifier {
         // valor previo en vez de pisarse con ceros o semillas obsoletas.
         if (isValidMonetaryRate(allRates.usd)) {
           _tasaCambioVesUsd = allRates.usd;
-          await prefs.setDouble(AppConstants.prefTasaCambio, _tasaCambioVesUsd);
-          await prefs.setDouble('cached_rate_usd', _tasaCambioVesUsd);
+          final ok1 = await prefs.setDouble(AppConstants.prefTasaCambio, _tasaCambioVesUsd);
+          if (ok1) ExchangeRateService.onKeyWriteConfirmed(AppConstants.prefTasaCambio);
+          final ok2 = await prefs.setDouble('cached_rate_usd', _tasaCambioVesUsd);
+          if (ok2) ExchangeRateService.onKeyWriteConfirmed('cached_rate_usd');
           await prefs.setBool('pref_es_tasa_manual_usd', false);
         }
         if (isValidMonetaryRate(allRates.eur)) {
           _tasaCambioVesEur = allRates.eur;
-          await prefs.setDouble('cached_rate_eur', _tasaCambioVesEur);
+          final okEur = await prefs.setDouble('cached_rate_eur', _tasaCambioVesEur);
+          if (okEur) ExchangeRateService.onKeyWriteConfirmed('cached_rate_eur');
         }
         if (isValidMonetaryRate(allRates.usdt)) {
           _tasaCambioVesUsdt = allRates.usdt;
-          await prefs.setDouble('cached_rate_usdt', _tasaCambioVesUsdt);
+          final okUsdt = await prefs.setDouble('cached_rate_usdt', _tasaCambioVesUsdt);
+          if (okUsdt) ExchangeRateService.onKeyWriteConfirmed('cached_rate_usdt');
         }
         _ultimaActualizacionTasas = allRates.fecha;
         _tasasSonReferencia = false;
-        await prefs.setString('cached_exchange_rates_timestamp', _ultimaActualizacionTasas!.toIso8601String());
+        final okTs = await prefs.setString('cached_exchange_rates_timestamp', _ultimaActualizacionTasas!.toIso8601String());
+        if (okTs) ExchangeRateService.onKeyWriteConfirmed('cached_exchange_rates_timestamp');
         exito = true;
       } else {
         // Modo referencia: si allRates trajo tasas válidas por caché o fallback, asignarlas
         if (isValidMonetaryRate(allRates.usd)) {
           _tasaCambioVesUsd = allRates.usd;
-          await prefs.setDouble(AppConstants.prefTasaCambio, _tasaCambioVesUsd);
+          final ok1 = await prefs.setDouble(AppConstants.prefTasaCambio, _tasaCambioVesUsd);
+          if (ok1) ExchangeRateService.onKeyWriteConfirmed(AppConstants.prefTasaCambio);
         }
         if (isValidMonetaryRate(allRates.eur)) {
           _tasaCambioVesEur = allRates.eur;
+          final okEur = await prefs.setDouble('cached_rate_eur', _tasaCambioVesEur);
+          if (okEur) ExchangeRateService.onKeyWriteConfirmed('cached_rate_eur');
         }
         if (isValidMonetaryRate(allRates.usdt)) {
           _tasaCambioVesUsdt = allRates.usdt;
+          final okUsdt = await prefs.setDouble('cached_rate_usdt', _tasaCambioVesUsdt);
+          if (okUsdt) ExchangeRateService.onKeyWriteConfirmed('cached_rate_usdt');
         }
         _tasasSonReferencia = true;
       }
@@ -320,7 +345,10 @@ class SettingsProvider with ChangeNotifier {
     _tasaCambioVesUsd = tasa;
     _tasasSonReferencia = true; // D-05 / D-06: Tasa manual tiene procedencia manual y se clasifica como referencia
     final prefs = _prefsInstance ?? await SharedPreferences.getInstance();
-    await prefs.setDouble(AppConstants.prefTasaCambio, _tasaCambioVesUsd);
+    final ok = await prefs.setDouble(AppConstants.prefTasaCambio, _tasaCambioVesUsd);
+    if (ok) {
+      ExchangeRateService.onKeyWriteConfirmed(AppConstants.prefTasaCambio);
+    }
     await prefs.setBool('pref_es_tasa_manual_usd', true);
     notifyListeners();
   }

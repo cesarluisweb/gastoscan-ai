@@ -38,8 +38,15 @@ class FakeSecureStorage extends Fake implements FlutterSecureStorage {
 class TestableSettingsProvider extends SettingsProvider {
   TestableSettingsProvider({super.secureStorage}) : super(autoLoad: false);
 
+  bool disableAutoSyncOnLoad = true;
+
   @override
-  Future<bool> actualizarTasaAutomatica({http.Client? client}) async => false;
+  Future<bool> actualizarTasaAutomatica({http.Client? client}) async {
+    if (disableAutoSyncOnLoad && client == null) {
+      return false;
+    }
+    return super.actualizarTasaAutomatica(client: client);
+  }
 }
 
 void main() {
@@ -169,7 +176,7 @@ void main() {
       });
 
       // 1. Usuario establece tasa manual 55.0
-      final provider1 = SettingsProvider(secureStorage: fakeSecureStorage, autoLoad: false);
+      final provider1 = TestableSettingsProvider(secureStorage: fakeSecureStorage);
       provider1.prefsInstance = sharedStore;
       await provider1.loadSettings();
       expect(provider1.tasaCambioVesUsd, equals(48.0));
@@ -178,7 +185,7 @@ void main() {
       expect(provider1.tasaCambioVesUsd, equals(55.0));
 
       // 2. Reinicio de aplicación (mismo store): la tasa manual prevalece sobre 48.0
-      final provider2 = SettingsProvider(secureStorage: fakeSecureStorage, autoLoad: false);
+      final provider2 = TestableSettingsProvider(secureStorage: fakeSecureStorage);
       provider2.prefsInstance = sharedStore;
       await provider2.loadSettings();
       expect(provider2.tasaCambioVesUsd, equals(55.0));
@@ -194,10 +201,9 @@ void main() {
       expect(provider2.tasasSonReferencia, isFalse);
     });
 
-    test('actualizarTasaAutomatica no asigna Infinity a las tasas activas', () async {
+    test('actualizarTasaAutomatica asigna tasas validas obtenidas de red', () async {
       final provider = SettingsProvider(secureStorage: fakeSecureStorage, autoLoad: false);
 
-      // Mock client que devuelve un JSON remoto anómalo
       final mockClient = MockClient((request) async {
         return http.Response('{"usd": 60.0, "eur": 65.0, "usdt": 62.0}', 200);
       });
@@ -207,6 +213,77 @@ void main() {
       expect(provider.tasaCambioVesUsd, equals(60.0));
       expect(provider.tasaCambioVesEur, equals(65.0));
       expect(provider.tasaCambioVesUsdt, equals(62.0));
+    });
+
+    test('actualizarTasaAutomatica no asigna Infinity ni valores fuera de dominio ante respuesta anomala', () async {
+      final provider = SettingsProvider(secureStorage: fakeSecureStorage, autoLoad: false);
+
+      // Mock client con valores fuera de dominio
+      final mockClient = MockClient((request) async {
+        return http.Response('{"usd": 1e400, "eur": -10.0, "usdt": 0.5}', 200);
+      });
+
+      final success = await provider.actualizarTasaAutomatica(client: mockClient);
+      expect(success, isFalse);
+      expect(provider.tasaCambioVesUsd.isFinite, isTrue);
+      expect(provider.tasaCambioVesUsd, equals(0.0));
+      expect(provider.tasaCambioVesEur, equals(0.0));
+      expect(provider.tasaCambioVesUsdt, equals(0.0));
+    });
+
+    test('M-05: setTasaCambio rescinde remove pendiente en ExchangeRateService al persistir tasa manual valida', () async {
+      final store = TestSharedPreferences({
+        AppConstants.prefTasaCambio: -10.0,
+      });
+
+      // 1. Purga falla en remove, dejando prefTasaCambio en pendingPurgeOperations
+      store.returnFalseOnRemove = true;
+      final res1 = await ExchangeRateService.ensureCacheHistoricaPurgada(prefsInstance: store);
+      expect(res1, equals(-1));
+      expect(ExchangeRateService.pendingPurgeOperations.containsKey(AppConstants.prefTasaCambio), isTrue);
+
+      // 2. Plataforma se recupera para escrituras
+      store.returnFalseOnRemove = false;
+
+      // 3. Usuario fija tasa manual 60.0 desde SettingsProvider
+      final provider = SettingsProvider(secureStorage: fakeSecureStorage, autoLoad: false);
+      provider.prefsInstance = store;
+      await provider.setTasaCambio(60.0);
+
+      // La escritura confirmada debe haber llamado a ExchangeRateService.onKeyWriteConfirmed
+      expect(ExchangeRateService.pendingPurgeOperations.containsKey(AppConstants.prefTasaCambio), isFalse);
+      expect(store.disk[AppConstants.prefTasaCambio], equals(60.0));
+
+      // 4. Se ejecuta ensureCacheHistoricaPurgada: no debe borrar prefTasaCambio
+      final res2 = await ExchangeRateService.ensureCacheHistoricaPurgada(prefsInstance: store);
+      expect(res2, equals(0));
+      expect(store.disk[AppConstants.prefTasaCambio], equals(60.0));
+      expect(store.getDouble(AppConstants.prefTasaCambio), equals(60.0));
+    });
+
+    test('N-09: loadSettings no lanza TypeError ante preferencias con tipos corruptos (safe getters)', () async {
+      final storeWithCorruptTypes = TestSharedPreferences({
+        ExchangeRateService.prefKeyCacheHistoricaPurgada: true,
+        AppConstants.prefGuardarFotos: 'true', // String en vez de bool
+        'pref_es_tasa_manual_usd': 1, // int en vez de bool
+        AppConstants.prefMonedaPrincipal: 100, // int en vez de String
+        'tipo_tasa': false, // bool en vez de String
+        'presupuesto_mensual': '500.0', // String en vez de double
+        AppConstants.prefRecordatoriosActivos: 'yes',
+        AppConstants.prefRecordatorioFinDeSemana: 0,
+        AppConstants.prefAnunciosActivos: 1.0,
+        AppConstants.prefCachedMensajesQuincenalesJson: 12345, // int en vez de String
+      });
+
+      final provider = TestableSettingsProvider(secureStorage: fakeSecureStorage);
+      provider.prefsInstance = storeWithCorruptTypes;
+
+      // Debe completar limpiamente sin TypeError y adoptando los defaults
+      await expectLater(provider.loadSettings(), completes);
+      expect(provider.guardarFotos, equals(AppConstants.defaultGuardarFotos));
+      expect(provider.monedaPrincipal, equals(AppConstants.defaultMoneda));
+      expect(provider.tipoTasa, equals('oficial'));
+      expect(provider.presupuestoMensual, equals(0.0));
     });
   });
 }

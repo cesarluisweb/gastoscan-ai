@@ -152,31 +152,39 @@ void main() {
       expect(spent, equals(100.0));
     });
 
-    test('setTasasReferencia rechaza Infinity, NaN, 0.5, 1.0 y valores negativos', () async {
+    test('B-05: setTasasReferencia rechaza Infinity, NaN, 0.5, 1.0 y valores negativos', () async {
       final provider = GastoProvider(repository: fakeRepo, autoLoad: false);
-
-      // Intentar pasar Infinity
-      provider.setTasasReferencia(tasaUsd: double.infinity, tasaEur: double.infinity);
-      // Intentar pasar NaN
-      provider.setTasasReferencia(tasaUsd: double.nan, tasaEur: double.nan);
-      // Intentar pasar 0.5 o 1.0
-      provider.setTasasReferencia(tasaUsd: 0.5, tasaEur: 1.0);
-      // Intentar pasar negativo
-      provider.setTasasReferencia(tasaUsd: -10.0, tasaEur: -5.0);
-
-      // Fijar tasas de prueba en fakeRepo
-      fakeRepo = FakeGastoRepositoryForProvider();
-
-      // Pasar tasa válida > 1.0
-      provider.setTasasReferencia(tasaUsd: 45.0, tasaEur: 50.0);
-
-      // Con effEur = 50.0 y 4000.0 VES: 4000 / 50 = 80.0
       provider.prefsInstance = TestSharedPreferences({
         ExchangeRateService.prefKeyCacheHistoricaPurgada: true,
       });
       await provider.cargarDatos();
-      provider.setTasasReferencia(tasaUsd: 45.0, tasaEur: 50.0);
 
+      // Intentar pasar Infinity
+      provider.setTasasReferencia(tasaUsd: double.infinity, tasaEur: double.infinity);
+      expect(provider.tasaUsd, equals(0.0));
+      expect(provider.tasaEur, equals(0.0));
+
+      // Intentar pasar NaN
+      provider.setTasasReferencia(tasaUsd: double.nan, tasaEur: double.nan);
+      expect(provider.tasaUsd, equals(0.0));
+      expect(provider.tasaEur, equals(0.0));
+
+      // Intentar pasar 0.5 o 1.0
+      provider.setTasasReferencia(tasaUsd: 0.5, tasaEur: 1.0);
+      expect(provider.tasaUsd, equals(0.0));
+      expect(provider.tasaEur, equals(0.0));
+
+      // Intentar pasar negativo
+      provider.setTasasReferencia(tasaUsd: -10.0, tasaEur: -5.0);
+      expect(provider.tasaUsd, equals(0.0));
+      expect(provider.tasaEur, equals(0.0));
+
+      // Pasar tasa válida > 1.0
+      provider.setTasasReferencia(tasaUsd: 45.0, tasaEur: 50.0);
+      expect(provider.tasaUsd, equals(45.0));
+      expect(provider.tasaEur, equals(50.0));
+
+      // Con effEur = 50.0 y 4000.0 VES: 4000 / 50 = 80.0
       final spent = provider.getSpentForCategory('Alimentos', moneda: 'EUR');
       expect(spent.isFinite, isTrue);
       expect(spent, equals(80.0));
@@ -201,6 +209,24 @@ void main() {
       // 4000.0 VES / 50.0 EUR = 80.0 EUR
       final spent = provider.getSpentForCategory('Alimentos', moneda: 'EUR');
       expect(spent, equals(80.0));
+    });
+
+    test('NEW-3b / D-05: GastoProvider prefiere tasa manual global sobre cache automatica antigua al reiniciar', () async {
+      final storeWithManualAndAuto = TestSharedPreferences({
+        ExchangeRateService.prefKeyCacheHistoricaPurgada: true,
+        'cached_rate_usd': 48.0, // Tasa automática antigua
+        'pref_es_tasa_manual_usd': true,
+        AppConstants.prefTasaCambio: 55.0, // Tasa manual global
+        'cached_rate_eur': 50.0,
+      });
+
+      final provider = GastoProvider(repository: fakeRepo, autoLoad: false);
+      provider.prefsInstance = storeWithManualAndAuto;
+      await provider.cargarDatos();
+
+      // Debe prevalecer 55.0 sobre 48.0 conforme a D-05
+      expect(provider.tasaUsd, equals(55.0));
+      expect(provider.tasaEur, equals(50.0));
     });
   });
 }

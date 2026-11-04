@@ -4,12 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../providers/gasto_provider.dart';
 import '../../providers/scan_queue_provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../data/models/gemini_extraction_result.dart';
 import '../../services/notification_service.dart';
 import '../../services/document_scanner_service.dart';
+import '../../services/sync_coordinator.dart';
+import '../../services/sync_service.dart';
 import 'dashboard_screen.dart';
 import 'expense_history_screen.dart';
 import 'analysis_screen.dart';
@@ -127,60 +131,153 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    NotificationService.instance.selectedPayloadNotifier.addListener(_handleNotificationPayload);
+    NotificationService.instance.pendingActionNotifier.addListener(_drainLaunchActions);
+    NotificationService.instance.selectedPayloadNotifier.addListener(_drainLaunchActions);
+
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
-      gastoProvider.sincronizarConFirestore();
-
-      // [E0-05a] Auto-reparación automática neutralizada normativamente (RM-03 Fase 0A).
-      // Se neutraliza cualquier ejecución automática de repararGastosTasa474 y repararGastosTasa850
-      // para preservar intactos los registros de usuarios y evitar mutaciones monetarias no autorizadas.
-
-      final initial = NotificationService.instance.initialPayload;
-      if (initial != null) {
-        _handleNotificationPayload();
-      }
+      await _inicializarServiciosSegundoPlano();
+      _drainLaunchActions();
     });
   }
 
-  void _handleNotificationPayload() {
-    final payload = NotificationService.instance.selectedPayloadNotifier.value ??
+  /// Inicialización desacoplada en segundo plano tras el primer renderizado de UI.
+  Future<void> _inicializarServiciosSegundoPlano() async {
+    // 1. Captura de intenciones: inicializar sin solicitar permisos bloqueantes
+    try {
+      await NotificationService.instance.initialize(requestPermission: false);
+    } catch (e) {
+      debugPrint('MainScreen: Error inicializando notificaciones locales: $e');
+    }
+
+    // 2. Suscripciones diferidas y reprogramación de recordatorios
+    try {
+      await NotificationService.instance.initializeFirebaseMessaging();
+      await NotificationService.instance.recordActivityAndReschedule();
+    } catch (e) {
+      debugPrint('MainScreen: Error configurando FCM o reprogramando recordatorio: $e');
+    }
+
+    // 3. Restauración silenciosa de sesión y autenticación en 2.º plano
+    if (Firebase.apps.isNotEmpty) {
+      try {
+        if (FirebaseAuth.instance.currentUser == null) {
+          final syncService = SyncService();
+          final user = await syncService.intentarLoginSilencioso().timeout(
+            const Duration(seconds: 10),
+            onTimeout: () => null,
+          );
+          if (user == null && FirebaseAuth.instance.currentUser == null) {
+            await FirebaseAuth.instance.signInAnonymously();
+          }
+        }
+      } catch (e) {
+        debugPrint('MainScreen: Error en autenticación de segundo plano: $e');
+      }
+    }
+
+    // 4. Sincronización en segundo plano centralizada en SyncCoordinator
+    try {
+      SyncCoordinator.instance.request(SyncTrigger.arranque);
+    } catch (e) {
+      debugPrint('MainScreen: Error en arranque de SyncCoordinator: $e');
+    }
+  }
+
+  bool _isHandlingAction = false;
+
+  /// Consume intenciones de navegación pendientes asegurando que ScanQueueProvider.ready
+  /// haya completado su carga desde SQLite antes de evaluar comprobantes disponibles.
+  Future<void> _drainLaunchActions() async {
+    if (!mounted || _isHandlingAction) return;
+
+    final action = NotificationService.instance.pendingAction;
+    final payload = action?.payload ??
+        NotificationService.instance.selectedPayloadNotifier.value ??
         NotificationService.instance.initialPayload;
-    if (payload == null || !mounted) return;
 
-    NotificationService.instance.clearPayload();
+    if (payload == null) return;
 
-    if (payload == 'pending_reviews') {
-      final scanQueue = Provider.of<ScanQueueProvider>(context, listen: false);
-      if (scanQueue.readyItems.isNotEmpty) {
-        final item = scanQueue.readyItems.first;
+    _isHandlingAction = true;
+    try {
+      if (payload == 'pending_reviews') {
+        final scanQueue = Provider.of<ScanQueueProvider>(context, listen: false);
+
+        // Esperar a que ScanQueueProvider termine su carga inicial desde SQLite (máximo 8 segundos)
         try {
-          final data = jsonDecode(item['extracted_data']);
-          final result = GeminiExtractionResult.fromJson(data);
-          final file = File(item['image_path']);
-
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ReviewExpenseScreen(
-                imageFile: file.existsSync() ? file : null,
-                extractedData: result,
-                queueItemId: item['id'],
-              ),
-            ),
-          ).then((_) {
-            scanQueue.loadReadyItems();
-          });
+          await scanQueue.ready.timeout(const Duration(seconds: 8));
         } catch (e) {
-          debugPrint('Error al abrir factura desde notificación: $e');
+          debugPrint('MainScreen: Tiempo de espera agotado esperando a ScanQueueProvider.ready: $e');
+        }
+
+        if (!mounted) return;
+
+        if (scanQueue.readyItems.isNotEmpty) {
+          final item = scanQueue.readyItems.first;
+          try {
+            final data = jsonDecode(item['extracted_data']);
+            final result = GeminiExtractionResult.fromJson(data);
+            final file = File(item['image_path']);
+
+            if (action != null) {
+              NotificationService.instance.markActionHandled(action.id);
+            } else {
+              NotificationService.instance.clearPayload();
+            }
+
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ReviewExpenseScreen(
+                  imageFile: file.existsSync() ? file : null,
+                  extractedData: result,
+                  queueItemId: item['id'],
+                ),
+              ),
+            );
+            if (mounted) {
+              scanQueue.loadReadyItems();
+            }
+          } catch (e) {
+            debugPrint('Error al abrir factura desde notificación: $e');
+            if (action != null) {
+              NotificationService.instance.markActionHandled(action.id);
+            } else {
+              NotificationService.instance.clearPayload();
+            }
+          }
+        } else {
+          // No hay comprobantes listos en la cola
+          if (action != null) {
+            NotificationService.instance.markActionHandled(action.id);
+          } else {
+            NotificationService.instance.clearPayload();
+          }
+
+          _onTabTapped(1); // Navegar a pestaña Gastos
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No hay comprobantes pendientes por revisar.'),
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      } else {
+        // Otros payloads (ej. broadcast_opened)
+        if (action != null) {
+          NotificationService.instance.markActionHandled(action.id);
+        } else {
+          NotificationService.instance.clearPayload();
         }
       }
+    } finally {
+      _isHandlingAction = false;
     }
   }
 
   @override
   void dispose() {
-    NotificationService.instance.selectedPayloadNotifier.removeListener(_handleNotificationPayload);
+    NotificationService.instance.pendingActionNotifier.removeListener(_drainLaunchActions);
+    NotificationService.instance.selectedPayloadNotifier.removeListener(_drainLaunchActions);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -190,6 +287,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       Provider.of<ScanQueueProvider>(context, listen: false).resumeQueueWhenOnline();
       Provider.of<GastoProvider>(context, listen: false).verificarReanudacionMesActual();
+      SyncCoordinator.instance.request(SyncTrigger.reanudacion);
+      _drainLaunchActions();
     }
   }
 

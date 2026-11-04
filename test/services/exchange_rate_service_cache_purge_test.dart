@@ -27,6 +27,7 @@ class TestSharedPreferences extends Fake implements SharedPreferences {
   bool returnFalseOnSetBool = false;
   bool throwOnSetDouble = false;
   bool returnFalseOnSetDouble = false;
+  void Function(String key)? onKeyRemoved;
 
   Map<String, Object> get data => memory;
 
@@ -116,6 +117,7 @@ class TestSharedPreferences extends Fake implements SharedPreferences {
     removedKeys.add(key);
     // En el plugin real, la caché en memoria se muta antes de la llamada de plataforma
     memory.remove(key);
+    onKeyRemoved?.call(key);
     if (throwOnRemove) {
       throw Exception('Simulated disk/IO error on remove');
     }
@@ -1324,6 +1326,31 @@ void main() {
         expect(ExchangeRateService.pendingPurgeOperations.isEmpty, isTrue);
         expect(ExchangeRateService.isPurgeMarkPendingConfirmation, isFalse);
       });
+
+      test('B-02: Eliminación de mapa histórico completo corrupto (cleanedMap.isEmpty) cuenta N entradas tanto en primer intento como en reintento', () async {
+        final initialHist = jsonEncode({
+          '2026-10-30': {'valor': 0.5, 'source': 'dolarapi'}, // Inválida
+          '2026-10-29': {'valor': -5.0, 'source': 'dolarapi'}, // Inválida
+        });
+        final store = TestSharedPreferences({
+          'tasas_historico_v1': initialHist,
+        });
+
+        // 1. Simular fallo de plataforma en remove
+        store.returnFalseOnRemove = true;
+        final res1 = await ExchangeRateService.ensureCacheHistoricaPurgada(prefsInstance: store);
+        expect(res1, equals(-1));
+        expect(ExchangeRateService.pendingPurgeOperations.containsKey('tasas_historico_v1'), isTrue);
+        expect(ExchangeRateService.pendingPurgeOperations['tasas_historico_v1']!.entriesCleanedCount, equals(2));
+
+        // 2. Plataforma se recupera
+        store.returnFalseOnRemove = false;
+        final res2 = await ExchangeRateService.ensureCacheHistoricaPurgada(prefsInstance: store);
+        // Debe reportar exactamente 2 entradas depuradas confirmadas físicamente en disco
+        expect(res2, equals(2));
+        expect(store.disk.containsKey('tasas_historico_v1'), isFalse);
+        expect(ExchangeRateService.pendingPurgeOperations.isEmpty, isTrue);
+      });
     });
 
     // =========================================================================
@@ -1343,10 +1370,9 @@ void main() {
         expect(res1, equals(-1));
         expect(ExchangeRateService.pendingPurgeOperations.containsKey('cached_rate_usd'), isTrue);
 
-        // 2. Plataforma se recupera para escrituras
-        store.returnFalseOnRemove = false;
-
-        // 3. Se obtiene cotización en vivo válida y se persiste exitosamente
+        // 2. Se obtiene cotización en vivo válida mientras returnFalseOnRemove SIGUE siendo true.
+        // getAllTodayRates llama a ensure (cuyo replay de remove falla porque returnFalseOnRemove es true,
+        // garantizando que cached_rate_usd permanece en pendingPurgeOperations hasta que se escribe la tasa fresca).
         final liveClient = MockClient((request) async {
           return http.Response('{"usd": 60.0, "eur": 65.0, "usdt": 62.0}', 200);
         });
@@ -1358,8 +1384,11 @@ void main() {
         expect(store.disk['cached_rate_usd'], equals(60.0));
         expect(store.getDouble('cached_rate_usd'), equals(60.0));
 
-        // La operación remove pendiente para cached_rate_usd DEBE haber sido rescindida
+        // La escritura exitosa de 60.0 DEBE haber invocado _onKeyWriteConfirmed('cached_rate_usd')
         expect(ExchangeRateService.pendingPurgeOperations.containsKey('cached_rate_usd'), isFalse);
+
+        // 3. Plataforma se recupera para removers
+        store.returnFalseOnRemove = false;
 
         // 4. Siguiente ejecución de purga: NO debe borrar cached_rate_usd
         final res2 = await ExchangeRateService.ensureCacheHistoricaPurgada(prefsInstance: store);
@@ -1375,6 +1404,129 @@ void main() {
         final fallbackRates = await ExchangeRateService.getAllTodayRates(client: failingClient, prefsInstance: store);
         expect(fallbackRates.usd, equals(60.0));
         expect(fallbackRates.esReferencia, isTrue);
+      });
+
+      test('onKeyWriteConfirmed rescinde explicitamente remove pendiente sobre prefTasaCambio y purga no la borra', () async {
+        final store = TestSharedPreferences({
+          AppConstants.prefTasaCambio: -10.0,
+        });
+
+        // 1. Purga intenta remover prefTasaCambio pero falla en plataforma
+        store.returnFalseOnRemove = true;
+        final res1 = await ExchangeRateService.ensureCacheHistoricaPurgada(prefsInstance: store);
+        expect(res1, equals(-1));
+        expect(ExchangeRateService.pendingPurgeOperations.containsKey(AppConstants.prefTasaCambio), isTrue);
+
+        // 2. Notificación explícita de escritura confirmada válida
+        store.returnFalseOnRemove = false;
+        store.disk[AppConstants.prefTasaCambio] = 60.0;
+        store.setDouble(AppConstants.prefTasaCambio, 60.0);
+        ExchangeRateService.onKeyWriteConfirmed(AppConstants.prefTasaCambio);
+
+        expect(ExchangeRateService.pendingPurgeOperations.containsKey(AppConstants.prefTasaCambio), isFalse);
+
+        // 3. Purga posterior: no debe borrar prefTasaCambio
+        final res2 = await ExchangeRateService.ensureCacheHistoricaPurgada(prefsInstance: store);
+        expect(res2, equals(0));
+        expect(store.disk[AppConstants.prefTasaCambio], equals(60.0));
+        expect(store.getDouble(AppConstants.prefTasaCambio), equals(60.0));
+      });
+
+      test('Replay de remove no borra prefTasaCambio si ahora tiene valor valido en disco (resiliencia ante omision de aviso)', () async {
+        final store = TestSharedPreferences({
+          AppConstants.prefTasaCambio: -10.0,
+        });
+
+        store.returnFalseOnRemove = true;
+        final res1 = await ExchangeRateService.ensureCacheHistoricaPurgada(prefsInstance: store);
+        expect(res1, equals(-1));
+        expect(ExchangeRateService.pendingPurgeOperations.containsKey(AppConstants.prefTasaCambio), isTrue);
+
+        // Se simula escritura directa de tasa válida en disco sin llamar a onKeyWriteConfirmed
+        store.disk[AppConstants.prefTasaCambio] = 65.0;
+        store.setDouble(AppConstants.prefTasaCambio, 65.0);
+        store.returnFalseOnRemove = false;
+
+        // El replay en purgarCacheHistoricaInvalida revalida isValidMonetaryRate antes de remove y rescinde
+        final res2 = await ExchangeRateService.ensureCacheHistoricaPurgada(prefsInstance: store);
+        expect(res2, equals(0));
+        expect(ExchangeRateService.pendingPurgeOperations.containsKey(AppConstants.prefTasaCambio), isFalse);
+        expect(store.disk[AppConstants.prefTasaCambio], equals(65.0));
+      });
+
+      test('Ruta B (TOCTOU): Revalidacion antes de remove en keysToRemove preserva tasa valida escrita durante la purga', () async {
+        final store = TestSharedPreferences({
+          'cached_rate_usdt': 0.5, // Primera clave en keysToRemove
+          'cached_rate_usd': 0.5,  // Segunda clave en keysToRemove
+        });
+
+        // Al removerse 'cached_rate_usdt', un proceso concurrente confirma escritura válida para 'cached_rate_usd'
+        store.onKeyRemoved = (removedKey) {
+          if (removedKey == 'cached_rate_usdt') {
+            store.disk['cached_rate_usd'] = 58.0;
+            store.memory['cached_rate_usd'] = 58.0;
+          }
+        };
+
+        final res = await ExchangeRateService.purgarCacheHistoricaInvalida(prefsInstance: store);
+        // Debe haber removido cached_rate_usdt (1), pero omitido cached_rate_usd por la revalidación TOCTOU
+        expect(res, equals(1));
+        expect(store.disk.containsKey('cached_rate_usdt'), isFalse);
+        expect(store.disk['cached_rate_usd'], equals(58.0));
+      });
+    });
+
+    // =========================================================================
+    // M-08: AISLAMIENTO DE ESTADO ESTÁTICO Y PURGAS EN VUELO MEDIANTE GENERACIÓN
+    // =========================================================================
+
+    group('M-08: Aislamiento de estado estático y purgas en vuelo mediante generación', () {
+      test('resetPendingPurgeOperationsForTesting invalida purga en vuelo e impide mutaciones posteriores', () async {
+        final store = TestSharedPreferences({
+          'cached_rate_usd': -5.0,
+        });
+
+        ExchangeRateService.resetPendingPurgeOperationsForTesting();
+        expect(ExchangeRateService.pendingPurgeOperations.isEmpty, isTrue);
+
+        store.returnFalseOnRemove = true;
+        final purgeFuture = ExchangeRateService.ensureCacheHistoricaPurgada(prefsInstance: store);
+
+        // Invocamos reset mientras la purga estaba en vuelo
+        ExchangeRateService.resetPendingPurgeOperationsForTesting();
+
+        final result = await purgeFuture;
+        // Purga invalidada retorna -1 y no contamina el nuevo estado limpio
+        expect(result, equals(-1));
+        expect(ExchangeRateService.pendingPurgeOperations.isEmpty, isTrue);
+        expect(ExchangeRateService.isPurgeMarkPendingConfirmation, isFalse);
+      });
+
+      test('finally condicional no pisa _activePurgeFuture de una purga posterior si la anterior termino despues de un reset', () async {
+        final store = TestSharedPreferences({
+          'cached_rate_usd': -5.0,
+        });
+
+        ExchangeRateService.resetPendingPurgeOperationsForTesting();
+
+        // 1. Iniciar purga lenta A
+        store.returnFalseOnRemove = true;
+        final futureA = ExchangeRateService.ensureCacheHistoricaPurgada(prefsInstance: store);
+
+        // 2. Reset mientras A está en vuelo
+        ExchangeRateService.resetPendingPurgeOperationsForTesting();
+
+        // 3. Iniciar purga B inmediatamente después del reset
+        store.returnFalseOnRemove = false;
+        store.disk['cached_rate_usd'] = 60.0;
+        store.setDouble('cached_rate_usd', 60.0);
+        final futureB = ExchangeRateService.ensureCacheHistoricaPurgada(prefsInstance: store);
+
+        // 4. Ambas completan; el finally de A no debió limpiar la referencia de B
+        final resA = await futureA;
+        final resB = await futureB;
+        expect(resA, equals(-1));
+        expect(resB, equals(0));
       });
     });
   });

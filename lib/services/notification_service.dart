@@ -14,6 +14,28 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   debugPrint('NotificationService: FCM background message recibido: ${message.messageId}');
 }
 
+/// Representa una intención de navegación pendiente disparada por una notificación.
+/// Mantiene el payload en bandeja hasta que el consumidor en UI confirme su atención.
+class PendingLaunchAction {
+  final String id;
+  final String payload;
+  final String origin;
+  final DateTime receivedAt;
+  bool isHandled;
+
+  PendingLaunchAction({
+    required this.id,
+    required this.payload,
+    required this.origin,
+    required this.receivedAt,
+    this.isHandled = false,
+  });
+
+  @override
+  String toString() =>
+      'PendingLaunchAction(id: $id, payload: $payload, origin: $origin, isHandled: $isHandled)';
+}
+
 /// Servicio centralizado de notificaciones locales y push de "Rinde Más".
 /// Administra:
 /// 1. Recordatorios de inactividad a 30 días (R4).
@@ -75,11 +97,52 @@ class NotificationService {
   DateTime? _lastWeekendScheduledTime;
   DateTime? get lastWeekendScheduledTime => _lastWeekendScheduledTime;
 
-  // Manejo de Deep-linking y Cold Start
+  // Manejo de Deep-linking, Cold Start y Bandeja de Intenciones
   String? _initialPayload;
   String? get initialPayload => _initialPayload;
 
   final ValueNotifier<String?> selectedPayloadNotifier = ValueNotifier<String?>(null);
+
+  PendingLaunchAction? _pendingAction;
+  PendingLaunchAction? get pendingAction => _pendingAction;
+
+  final ValueNotifier<PendingLaunchAction?> pendingActionNotifier =
+      ValueNotifier<PendingLaunchAction?>(null);
+
+  /// Registra una intención en la bandeja para ser consumida post-arranque.
+  void enqueueAction(String payload, String origin) {
+    if (payload.isEmpty) return;
+    final id = '${DateTime.now().millisecondsSinceEpoch}_${payload.hashCode}';
+    final action = PendingLaunchAction(
+      id: id,
+      payload: payload,
+      origin: origin,
+      receivedAt: DateTime.now(),
+    );
+    _pendingAction = action;
+    pendingActionNotifier.value = action;
+    _initialPayload = payload;
+    selectedPayloadNotifier.value = payload;
+  }
+
+  /// Marca una intención como atendida y la remueve de la bandeja.
+  void markActionHandled(String id) {
+    if (_pendingAction != null && _pendingAction!.id == id) {
+      _pendingAction!.isHandled = true;
+      _pendingAction = null;
+      pendingActionNotifier.value = null;
+      _initialPayload = null;
+      selectedPayloadNotifier.value = null;
+    }
+  }
+
+  /// Limpia forzosamente la intención pendiente (usado en tests y resets).
+  void clearPendingAction() {
+    _pendingAction = null;
+    pendingActionNotifier.value = null;
+    _initialPayload = null;
+    selectedPayloadNotifier.value = null;
+  }
 
   NotificationService._internal({FlutterLocalNotificationsPlugin? plugin, FirebaseMessaging? messaging})
       : _notificationsPlugin = plugin ?? FlutterLocalNotificationsPlugin(),
@@ -145,7 +208,7 @@ class NotificationService {
         onDidReceiveNotificationResponse: (NotificationResponse response) {
           debugPrint('NotificationService: Notificación pulsada: ${response.payload}');
           if (response.payload != null && response.payload!.isNotEmpty) {
-            selectedPayloadNotifier.value = response.payload;
+            enqueueAction(response.payload!, 'local_tap');
           }
         },
       );
@@ -156,9 +219,9 @@ class NotificationService {
       if (launchDetails != null &&
           launchDetails.didNotificationLaunchApp &&
           launchDetails.notificationResponse?.payload != null) {
-        _initialPayload = launchDetails.notificationResponse!.payload;
-        selectedPayloadNotifier.value = _initialPayload;
-        debugPrint('NotificationService: Cold start desde notificación con payload: $_initialPayload');
+        final payload = launchDetails.notificationResponse!.payload!;
+        enqueueAction(payload, 'local_launch');
+        debugPrint('NotificationService: Cold start desde notificación con payload: $payload');
       }
 
       if (requestPermission) {
@@ -210,15 +273,14 @@ class NotificationService {
       FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
         debugPrint('NotificationService: App abierta desde FCM push: ${message.messageId}');
         final payload = message.data['payload'] ?? 'broadcast_opened';
-        selectedPayloadNotifier.value = payload;
+        enqueueAction(payload, 'fcm_tap');
       });
 
       // 5. Manejar arranque en frío desde FCM si estaba cerrada
       final initialMessage = await _firebaseMessaging!.getInitialMessage();
       if (initialMessage != null) {
         final payload = initialMessage.data['payload'] ?? 'broadcast_opened';
-        _initialPayload = payload;
-        selectedPayloadNotifier.value = payload;
+        enqueueAction(payload, 'fcm_launch');
         debugPrint('NotificationService: Cold start desde FCM con payload: $payload');
       }
     } catch (e) {

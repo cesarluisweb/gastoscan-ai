@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'firebase_options.dart';
 import 'core/theme/app_theme.dart';
@@ -12,7 +11,6 @@ import 'providers/scan_queue_provider.dart';
 import 'providers/chat_provider.dart';
 import 'services/notification_service.dart';
 import 'ui/screens/main_screen.dart';
-import 'services/sync_service.dart';
 
 /// Punto de entrada oficial de Rinde Más.
 void main() async {
@@ -30,6 +28,7 @@ void main() async {
     ),
   );
 
+  // Fase 0: Inicialización imprescindible antes de runApp
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
@@ -39,27 +38,8 @@ void main() async {
     debugPrint("Firebase initialize error: $e");
   }
 
-  try {
-    // Intentar restaurar sesión de Google de forma silenciosa al iniciar
-    final syncService = SyncService();
-    await syncService.intentarLoginSilencioso();
-
-    if (FirebaseAuth.instance.currentUser == null) {
-      await FirebaseAuth.instance.signInAnonymously();
-    }
-  } catch (e) {
-    debugPrint("Error signing in: $e");
-  }
-
-  // Inicializar Notificaciones Locales, Broadcast FCM y programar recordatorios
-  try {
-    await NotificationService.instance.initialize();
-    await NotificationService.instance.initializeFirebaseMessaging();
-    await NotificationService.instance.recordActivityAndReschedule();
-  } catch (e) {
-    debugPrint("Error initializing notifications: $e");
-  }
-
+  // Renderizado instantáneo y local-first: sesiones, notificaciones
+  // y sincronización se coordinan en segundo plano tras el primer frame.
   runApp(const GastoScanApp());
 }
 

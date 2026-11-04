@@ -55,6 +55,13 @@ class SyncService {
     return prefs.getBool('sync_pending_replace_$uid') == true;
   }
 
+  /// Verifica públicamente si existe una bandera de reemplazo pendiente activa.
+  Future<bool> isPendingReplaceActive([String? uid]) async {
+    final targetUid = uid ?? _auth?.currentUser?.uid;
+    if (targetUid == null) return false;
+    return _isPendingReplace(targetUid);
+  }
+
   Future<void> _setPendingReplaceFlag(String uid) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('sync_pending_replace_$uid', true);
@@ -357,21 +364,19 @@ class SyncService {
     }
   }
 
-  Future<void> intentarLoginSilencioso() async {
+  Future<User?> intentarLoginSilencioso() async {
     try {
-      final auth = FirebaseAuth.instance;
+      final auth = _auth;
+      if (auth == null) return null;
       final currentUser = auth.currentUser;
 
       if (currentUser != null && !currentUser.isAnonymous) {
-        return;
+        return currentUser;
       }
 
-      final googleSignIn = GoogleSignIn(
-        serverClientId: AppConstants.googleWebClientId,
-      );
-
+      final googleSignIn = _googleSignInInstance;
       final GoogleSignInAccount? googleUser = await googleSignIn.signInSilently();
-      if (googleUser == null) return;
+      if (googleUser == null) return null;
 
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
@@ -382,15 +387,18 @@ class SyncService {
       final userCred = await auth.signInWithCredential(credential);
       final activeUser = userCred.user ?? auth.currentUser;
       if (activeUser != null) {
-        await activeUser.updateProfile(
-          displayName: googleUser.displayName,
-          photoURL: googleUser.photoUrl,
-        );
-        await activeUser.reload();
+        try {
+          await activeUser.updateProfile(
+            displayName: googleUser.displayName,
+            photoURL: googleUser.photoUrl,
+          );
+          await activeUser.reload();
+        } catch (_) {}
       }
-      await syncBidirectional();
+      return activeUser;
     } catch (e) {
       debugPrint("Fallo al autenticar silenciosamente con Google: $e");
+      return null;
     }
   }
 

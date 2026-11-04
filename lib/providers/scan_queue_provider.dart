@@ -37,6 +37,11 @@ class ScanQueueProvider with ChangeNotifier {
   String? _lastError;
   String? get lastError => _lastError;
 
+  final Completer<void> _readyCompleter = Completer<void>();
+
+  /// Completa cuando la primera carga de ítems listos y pendientes desde SQLite finaliza.
+  Future<void> get ready => _readyCompleter.future;
+
   ScanQueueProvider({
     DatabaseHelper? dbHelper,
     GeminiService? geminiService,
@@ -53,6 +58,10 @@ class ScanQueueProvider with ChangeNotifier {
     _initConnectivityListener();
     if (autoProcess) {
       loadQueue();
+    } else {
+      if (!_readyCompleter.isCompleted) {
+        _readyCompleter.complete();
+      }
     }
   }
 
@@ -87,16 +96,27 @@ class ScanQueueProvider with ChangeNotifier {
   }
 
   Future<void> loadQueue() async {
-    if (_isDisposed) return;
-    if (!_isProcessing) {
-      try {
-        await _dbHelper.resetStaleProcessingScanQueueItems();
-      } catch (e) {
-        debugPrint('Aviso: no se pudo resetear ítems en procesamiento: $e');
+    if (_isDisposed) {
+      if (!_readyCompleter.isCompleted) {
+        _readyCompleter.complete();
+      }
+      return;
+    }
+    try {
+      if (!_isProcessing) {
+        try {
+          await _dbHelper.resetStaleProcessingScanQueueItems();
+        } catch (e) {
+          debugPrint('Aviso: no se pudo resetear ítems en procesamiento: $e');
+        }
+      }
+      await loadReadyItems();
+      await loadPendingItems();
+    } finally {
+      if (!_readyCompleter.isCompleted) {
+        _readyCompleter.complete();
       }
     }
-    await loadReadyItems();
-    await loadPendingItems();
     processPendingItems(); // Intenta procesar al iniciar
   }
 

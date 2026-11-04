@@ -10,12 +10,14 @@ import '../domain/finance/savings_health_models.dart';
 import '../domain/finance/savings_health_calculator.dart';
 import '../services/notification_service.dart';
 import '../services/sync_service.dart';
+import '../services/sync_coordinator.dart';
 import '../services/exchange_rate_service.dart';
 import '../domain/monetary/rate_market.dart';
 
 class GastoProvider with ChangeNotifier {
   final GastoRepository _repository;
   final SyncService _syncService;
+  final SyncCoordinator _syncCoordinator;
 
   List<GastoModel> _gastos = [];
   bool _isLoading = false;
@@ -155,9 +157,14 @@ class GastoProvider with ChangeNotifier {
     );
   }
 
-  GastoProvider({GastoRepository? repository, SyncService? syncService, bool autoLoad = true})
-      : _repository = repository ?? GastoRepository(),
-        _syncService = syncService ?? SyncService(repository: repository ?? GastoRepository()) {
+  GastoProvider({
+    GastoRepository? repository,
+    SyncService? syncService,
+    SyncCoordinator? syncCoordinator,
+    bool autoLoad = true,
+  })  : _repository = repository ?? GastoRepository(),
+        _syncService = syncService ?? SyncService(repository: repository ?? GastoRepository()),
+        _syncCoordinator = syncCoordinator ?? SyncCoordinator.instance {
     if (autoLoad) {
       cargarDatos();
     }
@@ -177,8 +184,22 @@ class GastoProvider with ChangeNotifier {
         final prefs = _prefsInstance ?? await SharedPreferences.getInstance();
         final purgeResult = await ExchangeRateService.ensureCacheHistoricaPurgada(prefsInstance: prefs);
         if (purgeResult != -1) {
-          final rawUsd = prefs.get('cached_rate_usd') ?? prefs.get(AppConstants.prefTasaCambio);
-          _tasaUsd = isValidMonetaryRate(rawUsd) ? (rawUsd as num).toDouble() : 0.0;
+          double? cachedUsd;
+          final rawEsManual = prefs.get('pref_es_tasa_manual_usd');
+          final bool esTasaManual = rawEsManual is bool ? rawEsManual : false;
+          final rawManual = prefs.get(AppConstants.prefTasaCambio);
+          final rawAuto = prefs.get('cached_rate_usd');
+
+          if (esTasaManual && isValidMonetaryRate(rawManual)) {
+            // Tasa manual global prevalece al reiniciar mientras no haya conexión (D-05 / NEW-3b)
+            cachedUsd = (rawManual as num).toDouble();
+          } else if (isValidMonetaryRate(rawAuto)) {
+            cachedUsd = (rawAuto as num).toDouble();
+          } else if (isValidMonetaryRate(rawManual)) {
+            cachedUsd = (rawManual as num).toDouble();
+          }
+          _tasaUsd = cachedUsd ?? 0.0;
+
           final rawEur = prefs.get('cached_rate_eur');
           _tasaEur = isValidMonetaryRate(rawEur) ? (rawEur as num).toDouble() : 0.0;
         } else {
@@ -308,7 +329,7 @@ class GastoProvider with ChangeNotifier {
       }
 
       await cargarDatos();
-      _syncService.syncBidirectional(); // Sincronizar en segundo plano
+      _syncCoordinator.notifyLocalChange();
       NotificationService.instance.recordActivityAndReschedule();
       return true;
     } catch (e) {
@@ -377,7 +398,7 @@ class GastoProvider with ChangeNotifier {
       ); 
       await _repository.actualizarGasto(gastoAActualizar, items);
       await cargarDatos();
-      _syncService.syncBidirectional();
+      _syncCoordinator.notifyLocalChange();
       NotificationService.instance.recordActivityAndReschedule();
       return true;
     } catch (e) {
@@ -495,7 +516,7 @@ class GastoProvider with ChangeNotifier {
   }
 
   Future<void> sincronizarConFirestore() async {
-    await _syncService.syncBidirectional();
+    await _syncCoordinator.request(SyncTrigger.manual, forzar: true);
     await cargarDatos();
   }
 
@@ -504,7 +525,7 @@ class GastoProvider with ChangeNotifier {
     try {
       await _repository.eliminarGasto(id); // Ahora hace borrado lógico
       await cargarDatos();
-      _syncService.syncBidirectional(); // Manda a borrar en firebase
+      _syncCoordinator.notifyLocalChange();
       return true;
     } catch (e) {
       _errorMessage = _mapHumanFriendlyError(e, 'Error al eliminar el gasto: ${e.toString()}');
@@ -545,7 +566,7 @@ class GastoProvider with ChangeNotifier {
       _monedaPresupuesto = moneda;
       _presupuestoEsAdoptado = false;
       notifyListeners();
-      _syncService.syncBidirectional();
+      _syncCoordinator.notifyLocalChange();
       return true;
     } catch (e) {
       _errorMessage = _mapHumanFriendlyError(e, 'Error al guardar presupuesto general: ${e.toString()}');
@@ -569,7 +590,7 @@ class GastoProvider with ChangeNotifier {
       }
       _presupuestoEsAdoptado = false;
       notifyListeners();
-      _syncService.syncBidirectional();
+      _syncCoordinator.notifyLocalChange();
       return true;
     } catch (e) {
       _errorMessage = _mapHumanFriendlyError(e, 'Error al guardar presupuesto: ${e.toString()}');
@@ -600,7 +621,7 @@ class GastoProvider with ChangeNotifier {
       _presupuestosPorCategoria = Map.from(categorias)..removeWhere((key, value) => value <= 0);
       _presupuestoEsAdoptado = false;
       notifyListeners();
-      _syncService.syncBidirectional();
+      _syncCoordinator.notifyLocalChange();
       return true;
     } catch (e) {
       _errorMessage = _mapHumanFriendlyError(e, 'Error al guardar presupuestos: ${e.toString()}');
@@ -622,7 +643,7 @@ class GastoProvider with ChangeNotifier {
       _metaAhorro = meta >= 0 ? meta : 0.0;
       _presupuestoEsAdoptado = false;
       notifyListeners();
-      _syncService.syncBidirectional();
+      _syncCoordinator.notifyLocalChange();
       return true;
     } catch (e) {
       _errorMessage = _mapHumanFriendlyError(e, 'Error al guardar meta de ahorro: ${e.toString()}');

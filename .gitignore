@@ -37,6 +37,7 @@
 *.zip
 *.mp4
 token.txt
+test_results.txt
 firebase_functions/node_modules/
 firebase_functions/package-lock.json
 *.py

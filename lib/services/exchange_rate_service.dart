@@ -560,6 +560,9 @@ class ExchangeRateService {
   /// Control de concurrencia para evitar purgas simultáneas.
   static Future<int>? _activePurgeFuture;
 
+  /// Contador monotónico de generación de purga para aislar purgas en vuelo tras un reset (M-08).
+  static int _purgeGeneration = 0;
+
   /// Retorna si la marca de purga está pendiente de confirmación en disco (O2 / NEW-1).
   @visibleForTesting
   static bool get isPurgeMarkPendingConfirmation => _purgeMarkPendingConfirmation;
@@ -572,6 +575,7 @@ class ExchangeRateService {
   /// Limpia las operaciones pendientes en memoria y futuros activos (aislamiento de pruebas, M-08).
   @visibleForTesting
   static void resetPendingPurgeOperationsForTesting() {
+    _purgeGeneration++;
     _pendingPurgeOperations.clear();
     _purgeMarkPendingConfirmation = false;
     _activePurgeFuture = null;
@@ -579,9 +583,11 @@ class ExchangeRateService {
 
   /// Si una escritura física en disco de un valor válido para [key] se confirmó correctamente,
   /// rescinde cualquier operación de purga pendiente obsoleta sobre esa misma clave (M-05).
-  static void _onKeyWriteConfirmed(String key) {
+  static void onKeyWriteConfirmed(String key) {
     _pendingPurgeOperations.remove(key);
   }
+
+  static void _onKeyWriteConfirmed(String key) => onKeyWriteConfirmed(key);
 
   /// Valida si una cadena ISO 'YYYY-MM-DD' corresponde a una fecha real del calendario gregoriano.
   static bool _isValidCalendarDate(String dateStr) {
@@ -627,9 +633,17 @@ class ExchangeRateService {
       return await _activePurgeFuture!;
     }
 
+    final currentGen = _purgeGeneration;
+
     final purgeTask = () async {
       try {
         final count = await purgarCacheHistoricaInvalida(prefsInstance: prefs);
+
+        // Si la generación cambió (se invocó reset durante la ejecución), descartar mutación de estado
+        if (_purgeGeneration != currentGen) {
+          debugPrint('ExchangeRateService: Purga descartada por cambio de generación ($currentGen vs $_purgeGeneration).');
+          return -1;
+        }
 
         // Si quedaron mutaciones pendientes sin confirmar físicamente, no marcar éxito
         if (_pendingPurgeOperations.isNotEmpty) {
@@ -645,6 +659,10 @@ class ExchangeRateService {
         } catch (e) {
           debugPrint('ExchangeRateService: Excepción al persistir marca $prefKeyCacheHistoricaPurgada: $e');
           markSaved = false;
+        }
+
+        if (_purgeGeneration != currentGen) {
+          return -1;
         }
 
         if (!markSaved) {
@@ -666,7 +684,10 @@ class ExchangeRateService {
     try {
       return await purgeTask;
     } finally {
-      _activePurgeFuture = null;
+      // M-08: Limpiar únicamente si sigue siendo esta misma futura (evita pisar una futura posterior si hubo reset)
+      if (identical(_activePurgeFuture, purgeTask)) {
+        _activePurgeFuture = null;
+      }
     }
   }
 
@@ -686,6 +707,7 @@ class ExchangeRateService {
   /// NO borra indiscriminadamente la caché histórica válida ante excepciones de persistencia (B1 y NEW-1).
   static Future<int> purgarCacheHistoricaInvalida({SharedPreferences? prefsInstance}) async {
     final prefs = prefsInstance ?? await SharedPreferences.getInstance();
+    final currentGen = _purgeGeneration;
     int cleanedCount = 0;
     bool allWritesSucceeded = true;
 
@@ -694,11 +716,13 @@ class ExchangeRateService {
     // el payload o la eliminación pendiente aunque la memoria ya parezca limpia.
     final previousPendingKeys = List<String>.from(_pendingPurgeOperations.keys);
     for (final pk in previousPendingKeys) {
+      if (_purgeGeneration != currentGen) break;
       final op = _pendingPurgeOperations[pk];
       if (op == null) continue;
       if (op.type == PendingPurgeMutationType.setString) {
         try {
           final ok = await prefs.setString(op.key, op.stringPayload!);
+          if (_purgeGeneration != currentGen) break;
           if (ok) {
             _pendingPurgeOperations.remove(pk);
             cleanedCount += op.entriesCleanedCount;
@@ -711,8 +735,28 @@ class ExchangeRateService {
           debugPrint('ExchangeRateService: Excepción en reintento de setString(${op.key}): $e');
         }
       } else if (op.type == PendingPurgeMutationType.remove) {
+        // M-05: Si la clave es de tasa diaria actual y se confirmó un valor numérico válido,
+        // o si el timestamp se actualizó con fecha válida, rescindir la operación pendiente.
+        // NUNCA rescindir eliminaciones de claves con corrupción estructural (fechas imposibles o tipos corruptos, R-01).
+        final currentVal = prefs.get(op.key);
+        if (op.key == 'cached_exchange_rates_timestamp') {
+          if (currentVal is String && DateTime.tryParse(currentVal) != null) {
+            _pendingPurgeOperations.remove(pk);
+            continue;
+          }
+        } else if (op.key == 'cached_exchange_rate' ||
+                   op.key == AppConstants.prefTasaCambio ||
+                   op.key == 'cached_rate_usd' ||
+                   op.key == 'cached_rate_eur' ||
+                   op.key == 'cached_rate_usdt') {
+          if (isValidMonetaryRate(currentVal)) {
+            _pendingPurgeOperations.remove(pk);
+            continue;
+          }
+        }
         try {
           final ok = await prefs.remove(op.key);
+          if (_purgeGeneration != currentGen) break;
           if (ok) {
             _pendingPurgeOperations.remove(pk);
             cleanedCount += op.entriesCleanedCount;
@@ -742,12 +786,10 @@ class ExchangeRateService {
         if (rawVal is! String) {
           debugPrint('ExchangeRateService: $key tiene un tipo no esperado (${rawVal.runtimeType}); se marca para eliminación por corrupción de tipo.');
           keysToRemove.add(key);
-          cleanedCount++;
           continue;
         }
         if (rawVal.trim().isEmpty) {
           keysToRemove.add(key);
-          cleanedCount++;
           continue;
         }
 
@@ -760,13 +802,11 @@ class ExchangeRateService {
           } else {
             debugPrint('ExchangeRateService: $key no es un Map serializado. Se marca para eliminación.');
             keysToRemove.add(key);
-            cleanedCount++;
             continue;
           }
         } catch (e) {
           debugPrint('ExchangeRateService: Error de sintaxis JSON en $key: $e. Se marca para eliminación.');
           keysToRemove.add(key);
-          cleanedCount++;
           continue;
         }
 
@@ -824,11 +864,29 @@ class ExchangeRateService {
           }
         });
 
-        // 3. Persistencia aislada del mapa depurado (B1 & NEW-1)
+        // 3. Persistencia aislada del mapa depurado (B1, B-02 & NEW-1)
         if (mapMutated) {
-          cleanedCount += entriesCleanedInMap;
           if (cleanedMap.isEmpty) {
-            keysToRemove.add(key);
+            // B-02: Se elimina la clave completa del mapa corrupto; la cantidad de entradas
+            // depuradas es entriesCleanedInMap tanto en el primer intento como en el reintento.
+            _pendingPurgeOperations[key] = PendingPurgeOperation.remove(
+              key: key,
+              entriesCleanedCount: entriesCleanedInMap,
+            );
+            try {
+              final removed = await prefs.remove(key);
+              if (_purgeGeneration != currentGen) break;
+              if (removed) {
+                _pendingPurgeOperations.remove(key);
+                cleanedCount += entriesCleanedInMap;
+              } else {
+                debugPrint('ExchangeRateService: prefs.remove($key) retornó false. Se registra operación pendiente.');
+                allWritesSucceeded = false;
+              }
+            } catch (e) {
+              debugPrint('ExchangeRateService: Excepción al eliminar $key vacío: $e. Se registra operación pendiente.');
+              allWritesSucceeded = false;
+            }
           } else {
             final payload = jsonEncode(cleanedMap);
             _pendingPurgeOperations[key] = PendingPurgeOperation.setString(
@@ -838,8 +896,10 @@ class ExchangeRateService {
             );
             try {
               final saved = await prefs.setString(key, payload);
+              if (_purgeGeneration != currentGen) break;
               if (saved) {
                 _pendingPurgeOperations.remove(key);
+                cleanedCount += entriesCleanedInMap;
               } else {
                 debugPrint('ExchangeRateService: prefs.setString($key) retornó false. Se registra operación pendiente.');
                 allWritesSucceeded = false;
@@ -856,7 +916,6 @@ class ExchangeRateService {
         if (rawVal == null) continue;
         if (!isValidMonetaryRate(rawVal)) {
           keysToRemove.add(key);
-          cleanedCount++;
         }
       } else if (key == 'cached_exchange_rates_timestamp') {
         // NEW-6: Si el timestamp está corrupto (no String o fecha inválida), se purga selectivamente
@@ -866,7 +925,6 @@ class ExchangeRateService {
         if (rawVal is! String || DateTime.tryParse(rawVal) == null) {
           debugPrint('ExchangeRateService: $key corrupto o no interpretable como fecha (${rawVal.runtimeType}); se marca para eliminación.');
           keysToRemove.add(key);
-          cleanedCount++;
         }
       } else if (key.startsWith('cached_rate_')) {
         if (_pendingPurgeOperations.containsKey(key)) continue;
@@ -878,25 +936,55 @@ class ExchangeRateService {
           final bool valInvalid = !isValidMonetaryRate(rawVal);
           if (dateInvalid || valInvalid) {
             keysToRemove.add(key);
-            cleanedCount++;
           }
         } else {
           // Claves de tasa del día (ej. cached_rate_usd, cached_rate_eur, cached_rate_usdt)
           final rawVal = prefs.get(key);
           if (!isValidMonetaryRate(rawVal)) {
             keysToRemove.add(key);
-            cleanedCount++;
           }
         }
       }
     }
 
     for (final k in keysToRemove) {
+      if (_purgeGeneration != currentGen) break;
+
+      // M-05 (TOCTOU): Revalidar únicamente claves marcadas por valor numérico fuera de dominio
+      // si durante la purga se confirmó una escritura física válida.
+      // NUNCA omitir el borrado de claves con corrupción estructural (fechas imposibles o tipos corruptos, R-01).
+      final currentVal = prefs.get(k);
+      if (k == 'cached_exchange_rates_timestamp') {
+        if (currentVal is String && DateTime.tryParse(currentVal) != null) {
+          continue;
+        }
+      } else if (k == 'cached_exchange_rate' ||
+                 k == AppConstants.prefTasaCambio ||
+                 k == 'cached_rate_usd' ||
+                 k == 'cached_rate_eur' ||
+                 k == 'cached_rate_usdt') {
+        if (isValidMonetaryRate(currentVal)) {
+          continue;
+        }
+      } else if (k.startsWith('cached_rate_')) {
+        final parts = k.split('_');
+        if (parts.length >= 4) {
+          final datePart = parts.sublist(3).join('_');
+          if (!_isValidCalendarDate(datePart)) {
+            // Fecha inválida: NUNCA omitir el borrado por valor numérico (R-01)
+          } else if (isValidMonetaryRate(currentVal)) {
+            continue;
+          }
+        }
+      }
+
       _pendingPurgeOperations[k] = PendingPurgeOperation.remove(key: k, entriesCleanedCount: 1);
       try {
         final removed = await prefs.remove(k);
+        if (_purgeGeneration != currentGen) break;
         if (removed) {
           _pendingPurgeOperations.remove(k);
+          cleanedCount++;
         } else {
           debugPrint('ExchangeRateService: prefs.remove($k) retornó false. Se registra operación pendiente.');
           allWritesSucceeded = false;
@@ -905,6 +993,10 @@ class ExchangeRateService {
         debugPrint('ExchangeRateService: Excepción en prefs.remove($k): $e. Se registra operación pendiente.');
         allWritesSucceeded = false;
       }
+    }
+
+    if (_purgeGeneration != currentGen) {
+      throw StateError('Purga abortada por cambio de generación.');
     }
 
     if (!allWritesSucceeded || _pendingPurgeOperations.isNotEmpty) {

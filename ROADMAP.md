@@ -42,6 +42,42 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 
 ---
 
+## ⚠️ Decisión y Revisión Estratégica Obligatoria (Pendiente por César)
+
+> **Documento canónico de análisis:** [`c:\Users\cesar\.gemini\antigravity\brain\76540cb9-a8d1-4d3f-8230-6bc5cb272025\consejo_arquitectura_rinde_mas.md`](file:///c:/Users/cesar/.gemini/antigravity/brain/76540cb9-a8d1-4d3f-8230-6bc5cb272025/consejo_arquitectura_rinde_mas.md)  
+> *Auditoría cruzada y conciliación arquitectónica entre reportes de Gemini Flash, Gemini Argon y Claude Opus.*
+
+### Estado de Implementación al 04/11/2026:
+
+#### ✅ Ya Implementado en `main`:
+1. **Arnés de pruebas SQLite real en memoria (`E0-01`):** Dependencia `sqflite_common_ffi` incorporada en `dev_dependencies` y validada en CI (commit `de17323`).
+2. **Neutralización de tasas cableadas 850 / 474 (`E0-05a`):** Neutralizada la auto-reparación en segundo plano en `main_screen.dart` y `sync_service.dart` con `dryRun = true` (commit `de17323`).
+3. **Logs desacoplados en CI:** Se eliminaron los auto-commits de error a `main`; `build_apk.yml` ahora sube `test_results.txt` como artefacto descargable de GitHub Actions (Build 641).
+4. **Arquitectura de Arranque y Datos Local-First (`Prioridad 2`):** `Pendiente de validación 🧪`
+   - Desacoplamiento de cold start en `main.dart` con `runApp()` inmediato y tareas diferidas post-frame.
+   - Creación de `SyncCoordinator` con cerrojo de concurrencia, re-run secuencial, debounce de 2s en escrituras y throttle de 5 min en arranques rutinarios.
+   - Bandeja de intenciones (`PendingLaunchAction`) en `NotificationService` sincronizada con `ScanQueueProvider.ready` para eliminar carreras de tiempo en recordatorios.
+   - Documentación técnica y guía de validación en [`docs/DOC_ARRANQUE_LOCAL_FIRST.md`](docs/DOC_ARRANQUE_LOCAL_FIRST.md) (13 pruebas automatizadas dedicadas).
+
+#### 🔴 Prioridades Inmediatas (Requieren decisión y acción de César):
+1. **Seguridad Crítica de Firma (Keystore):**
+   - *Problema:* `android_template/rindemas.jks` y la contraseña `rindemas123` siguen versionados en Git y en texto plano dentro de `build.gradle.kts`.
+   - *Acción:* Migrar a *GitHub Secrets* (`KEYSTORE_BASE64`, contraseñas), retirar el `.jks` del repositorio y evaluar rotación de clave de subida en Google Play Console.
+2. **Reproducibilidad y Congelación de CI/CD:**
+   - *Problema:* `pubspec.lock` no está versionado en Git y CI descarga la versión `stable` flotante de Flutter del día.
+   - *Acción:* Versionar el `pubspec.lock` del artefacto validado (Build 624 / 649), fijar `flutter-version` exacta en `build_apk.yml` y eliminar dependencia muerta `cloud_functions: ^5.1.3` de `pubspec.yaml`.
+
+#### 🟡 Prioridades Medias / Mantenimiento:
+- **Centralizar `_convertBudgetToLens`:** Diferida para ejecutarse dentro del hito `E0-03` (Integración en lectores móviles y pantallas) de la Fase 0 RM-03, evitando duplicar esfuerzo con fórmulas cambiarias que serán sustituidas por `ResumenLenteMonetario`.
+- **Limpieza de Repositorio:** `Completada ✅` Purgados los 2.115 archivos de `firebase_functions/node_modules/` y desvinculado `test_results.txt` del árbol de Git e incorporado a `.gitignore`.
+- **Decisión sobre Stash pendiente (`stash@{0}: wip-lote-4-ui`):** `Completada ✅` Descartado (`git stash drop`) tras comprobar con `git diff` que el 100% de los cambios en `lib/` fueron integrados en el commit `59c1b64` (Lote 4).
+
+#### 🟢 Qué NO Implementar (Condicionado a métricas):
+- **Búsqueda FTS5:** No conectar a ciegas. Utilizar tabla normalizada con consultas SQL `LIKE` indexadas únicamente si las métricas en dispositivo demuestran lentitud (> 300 ms).
+- **Prohibido refactorizar o dividir `DatabaseHelper` o `ReviewExpenseScreen`** en pleno período de evaluación de Google Play.
+
+---
+
 ## Fase 0: Integridad Financiera y Multimoneda (Iniciativa RM-03 — En Progreso 🔄)
 *Contrato normativo [`docs/rm-03/contrato-v1.2.md`](docs/rm-03/contrato-v1.2.md), decisiones vinculantes `A-01` a `A-16` y `D-01` a `D-09`:*
 
@@ -135,16 +171,21 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 
 | Ítem / Área | Prioridad | Estado | Detalle |
 | :--- | :---: | :---: | :--- |
-| **Eliminar auto-commits de error en CI** | P0 | `Completada ✅` | Logs desacoplados como artefactos de GitHub Actions (Build 641). |
+| **Seguridad de Keystore de producción** | P0 | `Pendiente` | Migrar `android_template/rindemas.jks` y passwords a GitHub Secrets; desvincular de Git. |
 | **Generar y versionar `pubspec.lock`** | P0 | `Pendiente` | Aún ausente en git; CI sigue resolviendo dependencias flotantes en cada corrida. |
+| **Fijar versión de Flutter en CI** | P0 | `Pendiente` | `.github/workflows/build_apk.yml` usa `channel: stable` flotante en lugar de versión exacta. |
 | **Desacoplar Cold Start en `main.dart`** | P0 | `Pendiente` | `main()` ejecuta inicializaciones de auth y notificaciones bloqueando antes de `runApp()`. |
-| **Purgar `firebase_functions/node_modules/` de Git** | P0 | `Pendiente` | 2.115 archivos de dependencias de Node.js obsoletas siguen trackeados en el índice de Git. |
-| **Desvincular `test_results.txt` de Git** | P0 | `Pendiente` | Aunque CI ya no commitea sobre él, el archivo residual sigue versionado en el árbol. |
-| **Conectar búsqueda a SQLite FTS5** | P1 | `Pendiente` | `gastos_fts` existe en base de datos pero `ExpenseHistoryScreen` busca trayendo todo a RAM. |
-| **Centralizar `_convertBudgetToLens`** | P1 | `Pendiente` | La lógica cambiaria sigue triplicada en tres widgets de UI (`SummaryCard`, etc.). |
-| **Crear `ShoppingListProvider` / Repository** | P1 | `Pendiente` | Pantallas y chat siguen tocando `DatabaseHelper.instance` directo sin capa intermedia. |
-| **Actualizar `README.md` a la realidad** | P1 | `Pendiente` | Sigue listando Cloud Functions y 8 archivos inexistentes del proyecto inicial. |
+| **Coordinador Único de Sincronización (`SyncCoordinator`)** | P0 | `Pendiente` | Centralizar sincronización con Firestore evitando duplicados, concurrencia y sobrecostos. |
+| **Bandeja de Intenciones en Notificaciones** | P0 | `Pendiente` | Evitar pérdida del payload en frío esperando a que `ScanQueueProvider.ready` termine. |
+| **Eliminar auto-commits de error en CI** | P0 | `Completada ✅` | Logs desacoplados como artefactos de GitHub Actions (Build 641). |
+| **Neutralización tasas 850/474 en auto-reparaciones** | P0 | `Completada ✅` | Neutralizada la auto-reparación en segundo plano en `main_screen.dart` (commit `de17323`). |
+| **Purgar `firebase_functions/node_modules/` de Git** | P1 | `Completada ✅` | Purgados 2.115 archivos del índice de Git sin afectar código local. |
+| **Desvincular `test_results.txt` de Git** | P1 | `Completada ✅` | Desvinculado del índice y añadido a `.gitignore`. |
+| **Centralizar `_convertBudgetToLens`** | P1 | `Diferida a E0-03` | Se resolverá en la unificación de lectura multimoneda (Fase 0 E0-03). |
 | **Eliminar `cloud_functions` de `pubspec.yaml`** | P1 | `Pendiente` | Paquete nunca importado en Dart; sigue declarado en dependencias. |
+| **Búsqueda histórica eficiente (tabla normalizada)** | P2 | `Pendiente` | Mantener en memoria mientras no haya lentitud; migrar a SQL indexado ante métricas > 300ms. |
+| **Crear `ShoppingListProvider` / Repository** | P2 | `Pendiente` | Pantallas y chat siguen tocando `DatabaseHelper.instance` directo sin capa intermedia. |
+| **Actualizar `README.md` a la realidad** | P2 | `Pendiente` | Sigue listando Cloud Functions y 8 archivos inexistentes del proyecto inicial. |
 | **Archivar 24 docs Markdown de la raíz en `docs/`** | P2 | `Pendiente` | Planes históricos `DOC_*.md` finalizados siguen dispersos en la raíz del repositorio. |
 | **Eliminar binarios locales y `fix.py`** | P3 | `Pendiente` | `app-release.apk` (57 MB), `scratch/*.apk` (~300 MB) y script temporal `fix.py` en disco. |
 
