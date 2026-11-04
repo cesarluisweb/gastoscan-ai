@@ -1,3 +1,4 @@
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -97,6 +98,7 @@ void main() {
     late SettingsProvider settingsProvider;
 
     setUp(() {
+      SharedPreferences.setMockInitialValues({});
       final fakeDb = FakeDatabaseHelperForSmartEmptyState();
       fakeGastoProvider = TestableFakeGastoProvider(
         mes: DateTime.now().month,
@@ -104,8 +106,14 @@ void main() {
         gastos: [],
         ultimoMes: {'year': 2026, 'month': 10},
       );
-      scanQueueProvider = ScanQueueProvider(dbHelper: fakeDb);
-      settingsProvider = SettingsProvider();
+      scanQueueProvider = ScanQueueProvider(dbHelper: fakeDb, autoProcess: false);
+      settingsProvider = SettingsProvider(autoLoad: false);
+    });
+
+    tearDown(() {
+      scanQueueProvider.dispose();
+      settingsProvider.dispose();
+      fakeGastoProvider.dispose();
     });
 
     Widget createDashboardWidget() {
@@ -194,7 +202,7 @@ void main() {
 
       final returnBtnFinder = find.byKey(const Key('empty_state_return_to_current_month_btn'));
       expect(returnBtnFinder, findsOneWidget);
-      expect(find.textContaining('Noviembre 2025'), findsOneWidget);
+      expect(find.text('Sin gastos en Noviembre 2025'), findsOneWidget);
 
       await tester.tap(returnBtnFinder);
       await tester.pumpAndSettle();

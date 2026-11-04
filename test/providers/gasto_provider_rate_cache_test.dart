@@ -48,6 +48,9 @@ class FakeGastoRepositoryForProvider extends Fake implements GastoRepository {
     int? antesDeMes,
     bool estrictamenteAnterior = false,
   }) async => null;
+
+  @override
+  Future<Map<String, int>?> obtenerUltimoMesConGastos() async => null;
 }
 
 void main() {
