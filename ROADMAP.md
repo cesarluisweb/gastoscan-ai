@@ -179,13 +179,12 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 - `UX-13` **Sistema Ligero de Etiquetas (Tags) para Gastos:** `Pendiente`
   - *Problema:* Los usuarios solicitan clasificar gastos en conceptos específicos no cubiertos por las 8 categorías canónicas (como Entretenimiento, Comisiones bancarias, Mascotas o Ocio). Crear categorías libres rompería el catálogo canónico de `AppConstants.categorias`, la clasificación determinista de Gemini y la paridad con el panel web.
   - *Solución:* Permitir agregar una o más etiquetas opcionales (`#tags`) en `ReviewExpenseScreen` y formularios manuales, persistirlas en SQLite/Firestore y habilitar filtro por etiquetas en el historial sin alterar las 8 categorías fijas en presupuestos y radiografías.
-- `UX-14` **Estado Vacío Contextual Inteligente y Sincronización Temporal de Sesión:** `Implementada 🔧`
+- `UX-14` **Estado Vacío Contextual Inteligente y Sincronización Temporal de Sesión:** `Pendiente de validación 🧪`
   - *Problema:* Al cambiar de mes o quedar inadvertidamente en un año histórico sin compras (ej. 2025), la app mostraba un mensaje genérico "Sin gastos este mes", generando pánico de pérdida de datos cuando los registros estaban a salvo en meses anteriores (como Octubre 2026).
   - *Solución:*
     1. **Estado Vacío Inteligente (Solución 3):** Detección automática del último mes con compras en base de datos (`obtenerUltimoMesConGastos()`). En Inicio e Historial, si el mes activo está en blanco pero existen compras previas, se muestra la referencia y un botón directo de salto: `[Ver gastos de Octubre 2026]`. Si el usuario está consultando un año histórico, se ofrece el botón `[Volver al mes actual]`.
     2. **Sincronización Temporal en Ciclo de Vida (Solución 5):** En `MainScreen` (`WidgetsBindingObserver`), al reanudar la app desde segundo plano (`AppLifecycleState.resumed`), si pasaron más de 30 minutos de inactividad o el usuario quedó en un año anterior o período vacío, `verificarReanudacionMesActual()` restablece el selector al mes en curso (`DateTime.now()`).
-  - *Problema:* Los usuarios solicitan clasificar gastos en conceptos específicos no cubiertos por las 8 categorías canónicas (como Entretenimiento, Comisiones bancarias, Mascotas o Ocio). Crear categorías libres rompería el catálogo canónico de `AppConstants.categorias`, la clasificación determinista de Gemini y la paridad con el panel web.
-  - *Solución:* Permitir agregar una o más etiquetas opcionales (`#tags`) en `ReviewExpenseScreen` y formularios manuales, persistirlas en SQLite/Firestore y habilitar filtro por etiquetas en el historial sin alterar las 8 categorías fijas en presupuestos y radiografías.
+  - *Verificación:* CI verde (Android build 645, run 41849026245). Pruebas unitarias y de widgets en `smart_empty_state_and_lifecycle_test.dart`.
 
 ### Bloque C: Percepción con IA, Optimización y Seguridad
 - `AI-02` **Detección Automática y Transparente de Pagos Digitales (Pago Móvil / Zelle / Binance / PayPal):** `Completada ✅`
