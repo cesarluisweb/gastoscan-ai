@@ -170,7 +170,7 @@ void main() {
       final bandFinder = find.byKey(const Key('summary_card_savings_reserve_band'));
       expect(bandFinder, findsOneWidget);
       final bandContainer = tester.widget<Container>(bandFinder);
-      expect((bandContainer.decoration as BoxDecoration).color, equals(AppColors.savingsReserve));
+      expect(bandContainer.color, equals(AppColors.savingsReserve));
       final totalWidth = tester.getSize(progressFinder).width;
       final bandSize = tester.getSize(bandFinder);
       expect(bandSize.width, closeTo(totalWidth * 100.0 / 600.0, 0.5));
@@ -281,7 +281,7 @@ void main() {
       final bandFinder = find.byKey(const Key('summary_card_savings_reserve_band'));
       expect(bandFinder, findsOneWidget);
       final bandContainer = tester.widget<Container>(bandFinder);
-      expect((bandContainer.decoration as BoxDecoration).color, equals(AppColors.errorStrong));
+      expect(bandContainer.color, equals(AppColors.errorStrong));
       final totalWidth = tester.getSize(progressFinder).width;
       final bandSize = tester.getSize(bandFinder);
       expect(bandSize.width, closeTo(totalWidth * 0.10, 0.5));
@@ -321,7 +321,7 @@ void main() {
       final bandFinder = find.byKey(const Key('summary_card_savings_reserve_band'));
       expect(bandFinder, findsOneWidget);
       final bandContainer = tester.widget<Container>(bandFinder);
-      expect((bandContainer.decoration as BoxDecoration).color, equals(AppColors.savingsReserve));
+      expect(bandContainer.color, equals(AppColors.savingsReserve));
       final totalWidth = tester.getSize(progressFinder).width;
       final bandSize = tester.getSize(bandFinder);
       expect(bandSize.width, closeTo(totalWidth * 0.20, 0.5));
