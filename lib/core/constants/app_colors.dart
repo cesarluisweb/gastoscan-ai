@@ -25,8 +25,11 @@ class AppColors {
   static const Color errorStrong = Color(0xFFDC2626);     // Rojo intenso de exceso / reserva invadida (Red 600)
   static const Color errorTint = Color(0xFFFEE2E2);       // Fondo rojo suave para zona invadida / tanque vacío (Red 100)
   static const Color errorBorder = Color(0xFFFCA5A5);     // Borde rojo sutil para carril agotado (Red 300)
-  static const Color trackNeutral = Color(0xFFF1F5F9);    // Carril gris claro homologado (Slate 100)
   static const Color markerNeutral = Color(0xFF4B5563);   // Divisor vertical de ahorro en estado normal
+  static const Color trackNeutral = Color(0xFFE2E8F0);    // Carril gris Slate 200 (antes #F1F5F9)
+  static const Color trackBorder = Color(0xFFCBD5E1);     // Borde interior 1dp (Slate 300)
+  static const Color savingsReserve = Color(0xFF065F46);  // Reserva protegida de ahorro (Emerald 800)
+  static const Color textSpent = Color(0xFF475569);       // Monto "Gastado" (Slate 600)
 
   /// Devuelve el color semafórico unificado para progreso de presupuesto:
   /// - Rojo (`AppColors.error`): Presupuesto superado (isExceeded o percent >= 1.0)

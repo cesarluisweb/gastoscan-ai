@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'budget_bottom_sheet.dart';
@@ -113,6 +114,19 @@ class SummaryCard extends StatelessWidget {
     final remFormatted = CurrencyFormatter.formatAmount(rem, monedaPrincipal);
     final excessFormatted = CurrencyFormatter.formatAmount(excess, monedaPrincipal);
     final metaFormatted = CurrencyFormatter.formatAmount(metaInLens, monedaPrincipal);
+
+    final bool isTankExhausted = hasBudget && budgetInLens > 0 && effectiveSpent >= budgetInLens;
+    final bool isSavingsInvaded =
+        hasBudget && hasSavingsGoal && budgetInLens > 0 && effectiveSpent > limiteParaGastar;
+    final bool isOverLimitOrExhausted = isOverBudget || isTankExhausted;
+    final bool isCaution = hasBudget && !isOverLimitOrExhausted && percentUsed >= 0.85;
+    final bool isSavingsCompromised = hasSavingsGoal && isOverBudget;
+    final bool isAllReserved = hasSavingsGoal && budgetInLens > 0 && metaInLens >= budgetInLens;
+    final double savingsRemaining = hasSavingsGoal
+        ? (budgetInLens - effectiveSpent).clamp(0.0, metaInLens)
+        : 0.0;
+    final String savingsRemainingFormatted =
+        CurrencyFormatter.formatAmount(savingsRemaining, monedaPrincipal);
 
     String formatSecundarioAmount(double amountInLens) {
       if (monedaPrincipal == 'VES') {
@@ -297,41 +311,12 @@ class SummaryCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
 
-            // Fila de contexto sobre la barra (Gastado vs Límite)
+            // Fila de contexto sobre la barra (Límite vs Gastado)
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Izquierda: Gastado: $ X
-                Flexible(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text(
-                          'Gastado: ',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: AppColors.textSecondary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        Text(
-                          spentFormatted,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                // Derecha (tocable): Límite: $ Y ✏️
+                // Izquierda (tocable): Límite: $ Y ✏️
                 Flexible(
                   child: InkWell(
                     key: const Key('summary_card_edit_budget_btn'),
@@ -341,7 +326,7 @@ class SummaryCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerRight,
+                        alignment: Alignment.centerLeft,
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -373,6 +358,35 @@ class SummaryCard extends StatelessWidget {
                     ),
                   ),
                 ),
+                const SizedBox(width: 8),
+                // Derecha: Gastado: $ X
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'Gastado: ',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        Text(
+                          spentFormatted,
+                          style: const TextStyle(
+                            color: AppColors.textSpent,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
 
@@ -380,28 +394,35 @@ class SummaryCard extends StatelessWidget {
             const SizedBox(height: 10),
             LayoutBuilder(
               builder: (context, constraints) {
-                final totalWidth = constraints.maxWidth;
-                final bool isTankExhausted = hasBudget && budgetInLens > 0 && effectiveSpent >= budgetInLens;
-                final bool isSavingsInvaded =
-                    hasBudget && hasSavingsGoal && budgetInLens > 0 && effectiveSpent > limiteParaGastar;
-                final bool isOverLimitOrExhausted = isOverBudget || isTankExhausted;
-                final bool isCaution = !isOverLimitOrExhausted && (percentUsed >= 0.85);
+                final double totalWidth = constraints.maxWidth;
+                const double notchWidth = 6.0; // 2dp halo + 2dp línea + 2dp halo
+                const double notchHalf = notchWidth / 2;
+                const double notchMinCenter = 8.0; // garantiza >= 5dp de banda visible
 
-                final double rawSavingsRatio =
-                    (hasSavingsGoal && budgetInLens > 0) ? (metaInLens / budgetInLens).clamp(0.0, 1.0) : 0.0;
-                final double savingsMarkerPos = (totalWidth * rawSavingsRatio).clamp(0.0, totalWidth);
-                final double barFillRatio =
-                    budgetInLens > 0 ? ((budgetInLens - effectiveSpent) / budgetInLens).clamp(0.0, 1.0) : 0.0;
+                final double rawSavingsRatio = (hasSavingsGoal && budgetInLens > 0)
+                    ? (metaInLens / budgetInLens).clamp(0.0, 1.0)
+                    : 0.0;
+                final double barFillRatio = budgetInLens > 0
+                    ? ((budgetInLens - effectiveSpent) / budgetInLens).clamp(0.0, 1.0)
+                    : 0.0;
 
-                final Color barColor;
-                if (isOverLimitOrExhausted) {
-                  barColor = AppColors.errorStrong;
-                } else if (isCaution) {
-                  barColor = AppColors.caution;
-                } else {
-                  barColor = AppColors.balancePositive;
-                }
+                final double fillEnd = barFillRatio * totalWidth;
+                final double maxMarkerCenter = math.max(notchMinCenter, totalWidth - notchMinCenter);
+                // Mismo clamp en dp para banda y muesca: nunca se desalinean.
+                final double markerPos = !hasSavingsGoal
+                    ? 0.0
+                    : (isAllReserved
+                        ? totalWidth
+                        : (totalWidth * rawSavingsRatio).clamp(notchMinCenter, maxMarkerCenter));
+                final double reserveWidth = hasSavingsGoal ? math.min(fillEnd, markerPos) : 0.0;
+                final bool showNotch = hasSavingsGoal && !isAllReserved;
 
+                final Color barColor = isOverLimitOrExhausted
+                    ? AppColors.errorStrong
+                    : (isCaution ? AppColors.caution : AppColors.balancePositive);
+                final Color reserveColor = isOverLimitOrExhausted
+                    ? AppColors.errorStrong
+                    : AppColors.savingsReserve;
                 final Color trackColor = isTankExhausted ? AppColors.errorTint : AppColors.trackNeutral;
 
                 return Semantics(
@@ -411,7 +432,6 @@ class SummaryCard extends StatelessWidget {
                     clipBehavior: Clip.none,
                     alignment: Alignment.centerLeft,
                     children: [
-                      // Carril base con soporte de reserva invadida y borde en tanque agotado
                       ClipRRect(
                         borderRadius: BorderRadius.circular(5),
                         child: Container(
@@ -419,24 +439,31 @@ class SummaryCard extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: trackColor,
                             borderRadius: BorderRadius.circular(5),
-                            border: isTankExhausted ? Border.all(color: AppColors.errorBorder, width: 1) : null,
+                          ),
+                          // IMPORTANTE: foregroundDecoration, NO decoration.
+                          // Un border en decoration inserta 1dp el hijo y desalinea
+                          // totalWidth (markerPos/fillEnd) respecto al carril pintado.
+                          foregroundDecoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(5),
+                            border: Border.all(
+                              color: isTankExhausted ? AppColors.errorBorder : AppColors.trackBorder,
+                            ),
                           ),
                           child: Stack(
                             alignment: Alignment.centerLeft,
                             children: [
-                              // Si el ahorro es invadido, teñir la zona de reserva en rojo suave
                               if (isSavingsInvaded && !isTankExhausted)
                                 Positioned(
                                   left: 0,
                                   top: 0,
                                   bottom: 0,
-                                  width: savingsMarkerPos,
+                                  width: markerPos, // antes savingsMarkerPos (raw): usar el clamp
                                   child: Container(
                                     key: const Key('summary_card_savings_invaded_tint'),
                                     color: AppColors.errorTint,
                                   ),
                                 ),
-                              // Barra lineal con fondo transparente para dejar ver las capas inferiores
+                              // SIN CAMBIOS: misma key, mismo value, mismo color.
                               LinearProgressIndicator(
                                 key: const Key('summary_card_progress_indicator'),
                                 value: isTankExhausted ? 0.0 : barFillRatio,
@@ -444,23 +471,50 @@ class SummaryCard extends StatelessWidget {
                                 backgroundColor: isTankExhausted ? AppColors.errorTint : Colors.transparent,
                                 valueColor: AlwaysStoppedAnimation<Color>(barColor),
                               ),
+                              // Banda de reserva ENCIMA del indicador (dos tonos).
+                              if (reserveWidth > 0)
+                                Positioned(
+                                  left: 0,
+                                  top: 0,
+                                  bottom: 0,
+                                  width: reserveWidth,
+                                  child: Container(
+                                    key: const Key('summary_card_savings_reserve_band'),
+                                    color: reserveColor,
+                                  ),
+                                ),
                             ],
                           ),
                         ),
                       ),
-                      // Marcador vertical sobresaliendo 3dp arriba y abajo (Rojo si ahorro invadido o agotado)
-                      if (hasSavingsGoal)
+                      // Muesca: halo de 2dp a cada lado + línea de 2dp al centro.
+                      if (showNotch)
                         Positioned(
-                          left: (savingsMarkerPos - 1.0).clamp(0.0, totalWidth - 2.0),
+                          left: markerPos - notchHalf,
                           top: -3,
                           bottom: -3,
-                          child: Container(
-                            key: const Key('summary_card_savings_marker'),
-                            width: 2,
-                            decoration: BoxDecoration(
-                              color: isOverLimitOrExhausted ? AppColors.errorStrong : AppColors.markerNeutral,
-                              borderRadius: BorderRadius.circular(1),
-                            ),
+                          width: notchWidth,
+                          child: Stack(
+                            children: [
+                              const Positioned.fill(
+                                child: ColoredBox(color: AppColors.card), // fondo de la tarjeta
+                              ),
+                              Positioned(
+                                left: 2,
+                                right: 2,
+                                top: 0,
+                                bottom: 0,
+                                child: Container(
+                                  key: const Key('summary_card_savings_marker'),
+                                  decoration: BoxDecoration(
+                                    color: isOverLimitOrExhausted
+                                        ? AppColors.errorStrong
+                                        : AppColors.markerNeutral,
+                                    borderRadius: BorderRadius.circular(1),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                     ],
@@ -469,40 +523,36 @@ class SummaryCard extends StatelessWidget {
               },
             ),
 
-            // Divisor sutil y Pie de Meta de ahorro (si hasSavingsGoal es true)
+            // Leyenda de estado de ahorro (si hasSavingsGoal es true)
             if (hasSavingsGoal) ...[
-              const SizedBox(height: 12),
-              Divider(
-                height: 1,
-                thickness: 1,
-                color: AppColors.border.withValues(alpha: 0.6),
-              ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerLeft,
                 child: Row(
+                  key: const Key('summary_card_savings_legend'),
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.savings_outlined,
                       size: 16,
-                      color: AppColors.primaryDark,
+                      color: isSavingsCompromised ? AppColors.errorStrong : AppColors.savingsReserve,
                     ),
                     const SizedBox(width: 6),
-                    const Text(
-                      'Meta de ahorro: ',
+                    Text(
+                      isSavingsCompromised ? 'Ahorro comprometido · quedan' : 'Ahorro protegido ·',
                       style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
+                        color: isSavingsCompromised ? AppColors.errorStrong : AppColors.savingsReserve,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
+                    const SizedBox(width: 4),
                     Text(
-                      metaFormatted,
+                      isSavingsCompromised ? savingsRemainingFormatted : metaFormatted,
                       style: const TextStyle(
                         color: AppColors.textPrimary,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],

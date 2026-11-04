@@ -279,10 +279,13 @@ import '../styles/global.css';
                     <span id="progress-title-label" class="text-slate-700 font-semibold">Ritmo de gasto mensual</span>
                     <span id="card-daily-pace" class="text-xs text-slate-500"></span>
                 </div>
-                <div id="progress-track" class="relative w-full bg-slate-100 rounded-full h-3 overflow-hidden transition-all duration-500">
+                <div id="progress-track" class="relative w-full bg-slate-200 ring-1 ring-inset ring-slate-300 rounded-full h-3 overflow-hidden transition-all duration-500">
                     <div id="progress-savings-zone-tint" class="hidden absolute top-0 bottom-0 left-0 bg-rose-100 z-0"></div>
                     <div id="progress-bar-fill" class="relative z-[5] bg-emerald-600 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
-                    <div id="progress-savings-marker" class="hidden absolute top-0 bottom-0 w-0.5 bg-slate-900 z-10" title="Reserva de meta de ahorro"></div>
+                    <div id="progress-savings-band" class="hidden absolute top-0 bottom-0 left-0 bg-emerald-800 z-[6]"></div>
+                    <div id="progress-savings-marker" class="hidden absolute top-0 bottom-0 w-1.5 -translate-x-1/2 bg-white z-10 flex items-center justify-center" title="Reserva de meta de ahorro">
+                        <span id="progress-savings-marker-line" class="w-0.5 h-full bg-slate-600 rounded-full"></span>
+                    </div>
                 </div>
             </div>
 
@@ -903,7 +906,9 @@ import '../styles/global.css';
         const progressTrack = document.getElementById('progress-track');
         const progressSavingsZoneTint = document.getElementById('progress-savings-zone-tint');
         const progressBarFill = document.getElementById('progress-bar-fill');
+        const progressSavingsBand = document.getElementById('progress-savings-band');
         const progressSavingsMarker = document.getElementById('progress-savings-marker');
+        const progressSavingsMarkerLine = document.getElementById('progress-savings-marker-line');
         const cardDailyPace = document.getElementById('card-daily-pace');
         const categoriesList = document.getElementById('categories-list');
         const billsList = document.getElementById('bills-list');
@@ -1509,10 +1514,18 @@ import '../styles/global.css';
                         const markerPct = Math.min(Math.max((health.metaAhorro / effectiveGeneralBudget) * 100, 2), 98);
                         progressSavingsMarker.style.left = `${markerPct}%`;
                         progressSavingsMarker.classList.remove('hidden');
-                        if (isOverLimitOrExhausted) {
-                            progressSavingsMarker.className = "absolute top-0 bottom-0 w-0.5 bg-rose-600 z-10";
-                        } else {
-                            progressSavingsMarker.className = "absolute top-0 bottom-0 w-0.5 bg-slate-600 z-10";
+                        if (progressSavingsMarkerLine) {
+                            progressSavingsMarkerLine.style.backgroundColor = isOverLimitOrExhausted ? '#E11D48' : '#4B5563';
+                        }
+
+                        // Ancho de la banda de reserva: mismo clamp que el marcador
+                        if (progressSavingsBand) {
+                            if (hasSavings && !isOverLimitOrExhausted) {
+                                progressSavingsBand.style.width = `${Math.min(remainingFullRatio * 100, markerPct)}%`;
+                                progressSavingsBand.classList.remove('hidden');
+                            } else {
+                                progressSavingsBand.classList.add('hidden');
+                            }
                         }
 
                         // Zona de ahorro invadida
@@ -1526,6 +1539,7 @@ import '../styles/global.css';
                         }
                     } else {
                         progressSavingsMarker.classList.add('hidden');
+                        if (progressSavingsBand) progressSavingsBand.classList.add('hidden');
                         if (progressSavingsZoneTint) progressSavingsZoneTint.classList.add('hidden');
                     }
                 }
@@ -1533,9 +1547,9 @@ import '../styles/global.css';
                 // Color del carril al agotarse
                 if (progressTrack) {
                     if (isTankExhausted) {
-                        progressTrack.className = "relative w-full bg-rose-100 ring-1 ring-rose-300 rounded-full h-3 overflow-hidden transition-all duration-500";
+                        progressTrack.className = "relative w-full bg-rose-100 ring-1 ring-inset ring-rose-300 rounded-full h-3 overflow-hidden transition-all duration-500";
                     } else {
-                        progressTrack.className = "relative w-full bg-slate-100 rounded-full h-3 overflow-hidden transition-all duration-500";
+                        progressTrack.className = "relative w-full bg-slate-200 ring-1 ring-inset ring-slate-300 rounded-full h-3 overflow-hidden transition-all duration-500";
                     }
                 }
 
@@ -1550,8 +1564,9 @@ import '../styles/global.css';
                 if (progressTitleLabel) progressTitleLabel.textContent = "Ritmo de gasto mensual";
                 progressBarFill.style.width = "0%";
                 if (progressSavingsMarker) progressSavingsMarker.classList.add('hidden');
+                if (progressSavingsBand) progressSavingsBand.classList.add('hidden');
                 if (progressSavingsZoneTint) progressSavingsZoneTint.classList.add('hidden');
-                if (progressTrack) progressTrack.className = "relative w-full bg-slate-100 rounded-full h-3 overflow-hidden transition-all duration-500";
+                if (progressTrack) progressTrack.className = "relative w-full bg-slate-200 ring-1 ring-inset ring-slate-300 rounded-full h-3 overflow-hidden transition-all duration-500";
             }
         };
 

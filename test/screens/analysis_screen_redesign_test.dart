@@ -281,6 +281,11 @@ void main() {
       final progressBar = tester.widget<LinearProgressIndicator>(progressFinder);
       expect(progressBar.value, closeTo((550.0 - 18.0) / 550.0, 0.001));
       expect(find.byKey(const Key('analysis_savings_marker')), findsOneWidget);
+
+      // Banda de reserva de ahorro y leyenda con estado protegido
+      expect(find.byKey(const Key('analysis_savings_reserve_band')), findsOneWidget);
+      expect(find.byKey(const Key('analysis_savings_legend')), findsOneWidget);
+      expect(find.textContaining('Ahorro protegido ·'), findsOneWidget);
     });
 
     testWidgets('3. Tarjeta 2: Evolución Diaria renderiza curva acumulativa y ritmo dinámico', (tester) async {

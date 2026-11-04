@@ -22,6 +22,10 @@ Los colores de la aplicación están definidos en `lib/core/constants/app_colors
 | `AppColors.textMuted` | `#9CA3AF` | Gris claro para placeholders, divisores sutiles y timestamps pasivos. |
 | `AppColors.border` | `#E5E7EB` | Bordes de tarjetas, campos e inputs. |
 | `AppColors.error` | `#EF4444` | Alertas de presupuesto excedido, errores y acciones destructivas. |
+| `AppColors.trackNeutral` | `#E2E8F0` | Carril gris base del tanque de presupuesto (Slate 200). |
+| `AppColors.trackBorder` | `#CBD5E1` | Borde interior sutil (1dp) del carril de presupuesto (Slate 300). |
+| `AppColors.savingsReserve` | `#065F46` | Reserva protegida de ahorro en el tanque de presupuesto (Emerald 800). |
+| `AppColors.textSpent` | `#475569` | Monto de contexto "Gastado" sobre la barra de presupuesto (Slate 600). |
 
 ---
 
@@ -234,7 +238,7 @@ AlertDialog(
 - **Etiquetado Claro:** Usar siempre términos que reflejen capacidad de gasto restante: *"Disponible"*, *"Disponible para gastar"* o *"Te queda"*, reservando el signo `-` en rojo exclusivamente para cuando el presupuesto o límite sea superado (*"Presupuesto superado por -$X"*).
 
 ### 6.2 Semántica de Metas de Ahorro
-- Evitar términos ambiguos como únicamente *"Protegida"*. Utilizar etiquetas explícitas que identifiquen la meta: *"Ahorro protegido"*, *"Ahorro en riesgo"* o *"Ahorro comprometido"*.
+- Evitar términos ambiguos como únicamente *"Protegida"*. Utilizar etiquetas explícitas que identifiquen la meta: *"Ahorro protegido"* (gasto dentro del límite), *"Ahorro en riesgo"* (exclusivo de riesgo por proyección de ritmo de gasto en badge/insight) o *"Ahorro comprometido"* (invasión real de la reserva o tanque agotado).
 
 ### 6.3 Accesibilidad y Contraste WCAG en Textos Secundarios
 - En interfaces web y móviles, los textos secundarios (metadatos, promedios, subtítulos informativos y enlaces de acción) deben mantener un contraste mínimo de 4.5:1 (WCAG AA). Queda prohibido usar grises excesivamente claros (`text-slate-400` en web o colores por debajo de `AppColors.textSecondary` en móvil) en elementos interactivos o informativos clave.
@@ -243,18 +247,18 @@ AlertDialog(
 - **Tanque de Saldo Disponible (Barras de Consumo):**
   Las barras de presupuesto mensuales en la tarjeta principal (`SummaryCard`), en la pantalla de análisis (`AnalysisScreen._buildGeneralBudgetCard`), en el control por categorías (`CategoryChart`) y en el panel web (`panel.astro`) miden **saldo disponible restante** que se reduce de derecha a izquierda (`100% → 0%`) a medida que se ejecutan gastos, alineadas conceptualmente con el monto héroe superior (`Disponible para gastar`).
   1. *Escala base:* Escala siempre sobre el presupuesto general (`budget > 0`).
-  2. *Estado normal / saludable:* Verde (`AppColors.balancePositive` / `#16A34A`) en barras generales o el color de identidad de la categoría (`AppColors.categoryColors[cat]`) en `CategoryChart`, sobre carril gris claro (`AppColors.trackNeutral` / `#F1F5F9`).
-  3. *Estado de precaución:* Ámbar de alto contraste (`AppColors.caution` / `#D97706`) cuando queda `<= 15%` de capacidad antes de tocar la rayita de ahorro o el fondo del tanque (`usedRatio >= 0.85`). No mezclar con la proyección lineal `enRiesgo`, la cual se comunica exclusivamente en el badge de ahorro y en `AiInsightCard`.
-  4. *Estado de ahorro invadido (`límite < gasto < presupuesto`):* Toda la reserva de ahorro (`0%` hasta el marcador) entra en emergencia: el saldo que aún queda vivo de ahorro se pinta de rojo fuerte (`AppColors.errorStrong` / `#DC2626`), el tramo de ahorro ya consumido se tiñe de rojo suave (`AppColors.errorTint` / `#FEE2E2`), y el marcador vertical cambia a rojo fuerte.
-  5. *Estado de tanque agotado (`gasto >= presupuesto`):* Relleno al `0%` con todo el carril teñido en rojo suave (`AppColors.errorTint` / `#FEE2E2`) y borde rojo sutil (`AppColors.errorBorder` / `#FCA5A5`), evitando que un sobregasto se confunda con una barra inactiva.
+  2. *Estado normal / saludable:* Doble tono claro: carril gris (`AppColors.trackNeutral` / `#E2E8F0`) con borde interior 1dp (`AppColors.trackBorder` / `#CBD5E1`); tramo libre de saldo disponible en verde (`AppColors.balancePositive` / `#16A34A`), y banda de reserva de ahorro en esmeralda profundo (`AppColors.savingsReserve` / `#065F46`). En `CategoryChart`, el color de identidad de la categoría (`AppColors.categoryColors[cat]`).
+  3. *Estado de precaución:* Ámbar de alto contraste (`AppColors.caution` / `#D97706`) cuando queda `<= 15%` de capacidad antes de tocar la muesca de ahorro o el fondo del tanque (`usedRatio >= 0.85`). El ámbar aplica exclusivamente al tramo libre de saldo disponible; la banda de reserva intacta conserva `#065F46`. No mezclar con la proyección lineal `enRiesgo`, la cual se comunica exclusivamente en el badge de ahorro y en `AiInsightCard`.
+  4. *Estado de ahorro invadido (`límite < gasto < presupuesto`):* La reserva de ahorro entra en compromiso real: la porción que aún queda viva de ahorro se pinta de rojo fuerte (`AppColors.errorStrong` / `#DC2626`), el tramo de ahorro ya consumido se tiñe de rojo suave (`AppColors.errorTint` / `#FEE2E2`), la muesca vertical de corte (`2dp` central con halo de `2dp` del fondo) resalta en `#DC2626`, y la leyenda inferior indica "Ahorro comprometido · quedan $ X".
+  5. *Estado de tanque agotado (`gasto >= presupuesto`):* Relleno al `0%` con todo el carril teñido en rojo suave (`AppColors.errorTint` / `#FEE2E2`) y borde rojo sutil (`AppColors.errorBorder` / `#FCA5A5`), muesca oculta si `meta >= presupuesto`, y leyenda indicando "Ahorro comprometido · quedan $ 0,00".
 - **Barras de Asignación y Proporción Estadística:**
   Las barras de configuración de presupuestos en hojas modales (`BudgetBottomSheet`) y la distribución de compras en radiografías (`PurchaseRadiographyCard`) no representan saldo en tanque sino asignación o proporciones acumulativas de `0%` a `100%`, manteniendo el avance tradicional hacia la derecha.
 
 ### 6.5 Jerarquía de Tres Niveles del Resumen Financiero (Modelo Mental V3)
 Para evitar saturación visual y fatiga cognitiva, las tarjetas de balance mensual no deben apilar múltiples números gigantes en 32sp ni mostrar porcentajes abstractos:
 - **Nivel 1 (Héroe Único):** Saldo disponible restante (`Disponible para gastar`) en 32sp verde negrita con selector compacto tipo Binance (`USD BCV ▾`). Si está excedido, pastilla roja compacta `Excedido del límite` con saldo negativo en rojo.
-- **Nivel 2 (Contexto Horizontal Equilibrado):** Fila sobre la barra con `Gastado: $ X` a la izquierda y `Límite: $ Y ✏️` (tocable) a la derecha.
-- **Nivel 3 (Barra de Tanque con Reserva de Ahorro):** Barra lineal de 10dp con marcador vertical (`2dp`, sobresaliendo `3dp` arriba y abajo) posicionado a la izquierda en `metaAhorro / presupuestoGeneral`. La barra se vacía de derecha a izquierda hacia dicho marcador. Si el gasto cruza la rayita invadiendo el ahorro, la zona de ahorro se tiñe de emergencia en rojo (`#DC2626` vivo + `#FEE2E2` comido) y el marcador vertical pasa a rojo fuerte.
+- **Nivel 2 (Contexto Horizontal Equilibrado):** Fila sobre la barra con `Límite: $ Y ✏️` (tocable, `textPrimary`) a la izquierda y `Gastado: $ X` a la derecha en pizarra (`AppColors.textSpent` / `#475569`, peso `w600`), alineadas conceptualmente con el extremo lleno y el hueco vacío del tanque respectivamente.
+- **Nivel 3 (Barra de Tanque con Reserva de Ahorro V2):** Barra lineal de 10dp sobre carril `#E2E8F0` con borde interior `#CBD5E1`. Doble tono visual: saldo libre (`#16A34A`) y reserva protegida (`#065F46`) delimitada por una muesca vertical (`2dp` al centro con halo de `2dp` del color de la tarjeta y protrusión de `3dp` arriba y abajo). Leyenda inferior de estado sin divisores: `Ahorro protegido · $ X` (verde `#065F46`) o `Ahorro comprometido · quedan $ Y` (rojo `#DC2626`). Si el gasto invade la reserva, el remanente vivo pasa a rojo (`#DC2626`), el fondo consumido a `#FEE2E2`, y el marcador a rojo. Si `meta >= presupuesto`, la muesca se oculta y la reserva cubre el ancho completo.
 - **Desacoplamiento Pedagógico:** El cálculo del ritmo diario permitido (`$ X/día durante Y días restantes`) y las sugerencias de moderación se delegan dinámicamente al componente del `Asistente IA` (`AiInsightCard`), manteniendo la tarjeta de resumen limpia y enfocada en los 3 números clave.
 
 ### 6.6 Tarjeta de Distribución de Gastos (Dona y Lista Equilibrada)

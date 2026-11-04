@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
@@ -295,6 +296,20 @@ class AnalysisScreen extends StatelessWidget {
     final bool isExceeded = hasBudget && (targetBudget > 0 ? spent > targetBudget : spent > 0);
     final double percentUsed = (hasBudget && targetBudget > 0) ? (spent / targetBudget) : 0.0;
 
+    final bool isTankExhausted = hasBudget && budget > 0 && spent >= budget;
+    final bool isSavingsInvaded =
+        hasBudget && hasSavingsGoal && budget > 0 && spent > limiteParaGastar;
+    final bool isOverLimitOrExhausted = isExceeded || isTankExhausted;
+    final bool isCaution = hasBudget && !isOverLimitOrExhausted && percentUsed >= 0.85;
+    final bool isSavingsCompromised = hasSavingsGoal && isExceeded;
+    final bool isAllReserved = hasSavingsGoal && budget > 0 && metaAhorro >= budget;
+    final double savingsRemaining = hasSavingsGoal
+        ? (budget - spent).clamp(0.0, metaAhorro)
+        : 0.0;
+    final Color cardSurface = isExceeded
+        ? Color.alphaBlend(AppColors.error.withValues(alpha: 0.04), AppColors.card)
+        : AppColors.card;
+
     final now = DateTime.now();
     final isCurrentMonth = (now.month == gastoProvider.selectedMonth &&
         now.year == gastoProvider.selectedYear);
@@ -497,28 +512,34 @@ class AnalysisScreen extends StatelessWidget {
             // Barra lineal limpia de 10dp con marcador vertical de ahorro (Tanque que se vacía)
             LayoutBuilder(
               builder: (context, constraints) {
-                final totalWidth = constraints.maxWidth;
-                final bool isTankExhausted = hasBudget && budget > 0 && spent >= budget;
-                final bool isSavingsInvaded =
-                    hasBudget && hasSavingsGoal && budget > 0 && spent > limiteParaGastar;
-                final bool isOverLimitOrExhausted = isExceeded || isTankExhausted;
-                final bool isCaution = !isOverLimitOrExhausted && (percentUsed >= 0.85);
+                final double totalWidth = constraints.maxWidth;
+                const double notchWidth = 6.0; // 2dp halo + 2dp línea + 2dp halo
+                const double notchHalf = notchWidth / 2;
+                const double notchMinCenter = 8.0; // garantiza >= 5dp de banda visible
 
-                final double rawSavingsRatio =
-                    (hasSavingsGoal && budget > 0) ? (metaAhorro / budget).clamp(0.0, 1.0) : 0.0;
-                final double savingsMarkerPos = (totalWidth * rawSavingsRatio).clamp(0.0, totalWidth);
+                final double rawSavingsRatio = (hasSavingsGoal && budget > 0)
+                    ? (metaAhorro / budget).clamp(0.0, 1.0)
+                    : 0.0;
                 final double barFillRatio =
                     budget > 0 ? ((budget - spent) / budget).clamp(0.0, 1.0) : 0.0;
 
-                final Color barColor;
-                if (isOverLimitOrExhausted) {
-                  barColor = AppColors.errorStrong;
-                } else if (isCaution) {
-                  barColor = AppColors.caution;
-                } else {
-                  barColor = AppColors.balancePositive;
-                }
+                final double fillEnd = barFillRatio * totalWidth;
+                final double maxMarkerCenter = math.max(notchMinCenter, totalWidth - notchMinCenter);
+                // Mismo clamp en dp para banda y muesca: nunca se desalinean.
+                final double markerPos = !hasSavingsGoal
+                    ? 0.0
+                    : (isAllReserved
+                        ? totalWidth
+                        : (totalWidth * rawSavingsRatio).clamp(notchMinCenter, maxMarkerCenter));
+                final double reserveWidth = hasSavingsGoal ? math.min(fillEnd, markerPos) : 0.0;
+                final bool showNotch = hasSavingsGoal && !isAllReserved;
 
+                final Color barColor = isOverLimitOrExhausted
+                    ? AppColors.errorStrong
+                    : (isCaution ? AppColors.caution : AppColors.balancePositive);
+                final Color reserveColor = isOverLimitOrExhausted
+                    ? AppColors.errorStrong
+                    : AppColors.savingsReserve;
                 final Color trackColor = isTankExhausted ? AppColors.errorTint : AppColors.trackNeutral;
 
                 return Semantics(
@@ -535,7 +556,15 @@ class AnalysisScreen extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: trackColor,
                             borderRadius: BorderRadius.circular(5),
-                            border: isTankExhausted ? Border.all(color: AppColors.errorBorder, width: 1) : null,
+                          ),
+                          // IMPORTANTE: foregroundDecoration, NO decoration.
+                          // Un border en decoration inserta 1dp el hijo y desalinea
+                          // totalWidth (markerPos/fillEnd) respecto al carril pintado.
+                          foregroundDecoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(5),
+                            border: Border.all(
+                              color: isTankExhausted ? AppColors.errorBorder : AppColors.trackBorder,
+                            ),
                           ),
                           child: Stack(
                             alignment: Alignment.centerLeft,
@@ -545,7 +574,7 @@ class AnalysisScreen extends StatelessWidget {
                                   left: 0,
                                   top: 0,
                                   bottom: 0,
-                                  width: savingsMarkerPos,
+                                  width: markerPos,
                                   child: Container(
                                     key: const Key('analysis_savings_invaded_tint'),
                                     color: AppColors.errorTint,
@@ -558,22 +587,48 @@ class AnalysisScreen extends StatelessWidget {
                                 backgroundColor: isTankExhausted ? AppColors.errorTint : Colors.transparent,
                                 valueColor: AlwaysStoppedAnimation<Color>(barColor),
                               ),
+                              if (reserveWidth > 0)
+                                Positioned(
+                                  left: 0,
+                                  top: 0,
+                                  bottom: 0,
+                                  width: reserveWidth,
+                                  child: Container(
+                                    key: const Key('analysis_savings_reserve_band'),
+                                    color: reserveColor,
+                                  ),
+                                ),
                             ],
                           ),
                         ),
                       ),
-                      if (hasSavingsGoal)
+                      if (showNotch)
                         Positioned(
-                          left: (savingsMarkerPos - 1.0).clamp(0.0, totalWidth - 2.0),
+                          left: markerPos - notchHalf,
                           top: -3,
                           bottom: -3,
-                          child: Container(
-                            key: const Key('analysis_savings_marker'),
-                            width: 2,
-                            decoration: BoxDecoration(
-                              color: isOverLimitOrExhausted ? AppColors.errorStrong : AppColors.markerNeutral,
-                              borderRadius: BorderRadius.circular(1),
-                            ),
+                          width: notchWidth,
+                          child: Stack(
+                            children: [
+                              Positioned.fill(
+                                child: ColoredBox(color: cardSurface),
+                              ),
+                              Positioned(
+                                left: 2,
+                                right: 2,
+                                top: 0,
+                                bottom: 0,
+                                child: Container(
+                                  key: const Key('analysis_savings_marker'),
+                                  decoration: BoxDecoration(
+                                    color: isOverLimitOrExhausted
+                                        ? AppColors.errorStrong
+                                        : AppColors.markerNeutral,
+                                    borderRadius: BorderRadius.circular(1),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                     ],
@@ -581,6 +636,42 @@ class AnalysisScreen extends StatelessWidget {
                 );
               },
             ),
+
+            if (hasSavingsGoal) ...[
+              const SizedBox(height: 8),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  key: const Key('analysis_savings_legend'),
+                  children: [
+                    Icon(
+                      Icons.savings_outlined,
+                      size: 16,
+                      color: isSavingsCompromised ? AppColors.errorStrong : AppColors.savingsReserve,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      isSavingsCompromised ? 'Ahorro comprometido · quedan' : 'Ahorro protegido ·',
+                      style: TextStyle(
+                        color: isSavingsCompromised ? AppColors.errorStrong : AppColors.savingsReserve,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      isSavingsCompromised ? fmt(savingsRemaining) : fmt(metaAhorro),
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 14),
 
             // Recuadro analítico inferior (Caja gris suave rounded-xl con padding 14dp)
