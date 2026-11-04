@@ -174,9 +174,9 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 | **Seguridad de Keystore de producción** | P0 | `Pendiente` | Migrar `android_template/rindemas.jks` y passwords a GitHub Secrets; desvincular de Git. |
 | **Generar y versionar `pubspec.lock`** | P0 | `Pendiente` | Aún ausente en git; CI sigue resolviendo dependencias flotantes en cada corrida. |
 | **Fijar versión de Flutter en CI** | P0 | `Pendiente` | `.github/workflows/build_apk.yml` usa `channel: stable` flotante en lugar de versión exacta. |
-| **Desacoplar Cold Start en `main.dart`** | P0 | `Pendiente` | `main()` ejecuta inicializaciones de auth y notificaciones bloqueando antes de `runApp()`. |
-| **Coordinador Único de Sincronización (`SyncCoordinator`)** | P0 | `Pendiente` | Centralizar sincronización con Firestore evitando duplicados, concurrencia y sobrecostos. |
-| **Bandeja de Intenciones en Notificaciones** | P0 | `Pendiente` | Evitar pérdida del payload en frío esperando a que `ScanQueueProvider.ready` termine. |
+| **Desacoplar Cold Start en `main.dart`** | P0 | `Pendiente de validación 🧪` | Desacoplado cold start con `runApp()` inmediato y servicios diferidos post-frame. |
+| **Coordinador Único de Sincronización (`SyncCoordinator`)** | P0 | `Pendiente de validación 🧪` | Centralizado en `SyncCoordinator` con cerrojo, debounce 2s y throttle 5m. |
+| **Bandeja de Intenciones en Notificaciones** | P0 | `Pendiente de validación 🧪` | Consumo de `pendingAction` sincronizado con `ScanQueueProvider.ready`. |
 | **Eliminar auto-commits de error en CI** | P0 | `Completada ✅` | Logs desacoplados como artefactos de GitHub Actions (Build 641). |
 | **Neutralización tasas 850/474 en auto-reparaciones** | P0 | `Completada ✅` | Neutralizada la auto-reparación en segundo plano en `main_screen.dart` (commit `de17323`). |
 | **Purgar `firebase_functions/node_modules/` de Git** | P1 | `Completada ✅` | Purgados 2.115 archivos del índice de Git sin afectar código local. |
