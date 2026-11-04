@@ -571,7 +571,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ultimoAnio != null &&
         ultimoMes != null &&
         (ultimoAnio != gastoProvider.selectedYear || ultimoMes != gastoProvider.selectedMonth);
-    final String? ultimoMesNombre = tieneGastosEnOtroMes ? DateFormatter.getMonthName(ultimoMes!) : null;
+    final String? ultimoMesNombre = tieneGastosEnOtroMes ? DateFormatter.getMonthName(ultimoMes) : null;
 
     final String titulo = isCurrentMonth
         ? 'Sin gastos este mes'
@@ -613,7 +613,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             textAlign: TextAlign.center,
             style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
           ),
-          if (tieneGastosEnOtroMes && ultimoAnio != null && ultimoMes != null) ...[
+          if (tieneGastosEnOtroMes) ...[
             const SizedBox(height: 14),
             SizedBox(
               width: double.infinity,

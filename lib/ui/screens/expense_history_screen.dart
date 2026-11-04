@@ -611,7 +611,7 @@ class ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
         ultimoAnio != null &&
         ultimoMes != null &&
         (ultimoAnio != gastoProvider.selectedYear || ultimoMes != gastoProvider.selectedMonth);
-    final String? ultimoMesNombre = tieneGastosEnOtroMes ? DateFormatter.getMonthName(ultimoMes!) : null;
+    final String? ultimoMesNombre = tieneGastosEnOtroMes ? DateFormatter.getMonthName(ultimoMes) : null;
 
     final String titulo = isFiltered
         ? 'No se encontraron gastos'
@@ -662,7 +662,7 @@ class ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
               textAlign: TextAlign.center,
               style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
             ),
-            if (tieneGastosEnOtroMes && ultimoAnio != null && ultimoMes != null) ...[
+            if (tieneGastosEnOtroMes) ...[
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
