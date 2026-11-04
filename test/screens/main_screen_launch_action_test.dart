@@ -47,11 +47,13 @@ void main() {
       gastoProvider = FakeGastoProviderForMainScreenIntent();
       settingsProvider = FakeSettingsProviderForMainScreenIntent();
       notificationService = NotificationService.test();
+      NotificationService.instance = notificationService;
       notificationService.clearPendingAction();
     });
 
     tearDown(() {
       notificationService.clearPendingAction();
+      NotificationService.instance = NotificationService();
     });
 
     Widget createWidgetUnderTest() {

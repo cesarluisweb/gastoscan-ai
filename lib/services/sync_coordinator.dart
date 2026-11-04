@@ -158,51 +158,61 @@ class SyncCoordinator {
       return;
     }
 
-    // Cancelar cualquier debounce pendiente si se invocó directamente
+    _isSyncing = true;
+    _hasPendingRerun = false;
     _debounceTimer?.cancel();
     _debounceTimer = null;
 
-    final user = _syncService.currentUser;
-    // Guardas de privacidad y sesión: anónimos o sin usuario no sincronizan
-    if (user == null || user.isAnonymous) {
-      stateNotifier.value = SyncState.inactiva(lastSync: _lastSuccessfulSync);
-      return;
-    }
+    try {
+      final user = _syncService.currentUser;
+      // Guardas de privacidad y sesión: anónimos o sin usuario no sincronizan
+      if (user == null || user.isAnonymous) {
+        stateNotifier.value = SyncState.inactiva(lastSync: _lastSuccessfulSync);
+        return;
+      }
 
-    // Comprobar conectividad
-    final hasNet = await _connectivityService.isConnected();
-    if (!hasNet) {
-      stateNotifier.value = SyncState.error(
-        message: 'Sin conexión a internet.',
-        lastSync: _lastSuccessfulSync,
-      );
-      return;
-    }
+      // Comprobar conectividad
+      final hasNet = await _connectivityService.isConnected();
+      if (!hasNet) {
+        stateNotifier.value = SyncState.error(
+          message: 'Sin conexión a internet.',
+          lastSync: _lastSuccessfulSync,
+        );
+        return;
+      }
 
-    // Throttle de 5 minutos en arranques y reanudaciones salvo forzado explícito
-    if (!forzar && (trigger == SyncTrigger.arranque || trigger == SyncTrigger.reanudacion)) {
-      if (_lastSuccessfulSync != null) {
-        final elapsed = _now().difference(_lastSuccessfulSync!);
-        if (elapsed < minRoutineInterval) {
-          try {
-            final unsynced = await _repository.obtenerGastosNoSincronizados();
-            if (unsynced.isEmpty) {
-              debugPrint('[SyncCoordinator] Throttle activo ($elapsed < $minRoutineInterval) y sin cambios locales pendientes.');
-              return;
+      // Throttle de 5 minutos en arranques y reanudaciones salvo forzado explícito
+      if (!forzar && (trigger == SyncTrigger.arranque || trigger == SyncTrigger.reanudacion)) {
+        if (_lastSuccessfulSync != null) {
+          final elapsed = _now().difference(_lastSuccessfulSync!);
+          if (elapsed < minRoutineInterval) {
+            try {
+              final unsynced = await _repository.obtenerGastosNoSincronizados();
+              if (unsynced.isEmpty) {
+                debugPrint('[SyncCoordinator] Throttle activo ($elapsed < $minRoutineInterval) y sin cambios locales pendientes.');
+                return;
+              }
+            } catch (e) {
+              debugPrint('[SyncCoordinator] Error consultando no sincronizados en throttle: $e');
             }
-          } catch (e) {
-            debugPrint('[SyncCoordinator] Error consultando no sincronizados en throttle: $e');
           }
         }
       }
-    }
 
-    await _executeSync();
+      await _executeSync();
+    } finally {
+      _isSyncing = false;
+
+      // Si entraron nuevas peticiones durante la ejecución, disparar repetición secuencial limpia
+      if (_hasPendingRerun) {
+        _hasPendingRerun = false;
+        debugPrint('[SyncCoordinator] Ejecutando repetición secuencial por cambios pendientes.');
+        scheduleMicrotask(() => request(SyncTrigger.escritura, forzar: true));
+      }
+    }
   }
 
   Future<void> _executeSync() async {
-    _isSyncing = true;
-    _hasPendingRerun = false;
     stateNotifier.value = SyncState.enCurso(lastSync: _lastSuccessfulSync);
 
     final startTime = _now();
@@ -239,15 +249,6 @@ class SyncCoordinator {
         message: e.toString(),
         lastSync: _lastSuccessfulSync,
       );
-    } finally {
-      _isSyncing = false;
-
-      // Si entraron nuevas peticiones durante la ejecución, disparar repetición secuencial limpia
-      if (_hasPendingRerun) {
-        _hasPendingRerun = false;
-        debugPrint('[SyncCoordinator] Ejecutando repetición secuencial por cambios pendientes.');
-        scheduleMicrotask(() => request(SyncTrigger.escritura, forzar: true));
-      }
     }
   }
 
