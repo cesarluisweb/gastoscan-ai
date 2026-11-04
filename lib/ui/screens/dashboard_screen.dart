@@ -565,10 +565,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final mesSeleccionadoNombre = DateFormatter.getMonthName(gastoProvider.selectedMonth);
 
     final ultimo = gastoProvider.ultimoMesConGastos;
+    final int? ultimoAnio = ultimo?['year'];
+    final int? ultimoMes = ultimo?['month'];
     final bool tieneGastosEnOtroMes = ultimo != null &&
-        (ultimo['year'] != gastoProvider.selectedYear || ultimo['month'] != gastoProvider.selectedMonth);
-    final String? ultimoMesNombre = tieneGastosEnOtroMes ? DateFormatter.getMonthName(ultimo['month']!) : null;
-    final int? ultimoAnio = tieneGastosEnOtroMes ? ultimo['year'] : null;
+        ultimoAnio != null &&
+        ultimoMes != null &&
+        (ultimoAnio != gastoProvider.selectedYear || ultimoMes != gastoProvider.selectedMonth);
+    final String? ultimoMesNombre = tieneGastosEnOtroMes ? DateFormatter.getMonthName(ultimoMes!) : null;
 
     final String titulo = isCurrentMonth
         ? 'Sin gastos este mes'
@@ -610,13 +613,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
             textAlign: TextAlign.center,
             style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
           ),
-          if (tieneGastosEnOtroMes && ultimoAnio != null && ultimo != null) ...[
+          if (tieneGastosEnOtroMes && ultimoAnio != null && ultimoMes != null) ...[
             const SizedBox(height: 14),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
                 key: const Key('empty_state_jump_to_latest_btn'),
-                onPressed: () => gastoProvider.cambiarMes(ultimoAnio, ultimo['month']!),
+                onPressed: () => gastoProvider.cambiarMes(ultimoAnio, ultimoMes),
                 icon: const Icon(Icons.arrow_forward, size: 16),
                 label: Text(
                   'Ver gastos de $ultimoMesNombre $ultimoAnio',
