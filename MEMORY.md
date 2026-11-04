@@ -7,9 +7,11 @@
 - **P0 Detener commits automáticos CI:** `Completada ✅`. Integrado en `main` con CI verde (Build 641, commit `b5c4603`, run 41713145770). Cero commits automáticos generados en `origin/main`.
 - **Depuración de Roadmap:** `Completada ✅`. Archivados en `ROADMAP_HISTORICO.md` todos los hitos completados (incluidos UI-15, AI-09 y FIN-09 validados por César). `ROADMAP.md` limpio y sincronizado con el tablero de Deuda Técnica (P0-P3) en Fase 7 Bloque A.
 - **UX-14 (Estado Vacío Inteligente y Ciclo de Vida Temporal):** `Implementada 🔧` (en ajuste de botones). CI verde previo (Build 645). Deduplicación de botón único y estilo outline en curso.
-- **Artefacto para pruebas en teléfono:** Descargar `rindemas-dev-apk` desde el run de CI 41881942689 (*Rinde Más Dev*).
+- **Selector de Mes en AppBar (Inicio, Gastos, Análisis, Más):** `Pendiente de validación 🧪`. CI verde (Android build 649, commit `0eb455a`, run 41896045290). Selector movido de cuerpo a AppBar, 3 modos responsivos intrínsecos protegidos con `FittedBox`, acciones compactas a 40 dp.
+- **Artefacto para pruebas en teléfono:** Descargar `rindemas-dev-apk` desde el run de CI 41896045290 (*Rinde Más Dev*).
 
 ## Decisiones Técnicas y de Negocio Recientes
+- AppBarMonthSelector: Selector responsivo en AppBar con 3 umbrales escalados (Completo >=236dp, Compacto >=146dp, Mínimo >=88dp) y `FittedBox(fit: BoxFit.scaleDown)` para tolerancia total a fuentes Ahem/Roboto y densidad variable.
 - Fechas OCR y DatePicker: Triple escudo para fechas `DD/MM/YYYY` (Worker prompt + Gateway sanitizador + `GeminiExtractionResult.parseExtractionDate`).
 - DatePicker: Día actual con número negro (`Colors.black`) y relleno amarillo suave (`AppColors.primaryLight` inactivo / `primary` activo).
 - Tanque de presupuesto: `isCaution` depende exclusivamente del nivel físico (<=15% del límite), desacoplando `enRiesgo`.
