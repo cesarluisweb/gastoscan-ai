@@ -10,9 +10,12 @@
   - `SyncCoordinator` con cerrojo de concurrencia, debounce de 2s, throttle de 5 min y re-run secuencial.
   - Bandeja de intenciones (`PendingLaunchAction`) sincronizada con `ScanQueueProvider.ready`.
   - Documentación técnica: `docs/DOC_ARRANQUE_LOCAL_FIRST.md` (13 tests dedicados; total suite: 638 tests en verde).
-- **Próximo Paso Inmediato:** César valida en *Rinde Más Dev* (build 656) la experiencia en frío, debounce y notificaciones.
+- **Rediseño Selector de Mes en AppBar (Cápsula Unificada y Acciones Circulares):** `Pendiente de validación 🧪`. CI verde (Android build 657, commit `7ffede5`, run 41947798579). Cápsula única con micro-flechas circulares internas `#F1F5F9`, y botones de Lupa e IA en círculos de 34 dp con fondo blanco y borde fino.
+- **Artefacto para pruebas en teléfono:** Descargar `rindemas-dev-apk` desde el run de CI 41947798579 (*Rinde Más Dev*).
+- **Próximo Paso Inmediato:** César valida en *Rinde Más Dev* (build 657) la experiencia de la cápsula unificada y botones circulares en AppBar.
 
 ## Decisiones Técnicas y de Negocio Recientes
+- AppBarMonthSelector y Acciones: Cápsula unificada de 34 dp con micro-círculos de flechas internos `#F1F5F9`, y botones de acción (Lupa e IA) con `IconButton.styleFrom` circular blanco con borde de 1 px.
 - `_inicializarServiciosSegundoPlano()` post-frame corre desacoplado sin bloquear el despacho de intenciones.
 - Pruebas con `SnackBar` en Flutter requieren pump incremental de microtasks y animación antes del cierre con `pumpAndSettle()`.
 - Pruebas que toquen notificaciones o preferencias deben inicializar `SharedPreferences.setMockInitialValues({})`.
