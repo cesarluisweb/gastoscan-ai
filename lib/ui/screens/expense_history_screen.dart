@@ -267,11 +267,21 @@ class ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
         actions: [
           IconButton(
             key: const Key('expense_history_search_toggle'),
-            icon: Icon(_isSearching ? Icons.close : Icons.search),
+            icon: Icon(
+              _isSearching ? Icons.close : Icons.search,
+              size: 19,
+              color: AppColors.textPrimary,
+            ),
             tooltip: _isSearching ? 'Cerrar búsqueda' : 'Buscar',
-            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-            padding: EdgeInsets.zero,
-            visualDensity: VisualDensity.compact,
+            style: IconButton.styleFrom(
+              backgroundColor: AppColors.surface,
+              side: const BorderSide(color: AppColors.border, width: 1),
+              shape: const CircleBorder(),
+              minimumSize: const Size(34, 34),
+              maximumSize: const Size(34, 34),
+              padding: EdgeInsets.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
             onPressed: () {
               if (_isSearching) {
                 closeSearch();
@@ -280,19 +290,27 @@ class ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
               }
             },
           ),
+          const SizedBox(width: 4),
           IconButton(
             key: const Key('expense_history_ai_chat_button'),
             icon: const Icon(
               Icons.auto_awesome,
-              size: 22,
+              size: 19,
               color: AppColors.textPrimary,
             ),
             tooltip: 'Asistente IA',
-            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-            padding: EdgeInsets.zero,
-            visualDensity: VisualDensity.compact,
+            style: IconButton.styleFrom(
+              backgroundColor: AppColors.surface,
+              side: const BorderSide(color: AppColors.border, width: 1),
+              shape: const CircleBorder(),
+              minimumSize: const Size(34, 34),
+              maximumSize: const Size(34, 34),
+              padding: EdgeInsets.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
             onPressed: widget.onNavigateToChat,
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: Column(

@@ -118,26 +118,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
             key: const Key('dashboard_search_button'),
             icon: const Icon(
               Icons.search,
-              size: 22,
+              size: 19,
               color: AppColors.textPrimary,
             ),
             tooltip: 'Buscar',
-            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-            padding: EdgeInsets.zero,
-            visualDensity: VisualDensity.compact,
+            style: IconButton.styleFrom(
+              backgroundColor: AppColors.surface,
+              side: const BorderSide(color: AppColors.border, width: 1),
+              shape: const CircleBorder(),
+              minimumSize: const Size(34, 34),
+              maximumSize: const Size(34, 34),
+              padding: EdgeInsets.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
             onPressed: widget.onNavigateToSearch,
           ),
+          const SizedBox(width: 4),
           IconButton(
             key: const Key('dashboard_ai_chat_button'),
             icon: const Icon(
               Icons.auto_awesome,
-              size: 22,
+              size: 19,
               color: AppColors.textPrimary,
             ),
             tooltip: 'Asistente IA',
-            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-            padding: EdgeInsets.zero,
-            visualDensity: VisualDensity.compact,
+            style: IconButton.styleFrom(
+              backgroundColor: AppColors.surface,
+              side: const BorderSide(color: AppColors.border, width: 1),
+              shape: const CircleBorder(),
+              minimumSize: const Size(34, 34),
+              maximumSize: const Size(34, 34),
+              padding: EdgeInsets.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
             onPressed: () {
               if (widget.onNavigateToChat != null) {
                 widget.onNavigateToChat!();
@@ -151,6 +164,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               }
             },
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: Column(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:gastoscan_ai/core/constants/app_colors.dart';
 import 'package:gastoscan_ai/core/constants/app_constants.dart';
 import 'package:gastoscan_ai/providers/gasto_provider.dart';
 import 'package:gastoscan_ai/ui/widgets/app_bar_month_selector.dart';
@@ -97,22 +98,36 @@ Widget createRealLayoutHarness({
             actions: [
               IconButton(
                 key: const Key('dashboard_search_button'),
-                icon: const Icon(Icons.search, size: 22),
+                icon: const Icon(Icons.search, size: 19),
                 tooltip: 'Buscar',
-                constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                padding: EdgeInsets.zero,
-                visualDensity: VisualDensity.compact,
+                style: IconButton.styleFrom(
+                  backgroundColor: AppColors.surface,
+                  side: const BorderSide(color: AppColors.border, width: 1),
+                  shape: const CircleBorder(),
+                  minimumSize: const Size(34, 34),
+                  maximumSize: const Size(34, 34),
+                  padding: EdgeInsets.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
                 onPressed: () {},
               ),
+              const SizedBox(width: 4),
               IconButton(
                 key: const Key('dashboard_ai_chat_button'),
-                icon: const Icon(Icons.auto_awesome, size: 22),
+                icon: const Icon(Icons.auto_awesome, size: 19),
                 tooltip: 'Asistente IA',
-                constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                padding: EdgeInsets.zero,
-                visualDensity: VisualDensity.compact,
+                style: IconButton.styleFrom(
+                  backgroundColor: AppColors.surface,
+                  side: const BorderSide(color: AppColors.border, width: 1),
+                  shape: const CircleBorder(),
+                  minimumSize: const Size(34, 34),
+                  maximumSize: const Size(34, 34),
+                  padding: EdgeInsets.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
                 onPressed: () {},
               ),
+              const SizedBox(width: 8),
             ],
           ),
           body: const SizedBox.expand(),
@@ -247,19 +262,33 @@ void main() {
                   ),
                   actions: [
                     IconButton(
-                      icon: const Icon(Icons.search, size: 22),
-                      constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                      padding: EdgeInsets.zero,
-                      visualDensity: VisualDensity.compact,
+                      icon: const Icon(Icons.search, size: 19),
+                      style: IconButton.styleFrom(
+                        backgroundColor: AppColors.surface,
+                        side: const BorderSide(color: AppColors.border, width: 1),
+                        shape: const CircleBorder(),
+                        minimumSize: const Size(34, 34),
+                        maximumSize: const Size(34, 34),
+                        padding: EdgeInsets.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
                       onPressed: () {},
                     ),
+                    const SizedBox(width: 4),
                     IconButton(
-                      icon: const Icon(Icons.auto_awesome, size: 22),
-                      constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                      padding: EdgeInsets.zero,
-                      visualDensity: VisualDensity.compact,
+                      icon: const Icon(Icons.auto_awesome, size: 19),
+                      style: IconButton.styleFrom(
+                        backgroundColor: AppColors.surface,
+                        side: const BorderSide(color: AppColors.border, width: 1),
+                        shape: const CircleBorder(),
+                        minimumSize: const Size(34, 34),
+                        maximumSize: const Size(34, 34),
+                        padding: EdgeInsets.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
                       onPressed: () {},
                     ),
+                    const SizedBox(width: 8),
                   ],
                 ),
               ),

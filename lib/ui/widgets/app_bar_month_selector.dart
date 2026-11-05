@@ -6,7 +6,8 @@ import '../../core/utils/date_formatter.dart';
 import '../../providers/gasto_provider.dart';
 import 'month_selector_bar.dart';
 
-/// Selector de mes responsivo integrado en el AppBar para navegación temporal rápida.
+/// Selector de mes responsivo integrado en el AppBar como una cápsula unificada.
+/// Integra dentro de un único contenedor las flechas circulares de navegación y la píldora central.
 /// Se adapta a 3 modos según el ancho disponible (maxWidth): Completo, Compacto o Mínimo.
 class AppBarMonthSelector extends StatelessWidget {
   final String? keyPrefix;
@@ -64,6 +65,42 @@ class AppBarMonthSelector extends StatelessWidget {
     }
   }
 
+  Widget _buildArrowCircle({
+    required IconData icon,
+    required String tooltip,
+    required bool isDisabled,
+    required VoidCallback? onTap,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: onTap,
+          child: Container(
+            width: 26,
+            height: 26,
+            decoration: BoxDecoration(
+              color: isDisabled
+                  ? AppColors.cardLighter.withOpacity(0.4)
+                  : const Color(0xFFF1F5F9), // Gris tenue para destacar como botón
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: Icon(
+              icon,
+              size: 17,
+              color: isDisabled
+                  ? AppColors.textSecondary.withOpacity(0.35)
+                  : AppColors.textSecondary,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final gastoProvider = (selectedMonth == null || selectedYear == null)
@@ -86,102 +123,93 @@ class AppBarMonthSelector extends StatelessWidget {
     final String textoPildora = isCompleto ? '$mesNombre $year' : '$mesCorto $year';
 
     final bool showArrows = isCompleto || isCompacto;
-    final double arrowWidth = isCompleto ? 32.0 : 30.0;
     final bool isPrevDisabled = year <= AppConstants.fechaMinimaHistoricoTasas.year && month <= 1;
 
-    final Widget pill = Semantics(
-      button: true,
-      label: 'Cambiar mes, $mesNombre $year',
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          key: Key('${keyPrefix ?? ''}month_selector_title'),
-          onTap: () => MonthSelectorBar.showMonthPicker(
-            context: context,
-            initialYear: year,
-            initialMonth: month,
-            keyPrefix: keyPrefix,
-            onSelected: (nuevoAnio, nuevoMes) {
-              _handleCambiarMes(context, nuevoAnio, nuevoMes);
-            },
-          ),
-          borderRadius: BorderRadius.circular(20),
-          child: Container(
-            height: 32,
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.border, width: 1),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                if (isCompleto) ...[
-                  const Icon(
-                    Icons.calendar_today_outlined,
-                    size: 13,
-                    color: AppColors.textSecondary,
-                  ),
-                  const SizedBox(width: 6),
-                ],
-                Text(
-                  textoPildora,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Icon(
-                  Icons.keyboard_arrow_down,
-                  color: AppColors.textSecondary,
-                  size: isCompleto ? 16 : 14,
-                ),
-              ],
-            ),
-          ),
-        ),
+    final Widget capsule = Container(
+      height: 34,
+      padding: EdgeInsets.symmetric(
+        horizontal: showArrows ? 4 : 10,
+        vertical: 2,
       ),
-    );
-
-    final Widget content = Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        if (showArrows)
-          IconButton(
-            constraints: BoxConstraints(
-              minWidth: arrowWidth,
-              maxWidth: arrowWidth,
-              minHeight: 32,
-              maxHeight: 32,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border, width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          if (showArrows) ...[
+            _buildArrowCircle(
+              icon: Icons.chevron_left,
+              tooltip: 'Mes anterior',
+              isDisabled: isPrevDisabled,
+              onTap: isPrevDisabled ? null : () => _irAMesAnterior(context, year, month),
             ),
-            padding: EdgeInsets.zero,
-            visualDensity: VisualDensity.compact,
-            tooltip: 'Mes anterior',
-            icon: const Icon(Icons.chevron_left, size: 20, color: AppColors.textSecondary),
-            onPressed: isPrevDisabled ? null : () => _irAMesAnterior(context, year, month),
-          ),
-        pill,
-        if (showArrows)
-          IconButton(
-            constraints: BoxConstraints(
-              minWidth: arrowWidth,
-              maxWidth: arrowWidth,
-              minHeight: 32,
-              maxHeight: 32,
+            const SizedBox(width: 4),
+          ],
+          Semantics(
+            button: true,
+            label: 'Cambiar mes, $mesNombre $year',
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                key: Key('${keyPrefix ?? ''}month_selector_title'),
+                borderRadius: BorderRadius.circular(16),
+                onTap: () => MonthSelectorBar.showMonthPicker(
+                  context: context,
+                  initialYear: year,
+                  initialMonth: month,
+                  keyPrefix: keyPrefix,
+                  onSelected: (nuevoAnio, nuevoMes) {
+                    _handleCambiarMes(context, nuevoAnio, nuevoMes);
+                  },
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isCompleto) ...[
+                        const Icon(
+                          Icons.calendar_today_outlined,
+                          size: 13,
+                          color: AppColors.textSecondary,
+                        ),
+                        const SizedBox(width: 5),
+                      ],
+                      Text(
+                        textoPildora,
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: 3),
+                      Icon(
+                        Icons.keyboard_arrow_down,
+                        color: AppColors.textSecondary,
+                        size: isCompleto ? 16 : 14,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
-            padding: EdgeInsets.zero,
-            visualDensity: VisualDensity.compact,
-            tooltip: 'Mes siguiente',
-            icon: const Icon(Icons.chevron_right, size: 20, color: AppColors.textSecondary),
-            onPressed: () => _irAMesSiguiente(context, year, month),
           ),
-        const SizedBox(width: 4),
-      ],
+          if (showArrows) ...[
+            const SizedBox(width: 4),
+            _buildArrowCircle(
+              icon: Icons.chevron_right,
+              tooltip: 'Mes siguiente',
+              isDisabled: false,
+              onTap: () => _irAMesSiguiente(context, year, month),
+            ),
+          ],
+        ],
+      ),
     );
 
     return ConstrainedBox(
@@ -189,7 +217,10 @@ class AppBarMonthSelector extends StatelessWidget {
       child: FittedBox(
         fit: BoxFit.scaleDown,
         alignment: Alignment.centerRight,
-        child: content,
+        child: Padding(
+          padding: const EdgeInsets.only(right: 6),
+          child: capsule,
+        ),
       ),
     );
   }
