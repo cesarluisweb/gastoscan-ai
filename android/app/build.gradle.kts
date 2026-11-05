@@ -33,12 +33,16 @@ android {
 
     signingConfigs {
         create("release") {
-            val keystoreFile = rootProject.file("../android_template/rindemas.jks")
-            if (keystoreFile.exists()) {
+            // Credenciales inyectadas por CI desde GitHub Secrets. Nunca en el repositorio.
+            val keystorePath = System.getenv("ANDROID_KEYSTORE_PATH") ?: "../android_template/rindemas.jks"
+            val keystoreFile = rootProject.file(keystorePath)
+            val storePass = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+            val keyPass = System.getenv("ANDROID_KEY_PASSWORD") ?: storePass
+            if (keystoreFile.exists() && !storePass.isNullOrBlank()) {
                 storeFile = keystoreFile
-                storePassword = "rindemas123"
-                keyAlias = "rindemas"
-                keyPassword = "rindemas123"
+                storePassword = storePass
+                keyAlias = System.getenv("ANDROID_KEY_ALIAS") ?: "rindemas"
+                keyPassword = keyPass
             }
         }
     }

@@ -32,6 +32,11 @@
 **/android/local.properties
 **/android/**/GeneratedPluginRegistrant.java
 
+# Keystores y credenciales de firma (JAMAS versionar)
+*.jks
+*.keystore
+key.properties
+
 # Local builds & tokens
 *.apk
 *.zip
