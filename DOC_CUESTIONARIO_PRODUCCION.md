@@ -67,3 +67,21 @@ Este documento registra los datos, interacciones y cambios técnicos ocurridos d
 | **Día 6-13** | 25/10 - 02/11 | Optimización visual de presupuestos ("Tanque que se vacía") y triple escudo de fechas OCR. | Builds 640 y 641 en CI con 587 tests en verde. Despliegue web en producción. |
 | **Día 14** | 03/11/2026 | Cumplidos 14 días ininterrumpidos con 12 evaluadores activos. Se habilitó botón de acceso a producción. | Cero crashes, cero ANRs en consola. |
 | **Hito** | 04/11/2026 | Cuestionario completado y solicitud de acceso a producción enviada formalmente (07:42 AM). | Espera de revisión de Google (7 días o menos). |
+
+---
+
+## 4. Estado Verificado en Play Console (05/11/2026)
+
+**Comprobación directa del panel** (`Panel de control → Producción`):
+
+- **Producción:** `Inactivo`. La app sigue distribuida únicamente por prueba cerrada.
+- **Mensaje literal de la consola:**
+  > *"Hemos recibido tu solicitud de acceso a producción. Estamos revisando tu formulario de solicitud. Enviaremos un correo al propietario de la cuenta con las novedades. Este proceso suele tardar 7 días o menos, pero en ocasiones puede llevar más tiempo."*
+- **Fecha de la solicitud:** miércoles 04/11/2026, 07:42.
+- **Correo de notificación:** se enviará a la cuenta propietaria del proyecto (César).
+
+### Qué implica mientras dure la revisión
+1. **No se puede crear un release de producción**: el botón de producción permanece bloqueado hasta la aprobación.
+2. El AAB `1.5.0` (código de versión `669`, run de CI `42091003101`) se sube a **prueba cerrada** con normalidad; la revisión de acceso a producción no se reinicia por subir builds a ese canal.
+3. Cuando Google apruebe, se **promociona el mismo artefacto** a producción (sin recompilar). Se recomienda despliegue escalonado (20% → 100%).
+4. La ficha de Play, la política de privacidad y la declaración de Seguridad de los Datos ya están publicadas y no requieren cambios para esta versión.
