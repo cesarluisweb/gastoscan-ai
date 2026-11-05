@@ -33,6 +33,22 @@ description: "Convenciones para pruebas unitarias y de widgets, configuración d
   expect(textField.textCapitalization, TextCapitalization.words);
   expect(textField.decoration?.prefixText, 'USDT ');
   ```
+- **Inyección Segura de Overrides de `MediaQuery` en Pruebas (`TextScaler` / Insets):**
+  - Prohibido instanciar `MediaQuery(data: const MediaQueryData(), child: ...)` directamente dentro de `MaterialApp.home`. El constructor por defecto `const MediaQueryData()` fija `size: Size.zero`, destruyendo las dimensiones configuradas en `tester.view.physicalSize` y provocando que widgets basados en tamaño de pantalla retornen `SizedBox.shrink()` o no se instancien (`Found 0 widgets`).
+  - Para inyectar variaciones de accesibilidad o escala sin destruir el viewport, usar un `Builder` que herede el contexto de `MaterialApp`:
+    ```dart
+    MaterialApp(
+      home: Builder(
+        builder: (context) {
+          final mq = MediaQuery.of(context);
+          return MediaQuery(
+            data: mq.copyWith(textScaler: textScaler ?? mq.textScaler),
+            child: Scaffold(...),
+          );
+        },
+      ),
+    )
+    ```
 
 ## 3. Resiliencia y Aislamiento de Firebase
 - **Validación de Instancia Activa:** Todo widget o servicio que interactúe con `FirebaseAuth` o Firestore debe validar `Firebase.apps.isNotEmpty` antes de instanciar streams o métodos, garantizando que los tests de widgets se ejecuten limpiamente sin requerir un backend simulado.
