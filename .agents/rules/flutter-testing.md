@@ -60,6 +60,7 @@ description: "Convenciones para pruebas unitarias y de widgets, configuración d
 - **Inicialización Defensiva de `timezone`:** En servicios con alarmas programadas, inicializar `tz.initializeTimeZones()` dentro de un bloque `try/catch` en constructores o `setUp()` de tests, garantizando que `tz.local` esté siempre disponible para `TZDateTime`.
 - **Cobertura de Métodos Nuevos en Fakes Existentes:** Al agregar un nuevo método a contratos base (`GastoRepository`, `DatabaseHelper`), es obligatorio buscar todas las clases que extiendan o implementen dicha interfaz (`Fake implements GastoRepository`) e incorporar stubs con retorno por defecto (ej. `Future<Map<String, int>?> obtenerUltimoMesConGastos() async => null;`), evitando que suites no relacionadas fallen con `UnimplementedError` en CI.
 - **Aislamiento de Ciclo de Vida y Proveedores en Tests de Widgets:** Los proveedores que inicien tareas en segundo plano o streams (`ScanQueueProvider`, `SettingsProvider`) deben instanciarse siempre con `autoProcess: false` y `autoLoad: false` en `setUp()`, inicializar `SharedPreferences.setMockInitialValues({})`, y destruirse obligatoriamente en `tearDown()` llamando a `.dispose()`, previniendo errores de tipo *"This test failed after it had already completed"*.
+- **Brecha Asíncrona en Verificación de Coordinadores y Tareas Desacopladas:** Al probar un método coordinador o despachador asíncrono no esperado en la aserción inmediata (ej. `final f = coordinator.request(...)`) que contenga internamente microtareas previas (ej. `await _connectivityService.isConnected()`), la ejecución cede el turno al bucle de eventos antes de alcanzar el mock (`mockSync.syncBidirectional()`). Evaluar contadores síncronamente tras la llamada encontrará `0`. Para verificar que la rutina inició y entró en espera de su `Completer`, se debe ceder el microtask loop con `await Future<void>.delayed(Duration.zero);` antes de validar llamadas en dobles de prueba.
 
 ## 5. Aserciones Robustas y Determinismo
 - **Aserciones de Moneda y Formato:** Evitar evaluar cadenas literales completas que combinen texto y montos formateados (ej. evitar `find.textContaining('de $100.00 está')`). Validar por separado las frases clave con `contains` independientes (ej. `find.textContaining('Tu meta de ahorro')` y `find.textContaining('comprometida')`), evitando falsos negativos por diferencias de separadores decimales (`.` vs `,`) o espacios de `NumberFormat`.
@@ -91,4 +92,15 @@ description: "Convenciones para pruebas unitarias y de widgets, configuración d
 - **Inspección de Color en `Container` (`color` vs `decoration`):** Al verificar el color de un `Container` en pruebas de widgets mediante `tester.widget<Container>(finder)`:
   1. Si el widget fue instanciado con `color: X`, su propiedad `decoration` es `null`. Se debe evaluar directamente `container.color` (ej. `expect(container.color, equals(AppColors.savingsReserve))`).
   2. NUNCA realizar el cast `(container.decoration as BoxDecoration).color` a menos que el widget haya sido explícitamente construido con `decoration: BoxDecoration(color: ...)`.
+- **Evaluación de `SnackBar` y Temporizadores (`pumpAndSettle`):** Prohibido usar `await tester.pumpAndSettle()` inmediatamente después de una acción que deba desplegar un `SnackBar`. `pumpAndSettle()` avanza el reloj simulado hasta que no queden temporizadores activos, lo que agota la duración del `SnackBar` (ej. 3 segundos), ejecuta su animación de salida y lo retira del árbol, provocando falsos negativos (`findsOneWidget` encuentra 0). El patrón canónico de verificación es:
+  ```dart
+  // 1. Ejecutar callbacks post-frame y microtareas
+  await tester.pump();
+  // 2. Animar la entrada del SnackBar (200-500 ms) sin agotar su duración
+  await tester.pump(const Duration(milliseconds: 500));
+  // 3. Evaluar el contenido del SnackBar mientras sigue visible
+  expect(find.text('Mensaje esperado'), findsOneWidget);
+  // 4. Solo al final, agotar el temporizador restante para limpiar la prueba
+  await tester.pumpAndSettle();
+  ```
 - **Cero Advertencias en Archivos de Test:** El pipeline de CI corre con `--fatal-warnings`. Prohibido dejar importaciones huérfanas (`unused_import`) o advertencias en los archivos dentro de `test/`.
