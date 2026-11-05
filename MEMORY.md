@@ -10,12 +10,13 @@
   - `SyncCoordinator` con cerrojo de concurrencia, debounce de 2s, throttle de 5 min y re-run secuencial.
   - Bandeja de intenciones (`PendingLaunchAction`) sincronizada con `ScanQueueProvider.ready`.
   - Documentación técnica: `docs/DOC_ARRANQUE_LOCAL_FIRST.md` (13 tests dedicados; total suite: 638 tests en verde).
-- **Rediseño Selector de Mes en AppBar (Cápsula Unificada y Acciones Circulares):** `Pendiente de validación 🧪`. CI verde (Android build 657, commit `7ffede5`, run 41947798579). Cápsula única con micro-flechas circulares internas `#F1F5F9`, y botones de Lupa e IA en círculos de 34 dp con fondo blanco y borde fino.
-- **Artefacto para pruebas en teléfono:** Descargar `rindemas-dev-apk` desde el run de CI 41947798579 (*Rinde Más Dev*).
-- **Próximo Paso Inmediato:** César valida en *Rinde Más Dev* (build 657) la experiencia de la cápsula unificada y botones circulares en AppBar.
+- **Rediseño Selector de Mes en AppBar (Cápsula Unificada en Actions):** `Pendiente de validación 🧪`. CI verde (Android build 659, commit `a5ccb2e`, run 41953305328). Cápsula ubicada en `actions` con separación exacta de 4 dp respecto a Lupa (y 4 dp entre Lupa e IA), flechas internas tenues y sutiles, y título a la izquierda sin espacios flotantes.
+- **Artefacto para pruebas en teléfono:** Descargar `rindemas-dev-apk` desde el run de CI 41953305328 (*Rinde Más Dev*).
+- **Próximo Paso Inmediato:** César valida en *Rinde Más Dev* (build 659) la alineación y el estilo sutil de las flechas.
 
 ## Decisiones Técnicas y de Negocio Recientes
-- AppBarMonthSelector y Acciones: Cápsula unificada de 34 dp con micro-círculos de flechas internos `#F1F5F9`, y botones de acción (Lupa e IA) con `IconButton.styleFrom` circular blanco con borde de 1 px.
+- AppBarMonthSelector y Acciones: Cápsula unificada en `AppBar.actions` garantizando alineación derecha pegada a Lupa (4 dp) e IA (4 dp). Círculos de navegación con gris tenue `0xFFF1F5F9` al 55% e iconos atenuados al 70%.
+- `effectiveMaxWidth` de la cápsula auto-restringido a `screenWidth - 200` (con clamp seguro) para evitar desbordes en cualquier tamaño de pantalla.
 - `_inicializarServiciosSegundoPlano()` post-frame corre desacoplado sin bloquear el despacho de intenciones.
 - Pruebas con `SnackBar` en Flutter requieren pump incremental de microtasks y animación antes del cierre con `pumpAndSettle()`.
 - Pruebas que toquen notificaciones o preferencias deben inicializar `SharedPreferences.setMockInitialValues({})`.
