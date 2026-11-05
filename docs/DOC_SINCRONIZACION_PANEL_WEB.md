@@ -101,3 +101,12 @@ Compilación de frontend en Astro:
 npm --prefix landing run build
 ```
 Resultado: **5 páginas estáticas generadas sin errores**.
+
+---
+
+## 7. Corrección de Apilamiento (Z-Index)
+
+En pruebas de interfaz, el diálogo de decisión por discrepancia (`#modal-discrepancy-decision`) aparecía por debajo del modal principal `#modal-expense` (`z-50`) debido a que Tailwind no define la clase `z-60` por defecto sin configuración previa.
+
+- Se actualizó a clase arbitraria `z-[100]` y se añadió el atributo en línea `style="z-index: 100;"` como salvaguarda en [panel.astro](file:///c:/Development/Control%20de%20gastos%20VE/landing/src/pages/panel.astro).
+- Con esto, el diálogo y su fondo oscuro (`bg-slate-900/60 backdrop-blur-sm`) se superponen inequívocamente al modal de registro de gasto.
