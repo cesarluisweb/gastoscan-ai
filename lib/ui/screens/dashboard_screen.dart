@@ -90,30 +90,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const Text(
-              'Rinde Más',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-              ),
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: LayoutBuilder(
-                builder: (context, constraints) => Align(
-                  alignment: Alignment.centerRight,
-                  child: AppBarMonthSelector(
-                    maxWidth: constraints.maxWidth,
-                  ),
-                ),
-              ),
-            ),
-          ],
+        title: const Text(
+          'Rinde Más',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
         ),
         actions: [
+          const AppBarMonthSelector(),
+          const SizedBox(width: 4),
           IconButton(
             key: const Key('dashboard_search_button'),
             icon: const Icon(

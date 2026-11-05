@@ -61,7 +61,7 @@ Widget createWidgetUnderTest({
 Widget createRealLayoutHarness({
   required FakeGastoProvider provider,
   TextScaler? textScaler,
-  double titleFontSize = 10,
+  double titleFontSize = 20,
 }) {
   return ChangeNotifierProvider<GastoProvider>.value(
     value: provider,
@@ -72,30 +72,16 @@ Widget createRealLayoutHarness({
             : const MediaQueryData(),
         child: Scaffold(
           appBar: AppBar(
-            title: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  'Rinde Más',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: titleFontSize,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) => Align(
-                      alignment: Alignment.centerRight,
-                      child: AppBarMonthSelector(
-                        maxWidth: constraints.maxWidth,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+            title: Text(
+              'Rinde Más',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: titleFontSize,
+              ),
             ),
             actions: [
+              const AppBarMonthSelector(),
+              const SizedBox(width: 4),
               IconButton(
                 key: const Key('dashboard_search_button'),
                 icon: const Icon(Icons.search, size: 19),
@@ -241,26 +227,13 @@ void main() {
               ),
               child: Scaffold(
                 appBar: AppBar(
-                  title: Row(
-                    children: [
-                      const Text(
-                        'Rinde Más',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: LayoutBuilder(
-                          builder: (context, constraints) => Align(
-                            alignment: Alignment.centerRight,
-                            child: AppBarMonthSelector(
-                              maxWidth: 160,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                  title: const Text(
+                    'Rinde Más',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
                   ),
                   actions: [
+                    const AppBarMonthSelector(maxWidth: 160),
+                    const SizedBox(width: 4),
                     IconButton(
                       icon: const Icon(Icons.search, size: 19),
                       style: IconButton.styleFrom(
@@ -390,24 +363,18 @@ void main() {
             appBar: AppBar(
               title: isSearching
                   ? const TextField(key: Key('expense_history_search_field'))
-                  : Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        const Text('Gastos'),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: LayoutBuilder(
-                            builder: (context, constraints) => Align(
-                              alignment: Alignment.centerRight,
-                              child: AppBarMonthSelector(
-                                keyPrefix: 'expense_history_',
-                                maxWidth: constraints.maxWidth,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                  : const Text('Gastos'),
+              actions: [
+                if (!isSearching) ...[
+                  const AppBarMonthSelector(keyPrefix: 'expense_history_'),
+                  const SizedBox(width: 4),
+                ],
+                IconButton(
+                  key: const Key('expense_history_search_toggle'),
+                  icon: const Icon(Icons.search),
+                  onPressed: () {},
+                ),
+              ],
             ),
           ),
         );

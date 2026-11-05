@@ -344,26 +344,11 @@ class MoreScreenState extends State<MoreScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const Text('Más'),
-            const SizedBox(width: 6),
-            Expanded(
-              child: LayoutBuilder(
-                builder: (context, constraints) => Align(
-                  alignment: Alignment.centerRight,
-                  child: AppBarMonthSelector(
-                    keyPrefix: 'more_',
-                    maxWidth: constraints.maxWidth,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+        title: const Text('Más'),
         automaticallyImplyLeading: false,
         actions: [
+          const AppBarMonthSelector(keyPrefix: 'more_'),
+          const SizedBox(width: 4),
           IconButton(
             key: const Key('more_search_button'),
             icon: const Icon(

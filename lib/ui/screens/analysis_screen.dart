@@ -68,25 +68,10 @@ class AnalysisScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const Text('Análisis'),
-            const SizedBox(width: 6),
-            Expanded(
-              child: LayoutBuilder(
-                builder: (context, constraints) => Align(
-                  alignment: Alignment.centerRight,
-                  child: AppBarMonthSelector(
-                    keyPrefix: 'analysis_',
-                    maxWidth: constraints.maxWidth,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+        title: const Text('Análisis'),
         actions: [
+          const AppBarMonthSelector(keyPrefix: 'analysis_'),
+          const SizedBox(width: 4),
           IconButton(
             key: const Key('analysis_search_button'),
             icon: const Icon(

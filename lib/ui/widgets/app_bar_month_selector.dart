@@ -6,12 +6,12 @@ import '../../core/utils/date_formatter.dart';
 import '../../providers/gasto_provider.dart';
 import 'month_selector_bar.dart';
 
-/// Selector de mes responsivo integrado en el AppBar como una cápsula unificada.
+/// Selector de mes responsivo integrado en las acciones del AppBar como una cápsula unificada.
 /// Integra dentro de un único contenedor las flechas circulares de navegación y la píldora central.
-/// Se adapta a 3 modos según el ancho disponible (maxWidth): Completo, Compacto o Mínimo.
+/// Se adapta a 3 modos según el ancho disponible: Completo, Compacto o Mínimo.
 class AppBarMonthSelector extends StatelessWidget {
   final String? keyPrefix;
-  final double maxWidth;
+  final double? maxWidth;
   final int? selectedMonth;
   final int? selectedYear;
   final void Function(int year, int month)? onMonthChanged;
@@ -19,7 +19,7 @@ class AppBarMonthSelector extends StatelessWidget {
   const AppBarMonthSelector({
     super.key,
     this.keyPrefix,
-    required this.maxWidth,
+    this.maxWidth,
     this.selectedMonth,
     this.selectedYear,
     this.onMonthChanged,
@@ -76,24 +76,24 @@ class AppBarMonthSelector extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(12),
           onTap: onTap,
           child: Container(
-            width: 26,
-            height: 26,
+            width: 24,
+            height: 24,
             decoration: BoxDecoration(
               color: isDisabled
-                  ? AppColors.cardLighter.withOpacity(0.4)
-                  : const Color(0xFFF1F5F9), // Gris tenue para destacar como botón
+                  ? Colors.transparent
+                  : const Color(0xFFF1F5F9).withOpacity(0.55), // Gris tenue y muy sutil
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
             child: Icon(
               icon,
-              size: 17,
+              size: 15,
               color: isDisabled
-                  ? AppColors.textSecondary.withOpacity(0.35)
-                  : AppColors.textSecondary,
+                  ? AppColors.textSecondary.withOpacity(0.2)
+                  : AppColors.textSecondary.withOpacity(0.7), // Discreto sin llamar la atención
             ),
           ),
         ),
@@ -109,10 +109,12 @@ class AppBarMonthSelector extends StatelessWidget {
     final int month = selectedMonth ?? gastoProvider?.selectedMonth ?? DateTime.now().month;
     final int year = selectedYear ?? gastoProvider?.selectedYear ?? DateTime.now().year;
 
+    final double effectiveMaxWidth = maxWidth ?? (MediaQuery.sizeOf(context).width - 200);
+
     final double scale = MediaQuery.textScalerOf(context).scale(13) / 13;
-    final bool isCompleto = maxWidth >= 236 * scale;
-    final bool isCompacto = !isCompleto && maxWidth >= 146 * scale;
-    final bool isMinimo = !isCompleto && !isCompacto && maxWidth >= 88 * scale;
+    final bool isCompleto = effectiveMaxWidth >= 236 * scale;
+    final bool isCompacto = !isCompleto && effectiveMaxWidth >= 146 * scale;
+    final bool isMinimo = !isCompleto && !isCompacto && effectiveMaxWidth >= 88 * scale;
 
     if (!isCompleto && !isCompacto && !isMinimo) {
       return const SizedBox.shrink();
@@ -128,7 +130,7 @@ class AppBarMonthSelector extends StatelessWidget {
     final Widget capsule = Container(
       height: 34,
       padding: EdgeInsets.symmetric(
-        horizontal: showArrows ? 4 : 10,
+        horizontal: showArrows ? 3 : 8,
         vertical: 2,
       ),
       decoration: BoxDecoration(
@@ -213,14 +215,10 @@ class AppBarMonthSelector extends StatelessWidget {
     );
 
     return ConstrainedBox(
-      constraints: BoxConstraints(maxWidth: maxWidth),
+      constraints: BoxConstraints(maxWidth: effectiveMaxWidth),
       child: FittedBox(
         fit: BoxFit.scaleDown,
-        alignment: Alignment.centerRight,
-        child: Padding(
-          padding: const EdgeInsets.only(right: 6),
-          child: capsule,
-        ),
+        child: capsule,
       ),
     );
   }

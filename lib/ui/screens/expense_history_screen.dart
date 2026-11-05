@@ -246,25 +246,12 @@ class ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
                   });
                 },
               )
-            : Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const Text('Gastos'),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) => Align(
-                        alignment: Alignment.centerRight,
-                        child: AppBarMonthSelector(
-                          keyPrefix: 'expense_history_',
-                          maxWidth: constraints.maxWidth,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            : const Text('Gastos'),
         actions: [
+          if (!_isSearching) ...[
+            const AppBarMonthSelector(keyPrefix: 'expense_history_'),
+            const SizedBox(width: 4),
+          ],
           IconButton(
             key: const Key('expense_history_search_toggle'),
             icon: Icon(
