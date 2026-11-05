@@ -36,9 +36,11 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
    - Reubicación del selector de mes desde el cuerpo de las pantallas hacia el AppBar en las 4 pestañas principales.
    - Componente `AppBarMonthSelector` responsivo con 3 modos automáticos según ancho disponible (`Completo`, `Compacto`, `Mínimo`), protegido contra desbordes con `FittedBox`.
    - *Verificación:* CI Build 649 en verde (commit `0eb455a`), 22 pruebas unitarias y de widgets dedicadas.
-3. **Fase 5 (Web): Edición y Detalle Ampliado de Facturas:** `Pendiente de validación 🧪`
-   - Edición completa de compras, desglose dinámico de ítems, cálculo proporcional y sincronización directa con Firestore desde el navegador.
-   - *Verificación:* Desplegado a producción en web build 8 (commit `0bd3500`).
+3. **Fase 5 (Web): Sincronización del Registro y Edición de Gastos con App Móvil:** `Implementada 🔧`
+   - Reorganización en 4 tarjetas idénticas a la app móvil (General, ¿Qué compraste?, Monto total, ¿Cómo pagaste?).
+   - Módulos puros `expense-money.js` y `category-classifier.js` con 11 pruebas unitarias (Node 24) validando paridad al céntimo (C1 a C6) y autoclasificación inteligente.
+   - Eliminación de P2P en EUR, cálculo bidireccional de Bolívares/tasa cobrada en caja y protección de total dictado.
+   - *Verificación:* Pruebas Node en verde, build estático de Astro exitoso. Documentación técnica en `docs/DOC_SINCRONIZACION_PANEL_WEB.md`.
 
 ---
 
@@ -83,7 +85,7 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 
 - `E0-05a` **Neutralización de auto-reparaciones automáticas 850 / 474:** `Completada ✅` Neutralizada la ejecución en segundo plano en `main_screen.dart` y `sync_service.dart`; `dryRun = true` por defecto (commit `de17323`).
 - `E0-01` **Arnés de pruebas SQLite real en memoria:** `Completada ✅` Dependencia `sqflite_common_ffi` incorporada en `dev_dependencies` y validada en CI (commit `de17323`).
-- `E0-02` **Dominio monetario, tuplas inmutables y saneamiento de caché de tasas (A-07):** `Pendiente 📋` Saneamiento tras quinta reauditoría (U1/U2 no completadas). Especificación técnica consolidada finalizada en [`docs/rm-03/especificacion-consolidada-u1-u2.md`](docs/rm-03/especificacion-consolidada-u1-u2.md) (`MonetaryPrefsCoordinator`, registro JSON canónico como autoridad única, resolución independiente de cotización vs tasa global, precedencia D-05, reglas D-09 de confirmación obligatoria, erradicación de 850, independencia D-04 y matriz de 35 pruebas). Pendiente de implementación autorizada.
+- `E0-02` **Dominio monetario, tuplas inmutables y saneamiento de caché de tasas (A-07):** `Pendiente de validación 🧪` Aceptada técnicamente en 7.ª reauditoría adversarial ([`docs/rm-03/auditorias/septima-reauditoria-u1-u2-deepseek.md`](docs/rm-03/auditorias/septima-reauditoria-u1-u2-deepseek.md)). R-01, B-02, B-05, M-05, M-08, NEW-3b y N-09 resueltos con 126 pruebas validadas. Base previa validada en CI Build 651 en verde. Pendiente de commit/push del lote de cierre y confirmación remota.
 - `E0-03` **Integración en lectores móviles, pantallas y panel web:** `Pendiente` (Bloqueada secuencialmente hasta cerrar E0-02). Independencia estricta por moneda (D-04 / H-1), denominaciones visuales canónicas (D-07), bloqueo de `EUR + BS_USDT` en UI (A-04) y lectura sin invención de equivalencias (`resolvePersistedExpense` y `ResumenLenteMonetario`, A-16 / H-2).
 - `E0-04` **Sincronización atómica `synced = 0`, tombstones remotos y CAS:** `Pendiente` (Bloqueada secuencialmente hasta cerrar E0-03). CAS optimista, `ConflictoTombstoneRemoto`, `sonContenidoNegocioIdentico` exacto y allowlist de metadatos (A-09, A-15).
 - `E0-05b` **Protocolo de diagnóstico de datos existentes (Q01..Q20):** `Pendiente` Consultas de solo lectura sobre fixtures de prueba sin PII (A-14).

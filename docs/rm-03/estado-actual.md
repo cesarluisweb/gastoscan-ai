@@ -1,12 +1,12 @@
 # RM-03 — Estado Actual del Proyecto
 
 > **Fecha de corte de inspección:** Noviembre de 2026.  
-> **Rama activa:** `main` (Working Tree local con las correcciones completas de R-01, B-02, B-05, M-05, M-08, NEW-3b en GastoProvider y N-09; listo para 7.ª reauditoría; sin commit ni push).  
+> **Rama activa:** `main` (Working Tree local con E0-02 aprobada técnicamente en 7.ª reauditoría; lista para commit, push y validación en CI).  
 > **Contrato normativo:** `docs/rm-03/contrato-v1.2.md` (íntegro, sin modificaciones).  
 > **Decisiones vinculantes:** `docs/rm-03/decisiones.md` (`A-01` a `A-16` y `D-01` a `D-08` aprobadas, sin modificaciones).  
 > **Último informe de implementación:** `docs/rm-03/auditorias/implementacion-u1-u4-e0-02.md` → resolución integral de R-01, B-02, B-05, M-05, M-08, NEW-3b, N-09 y suite de 126 pruebas.  
-> **Última auditoría previa:** Sexta reauditoría adversarial independiente (`auditorias/sexta-reauditoria-u1-u2-deepseek.md`) → **RECHAZADA ❌** (por bloqueante R-01 y residuales de conteo).  
-> **Próximo hito:** Someter el working tree a la **Séptima Reauditoría Adversarial Independiente** de DeepSeek.
+> **Última auditoría:** Séptima reauditoría adversarial independiente (`auditorias/septima-reauditoria-u1-u2-deepseek.md`) → **ACEPTADO CON OBSERVACIONES ⚠️**.  
+> **Próximo hito:** Commit, push y confirmación de CI en verde para dar cierre definitivo a `E0-02` y autorizar `E0-03`.
 
 ---
 
@@ -16,8 +16,8 @@
 | :--- | :--- | :--- | :--- |
 | **`E0-05a`** | Neutralización de auto-reparación 850/474 | **Completada ✅** | Mergeada en `main` (commit `de17323`). `repararTasasHistoricasIncompletas` neutralizada en `main_screen.dart:132-145` y `sync_service.dart`; `dryRun = true` por defecto en `gasto_repository.dart`. |
 | **`E0-01`** | Arnés de pruebas SQLite real en memoria | **Completada ✅** | Mergeada en `main` (commit `de17323`). `sqflite_common_ffi` incorporado en `dev_dependencies` (**A-08**) y validado en CI. |
-| **`E0-02`** | Dominio monetario, tupla y purga de caché A-07 | **Parche corregido 🔧 — Pendiente de 7.ª reauditoría** | R-01 resuelto (revalidación selectiva sin blindar corrupción estructural). B-02 resuelto sin doble conteo y con test de mapa completo. M-05 con pruebas reales y notificación exhaustiva. M-08 con token y `finally` condicional probado. NEW-3b implementado en `GastoProvider`. N-09 resuelto con safe getters. 126 pruebas monetarias documentadas. Ver §2.1 y §2.2. |
-| **`E0-03`** | Integración en lectores móviles y panel web | **No autorizada ⏸️** | Continúa **NO AUTORIZADA** hasta que E0-02 sea aceptada por auditoría adversarial independiente y validada en CI en verde (**A-16**). Incluye H-1 global y H-2 en presentación, regidas por **D-01 a D-08**. |
+| **`E0-02`** | Dominio monetario, tupla y purga de caché A-07 | **Aceptada en 7.ª reauditoría 🟢 — Pendiente de CI** | R-01 resuelto (revalidación selectiva sin blindar corrupción estructural). B-02 resuelto sin doble conteo y con test de mapa completo. M-05 con pruebas reales y notificación exhaustiva. M-08 con token y `finally` condicional probado. NEW-3b implementado en `GastoProvider`. N-09 resuelto con safe getters. 126 pruebas monetarias documentadas. Veredicto: **ACEPTADO CON OBSERVACIONES ⚠️**. Ver §2.1 y §2.2. |
+| **`E0-03`** | Integración en lectores móviles y panel web | **En espera de CI ⏸️** | Autorizada condicionalmente a la confirmación de CI en verde de E0-02 (**A-16**). Incluye H-1 global y H-2 en presentación, regidas por **D-01 a D-08**. |
 | **`E0-04`** | Atomismo `synced=0`, CAS, allowlist de metadatos | **Pendiente ⏳** | Pendiente; requiere E0-02 y E0-03 en verde. Incluye la semántica de limpieza nullable de `copyWith` en `GastoModel` (S3.2). |
 | **`E0-05b`** | Diagnósticos read-only `Q01..Q20` sin PII | **Pendiente ⏳** | Pendiente; ejecución en paralelo o tras E0-03 (**A-14**). |
 | **Fase 0B** | Guardado sin tasa con sincronización remota | **Bloqueada 🔴** | Bloqueada por diseño normativo (**A-12**, **D-03**, **D-04**). Prohibido habilitar mientras la nube no esté contenida. |
@@ -80,4 +80,5 @@ La **sexta reauditoría adversarial independiente** (`auditorias/sexta-reauditor
 9. [`correcciones-cuarta-reauditoria-u1-u2.md`](file:///c:/Development/Control%20de%20gastos%20VE/docs/rm-03/auditorias/correcciones-cuarta-reauditoria-u1-u2.md): Correcciones B-01..B-04 y M-01..M-08.
 10. [`quinta-reauditoria-u1-u2-deepseek.md`](file:///c:/Development/Control%20de%20gastos%20VE/docs/rm-03/auditorias/quinta-reauditoria-u1-u2-deepseek.md): Quinta reauditoría. Veredicto: **RECHAZADO ❌**.
 11. [`sexta-reauditoria-u1-u2-deepseek.md`](file:///c:/Development/Control%20de%20gastos%20VE/docs/rm-03/auditorias/sexta-reauditoria-u1-u2-deepseek.md): Sexta reauditoría. Bloqueante R-01, B-02 conteo doble, 122 pruebas. Veredicto: **RECHAZADO ❌**.
-12. [`implementacion-u1-u4-e0-02.md`](file:///c:/Development/Control%20de%20gastos%20VE/docs/rm-03/auditorias/implementacion-u1-u4-e0-02.md): Informe de implementación integral corregido (resolución de R-01, B-02, M-05, M-08, NEW-3b, N-09 y 126 pruebas). Estado: **LISTO PARA 7.ª REAUDITORÍA ADVERSARIAL**.
+12. [`implementacion-u1-u4-e0-02.md`](file:///c:/Development/Control%20de%20gastos%20VE/docs/rm-03/auditorias/implementacion-u1-u4-e0-02.md): Informe de implementación integral corregido (resolución de R-01, B-02, M-05, M-08, NEW-3b, N-09 y 126 pruebas).
+13. [`septima-reauditoria-u1-u2-deepseek.md`](file:///c:/Development/Control%20de%20gastos%20VE/docs/rm-03/auditorias/septima-reauditoria-u1-u2-deepseek.md): Séptima reauditoría adversarial. R-01, B-02, B-05, M-05, M-08, NEW-3b, N-09 resueltos; 126 pruebas validadas. Veredicto: **ACEPTADO CON OBSERVACIONES ⚠️**. Aprobado para integración en `main` y validación en CI.
