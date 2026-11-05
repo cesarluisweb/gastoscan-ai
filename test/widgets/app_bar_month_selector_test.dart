@@ -128,36 +128,38 @@ Widget createRealLayoutHarness({
 
 void main() {
   group('AppBarMonthSelector Tests', () {
-    testWidgets('a) maxWidth 300 -> se ve "Noviembre 2026" completo y las 2 flechas', (tester) async {
-      final provider = FakeGastoProvider(mes: 11, anio: 2026);
+    testWidgets('a) año actual -> se ve mes abreviado "Nov" y las 2 flechas sin icono calendario ni caret', (tester) async {
+      final currentYear = DateTime.now().year;
+      final provider = FakeGastoProvider(mes: 11, anio: currentYear);
       await tester.pumpWidget(createWidgetUnderTest(maxWidth: 300, provider: provider));
       await tester.pumpAndSettle();
 
-      expect(find.text('Noviembre 2026'), findsOneWidget);
-      expect(find.byIcon(Icons.calendar_today_outlined), findsOneWidget);
+      expect(find.text('Nov'), findsOneWidget);
+      expect(find.byIcon(Icons.calendar_today_outlined), findsNothing);
+      expect(find.byIcon(Icons.keyboard_arrow_down), findsNothing);
       expect(find.byIcon(Icons.chevron_left), findsOneWidget);
       expect(find.byIcon(Icons.chevron_right), findsOneWidget);
     });
 
-    testWidgets('b) maxWidth 160 -> se ve "Nov 2026" y las 2 flechas', (tester) async {
-      final provider = FakeGastoProvider(mes: 11, anio: 2026);
+    testWidgets('b) año distinto (2025) -> se ve "Nov 25" con año a 2 dígitos y las 2 flechas', (tester) async {
+      final provider = FakeGastoProvider(mes: 11, anio: 2025);
       await tester.pumpWidget(createWidgetUnderTest(maxWidth: 160, provider: provider));
       await tester.pumpAndSettle();
 
-      expect(find.text('Nov 2026'), findsOneWidget);
+      expect(find.text('Nov 25'), findsOneWidget);
       expect(find.byIcon(Icons.calendar_today_outlined), findsNothing);
+      expect(find.byIcon(Icons.keyboard_arrow_down), findsNothing);
       expect(find.byIcon(Icons.chevron_left), findsOneWidget);
       expect(find.byIcon(Icons.chevron_right), findsOneWidget);
     });
 
-    testWidgets('c) maxWidth 120 -> solo la píldora, sin flechas; al tocarla se abre el diálogo', (tester) async {
-      final provider = FakeGastoProvider(mes: 11, anio: 2026);
+    testWidgets('c) tap en la píldora abre el diálogo de selección de 12 meses', (tester) async {
+      final currentYear = DateTime.now().year;
+      final provider = FakeGastoProvider(mes: 11, anio: currentYear);
       await tester.pumpWidget(createWidgetUnderTest(maxWidth: 120, provider: provider));
       await tester.pumpAndSettle();
 
-      expect(find.text('Nov 2026'), findsOneWidget);
-      expect(find.byIcon(Icons.chevron_left), findsNothing);
-      expect(find.byIcon(Icons.chevron_right), findsNothing);
+      expect(find.text('Nov'), findsOneWidget);
 
       await tester.tap(find.byKey(const Key('month_selector_title')));
       await tester.pumpAndSettle();
@@ -165,14 +167,14 @@ void main() {
       expect(find.byKey(const Key('month_pick_5')), findsOneWidget);
     });
 
-    testWidgets('d) maxWidth 60 -> devuelve SizedBox.shrink(), sin excepciones', (tester) async {
-      final provider = FakeGastoProvider(mes: 11, anio: 2026);
-      await tester.pumpWidget(createWidgetUnderTest(maxWidth: 60, provider: provider));
+    testWidgets('d) maxWidth 30 -> devuelve SizedBox.shrink(), sin excepciones', (tester) async {
+      final currentYear = DateTime.now().year;
+      final provider = FakeGastoProvider(mes: 11, anio: currentYear);
+      await tester.pumpWidget(createWidgetUnderTest(maxWidth: 30, provider: provider));
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('month_selector_title')), findsNothing);
-      expect(find.text('Nov 2026'), findsNothing);
-      expect(find.text('Noviembre 2026'), findsNothing);
+      expect(find.text('Nov'), findsNothing);
       expect(tester.takeException(), isNull);
     });
 
@@ -275,8 +277,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
-      expect(find.byIcon(Icons.chevron_left), findsNothing);
-      expect(find.byIcon(Icons.chevron_right), findsNothing);
+      expect(find.byIcon(Icons.chevron_left), findsOneWidget);
+      expect(find.byIcon(Icons.chevron_right), findsOneWidget);
 
       final pillFinder = find.byKey(const Key('month_selector_title'));
       expect(pillFinder, findsOneWidget);
@@ -287,7 +289,8 @@ void main() {
     });
 
     testWidgets('g) Tap en flecha izquierda/derecha llama a cambiarMes con el mes esperado', (tester) async {
-      final provider = FakeGastoProvider(mes: 10, anio: 2026);
+      final currentYear = DateTime.now().year;
+      final provider = FakeGastoProvider(mes: 10, anio: currentYear);
       await tester.pumpWidget(createWidgetUnderTest(maxWidth: 300, provider: provider));
       await tester.pumpAndSettle();
 
@@ -296,21 +299,21 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(provider.selectedMonth, 9);
-      expect(provider.selectedYear, 2026);
-      expect(find.text('Septiembre 2026'), findsOneWidget);
+      expect(provider.selectedYear, currentYear);
+      expect(find.text('Sep'), findsOneWidget);
 
       // Septiembre -> Octubre
       await tester.tap(find.byTooltip('Mes siguiente'));
       await tester.pumpAndSettle();
 
       expect(provider.selectedMonth, 10);
-      expect(provider.selectedYear, 2026);
-      expect(find.text('Octubre 2026'), findsOneWidget);
+      expect(provider.selectedYear, currentYear);
+      expect(find.text('Oct'), findsOneWidget);
 
-      // Flecha izquierda en Enero 2023 (fecha mínima) queda deshabilitada
+      // Flecha izquierda en Enero 2023 (fecha mínima) queda deshabilitada y muestra año a 2 dígitos
       provider.cambiarMes(AppConstants.fechaMinimaHistoricoTasas.year, 1);
       await tester.pumpAndSettle();
-      expect(find.text('Enero 2023'), findsOneWidget);
+      expect(find.text('Ene 23'), findsOneWidget);
 
       await tester.tap(find.byTooltip('Mes anterior'));
       await tester.pumpAndSettle();

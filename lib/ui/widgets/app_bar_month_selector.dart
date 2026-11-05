@@ -8,7 +8,7 @@ import 'month_selector_bar.dart';
 
 /// Selector de mes responsivo integrado en las acciones del AppBar como una cápsula unificada.
 /// Integra dentro de un único contenedor las flechas circulares de navegación y la píldora central.
-/// Se adapta a 3 modos según el ancho disponible: Completo, Compacto o Mínimo.
+/// Muestra el mes abreviado (ej. 'Nov' en el año actual, o 'Nov 25' en años distintos) sin flecha inferior ni icono de calendario.
 class AppBarMonthSelector extends StatelessWidget {
   final String? keyPrefix;
   final double? maxWidth;
@@ -106,27 +106,25 @@ class AppBarMonthSelector extends StatelessWidget {
     final gastoProvider = (selectedMonth == null || selectedYear == null)
         ? _tryGetGastoProvider(context)
         : null;
+    final int currentYear = DateTime.now().year;
     final int month = selectedMonth ?? gastoProvider?.selectedMonth ?? DateTime.now().month;
-    final int year = selectedYear ?? gastoProvider?.selectedYear ?? DateTime.now().year;
+    final int year = selectedYear ?? gastoProvider?.selectedYear ?? currentYear;
 
     final double screenWidth = MediaQuery.maybeSizeOf(context)?.width ?? 0;
-    final double defaultWidth = screenWidth > 0 ? (screenWidth - 200).clamp(90.0, 400.0) : 200.0;
+    final double defaultWidth = screenWidth > 0 ? (screenWidth - 200).clamp(80.0, 400.0) : 200.0;
     final double effectiveMaxWidth = maxWidth ?? defaultWidth;
 
     final double scale = MediaQuery.textScalerOf(context).scale(13) / 13;
-    final bool isCompleto = effectiveMaxWidth >= 210 * scale;
-    final bool isCompacto = !isCompleto && effectiveMaxWidth >= 146 * scale;
-    final bool isMinimo = !isCompleto && !isCompacto && effectiveMaxWidth >= 88 * scale;
-
-    if (!isCompleto && !isCompacto && !isMinimo) {
+    if (effectiveMaxWidth < 40 * scale) {
       return const SizedBox.shrink();
     }
 
+    final bool showArrows = effectiveMaxWidth >= 75 * scale;
     final String mesNombre = DateFormatter.getMonthName(month);
     final String mesCorto = mesNombre.length >= 3 ? mesNombre.substring(0, 3) : mesNombre;
-    final String textoPildora = isCompleto ? '$mesNombre $year' : '$mesCorto $year';
+    final String anioCorto = (year % 100).toString().padLeft(2, '0');
+    final String textoPildora = (year == currentYear) ? mesCorto : '$mesCorto $anioCorto';
 
-    final bool showArrows = isCompleto || isCompacto;
     final bool isPrevDisabled = year <= AppConstants.fechaMinimaHistoricoTasas.year && month <= 1;
 
     final Widget capsule = Container(
@@ -151,7 +149,7 @@ class AppBarMonthSelector extends StatelessWidget {
               isDisabled: isPrevDisabled,
               onTap: isPrevDisabled ? null : () => _irAMesAnterior(context, year, month),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: 3),
           ],
           Semantics(
             button: true,
@@ -172,39 +170,20 @@ class AppBarMonthSelector extends StatelessWidget {
                 ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (isCompleto) ...[
-                        const Icon(
-                          Icons.calendar_today_outlined,
-                          size: 13,
-                          color: AppColors.textSecondary,
-                        ),
-                        const SizedBox(width: 5),
-                      ],
-                      Text(
-                        textoPildora,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(width: 3),
-                      Icon(
-                        Icons.keyboard_arrow_down,
-                        color: AppColors.textSecondary,
-                        size: isCompleto ? 16 : 14,
-                      ),
-                    ],
+                  child: Text(
+                    textoPildora,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
             ),
           ),
           if (showArrows) ...[
-            const SizedBox(width: 4),
+            const SizedBox(width: 3),
             _buildArrowCircle(
               icon: Icons.chevron_right,
               tooltip: 'Mes siguiente',
