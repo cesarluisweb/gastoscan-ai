@@ -109,10 +109,12 @@ class AppBarMonthSelector extends StatelessWidget {
     final int month = selectedMonth ?? gastoProvider?.selectedMonth ?? DateTime.now().month;
     final int year = selectedYear ?? gastoProvider?.selectedYear ?? DateTime.now().year;
 
-    final double effectiveMaxWidth = maxWidth ?? (MediaQuery.sizeOf(context).width - 200);
+    final double screenWidth = MediaQuery.maybeSizeOf(context)?.width ?? 0;
+    final double defaultWidth = screenWidth > 0 ? (screenWidth - 200).clamp(90.0, 400.0) : 200.0;
+    final double effectiveMaxWidth = maxWidth ?? defaultWidth;
 
     final double scale = MediaQuery.textScalerOf(context).scale(13) / 13;
-    final bool isCompleto = effectiveMaxWidth >= 236 * scale;
+    final bool isCompleto = effectiveMaxWidth >= 210 * scale;
     final bool isCompacto = !isCompleto && effectiveMaxWidth >= 146 * scale;
     final bool isMinimo = !isCompleto && !isCompacto && effectiveMaxWidth >= 88 * scale;
 

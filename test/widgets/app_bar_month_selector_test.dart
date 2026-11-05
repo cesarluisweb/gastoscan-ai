@@ -66,58 +66,61 @@ Widget createRealLayoutHarness({
   return ChangeNotifierProvider<GastoProvider>.value(
     value: provider,
     child: MaterialApp(
-      home: MediaQuery(
-        data: textScaler != null
-            ? const MediaQueryData().copyWith(textScaler: textScaler)
-            : const MediaQueryData(),
-        child: Scaffold(
-          appBar: AppBar(
-            title: Text(
-              'Rinde Más',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: titleFontSize,
+      home: Builder(
+        builder: (context) {
+          final mq = MediaQuery.of(context);
+          return MediaQuery(
+            data: textScaler != null ? mq.copyWith(textScaler: textScaler) : mq,
+            child: Scaffold(
+              appBar: AppBar(
+                title: Text(
+                  'Rinde Más',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: titleFontSize,
+                  ),
+                ),
+                actions: [
+                  const AppBarMonthSelector(),
+                  const SizedBox(width: 4),
+                  IconButton(
+                    key: const Key('dashboard_search_button'),
+                    icon: const Icon(Icons.search, size: 19),
+                    tooltip: 'Buscar',
+                    style: IconButton.styleFrom(
+                      backgroundColor: AppColors.surface,
+                      side: const BorderSide(color: AppColors.border, width: 1),
+                      shape: const CircleBorder(),
+                      minimumSize: const Size(34, 34),
+                      maximumSize: const Size(34, 34),
+                      padding: EdgeInsets.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    onPressed: () {},
+                  ),
+                  const SizedBox(width: 4),
+                  IconButton(
+                    key: const Key('dashboard_ai_chat_button'),
+                    icon: const Icon(Icons.auto_awesome, size: 19),
+                    tooltip: 'Asistente IA',
+                    style: IconButton.styleFrom(
+                      backgroundColor: AppColors.surface,
+                      side: const BorderSide(color: AppColors.border, width: 1),
+                      shape: const CircleBorder(),
+                      minimumSize: const Size(34, 34),
+                      maximumSize: const Size(34, 34),
+                      padding: EdgeInsets.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    onPressed: () {},
+                  ),
+                  const SizedBox(width: 8),
+                ],
               ),
+              body: const SizedBox.expand(),
             ),
-            actions: [
-              const AppBarMonthSelector(),
-              const SizedBox(width: 4),
-              IconButton(
-                key: const Key('dashboard_search_button'),
-                icon: const Icon(Icons.search, size: 19),
-                tooltip: 'Buscar',
-                style: IconButton.styleFrom(
-                  backgroundColor: AppColors.surface,
-                  side: const BorderSide(color: AppColors.border, width: 1),
-                  shape: const CircleBorder(),
-                  minimumSize: const Size(34, 34),
-                  maximumSize: const Size(34, 34),
-                  padding: EdgeInsets.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                onPressed: () {},
-              ),
-              const SizedBox(width: 4),
-              IconButton(
-                key: const Key('dashboard_ai_chat_button'),
-                icon: const Icon(Icons.auto_awesome, size: 19),
-                tooltip: 'Asistente IA',
-                style: IconButton.styleFrom(
-                  backgroundColor: AppColors.surface,
-                  side: const BorderSide(color: AppColors.border, width: 1),
-                  shape: const CircleBorder(),
-                  minimumSize: const Size(34, 34),
-                  maximumSize: const Size(34, 34),
-                  padding: EdgeInsets.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                onPressed: () {},
-              ),
-              const SizedBox(width: 8),
-            ],
-          ),
-          body: const SizedBox.expand(),
-        ),
+          );
+        },
       ),
     ),
   );
