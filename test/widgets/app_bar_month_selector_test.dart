@@ -128,32 +128,52 @@ Widget createRealLayoutHarness({
 
 void main() {
   group('AppBarMonthSelector Tests', () {
-    testWidgets('a) año actual -> se ve mes abreviado "Nov" y las 2 flechas sin icono calendario ni caret', (tester) async {
+    testWidgets('a) año actual en ancho amplio -> se ve nombre completo "Noviembre" y las 2 flechas sin fondo circular', (tester) async {
       final currentYear = DateTime.now().year;
       final provider = FakeGastoProvider(mes: 11, anio: currentYear);
       await tester.pumpWidget(createWidgetUnderTest(maxWidth: 300, provider: provider));
       await tester.pumpAndSettle();
 
-      expect(find.text('Nov'), findsOneWidget);
+      expect(find.text('Noviembre'), findsOneWidget);
       expect(find.byIcon(Icons.calendar_today_outlined), findsNothing);
       expect(find.byIcon(Icons.keyboard_arrow_down), findsNothing);
       expect(find.byIcon(Icons.chevron_left), findsOneWidget);
       expect(find.byIcon(Icons.chevron_right), findsOneWidget);
+
+      // Borde normal para mes actual
+      final container = tester.widget<Container>(find.descendant(
+        of: find.byType(AppBarMonthSelector),
+        matching: find.byType(Container),
+      ).first);
+      final boxDec = container.decoration as BoxDecoration;
+      final border = boxDec.border as Border;
+      expect(border.top.color, AppColors.border);
+      expect(border.top.width, 1.0);
     });
 
-    testWidgets('b) año distinto (2025) -> se ve "Nov 25" con año a 2 dígitos y las 2 flechas', (tester) async {
+    testWidgets('b) año distinto (2025) -> se ve "Noviembre 25" con año a 2 dígitos y borde resaltado', (tester) async {
       final provider = FakeGastoProvider(mes: 11, anio: 2025);
-      await tester.pumpWidget(createWidgetUnderTest(maxWidth: 160, provider: provider));
+      await tester.pumpWidget(createWidgetUnderTest(maxWidth: 200, provider: provider));
       await tester.pumpAndSettle();
 
-      expect(find.text('Nov 25'), findsOneWidget);
+      expect(find.text('Noviembre 25'), findsOneWidget);
       expect(find.byIcon(Icons.calendar_today_outlined), findsNothing);
       expect(find.byIcon(Icons.keyboard_arrow_down), findsNothing);
       expect(find.byIcon(Icons.chevron_left), findsOneWidget);
       expect(find.byIcon(Icons.chevron_right), findsOneWidget);
+
+      // Borde resaltado con primaryDark
+      final container = tester.widget<Container>(find.descendant(
+        of: find.byType(AppBarMonthSelector),
+        matching: find.byType(Container),
+      ).first);
+      final boxDec = container.decoration as BoxDecoration;
+      final border = boxDec.border as Border;
+      expect(border.top.color, AppColors.primaryDark);
+      expect(border.top.width, 1.5);
     });
 
-    testWidgets('c) tap en la píldora abre el diálogo de selección de 12 meses', (tester) async {
+    testWidgets('c) ancho reducido (120) -> se abrevia a "Nov" y tap abre el diálogo de 12 meses', (tester) async {
       final currentYear = DateTime.now().year;
       final provider = FakeGastoProvider(mes: 11, anio: currentYear);
       await tester.pumpWidget(createWidgetUnderTest(maxWidth: 120, provider: provider));
@@ -300,7 +320,7 @@ void main() {
 
       expect(provider.selectedMonth, 9);
       expect(provider.selectedYear, currentYear);
-      expect(find.text('Sep'), findsOneWidget);
+      expect(find.text('Septiembre'), findsOneWidget);
 
       // Septiembre -> Octubre
       await tester.tap(find.byTooltip('Mes siguiente'));
@@ -308,12 +328,12 @@ void main() {
 
       expect(provider.selectedMonth, 10);
       expect(provider.selectedYear, currentYear);
-      expect(find.text('Oct'), findsOneWidget);
+      expect(find.text('Octubre'), findsOneWidget);
 
       // Flecha izquierda en Enero 2023 (fecha mínima) queda deshabilitada y muestra año a 2 dígitos
       provider.cambiarMes(AppConstants.fechaMinimaHistoricoTasas.year, 1);
       await tester.pumpAndSettle();
-      expect(find.text('Ene 23'), findsOneWidget);
+      expect(find.text('Enero 23'), findsOneWidget);
 
       await tester.tap(find.byTooltip('Mes anterior'));
       await tester.pumpAndSettle();
