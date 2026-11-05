@@ -29,6 +29,7 @@
 - Cambiar la arquitectura de navegación principal o flujos de autenticación.
 - Eliminar archivos existentes de código o documentación.
 - Alternar la visibilidad del repositorio (actualmente **Público** durante el desarrollo; debe volver a **Privado** al terminar) sin autorización explícita de César.
+- Al realizar cambios significativos en formularios, flujos de registro, reglas de negocio o cálculo financiero en la app Flutter, **preguntar explícitamente a César** si también deben sincronizarse y adaptarse al panel web antes de dar por cerrada la tarea.
 
 ### 🚫 Nunca (Prohibiciones estrictas en una línea):
 - Modificar archivos en `android/` de forma manual o local (CI los regenera).

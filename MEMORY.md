@@ -2,7 +2,7 @@
 > Regla de oro: Mantener en máximo ~50 líneas. Lo permanente se gradúa a AGENTS.md o DESIGN.md.
 
 ## Estado Actual Inmediato
-- **Rama:** `main` (commit `14003f7` en verde en CI: Web Build 20 desplegado en producción).
+- **Rama:** `main` (commit `3bf167d` en verde en CI: Web Build 21 desplegado en producción).
 - **Acceso a Producción Google Play:** Solicitud enviada el 04/11/2026. En revisión por Google.
 - **Sincronización Panel Web con App Móvil (Fase 5):** `Pendiente de validación 🧪`.
   - Reorganización en 4 tarjetas (General, ¿Qué compraste?, Monto total, ¿Cómo pagaste?) con orden canónico `USD -> VES -> USDT -> EUR`.
