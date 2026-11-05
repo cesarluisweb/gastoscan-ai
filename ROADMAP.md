@@ -60,14 +60,15 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
    - Creación de `SyncCoordinator` con cerrojo de concurrencia, re-run secuencial, debounce de 2s en escrituras y throttle de 5 min en arranques rutinarios.
    - Bandeja de intenciones (`PendingLaunchAction`) en `NotificationService` sincronizada con `ScanQueueProvider.ready` para eliminar carreras de tiempo en recordatorios.
    - Documentación técnica y guía de validación en [`docs/DOC_ARRANQUE_LOCAL_FIRST.md`](docs/DOC_ARRANQUE_LOCAL_FIRST.md) (13 pruebas automatizadas dedicadas).
+5. **Seguridad Crítica de Firma (Keystore) — `Pendiente de validación 🧪`:** `android_template/rindemas.jks` retirado de Git (respaldo cifrado fuera del repositorio) y firma inyectada desde GitHub Secrets (`ANDROID_KEYSTORE_*`). CI aborta si el SHA-1 restaurado no es `D3:85:0D:…` o si el AAB no queda firmado con SHA-256 `B2:06:E4:7B:…`. Rotación de la upload key diferida hasta la aprobación de Producción (ver nota de decisiones).
+6. **Reproducibilidad y Congelación de CI/CD — `Completada ✅`:** Flutter fijado en `3.47.9`, `pubspec.lock` versionado (verificado idéntico al generado por el runner 3.47.9) con guarda anti-drift en CI y `cloud_functions` eliminado. Build 664 en verde (638 pruebas, commit `5219134`).
 
 #### 🔴 Prioridades Inmediatas (Requieren decisión y acción de César):
-1. **Seguridad Crítica de Firma (Keystore):**
-   - *Problema:* `android_template/rindemas.jks` y la contraseña `rindemas123` siguen versionados en Git y en texto plano dentro de `build.gradle.kts`.
-   - *Acción:* Migrar a *GitHub Secrets* (`KEYSTORE_BASE64`, contraseñas), retirar el `.jks` del repositorio y evaluar rotación de clave de subida en Google Play Console.
-2. **Reproducibilidad y Congelación de CI/CD:**
-   - *Problema:* `pubspec.lock` no está versionado en Git y CI descarga la versión `stable` flotante de Flutter del día.
-   - *Acción:* Versionar el `pubspec.lock` del artefacto validado (Build 624 / 649), fijar `flutter-version` exacta en `build_apk.yml` y eliminar dependencia muerta `cloud_functions: ^5.1.3` de `pubspec.yaml`.
+1. **Abuso de cuota de IA con sesiones anónimas (`F2-C02`):**
+   - *Problema:* El Cloudflare Worker no valida `sign_in_provider != 'anonymous'` y el límite de peticiones vive en memoria por isolate, por lo que rotar UIDs anónimos permite agotar la cuota de Gemini.
+   - *Acción:* Rechazar tokens anónimos en los endpoints de IA (exigir sesión de Google, según `privacidad-seguridad.md`) o mover el contador a KV/Durable Object.
+2. **Rotación de la clave de subida (upload key):**
+   - *Acción:* Ejecutar **después** de la aprobación de Producción. Requiere `keytool` (no hay JDK local: hacerlo vía CI), registrar la nueva SHA-1 para `com.cesarluis.rindemas.dev` y actualizar los 3 secretos. La app signing key de Google no cambia y las instalaciones existentes no se ven afectadas.
 
 #### 🟡 Prioridades Medias / Mantenimiento:
 - **Centralizar `_convertBudgetToLens`:** Diferida para ejecutarse dentro del hito `E0-03` (Integración en lectores móviles y pantallas) de la Fase 0 RM-03, evitando duplicar esfuerzo con fórmulas cambiarias que serán sustituidas por `ResumenLenteMonetario`.
@@ -173,9 +174,9 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 
 | Ítem / Área | Prioridad | Estado | Detalle |
 | :--- | :---: | :---: | :--- |
-| **Seguridad de Keystore de producción** | P0 | `Pendiente` | Migrar `android_template/rindemas.jks` y passwords a GitHub Secrets; desvincular de Git. |
-| **Generar y versionar `pubspec.lock`** | P0 | `Pendiente` | Aún ausente en git; CI sigue resolviendo dependencias flotantes en cada corrida. |
-| **Fijar versión de Flutter en CI** | P0 | `Pendiente` | `.github/workflows/build_apk.yml` usa `channel: stable` flotante en lugar de versión exacta. |
+| **Seguridad de Keystore de producción** | P0 | `Pendiente de validación 🧪` | `.jks` retirado de Git; firma desde GitHub Secrets con guardas de SHA-1/SHA-256 en CI (build 664). Falta rotación de upload key tras aprobación de Producción. |
+| **Generar y versionar `pubspec.lock`** | P0 | `Completada ✅` | Versionado y verificado idéntico al generado por Flutter 3.47.9; CI falla si se desvía. |
+| **Fijar versión de Flutter en CI** | P0 | `Completada ✅` | `flutter-version: '3.47.9'` fijado en `.github/workflows/build_apk.yml`. |
 | **Desacoplar Cold Start en `main.dart`** | P0 | `Pendiente de validación 🧪` | Desacoplado cold start con `runApp()` inmediato y servicios diferidos post-frame. |
 | **Coordinador Único de Sincronización (`SyncCoordinator`)** | P0 | `Pendiente de validación 🧪` | Centralizado en `SyncCoordinator` con cerrojo, debounce 2s y throttle 5m. |
 | **Bandeja de Intenciones en Notificaciones** | P0 | `Pendiente de validación 🧪` | Consumo de `pendingAction` sincronizado con `ScanQueueProvider.ready`. |
@@ -184,7 +185,7 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 | **Purgar `firebase_functions/node_modules/` de Git** | P1 | `Completada ✅` | Purgados 2.115 archivos del índice de Git sin afectar código local. |
 | **Desvincular `test_results.txt` de Git** | P1 | `Completada ✅` | Desvinculado del índice y añadido a `.gitignore`. |
 | **Centralizar `_convertBudgetToLens`** | P1 | `Diferida a E0-03` | Se resolverá en la unificación de lectura multimoneda (Fase 0 E0-03). |
-| **Eliminar `cloud_functions` de `pubspec.yaml`** | P1 | `Pendiente` | Paquete nunca importado en Dart; sigue declarado en dependencias. |
+| **Eliminar `cloud_functions` de `pubspec.yaml`** | P1 | `Completada ✅` | Paquete nunca importado en Dart; eliminado del `pubspec.yaml` y del `pubspec.lock`. |
 | **Búsqueda histórica eficiente (tabla normalizada)** | P2 | `Pendiente` | Mantener en memoria mientras no haya lentitud; migrar a SQL indexado ante métricas > 300ms. |
 | **Crear `ShoppingListProvider` / Repository** | P2 | `Pendiente` | Pantallas y chat siguen tocando `DatabaseHelper.instance` directo sin capa intermedia. |
 | **Actualizar `README.md` a la realidad** | P2 | `Pendiente` | Sigue listando Cloud Functions y 8 archivos inexistentes del proyecto inicial. |
