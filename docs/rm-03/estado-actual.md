@@ -1,12 +1,12 @@
 # RM-03 — Estado Actual del Proyecto
 
 > **Fecha de corte de inspección:** Noviembre de 2026.  
-> **Rama activa:** `main` (`HEAD == origin/main == b58965a`; CI Build 665 en verde).  
+> **Rama activa:** `main` (`HEAD == origin/main == afb6113`; CI Build 671 en verde, run 42853151974).  
 > **Contrato normativo:** `docs/rm-03/contrato-v1.2.md` (íntegro, sin modificaciones).  
 > **Decisiones vinculantes:** `docs/rm-03/decisiones.md` (`A-01` a `A-16` y `D-01` a `D-08` aprobadas, sin modificaciones).  
-> **Último informe de implementación:** `docs/rm-03/auditorias/implementacion-u1-u4-e0-02.md` → resolución integral de D-05, M5-a, M-08, R-01, B-02, B-05, NEW-3b, N-09 y suite de 127 pruebas.  
+> **Último informe de implementación:** `docs/DOC_E0_03_LECTORES_MULTIMONEDA.md` → integración de lectores multimoneda, lentes independientes y denominaciones canónicas.  
 > **Última auditoría:** Octava reauditoría adversarial independiente (`docs/rm-03/auditorias/octava-reauditoria-u1-u2-deepseek.md`) — **ACEPTADO CON OBSERVACIONES ⚠️**.  
-> **Próximo hito:** Ejecución y cierre formal de `E0-03` (U3/U4: lectores móviles, pantallas y panel web).
+> **Próximo hito:** Validación en dispositivo físico por César de `E0-03` y posterior transición a `E0-04`.
 
 ---
 
@@ -17,8 +17,8 @@
 | **`E0-05a`** | Neutralización de auto-reparación 850/474 | **Completada ✅** | Mergeada en `main` (commit `de17323`). `repararTasasHistoricasIncompletas` neutralizada en `main_screen.dart:132-145` y `sync_service.dart`; `dryRun = true` por defecto en `gasto_repository.dart`. |
 | **`E0-01`** | Arnés de pruebas SQLite real en memoria | **Completada ✅** | Mergeada en `main` (commit `de17323`). `sqflite_common_ffi` incorporado en `dev_dependencies` (**A-08**) y validado en CI. |
 | **`E0-02`** | Dominio monetario, tupla y purga de caché A-07 | **Completada ✅** | Aceptada técnicamente en 8.ª reauditoría. D-05, M5-a, M-08, R-01, B-02, N-09 resueltos. CI Build 665 en verde (commit `b58965a`). 127 pruebas en verde. Visto bueno explícito de César otorgado en *Rinde Más Dev*. |
-| **`E0-03`** | Integración en lectores móviles y panel web | **En progreso 🔄** | CI de E0-02 confirmado en verde y E0-02 completada (**A-16**). Inicio técnico de U3/U4 (D-01 a D-08, H-1, H-2). |
-| **`E0-04`** | Atomismo `synced=0`, CAS, allowlist de metadatos | **Pendiente ⏳** | Pendiente; requiere E0-02 y E0-03 en verde. Incluye la semántica de limpieza nullable de `copyWith` en `GastoModel` (S3.2). |
+| **`E0-03`** | Integración en lectores móviles y panel web | **Pendiente de validación 🧪** | Implementación completa (H-1, H-2, A-16, D-06, D-07, A-04). 650 pruebas en verde en CI Build 671 (commit `75f3965`, run 42853151974). Guía de pruebas en `docs/DOC_E0_03_LECTORES_MULTIMONEDA.md`. |
+| **`E0-04`** | Atomismo `synced=0`, CAS, allowlist de metadatos | **Pendiente ⏳** | Pendiente; requiere validación de E0-03 en dispositivo por César. Incluye la semántica de limpieza nullable de `copyWith` en `GastoModel` (S3.2). |
 | **`E0-05b`** | Diagnósticos read-only `Q01..Q20` sin PII | **Pendiente ⏳** | Pendiente; ejecución en paralelo o tras E0-03 (**A-14**). |
 | **Fase 0B** | Guardado sin tasa con sincronización remota | **Bloqueada 🔴** | Bloqueada por diseño normativo (**A-12**, **D-03**, **D-04**). Prohibido habilitar mientras la nube no esté contenida. |
 | **Doc RM-03** | Documentación central y persistente del proyecto | **Completada ✅** | Estructura en `docs/rm-03/` activa: `README.md`, `contrato-v1.2.md` (íntegro), `decisiones.md` (`A-01` a `A-16` y `D-01` a `D-08`), `estado-actual.md` e historial en `auditorias/`. |
