@@ -145,7 +145,7 @@ void main() {
       expect(find.text('Asistente IA'), findsOneWidget);
       expect(find.text('Tasas de Cambio'), findsOneWidget);
       // Sin sincronización en vivo el provider conserva tasasSonReferencia=true
-      expect(find.text('Última tasa registrada'), findsOneWidget);
+      expect(find.text('Sin tasa disponible'), findsOneWidget);
       expect(find.text('Dólar BCV'), findsOneWidget);
       expect(find.text('Euro BCV'), findsOneWidget);
       expect(find.text('USDT P2P'), findsOneWidget);
