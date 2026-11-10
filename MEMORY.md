@@ -10,8 +10,9 @@
 - **Artefacto para Play:** `app-release-aab` del run 42835194258 (build 666).
 - **Artefacto para pruebas en teléfono:** `rindemas-dev-apk` del run 42835194258 (*Rinde Más Dev* build 666).
 - **Sincronización Panel Web (Fase 5)** y **Selector de Mes en AppBar:** `Pendiente de validación 🧪` (CI verde, falta visto bueno visual de César).
-- **RM-03 (Fase 0A / E0-02) — `Completada ✅`:** CI Build 665 en verde. Visto bueno explícito de César recibido. Transición a `E0-03` (U3/U4: lectores móviles, pantallas y panel web).
-- **Próximo Paso Inmediato:** Auditoría del estado real de `E0-03` (U3/U4) en el repositorio y ejecución de los puntos pendientes.
+- **RM-03 (Fase 0A / E0-02) — `Completada ✅`:** CI Build 665 en verde. Visto bueno explícito de César recibido.
+- **RM-03 (Fase 0A / E0-03) — `Pendiente de validación 🧪`:** Lectores móviles, pantallas y panel web completados (H-1, H-2, A-16, D-06, D-07). Lentes monetarios independientes, denominaciones canónicas en `MoreScreen` y `CurrencyCalculatorScreen`, panel web Astro validado. Documentación y guía de pruebas en `docs/DOC_E0_03_LECTORES_MULTIMONEDA.md`.
+- **Próximo Paso Inmediato:** Confirmar CI en verde tras push único y esperar validación de César en *Rinde Más Dev*.
 
 ## Decisiones Técnicas y de Negocio Recientes
 - **Rotación de la clave de subida: diferida** hasta que Google apruebe el acceso a Producción. No reinicia la revisión, pero el reset tarda 24-72 h y bloquearía una subida inmediata. El repositorio público conserva el `.jks` en el historial, por lo que la rotación sigue siendo necesaria.
