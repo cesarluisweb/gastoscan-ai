@@ -285,5 +285,68 @@ void main() {
       expect(provider.tipoTasa, equals('oficial'));
       expect(provider.presupuestoMensual, equals(0.0));
     });
+
+    test('D-05: Tasa manual global persiste ante reinicio offline, sincronizacion fallida y solo cede ante red viva (NEW-3b)', () async {
+      final store = TestSharedPreferences({
+        ExchangeRateService.prefKeyCacheHistoricaPurgada: true,
+        'pref_es_tasa_manual_usd': true,
+        AppConstants.prefTasaCambio: 55.0,
+        'cached_rate_usd': 48.0,
+      });
+
+      // 1. Primer arranque en frío (offline): loadSettings debe priorizar la tasa manual (55.0)
+      final provider1 = TestableSettingsProvider(secureStorage: fakeSecureStorage);
+      provider1.prefsInstance = store;
+      await provider1.loadSettings();
+
+      expect(provider1.tasaCambioVesUsd, equals(55.0));
+      expect(provider1.esTasaManualUsd, isTrue);
+
+      // 2. Sincronización de fondo sin conexión (failing client):
+      // NO debe sobrescribir la tasa manual (55.0) con la caché antigua (48.0)
+      final offlineClient = MockClient((_) async => http.Response('Error de conexión', 503));
+      final syncResult = await provider1.actualizarTasaAutomatica(client: offlineClient);
+      expect(syncResult, isFalse);
+      expect(provider1.tasaCambioVesUsd, equals(55.0));
+      expect(provider1.esTasaManualUsd, isTrue);
+      expect(store.disk[AppConstants.prefTasaCambio], equals(55.0));
+      expect(store.disk['pref_es_tasa_manual_usd'], isTrue);
+
+      // 3. Segundo arranque offline simulado tras recarga física de disco
+      store.reloadFromDisk();
+      final provider2 = TestableSettingsProvider(secureStorage: fakeSecureStorage);
+      provider2.prefsInstance = store;
+      await provider2.loadSettings();
+
+      expect(provider2.tasaCambioVesUsd, equals(55.0));
+      expect(provider2.esTasaManualUsd, isTrue);
+
+      // 4. Retorno de conexión a Internet con cotización en vivo válida (62.0):
+      // Ahora sí sustituye la tasa manual y desactiva la bandera
+      final liveClient = MockClient((request) async {
+        return http.Response('{"usd": 62.0, "eur": 66.0, "usdt": 63.0}', 200);
+      });
+      final onlineResult = await provider2.actualizarTasaAutomatica(client: liveClient);
+      expect(onlineResult, isTrue);
+      expect(provider2.tasaCambioVesUsd, equals(62.0));
+      expect(provider2.esTasaManualUsd, isFalse);
+      expect(store.disk[AppConstants.prefTasaCambio], equals(62.0));
+      expect(store.disk['pref_es_tasa_manual_usd'], isFalse);
+
+      // 5. Si setTasaCambio falla al persistir en disco (returnFalseOnSetDouble),
+      // no activa pref_es_tasa_manual_usd en disco ni en memoria
+      store.returnFalseOnSetDouble = true;
+      await provider2.setTasaCambio(70.0);
+      expect(provider2.esTasaManualUsd, isFalse);
+      expect(store.disk['pref_es_tasa_manual_usd'], isFalse);
+
+      // 6. Si setDouble confirma pero setBool falla en disco (returnFalseOnSetBool),
+      // la bandera en memoria no se activa para mantener consistencia con el disco
+      store.returnFalseOnSetDouble = false;
+      store.returnFalseOnSetBool = true;
+      await provider2.setTasaCambio(75.0);
+      expect(provider2.esTasaManualUsd, isFalse);
+      expect(store.disk['pref_es_tasa_manual_usd'], isFalse);
+    });
   });
 }

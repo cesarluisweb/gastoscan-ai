@@ -3,13 +3,14 @@
 
 ## Estado Actual Inmediato
 - **Rama:** `main` (commit `5219134`; CI Android build 664 en verde, versión `1.5.0+669`).
-- **Acceso a Producción Google Play:** Solicitud enviada el 04/11/2026 07:42. Al 05/11/2026 la consola muestra **Producción `Inactivo`** y *"Estamos revisando tu formulario de solicitud"* (7 días o menos). No se puede crear release de producción todavía; el AAB 1.5.0 (669) va a prueba cerrada.
+- **Acceso a Producción Google Play:** Segunda ventana de prueba cerrada en curso (Día 3/14 cumplido con 12 evaluadores activos). AAB `1.5.0+669` subido exitosamente a la pista de prueba cerrada en Play Console. Mensaje de actualización enviado a evaluadores. Fin estimado de la ventana: ~19/11/2026.
 - **Seguridad de firma (P0) — `Pendiente de validación 🧪`:** `android_template/rindemas.jks` fuera de Git; respaldo en `C:\Users\cesar\Documents\RindeMas-Backup-Keystore`. Firma inyectada desde Secrets `ANDROID_KEYSTORE_*`. CI aborta si el SHA-1 restaurado ≠ `D3850D17…` o si el AAB no firma con SHA-256 `B206E47B…`.
 - **Reproducibilidad (P0) — `Completada ✅`:** Flutter fijado en `3.47.9`, `pubspec.lock` versionado (idéntico al del runner) con guarda anti-drift y `cloud_functions` eliminado. 638 pruebas en verde.
 - **Artefacto para Play:** `app-release-aab` del run 42091003101 (build 664 → versionCode 669, versionName 1.5.0).
 - **Artefacto para pruebas en teléfono:** `rindemas-dev-apk` del mismo run (*Rinde Más Dev* 1.5.0/669).
 - **Sincronización Panel Web (Fase 5)** y **Selector de Mes en AppBar:** `Pendiente de validación 🧪` (CI verde, falta visto bueno visual de César).
-- **Próximo Paso Inmediato:** César sube el AAB a prueba cerrada y valida el APK Dev 1.5.0/669.
+- **RM-03 (Fase 0A / E0-02) — `Aceptado técnicamente ⚠️`:** Compuerta cerrada en working tree (8.ª reauditoría favorable, 127 pruebas en orden). E0-03 autorizado condicionalmente a CI en verde.
+- **Próximo Paso Inmediato:** César autoriza commit y push a `main` para validación en GitHub Actions CI (build y 127 pruebas).
 
 ## Decisiones Técnicas y de Negocio Recientes
 - **Rotación de la clave de subida: diferida** hasta que Google apruebe el acceso a Producción. No reinicia la revisión, pero el reset tarda 24-72 h y bloquearía una subida inmediata. El repositorio público conserva el `.jks` en el historial, por lo que la rotación sigue siendo necesaria.
@@ -18,6 +19,7 @@
 - AppBarMonthSelector: Nombre completo del mes sin año ('Noviembre'), conmutación automática a 3 letras ('Nov') ante `effectiveMaxWidth < 145`, flechas negras transparentes (19 dp) y borde amarillo de acento (`AppColors.primaryDark`) fuera del mes actual.
 - Navegación mensual: Flechas directas integradas en la cápsula y diálogo de 12 meses accesible al pulsar el texto central.
 - Toda aceptación exige CI en verde; la inspección estática no sustituye pruebas.
+- **Redes Sociales (Consenso Muse 09/11):** Bio = Canal de WhatsApp directo (`/channel/0029VbEPwHLDJ6H678QLlN1H`). Reels con colaboración manual obligatoria a `@lili9077p`. Voz calmada/asesor. Test A/B horario: Lunes 7:00 PM vs Miércoles 6:00 PM. Cierre: *"el enlace del canal está en el perfil"*.
 
 ## Errores y Fricciones a Evitar
 - No encadenar comandos con `&&` ni usar redirección `>` en PowerShell.

@@ -23,6 +23,7 @@ class SettingsProvider with ChangeNotifier {
   /// true mientras no se haya verificado una tasa en vivo: los valores
   /// pueden venir de caché antigua o de semillas. La UI lo muestra.
   bool _tasasSonReferencia = true;
+  bool _esTasaManualUsd = false;
   String _monedaPrincipal = AppConstants.defaultMoneda;
   String _tipoTasa = 'oficial'; // 'oficial' o 'paralelo'
   bool _isSyncingRate = false;
@@ -46,6 +47,7 @@ class SettingsProvider with ChangeNotifier {
   double get tasaCambioVesUsdt => _tasaCambioVesUsdt;
   DateTime? get ultimaActualizacionTasas => _ultimaActualizacionTasas;
   bool get tasasSonReferencia => _tasasSonReferencia;
+  bool get esTasaManualUsd => _esTasaManualUsd;
   String get monedaPrincipal => _monedaPrincipal;
   String get tipoTasa => _tipoTasa;
   bool get isSyncingRate => _isSyncingRate;
@@ -103,11 +105,11 @@ class SettingsProvider with ChangeNotifier {
     if (purgeResult != -1) {
       // Purga exitosa: consumir semillas locales verificadas según validador canónico (D-08)
       double? cachedUsd;
-      final bool esTasaManual = _safeGetBool(prefs, 'pref_es_tasa_manual_usd', false);
+      _esTasaManualUsd = _safeGetBool(prefs, 'pref_es_tasa_manual_usd', false);
       final rawManual = prefs.get(AppConstants.prefTasaCambio);
       final rawAuto = prefs.get('cached_rate_usd');
 
-      if (esTasaManual && isValidMonetaryRate(rawManual)) {
+      if (_esTasaManualUsd && isValidMonetaryRate(rawManual)) {
         // Tasa manual global prevalece al reiniciar mientras no haya conexión (D-05 / NEW-3b)
         cachedUsd = (rawManual as num).toDouble();
       } else if (isValidMonetaryRate(rawAuto)) {
@@ -151,6 +153,7 @@ class SettingsProvider with ChangeNotifier {
       _tasaCambioVesUsdt = 0.0;
       _ultimaActualizacionTasas = null;
       _tasasSonReferencia = true; // NEW-2: Reseteo obligatorio a modo referencia ante purga fallida
+      _esTasaManualUsd = false;
     }
 
     _monedaPrincipal = _safeGetString(prefs, AppConstants.prefMonedaPrincipal, AppConstants.defaultMoneda);
@@ -263,7 +266,10 @@ class SettingsProvider with ChangeNotifier {
           if (ok1) ExchangeRateService.onKeyWriteConfirmed(AppConstants.prefTasaCambio);
           final ok2 = await prefs.setDouble('cached_rate_usd', _tasaCambioVesUsd);
           if (ok2) ExchangeRateService.onKeyWriteConfirmed('cached_rate_usd');
-          await prefs.setBool('pref_es_tasa_manual_usd', false);
+          final okBool = await prefs.setBool('pref_es_tasa_manual_usd', false);
+          if (okBool) {
+            _esTasaManualUsd = false;
+          }
         }
         if (isValidMonetaryRate(allRates.eur)) {
           _tasaCambioVesEur = allRates.eur;
@@ -281,8 +287,15 @@ class SettingsProvider with ChangeNotifier {
         if (okTs) ExchangeRateService.onKeyWriteConfirmed('cached_exchange_rates_timestamp');
         exito = true;
       } else {
-        // Modo referencia: si allRates trajo tasas válidas por caché o fallback, asignarlas
-        if (isValidMonetaryRate(allRates.usd)) {
+        // Modo referencia: si el usuario configuró una tasa manual global válida, se conserva intacta (D-05)
+        final bool isManual = _esTasaManualUsd || _safeGetBool(prefs, 'pref_es_tasa_manual_usd', false);
+        final rawPrefTasa = prefs.get(AppConstants.prefTasaCambio);
+        if (isManual && (isValidMonetaryRate(_tasaCambioVesUsd) || isValidMonetaryRate(rawPrefTasa))) {
+          if (!isValidMonetaryRate(_tasaCambioVesUsd) && isValidMonetaryRate(rawPrefTasa)) {
+            _tasaCambioVesUsd = (rawPrefTasa as num).toDouble();
+          }
+          // Preservar la tasa manual global en disco y memoria (D-05 / NEW-3b)
+        } else if (isValidMonetaryRate(allRates.usd)) {
           _tasaCambioVesUsd = allRates.usd;
           final ok1 = await prefs.setDouble(AppConstants.prefTasaCambio, _tasaCambioVesUsd);
           if (ok1) ExchangeRateService.onKeyWriteConfirmed(AppConstants.prefTasaCambio);
@@ -348,8 +361,12 @@ class SettingsProvider with ChangeNotifier {
     final ok = await prefs.setDouble(AppConstants.prefTasaCambio, _tasaCambioVesUsd);
     if (ok) {
       ExchangeRateService.onKeyWriteConfirmed(AppConstants.prefTasaCambio);
+      final okBool = await prefs.setBool('pref_es_tasa_manual_usd', true);
+      _esTasaManualUsd = okBool;
+    } else {
+      debugPrint("SettingsProvider: Error persistiendo tasa manual en disco.");
+      _esTasaManualUsd = false;
     }
-    await prefs.setBool('pref_es_tasa_manual_usd', true);
     notifyListeners();
   }
 

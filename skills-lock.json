@@ -18,6 +18,12 @@
       "sourceType": "github",
       "skillPath": "skills/material-3/SKILL.md",
       "computedHash": "b675af544d7f335ca6dd2edb708930605484084354a4ef383362c9ec2b1717c7"
+    },
+    "security-audit": {
+      "source": "cloudflare/security-audit-skill",
+      "sourceType": "github",
+      "skillPath": "skills/security-audit/SKILL.md",
+      "computedHash": "e6b2e317de75da97e9de18d842982994803f3a67a4a6d8154a82323dc3de8528"
     }
   }
 }

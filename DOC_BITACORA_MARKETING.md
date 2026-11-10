@@ -343,3 +343,20 @@ Capitalizar las consultas orgánicas medidas en TikTok Studio (*"cómo se ahorra
 
 
 
+
+
+---
+
+## 12. Consenso Operativo con Agente de Redes Muse (09 de Noviembre de 2026)
+
+Integración del agente de IA de Meta (Muse) con acceso a Instagram y TikTok para optimizar la cadencia de publicación y el ahorro operativo de tokens:
+
+* **Enlace Único en Biografía:** Se fija exclusivamente el **Canal de WhatsApp** (`https://whatsapp.com/channel/0029VbEPwHLDJ6H678QLlN1H`). Se descarta la landing como bio temporal porque no tiene formulario y genera fricción extra. Cierre estándar en video: *"el enlace del canal está en el perfil"*.
+* **Voz de Marca Refinada:** Seria, calmada y de confianza (estilo asesor). Frases cortas, sin chistes sobre dinero y sin falsa urgencia. El uso de "nosotros" queda restringido a hitos y piezas de origen (máximo 1 de cada 4).
+* **Experimento A/B de Horario de Publicación:**
+  - *Pieza 1:* Lunes 09/11 a las 7:00 p. m.
+  - *Pieza 2:* Miércoles 11/11 a las 6:00 p. m.
+  - Medición a las 48 horas (vistas, guardados, suscriptores nuevos al canal) para fijar el horario definitivo.
+* **Colaboración Cruzada Invariable en Instagram Reels:** Toda publicación de Reels desde `@rindemas.app` invita manualmente como colaboradora a `@lili9077p`.
+* **Métricas Recientes de Referencia (Reel #2 al 09/11):** 327 visualizaciones, 33 likes (10.1% de tasa de me gusta), 54% de retención (20s promedio en video de 37s), 93.6% alcance en no-seguidores.
+* **Historias y Feed:** Stickers de enlace en el tercio medio (>3 cm del borde inferior), pie de foto (*caption*) vacío si la pieza tiene texto, formato 4:5 vertical (1080x1350) para el feed y contraste estricto (fondo amarillo con texto negro).

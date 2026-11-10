@@ -560,6 +560,9 @@ class ExchangeRateService {
   /// Control de concurrencia para evitar purgas simultáneas.
   static Future<int>? _activePurgeFuture;
 
+  @visibleForTesting
+  static Future<int>? get activePurgeFuture => _activePurgeFuture;
+
   /// Contador monotónico de generación de purga para aislar purgas en vuelo tras un reset (M-08).
   static int _purgeGeneration = 0;
 
@@ -735,25 +738,9 @@ class ExchangeRateService {
           debugPrint('ExchangeRateService: Excepción en reintento de setString(${op.key}): $e');
         }
       } else if (op.type == PendingPurgeMutationType.remove) {
-        // M-05: Si la clave es de tasa diaria actual y se confirmó un valor numérico válido,
-        // o si el timestamp se actualizó con fecha válida, rescindir la operación pendiente.
-        // NUNCA rescindir eliminaciones de claves con corrupción estructural (fechas imposibles o tipos corruptos, R-01).
-        final currentVal = prefs.get(op.key);
-        if (op.key == 'cached_exchange_rates_timestamp') {
-          if (currentVal is String && DateTime.tryParse(currentVal) != null) {
-            _pendingPurgeOperations.remove(pk);
-            continue;
-          }
-        } else if (op.key == 'cached_exchange_rate' ||
-                   op.key == AppConstants.prefTasaCambio ||
-                   op.key == 'cached_rate_usd' ||
-                   op.key == 'cached_rate_eur' ||
-                   op.key == 'cached_rate_usdt') {
-          if (isValidMonetaryRate(currentVal)) {
-            _pendingPurgeOperations.remove(pk);
-            continue;
-          }
-        }
+        // M-05 / M5-a: En el replay de operaciones pendientes se ejecuta la persistencia física directa.
+        // La rescisión de un remove pendiente por tasa fresca ocurre exclusivamente ante confirmación
+        // física de disco mediante onKeyWriteConfirmed(key), no mediante lectura de la caché volátil en memoria.
         try {
           final ok = await prefs.remove(op.key);
           if (_purgeGeneration != currentGen) break;

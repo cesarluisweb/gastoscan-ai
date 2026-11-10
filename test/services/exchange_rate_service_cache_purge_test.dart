@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -28,6 +29,7 @@ class TestSharedPreferences extends Fake implements SharedPreferences {
   bool throwOnSetDouble = false;
   bool returnFalseOnSetDouble = false;
   void Function(String key)? onKeyRemoved;
+  Future<void> Function(String key)? onKeyRemovedAsync;
 
   Map<String, Object> get data => memory;
 
@@ -118,6 +120,9 @@ class TestSharedPreferences extends Fake implements SharedPreferences {
     // En el plugin real, la caché en memoria se muta antes de la llamada de plataforma
     memory.remove(key);
     onKeyRemoved?.call(key);
+    if (onKeyRemovedAsync != null) {
+      await onKeyRemovedAsync!(key);
+    }
     if (throwOnRemove) {
       throw Exception('Simulated disk/IO error on remove');
     }
@@ -1432,26 +1437,34 @@ void main() {
         expect(store.getDouble(AppConstants.prefTasaCambio), equals(60.0));
       });
 
-      test('Replay de remove no borra prefTasaCambio si ahora tiene valor valido en disco (resiliencia ante omision de aviso)', () async {
+      test('M5-a: Replay no rescinde remove si setDouble muto memoria pero fallo en disco (returnFalseOnSetDouble)', () async {
         final store = TestSharedPreferences({
-          AppConstants.prefTasaCambio: -10.0,
+          'cached_rate_usd': -5.0, // Corrupto en disco y memoria
         });
 
+        // 1. Purga intenta remover pero falla en plataforma
         store.returnFalseOnRemove = true;
         final res1 = await ExchangeRateService.ensureCacheHistoricaPurgada(prefsInstance: store);
         expect(res1, equals(-1));
-        expect(ExchangeRateService.pendingPurgeOperations.containsKey(AppConstants.prefTasaCambio), isTrue);
+        expect(ExchangeRateService.pendingPurgeOperations.containsKey('cached_rate_usd'), isTrue);
 
-        // Se simula escritura directa de tasa válida en disco sin llamar a onKeyWriteConfirmed
-        store.disk[AppConstants.prefTasaCambio] = 65.0;
-        store.setDouble(AppConstants.prefTasaCambio, 65.0);
+        // 2. Un intento de escritura de tasa válida muta la memoria (60.0) pero falla en disco
+        store.returnFalseOnSetDouble = true;
+        final writeOk = await store.setDouble('cached_rate_usd', 60.0);
+        expect(writeOk, isFalse);
+        // Como writeOk fue false, NO se llama a onKeyWriteConfirmed
+        // Memoria tiene 60.0 pero disco sigue teniendo -5.0
+        expect(store.memory['cached_rate_usd'], equals(60.0));
+        expect(store.disk['cached_rate_usd'], equals(-5.0));
+
+        // 3. Replay de purga con plataforma recuperada para removers
         store.returnFalseOnRemove = false;
-
-        // El replay en purgarCacheHistoricaInvalida revalida isValidMonetaryRate antes de remove y rescinde
+        // El replay NO debe rescindir por el 60.0 en memoria: DEBE ejecutar remove en disco y limpiar
         final res2 = await ExchangeRateService.ensureCacheHistoricaPurgada(prefsInstance: store);
-        expect(res2, equals(0));
-        expect(ExchangeRateService.pendingPurgeOperations.containsKey(AppConstants.prefTasaCambio), isFalse);
-        expect(store.disk[AppConstants.prefTasaCambio], equals(65.0));
+        expect(res2, equals(1)); // Limpió la clave corrupta del disco
+        expect(store.disk.containsKey('cached_rate_usd'), isFalse);
+        expect(ExchangeRateService.pendingPurgeOperations.isEmpty, isTrue);
+        expect(store.disk[ExchangeRateService.prefKeyCacheHistoricaPurgada], isTrue);
       });
 
       test('Ruta B (TOCTOU): Revalidacion antes de remove en keysToRemove preserva tasa valida escrita durante la purga', () async {
@@ -1489,17 +1502,28 @@ void main() {
         ExchangeRateService.resetPendingPurgeOperationsForTesting();
         expect(ExchangeRateService.pendingPurgeOperations.isEmpty, isTrue);
 
-        store.returnFalseOnRemove = true;
+        final completer = Completer<void>();
+        store.onKeyRemovedAsync = (key) async {
+          await completer.future;
+        };
+
+        // En ausencia de cambio de generación, la purga completaría exitosamente (remove retorna true)
+        store.returnFalseOnRemove = false;
         final purgeFuture = ExchangeRateService.ensureCacheHistoricaPurgada(prefsInstance: store);
 
-        // Invocamos reset mientras la purga estaba en vuelo
+        // Se invoca reset mientras la purga está pausada dentro de remove
         ExchangeRateService.resetPendingPurgeOperationsForTesting();
 
+        // Se desbloquea el remove de la purga original
+        completer.complete();
+
         final result = await purgeFuture;
-        // Purga invalidada retorna -1 y no contamina el nuevo estado limpio
+        // La purga invalidada retorna -1 por discriminación de generación (a pesar de que remove retornó true)
         expect(result, equals(-1));
         expect(ExchangeRateService.pendingPurgeOperations.isEmpty, isTrue);
         expect(ExchangeRateService.isPurgeMarkPendingConfirmation, isFalse);
+        // La marca de purga NO debe persistirse en disco
+        expect(store.disk[ExchangeRateService.prefKeyCacheHistoricaPurgada], isNot(true));
       });
 
       test('finally condicional no pisa _activePurgeFuture de una purga posterior si la anterior termino despues de un reset', () async {
@@ -1509,24 +1533,58 @@ void main() {
 
         ExchangeRateService.resetPendingPurgeOperationsForTesting();
 
-        // 1. Iniciar purga lenta A
-        store.returnFalseOnRemove = true;
-        final futureA = ExchangeRateService.ensureCacheHistoricaPurgada(prefsInstance: store);
+        final completerA = Completer<void>();
+        store.onKeyRemovedAsync = (key) async {
+          // Solo pausamos la primera purga (A)
+          if (!completerA.isCompleted) {
+            await completerA.future;
+          }
+        };
 
-        // 2. Reset mientras A está en vuelo
-        ExchangeRateService.resetPendingPurgeOperationsForTesting();
-
-        // 3. Iniciar purga B inmediatamente después del reset
+        // 1. Iniciar purga lenta A (se pausa dentro de remove)
         store.returnFalseOnRemove = false;
-        store.disk['cached_rate_usd'] = 60.0;
-        store.setDouble('cached_rate_usd', 60.0);
-        final futureB = ExchangeRateService.ensureCacheHistoricaPurgada(prefsInstance: store);
+        final futureA = ExchangeRateService.ensureCacheHistoricaPurgada(prefsInstance: store);
+        final taskA = ExchangeRateService.activePurgeFuture;
+        expect(taskA, isNotNull);
 
-        // 4. Ambas completan; el finally de A no debió limpiar la referencia de B
+        // 2. Reset mientras A está pausada en vuelo
+        ExchangeRateService.resetPendingPurgeOperationsForTesting();
+        expect(ExchangeRateService.activePurgeFuture, isNull);
+
+        // 3. Iniciar purga B inmediatamente después del reset con su propia pausa controlada
+        final completerB = Completer<void>();
+        final storeB = TestSharedPreferences({
+          'cached_rate_usd': -5.0,
+        });
+        storeB.onKeyRemovedAsync = (key) async {
+          await completerB.future;
+        };
+
+        final futureB = ExchangeRateService.ensureCacheHistoricaPurgada(prefsInstance: storeB);
+        final taskB = ExchangeRateService.activePurgeFuture;
+        expect(taskB, isNotNull);
+        expect(identical(taskB, taskA), isFalse);
+
+        // 4. Liberar purga A para que termine su ejecución y llegue a su bloque finally
+        completerA.complete();
         final resA = await futureA;
-        final resB = await futureB;
         expect(resA, equals(-1));
-        expect(resB, equals(0));
+
+        // 5. Discriminación de M-08: el finally de A NO debió anular _activePurgeFuture porque pertenece a taskB
+        expect(ExchangeRateService.activePurgeFuture, isNotNull);
+        expect(identical(ExchangeRateService.activePurgeFuture, taskB), isTrue);
+
+        // 6. Una llamada C concurrente se engancha a la purga B en curso sin lanzar una purga redundante
+        final futureC = ExchangeRateService.ensureCacheHistoricaPurgada(prefsInstance: storeB);
+        expect(identical(ExchangeRateService.activePurgeFuture, taskB), isTrue);
+
+        // 7. Liberar purga B; ambas completan con éxito y el finally de B sí limpia _activePurgeFuture
+        completerB.complete();
+        final resB = await futureB;
+        final resC = await futureC;
+        expect(resB, equals(1));
+        expect(resC, equals(1));
+        expect(ExchangeRateService.activePurgeFuture, isNull);
       });
     });
   });
