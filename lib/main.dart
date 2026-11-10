@@ -16,6 +16,11 @@ import 'ui/screens/main_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Fijar orientación vertical exclusiva
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]);
+
   // Configurar Edge-to-Edge nativo y barras del sistema transparentes (Android 15+)
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(
