@@ -76,9 +76,11 @@ class TestSharedPreferences extends Fake implements SharedPreferences {
     memory[key] = value;
     setStringValues[key] = value;
     if (throwOnSetString) {
+      ExchangeRateService.onKeyWriteFailed(key);
       throw Exception('Simulated disk/IO error on setString');
     }
     if (returnFalseOnSetString) {
+      ExchangeRateService.onKeyWriteFailed(key);
       return false;
     }
     disk[key] = value;
@@ -91,9 +93,11 @@ class TestSharedPreferences extends Fake implements SharedPreferences {
     memory[key] = value;
     setDoubleValues[key] = value;
     if (throwOnSetDouble) {
+      ExchangeRateService.onKeyWriteFailed(key);
       throw Exception('Simulated disk/IO error on setDouble');
     }
     if (returnFalseOnSetDouble) {
+      ExchangeRateService.onKeyWriteFailed(key);
       return false;
     }
     disk[key] = value;
@@ -105,9 +109,11 @@ class TestSharedPreferences extends Fake implements SharedPreferences {
     memory[key] = value;
     setBoolValues[key] = value;
     if (throwOnSetBool) {
+      ExchangeRateService.onKeyWriteFailed(key);
       throw Exception('Simulated disk/IO error on setBool');
     }
     if (returnFalseOnSetBool) {
+      ExchangeRateService.onKeyWriteFailed(key);
       return false;
     }
     disk[key] = value;
@@ -1473,19 +1479,73 @@ void main() {
           'cached_rate_usd': 0.5,  // Segunda clave en keysToRemove
         });
 
-        // Al removerse 'cached_rate_usdt', un proceso concurrente confirma escritura válida para 'cached_rate_usd'
+        // Al removerse 'cached_rate_usdt', un proceso concurrente confirma escritura válida en disco para 'cached_rate_usd'
         store.onKeyRemoved = (removedKey) {
           if (removedKey == 'cached_rate_usdt') {
             store.disk['cached_rate_usd'] = 58.0;
             store.memory['cached_rate_usd'] = 58.0;
+            ExchangeRateService.onKeyWriteConfirmed('cached_rate_usd');
           }
         };
 
         final res = await ExchangeRateService.purgarCacheHistoricaInvalida(prefsInstance: store);
-        // Debe haber removido cached_rate_usdt (1), pero omitido cached_rate_usd por la revalidación TOCTOU
+        // Debe haber removido cached_rate_usdt (1), pero omitido cached_rate_usd por la revalidación TOCTOU con confirmación física
         expect(res, equals(1));
         expect(store.disk.containsKey('cached_rate_usdt'), isFalse);
         expect(store.disk['cached_rate_usd'], equals(58.0));
+      });
+
+      test('M-05 TOCTOU: una escritura valida solo en memoria no debe blindar el disco', () async {
+        final store = TestSharedPreferences({
+          'cached_rate_usdt': 0.5, // se procesa primero
+          'cached_rate_usd': 0.5,  // se procesa después
+        });
+        store.onKeyRemoved = (key) {
+          if (key == 'cached_rate_usdt') {
+            // Simula setDouble que muta memoria y falla en disco (sin llamar a onKeyWriteConfirmed)
+            store.memory['cached_rate_usd'] = 60.0;
+            // store.disk['cached_rate_usd'] sigue en 0.5 corrupto
+          }
+        };
+
+        final res = await ExchangeRateService.ensureCacheHistoricaPurgada(prefsInstance: store);
+
+        expect(res, equals(2));                                            // usdt + usd
+        expect(store.disk.containsKey('cached_rate_usd'), isFalse);        // Se limpió el 0.5 del disco
+        expect(store.disk[ExchangeRateService.prefKeyCacheHistoricaPurgada], isTrue);
+      });
+
+      test('M-05 scan: setDouble fallido antes de la purga no debe blindar el disco', () async {
+        final store = TestSharedPreferences({'cached_rate_usd': 0.5});
+        store.returnFalseOnSetDouble = true;
+
+        final ok = await store.setDouble('cached_rate_usd', 60.0);
+        expect(ok, isFalse);
+        expect(store.memory['cached_rate_usd'], equals(60.0));
+        expect(store.disk['cached_rate_usd'], equals(0.5));
+
+        final res = await ExchangeRateService.ensureCacheHistoricaPurgada(prefsInstance: store);
+
+        expect(res, equals(1));
+        expect(store.disk.containsKey('cached_rate_usd'), isFalse);
+        expect(store.disk[ExchangeRateService.prefKeyCacheHistoricaPurgada], isTrue);
+      });
+
+      test('M-04: Timestamp con fecha de calendario imposible (2026-02-30) se purga como corrupto', () async {
+        final store = TestSharedPreferences({
+          'cached_exchange_rates_timestamp': '2026-02-30T14:30:00.000Z',
+        });
+
+        final res = await ExchangeRateService.purgarCacheHistoricaInvalida(prefsInstance: store);
+        expect(res, equals(1));
+        expect(store.disk.containsKey('cached_exchange_rates_timestamp'), isFalse);
+      });
+
+      test('N-11: getRateForDate con fecha imposible (2026-02-30) retorna 0.0 sin consultar ni almacenar clave', () async {
+        final store = TestSharedPreferences({});
+        final rate = await ExchangeRateService.getRateForDate('2026-02-30', moneda: 'USD', prefsInstance: store);
+        expect(rate, equals(0.0));
+        expect(store.disk.containsKey('cached_rate_USD_2026-02-30'), isFalse);
       });
     });
 

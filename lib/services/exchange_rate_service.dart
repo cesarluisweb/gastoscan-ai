@@ -155,22 +155,32 @@ class ExchangeRateService {
           final now = DateTime.now();
           if (await prefs.setDouble('cached_rate_usd', gUsd)) {
             _onKeyWriteConfirmed('cached_rate_usd');
+          } else {
+            _onKeyWriteFailed('cached_rate_usd');
           }
           if (await prefs.setDouble('cached_exchange_rate', gUsd)) {
             _onKeyWriteConfirmed('cached_exchange_rate');
+          } else {
+            _onKeyWriteFailed('cached_exchange_rate');
           }
           if (gEur != null) {
             if (await prefs.setDouble('cached_rate_eur', gEur)) {
               _onKeyWriteConfirmed('cached_rate_eur');
+            } else {
+              _onKeyWriteFailed('cached_rate_eur');
             }
           }
           if (gUsdt != null) {
             if (await prefs.setDouble('cached_rate_usdt', gUsdt)) {
               _onKeyWriteConfirmed('cached_rate_usdt');
+            } else {
+              _onKeyWriteFailed('cached_rate_usdt');
             }
           }
           if (await prefs.setString('cached_exchange_rates_timestamp', now.toIso8601String())) {
             _onKeyWriteConfirmed('cached_exchange_rates_timestamp');
+          } else {
+            _onKeyWriteFailed('cached_exchange_rates_timestamp');
           }
           return ExchangeRatesData(
             usd: gUsd,
@@ -196,9 +206,13 @@ class ExchangeRateService {
       usdRate = results[0]!;
       if (await prefs.setDouble('cached_rate_usd', usdRate)) {
         _onKeyWriteConfirmed('cached_rate_usd');
+      } else {
+        _onKeyWriteFailed('cached_rate_usd');
       }
       if (await prefs.setDouble('cached_exchange_rate', usdRate)) {
         _onKeyWriteConfirmed('cached_exchange_rate');
+      } else {
+        _onKeyWriteFailed('cached_exchange_rate');
       }
       fetchedAny = true;
     }
@@ -207,6 +221,8 @@ class ExchangeRateService {
       eurRate = results[1]!;
       if (await prefs.setDouble('cached_rate_eur', eurRate)) {
         _onKeyWriteConfirmed('cached_rate_eur');
+      } else {
+        _onKeyWriteFailed('cached_rate_eur');
       }
       fetchedAny = true;
     }
@@ -215,6 +231,8 @@ class ExchangeRateService {
       usdtRate = results[2]!;
       if (await prefs.setDouble('cached_rate_usdt', usdtRate)) {
         _onKeyWriteConfirmed('cached_rate_usdt');
+      } else {
+        _onKeyWriteFailed('cached_rate_usdt');
       }
       fetchedAny = true;
     } else if (!isValidMonetaryRate(usdtRate) && isValidMonetaryRate(usdRate)) {
@@ -227,6 +245,8 @@ class ExchangeRateService {
       final now = DateTime.now();
       if (await prefs.setString('cached_exchange_rates_timestamp', now.toIso8601String())) {
         _onKeyWriteConfirmed('cached_exchange_rates_timestamp');
+      } else {
+        _onKeyWriteFailed('cached_exchange_rates_timestamp');
       }
       return ExchangeRatesData(
         usd: isValidMonetaryRate(usdRate) ? usdRate! : 0.0,
@@ -400,6 +420,12 @@ class ExchangeRateService {
       return isValidMonetaryRate(allRates.usd) ? allRates.usd : 0.0;
     }
 
+    // Validar formato e integridad de calendario de la fecha solicitada (N-11)
+    if (!_isValidCalendarDate(isoDate)) {
+      debugPrint('ExchangeRateService: Fecha no válida según calendario gregoriano ($isoDate); retorna 0.0.');
+      return 0.0;
+    }
+
     // 1. Revisar caché local por fecha y moneda
     final prefs = prefsInstance ?? await SharedPreferences.getInstance();
     final purgeResult = await ensureCacheHistoricaPurgada(prefsInstance: prefs);
@@ -459,6 +485,8 @@ class ExchangeRateService {
               final rate = (rawRate as num).toDouble();
               if (await prefs.setDouble(cacheKey, rate)) {
                 _onKeyWriteConfirmed(cacheKey);
+              } else {
+                _onKeyWriteFailed(cacheKey);
               }
               return rate;
             }
@@ -485,6 +513,8 @@ class ExchangeRateService {
         if (lastValidRate != null) {
           if (await prefs.setDouble(cacheKey, lastValidRate)) {
             _onKeyWriteConfirmed(cacheKey);
+          } else {
+            _onKeyWriteFailed(cacheKey);
           }
           return lastValidRate;
         }
@@ -508,6 +538,8 @@ class ExchangeRateService {
               final vesRate = (rawVes as num).toDouble();
               if (await prefs.setDouble(cacheKey, vesRate)) {
                 _onKeyWriteConfirmed(cacheKey);
+              } else {
+                _onKeyWriteFailed(cacheKey);
               }
               return vesRate;
             }
@@ -530,6 +562,8 @@ class ExchangeRateService {
       if (isValidMonetaryRate(usdHistorical)) {
         if (await prefs.setDouble(cacheKey, usdHistorical)) {
           _onKeyWriteConfirmed(cacheKey);
+        } else {
+          _onKeyWriteFailed(cacheKey);
         }
         return usdHistorical;
       }
@@ -554,6 +588,12 @@ class ExchangeRateService {
   /// Permite reintentar en el mismo proceso incluso si SharedPreferences ya mutó su caché en memoria.
   static final Map<String, PendingPurgeOperation> _pendingPurgeOperations = {};
 
+  /// Claves cuya persistencia física válida en disco ha sido confirmada durante la generación actual (M-05 TOCTOU).
+  static final Set<String> _confirmedWrites = {};
+
+  /// Claves cuya persistencia física en disco ha fallado durante la generación actual (M-05 Scan).
+  static final Set<String> _failedWrites = {};
+
   /// Indica si la persistencia física de la marca [prefKeyCacheHistoricaPurgada] está pendiente de confirmación (U2 / NEW-1).
   static bool _purgeMarkPendingConfirmation = false;
 
@@ -575,22 +615,44 @@ class ExchangeRateService {
   static Map<String, PendingPurgeOperation> get pendingPurgeOperations =>
       Map.unmodifiable(_pendingPurgeOperations);
 
+  /// Retorna el conjunto de claves con escritura confirmada (M-05).
+  @visibleForTesting
+  static Set<String> get confirmedWrites => Set.unmodifiable(_confirmedWrites);
+
+  /// Retorna el conjunto de claves con escritura fallida no confirmada en disco (M-05).
+  @visibleForTesting
+  static Set<String> get failedWrites => Set.unmodifiable(_failedWrites);
+
   /// Limpia las operaciones pendientes en memoria y futuros activos (aislamiento de pruebas, M-08).
   @visibleForTesting
   static void resetPendingPurgeOperationsForTesting() {
     _purgeGeneration++;
     _pendingPurgeOperations.clear();
+    _confirmedWrites.clear();
+    _failedWrites.clear();
     _purgeMarkPendingConfirmation = false;
     _activePurgeFuture = null;
   }
 
   /// Si una escritura física en disco de un valor válido para [key] se confirmó correctamente,
-  /// rescinde cualquier operación de purga pendiente obsoleta sobre esa misma clave (M-05).
+  /// rescinde cualquier operación de purga pendiente obsoleta sobre esa misma clave (M-05)
+  /// y registra la confirmación física para proteger contra condiciones de carrera TOCTOU.
   static void onKeyWriteConfirmed(String key) {
+    _failedWrites.remove(key);
     _pendingPurgeOperations.remove(key);
+    _confirmedWrites.add(key);
+  }
+
+  /// Si una escritura física en disco falló en plataforma (`return false` o excepción),
+  /// registra la clave como no confiable en disco para que el escaneo de purga no la omita
+  /// aunque su valor volátil en la memoria de SharedPreferences parezca válido (M-05).
+  static void onKeyWriteFailed(String key) {
+    _confirmedWrites.remove(key);
+    _failedWrites.add(key);
   }
 
   static void _onKeyWriteConfirmed(String key) => onKeyWriteConfirmed(key);
+  static void _onKeyWriteFailed(String key) => onKeyWriteFailed(key);
 
   /// Valida si una cadena ISO 'YYYY-MM-DD' corresponde a una fecha real del calendario gregoriano.
   static bool _isValidCalendarDate(String dateStr) {
@@ -901,16 +963,30 @@ class ExchangeRateService {
         if (_pendingPurgeOperations.containsKey(key)) continue;
         final rawVal = prefs.get(key);
         if (rawVal == null) continue;
-        if (!isValidMonetaryRate(rawVal)) {
+        if (!isValidMonetaryRate(rawVal) || _failedWrites.contains(key)) {
           keysToRemove.add(key);
         }
       } else if (key == 'cached_exchange_rates_timestamp') {
-        // NEW-6: Si el timestamp está corrupto (no String o fecha inválida), se purga selectivamente
+        // NEW-6 y M-04: Si el timestamp está corrupto (no String, no parseable o fecha imposible), se purga selectivamente
         if (_pendingPurgeOperations.containsKey(key)) continue;
         final rawVal = prefs.get(key);
         if (rawVal == null) continue;
-        if (rawVal is! String || DateTime.tryParse(rawVal) == null) {
-          debugPrint('ExchangeRateService: $key corrupto o no interpretable como fecha (${rawVal.runtimeType}); se marca para eliminación.');
+        bool isCorruptTimestamp = false;
+        if (rawVal is! String) {
+          isCorruptTimestamp = true;
+        } else {
+          final parsed = DateTime.tryParse(rawVal);
+          if (parsed == null) {
+            isCorruptTimestamp = true;
+          } else {
+            final datePart = rawVal.split('T')[0];
+            if (!_isValidCalendarDate(datePart)) {
+              isCorruptTimestamp = true;
+            }
+          }
+        }
+        if (isCorruptTimestamp || _failedWrites.contains(key)) {
+          debugPrint('ExchangeRateService: $key corrupto o no confirmado físicamente; se marca para eliminación.');
           keysToRemove.add(key);
         }
       } else if (key.startsWith('cached_rate_')) {
@@ -920,47 +996,56 @@ class ExchangeRateService {
           final datePart = parts.sublist(3).join('_');
           final rawVal = prefs.get(key);
           final bool dateInvalid = !_isValidCalendarDate(datePart);
-          final bool valInvalid = !isValidMonetaryRate(rawVal);
+          final bool valInvalid = !isValidMonetaryRate(rawVal) || _failedWrites.contains(key);
           if (dateInvalid || valInvalid) {
             keysToRemove.add(key);
           }
         } else {
           // Claves de tasa del día (ej. cached_rate_usd, cached_rate_eur, cached_rate_usdt)
           final rawVal = prefs.get(key);
-          if (!isValidMonetaryRate(rawVal)) {
+          if (!isValidMonetaryRate(rawVal) || _failedWrites.contains(key)) {
             keysToRemove.add(key);
           }
         }
       }
     }
 
+    // Claves marcadas como inválidas no pueden ser protegidas por confirmaciones de escrituras anteriores (M-05).
+    _confirmedWrites.removeAll(keysToRemove);
+
     for (final k in keysToRemove) {
       if (_purgeGeneration != currentGen) break;
 
-      // M-05 (TOCTOU): Revalidar únicamente claves marcadas por valor numérico fuera de dominio
-      // si durante la purga se confirmó una escritura física válida.
+      // M-05 (TOCTOU): Solo se puede omitir el borrado si una escritura física en disco
+      // fue explícitamente confirmada mediante onKeyWriteConfirmed(k) durante la purga,
+      // NUNCA basándose únicamente en la lectura de memoria de prefs.get(k).
       // NUNCA omitir el borrado de claves con corrupción estructural (fechas imposibles o tipos corruptos, R-01).
+      final bool writeConfirmed = _confirmedWrites.contains(k);
       final currentVal = prefs.get(k);
-      if (k == 'cached_exchange_rates_timestamp') {
-        if (currentVal is String && DateTime.tryParse(currentVal) != null) {
-          continue;
-        }
-      } else if (k == 'cached_exchange_rate' ||
-                 k == AppConstants.prefTasaCambio ||
-                 k == 'cached_rate_usd' ||
-                 k == 'cached_rate_eur' ||
-                 k == 'cached_rate_usdt') {
-        if (isValidMonetaryRate(currentVal)) {
-          continue;
-        }
-      } else if (k.startsWith('cached_rate_')) {
-        final parts = k.split('_');
-        if (parts.length >= 4) {
-          final datePart = parts.sublist(3).join('_');
-          if (!_isValidCalendarDate(datePart)) {
-            // Fecha inválida: NUNCA omitir el borrado por valor numérico (R-01)
-          } else if (isValidMonetaryRate(currentVal)) {
+
+      if (writeConfirmed) {
+        if (k == 'cached_exchange_rates_timestamp') {
+          if (currentVal is String) {
+            final parsed = DateTime.tryParse(currentVal);
+            if (parsed != null && _isValidCalendarDate(currentVal.split('T')[0])) {
+              continue;
+            }
+          }
+        } else if (k == 'cached_exchange_rate' ||
+                   k == AppConstants.prefTasaCambio ||
+                   k == 'cached_rate_usd' ||
+                   k == 'cached_rate_eur' ||
+                   k == 'cached_rate_usdt') {
+          if (isValidMonetaryRate(currentVal)) {
             continue;
+          }
+        } else if (k.startsWith('cached_rate_')) {
+          final parts = k.split('_');
+          if (parts.length >= 4) {
+            final datePart = parts.sublist(3).join('_');
+            if (_isValidCalendarDate(datePart) && isValidMonetaryRate(currentVal)) {
+              continue;
+            }
           }
         }
       }
@@ -969,8 +1054,13 @@ class ExchangeRateService {
       try {
         final removed = await prefs.remove(k);
         if (_purgeGeneration != currentGen) break;
-        if (removed) {
+        if (_confirmedWrites.contains(k)) {
+          // Si durante el await de remove se confirmó concurrentemente una escritura física fresca,
+          // se rescinde la operación y se preserva el dato fresco (§2.5).
           _pendingPurgeOperations.remove(k);
+        } else if (removed) {
+          _pendingPurgeOperations.remove(k);
+          _failedWrites.remove(k);
           cleanedCount++;
         } else {
           debugPrint('ExchangeRateService: prefs.remove($k) retornó false. Se registra operación pendiente.');

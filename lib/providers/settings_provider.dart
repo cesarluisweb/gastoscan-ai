@@ -263,9 +263,17 @@ class SettingsProvider with ChangeNotifier {
         if (isValidMonetaryRate(allRates.usd)) {
           _tasaCambioVesUsd = allRates.usd;
           final ok1 = await prefs.setDouble(AppConstants.prefTasaCambio, _tasaCambioVesUsd);
-          if (ok1) ExchangeRateService.onKeyWriteConfirmed(AppConstants.prefTasaCambio);
+          if (ok1) {
+            ExchangeRateService.onKeyWriteConfirmed(AppConstants.prefTasaCambio);
+          } else {
+            ExchangeRateService.onKeyWriteFailed(AppConstants.prefTasaCambio);
+          }
           final ok2 = await prefs.setDouble('cached_rate_usd', _tasaCambioVesUsd);
-          if (ok2) ExchangeRateService.onKeyWriteConfirmed('cached_rate_usd');
+          if (ok2) {
+            ExchangeRateService.onKeyWriteConfirmed('cached_rate_usd');
+          } else {
+            ExchangeRateService.onKeyWriteFailed('cached_rate_usd');
+          }
           final okBool = await prefs.setBool('pref_es_tasa_manual_usd', false);
           if (okBool) {
             _esTasaManualUsd = false;
@@ -274,17 +282,29 @@ class SettingsProvider with ChangeNotifier {
         if (isValidMonetaryRate(allRates.eur)) {
           _tasaCambioVesEur = allRates.eur;
           final okEur = await prefs.setDouble('cached_rate_eur', _tasaCambioVesEur);
-          if (okEur) ExchangeRateService.onKeyWriteConfirmed('cached_rate_eur');
+          if (okEur) {
+            ExchangeRateService.onKeyWriteConfirmed('cached_rate_eur');
+          } else {
+            ExchangeRateService.onKeyWriteFailed('cached_rate_eur');
+          }
         }
         if (isValidMonetaryRate(allRates.usdt)) {
           _tasaCambioVesUsdt = allRates.usdt;
           final okUsdt = await prefs.setDouble('cached_rate_usdt', _tasaCambioVesUsdt);
-          if (okUsdt) ExchangeRateService.onKeyWriteConfirmed('cached_rate_usdt');
+          if (okUsdt) {
+            ExchangeRateService.onKeyWriteConfirmed('cached_rate_usdt');
+          } else {
+            ExchangeRateService.onKeyWriteFailed('cached_rate_usdt');
+          }
         }
         _ultimaActualizacionTasas = allRates.fecha;
         _tasasSonReferencia = false;
         final okTs = await prefs.setString('cached_exchange_rates_timestamp', _ultimaActualizacionTasas!.toIso8601String());
-        if (okTs) ExchangeRateService.onKeyWriteConfirmed('cached_exchange_rates_timestamp');
+        if (okTs) {
+          ExchangeRateService.onKeyWriteConfirmed('cached_exchange_rates_timestamp');
+        } else {
+          ExchangeRateService.onKeyWriteFailed('cached_exchange_rates_timestamp');
+        }
         exito = true;
       } else {
         // Modo referencia: si el usuario configuró una tasa manual global válida, se conserva intacta (D-05)
@@ -298,17 +318,29 @@ class SettingsProvider with ChangeNotifier {
         } else if (isValidMonetaryRate(allRates.usd)) {
           _tasaCambioVesUsd = allRates.usd;
           final ok1 = await prefs.setDouble(AppConstants.prefTasaCambio, _tasaCambioVesUsd);
-          if (ok1) ExchangeRateService.onKeyWriteConfirmed(AppConstants.prefTasaCambio);
+          if (ok1) {
+            ExchangeRateService.onKeyWriteConfirmed(AppConstants.prefTasaCambio);
+          } else {
+            ExchangeRateService.onKeyWriteFailed(AppConstants.prefTasaCambio);
+          }
         }
         if (isValidMonetaryRate(allRates.eur)) {
           _tasaCambioVesEur = allRates.eur;
           final okEur = await prefs.setDouble('cached_rate_eur', _tasaCambioVesEur);
-          if (okEur) ExchangeRateService.onKeyWriteConfirmed('cached_rate_eur');
+          if (okEur) {
+            ExchangeRateService.onKeyWriteConfirmed('cached_rate_eur');
+          } else {
+            ExchangeRateService.onKeyWriteFailed('cached_rate_eur');
+          }
         }
         if (isValidMonetaryRate(allRates.usdt)) {
           _tasaCambioVesUsdt = allRates.usdt;
           final okUsdt = await prefs.setDouble('cached_rate_usdt', _tasaCambioVesUsdt);
-          if (okUsdt) ExchangeRateService.onKeyWriteConfirmed('cached_rate_usdt');
+          if (okUsdt) {
+            ExchangeRateService.onKeyWriteConfirmed('cached_rate_usdt');
+          } else {
+            ExchangeRateService.onKeyWriteFailed('cached_rate_usdt');
+          }
         }
         _tasasSonReferencia = true;
       }
@@ -364,6 +396,7 @@ class SettingsProvider with ChangeNotifier {
       final okBool = await prefs.setBool('pref_es_tasa_manual_usd', true);
       _esTasaManualUsd = okBool;
     } else {
+      ExchangeRateService.onKeyWriteFailed(AppConstants.prefTasaCambio);
       debugPrint("SettingsProvider: Error persistiendo tasa manual en disco.");
       _esTasaManualUsd = false;
     }
