@@ -941,7 +941,8 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final settings = Provider.of<SettingsProvider>(context, listen: false);
-    if (settings.guardarFotos && !settings.avisoGaleriaMostrado) {
+    final bool hayImagenPorGuardar = !_imageDeleted && (_pickedImage != null || widget.imageFile != null);
+    if (settings.guardarFotos && hayImagenPorGuardar && !settings.avisoGaleriaMostrado) {
       await showDialog<void>(
         context: context,
         builder: (ctx) => AlertDialog(
