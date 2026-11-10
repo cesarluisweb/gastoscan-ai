@@ -22,6 +22,19 @@ class GastoRepository {
     return _dbHelper.updateGastoSyncStatus(gasto);
   }
 
+  /// Control de concurrencia optimista al recibir ACK de Firestore
+  Future<int> marcarGastoSincronizadoCondicional(
+    int id,
+    String expectedActualizadoEn, {
+    String? firestoreId,
+  }) {
+    return _dbHelper.marcarGastoSincronizadoCondicional(
+      id,
+      expectedActualizadoEn,
+      firestoreId: firestoreId,
+    );
+  }
+
   /// Borrado lógico
   Future<int> eliminarGasto(int id) {
     return _dbHelper.softDeleteGasto(id);

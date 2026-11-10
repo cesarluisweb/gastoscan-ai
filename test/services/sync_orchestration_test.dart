@@ -109,6 +109,39 @@ class FakeGastoRepository extends Fake implements GastoRepository {
   }
 
   @override
+  Future<void> actualizarGastoSyncStatus(GastoModel gasto) async {
+    final idx = localGastos.indexWhere((g) => g.id == gasto.id);
+    if (idx != -1) {
+      localGastos[idx] = localGastos[idx].copyWith(
+        synced: gasto.synced,
+        firestoreId: gasto.firestoreId,
+        actualizadoEn: gasto.actualizadoEn,
+      );
+    }
+  }
+
+  @override
+  Future<int> marcarGastoSincronizadoCondicional(
+    int id,
+    String expectedActualizadoEn, {
+    String? firestoreId,
+  }) async {
+    final idx = localGastos.indexWhere((g) => g.id == id);
+    if (idx != -1) {
+      final current = localGastos[idx];
+      final currentActualizadoEn = current.actualizadoEn ?? current.creadoEn;
+      if (currentActualizadoEn == expectedActualizadoEn) {
+        localGastos[idx] = current.copyWith(
+          synced: 1,
+          firestoreId: firestoreId ?? current.firestoreId,
+        );
+        return 1;
+      }
+    }
+    return 0;
+  }
+
+  @override
   Future<List<Map<String, dynamic>>> obtenerTodosLosPresupuestosMensuales() async {
     return List.from(localPresupuestos);
   }
@@ -386,6 +419,150 @@ void main() {
       expect(fakeRepo.replacedGastos!.length, equals(1));
       expect(fakeRepo.replacedPresupuestos!.length, equals(1));
       expect(prefs.getBool('sync_pending_replace_user-abc'), isNull);
+    });
+
+    test('7. Remote tombstone with local unsynced edits (synced=0, eliminadoEn=null) preserves local and registers conflict (T-69)', () async {
+      final localUnsynced = GastoModel(
+        id: 7,
+        uuid: 'u-tombstone-1',
+        fecha: '2026-11-10',
+        comercio: 'Panadería Central',
+        moneda: 'USD',
+        totalOriginal: 5000,
+        totalUsd: 5000,
+        tasaCambio: 45.0,
+        categoria: 'Alimentos',
+        creadoEn: '2026-11-10T10:00:00.000Z',
+        actualizadoEn: '2026-11-10T10:00:00.000Z',
+        eliminadoEn: null,
+        synced: 0,
+      );
+      fakeRepo.localGastos = [localUnsynced];
+
+      fakeRemote.remoteGastos = [
+        const RemoteGasto(
+          id: 'u-tombstone-1',
+          data: {
+            'uuid': 'u-tombstone-1',
+            'fecha': '2026-11-10',
+            'comercio': 'Panadería Central',
+            'moneda': 'USD',
+            'total_original': 50.0,
+            'total_usd': 50.0,
+            'tasa_cambio': 45.0,
+            'categoria': 'Alimentos',
+            'creado_en': '2026-11-10T09:00:00.000Z',
+            'actualizado_en': '2026-11-10T11:00:00.000Z',
+            'eliminado_en': '2026-11-10T11:00:00.000Z',
+          },
+        ),
+      ];
+
+      await syncService.syncFromFirestore(fakeAuth.user!);
+
+      // PROHIBIDO purgar localmente
+      expect(fakeRepo.physicallyDeletedIds, isNot(contains(7)));
+      expect(fakeRepo.localGastos.any((g) => g.id == 7), isTrue);
+      expect(syncService.hasConflict('u-tombstone-1'), isTrue);
+      expect(syncService.tombstoneConflicts['u-tombstone-1']?.fechaEliminacionRemota, equals('2026-11-10T11:00:00.000Z'));
+    });
+
+    test('8. Pending conflict blocks automatic push of that uuid in syncToFirestore', () async {
+      final localGasto = GastoModel(
+        id: 8,
+        uuid: 'u-conflict-push',
+        fecha: '2026-11-10',
+        comercio: 'Tienda A',
+        moneda: 'USD',
+        totalOriginal: 1000,
+        totalUsd: 1000,
+        tasaCambio: 45.0,
+        categoria: 'Otros',
+        creadoEn: '2026-11-10T10:00:00.000Z',
+        actualizadoEn: '2026-11-10T10:00:00.000Z',
+        synced: 0,
+      );
+      fakeRepo.localGastos = [localGasto];
+
+      // Registrar conflicto pendiente en memoria
+      syncService.registrarConflictoTombstone(
+        ConflictoTombstoneRemoto(
+          uuid: 'u-conflict-push',
+          localSnapshot: localGasto,
+          fechaEliminacionRemota: '2026-11-10T11:00:00.000Z',
+        ),
+      );
+
+      await syncService.syncToFirestore(fakeAuth.user!);
+
+      // Push debe omitirse para ese uuid
+      expect(fakeRemote.upsertedGastos, isEmpty);
+      expect(fakeRemote.softDeletedUuids, isEmpty);
+    });
+
+    test('9. Push success conditionally marks synced = 1 via optimistic CAS', () async {
+      final localGasto = GastoModel(
+        id: 9,
+        uuid: 'u-cas-success',
+        fecha: '2026-11-10',
+        comercio: 'Farmacia',
+        moneda: 'USD',
+        totalOriginal: 2000,
+        totalUsd: 2000,
+        tasaCambio: 45.0,
+        categoria: 'Salud',
+        creadoEn: '2026-11-10T10:00:00.000Z',
+        actualizadoEn: '2026-11-10T10:00:00.000Z',
+        synced: 0,
+      );
+      fakeRepo.localGastos = [localGasto];
+
+      await syncService.syncToFirestore(fakeAuth.user!);
+
+      expect(fakeRemote.upsertedGastos.length, equals(1));
+      expect(fakeRepo.localGastos.firstWhere((g) => g.id == 9).synced, equals(1));
+    });
+
+    test('10. Post-crash idempotency in syncFromFirestore marks local as synced = 1', () async {
+      final localGasto = GastoModel(
+        id: 10,
+        uuid: 'u-post-crash-1',
+        fecha: '2026-11-10',
+        comercio: 'Automercado',
+        moneda: 'USD',
+        totalOriginal: 2500,
+        totalUsd: 2500,
+        tasaCambio: 45.0,
+        categoria: 'Alimentos',
+        creadoEn: '2026-11-10T10:00:00.000Z',
+        actualizadoEn: '2026-11-10T10:00:00.000Z',
+        synced: 0, // Quedó sin marcar por caída anterior
+      );
+      fakeRepo.localGastos = [localGasto];
+
+      fakeRemote.remoteGastos = [
+        const RemoteGasto(
+          id: 'u-post-crash-1',
+          data: {
+            'uuid': 'u-post-crash-1',
+            'fecha': '2026-11-10',
+            'comercio': 'Automercado',
+            'moneda': 'USD',
+            'total_original': 25.0,
+            'total_usd': 25.0,
+            'tasa_cambio': 45.0,
+            'categoria': 'Alimentos',
+            'creado_en': '2026-11-10T10:00:00.000Z',
+            'actualizado_en': '2026-11-10T10:05:00.000Z',
+          },
+        ),
+      ];
+
+      await syncService.syncFromFirestore(fakeAuth.user!);
+
+      // Debe haberse marcado como synced = 1 sin crear duplicados ni borrar
+      expect(fakeRepo.localGastos.firstWhere((g) => g.id == 10).synced, equals(1));
+      expect(fakeRepo.physicallyDeletedIds, isEmpty);
     });
   });
 }

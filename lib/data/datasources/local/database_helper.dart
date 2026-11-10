@@ -644,6 +644,31 @@ class DatabaseHelper {
     );
   }
 
+  /// Marca un gasto como sincronizado (synced = 1) ÚNICAMENTE si el 'actualizado_en'
+  /// local coincide con 'expectedActualizadoEn' (control de concurrencia optimista).
+  /// Previene Lost Updates si el usuario modifica localmente el gasto mientras el push
+  /// viajaba por la red.
+  /// Retorna el número de filas afectadas (1 si tuvo éxito, 0 si divergente en vuelo).
+  Future<int> marcarGastoSincronizadoCondicional(
+    int id,
+    String expectedActualizadoEn, {
+    String? firestoreId,
+  }) async {
+    final db = await instance.database;
+    final values = <String, dynamic>{
+      'synced': 1,
+    };
+    if (firestoreId != null) {
+      values['firestore_id'] = firestoreId;
+    }
+    return await db.update(
+      'gastos',
+      values,
+      where: 'id = ? AND (actualizado_en = ? OR (actualizado_en IS NULL AND creado_en = ?))',
+      whereArgs: [id, expectedActualizadoEn, expectedActualizadoEn],
+    );
+  }
+
   /// Obtiene el año y mes del gasto activo más reciente registrado en la base de datos.
   /// Retorna un mapa {'year': int, 'month': int} o null si no hay gastos registrados.
   Future<Map<String, int>?> getLatestExpenseMonth() async {

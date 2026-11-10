@@ -1118,6 +1118,11 @@ void main() {
     await tester.tap(find.widgetWithText(ElevatedButton, 'Guardar gasto'));
     await tester.pumpAndSettle();
 
+    if (find.text('¿Confirmas el cambio de monto?').evaluate().isNotEmpty) {
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Actualizar monto'));
+      await tester.pumpAndSettle();
+    }
+
     // Debe llamar a actualizarGasto y salir
     expect(gastoProvider.actualizarGastoLlamado, isTrue);
     expect(find.text('Abrir Edicion'), findsOneWidget);

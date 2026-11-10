@@ -1340,6 +1340,46 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     final matchedIds = List<int>.from(widget.extractedData?.matchedShoppingItemIds ?? []);
 
     if (widget.existingGasto != null) {
+      // Confirmación explícita de cambio de monto (A-15)
+      final origTotal = widget.existingGasto!.totalOriginal;
+      final origMoneda = widget.existingGasto!.moneda;
+      final bool montoCambio = origTotal != totalOriginalCentavos || origMoneda != monedaFinal;
+      if (montoCambio) {
+        final montoAnteriorStr = '${_symbolForMoneda(origMoneda)} ${(origTotal / 100.0).toStringAsFixed(2)}';
+        final montoNuevoStr = '${_symbolForMoneda(monedaFinal)} ${(totalOriginalCentavos / 100.0).toStringAsFixed(2)}';
+        final bool? confirmar = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('¿Confirmas el cambio de monto?'),
+            content: Text(
+              'Estás modificando el importe registrado de $montoAnteriorStr a $montoNuevoStr. '
+              'Esta acción recalculará las equivalencias asociadas.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Revisar'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryDark,
+                  foregroundColor: Colors.black,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Actualizar monto', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+        );
+        if (confirmar != true) {
+          if (!mounted) return;
+          setState(() => _isSaving = false);
+          return;
+        }
+      }
+
       success = await gastoProvider.actualizarGasto(nuevoGasto, itemsFinal);
     } else {
       try {

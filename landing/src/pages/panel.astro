@@ -3261,6 +3261,51 @@ import '../styles/global.css';
             const gastoId = editingGastoId || (crypto.randomUUID ? crypto.randomUUID() : `web_${Date.now()}`);
             const docRef = doc(db, 'users', currentUser.uid, 'gastos', gastoId);
 
+            // A-09 y A-15: Allowlist de metadatos y confirmación de cambio de importe
+            const targetGasto = editingGastoId ? currentGastos.find(g => g.id === editingGastoId) : null;
+            if (targetGasto) {
+                const origTotal = Number(targetGasto.total_original || 0);
+                const origMoneda = targetGasto.moneda || 'USD';
+                const financialsChanged = (origTotal !== computed.total_original) || (origMoneda !== computed.moneda);
+
+                if (financialsChanged) {
+                    const montoAnteriorStr = formatMoney(origTotal / 100.0, origMoneda);
+                    const montoNuevoStr = formatMoney(computed.total_original / 100.0, computed.moneda);
+                    const confirmed = confirm(`¿Confirmas el cambio de monto?\n\nEstás modificando el importe registrado de ${montoAnteriorStr} a ${montoNuevoStr}. Esta acción recalculará las equivalencias asociadas.`);
+                    if (!confirmed) {
+                        return;
+                    }
+                } else {
+                    // Edición ordinaria de metadatos (A-09): aislar estrictamente el payload
+                    try {
+                        if (btnSaveExpenseModal) {
+                            btnSaveExpenseModal.disabled = true;
+                            btnSaveExpenseModal.innerHTML = `<span>Guardando...</span>`;
+                        }
+                        const metadataPayload = {
+                            comercio: comercio,
+                            fecha: fecha,
+                            categoria: primaryCat,
+                            items: finalItems,
+                            actualizado_en: new Date().toISOString(),
+                        };
+                        await updateDoc(docRef, metadataPayload);
+                        closeExpenseModal();
+                        await loadDashboardData();
+                        return;
+                    } catch (err) {
+                        console.error("Error al actualizar metadatos del gasto:", err);
+                        alert("No se pudo actualizar la información del gasto.");
+                        return;
+                    } finally {
+                        if (btnSaveExpenseModal) {
+                            btnSaveExpenseModal.disabled = false;
+                            btnSaveExpenseModal.innerHTML = `<span>Actualizar Gasto</span>`;
+                        }
+                    }
+                }
+            }
+
             try {
                 if (btnSaveExpenseModal) {
                     btnSaveExpenseModal.disabled = true;

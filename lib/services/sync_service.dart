@@ -43,6 +43,38 @@ class SyncService {
 
   User? get currentUser => _auth?.currentUser;
 
+  final Map<String, ConflictoTombstoneRemoto> _tombstoneConflicts = {};
+  final Map<String, ConflictoEdicionConcurrente> _concurrentConflicts = {};
+
+  Map<String, ConflictoTombstoneRemoto> get tombstoneConflicts =>
+      Map.unmodifiable(_tombstoneConflicts);
+  Map<String, ConflictoEdicionConcurrente> get concurrentConflicts =>
+      Map.unmodifiable(_concurrentConflicts);
+
+  bool hasConflict(String uuid) =>
+      _tombstoneConflicts.containsKey(uuid) || _concurrentConflicts.containsKey(uuid);
+
+  void registrarConflictoTombstone(ConflictoTombstoneRemoto conflicto) {
+    _tombstoneConflicts[conflicto.uuid] = conflicto;
+  }
+
+  void registrarConflictoConcurrente(ConflictoEdicionConcurrente conflicto) {
+    _concurrentConflicts[conflicto.uuid] = conflicto;
+  }
+
+  void resolverConflictoTombstone(String uuid) {
+    _tombstoneConflicts.remove(uuid);
+  }
+
+  void resolverConflictoConcurrente(String uuid) {
+    _concurrentConflicts.remove(uuid);
+  }
+
+  void limpiarConflictos() {
+    _tombstoneConflicts.clear();
+    _concurrentConflicts.clear();
+  }
+
   GastosRemoteDataSource? get _remoteDataSource {
     if (_customRemoteDataSource != null) return _customRemoteDataSource;
     final fs = _firestore;
@@ -182,6 +214,11 @@ class SyncService {
     final unsyncedGastos = await _repository.obtenerGastosNoSincronizados();
 
     for (var gasto in unsyncedGastos) {
+      if (hasConflict(gasto.uuid)) {
+        debugPrint("SyncService: Push omitido para ${gasto.uuid} por conflicto pendiente");
+        continue;
+      }
+
       if (gasto.eliminadoEn != null) {
         if (gasto.firestoreId == null) {
           // Gasto fantasma nunca subido a la nube: purga puramente local
@@ -201,8 +238,20 @@ class SyncService {
       } else {
         try {
           await rds.upsertGasto(user.uid, gasto);
-          final syncedGasto = gasto.copyWith(firestoreId: gasto.uuid, synced: 1);
-          await _repository.actualizarGastoSyncStatus(syncedGasto);
+          if (gasto.id != null) {
+            final expectedActualizadoEn = gasto.actualizadoEn ?? gasto.creadoEn;
+            final updated = await _repository.marcarGastoSincronizadoCondicional(
+              gasto.id!,
+              expectedActualizadoEn,
+              firestoreId: gasto.uuid,
+            );
+            if (updated == 0) {
+              debugPrint("SyncService: Gasto ${gasto.uuid} fue modificado localmente en vuelo; se mantiene synced = 0");
+            }
+          } else {
+            final syncedGasto = gasto.copyWith(firestoreId: gasto.uuid, synced: 1);
+            await _repository.actualizarGastoSyncStatus(syncedGasto);
+          }
         } catch (_) {
           debugPrint("SyncService: Error subiendo gasto activo a Firestore");
         }
@@ -261,6 +310,41 @@ class SyncService {
         case AccionReconciliacion.subirLocalANube:
           if (localGasto != null && localGasto.synced != 0 && localGasto.id != null) {
             await _repository.marcarComoPendiente(localGasto.id!);
+          }
+          break;
+
+        case AccionReconciliacion.marcarSynced:
+          if (localGasto?.id != null) {
+            await _repository.actualizarGastoSyncStatus(
+              localGasto!.copyWith(
+                actualizadoEn: gastoRemoto.actualizadoEn,
+                synced: 1,
+              ),
+            );
+          }
+          break;
+
+        case AccionReconciliacion.conflictoTombstoneRemoto:
+          if (localGasto != null && gastoRemoto.eliminadoEn != null) {
+            registrarConflictoTombstone(
+              ConflictoTombstoneRemoto(
+                uuid: localGasto.uuid,
+                localSnapshot: localGasto,
+                fechaEliminacionRemota: gastoRemoto.eliminadoEn!,
+              ),
+            );
+          }
+          break;
+
+        case AccionReconciliacion.conflictoEdicionConcurrente:
+          if (localGasto != null) {
+            registrarConflictoConcurrente(
+              ConflictoEdicionConcurrente(
+                uuid: localGasto.uuid,
+                local: localGasto,
+                remoto: gastoRemoto,
+              ),
+            );
           }
           break;
 

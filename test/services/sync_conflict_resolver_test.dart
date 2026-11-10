@@ -123,5 +123,79 @@ void main() {
       final action = resolverConflicto(local, remote);
       expect(action, equals(AccionReconciliacion.mantenerLocal));
     });
+    test('11. Remote deleted, local unsynced (synced=0, eliminadoEn=null) -> conflictoTombstoneRemoto (T-69)', () {
+      final local = gastoBase.copyWith(
+        id: 1,
+        synced: 0,
+        eliminadoEn: null,
+      );
+      final remote = gastoBase.copyWith(
+        firestoreId: 'doc-1',
+        eliminadoEn: '2026-10-26T11:00:00.000Z',
+      );
+      final action = resolverConflicto(local, remote);
+      expect(action, equals(AccionReconciliacion.conflictoTombstoneRemoto));
+    });
+
+    test('12. Remote deleted, local unsynced but deleted (synced=0, eliminadoEn!=null) -> eliminarLocalFisico (Caso C)', () {
+      final local = gastoBase.copyWith(
+        id: 1,
+        synced: 0,
+        eliminadoEn: '2026-10-26T10:30:00.000Z',
+      );
+      final remote = gastoBase.copyWith(
+        firestoreId: 'doc-1',
+        eliminadoEn: '2026-10-26T11:00:00.000Z',
+      );
+      final action = resolverConflicto(local, remote);
+      expect(action, equals(AccionReconciliacion.eliminarLocalFisico));
+    });
+
+    test('13. Both active, local unsynced (synced=0), business content identical -> marcarSynced (Post-crash)', () {
+      final local = gastoBase.copyWith(
+        id: 1,
+        synced: 0,
+        actualizadoEn: '2026-10-26T10:00:00.000Z',
+      );
+      final remote = gastoBase.copyWith(
+        firestoreId: 'doc-1',
+        synced: 1,
+        actualizadoEn: '2026-10-26T10:05:00.000Z',
+      );
+      final action = resolverConflicto(local, remote);
+      expect(action, equals(AccionReconciliacion.marcarSynced));
+    });
+
+    test('14. Both active, local unsynced (synced=0), content differs and remote newer -> conflictoEdicionConcurrente', () {
+      final local = gastoBase.copyWith(
+        id: 1,
+        synced: 0,
+        totalOriginal: 2000,
+        actualizadoEn: '2026-10-26T10:00:00.000Z',
+      );
+      final remote = gastoBase.copyWith(
+        firestoreId: 'doc-1',
+        totalOriginal: 3000,
+        actualizadoEn: '2026-10-26T10:05:00.000Z',
+      );
+      final action = resolverConflicto(local, remote);
+      expect(action, equals(AccionReconciliacion.conflictoEdicionConcurrente));
+    });
+
+    test('15. Both active, local unsynced (synced=0), content differs and local newer -> subirLocalANube', () {
+      final local = gastoBase.copyWith(
+        id: 1,
+        synced: 0,
+        totalOriginal: 2000,
+        actualizadoEn: '2026-10-26T10:10:00.000Z',
+      );
+      final remote = gastoBase.copyWith(
+        firestoreId: 'doc-1',
+        totalOriginal: 3000,
+        actualizadoEn: '2026-10-26T10:05:00.000Z',
+      );
+      final action = resolverConflicto(local, remote);
+      expect(action, equals(AccionReconciliacion.subirLocalANube));
+    });
   });
 }
