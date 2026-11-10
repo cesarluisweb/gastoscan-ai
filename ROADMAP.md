@@ -65,10 +65,10 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 
 7. **Seguridad de IA, Cuotas, Galería e Integridad (A1a, B2, C1, C2):** `Completada ✅`
    - Estado: `Completada ✅` — Verificado y validado en dispositivo físico por César en *Rinde Más Dev* (Build 672, commit `87c8da0`).
-   - A1a (Worker): Cuota compartida persistente con Cloudflare D1 (50/día por UID, 20.000 global), fail-closed, corte VET (UTC-4). Pendiente operativo: `wrangler deploy` del Worker en producción (`npx wrangler d1 migrations apply rindemas-usage --remote` previo).
+   - A1a (Worker): Cuota compartida persistente con Cloudflare D1 (50/dia por UID, 20.000 global), fail-closed, corte VET (UTC-4). DESPLEGADO y verificado en produccion el 2026-11-10 (/health responde HTTP 200).
    - B2 (App): Copia de comprobantes en álbum "Rinde Más" de la galería del sistema activada por defecto, persistente fuera de la app. Aviso único verificado en primer guardado con foto y ausente en gastos manuales.
    - C1/C2 (IA/App): Saneamiento estricto de montos en `GeminiExtractionResult`, topes de cordura y validación semántica con tolerancia 0.50 en visión.
-   - Pendiente explícito adicional: Decisión sobre endurecimiento de reglas de Firestore.
+   - Pendiente adicional (B1): reglas de Firestore sin endurecer. Plan completo en docs/DOC_REGLAS_FIRESTORE_B1.md; requiere sesion dedicada con el emulador. El despliegue automatico de reglas ya fue cortado.
 
 #### 🔴 Prioridades Inmediatas (Requieren decisión y acción de César):
 1. **Rotación de la clave de subida (upload key):**

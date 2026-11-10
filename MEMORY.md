@@ -4,7 +4,7 @@
 ## Estado Actual Inmediato
 - **Rama:** `main` (commit `ba0de88`; CI Android build 676 en verde, run 42865178416; CI Web build 25 en verde, run 42861811435).
 - **Acceso a Producción Google Play:** Segunda ventana de prueba cerrada en curso (Día 3/14 cumplido con 12 evaluadores activos). AAB `1.5.0+669` en Play Console. Fin estimado: ~19/11/2026.
-- **Seguridad, Cuotas, Galería e Integridad (A1a, B2, C1, C2) — `Completada ✅`:** Visto bueno explícito de César en *Rinde Más Dev* (Build 672 / 676). Cuota D1 (50/día UID, 20k global, VET UTC-4, fail-closed). B2: copia en galería por defecto y sin aviso en gastos manuales. C1/C2: saneamiento de montos y SemanticValidator al 50%. Pendiente operativo: `wrangler deploy` del Worker y decisión sobre reglas de Firestore.
+- **Seguridad, Cuotas, Galería e Integridad (A1a, B2, C1, C2) — `Completada ✅`:** Visto bueno de César en *Rinde Más Dev* (Build 672/676). Cuota D1 (50/día UID, 20k global, VET UTC-4, fail-closed). Worker DESPLEGADO (/health 200). B2: copia en galería por defecto y sin aviso en manuales. C1/C2: saneamiento de montos y SemanticValidator al 50%. B1 planificado en `docs/DOC_REGLAS_FIRESTORE_B1.md`. Despliegue automático de reglas cortado.
 - **Seguridad de firma (P0) — `Pendiente de validación 🧪`:** `android_template/rindemas.jks` fuera de Git; firma inyectada desde Secrets. CI verificado con SHA-256 en build 671.
 - **Reproducibilidad (P0) — `Completada ✅`:** Flutter fijado en `3.47.9`, `pubspec.lock` versionado con guarda anti-drift.
 - **Artefacto para Play:** `app-release-aab` del run 42865178416 (build 676).
