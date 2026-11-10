@@ -12,6 +12,7 @@ import '../services/notification_service.dart';
 import '../services/sync_service.dart';
 import '../services/sync_coordinator.dart';
 import '../services/exchange_rate_service.dart';
+import '../domain/monetary/rate_market.dart';
 import '../domain/monetary/resumen_lente_monetario.dart';
 
 class GastoProvider with ChangeNotifier {

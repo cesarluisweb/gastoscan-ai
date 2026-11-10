@@ -7,6 +7,7 @@ import '../../models/presupuesto_remoto_model.dart';
 import '../../models/shopping_item_model.dart';
 import '../../models/categoria_model.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../domain/monetary/rate_market.dart';
 import '../../../domain/monetary/resumen_lente_monetario.dart';
 
 class DatabaseHelper {

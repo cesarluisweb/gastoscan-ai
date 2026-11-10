@@ -25,7 +25,6 @@ class SettingsProvider with ChangeNotifier {
   EstadoTasaMoneda _estadoTasaUsd = EstadoTasaMoneda.sinTasa;
   EstadoTasaMoneda _estadoTasaEur = EstadoTasaMoneda.sinTasa;
   EstadoTasaMoneda _estadoTasaUsdt = EstadoTasaMoneda.sinTasa;
-  bool _tasasSonReferencia = true;
   bool _esTasaManualUsd = false;
   String _monedaPrincipal = AppConstants.defaultMoneda;
   String _tipoTasa = 'oficial'; // 'oficial' o 'paralelo'
@@ -184,7 +183,6 @@ class SettingsProvider with ChangeNotifier {
       } else {
         _estadoTasaUsdt = EstadoTasaMoneda.sinTasa;
       }
-      _tasasSonReferencia = _estadoTasaUsd == EstadoTasaMoneda.referencia;
     } else {
       // Purga fallida (-1): comportamiento fail-closed. No consumir semillas locales no verificadas
       debugPrint('SettingsProvider: Purga fallida (-1). Se omite caché local no verificada.');
@@ -195,7 +193,6 @@ class SettingsProvider with ChangeNotifier {
       _estadoTasaUsd = EstadoTasaMoneda.sinTasa;
       _estadoTasaEur = EstadoTasaMoneda.sinTasa;
       _estadoTasaUsdt = EstadoTasaMoneda.sinTasa;
-      _tasasSonReferencia = false;
       _esTasaManualUsd = false;
     }
 
@@ -344,7 +341,6 @@ class SettingsProvider with ChangeNotifier {
         _estadoTasaUsd = _esTasaManualUsd ? EstadoTasaMoneda.referencia : EstadoTasaMoneda.actualizada;
         _estadoTasaEur = EstadoTasaMoneda.actualizada;
         _estadoTasaUsdt = EstadoTasaMoneda.actualizada;
-        _tasasSonReferencia = false;
         final okTs = await prefs.setString('cached_exchange_rates_timestamp', _ultimaActualizacionTasas!.toIso8601String());
         if (okTs) {
           ExchangeRateService.onKeyWriteConfirmed('cached_exchange_rates_timestamp');
@@ -391,7 +387,6 @@ class SettingsProvider with ChangeNotifier {
         _estadoTasaUsd = isValidMonetaryRate(_tasaCambioVesUsd) ? EstadoTasaMoneda.referencia : EstadoTasaMoneda.sinTasa;
         _estadoTasaEur = isValidMonetaryRate(_tasaCambioVesEur) ? EstadoTasaMoneda.referencia : EstadoTasaMoneda.sinTasa;
         _estadoTasaUsdt = isValidMonetaryRate(_tasaCambioVesUsdt) ? EstadoTasaMoneda.referencia : EstadoTasaMoneda.sinTasa;
-        _tasasSonReferencia = true;
       }
     } catch (e) {
       debugPrint("Error al actualizar tasas automáticas: $e");
@@ -445,7 +440,6 @@ class SettingsProvider with ChangeNotifier {
     }
     _tasaCambioVesUsd = tasa;
     _estadoTasaUsd = isValidMonetaryRate(tasa) ? EstadoTasaMoneda.referencia : EstadoTasaMoneda.sinTasa;
-    _tasasSonReferencia = true; // D-05 / D-06: Tasa manual tiene procedencia manual y se clasifica como referencia
     final prefs = _prefsInstance ?? await SharedPreferences.getInstance();
     final ok = await prefs.setDouble(AppConstants.prefTasaCambio, _tasaCambioVesUsd);
     if (ok) {
