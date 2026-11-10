@@ -63,11 +63,13 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 5. **Seguridad Crítica de Firma (Keystore) — `Pendiente de validación 🧪`:** `android_template/rindemas.jks` retirado de Git (respaldo cifrado fuera del repositorio) y firma inyectada desde GitHub Secrets (`ANDROID_KEYSTORE_*`). CI aborta si el SHA-1 restaurado no es `D3:85:0D:…` o si el AAB no queda firmado con SHA-256 `B2:06:E4:7B:…`. Rotación de la upload key diferida hasta la aprobación de Producción (ver nota de decisiones).
 6. **Reproducibilidad y Congelación de CI/CD — `Completada ✅`:** Flutter fijado en `3.47.9`, `pubspec.lock` versionado (verificado idéntico al generado por el runner 3.47.9) con guarda anti-drift en CI y `cloud_functions` eliminado. Build 664 en verde (638 pruebas, commit `5219134`).
 
+7. **Parche de Seguridad y Cuotas de IA en Worker (`F2-C02` / `A1a`, `A2`, `C1`):** `Completada ✅`
+   - Cuota compartida persistente con Cloudflare D1 (50/día por UID, 20.000 global), fail-closed y degradación defensiva a memoria con cabecera `x-quota-mode`.
+   - Topes por petición (`maxOutputTokens: 4096 / 8192`, ocrText máx 15.000 chars, corte 504 en timeout sin reintentos).
+   - Prompt endurecido con `systemInstruction`, delimitación de comprobante no confiable y `responseSchema` estricto (commit `6ed34c4`, CI Build 666 en verde).
+
 #### 🔴 Prioridades Inmediatas (Requieren decisión y acción de César):
-1. **Abuso de cuota de IA con sesiones anónimas (`F2-C02`):**
-   - *Problema:* El Cloudflare Worker no valida `sign_in_provider != 'anonymous'` y el límite de peticiones vive en memoria por isolate, por lo que rotar UIDs anónimos permite agotar la cuota de Gemini.
-   - *Acción:* Rechazar tokens anónimos en los endpoints de IA (exigir sesión de Google, según `privacidad-seguridad.md`) o mover el contador a KV/Durable Object.
-2. **Rotación de la clave de subida (upload key):**
+1. **Rotación de la clave de subida (upload key):**
    - *Acción:* Ejecutar **después** de la aprobación de Producción. Requiere `keytool` (no hay JDK local: hacerlo vía CI), registrar la nueva SHA-1 para `com.cesarluis.rindemas.dev` y actualizar los 3 secretos. La app signing key de Google no cambia y las instalaciones existentes no se ven afectadas.
 
 #### 🟡 Prioridades Medias / Mantenimiento:

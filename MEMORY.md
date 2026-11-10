@@ -2,14 +2,15 @@
 > Regla de oro: Mantener en máximo ~50 líneas. Lo permanente se gradúa a AGENTS.md o DESIGN.md.
 
 ## Estado Actual Inmediato
-- **Rama:** `main` (commit `5219134`; CI Android build 664 en verde, versión `1.5.0+669`).
-- **Acceso a Producción Google Play:** Segunda ventana de prueba cerrada en curso (Día 3/14 cumplido con 12 evaluadores activos). AAB `1.5.0+669` subido exitosamente a la pista de prueba cerrada en Play Console. Mensaje de actualización enviado a evaluadores. Fin estimado de la ventana: ~19/11/2026.
+- **Rama:** `main` (commit `6ed34c4`; CI Android build 666 en verde, run 42835194258).
+- **Acceso a Producción Google Play:** Segunda ventana de prueba cerrada en curso (Día 3/14 cumplido con 12 evaluadores activos). AAB `1.5.0+669` en Play Console. Fin estimado: ~19/11/2026.
+- **Seguridad y Parche de IA en Worker (A1a, A2, C1) — `Completada ✅`:** Cuota compartida persistente con Cloudflare D1 (50/día por UID, 20.000 global), fail-closed, degradación a memoria, topes de salida (4096 / 8192), prompt endurecido con delimitadores y responseSchema. 10 tests en verde en CI.
 - **Seguridad de firma (P0) — `Pendiente de validación 🧪`:** `android_template/rindemas.jks` fuera de Git; respaldo en `C:\Users\cesar\Documents\RindeMas-Backup-Keystore`. Firma inyectada desde Secrets `ANDROID_KEYSTORE_*`. CI aborta si el SHA-1 restaurado ≠ `D3850D17…` o si el AAB no firma con SHA-256 `B206E47B…`.
-- **Reproducibilidad (P0) — `Completada ✅`:** Flutter fijado en `3.47.9`, `pubspec.lock` versionado (idéntico al del runner) con guarda anti-drift y `cloud_functions` eliminado. 638 pruebas en verde.
-- **Artefacto para Play:** `app-release-aab` del run 42091003101 (build 664 → versionCode 669, versionName 1.5.0).
-- **Artefacto para pruebas en teléfono:** `rindemas-dev-apk` del mismo run (*Rinde Más Dev* 1.5.0/669).
+- **Reproducibilidad (P0) — `Completada ✅`:** Flutter fijado en `3.47.9`, `pubspec.lock` versionado con guarda anti-drift y `cloud_functions` eliminado.
+- **Artefacto para Play:** `app-release-aab` del run 42835194258 (build 666).
+- **Artefacto para pruebas en teléfono:** `rindemas-dev-apk` del run 42835194258 (*Rinde Más Dev* build 666).
 - **Sincronización Panel Web (Fase 5)** y **Selector de Mes en AppBar:** `Pendiente de validación 🧪` (CI verde, falta visto bueno visual de César).
-- **RM-03 (Fase 0A / E0-02) — `Completada ✅`:** CI Build 665 en verde (run 42734265430, commit `b58965a`). 127 pruebas monetarias en verde. Visto bueno explícito de César recibido. Transición a `E0-03` (U3/U4: lectores móviles, pantallas y panel web).
+- **RM-03 (Fase 0A / E0-02) — `Completada ✅`:** CI Build 665 en verde. Visto bueno explícito de César recibido. Transición a `E0-03` (U3/U4: lectores móviles, pantallas y panel web).
 - **Próximo Paso Inmediato:** Auditoría del estado real de `E0-03` (U3/U4) en el repositorio y ejecución de los puntos pendientes.
 
 ## Decisiones Técnicas y de Negocio Recientes
