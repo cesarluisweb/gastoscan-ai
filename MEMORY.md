@@ -2,17 +2,17 @@
 > Regla de oro: Mantener en máximo ~50 líneas. Lo permanente se gradúa a AGENTS.md o DESIGN.md.
 
 ## Estado Actual Inmediato
-- **Rama:** `main` (commit `6ed34c4`; CI Android build 666 en verde, run 42835194258).
+- **Rama:** `main` (commit `75f3965`; CI Android build 671 en verde, run 42853151974; CI Web build 23 en verde, run 42852053353).
 - **Acceso a Producción Google Play:** Segunda ventana de prueba cerrada en curso (Día 3/14 cumplido con 12 evaluadores activos). AAB `1.5.0+669` en Play Console. Fin estimado: ~19/11/2026.
-- **Seguridad y Parche de IA en Worker (A1a, A2, C1) — `Pendiente de validación 🧪`:** Cuota compartida persistente con Cloudflare D1 (50/día por UID, 20.000 global), fail-closed estricto (503 si DB no disponible), corte diario en VET (UTC-4), 401 opaco sin fugas y topes de salida (4096 / 8192). 13 tests locales en verde (`workers/test/quota.test.js`); CI aún no corrió sobre estos últimos cambios.
-- **Seguridad de firma (P0) — `Pendiente de validación 🧪`:** `android_template/rindemas.jks` fuera de Git; respaldo en `C:\Users\cesar\Documents\RindeMas-Backup-Keystore`. Firma inyectada desde Secrets `ANDROID_KEYSTORE_*`. CI aborta si el SHA-1 restaurado ≠ `D3850D17…` o si el AAB no firma con SHA-256 `B206E47B…`.
-- **Reproducibilidad (P0) — `Completada ✅`:** Flutter fijado en `3.47.9`, `pubspec.lock` versionado con guarda anti-drift y `cloud_functions` eliminado.
-- **Artefacto para Play:** `app-release-aab` del run 42835194258 (build 666).
-- **Artefacto para pruebas en teléfono:** `rindemas-dev-apk` del run 42835194258 (*Rinde Más Dev* build 666).
+- **Seguridad y Parche de IA en Worker (A1a, A2, C1) y App (C2) — `Pendiente de validación 🧪`:** Cuota compartida persistente con Cloudflare D1 (50/día por UID, 20.000 global), fail-closed estricto, corte en VET (UTC-4) y topes de tokens. En app móvil (C2): saneamiento de montos negativos/infinitos, límites de cordura y validación semántica al 50% en visión. 650 tests en verde en CI.
+- **Seguridad de firma (P0) — `Pendiente de validación 🧪`:** `android_template/rindemas.jks` fuera de Git; firma inyectada desde Secrets. CI verificado con SHA-256 en build 671.
+- **Reproducibilidad (P0) — `Completada ✅`:** Flutter fijado en `3.47.9`, `pubspec.lock` versionado con guarda anti-drift.
+- **Artefacto para Play:** `app-release-aab` del run 42853151974 (build 671).
+- **Artefacto para pruebas en teléfono:** `rindemas-dev-apk` del run 42853151974 (*Rinde Más Dev* build 671).
 - **Sincronización Panel Web (Fase 5)** y **Selector de Mes en AppBar:** `Pendiente de validación 🧪` (CI verde, falta visto bueno visual de César).
 - **RM-03 (Fase 0A / E0-02) — `Completada ✅`:** CI Build 665 en verde. Visto bueno explícito de César recibido.
-- **RM-03 (Fase 0A / E0-03) — `Pendiente de validación 🧪`:** Lectores móviles, pantallas y panel web completados (H-1, H-2, A-16, D-06, D-07). Lentes monetarios independientes, denominaciones canónicas en `MoreScreen` y `CurrencyCalculatorScreen`, panel web Astro validado. Documentación y guía de pruebas en `docs/DOC_E0_03_LECTORES_MULTIMONEDA.md`.
-- **Próximo Paso Inmediato:** Confirmar CI en verde tras push único y esperar validación de César en *Rinde Más Dev*.
+- **RM-03 (Fase 0A / E0-03) — `Pendiente de validación 🧪`:** Lectores móviles, pantallas y panel web completados (H-1, H-2, A-16, D-06, D-07). Lentes monetarios independientes, denominaciones canónicas en `MoreScreen` y `CurrencyCalculatorScreen`, panel web Astro validado. Guía de pruebas en `docs/DOC_E0_03_LECTORES_MULTIMONEDA.md`.
+- **Próximo Paso Inmediato:** Validación por César en teléfono físico (*Rinde Más Dev* build 671) siguiendo la guía de `docs/DOC_E0_03_LECTORES_MULTIMONEDA.md`.
 
 ## Decisiones Técnicas y de Negocio Recientes
 - **Rotación de la clave de subida: diferida** hasta que Google apruebe el acceso a Producción. No reinicia la revisión, pero el reset tarda 24-72 h y bloquearía una subida inmediata. El repositorio público conserva el `.jks` en el historial, por lo que la rotación sigue siendo necesaria.
