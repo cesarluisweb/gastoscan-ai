@@ -16,6 +16,7 @@ class SettingsProvider with ChangeNotifier {
   String _apiKey = '';
   int _apiKeyRevision = 0;
   bool _guardarFotos = AppConstants.defaultGuardarFotos;
+  bool _avisoGaleriaMostrado = false;
   double _tasaCambioVesUsd = 0.0;
   double _tasaCambioVesEur = 0.0;
   double _tasaCambioVesUsdt = 0.0;
@@ -42,6 +43,7 @@ class SettingsProvider with ChangeNotifier {
   String get apiKey => _apiKey;
   String get effectiveApiKey => _apiKey.trim().isNotEmpty ? _apiKey.trim() : AppConstants.defaultApiKey.trim();
   bool get guardarFotos => _guardarFotos;
+  bool get avisoGaleriaMostrado => _avisoGaleriaMostrado;
   double get tasaCambioVesUsd => _tasaCambioVesUsd;
   double get tasaCambioVesEur => _tasaCambioVesEur;
   double get tasaCambioVesUsdt => _tasaCambioVesUsdt;
@@ -92,6 +94,7 @@ class SettingsProvider with ChangeNotifier {
 
     // 1. Lectura inmediata de preferencias (primer milisegundo)
     _guardarFotos = _safeGetBool(prefs, AppConstants.prefGuardarFotos, AppConstants.defaultGuardarFotos);
+    _avisoGaleriaMostrado = _safeGetBool(prefs, 'aviso_galeria_mostrado', false);
 
     // Asegurar purga de caché histórica previa al consumo de semillas (A-07 & B2)
     int purgeResult = -1;
@@ -379,6 +382,13 @@ class SettingsProvider with ChangeNotifier {
     _guardarFotos = value;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(AppConstants.prefGuardarFotos, _guardarFotos);
+    notifyListeners();
+  }
+
+  Future<void> marcarAvisoGaleriaMostrado() async {
+    _avisoGaleriaMostrado = true;
+    final prefs = _prefsInstance ?? await SharedPreferences.getInstance();
+    await prefs.setBool('aviso_galeria_mostrado', true);
     notifyListeners();
   }
 

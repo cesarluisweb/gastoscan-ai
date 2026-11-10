@@ -8,6 +8,7 @@ import '../../models/shopping_item_model.dart';
 import '../../models/categoria_model.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../domain/monetary/rate_market.dart';
+import '../../../domain/monetary/resumen_lente_monetario.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -687,61 +688,19 @@ class DatabaseHelper {
     return _hydrateGastosWithItems(db, result);
   }
 
-  /// Calcula los totales del mes (suma en USD, VES y USDT) de forma determinista y consistente.
+  /// Calcula los totales del mes (suma en USD, VES, USDT y EUR) usando el agregador canónico ResumenLenteMonetario (A-16).
   Future<Map<String, double>> getMonthlyTotals(int year, int month) async {
-    final db = await instance.database;
-    final monthStr = month.toString().padLeft(2, '0');
-    final pattern = '$year-$monthStr%';
-
-    final rows = await db.query(
-      'gastos',
-      columns: ['moneda', 'total_original', 'total_usd', 'total_usdt', 'total_eur', 'tasa_cambio', 'tasa_usdt', 'tasa_eur'],
-      where: 'fecha LIKE ? AND eliminado_en IS NULL',
-      whereArgs: [pattern],
-    );
-
-    double sumUsd = 0.0;
-    double sumVes = 0.0;
-    double sumUsdt = 0.0;
-    double sumEur = 0.0;
-
-    for (final r in rows) {
-      final moneda = (r['moneda'] as String?) ?? 'VES';
-      final totalOrigInt = (r['total_original'] as num?)?.toInt() ?? 0;
-      final totalUsdInt = (r['total_usd'] as num?)?.toInt() ?? 0;
-      final totalUsdtInt = (r['total_usdt'] as num?)?.toInt();
-      final totalEurInt = (r['total_eur'] as num?)?.toInt();
-      final tasa = (r['tasa_cambio'] as num?)?.toDouble() ?? 1.0;
-      final tasaEur = (r['tasa_eur'] as num?)?.toDouble();
-      final tasaUsdt = (r['tasa_usdt'] as num?)?.toDouble();
-
-      final double totalOrig = totalOrigInt / 100.0;
-      final double totalUsd = totalUsdInt / 100.0;
-      final double totalUsdt = (totalUsdtInt != null)
-          ? (totalUsdtInt / 100.0)
-          : (moneda == 'USD'
-              ? totalUsd
-              : ((tasaUsdt != null && tasaUsdt > 0) ? (moneda == 'VES' ? totalOrig / tasaUsdt : 0.0) : 0.0));
-      final double totalEur = (totalEurInt != null)
-          ? (totalEurInt / 100.0)
-          : ((tasaEur != null && tasaEur > 0) ? (moneda == 'VES' ? totalOrig / tasaEur : 0.0) : 0.0);
-
-      sumUsd += totalUsd;
-      sumUsdt += totalUsdt;
-      sumEur += totalEur;
-
-      if (moneda == 'VES') {
-        sumVes += totalOrig;
-      } else {
-        sumVes += (totalUsd * (tasa > 0 ? tasa : 1.0));
-      }
-    }
+    final gastos = await getGastosByMonth(year, month);
+    final resUsd = ResumenLenteMonetario.calcular(monedaLente: 'USD', gastos: gastos);
+    final resVes = ResumenLenteMonetario.calcular(monedaLente: 'VES', gastos: gastos);
+    final resUsdt = ResumenLenteMonetario.calcular(monedaLente: 'USDT', gastos: gastos);
+    final resEur = ResumenLenteMonetario.calcular(monedaLente: 'EUR', gastos: gastos);
 
     return {
-      'USD': sumUsd,
-      'VES': sumVes,
-      'USDT': sumUsdt,
-      'EUR': sumEur,
+      'USD': resUsd.totalMostradoDisplay,
+      'VES': resVes.totalMostradoDisplay,
+      'USDT': resUsdt.totalMostradoDisplay,
+      'EUR': resEur.totalMostradoDisplay,
     };
   }
 

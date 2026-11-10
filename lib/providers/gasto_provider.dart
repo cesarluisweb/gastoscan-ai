@@ -13,6 +13,8 @@ import '../services/sync_service.dart';
 import '../services/sync_coordinator.dart';
 import '../services/exchange_rate_service.dart';
 import '../domain/monetary/rate_market.dart';
+import '../domain/monetary/resumen_lente_monetario.dart';
+import '../domain/monetary/monetary_resolution.dart';
 
 class GastoProvider with ChangeNotifier {
   final GastoRepository _repository;
@@ -37,6 +39,10 @@ class GastoProvider with ChangeNotifier {
   Map<String, double> _totalesPorCategoriaUsdt = {};
   Map<String, double> _totalesPorCategoriaEur = {};
   double _totalMesEur = 0.0;
+  ResumenLenteMonetario _resumenUsd = const ResumenLenteMonetario(monedaLente: 'USD');
+  ResumenLenteMonetario _resumenVes = const ResumenLenteMonetario(monedaLente: 'VES');
+  ResumenLenteMonetario _resumenUsdt = const ResumenLenteMonetario(monedaLente: 'USDT');
+  ResumenLenteMonetario _resumenEur = const ResumenLenteMonetario(monedaLente: 'EUR');
   Map<String, double> _presupuestosPorCategoria = {};
   bool _presupuestoEsAdoptado = false;
   double _tasaUsd = 0.0;
@@ -116,6 +122,24 @@ class GastoProvider with ChangeNotifier {
   double get totalMesVes => _totalMesVes;
   double get totalMesUsdt => _totalMesUsdt;
   double get totalMesEur => _totalMesEur;
+  ResumenLenteMonetario get resumenUsd => _resumenUsd;
+  ResumenLenteMonetario get resumenVes => _resumenVes;
+  ResumenLenteMonetario get resumenUsdt => _resumenUsdt;
+  ResumenLenteMonetario get resumenEur => _resumenEur;
+
+  ResumenLenteMonetario getResumenLente(String lente) {
+    switch (lente.toUpperCase().trim()) {
+      case 'VES':
+        return _resumenVes;
+      case 'USDT':
+        return _resumenUsdt;
+      case 'EUR':
+        return _resumenEur;
+      case 'USD':
+      default:
+        return _resumenUsd;
+    }
+  }
   double get presupuestoGeneral => _presupuestoGeneral;
   double get metaAhorro => _metaAhorro;
   String get monedaPresupuesto => _monedaPresupuesto;
@@ -135,9 +159,9 @@ class GastoProvider with ChangeNotifier {
     if (_monedaPresupuesto == 'VES') {
       gastoAcumulado = _totalMesVes;
     } else if (_monedaPresupuesto == 'USDT') {
-      gastoAcumulado = _totalMesUsdt > 0 ? _totalMesUsdt : _totalMesUsd;
+      gastoAcumulado = _totalMesUsdt;
     } else if (_monedaPresupuesto == 'EUR') {
-      gastoAcumulado = _totalMesEur > 0 ? _totalMesEur : _totalMesUsd;
+      gastoAcumulado = _totalMesEur;
     } else {
       gastoAcumulado = _totalMesUsd;
     }
@@ -217,11 +241,15 @@ class GastoProvider with ChangeNotifier {
       _gastos = await _repository.obtenerGastosPorMes(_selectedYear, _selectedMonth);
       _ultimoMesConGastos = await _repository.obtenerUltimoMesConGastos();
       
-      final totales = await _repository.obtenerTotalesMes(_selectedYear, _selectedMonth);
-      _totalMesUsd = totales['USD'] ?? 0.0;
-      _totalMesVes = totales['VES'] ?? 0.0;
-      _totalMesUsdt = totales['USDT'] ?? _totalMesUsd;
-      _totalMesEur = totales['EUR'] ?? _totalMesUsd;
+      _resumenUsd = ResumenLenteMonetario.calcular(monedaLente: 'USD', gastos: _gastos);
+      _resumenVes = ResumenLenteMonetario.calcular(monedaLente: 'VES', gastos: _gastos);
+      _resumenUsdt = ResumenLenteMonetario.calcular(monedaLente: 'USDT', gastos: _gastos);
+      _resumenEur = ResumenLenteMonetario.calcular(monedaLente: 'EUR', gastos: _gastos);
+
+      _totalMesUsd = _resumenUsd.totalMostradoDisplay;
+      _totalMesVes = _resumenVes.totalMostradoDisplay;
+      _totalMesUsdt = _resumenUsdt.totalMostradoDisplay;
+      _totalMesEur = _resumenEur.totalMostradoDisplay;
 
       _totalesPorCategoria = await _repository.obtenerTotalesPorCategoria(_selectedYear, _selectedMonth, moneda: 'USD');
       _totalesPorCategoriaVes = await _repository.obtenerTotalesPorCategoria(_selectedYear, _selectedMonth, moneda: 'VES');
@@ -678,17 +706,7 @@ class GastoProvider with ChangeNotifier {
     } else if (normMoneda == 'USDT') {
       map = totalesPorCategoriaUsdt;
     } else if (normMoneda == 'EUR') {
-      final double effEur = _tasaEur > 0 ? _tasaEur : 0.0;
-      final double effUsd = _tasaUsd > 0 ? _tasaUsd : 0.0;
-      if (effEur > 0 && _totalesPorCategoriaVes.isNotEmpty) {
-        map = _totalesPorCategoriaVes;
-        factor = 1.0 / effEur;
-      } else if (effEur > 0 && effUsd > 0) {
-        map = _totalesPorCategoria;
-        factor = effUsd / effEur;
-      } else {
-        map = _totalesPorCategoria;
-      }
+      map = totalesPorCategoriaEur;
     } else {
       map = _totalesPorCategoria;
     }
