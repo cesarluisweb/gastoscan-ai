@@ -6,6 +6,7 @@ import 'package:gastoscan_ai/data/models/gasto_model.dart';
 import 'package:gastoscan_ai/data/models/item_gasto_model.dart';
 import 'package:gastoscan_ai/data/models/presupuesto_remoto_model.dart';
 import 'package:gastoscan_ai/data/repositories/gasto_repository.dart';
+import 'package:gastoscan_ai/services/sync_conflict_resolver.dart';
 import 'package:gastoscan_ai/services/sync_service.dart';
 
 class FakeRemoteDataSource implements GastosRemoteDataSource {
