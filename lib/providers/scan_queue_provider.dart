@@ -17,6 +17,8 @@ class ScanQueueProvider with ChangeNotifier {
   final GeminiService _geminiService;
   final LocalOcrService _localOcrService;
   final SemanticValidator _semanticValidator;
+  final SemanticValidator _visionSemanticValidator =
+      const SemanticValidator(tolerancePercentage: 0.50);
   final ConnectivityService _connectivityService;
   final bool autoProcess;
   StreamSubscription<bool>? _connectivitySub;
@@ -471,6 +473,7 @@ class ScanQueueProvider with ChangeNotifier {
             }
 
             // 3. Fallback a Gemini Visión si el texto no fue suficiente o falló la validación
+            bool visionInvalida = false;
             if (!processedByText || extractedList.isEmpty) {
               if (_cancelRequested || _isDisposed) break;
               extractedList = await _geminiService.analyzeReceiptImage(
@@ -478,6 +481,14 @@ class ScanQueueProvider with ChangeNotifier {
                 apiKey: 'proxy',
                 pendingShoppingItems: pendingShopping,
               );
+              if (extractedList.isNotEmpty) {
+                final visionValidation = _visionSemanticValidator.validate(extractedList);
+                if (!visionValidation.isValid) {
+                  debugPrint('Validación semántica falló en visión: ${visionValidation.reason}');
+                  visionInvalida = true;
+                  extractedList = [];
+                }
+              }
             }
 
             if (_cancelRequested || _isDisposed) break;
@@ -498,7 +509,9 @@ class ScanQueueProvider with ChangeNotifier {
             } else {
               // No borrar la imagen en silencio. Pasar directamente a error para no quemar tokens en reintentos esteriles
               final nextAttempts = currentAttempts + 1;
-              _lastError = 'No se detectaron datos de factura en la imagen.';
+              _lastError = visionInvalida
+                  ? 'No pudimos validar los montos del comprobante. Revisa la foto o regístralo manualmente.'
+                  : 'No se detectaron datos de factura en la imagen.';
               await _dbHelper.updateScanQueueItem(
                 id,
                 'error',

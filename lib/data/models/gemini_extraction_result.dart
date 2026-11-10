@@ -25,11 +25,16 @@ class GeminiExtractionResult {
     this.metodoLiquidacion,
   });
 
-    static double _parseAmount(dynamic value, {bool isPrice = false}) {
-      // Lógica centralizada en amount_parser.dart; aquí se conserva la firma
-      // y la semántica de fallback (0.0 ante dato ausente/inválido de la IA).
-      return tryParseAmount(value, isPrice: isPrice) ?? 0.0;
-    }
+  static const double _maxMontoIA = 1000000000.0; // techo de cordura: mil millones
+  static const double _maxCantidadIA = 10000.0;
+
+  static double _parseAmount(dynamic value, {bool isPrice = false}) {
+    // Defensa contra datos de la IA: nada negativo, infinito ni fuera de rango.
+    final parsed = tryParseAmount(value, isPrice: isPrice) ?? 0.0;
+    if (!parsed.isFinite || parsed < 0) return 0.0;
+    if (parsed > _maxMontoIA) return _maxMontoIA;
+    return parsed;
+  }
 
   /// Normaliza defensivamente la fecha extraída por la IA a formato ISO (YYYY-MM-DD).
   /// Soporta ISO ('2026-11-03'), formato venezolano/latinoamericano ('03/11/2026', '03-11-2026', '03.11.2026')
@@ -127,10 +132,13 @@ class GeminiExtractionResult {
           
           double cant = _parseAmount(itemMap['cantidad'], isPrice: false);
           if (cant <= 0.0) cant = 1.0;
+          if (cant > _maxCantidadIA) cant = _maxCantidadIA;
           
           final precio = _parseAmount(itemMap['precio_unitario']);
           // El total del ítem se calcula estrictamente como Cantidad * Precio Unitario
-          final totalCalculado = cant * precio;
+          double totalCalculado = cant * precio;
+          if (!totalCalculado.isFinite || totalCalculado < 0) totalCalculado = 0.0;
+          if (totalCalculado > _maxMontoIA) totalCalculado = _maxMontoIA;
           final catItemRaw = itemMap['categoria']?.toString() ?? 'Otros';
           final normCat = AppConstants.normalizarCategoria(catItemRaw);
           final catItem = validCategorias.contains(normCat) ? normCat : 'Otros';

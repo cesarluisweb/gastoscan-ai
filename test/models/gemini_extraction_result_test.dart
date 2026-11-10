@@ -330,4 +330,102 @@ void main() {
       expect(GeminiExtractionResult.parseExtractionDate('   '), equals(todayIso));
     });
   });
+
+  group('GeminiExtractionResult - Integridad y saneamiento de datos IA (C2)', () {
+    test('1. precio_unitario negativo (-50) se sanea a 0 y total 0', () {
+      final json = {
+        'facturas': [
+          {
+            'comercio': 'Tienda Test',
+            'fecha': '2026-11-10',
+            'moneda': 'USD',
+            'total_original': 0.0,
+            'items': [
+              {'descripcion': 'Producto', 'cantidad': 1, 'precio_unitario': -50.0},
+            ],
+          }
+        ]
+      };
+
+      final results = GeminiExtractionResult.listFromJson(json);
+      expect(results.first.items.first.precioUnitario, equals(0));
+      expect(results.first.items.first.total, equals(0));
+    });
+
+    test('2. total_original negativo (-100) se sanea a 0', () {
+      final json = {
+        'facturas': [
+          {
+            'comercio': 'Tienda Test',
+            'fecha': '2026-11-10',
+            'moneda': 'USD',
+            'total_original': -100.0,
+            'items': <dynamic>[],
+          }
+        ]
+      };
+
+      final results = GeminiExtractionResult.listFromJson(json);
+      expect(results.first.totalOriginal, equals(0.0));
+    });
+
+    test('3. cantidad desproporcionada (1000000000000) se trunca a 10000 sin excepción', () {
+      final json = {
+        'facturas': [
+          {
+            'comercio': 'Tienda Test',
+            'fecha': '2026-11-10',
+            'moneda': 'USD',
+            'total_original': 100.0,
+            'items': [
+              {'descripcion': 'Arroz', 'cantidad': 1000000000000, 'precio_unitario': 10.0},
+            ],
+          }
+        ]
+      };
+
+      final results = GeminiExtractionResult.listFromJson(json);
+      expect(results.first.items.first.cantidad, equals(10000.0));
+    });
+
+    test('4. precio_unitario enorme (1e300) sin excepción y total <= 100000000000 (centavos)', () {
+      final json = {
+        'facturas': [
+          {
+            'comercio': 'Tienda Test',
+            'fecha': '2026-11-10',
+            'moneda': 'USD',
+            'total_original': 100.0,
+            'items': [
+              {'descripcion': 'Oro', 'cantidad': 1, 'precio_unitario': 1e300},
+            ],
+          }
+        ]
+      };
+
+      final results = GeminiExtractionResult.listFromJson(json);
+      expect(results.first.items.first.precioUnitario, lessThanOrEqualTo(100000000000));
+      expect(results.first.items.first.total, lessThanOrEqualTo(100000000000));
+    });
+
+    test('5. precio_unitario no numérico ("abc") se sanea a 0', () {
+      final json = {
+        'facturas': [
+          {
+            'comercio': 'Tienda Test',
+            'fecha': '2026-11-10',
+            'moneda': 'USD',
+            'total_original': 0.0,
+            'items': [
+              {'descripcion': 'Algo', 'cantidad': 1, 'precio_unitario': 'abc'},
+            ],
+          }
+        ]
+      };
+
+      final results = GeminiExtractionResult.listFromJson(json);
+      expect(results.first.items.first.precioUnitario, equals(0));
+      expect(results.first.items.first.total, equals(0));
+    });
+  });
 }
