@@ -63,12 +63,12 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 5. **Seguridad Crítica de Firma (Keystore) — `Pendiente de validación 🧪`:** `android_template/rindemas.jks` retirado de Git (respaldo cifrado fuera del repositorio) y firma inyectada desde GitHub Secrets (`ANDROID_KEYSTORE_*`). CI aborta si el SHA-1 restaurado no es `D3:85:0D:…` o si el AAB no queda firmado con SHA-256 `B2:06:E4:7B:…`. Rotación de la upload key diferida hasta la aprobación de Producción (ver nota de decisiones).
 6. **Reproducibilidad y Congelación de CI/CD — `Completada ✅`:** Flutter fijado en `3.47.9`, `pubspec.lock` versionado (verificado idéntico al generado por el runner 3.47.9) con guarda anti-drift en CI y `cloud_functions` eliminado. Build 664 en verde (638 pruebas, commit `5219134`).
 
-7. **Seguridad de IA, Cuotas, Galería e Integridad (A1a, B2, C1, C2):** `Pendiente de validación 🧪`
-   - Estado: Pendiente de validación en dispositivo físico (CI Build 671 en verde sobre commit `75f3965`, 650 tests).
-   - A1a (Worker): Cuota compartida persistente con Cloudflare D1 (50/día por UID, 20.000 global), fail-closed, corte VET (UTC-4). Pendiente explícito: `wrangler deploy` del Worker en producción (`npx wrangler d1 migrations apply rindemas-usage --remote` previo).
-   - B2 (App): Copia de comprobantes en álbum "Rinde Más" de la galería del sistema activada por defecto, persistente fuera de la app.
+7. **Seguridad de IA, Cuotas, Galería e Integridad (A1a, B2, C1, C2):** `Completada ✅`
+   - Estado: `Completada ✅` — Verificado y validado en dispositivo físico por César en *Rinde Más Dev* (Build 672, commit `87c8da0`).
+   - A1a (Worker): Cuota compartida persistente con Cloudflare D1 (50/día por UID, 20.000 global), fail-closed, corte VET (UTC-4). Pendiente operativo: `wrangler deploy` del Worker en producción (`npx wrangler d1 migrations apply rindemas-usage --remote` previo).
+   - B2 (App): Copia de comprobantes en álbum "Rinde Más" de la galería del sistema activada por defecto, persistente fuera de la app. Aviso único verificado en primer guardado con foto y ausente en gastos manuales.
    - C1/C2 (IA/App): Saneamiento estricto de montos en `GeminiExtractionResult`, topes de cordura y validación semántica con tolerancia 0.50 en visión.
-   - Pendiente explícito adicional: Decisión sobre reglas de Firestore.
+   - Pendiente explícito adicional: Decisión sobre endurecimiento de reglas de Firestore.
 
 #### 🔴 Prioridades Inmediatas (Requieren decisión y acción de César):
 1. **Rotación de la clave de subida (upload key):**
