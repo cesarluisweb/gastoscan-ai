@@ -2,18 +2,18 @@
 > Regla de oro: Mantener en máximo ~50 líneas. Lo permanente se gradúa a AGENTS.md o DESIGN.md.
 
 ## Estado Actual Inmediato
-- **Rama:** `main` (commit `2d81a4b`; CI Android build 672 en verde, run 42857112563; CI Web build 24 en verde, run 42857112757).
+- **Rama:** `main` (commit `def819a`; CI Android build 676 en verde, run 42865178416; CI Web build 25 en verde, run 42861811435).
 - **Acceso a Producción Google Play:** Segunda ventana de prueba cerrada en curso (Día 3/14 cumplido con 12 evaluadores activos). AAB `1.5.0+669` en Play Console. Fin estimado: ~19/11/2026.
 - **Seguridad, Cuotas, Galería e Integridad (A1a, B2, C1, C2) — `Pendiente de validación 🧪`:** CI build 671 en verde sobre commit `75f3965` (650 tests). Cuota D1 (50/día UID, 20k global, VET UTC-4, fail-closed). B2: copia en galería del sistema activada por defecto. C1/C2: saneamiento de montos y SemanticValidator al 50% en visión. Pendiente explícito: `wrangler deploy` del Worker y decisión sobre reglas de Firestore. Falta prueba en dispositivo.
 - **Seguridad de firma (P0) — `Pendiente de validación 🧪`:** `android_template/rindemas.jks` fuera de Git; firma inyectada desde Secrets. CI verificado con SHA-256 en build 671.
 - **Reproducibilidad (P0) — `Completada ✅`:** Flutter fijado en `3.47.9`, `pubspec.lock` versionado con guarda anti-drift.
-- **Artefacto para Play:** `app-release-aab` del run 42857112563 (build 672).
-- **Artefacto para pruebas en teléfono:** `rindemas-dev-apk` del run 42857112563 (*Rinde Más Dev* build 672).
+- **Artefacto para Play:** `app-release-aab` del run 42865178416 (build 676).
+- **Artefacto para pruebas en teléfono:** `rindemas-dev-apk` del run 42865178416 (*Rinde Más Dev* build 676).
 - **Sincronización Panel Web (Fase 5)** y **Selector de Mes en AppBar:** `Pendiente de validación 🧪` (CI verde, falta visto bueno visual de César).
 - **RM-03 (Fase 0A / E0-02) — `Completada ✅`:** CI Build 665 en verde. Visto bueno explícito de César recibido.
 - **RM-03 (Fase 0A / E0-03) — `Pendiente de validación 🧪`:** Lectores móviles, pantallas y panel web completados (H-1, H-2, A-16, D-06, D-07). Lentes monetarios independientes, denominaciones canónicas en `MoreScreen` y `CurrencyCalculatorScreen`, panel web Astro validado. Guía de pruebas en `docs/DOC_E0_03_LECTORES_MULTIMONEDA.md`.
-- **RM-03 (Fase 0A / E0-04) — `Implementada 🔧`:** Sincronización atómica, CAS optimista (`marcarGastoSincronizadoCondicional`), protección de tombstones (`ConflictoTombstoneRemoto`, prohibido borrado local con `synced == 0`), idempotencia post-crash (`sonContenidoNegocioIdentico`), allowlist en panel web (`A-09`) y diálogo de confirmación de monto (`A-15`).
-- **Próximo Paso Inmediato:** Push de E0-04, validación de CI (build 673) y prueba en teléfono físico (*Rinde Más Dev* build 672/673).
+- **RM-03 (Fase 0A / E0-04) — `Pendiente de validación 🧪`:** Sincronización atómica, CAS optimista (`marcarGastoSincronizadoCondicional`), protección de tombstones (`ConflictoTombstoneRemoto`, prohibido borrado local con `synced == 0`), idempotencia post-crash (`sonContenidoNegocioIdentico` con normalización canónica de categorías), allowlist en panel web (`A-09`) y diálogo de confirmación de monto (`A-15`). CI Build 676 en verde (673 tests).
+- **Próximo Paso Inmediato:** Validación en teléfono físico de E0-03 y E0-04 (*Rinde Más Dev* build 676).
 
 ## Decisiones Técnicas y de Negocio Recientes
 - **Rotación de la clave de subida: diferida** hasta que Google apruebe el acceso a Producción. No reinicia la revisión, pero el reset tarda 24-72 h y bloquearía una subida inmediata. El repositorio público conserva el `.jks` en el historial, por lo que la rotación sigue siendo necesaria.
