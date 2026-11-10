@@ -24,6 +24,8 @@
 - Formulario de gastos y teclado (UX): Barra inferior de totales y guardado anclada al borde físico (cubierta por teclado) para proteger el viewport vertical y evitar asfixia del formulario (regla oficial en DESIGN.md 4.7).
 - Toda aceptación exige CI en verde; la inspección estática no sustituye pruebas.
 - **Redes Sociales (Consenso Muse 09/11):** Bio = Canal de WhatsApp directo (`/channel/0029VbEPwHLDJ6H678QLlN1H`). Reels con colaboración manual obligatoria a `@lili9077p`. Voz calmada/asesor. Test A/B horario: Lunes 7:00 PM vs Miércoles 6:00 PM. Cierre: *"el enlace del canal está en el perfil"*.
+- **Prueba Piloto ASD-STE100:** Regla de estilo técnico operativo agregada a `AGENTS.md` a prueba; retirar si genera rigidez o fricción innecesaria.
+- **Asistente IA (Chat UX):** Ocultamiento de sugerencias rápidas con teclado abierto y auto-scroll suave (~250 ms) al último mensaje condicionado a proximidad del final, preservando scroll si se lee historial antiguo.
 
 ## Errores y Fricciones a Evitar
 - No encadenar comandos con `&&` ni usar redirección `>` en PowerShell.

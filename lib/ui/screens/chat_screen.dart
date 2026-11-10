@@ -78,6 +78,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   bool _isListening = false;
   bool _speechAvailable = false;
   String? _spanishLocaleId;
+  double _previousBottomInset = 0.0;
+  bool _wasNearBottomBeforeKeyboard = true;
 
   ChatProvider _getChatProvider(BuildContext context) {
     if (widget.chatProvider != null) return widget.chatProvider!;
@@ -105,9 +107,25 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   void _onFocusChange() {
-    if (_focusNode.hasFocus && _isListening) {
-      _stopListening();
+    if (_focusNode.hasFocus) {
+      if (_isListening) {
+        _stopListening();
+      }
+      _wasNearBottomBeforeKeyboard = _isNearBottom();
     }
+  }
+
+  @override
+  void didChangeMetrics() {
+    super.didChangeMetrics();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+      if (bottomInset > 0 && _focusNode.hasFocus && _wasNearBottomBeforeKeyboard) {
+        _wasNearBottomBeforeKeyboard = false;
+        _scrollToBottomAnimated(durationMs: 250);
+      }
+    });
   }
 
   @override
@@ -213,6 +231,24 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         }
       }
     }
+  }
+
+  bool _isNearBottom([double threshold = 200.0]) {
+    if (!_scrollController.hasClients) return true;
+    final pos = _scrollController.position;
+    return (pos.maxScrollExtent - pos.pixels) <= threshold;
+  }
+
+  void _scrollToBottomAnimated({int durationMs = 250}) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: Duration(milliseconds: durationMs),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   void _scrollToBottom() {
@@ -834,6 +870,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       builder: (context, _) {
         final messages = chatProvider.messages;
         final isLoading = chatProvider.isLoading;
+        final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+        final isKeyboardOpen = bottomInset > 0;
+
+        if (bottomInset > _previousBottomInset && _wasNearBottomBeforeKeyboard && _focusNode.hasFocus) {
+          _wasNearBottomBeforeKeyboard = false;
+          _scrollToBottomAnimated(durationMs: 250);
+        }
+        _previousBottomInset = bottomInset;
 
         return Scaffold(
           appBar: AppBar(
@@ -1014,49 +1058,50 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               padding: EdgeInsets.all(8.0),
               child: CircularProgressIndicator(),
             ),
-          Container(
-            height: 40,
-            margin: const EdgeInsets.only(bottom: 8),
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: kDefaultChatSuggestions.length,
-              separatorBuilder: (context, index) => const SizedBox(width: 8),
-              itemBuilder: (context, index) {
-                final suggestion = kDefaultChatSuggestions[index];
-                return ActionChip(
-                  key: Key('chat_suggestion_chip_$index'),
-                  avatar: Icon(
-                    suggestion.icon,
-                    size: 16,
-                    color: isLoading ? AppColors.textMuted : AppColors.secondary,
-                  ),
-                  label: Text(
-                    suggestion.label,
-                    style: TextStyle(
-                      color: isLoading ? AppColors.textMuted : AppColors.textPrimary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
+          if (!isKeyboardOpen)
+            Container(
+              height: 40,
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: kDefaultChatSuggestions.length,
+                separatorBuilder: (context, index) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  final suggestion = kDefaultChatSuggestions[index];
+                  return ActionChip(
+                    key: Key('chat_suggestion_chip_$index'),
+                    avatar: Icon(
+                      suggestion.icon,
+                      size: 16,
+                      color: isLoading ? AppColors.textMuted : AppColors.secondary,
                     ),
-                  ),
-                  backgroundColor: AppColors.surface,
-                  side: BorderSide(
-                    color: isLoading ? AppColors.divider : AppColors.border,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  onPressed: isLoading ? null : () => _sendMessage(suggestion.label),
-                );
-              },
+                    label: Text(
+                      suggestion.label,
+                      style: TextStyle(
+                        color: isLoading ? AppColors.textMuted : AppColors.textPrimary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    backgroundColor: AppColors.surface,
+                    side: BorderSide(
+                      color: isLoading ? AppColors.divider : AppColors.border,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    onPressed: isLoading ? null : () => _sendMessage(suggestion.label),
+                  );
+                },
+              ),
             ),
-          ),
           Container(
             padding: EdgeInsets.only(
               left: 8,
               right: 8,
               top: 8,
-              bottom: MediaQuery.of(context).viewInsets.bottom > 0 ? 8 : 12,
+              bottom: isKeyboardOpen ? 8 : 12,
             ),
             color: AppColors.surface,
             child: Row(
@@ -1068,6 +1113,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     onTap: () {
                       if (_isListening) {
                         _stopListening();
+                      }
+                      _wasNearBottomBeforeKeyboard = _isNearBottom();
+                      if (MediaQuery.of(context).viewInsets.bottom > 0 && _wasNearBottomBeforeKeyboard) {
+                        _scrollToBottomAnimated(durationMs: 250);
                       }
                     },
                     onChanged: (_) {

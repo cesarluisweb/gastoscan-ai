@@ -544,5 +544,93 @@ void main() {
       expect(productNames, isNot(contains('Impuesto IVA')));
       expect(productNames, isNot(contains('IVA 16%')));
     });
+
+    testWidgets('hides suggestions bar when keyboard opens and restores it when closed', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('chat_suggestion_chip_0')), findsOneWidget);
+
+      tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+      addTearDown(tester.view.reset);
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('chat_suggestion_chip_0')), findsNothing);
+
+      tester.view.viewInsets = FakeViewPadding.zero;
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('chat_suggestion_chip_0')), findsOneWidget);
+    });
+
+    testWidgets('auto-scrolls to bottom when opening keyboard if near bottom', (tester) async {
+      final sharedChatProvider = ChatProvider();
+      for (int i = 0; i < 20; i++) {
+        sharedChatProvider.addMessage({
+          'role': i % 2 == 0 ? 'user' : 'assistant',
+          'text': 'Mensaje $i con bastante texto para ocupar espacio vertical en el chat',
+        });
+      }
+
+      tester.view.physicalSize = const Size(400, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(createWidgetUnderTest(chatProvider: sharedChatProvider));
+      await tester.pumpAndSettle();
+
+      final scrollFinder = find.byType(Scrollable).first;
+      final scrollableState = tester.state<ScrollableState>(scrollFinder);
+      final maxScroll = scrollableState.position.maxScrollExtent;
+      expect(maxScroll, greaterThan(0));
+
+      scrollableState.position.jumpTo(maxScroll);
+      await tester.pumpAndSettle();
+
+      final inputFinder = find.byType(TextField);
+      await tester.tap(inputFinder);
+      await tester.pump();
+
+      tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      final newMaxScroll = scrollableState.position.maxScrollExtent;
+      expect(scrollableState.position.pixels, closeTo(newMaxScroll, 1.0));
+    });
+
+    testWidgets('preserves scroll position when keyboard opens if user scrolled far up', (tester) async {
+      final sharedChatProvider = ChatProvider();
+      for (int i = 0; i < 30; i++) {
+        sharedChatProvider.addMessage({
+          'role': i % 2 == 0 ? 'user' : 'assistant',
+          'text': 'Mensaje largo número $i para ocupar suficiente espacio',
+        });
+      }
+
+      tester.view.physicalSize = const Size(400, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(createWidgetUnderTest(chatProvider: sharedChatProvider));
+      await tester.pumpAndSettle();
+
+      final scrollFinder = find.byType(Scrollable).first;
+      final scrollableState = tester.state<ScrollableState>(scrollFinder);
+      expect(scrollableState.position.maxScrollExtent, greaterThan(500));
+
+      scrollableState.position.jumpTo(0.0);
+      await tester.pumpAndSettle();
+
+      final inputFinder = find.byType(TextField);
+      await tester.tap(inputFinder);
+      await tester.pump();
+
+      tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(scrollableState.position.pixels, lessThan(100.0));
+    });
   });
 }
