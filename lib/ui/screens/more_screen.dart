@@ -815,11 +815,11 @@ class MoreScreenState extends State<MoreScreen> {
                     contentPadding: EdgeInsets.zero,
                     activeColor: AppColors.primaryDark,
                     title: const Text(
-                      'Guardar copia de fotos en el dispositivo',
+                      'Guardar copia en la galería del teléfono',
                       style: TextStyle(color: AppColors.textPrimary, fontSize: 14),
                     ),
                     subtitle: const Text(
-                      'Si está desactivado, la foto se elimina inmediatamente tras extraer los datos para ahorrar espacio.',
+                      'Se guarda una copia en el álbum "Rinde Más" de tu galería. Esa copia queda fuera de la app y no se borra al eliminar tu cuenta. Si lo desactivas, la foto se elimina inmediatamente después de extraer los datos.',
                       style: TextStyle(color: AppColors.textMuted, fontSize: 12),
                     ),
                     value: settings.guardarFotos,
