@@ -49,7 +49,7 @@ class SettingsProvider with ChangeNotifier {
   double get tasaCambioVesEur => _tasaCambioVesEur;
   double get tasaCambioVesUsdt => _tasaCambioVesUsdt;
   DateTime? get ultimaActualizacionTasas => _ultimaActualizacionTasas;
-  bool get tasasSonReferencia => _estadoTasaUsd == EstadoTasaMoneda.referencia;
+  bool get tasasSonReferencia => _estadoTasaUsd != EstadoTasaMoneda.actualizada;
   EstadoTasaMoneda get estadoTasaUsd => _estadoTasaUsd;
   EstadoTasaMoneda get estadoTasaEur => _estadoTasaEur;
   EstadoTasaMoneda get estadoTasaUsdt => _estadoTasaUsdt;

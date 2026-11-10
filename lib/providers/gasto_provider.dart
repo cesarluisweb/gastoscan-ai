@@ -705,7 +705,13 @@ class GastoProvider with ChangeNotifier {
     } else if (normMoneda == 'USDT') {
       map = totalesPorCategoriaUsdt;
     } else if (normMoneda == 'EUR') {
-      map = totalesPorCategoriaEur;
+      final double effEur = _tasaEur > 1.0 ? _tasaEur : 0.0;
+      if (effEur > 1.0 && _totalesPorCategoriaVes.isNotEmpty) {
+        map = _totalesPorCategoriaVes;
+        factor = 1.0 / effEur;
+      } else {
+        map = totalesPorCategoriaEur;
+      }
     } else {
       map = _totalesPorCategoria;
     }

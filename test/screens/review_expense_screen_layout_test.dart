@@ -114,6 +114,9 @@ class FakeSettingsProvider extends SettingsProvider {
   String get monedaPrincipal => monedaPref;
 
   @override
+  bool get avisoGaleriaMostrado => true;
+
+  @override
   Future<void> loadSettings() async {}
 }
 
@@ -673,6 +676,7 @@ void main() {
     // Tocar Guardar Gasto
     await tester.tap(find.widgetWithText(ElevatedButton, 'Guardar Gasto'));
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
 
     // Verificar que aparece el SnackBar de error
     expect(find.textContaining('No hay una tasa de cambio válida'), findsOneWidget);
