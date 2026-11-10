@@ -218,6 +218,9 @@ AlertDialog(
    - **Barra Anclada al Borde Físico:** En formularios ricos y extensos (como `ReviewExpenseScreen`), la barra inferior (`bottomNavigationBar`) que contiene el total acumulado y los botones primarios («Guardar Gasto», «Guardar y revisar siguiente») se mantiene fija en el borde físico inferior de la pantalla y queda cubierta cuando se despliega el teclado suave (`viewInsets.bottom > 0`).
    - **Anti-Patrón Evitado (Preservación del Viewport):** Prohibido desplazar la barra completa (~120–165 dp) por encima del teclado. La suma de `AppBar`, teclado virtual (~300 dp) y barra inferior reduce el espacio visible del formulario a menos de 200 dp en pantallas estándar (360–390 dp), provocando asfixia visual, micro-scrolls forzados y riesgo de pulsaciones accidentales de guardado antes de revisar datos.
    - **Flujo de Interacción:** El usuario completa sus entradas de texto con el máximo espacio visible posible y descarta el teclado suave (botón *Listo/Done*, botón atrás o toque fuera de foco) para validar visualmente los montos consolidados antes de tocar el botón de guardado. Si en el futuro se requiriese acción directa con teclado abierto, solo se admitirá una tira ultra-compacta de una línea ($\le 48\text{dp}$), nunca el bloque completo de totales y botones dobles.
+8. **Orientación de Pantalla Exclusivamente Vertical (`portraitUp`):**
+   - La app móvil bloquea su orientación en vertical (`DeviceOrientation.portraitUp`) en `main()`.
+   - **Justificación de diseño:** Rinde Más está concebida para uso rápido a una mano en comercios y cajas. El modo apaisado reduce la altura visible a menos de 300 dp con el teclado activo, quebrando modales, selectores y el flujo de captura OCR de comprobantes.
 
 ---
 
