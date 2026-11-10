@@ -51,30 +51,22 @@ function isRateLimited(uid, limit = 30, windowMs = 60000) {
 const DAILY_UID_LIMIT = 50;
 const DAILY_GLOBAL_LIMIT = 20000;
 
-const memoryUsageMap = new Map();
-let warnedMemoryMode = false;
+// Venezuela es UTC-4 todo el año (sin horario de verano).
+const VET_OFFSET_MS = 4 * 60 * 60 * 1000;
+function quotaDayFor(date = new Date()) {
+  return new Date(date.getTime() - VET_OFFSET_MS).toISOString().slice(0, 10);
+}
 
 async function incrementUsage(db, day, scope) {
-  if (db && typeof db.prepare === "function") {
-    const stmt = db.prepare(
-      "INSERT INTO usage (day, scope, count) VALUES (?, ?, 1) ON CONFLICT(day, scope) DO UPDATE SET count = count + 1 RETURNING count"
-    );
-    const row = await stmt.bind(day, scope).first();
-    return row ? (row.count ?? row.COUNT ?? 1) : 1;
+  if (!db || typeof db.prepare !== "function") {
+    throw new Error("DB de cuotas no disponible");
   }
 
-  // Fallback en memoria si no hay base de datos vinculada
-  const key = `${day}:${scope}`;
-  const count = (memoryUsageMap.get(key) || 0) + 1;
-  memoryUsageMap.set(key, count);
-
-  if (memoryUsageMap.size > 10000) {
-    for (const k of memoryUsageMap.keys()) {
-      if (!k.startsWith(day)) memoryUsageMap.delete(k);
-    }
-  }
-
-  return count;
+  const stmt = db.prepare(
+    "INSERT INTO usage (day, scope, count) VALUES (?, ?, 1) ON CONFLICT(day, scope) DO UPDATE SET count = count + 1 RETURNING count"
+  );
+  const row = await stmt.bind(day, scope).first();
+  return row ? (row.count ?? row.COUNT ?? 1) : 1;
 }
 
 /**
@@ -94,18 +86,21 @@ async function checkDailyQuota(env, uid, isCustomKey) {
     };
   }
 
-  const day = new Date().toISOString().slice(0, 10);
-  const isMemoryMode = !env || !env.DB;
-  const quotaMode = isMemoryMode ? "memory" : "d1";
-
-  if (isMemoryMode && !warnedMemoryMode) {
-    warnedMemoryMode = true;
-    console.warn("env.DB no está definido. Degradando control de cuotas a memoria local.");
+  if (!env || !env.DB || typeof env.DB.prepare !== "function") {
+    return {
+      allowed: false,
+      statusCode: 503,
+      error: "Servicio de cuotas no disponible. Intenta nuevamente en unos momentos.",
+      quotaMode: "memory"
+    };
   }
+
+  const day = quotaDayFor();
+  const quotaMode = "d1";
 
   try {
     // 1. Límite diario individual por UID (50 peticiones/día)
-    const uidCount = await incrementUsage(env ? env.DB : null, day, `uid:${uid}`);
+    const uidCount = await incrementUsage(env.DB, day, `uid:${uid}`);
     if (uidCount > DAILY_UID_LIMIT) {
       return {
         allowed: false,
@@ -116,7 +111,7 @@ async function checkDailyQuota(env, uid, isCustomKey) {
     }
 
     // 2. Tope global diario compartido (todas las cuentas juntas)
-    const globalCount = await incrementUsage(env ? env.DB : null, day, "global");
+    const globalCount = await incrementUsage(env.DB, day, "global");
     if (globalCount > DAILY_GLOBAL_LIMIT) {
       return {
         allowed: false,
@@ -418,7 +413,8 @@ export default {
       const authHeader = request.headers.get("Authorization");
       userPayload = await verifyFirebaseToken(authHeader, projectId);
     } catch (authErr) {
-      return new Response(JSON.stringify({ error: `No autenticado: ${authErr.message}` }), {
+      console.error("Error de autenticación:", authErr);
+      return new Response(JSON.stringify({ error: "No autenticado." }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
@@ -463,20 +459,6 @@ export default {
         status: 404,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
-    }
-
-    if (quota.quotaMode === "memory") {
-      try {
-        endpointResponse.headers.set("x-quota-mode", "memory");
-      } catch (_) {
-        const newHeaders = new Headers(endpointResponse.headers);
-        newHeaders.set("x-quota-mode", "memory");
-        return new Response(endpointResponse.body, {
-          status: endpointResponse.status,
-          statusText: endpointResponse.statusText,
-          headers: newHeaders
-        });
-      }
     }
 
     return endpointResponse;
@@ -1356,5 +1338,6 @@ export {
   checkDailyQuota,
   incrementUsage,
   DAILY_UID_LIMIT,
-  DAILY_GLOBAL_LIMIT
+  DAILY_GLOBAL_LIMIT,
+  quotaDayFor
 };

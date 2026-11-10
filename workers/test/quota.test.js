@@ -4,7 +4,8 @@ import worker, {
   checkDailyQuota,
   incrementUsage,
   DAILY_UID_LIMIT,
-  DAILY_GLOBAL_LIMIT
+  DAILY_GLOBAL_LIMIT,
+  quotaDayFor
 } from "../src/index.js";
 
 // Implementación en memoria del binding D1 de Cloudflare para pruebas sin red
@@ -79,7 +80,7 @@ describe("A1a — Control de Cuota y Rate Limiting Persistente con Cloudflare D1
 
   test("bloquea con 429 al superar el tope global diario de 20.000", async () => {
     const fakeDb = createFakeD1();
-    const today = new Date().toISOString().slice(0, 10);
+    const today = quotaDayFor();
     // Simular que el contador global ya alcanzó el tope
     fakeDb._store.set(`${today}:global`, DAILY_GLOBAL_LIMIT);
 
@@ -93,7 +94,7 @@ describe("A1a — Control de Cuota y Rate Limiting Persistente con Cloudflare D1
 
   test("las peticiones con API key propia (BYOK) no consumen cuota compartida", async () => {
     const fakeDb = createFakeD1();
-    const today = new Date().toISOString().slice(0, 10);
+    const today = quotaDayFor();
     // Límite global y de usuario agotados
     fakeDb._store.set(`${today}:global`, DAILY_GLOBAL_LIMIT + 10);
     fakeDb._store.set(`${today}:uid:user_byok`, DAILY_UID_LIMIT + 10);
@@ -104,13 +105,14 @@ describe("A1a — Control de Cuota y Rate Limiting Persistente con Cloudflare D1
     assert.equal(result.allowed, true, "BYOK no debe ser bloqueado por cuotas compartidas");
   });
 
-  test("degrada a memoria con x-quota-mode: memory si env.DB no está definido", async () => {
+  test("aplica fail-closed con 503 si env.DB no está definido", async () => {
     const envSinDb = {};
     const uid = "user_memory_fallback";
 
     const result = await checkDailyQuota(envSinDb, uid, false);
-    assert.equal(result.allowed, true);
-    assert.equal(result.quotaMode, "memory", "Debe marcar modo memoria ante ausencia de binding");
+    assert.equal(result.allowed, false);
+    assert.equal(result.statusCode, 503);
+    assert.equal(result.quotaMode, "memory");
   });
 
   test("aplica fail-closed con 503 ante fallo en base de datos D1", async () => {
@@ -163,7 +165,7 @@ describe("A1a — Control de Cuota y Rate Limiting Persistente con Cloudflare D1
     const fakeDb = createFakeD1();
     const env = { DB: fakeDb };
     const uid = "user_t3_uid";
-    const today = new Date().toISOString().slice(0, 10);
+    const today = quotaDayFor();
 
     // Consumir las 50 peticiones del usuario
     for (let i = 0; i < DAILY_UID_LIMIT; i++) {
@@ -205,5 +207,49 @@ describe("A1a — Control de Cuota y Rate Limiting Persistente con Cloudflare D1
     assert.throws(() => {
       fakeDb.prepare("INSERT INTO usage (day, scope, count) VALUES (?, ?, 1) ON CONFLICT(day, scope) DO UPDATE SET count = count + 1");
     }, /RETURNING count/);
+  });
+
+  test("calcula el corte de cuota en hora de Venezuela (UTC-4)", () => {
+    assert.equal(quotaDayFor(new Date("2026-11-11T02:00:00Z")), "2026-11-10"); // 22:00 VET del día 10
+    assert.equal(quotaDayFor(new Date("2026-11-10T12:00:00Z")), "2026-11-10");
+  });
+
+  test("la respuesta 401 no filtra internos", async () => {
+    const fakeDb = createFakeD1();
+    const env = {
+      GEMINI_API_KEY: "dummy_key",
+      DB: fakeDb,
+      FIREBASE_PROJECT_ID: "gastoscan-ai"
+    };
+    const req = new Request("https://rindemas-gateway.workers.dev/analyze-receipt", {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer basura",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ ocrText: "test" })
+    });
+
+    const response = await worker.fetch(req, env, {});
+    assert.equal(response.status, 401);
+    const bodyText = await response.text();
+    assert.equal(bodyText.includes("JWT"), false, "No debe filtrar 'JWT'");
+    assert.equal(bodyText.includes("kid"), false, "No debe filtrar 'kid'");
+    assert.equal(bodyText.includes("Issuer"), false, "No debe filtrar 'Issuer'");
+    assert.equal(bodyText.includes("gastoscan"), false, "No debe filtrar 'gastoscan'");
+    const json = JSON.parse(bodyText);
+    assert.equal(json.error, "No autenticado.");
+  });
+
+  test("incrementUsage lanza error si recibe un db inválido", async () => {
+    await assert.rejects(
+      async () => {
+        await incrementUsage(null, "2026-11-10", "global");
+      },
+      {
+        name: "Error",
+        message: "DB de cuotas no disponible"
+      }
+    );
   });
 });
