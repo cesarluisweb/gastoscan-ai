@@ -39,7 +39,7 @@ jobs:
       - name: Instalar Dependencias de Landing
         run: |
           cd landing
-          npm ci || npm install
+          npm ci
           cd ..
 
       - name: Compilar Landing y Panel Web (Astro)
@@ -54,4 +54,4 @@ jobs:
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_GATOSCAN_AI }}
         run: |
-          npx firebase-tools deploy --only hosting,firestore:rules --project gastoscan-ai --token "${{ secrets.FIREBASE_SERVICE_ACCOUNT_GATOSCAN_AI }}" --non-interactive
+          npx firebase-tools@15.35.0 deploy --only hosting,firestore:rules --project gastoscan-ai --token "$FIREBASE_TOKEN" --non-interactive
