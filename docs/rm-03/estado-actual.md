@@ -6,7 +6,7 @@
 > **Decisiones vinculantes:** `docs/rm-03/decisiones.md` (`A-01` a `A-16` y `D-01` a `D-08` aprobadas, sin modificaciones).  
 > **Último informe de implementación:** `docs/rm-03/auditorias/implementacion-u1-u4-e0-02.md` → resolución integral de D-05, M5-a, M-08, R-01, B-02, B-05, NEW-3b, N-09 y suite de 127 pruebas.  
 > **Última auditoría:** Octava reauditoría adversarial independiente (`docs/rm-03/auditorias/octava-reauditoria-u1-u2-deepseek.md`) — **ACEPTADO CON OBSERVACIONES ⚠️**.  
-> **Próximo hito:** Validación en dispositivo físico (*Rinde Más Dev*) para visto bueno de César en `E0-02` e inicio formal de `E0-03` (U3/U4).
+> **Próximo hito:** Ejecución y cierre formal de `E0-03` (U3/U4: lectores móviles, pantallas y panel web).
 
 ---
 
@@ -16,8 +16,8 @@
 | :--- | :--- | :--- | :--- |
 | **`E0-05a`** | Neutralización de auto-reparación 850/474 | **Completada ✅** | Mergeada en `main` (commit `de17323`). `repararTasasHistoricasIncompletas` neutralizada en `main_screen.dart:132-145` y `sync_service.dart`; `dryRun = true` por defecto en `gasto_repository.dart`. |
 | **`E0-01`** | Arnés de pruebas SQLite real en memoria | **Completada ✅** | Mergeada en `main` (commit `de17323`). `sqflite_common_ffi` incorporado en `dev_dependencies` (**A-08**) y validado en CI. |
-| **`E0-02`** | Dominio monetario, tupla y purga de caché A-07 | **Pendiente de validación 🧪** | Aceptada técnicamente en 8.ª reauditoría. D-05, M5-a, M-08, R-01, B-02, N-09 resueltos. CI Build 665 en verde (commit `b58965a`). 127 pruebas en verde. Pendiente de visto bueno explícito de César en dispositivo físico. |
-| **`E0-03`** | Integración en lectores móviles y panel web | **Autorizado condicionalmente ⚠️ — Listo para iniciar** | CI de E0-02 confirmado en verde (**A-16**). Habilitado el inicio técnico de U3/U4 (D-01 a D-08, H-1, H-2). |
+| **`E0-02`** | Dominio monetario, tupla y purga de caché A-07 | **Completada ✅** | Aceptada técnicamente en 8.ª reauditoría. D-05, M5-a, M-08, R-01, B-02, N-09 resueltos. CI Build 665 en verde (commit `b58965a`). 127 pruebas en verde. Visto bueno explícito de César otorgado en *Rinde Más Dev*. |
+| **`E0-03`** | Integración en lectores móviles y panel web | **En progreso 🔄** | CI de E0-02 confirmado en verde y E0-02 completada (**A-16**). Inicio técnico de U3/U4 (D-01 a D-08, H-1, H-2). |
 | **`E0-04`** | Atomismo `synced=0`, CAS, allowlist de metadatos | **Pendiente ⏳** | Pendiente; requiere E0-02 y E0-03 en verde. Incluye la semántica de limpieza nullable de `copyWith` en `GastoModel` (S3.2). |
 | **`E0-05b`** | Diagnósticos read-only `Q01..Q20` sin PII | **Pendiente ⏳** | Pendiente; ejecución en paralelo o tras E0-03 (**A-14**). |
 | **Fase 0B** | Guardado sin tasa con sincronización remota | **Bloqueada 🔴** | Bloqueada por diseño normativo (**A-12**, **D-03**, **D-04**). Prohibido habilitar mientras la nube no esté contenida. |
