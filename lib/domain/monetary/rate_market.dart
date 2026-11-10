@@ -5,6 +5,13 @@ enum RateMarket {
   usdtP2p,    // VES / USDT (P2P / Paralelo)
 }
 
+/// Tres estados canónicos de disponibilidad de tasa por moneda (Decisión D-06).
+enum EstadoTasaMoneda {
+  actualizada, // Tasa viva validada de la fecha de hoy
+  referencia,  // Tasa válida de fecha anterior o manual persistida offline
+  sinTasa,     // Sin tasa disponible (<= 1.0, purga fallida o nunca registrada)
+}
+
 /// Identificador unívoco del origen y campo de una cotización de tasa.
 enum RateSourceId {
   // Mercado USD Oficial (VES/USD)

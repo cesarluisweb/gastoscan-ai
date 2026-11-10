@@ -800,7 +800,11 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         final parsed = DateTime.tryParse(fecha) ?? DateTime.now();
         final now = DateTime.now();
         final isCurrentMonth = (parsed.year == now.year && parsed.month == now.month);
-        final offlineSuffix = settings.tasasSonReferencia ? ' · Tasa estimada en caché (sin conexión)' : '';
+        final offlineSuffix = settings.esTasaManualUsd
+            ? ' · Tasa manual'
+            : (settings.estadoTasaUsd == EstadoTasaMoneda.referencia
+                ? ' · Última tasa registrada en caché'
+                : '');
 
         if (_selectedMoneda == 'VES') {
           final tasaAplicar = _tasaUsdFecha;
@@ -815,7 +819,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
             _fuenteTasa = 'Sin conexión para histórico · Tasa referencial';
           }
         } else if (_selectedMoneda == 'EUR') {
-          double? tasaAplicar = _tasaEurFecha ?? _tasaUsdFecha;
+          double? tasaAplicar = _tasaEurFecha;
           if (tasaAplicar != null && tasaAplicar > 0) _tasaCambioCtrl.text = tasaAplicar.toStringAsFixed(2);
           if (isToday) {
             _fuenteTasa = 'Euro BCV oficial (Hoy)$offlineSuffix';

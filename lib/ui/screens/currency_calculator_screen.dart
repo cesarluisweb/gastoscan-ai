@@ -79,13 +79,13 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
   double _obtenerTasaActiva(SettingsProvider settings) {
     switch (_selectedTipoTasa) {
       case TipoTasaCalculadora.dolarBcv:
-        return settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : AppConstants.defaultTasaCambio;
+        return settings.tasaCambioVesUsd > 1.0 ? settings.tasaCambioVesUsd : 0.0;
       case TipoTasaCalculadora.euroBcv:
-        return settings.tasaCambioVesEur > 0 ? settings.tasaCambioVesEur : settings.tasaCambioVesUsd;
+        return settings.tasaCambioVesEur > 1.0 ? settings.tasaCambioVesEur : 0.0;
       case TipoTasaCalculadora.usdtBinance:
-        return settings.tasaCambioVesUsdt > 0 ? settings.tasaCambioVesUsdt : settings.tasaCambioVesUsd;
+        return settings.tasaCambioVesUsdt > 1.0 ? settings.tasaCambioVesUsdt : 0.0;
       case TipoTasaCalculadora.personalizada:
-        return _customRate > 0 ? _customRate : (settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : AppConstants.defaultTasaCambio);
+        return _customRate > 1.0 ? _customRate : 0.0;
     }
   }
 
@@ -96,7 +96,7 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
     final tasa = _obtenerTasaActiva(settings);
     final double? montoDivisa = tryParseAmount(_divisaCtrl.text, isPrice: false);
 
-    if (montoDivisa == null || montoDivisa <= 0) {
+    if (montoDivisa == null || montoDivisa <= 0 || tasa <= 1.0) {
       _vesCtrl.text = '';
     } else {
       final double montoVes = montoDivisa * tasa;
@@ -112,7 +112,7 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
     final tasa = _obtenerTasaActiva(settings);
     final double? montoVes = tryParseAmount(_vesCtrl.text, isPrice: false);
 
-    if (montoVes == null || montoVes <= 0 || tasa <= 0) {
+    if (montoVes == null || montoVes <= 0 || tasa <= 1.0) {
       _divisaCtrl.text = '';
     } else {
       final double montoDivisa = montoVes / tasa;
@@ -243,17 +243,17 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
         ? montoDivisaActual
         : 1.0;
 
-    final double tasaUsd = settings.tasaCambioVesUsd > 0
+    final double tasaUsd = settings.tasaCambioVesUsd > 1.0
         ? settings.tasaCambioVesUsd
-        : AppConstants.defaultTasaCambio;
-    final double tasaEur = settings.tasaCambioVesEur > 0
+        : 0.0;
+    final double tasaEur = settings.tasaCambioVesEur > 1.0
         ? settings.tasaCambioVesEur
-        : settings.tasaCambioVesUsd;
-    final double tasaUsdt = settings.tasaCambioVesUsdt > 0
+        : 0.0;
+    final double tasaUsdt = settings.tasaCambioVesUsdt > 1.0
         ? settings.tasaCambioVesUsdt
-        : settings.tasaCambioVesUsd;
+        : 0.0;
 
-    final double brechaUsdtBcv = (tasaUsd > 0 && tasaUsdt > 0)
+    final double brechaUsdtBcv = (tasaUsd > 1.0 && tasaUsdt > 1.0)
         ? ((tasaUsdt - tasaUsd) / tasaUsd) * 100
         : 0.0;
 
@@ -288,7 +288,7 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
                 _buildRateChip(
                   key: const Key('calc_chip_dolar_bcv'),
                   label: 'Dólar BCV',
-                  sub: 'Bs. ${tasaUsd.toStringAsFixed(2)}',
+                  sub: tasaUsd > 1.0 ? 'Bs. ${tasaUsd.toStringAsFixed(2)}' : '—',
                   isSelected: _selectedTipoTasa == TipoTasaCalculadora.dolarBcv,
                   onTap: () => _seleccionarTipoTasa(TipoTasaCalculadora.dolarBcv, settings),
                 ),
@@ -296,7 +296,7 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
                 _buildRateChip(
                   key: const Key('calc_chip_euro_bcv'),
                   label: 'Euro BCV',
-                  sub: 'Bs. ${tasaEur.toStringAsFixed(2)}',
+                  sub: tasaEur > 1.0 ? 'Bs. ${tasaEur.toStringAsFixed(2)}' : '—',
                   isSelected: _selectedTipoTasa == TipoTasaCalculadora.euroBcv,
                   onTap: () => _seleccionarTipoTasa(TipoTasaCalculadora.euroBcv, settings),
                 ),
@@ -304,7 +304,7 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
                 _buildRateChip(
                   key: const Key('calc_chip_usdt'),
                   label: 'USDT P2P',
-                  sub: 'Bs. ${tasaUsdt.toStringAsFixed(2)}',
+                  sub: tasaUsdt > 1.0 ? 'Bs. ${tasaUsdt.toStringAsFixed(2)}' : '—',
                   isSelected: _selectedTipoTasa == TipoTasaCalculadora.usdtBinance,
                   onTap: () => _seleccionarTipoTasa(TipoTasaCalculadora.usdtBinance, settings),
                 ),
@@ -474,22 +474,22 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
                 const SizedBox(height: 12),
                 _buildComparisonRow(
                   title: 'Dólar BCV',
-                  rate: 'Bs. ${tasaUsd.toStringAsFixed(2)}',
-                  total: 'Bs. ${CurrencyFormatter.formatVes(montoBaseDivisa * tasaUsd).replaceAll('Bs. ', '')}',
+                  rate: tasaUsd > 1.0 ? 'Bs. ${tasaUsd.toStringAsFixed(2)}' : '—',
+                  total: tasaUsd > 1.0 ? 'Bs. ${CurrencyFormatter.formatVes(montoBaseDivisa * tasaUsd).replaceAll('Bs. ', '')}' : '—',
                   isHighlighted: _selectedTipoTasa == TipoTasaCalculadora.dolarBcv,
                 ),
                 const Divider(height: 16, color: AppColors.border),
                 _buildComparisonRow(
                   title: 'Euro BCV',
-                  rate: 'Bs. ${tasaEur.toStringAsFixed(2)}',
-                  total: 'Bs. ${CurrencyFormatter.formatVes(montoBaseDivisa * tasaEur).replaceAll('Bs. ', '')}',
+                  rate: tasaEur > 1.0 ? 'Bs. ${tasaEur.toStringAsFixed(2)}' : '—',
+                  total: tasaEur > 1.0 ? 'Bs. ${CurrencyFormatter.formatVes(montoBaseDivisa * tasaEur).replaceAll('Bs. ', '')}' : '—',
                   isHighlighted: _selectedTipoTasa == TipoTasaCalculadora.euroBcv,
                 ),
                 const Divider(height: 16, color: AppColors.border),
                 _buildComparisonRow(
                   title: 'USDT P2P',
-                  rate: 'Bs. ${tasaUsdt.toStringAsFixed(2)}',
-                  total: 'Bs. ${CurrencyFormatter.formatVes(montoBaseDivisa * tasaUsdt).replaceAll('Bs. ', '')}',
+                  rate: tasaUsdt > 1.0 ? 'Bs. ${tasaUsdt.toStringAsFixed(2)}' : '—',
+                  total: tasaUsdt > 1.0 ? 'Bs. ${CurrencyFormatter.formatVes(montoBaseDivisa * tasaUsdt).replaceAll('Bs. ', '')}' : '—',
                   isHighlighted: _selectedTipoTasa == TipoTasaCalculadora.usdtBinance,
                 ),
                 const SizedBox(height: 14),
@@ -508,7 +508,7 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Brecha USDT vs Dólar BCV: ${brechaUsdtBcv >= 0 ? '+' : ''}${brechaUsdtBcv.toStringAsFixed(1)}%',
+                          (tasaUsd > 1.0 && tasaUsdt > 1.0) ? 'Brecha USDT vs Dólar BCV: ${brechaUsdtBcv >= 0 ? "+" : ""}${brechaUsdtBcv.toStringAsFixed(1)}%' : 'Brecha USDT vs Dólar BCV: —',
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -790,7 +790,7 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
             const Icon(Icons.swap_vert, size: 16, color: AppColors.textPrimary),
             const SizedBox(width: 4),
             Text(
-              '1 $_selectedCurrency = Bs. ${tasaActiva.toStringAsFixed(2)}',
+              tasaActiva > 1.0 ? '1 $_selectedCurrency = Bs. ${tasaActiva.toStringAsFixed(2)}' : '1 $_selectedCurrency = —',
               style: const TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.bold,

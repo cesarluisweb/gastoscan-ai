@@ -21,6 +21,7 @@ import 'chat_screen.dart';
 import 'receipt_gallery_screen.dart';
 import 'currency_calculator_screen.dart';
 import '../../data/datasources/remote/gemini_service.dart';
+import '../../domain/monetary/rate_market.dart';
 
 enum MoreSubView { hub, shoppingList, chat, receiptGallery, calculator }
 
@@ -504,24 +505,24 @@ class MoreScreenState extends State<MoreScreen> {
                           ),
                           child: Text(
                             () {
-                              // Sin dato en vivo no se afirma vigencia: se avisa.
-                              if (settings.tasasSonReferencia) return '⚠ Tasa de referencia';
-                              final updateDate = settings.ultimaActualizacionTasas;
-                              final today = DateTime.now();
-                              if (updateDate != null &&
-                                  updateDate.year == today.year &&
-                                  updateDate.month == today.month &&
-                                  updateDate.day == today.day) {
-                                return '✓ Actualizada hoy';
+                              if (settings.esTasaManualUsd) return 'Tasa manual';
+                              switch (settings.estadoTasaUsd) {
+                                case EstadoTasaMoneda.actualizada:
+                                  return '✓ Actualizada hoy';
+                                case EstadoTasaMoneda.referencia:
+                                  return 'Última tasa registrada';
+                                case EstadoTasaMoneda.sinTasa:
+                                  return 'Sin tasa disponible';
                               }
-                              return 'Tasas del día';
                             }(),
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
-                              color: settings.tasasSonReferencia
-                                  ? AppColors.warning
-                                  : AppColors.textSecondary,
+                              color: settings.estadoTasaUsd == EstadoTasaMoneda.actualizada
+                                  ? AppColors.textSecondary
+                                  : (settings.estadoTasaUsd == EstadoTasaMoneda.sinTasa
+                                      ? AppColors.error
+                                      : AppColors.warning),
                             ),
                           ),
                         ),
@@ -575,7 +576,7 @@ class MoreScreenState extends State<MoreScreen> {
                             ],
                           ),
                           Text(
-                            'Bs. ${settings.tasaCambioVesUsd.toStringAsFixed(2)} / USD',
+                            settings.tasaCambioVesUsd > 1.0 ? 'Bs. ${settings.tasaCambioVesUsd.toStringAsFixed(2)} / USD' : '—',
                             style: const TextStyle(
                               color: AppColors.textPrimary,
                               fontSize: 14,
@@ -607,7 +608,7 @@ class MoreScreenState extends State<MoreScreen> {
                             ],
                           ),
                           Text(
-                            'Bs. ${settings.tasaCambioVesEur.toStringAsFixed(2)} / EUR',
+                            settings.tasaCambioVesEur > 1.0 ? 'Bs. ${settings.tasaCambioVesEur.toStringAsFixed(2)} / EUR' : '—',
                             style: const TextStyle(
                               color: AppColors.textPrimary,
                               fontSize: 14,
@@ -639,7 +640,7 @@ class MoreScreenState extends State<MoreScreen> {
                             ],
                           ),
                           Text(
-                            'Bs. ${settings.tasaCambioVesUsdt.toStringAsFixed(2)} / USDT',
+                            settings.tasaCambioVesUsdt > 1.0 ? 'Bs. ${settings.tasaCambioVesUsdt.toStringAsFixed(2)} / USDT' : '—',
                             style: const TextStyle(
                               color: AppColors.textPrimary,
                               fontSize: 14,
