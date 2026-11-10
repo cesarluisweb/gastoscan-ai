@@ -9,8 +9,8 @@
 - **Artefacto para Play:** `app-release-aab` del run 42091003101 (build 664 → versionCode 669, versionName 1.5.0).
 - **Artefacto para pruebas en teléfono:** `rindemas-dev-apk` del mismo run (*Rinde Más Dev* 1.5.0/669).
 - **Sincronización Panel Web (Fase 5)** y **Selector de Mes en AppBar:** `Pendiente de validación 🧪` (CI verde, falta visto bueno visual de César).
-- **RM-03 (Fase 0A / E0-02) — `Aceptado técnicamente ⚠️`:** Compuerta cerrada en working tree (8.ª reauditoría favorable, 127 pruebas en orden). E0-03 autorizado condicionalmente a CI en verde.
-- **Próximo Paso Inmediato:** César autoriza commit y push a `main` para validación en GitHub Actions CI (build y 127 pruebas).
+- **RM-03 (Fase 0A / E0-02) — `Pendiente de validación 🧪`:** CI Build 665 en verde (run 42734265430, commit `b58965a`). 127 pruebas monetarias en verde. Artefactos `rindemas-dev-apk` y `app-release-aab` generados. `E0-03` (U3/U4) formalmente habilitado para inicio técnico.
+- **Próximo Paso Inmediato:** César valida *Rinde Más Dev* de build 665 o autoriza el arranque de `E0-03` (U3/U4).
 
 ## Decisiones Técnicas y de Negocio Recientes
 - **Rotación de la clave de subida: diferida** hasta que Google apruebe el acceso a Producción. No reinicia la revisión, pero el reset tarda 24-72 h y bloquearía una subida inmediata. El repositorio público conserva el `.jks` en el historial, por lo que la rotación sigue siendo necesaria.
