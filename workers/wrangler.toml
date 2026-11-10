@@ -9,5 +9,10 @@ FIREBASE_PROJECT_ID = "gastoscan-ai"
 enabled = true
 head_sampling_rate = 1
 
+[[d1_databases]]
+binding = "DB"
+database_name = "rindemas-usage"
+database_id = "d29a43ee-3ec9-4ea8-9396-6e17220392d5"
+
 # Los secretos como GEMINI_API_KEY se configuran con:
 # npx wrangler secret put GEMINI_API_KEY
