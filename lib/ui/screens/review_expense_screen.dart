@@ -936,15 +936,51 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
   Future<void> _guardarGasto({bool revisarSiguiente = false}) async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isSaving = true);
     final settings = Provider.of<SettingsProvider>(context, listen: false);
+    if (settings.guardarFotos && !settings.avisoGaleriaMostrado) {
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: AppColors.card,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text(
+            'Tus comprobantes también se guardan en la galería',
+            style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary, fontSize: 16),
+          ),
+          content: const Text(
+            'Además de dentro de la app, guardamos una copia en el álbum "Rinde Más" de la galería de tu teléfono. Esa copia es tuya: queda fuera de la app y no se borra al eliminar tu cuenta. Puedes desactivarlo en Más > Almacenamiento de fotos.',
+            style: TextStyle(color: AppColors.textSecondary, height: 1.4),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Entendido', style: TextStyle(color: AppColors.primaryDark, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      );
+      if (!mounted) return;
+      await settings.marcarAvisoGaleriaMostrado();
+      if (!mounted) return;
+    }
+
+    setState(() => _isSaving = true);
     final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
 
     String? rutaFotoFinal;
     if (_imageDeleted) {
       rutaFotoFinal = null;
     } else if (_pickedImage != null) {
-      rutaFotoFinal = await ImageService.saveImagePermanently(_pickedImage!);
+      if (settings.guardarFotos) {
+        rutaFotoFinal = await ImageService.saveImagePermanently(_pickedImage!);
+      } else if (widget.queueItemId != null) {
+        final isUsed = await DatabaseHelper.instance.isImagePathUsedByOtherQueueItems(widget.queueItemId!, _pickedImage!.path);
+        if (!isUsed) {
+          await ImageService.deleteTempFile(_pickedImage!);
+        }
+      } else {
+        await ImageService.deleteTempFile(_pickedImage!);
+      }
     } else {
       if (widget.existingGasto != null) {
         rutaFotoFinal = widget.existingGasto!.rutaFotoLocal;
