@@ -1,6 +1,8 @@
 import '../../core/constants/app_constants.dart';
 import 'item_gasto_model.dart';
 
+const Object _unsetSentinel = Object();
+
 class GastoModel {
   final int? id;
   final String uuid;
@@ -130,22 +132,22 @@ class GastoModel {
     String? moneda,
     int? totalOriginal,
     int? totalUsd,
-    int? totalUsdt,
-    int? totalEur,
+    Object? totalUsdt = _unsetSentinel,
+    Object? totalEur = _unsetSentinel,
     double? tasaCambio,
-    double? tasaUsdt,
-    double? tasaEur,
-    String? fuenteTasaCambio,
-    String? fechaTasaCambio,
+    Object? tasaUsdt = _unsetSentinel,
+    Object? tasaEur = _unsetSentinel,
+    Object? fuenteTasaCambio = _unsetSentinel,
+    Object? fechaTasaCambio = _unsetSentinel,
     String? categoria,
-    String? rutaFotoLocal,
+    Object? rutaFotoLocal = _unsetSentinel,
     String? creadoEn,
     String? actualizadoEn,
-    String? eliminadoEn,
+    Object? eliminadoEn = _unsetSentinel,
     List<ItemGastoModel>? items,
-    String? firestoreId,
+    Object? firestoreId = _unsetSentinel,
     int? synced,
-    String? ocrText,
+    Object? ocrText = _unsetSentinel,
   }) {
     return GastoModel(
       id: id ?? this.id,
@@ -155,22 +157,22 @@ class GastoModel {
       moneda: moneda ?? this.moneda,
       totalOriginal: totalOriginal ?? this.totalOriginal,
       totalUsd: totalUsd ?? this.totalUsd,
-      totalUsdt: totalUsdt ?? this.totalUsdt,
-      totalEur: totalEur ?? this.totalEur,
+      totalUsdt: identical(totalUsdt, _unsetSentinel) ? this.totalUsdt : totalUsdt as int?,
+      totalEur: identical(totalEur, _unsetSentinel) ? this.totalEur : totalEur as int?,
       tasaCambio: tasaCambio ?? this.tasaCambio,
-      tasaUsdt: tasaUsdt ?? this.tasaUsdt,
-      tasaEur: tasaEur ?? this.tasaEur,
-      fuenteTasaCambio: fuenteTasaCambio ?? this.fuenteTasaCambio,
-      fechaTasaCambio: fechaTasaCambio ?? this.fechaTasaCambio,
+      tasaUsdt: identical(tasaUsdt, _unsetSentinel) ? this.tasaUsdt : tasaUsdt as double?,
+      tasaEur: identical(tasaEur, _unsetSentinel) ? this.tasaEur : tasaEur as double?,
+      fuenteTasaCambio: identical(fuenteTasaCambio, _unsetSentinel) ? this.fuenteTasaCambio : fuenteTasaCambio as String?,
+      fechaTasaCambio: identical(fechaTasaCambio, _unsetSentinel) ? this.fechaTasaCambio : fechaTasaCambio as String?,
       categoria: categoria ?? this.categoria,
-      rutaFotoLocal: rutaFotoLocal ?? this.rutaFotoLocal,
+      rutaFotoLocal: identical(rutaFotoLocal, _unsetSentinel) ? this.rutaFotoLocal : rutaFotoLocal as String?,
       creadoEn: creadoEn ?? this.creadoEn,
       actualizadoEn: actualizadoEn ?? this.actualizadoEn,
-      eliminadoEn: eliminadoEn ?? this.eliminadoEn,
+      eliminadoEn: identical(eliminadoEn, _unsetSentinel) ? this.eliminadoEn : eliminadoEn as String?,
       items: items ?? this.items,
-      firestoreId: firestoreId ?? this.firestoreId,
+      firestoreId: identical(firestoreId, _unsetSentinel) ? this.firestoreId : firestoreId as String?,
       synced: synced ?? this.synced,
-      ocrText: ocrText ?? this.ocrText,
+      ocrText: identical(ocrText, _unsetSentinel) ? this.ocrText : ocrText as String?,
     );
   }
 

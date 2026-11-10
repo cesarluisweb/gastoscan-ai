@@ -201,3 +201,44 @@ ValorMonetarioResuelto resolvePersistedExpense({
     motivoNoDisponible: 'Lente no soportada',
   );
 }
+
+/// Comprueba si dos instancias de [GastoModel] poseen contenido de negocio idéntico,
+/// excluyendo metadatos transaccionales y locales de sincronización (`synced`, `firestoreId`,
+/// `rutaFotoLocal`, `ocrText`, `id`, `creadoEn`, `actualizadoEn`).
+///
+/// Utilizado para idempotencia post-crash y control de concurrencia optimista conforme
+/// al contrato normativo de RM-03 v1.2 §4.
+bool sonContenidoNegocioIdentico(GastoModel a, GastoModel b) {
+  if (a.uuid != b.uuid) return false;
+  if (a.fecha != b.fecha) return false;
+  if (a.comercio.trim().toLowerCase() != b.comercio.trim().toLowerCase()) return false;
+  if (a.moneda.toUpperCase().trim() != b.moneda.toUpperCase().trim()) return false;
+  if (a.totalOriginal != b.totalOriginal) return false;
+  if (a.totalUsd != b.totalUsd) return false;
+  if (a.totalUsdt != b.totalUsdt) return false;
+  if (a.totalEur != b.totalEur) return false;
+  if ((a.tasaCambio - b.tasaCambio).abs() > 0.0001) return false;
+  final aTasaUsdt = a.tasaUsdt ?? 0.0;
+  final bTasaUsdt = b.tasaUsdt ?? 0.0;
+  if ((aTasaUsdt - bTasaUsdt).abs() > 0.0001) return false;
+  final aTasaEur = a.tasaEur ?? 0.0;
+  final bTasaEur = b.tasaEur ?? 0.0;
+  if ((aTasaEur - bTasaEur).abs() > 0.0001) return false;
+  if (a.categoria.trim().toLowerCase() != b.categoria.trim().toLowerCase()) return false;
+  if (a.eliminadoEn != b.eliminadoEn) return false;
+
+  final itemsA = a.items;
+  final itemsB = b.items;
+  if (itemsA.length != itemsB.length) return false;
+  for (int i = 0; i < itemsA.length; i++) {
+    final itA = itemsA[i];
+    final itB = itemsB[i];
+    if (itA.descripcion.trim().toLowerCase() != itB.descripcion.trim().toLowerCase()) return false;
+    if (itA.cantidad != itB.cantidad) return false;
+    if (itA.precioUnitario != itB.precioUnitario) return false;
+    if (itA.total != itB.total) return false;
+    if (itA.categoria.trim().toLowerCase() != itB.categoria.trim().toLowerCase()) return false;
+  }
+
+  return true;
+}
