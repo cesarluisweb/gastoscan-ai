@@ -1,3 +1,4 @@
+import '../../core/constants/app_constants.dart';
 import '../../data/models/gasto_model.dart';
 import 'rate_market.dart';
 
@@ -224,7 +225,7 @@ bool sonContenidoNegocioIdentico(GastoModel a, GastoModel b) {
   final aTasaEur = a.tasaEur ?? 0.0;
   final bTasaEur = b.tasaEur ?? 0.0;
   if ((aTasaEur - bTasaEur).abs() > 0.0001) return false;
-  if (a.categoria.trim().toLowerCase() != b.categoria.trim().toLowerCase()) return false;
+  if (AppConstants.normalizarCategoria(a.categoria) != AppConstants.normalizarCategoria(b.categoria)) return false;
   if (a.eliminadoEn != b.eliminadoEn) return false;
 
   final itemsA = a.items;
@@ -237,7 +238,7 @@ bool sonContenidoNegocioIdentico(GastoModel a, GastoModel b) {
     if (itA.cantidad != itB.cantidad) return false;
     if (itA.precioUnitario != itB.precioUnitario) return false;
     if (itA.total != itB.total) return false;
-    if (itA.categoria.trim().toLowerCase() != itB.categoria.trim().toLowerCase()) return false;
+    if (AppConstants.normalizarCategoria(itA.categoria) != AppConstants.normalizarCategoria(itB.categoria)) return false;
   }
 
   return true;

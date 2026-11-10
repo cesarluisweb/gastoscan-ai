@@ -534,7 +534,7 @@ void main() {
         totalOriginal: 2500,
         totalUsd: 2500,
         tasaCambio: 45.0,
-        categoria: 'Alimentos',
+        categoria: 'Alimentación',
         creadoEn: '2026-11-10T10:00:00.000Z',
         actualizadoEn: '2026-11-10T10:00:00.000Z',
         synced: 0, // Quedó sin marcar por caída anterior
@@ -552,7 +552,7 @@ void main() {
             'total_original': 2500,
             'total_usd': 2500,
             'tasa_cambio': 45.0,
-            'categoria': 'Alimentos',
+            'categoria': 'Alimentación',
             'creado_en': '2026-11-10T10:00:00.000Z',
             'actualizado_en': '2026-11-10T10:05:00.000Z',
           },
