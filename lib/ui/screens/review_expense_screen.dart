@@ -1345,6 +1345,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       final origMoneda = widget.existingGasto!.moneda;
       final bool montoCambio = origTotal != totalOriginalCentavos || origMoneda != monedaFinal;
       if (montoCambio) {
+        setState(() => _isSaving = false);
         final montoAnteriorStr = '${_symbolForMoneda(origMoneda)} ${(origTotal / 100.0).toStringAsFixed(2)}';
         final montoNuevoStr = '${_symbolForMoneda(monedaFinal)} ${(totalOriginalCentavos / 100.0).toStringAsFixed(2)}';
         final bool? confirmar = await showDialog<bool>(
@@ -1375,9 +1376,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         );
         if (confirmar != true) {
           if (!mounted) return;
-          setState(() => _isSaving = false);
           return;
         }
+        setState(() => _isSaving = true);
       }
 
       success = await gastoProvider.actualizarGasto(nuevoGasto, itemsFinal);
