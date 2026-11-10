@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_constants.dart';
 import '../../core/utils/amount_parser.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../data/models/gemini_extraction_result.dart';

@@ -108,7 +108,7 @@ jobs:
         run: flutter test > test_results.txt || (cat test_results.txt && exit 1)
 
       - name: Subir Reporte de Pruebas como Artefacto
-        if: always() && (steps.run_unit_tests.outcome == 'success' || steps.run_unit_tests.outcome == 'failure')
+        if: always() && hashFiles('test_results.txt') != ''
         uses: actions/upload-artifact@v4
         with:
           name: test-results
