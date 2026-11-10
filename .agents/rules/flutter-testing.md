@@ -120,3 +120,11 @@ description: "Convenciones para pruebas unitarias y de widgets, configuración d
   await tester.pumpAndSettle();
   ```
 - **Cero Advertencias en Archivos de Test:** El pipeline de CI corre con `--fatal-warnings`. Prohibido dejar importaciones huérfanas (`unused_import`) o advertencias en los archivos dentro de `test/`.
+
+## 6. Validación de Guías de Pruebas Manuales en Dispositivo Físico
+- **Inspección Previa en `lib/ui/` Obligatoria:** Antes de redactar cualquier guía de pruebas paso a paso en dispositivo físico, el asistente debe inspeccionar el código fuente de los widgets en `lib/ui/` y aportar evidencia archivo:línea de que cada menú, ruta y campo descrito existe físicamente en la build que se va a instalar. Queda prohibido presuponer controles visuales a partir de métodos de servicios, proveedores o modelos.
+- **Criterios de Invalidez de Guías:** Se considera inválida cualquier guía que:
+  1. Nombre un control cuyo `onTap`/`onPressed`/`TextField` no exista en `lib/ui/`.
+  2. Describa una ruta sin verificar que es alcanzable (navegación real, sin feature flag ni condicional que la oculte).
+  3. No indique el SHA del commit y el número de build del artefacto que se está probando.
+  4. Referencie un método (p. ej. `SettingsProvider.setTasaCambio`) sin listar sus llamadores reales vía búsqueda en `lib/ui/`. Si la lista de llamadores está vacía, el flujo no es probable en dispositivo y debe declararse como tal, no maquetarse como instrucción.

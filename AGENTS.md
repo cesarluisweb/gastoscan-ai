@@ -83,6 +83,12 @@ Se considera Tarea Crítica cualquier cambio que involucre:
 
 *Protocolo para Tareas Críticas:* Registrar los cambios en un documento técnico dedicado (`DOC_*.md`), proveer a César una guía de pruebas paso a paso y esperar su visto bueno antes de dar por cerrada la tarea.
 
+*Validación de Guías de Pruebas en Dispositivo:* Antes de redactar cualquier guía de pruebas paso a paso en dispositivo físico, el asistente debe inspeccionar el código fuente de los widgets en `lib/ui/` y aportar evidencia archivo:línea de que cada menú, ruta y campo descrito existe físicamente en la build que se va a instalar. Queda prohibido presuponer controles visuales a partir de métodos de servicios, proveedores o modelos. Se considera inválida cualquier guía que:
+1. Nombre un control cuyo `onTap`/`onPressed`/`TextField` no exista en `lib/ui/`.
+2. Describa una ruta sin verificar que es alcanzable (navegación real, sin feature flag ni condicional que la oculte).
+3. No indique el SHA del commit y el número de build del artefacto que se está probando.
+4. Referencie un método (p. ej. `SettingsProvider.setTasaCambio`) sin listar sus llamadores reales vía búsqueda en `lib/ui/`. Si la lista de llamadores está vacía, el flujo no es probable en dispositivo y debe declararse como tal, no maquetarse como instrucción.
+
 ## 5. Índice de Consulta Directa ("Si vas a hacer X, consulta Y")
 
 Antes de ejecutar tareas en áreas específicas, consulta la regla modular o skill correspondiente:
