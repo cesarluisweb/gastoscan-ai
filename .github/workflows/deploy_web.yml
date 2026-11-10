@@ -6,8 +6,6 @@ on:
     paths:
       - 'landing/**'
       - 'firebase.json'
-      - 'firestore.rules'
-      - 'firestore.indexes.json'
       - '.firebaserc'
       - '.github/workflows/deploy_web.yml'
   workflow_dispatch:
@@ -50,8 +48,8 @@ jobs:
           npm run build
           cd ..
 
-      - name: Desplegar a Firebase Hosting y Reglas de Firestore
+      - name: Desplegar a Firebase Hosting
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_GATOSCAN_AI }}
         run: |
-          npx firebase-tools@15.35.0 deploy --only hosting,firestore:rules --project gastoscan-ai --token "$FIREBASE_TOKEN" --non-interactive
+          npx firebase-tools@15.35.0 deploy --only hosting --project gastoscan-ai --token "$FIREBASE_TOKEN" --non-interactive

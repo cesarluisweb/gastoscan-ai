@@ -1,0 +1,30 @@
+name: Desplegar Reglas de Firestore (manual)
+on:
+  workflow_dispatch:
+    inputs:
+      confirmacion:
+        description: 'Escribe DEPLOY para confirmar que probaste las reglas en el emulador'
+        required: true
+        default: ''
+permissions:
+  contents: read
+jobs:
+  deploy-rules:
+    name: Publicar firestore.rules
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: github.event.inputs.confirmacion == 'DEPLOY'
+    steps:
+      - name: Descargar codigo fuente
+        uses: actions/checkout@v4
+
+      - name: Mostrar reglas que se van a publicar
+        run: |
+          echo "Commit: $GITHUB_SHA"
+          cat firestore.rules
+
+      - name: Desplegar Reglas de Firestore
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_GATOSCAN_AI }}
+        run: |
+          npx firebase-tools@15.35.0 deploy --only firestore:rules --project gastoscan-ai --token "$FIREBASE_TOKEN" --non-interactive
