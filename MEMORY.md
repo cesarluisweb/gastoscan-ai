@@ -4,7 +4,7 @@
 ## Estado Actual Inmediato
 - **Rama:** `main` (commit `6ed34c4`; CI Android build 666 en verde, run 42835194258).
 - **Acceso a Producción Google Play:** Segunda ventana de prueba cerrada en curso (Día 3/14 cumplido con 12 evaluadores activos). AAB `1.5.0+669` en Play Console. Fin estimado: ~19/11/2026.
-- **Seguridad y Parche de IA en Worker (A1a, A2, C1) — `Completada ✅`:** Cuota compartida persistente con Cloudflare D1 (50/día por UID, 20.000 global), fail-closed estricto (503 si DB no disponible), corte diario en VET (UTC-4), 401 opaco sin fugas y topes de salida (4096 / 8192). 13 tests locales en verde (`workers/test/quota.test.js`).
+- **Seguridad y Parche de IA en Worker (A1a, A2, C1) — `Pendiente de validación 🧪`:** Cuota compartida persistente con Cloudflare D1 (50/día por UID, 20.000 global), fail-closed estricto (503 si DB no disponible), corte diario en VET (UTC-4), 401 opaco sin fugas y topes de salida (4096 / 8192). 13 tests locales en verde (`workers/test/quota.test.js`); CI aún no corrió sobre estos últimos cambios.
 - **Seguridad de firma (P0) — `Pendiente de validación 🧪`:** `android_template/rindemas.jks` fuera de Git; respaldo en `C:\Users\cesar\Documents\RindeMas-Backup-Keystore`. Firma inyectada desde Secrets `ANDROID_KEYSTORE_*`. CI aborta si el SHA-1 restaurado ≠ `D3850D17…` o si el AAB no firma con SHA-256 `B206E47B…`.
 - **Reproducibilidad (P0) — `Completada ✅`:** Flutter fijado en `3.47.9`, `pubspec.lock` versionado con guarda anti-drift y `cloud_functions` eliminado.
 - **Artefacto para Play:** `app-release-aab` del run 42835194258 (build 666).

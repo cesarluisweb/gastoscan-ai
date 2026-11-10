@@ -46,7 +46,7 @@ function isRateLimited(uid, limit = 30, windowMs = 60000) {
   return userData.count > limit;
 }
 
-// Control de cuota diaria persistente (D1 / degradación en memoria)
+// Control de cuota diaria persistente (D1, fail-closed)
 // Límites: 50/día por UID (cuota compartida) y tope global de 20.000/día para proteger el proyecto de Google
 const DAILY_UID_LIMIT = 50;
 const DAILY_GLOBAL_LIMIT = 20000;
@@ -70,7 +70,7 @@ async function incrementUsage(db, day, scope) {
 }
 
 /**
- * Valida e incrementa la cuota diaria persistente en D1 (o memoria).
+ * Valida e incrementa la cuota diaria persistente en D1.
  * 
  * ORDEN CRÍTICO: Primero se evalúa e incrementa el límite por UID. Solo si el UID
  * tiene cuota disponible (< 50) se procede a incrementar el contador global.
@@ -91,7 +91,7 @@ async function checkDailyQuota(env, uid, isCustomKey) {
       allowed: false,
       statusCode: 503,
       error: "Servicio de cuotas no disponible. Intenta nuevamente en unos momentos.",
-      quotaMode: "memory"
+      quotaMode: "unavailable"
     };
   }
 
@@ -430,13 +430,13 @@ export default {
       });
     }
 
-    // 2.1 Control de cuota diaria persistente (D1 / fallback memoria)
+    // 2.1 Control de cuota diaria persistente (D1, fail-closed)
     // Límites: 50/día por UID (solo cuota compartida) y tope global de 20.000/día
     const quota = await checkDailyQuota(env, uid, isCustomKey);
     if (!quota.allowed) {
       const quotaHeaders = { ...corsHeaders, "Content-Type": "application/json" };
-      if (quota.quotaMode === "memory") {
-        quotaHeaders["x-quota-mode"] = "memory";
+      if (quota.quotaMode === "unavailable") {
+        quotaHeaders["x-quota-mode"] = "unavailable";
       }
       return new Response(JSON.stringify({
         error: quota.error,

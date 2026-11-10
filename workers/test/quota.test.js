@@ -112,7 +112,7 @@ describe("A1a — Control de Cuota y Rate Limiting Persistente con Cloudflare D1
     const result = await checkDailyQuota(envSinDb, uid, false);
     assert.equal(result.allowed, false);
     assert.equal(result.statusCode, 503);
-    assert.equal(result.quotaMode, "memory");
+    assert.equal(result.quotaMode, "unavailable");
   });
 
   test("aplica fail-closed con 503 ante fallo en base de datos D1", async () => {
