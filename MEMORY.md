@@ -4,7 +4,7 @@
 ## Estado Actual Inmediato
 - **Rama:** `main` (commit `75f3965`; CI Android build 671 en verde, run 42853151974; CI Web build 23 en verde, run 42852053353).
 - **Acceso a Producción Google Play:** Segunda ventana de prueba cerrada en curso (Día 3/14 cumplido con 12 evaluadores activos). AAB `1.5.0+669` en Play Console. Fin estimado: ~19/11/2026.
-- **Seguridad y Parche de IA en Worker (A1a, A2, C1) y App (C2) — `Pendiente de validación 🧪`:** Cuota compartida persistente con Cloudflare D1 (50/día por UID, 20.000 global), fail-closed estricto, corte en VET (UTC-4) y topes de tokens. En app móvil (C2): saneamiento de montos negativos/infinitos, límites de cordura y validación semántica al 50% en visión. 650 tests en verde en CI.
+- **Seguridad, Cuotas, Galería e Integridad (A1a, B2, C1, C2) — `Pendiente de validación 🧪`:** CI build 671 en verde sobre commit `75f3965` (650 tests). Cuota D1 (50/día UID, 20k global, VET UTC-4, fail-closed). B2: copia en galería del sistema activada por defecto. C1/C2: saneamiento de montos y SemanticValidator al 50% en visión. Pendiente explícito: `wrangler deploy` del Worker y decisión sobre reglas de Firestore. Falta prueba en dispositivo.
 - **Seguridad de firma (P0) — `Pendiente de validación 🧪`:** `android_template/rindemas.jks` fuera de Git; firma inyectada desde Secrets. CI verificado con SHA-256 en build 671.
 - **Reproducibilidad (P0) — `Completada ✅`:** Flutter fijado en `3.47.9`, `pubspec.lock` versionado con guarda anti-drift.
 - **Artefacto para Play:** `app-release-aab` del run 42853151974 (build 671).

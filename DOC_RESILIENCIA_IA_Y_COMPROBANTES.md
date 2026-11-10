@@ -70,3 +70,12 @@ Sigue estos pasos en la aplicación para comprobar que todo funciona de acuerdo 
 Una vez realizadas estas pruebas y recibido tu visto bueno:
 1. Se registrará el hito como completado en `ROADMAP.md`.
 2. Se procederá con la siguiente tarea planificada (Planificación de API Key propia opcional para Gemini en sección Más).
+
+
+---
+
+## 4. Integridad de la extracción (C1, C2)
+
+- Saneamiento de montos en `lib/data/models/gemini_extraction_result.dart`: negativos, infinitos y NaN se convierten en 0; cualquier valor mayor a 1.000.000.000 se topa. Cantidad máxima 10.000. El total del ítem se topa ANTES de convertir a centavos, porque un double enorme lanza `UnsupportedError` al redondear.
+- La ruta de visión ahora pasa por `SemanticValidator` con tolerancia 0.50 (la de texto usa 0.15). Si falla, el ítem queda en estado `'error'` con el mensaje: "No pudimos validar los montos del comprobante. Revisa la foto o regístralo manualmente."
+- Justificación del 0.50: la visión es menos precisa; se prefiere no rechazar facturas válidas. Si aparecen rechazos falsos, se sube a 0.60.

@@ -51,3 +51,18 @@
   `https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com`
 - **Proyecto Firebase:** `gastoscan-ai`
 - **Issuer Esperado:** `https://securetoken.google.com/gastoscan-ai`
+
+---
+
+## 4. Control de cuota de IA (A1a)
+
+- **Mecanismo:** Cloudflare D1, tabla `usage(day, scope, count)` con `PRIMARY KEY (day, scope)`.
+- **Límites:** 50 peticiones/día por UID (solo cuota compartida) y 20.000/día global.
+- **Orden obligatorio:** Se evalúa e incrementa el UID primero y solo si pasa se toca el contador global. Si se invierte, una cuenta bloqueada infla el global y tumba el servicio para todos.
+- **Corte diario:** Hora de Venezuela (UTC-4), no UTC.
+- **Fail-closed:** Si falta el binding `DB` o la consulta falla, se devuelve 503 y NO se llama a Gemini.
+- **Bypass BYOK:** Las peticiones con API key propia (BYOK) no consumen cuota ni escriben en D1.
+- **Orden de despliegue obligatorio:** `npx wrangler d1 migrations apply rindemas-usage --remote` ANTES de `npx wrangler deploy`. Si se invierte, la IA devuelve 503.
+- **Limitación conocida y aceptada:** Sin binding D1 la IA se detiene por diseño.
+- **Reintentos:** Una petición puede generar hasta 2 llamadas a Gemini (reintento solo en 429/5xx).
+

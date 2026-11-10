@@ -55,3 +55,14 @@ En respuesta directa a la experiencia de usuario y requerimientos funcionales so
 4. Tocar el botón inferior rojo **«Eliminar X fotos»** o el icono de papelera superior.
 5. Confirmar en el diálogo de advertencia.
 6. Verificar que las fotos se borran del almacenamiento y se muestra un mensaje informativo, mientras todos los registros de gastos se conservan en la aplicación.
+
+
+---
+
+## Copia en la galería del sistema (B2)
+
+- El interruptor "Guardar copia en la galería del teléfono" viene activado por defecto.
+- Con el interruptor activo, cada comprobante se guarda en el directorio interno de la app Y se registra en el álbum "Rinde Más" de la galería del sistema.
+- La copia de la galería queda fuera de la app: no se borra al eliminar la cuenta, al limpiar archivos temporales ni al desinstalar.
+- Aviso único en el primer guardado con foto.
+- Referencias: `lib/services/image_service.dart:31-46`, `lib/ui/screens/review_expense_screen.dart:944-947`, `lib/ui/screens/more_screen.dart:817-824`, `landing/src/pages/privacidad.astro:85` y `:92`.
