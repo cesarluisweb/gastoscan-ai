@@ -99,7 +99,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
       tasa,
       widget.monedaPrincipal,
       tasaEur: (widget.gasto.tasaEurDisplay != null && widget.gasto.tasaEurDisplay! > 0) ? widget.gasto.tasaEurDisplay! : widget.tasaEur,
-      tasaUsdt: widget.gasto.tasaUsdtDisplay > 0 ? widget.gasto.tasaUsdtDisplay : widget.tasaUsdt,
+      tasaUsdt: (widget.gasto.tasaUsdtDisplay != null && widget.gasto.tasaUsdtDisplay! > 0) ? widget.gasto.tasaUsdtDisplay! : widget.tasaUsdt,
       totalUsdt: widget.gasto.totalUsdtDisplay,
       totalEur: widget.gasto.totalEurDisplay,
       monedaOrigen: widget.gasto.moneda,
@@ -362,9 +362,10 @@ class _ExpenseCardState extends State<ExpenseCard> {
                             );
                             break;
                           case 'USDT':
+                            final double usdtBase = widget.gasto.totalUsdtDisplay ?? (widget.gasto.moneda == 'USD' ? widget.gasto.totalUsdDisplay : 0.0);
                             itemDisplay = itemRatio > 0
-                                ? (widget.gasto.totalUsdtDisplay * itemRatio)
-                                : widget.gasto.totalUsdtDisplay;
+                                ? (usdtBase * itemRatio)
+                                : usdtBase;
                             break;
                           case 'USD':
                           default:

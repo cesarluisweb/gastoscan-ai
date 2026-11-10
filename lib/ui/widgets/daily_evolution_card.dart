@@ -59,7 +59,7 @@ class DailyEvolutionCard extends StatelessWidget {
           }
         } else if (monedaPrincipal == 'USDT') {
           monto = (g.totalUsdt != null && g.totalUsdt! > 0)
-              ? g.totalUsdtDisplay
+              ? (g.totalUsdtDisplay ?? (g.moneda == 'USD' ? g.totalUsdDisplay : 0.0))
               : g.totalUsdDisplay;
         } else if (monedaPrincipal == 'EUR') {
           final usdRate = tasaCambio > 0 ? tasaCambio : 1.0;

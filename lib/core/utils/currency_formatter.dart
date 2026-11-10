@@ -64,15 +64,15 @@ class CurrencyFormatter {
         }
         // Sin tasa EUR no se inventa ratio: se usa la tasa USD como aproximación
         // solo si existe; si no hay dato, la rama neutra muestra el equivalente en USD.
-        final double eurRate = tasaEur > 0 ? tasaEur : (tasaCambio > 0 ? tasaCambio : 0.0);
-        return formatEur(eurRate > 0 ? ves / eurRate : totalUsd);
+        final double eurRate = tasaEur > 0 ? tasaEur : 0.0;
+        return eurRate > 0 ? formatEur(ves / eurRate) : '—';
       case 'USDT':
         if (totalUsdt != null && totalUsdt > 0) {
           return formatUsdt(totalUsdt);
         }
         if (monedaOrigen == 'VES') {
-          final double rate = tasaUsdt > 0 ? tasaUsdt : (tasaCambio > 0 ? tasaCambio : 1.0);
-          return formatUsdt(rate > 0 ? ves / rate : totalUsd);
+          final double rate = tasaUsdt > 0 ? tasaUsdt : 0.0;
+          return rate > 0 ? formatUsdt(ves / rate) : '—';
         }
         return formatUsdt(totalUsd);
       case 'USD':
@@ -111,8 +111,8 @@ class CurrencyFormatter {
     if (monedaPreferida == 'EUR') {
       final ves = amountUsd * (tasaCambio > 0 ? tasaCambio : 1.0);
       // Sin tasa EUR no se inventa ratio: aproximación con tasa USD o neutro.
-      final eurRate = tasaEur > 0 ? tasaEur : (tasaCambio > 0 ? tasaCambio : 0.0);
-      return eurRate > 0 ? ves / eurRate : amountUsd;
+      final eurRate = tasaEur > 0 ? tasaEur : 0.0;
+      return eurRate > 0 ? ves / eurRate : 0.0;
     }
     if (monedaPreferida == 'USDT') {
       // Paridad 1:1 directa con USD
@@ -133,11 +133,11 @@ class CurrencyFormatter {
       case 'VES':
         return amountVes;
       case 'EUR':
-        final double eurRate = tasaEur > 0 ? tasaEur : (tasaCambio > 0 ? tasaCambio : 1.0);
-        return eurRate > 0 ? amountVes / eurRate : (tasaCambio > 0 ? amountVes / tasaCambio : 0.0);
+        final double eurRate = tasaEur > 0 ? tasaEur : 0.0;
+        return eurRate > 0 ? amountVes / eurRate : 0.0;
       case 'USDT':
-        final double usdtRate = tasaUsdt > 0 ? tasaUsdt : (tasaCambio > 0 ? tasaCambio : 1.0);
-        return usdtRate > 0 ? amountVes / usdtRate : (tasaCambio > 0 ? amountVes / tasaCambio : 0.0);
+        final double usdtRate = tasaUsdt > 0 ? tasaUsdt : 0.0;
+        return usdtRate > 0 ? amountVes / usdtRate : 0.0;
       case 'USD':
       default:
         return tasaCambio > 0 ? amountVes / tasaCambio : 0.0;
@@ -166,10 +166,10 @@ class CurrencyFormatter {
     if (from == 'VES') {
       ves = amount;
     } else if (from == 'EUR') {
-      final eurRate = tasaEur > 0 ? tasaEur : tasaCambioUsd;
+      final eurRate = tasaEur > 0 ? tasaEur : 0.0;
       ves = amount * (eurRate > 0 ? eurRate : 1.0);
     } else if (from == 'USDT') {
-      final usdtRate = tasaUsdt > 0 ? tasaUsdt : tasaCambioUsd;
+      final usdtRate = tasaUsdt > 0 ? tasaUsdt : 0.0;
       ves = amount * (usdtRate > 0 ? usdtRate : 1.0);
     } else {
       // USD

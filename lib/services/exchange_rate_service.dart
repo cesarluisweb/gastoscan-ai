@@ -185,7 +185,7 @@ class ExchangeRateService {
           return ExchangeRatesData(
             usd: gUsd,
             eur: gEur ?? (eurRate ?? 0.0),
-            usdt: gUsdt ?? (usdtRate ?? gUsd),
+            usdt: gUsdt ?? (usdtRate ?? 0.0),
             fecha: now,
           );
         }
@@ -235,10 +235,6 @@ class ExchangeRateService {
         _onKeyWriteFailed('cached_rate_usdt');
       }
       fetchedAny = true;
-    } else if (!isValidMonetaryRate(usdtRate) && isValidMonetaryRate(usdRate)) {
-      // Último recurso histórico: USDT ≈ USD. Queda señalado vía
-      // `esReferencia` cuando nada se obtuvo en vivo.
-      usdtRate = usdRate;
     }
 
     if (fetchedAny) {
@@ -550,27 +546,8 @@ class ExchangeRateService {
       }
     }
 
-    // 4. Fallback de USDT a USD oficial de la misma fecha histórica si el histórico paralelo no existía
-    if (monedaClean == 'USDT') {
-      final usdHistorical = await getRateForDate(
-        isoDate,
-        moneda: 'USD',
-        tipo: 'oficial',
-        client: httpClient,
-        prefsInstance: prefs,
-      );
-      if (isValidMonetaryRate(usdHistorical)) {
-        if (await prefs.setDouble(cacheKey, usdHistorical)) {
-          _onKeyWriteConfirmed(cacheKey);
-        } else {
-          _onKeyWriteFailed(cacheKey);
-        }
-        return usdHistorical;
-      }
-    }
-
-    // 5. Para fechas históricas sin datos, retornar 0.0 para no falsificar la tasa
-    // asignando erróneamente la tasa del día de hoy.
+    // 4. Para fechas históricas sin datos, retornar 0.0 para no falsificar la tasa
+    // inventando equivalencias o asignando erróneamente la tasa del día de hoy (D-04, H-1).
     return 0.0;
   }
 

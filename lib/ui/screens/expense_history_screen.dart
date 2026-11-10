@@ -465,7 +465,7 @@ class ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
       sumUsdt = gastoProvider.totalMesUsdt;
     } else {
       sumUsd = currentGastos.fold(0.0, (acc, g) => acc + g.totalUsdDisplay);
-      sumUsdt = currentGastos.fold(0.0, (acc, g) => acc + g.totalUsdtDisplay);
+      sumUsdt = currentGastos.fold(0.0, (acc, g) => acc + (g.totalUsdtDisplay ?? (g.moneda == 'USD' ? g.totalUsdDisplay : 0.0)));
       sumVes = currentGastos.fold(0.0, (acc, g) {
         final double t = g.tasaCambio > 0 ? g.tasaCambio : tasa;
         return acc + (g.moneda == 'VES' ? g.totalOriginalDisplay : g.totalUsdDisplay * t);

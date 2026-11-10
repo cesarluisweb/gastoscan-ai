@@ -47,7 +47,7 @@ void main() {
       expect(rate, equals(0.0));
     });
 
-    test('USDT historico hace fallback a USD historico de la misma fecha si no hay paralelo', () async {
+    test('USDT historico no hace fallback a USD si no hay paralelo (D-04, H-1)', () async {
       final mock = MockClient((request) async {
         if (request.url.toString().contains('/dolares/paralelo')) {
           return http.Response('[]', 200);
@@ -58,7 +58,7 @@ void main() {
         return http.Response('error', 500);
       });
       final usdtRate = await ExchangeRateService.getRateForDate('2024-05-15', moneda: 'USDT', client: mock);
-      expect(usdtRate, equals(36.5));
+      expect(usdtRate, equals(0.0));
     });
 
     test('encuentra el ultimo dia habil anterior si la fecha es fin de semana', () async {

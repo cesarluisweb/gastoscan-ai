@@ -709,17 +709,22 @@ class DatabaseHelper {
       final moneda = (r['moneda'] as String?) ?? 'VES';
       final totalOrigInt = (r['total_original'] as num?)?.toInt() ?? 0;
       final totalUsdInt = (r['total_usd'] as num?)?.toInt() ?? 0;
-      final totalUsdtInt = (r['total_usdt'] as num?)?.toInt() ?? totalUsdInt;
+      final totalUsdtInt = (r['total_usdt'] as num?)?.toInt();
       final totalEurInt = (r['total_eur'] as num?)?.toInt();
       final tasa = (r['tasa_cambio'] as num?)?.toDouble() ?? 1.0;
       final tasaEur = (r['tasa_eur'] as num?)?.toDouble();
+      final tasaUsdt = (r['tasa_usdt'] as num?)?.toDouble();
 
       final double totalOrig = totalOrigInt / 100.0;
       final double totalUsd = totalUsdInt / 100.0;
-      final double totalUsdt = totalUsdtInt / 100.0;
+      final double totalUsdt = (totalUsdtInt != null)
+          ? (totalUsdtInt / 100.0)
+          : (moneda == 'USD'
+              ? totalUsd
+              : ((tasaUsdt != null && tasaUsdt > 0) ? (moneda == 'VES' ? totalOrig / tasaUsdt : 0.0) : 0.0));
       final double totalEur = (totalEurInt != null)
           ? (totalEurInt / 100.0)
-          : ((tasaEur != null && tasaEur > 0) ? (moneda == 'VES' ? totalOrig / tasaEur : totalUsd) : totalUsd);
+          : ((tasaEur != null && tasaEur > 0) ? (moneda == 'VES' ? totalOrig / tasaEur : 0.0) : 0.0);
 
       sumUsd += totalUsd;
       sumUsdt += totalUsdt;
@@ -751,7 +756,7 @@ class DatabaseHelper {
 
     final gastosRows = await db.query(
       'gastos',
-      columns: ['id', 'moneda', 'total_original', 'total_usd', 'total_usdt', 'total_eur', 'tasa_cambio', 'tasa_eur', 'categoria'],
+      columns: ['id', 'moneda', 'total_original', 'total_usd', 'total_usdt', 'total_eur', 'tasa_cambio', 'tasa_usdt', 'tasa_eur', 'categoria'],
       where: 'fecha LIKE ? AND eliminado_en IS NULL',
       whereArgs: [pattern],
     );
@@ -784,12 +789,18 @@ class DatabaseHelper {
       final gastoMoneda = (g['moneda'] as String?) ?? 'VES';
       final totalOrig = ((g['total_original'] as num?)?.toInt() ?? 0) / 100.0;
       final totalUsd = ((g['total_usd'] as num?)?.toInt() ?? 0) / 100.0;
-      final totalUsdt = ((g['total_usdt'] as num?)?.toInt() ?? (g['total_usd'] as num?)?.toInt() ?? 0) / 100.0;
+      final totalUsdtInt = (g['total_usdt'] as num?)?.toInt();
+      final tasaUsdt = (g['tasa_usdt'] as num?)?.toDouble();
+      final totalUsdt = (totalUsdtInt != null)
+          ? (totalUsdtInt / 100.0)
+          : (gastoMoneda == 'USD'
+              ? totalUsd
+              : ((tasaUsdt != null && tasaUsdt > 0) ? (gastoMoneda == 'VES' ? totalOrig / tasaUsdt : 0.0) : 0.0));
       final totalEurInt = (g['total_eur'] as num?)?.toInt();
       final tasaEur = (g['tasa_eur'] as num?)?.toDouble();
       final totalEur = (totalEurInt != null)
           ? (totalEurInt / 100.0)
-          : ((tasaEur != null && tasaEur > 0) ? (gastoMoneda == 'VES' ? totalOrig / tasaEur : totalUsd) : totalUsd);
+          : ((tasaEur != null && tasaEur > 0) ? (gastoMoneda == 'VES' ? totalOrig / tasaEur : 0.0) : 0.0);
       final tasa = (g['tasa_cambio'] as num?)?.toDouble() ?? 1.0;
       final gastoCat = AppConstants.normalizarCategoria(g['categoria'] as String?);
 

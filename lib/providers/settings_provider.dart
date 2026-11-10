@@ -131,8 +131,8 @@ class SettingsProvider with ChangeNotifier {
       if (isValidMonetaryRate(rawUsdt)) {
         cachedUsdt = (rawUsdt as num).toDouble();
       }
-      // Preservar fallback semántico USD -> USDT (H-1 pendiente de E0-03)
-      _tasaCambioVesUsdt = cachedUsdt ?? _tasaCambioVesUsd;
+      // H-1 (E0-03): Eliminado fallback cruzado USD -> USDT (D-04)
+      _tasaCambioVesUsdt = cachedUsdt ?? 0.0;
 
       // NEW-6: Comprobación segura de tipo String antes de leer timestamp
       final rawTimestamp = prefs.get('cached_exchange_rates_timestamp');

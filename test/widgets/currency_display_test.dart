@@ -90,6 +90,27 @@ void main() {
       expect(usdtPrecalculado, contains('USDT'));
     });
 
+    test('formatPreferido retorna em-dash (—) ante ausencia de tasa EUR o USDT propia (D-04, H-1)', () {
+      final eurSinTasa = CurrencyFormatter.formatPreferido(
+        10.0,
+        400.0,
+        40.0,
+        'EUR',
+        tasaEur: 0.0,
+      );
+      expect(eurSinTasa, equals('—'));
+
+      final usdtVesSinTasa = CurrencyFormatter.formatPreferido(
+        20.0,
+        800.0,
+        40.0,
+        'USDT',
+        tasaUsdt: 0.0,
+        monedaOrigen: 'VES',
+      );
+      expect(usdtVesSinTasa, equals('—'));
+    });
+
     test('convertAmount correctly converts EUR and USDT to USD', () {
       final eurToUsd = CurrencyFormatter.convertAmount(
         100.0,

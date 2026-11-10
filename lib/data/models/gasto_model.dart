@@ -205,8 +205,8 @@ class GastoModel {
 
   double get totalOriginalDisplay => totalOriginal / 100.0;
   double get totalUsdDisplay => totalUsd / 100.0;
-  double get totalUsdtDisplay => (totalUsdt ?? totalUsd) / 100.0;
-  double get tasaUsdtDisplay => (tasaUsdt != null && tasaUsdt! > 0) ? tasaUsdt! : tasaCambio;
+  double? get totalUsdtDisplay => totalUsdt != null ? totalUsdt! / 100.0 : null;
+  double? get tasaUsdtDisplay => (tasaUsdt != null && tasaUsdt! > 0) ? tasaUsdt! : null;
   double? get totalEurDisplay => totalEur != null ? totalEur! / 100.0 : null;
   double? get tasaEurDisplay => tasaEur;
 }

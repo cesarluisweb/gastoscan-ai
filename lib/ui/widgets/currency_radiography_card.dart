@@ -48,7 +48,7 @@ class CurrencyRadiographyCard extends StatelessWidget {
       return gasto.totalUsdDisplay * rate;
     } else if (monedaPrincipal == 'USDT') {
       return (gasto.totalUsdt != null && gasto.totalUsdt! > 0)
-          ? gasto.totalUsdtDisplay
+          ? (gasto.totalUsdtDisplay ?? (gasto.moneda == 'USD' ? gasto.totalUsdDisplay : 0.0))
           : gasto.totalUsdDisplay;
     } else if (monedaPrincipal == 'EUR') {
       final rate = gasto.tasaCambio > 0 ? gasto.tasaCambio : usdRate;

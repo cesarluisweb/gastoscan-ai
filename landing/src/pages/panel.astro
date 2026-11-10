@@ -1573,11 +1573,11 @@ import '../styles/global.css';
                 let totalUsdt = 0;
                 if (g.total_usdt !== undefined && g.total_usdt !== null) {
                     totalUsdt = (Number(g.total_usdt || 0)) / 100.0;
-                } else if (g.moneda !== 'VES') {
+                } else if (g.moneda === 'USD') {
                     totalUsdt = totalUsd;
                 } else {
                     const tUsdt = Number(g.tasa_usdt || 0) > 0 ? Number(g.tasa_usdt) : (Number(liveRates.usdt || 0) > 0 ? Number(liveRates.usdt) : 0);
-                    totalUsdt = tUsdt > 0 ? (totalOrig / tUsdt) : totalUsd;
+                    totalUsdt = tUsdt > 0 ? (totalOrig / tUsdt) : 0;
                 }
                 sumUsdt += totalUsdt;
 
@@ -1588,7 +1588,7 @@ import '../styles/global.css';
                     totalEur = totalOrig;
                 } else {
                     const tEur = Number(g.tasa_eur || 0) > 0 ? Number(g.tasa_eur) : (Number(liveRates.eur || 0) > 0 ? Number(liveRates.eur) : 0);
-                    totalEur = tEur > 0 ? (g.moneda === 'VES' ? totalOrig / tEur : (totalUsd * (tasa > 0 ? tasa : 1.0)) / tEur) : totalUsd;
+                    totalEur = tEur > 0 ? (g.moneda === 'VES' ? totalOrig / tEur : (totalUsd * (tasa > 0 ? tasa : 1.0)) / tEur) : 0;
                 }
                 sumEur += totalEur;
 
@@ -1816,11 +1816,11 @@ import '../styles/global.css';
                 let totalUsdt = 0;
                 if (g.total_usdt !== undefined && g.total_usdt !== null) {
                     totalUsdt = (Number(g.total_usdt || 0)) / 100.0;
-                } else if (g.moneda !== 'VES') {
+                } else if (g.moneda === 'USD') {
                     totalUsdt = totalUsd;
                 } else {
                     const tUsdt = Number(g.tasa_usdt || 0) > 0 ? Number(g.tasa_usdt) : (Number(liveRates.usdt || 0) > 0 ? Number(liveRates.usdt) : 0);
-                    totalUsdt = tUsdt > 0 ? (totalOrig / tUsdt) : totalUsd;
+                    totalUsdt = tUsdt > 0 ? (totalOrig / tUsdt) : 0;
                 }
 
                 let targetTotal = 0;
@@ -1834,7 +1834,7 @@ import '../styles/global.css';
                     } else {
                         const tEur = Number(g.tasa_eur || 0) > 0 ? Number(g.tasa_eur) : (Number(liveRates.eur || 0) > 0 ? Number(liveRates.eur) : 0);
                         const vesEquiv = g.moneda === 'VES' ? totalOrig : (totalUsd * (tasa > 0 ? tasa : 1.0));
-                        targetTotal = tEur > 0 ? (vesEquiv / tEur) : (liveRates.eur > 0 ? (vesEquiv / liveRates.eur) : totalUsd);
+                        targetTotal = tEur > 0 ? (vesEquiv / tEur) : (liveRates.eur > 0 ? (vesEquiv / liveRates.eur) : 0);
                     }
                 } else if (displayCurrency === 'USDT') {
                     targetTotal = totalUsdt;
@@ -1954,22 +1954,22 @@ import '../styles/global.css';
                 let totalUsdt = 0;
                 if (gasto.total_usdt !== undefined && gasto.total_usdt !== null) {
                     totalUsdt = (Number(gasto.total_usdt || 0)) / 100.0;
-                } else if (moneda !== 'VES') {
+                } else if (moneda === 'USD') {
                     totalUsdt = totalUsd;
                 } else {
                     const tUsdt = Number(gasto.tasa_usdt || 0) > 0 ? Number(gasto.tasa_usdt) : (Number(liveRates.usdt || 0) > 0 ? Number(liveRates.usdt) : 0);
-                    totalUsdt = tUsdt > 0 ? (totalOrig / tUsdt) : totalUsd;
+                    totalUsdt = tUsdt > 0 ? (totalOrig / tUsdt) : 0;
                 }
 
                 const budgetCurrency = currentPresupuesto.moneda || 'USD';
                 const displayCurrency = activeLens || budgetCurrency;
                 const vesTotalGasto = moneda === 'VES' ? totalOrig : (totalUsd * tasa);
-                const eurRateRef = liveRates.eur > 0 ? liveRates.eur : (liveRates.usd > 0 ? liveRates.usd : 1.0);
+                const eurRateRef = liveRates.eur > 0 ? liveRates.eur : 0;
                 let targetTotalLens = totalUsd;
                 if (displayCurrency === 'VES') {
                     targetTotalLens = vesTotalGasto;
                 } else if (displayCurrency === 'USDT') {
-                    targetTotalLens = totalUsdt > 0 ? totalUsdt : totalUsd;
+                    targetTotalLens = totalUsdt;
                 } else if (displayCurrency === 'EUR') {
                     if (gasto.total_eur !== undefined && gasto.total_eur !== null) {
                         targetTotalLens = (Number(gasto.total_eur || 0)) / 100.0;
@@ -1977,7 +1977,7 @@ import '../styles/global.css';
                         targetTotalLens = totalOrig;
                     } else {
                         const tEur = Number(gasto.tasa_eur || 0) > 0 ? Number(gasto.tasa_eur) : (Number(liveRates.eur || 0) > 0 ? Number(liveRates.eur) : 0);
-                        targetTotalLens = tEur > 0 ? (vesTotalGasto / tEur) : (eurRateRef > 0 ? (vesTotalGasto / eurRateRef) : totalUsd);
+                        targetTotalLens = tEur > 0 ? (vesTotalGasto / tEur) : (eurRateRef > 0 ? (vesTotalGasto / eurRateRef) : 0);
                     }
                 }
 

@@ -362,7 +362,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
             ? MetodoLiquidacionUsd.pagadoEnBsUsdt
             : MetodoLiquidacionUsd.pagadoEnBsBcv;
         final double indexedAmount = isIndexedUsdt
-            ? gasto.totalUsdtDisplay
+            ? (gasto.totalUsdtDisplay ?? (gasto.moneda == 'USD' ? gasto.totalUsdDisplay : 0.0))
             : (isIndexedEur && tasa > 0
                 ? (gasto.totalOriginalDisplay / tasa)
                 : gasto.totalUsdDisplay);
