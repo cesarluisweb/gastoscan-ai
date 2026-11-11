@@ -2,7 +2,7 @@
 > Regla de oro: Mantener en máximo ~50 líneas. Lo permanente se gradúa a AGENTS.md o DESIGN.md.
 
 ## Estado Actual Inmediato
-- **Rama:** `main` (commit `789e111`; CI Android build 680 en verde, run 43058347857; orientación vertical fijada con `DeviceOrientation.portraitUp`).
+- **Rama:** `main` (commit `6b60c46`; CI Android build 681 en verde, run 43072708890; orientación vertical fijada con `DeviceOrientation.portraitUp`).
 - **Acceso a Producción Google Play:** Segunda ventana de prueba cerrada en curso (Día 3/14 cumplido con 12 evaluadores activos). AAB `1.5.0+669` en Play Console. Fin estimado: ~19/11/2026.
 - **Seguridad, Cuotas, Galería e Integridad (A1a, B2, C1, C2) — `Completada ✅`:** Visto bueno de César en *Rinde Más Dev* (Build 672/676). Cuota D1 (50/día UID, 20k global, VET UTC-4, fail-closed). Worker DESPLEGADO (/health 200). B2: copia en galería por defecto y sin aviso en manuales. C1/C2: saneamiento de montos y SemanticValidator al 50%. B1 planificado en `docs/DOC_REGLAS_FIRESTORE_B1.md`. Despliegue automático de reglas cortado.
 - **Seguridad de firma (P0) — `Pendiente de validación 🧪`:** `android_template/rindemas.jks` fuera de Git; firma inyectada desde Secrets. CI verificado con SHA-256 en build 671.
@@ -27,6 +27,7 @@
 - **Prueba Piloto ASD-STE100:** Regla de estilo técnico operativo agregada a `AGENTS.md` a prueba; retirar si genera rigidez o fricción innecesaria.
 - **Asistente IA (Chat UX):** Ocultamiento de sugerencias rápidas con teclado abierto y auto-scroll suave (~250 ms) al último mensaje condicionado a proximidad del final, preservando scroll si se lee historial antiguo.
 - **Sistema de Diseño Interactivo:** Creado `docs/design-system.html` (autocontenido, con `localStorage`, validador WCAG/`DESIGN.md` en vivo y botón de exportación `Antes → Después` para aplicar ajustes).
+- **Revisor Adversarial Pre-CI:** Skill creada en `.agents/skills/revisor-adversarial/SKILL.md` e indexada en `AGENTS.md` para auditar `git diff` mediante subagente antes de cada `git push` de código.
 
 ## Errores y Fricciones a Evitar
 - No encadenar comandos con `&&` ni usar redirección `>` en PowerShell.

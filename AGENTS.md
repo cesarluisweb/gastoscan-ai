@@ -102,6 +102,7 @@ Antes de ejecutar tareas en áreas específicas, consulta la regla modular o ski
 
 - **Código Dart, maquetación de widgets, imports o modelos:** Consulta [`.agents/rules/flutter-desarrollo.md`](./.agents/rules/flutter-desarrollo.md).
 - **Pruebas unitarias, de widgets, fakes o mocks en Dart:** Consulta [`.agents/rules/flutter-testing.md`](./.agents/rules/flutter-testing.md).
+- **Auditoría adversarial antes de compilar en CI (`git push`):** Ejecuta la skill [`.agents/skills/revisor-adversarial/SKILL.md`](./.agents/skills/revisor-adversarial/SKILL.md).
 - **Landing page, panel web, Astro o `firebase.json`:** Consulta [`.agents/rules/web.md`](./.agents/rules/web.md).
 - **Compilar y publicar la landing o panel web:** Ejecuta la skill [`.agents/skills/desplegar-landing/SKILL.md`](./.agents/skills/desplegar-landing/SKILL.md).
 - **Pipeline de CI/CD, inyección en Android o distribución de artefactos:** Consulta [`.agents/rules/ci-distribucion.md`](./.agents/rules/ci-distribucion.md).
