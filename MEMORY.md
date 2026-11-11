@@ -10,10 +10,8 @@
 - **Artefacto para Play:** `app-release-aab` del run 42918807157 (build 678).
 - **Artefacto para pruebas en teléfono:** `rindemas-dev-apk` del run 42918807157 (*Rinde Más Dev* build 678).
 - **Sincronización Panel Web (Fase 5)** y **Selector de Mes en AppBar:** `Pendiente de validación 🧪` (CI verde, falta visto bueno visual de César).
-- **RM-03 (Fase 0A / E0-02) — `Completada ✅`:** CI Build 665 en verde. Visto bueno explícito de César recibido.
-- **RM-03 (Fase 0A / E0-03) — `Pendiente de validación 🧪`:** Lectores móviles, pantallas y panel web completados (H-1, H-2, A-16, D-06, D-07). Lentes monetarios independientes, denominaciones canónicas en `MoreScreen` y `CurrencyCalculatorScreen`, panel web Astro validado. Guía de pruebas en `docs/DOC_E0_03_LECTORES_MULTIMONEDA.md`.
-- **RM-03 (Fase 0A / E0-04) — `Pendiente de validación 🧪`:** Sincronización atómica, CAS optimista (`marcarGastoSincronizadoCondicional`), protección de tombstones (`ConflictoTombstoneRemoto`, prohibido borrado local con `synced == 0`), idempotencia post-crash (`sonContenidoNegocioIdentico` con normalización canónica de categorías), allowlist en panel web (`A-09`) y diálogo de confirmación de monto (`A-15`). CI Build 676 en verde (673 tests).
-- **Próximo Paso Inmediato:** Validación en teléfono físico de E0-03 y E0-04 (*Rinde Más Dev* build 676).
+- **RM-03 (Fase 0A / E0-02, E0-03 y E0-04) — `Completada ✅`:** Visto bueno explícito de César otorgado en *Rinde Más Dev* (Build 678). Lentes monetarios independientes (`E0-03`), sincronización atómica con CAS, defensa de tombstones, allowlist web `A-09` y confirmación de cambio de monto `A-15` (`E0-04`) cerrados.
+- **Próximo Paso Inmediato:** Validar en teléfono físico el fix de teclado/caja multilínea en `ChatScreen` y el botón de guardado al final del scroll en `ReviewExpenseScreen`; elegir diseño en `MoreScreen` (`b171c76f`) y ejecutar `E0-05b`.
 
 ## Decisiones Técnicas y de Negocio Recientes
 - **Rotación de la clave de subida: diferida** hasta que Google apruebe el acceso a Producción. No reinicia la revisión, pero el reset tarda 24-72 h y bloquearía una subida inmediata. El repositorio público conserva el `.jks` en el historial, por lo que la rotación sigue siendo necesaria.
@@ -26,6 +24,7 @@
 - **Redes Sociales (Consenso Muse 09/11):** Bio = Canal de WhatsApp directo (`/channel/0029VbEPwHLDJ6H678QLlN1H`). Reels con colaboración manual obligatoria a `@lili9077p`. Voz calmada/asesor. Test A/B horario: Lunes 7:00 PM vs Miércoles 6:00 PM. Cierre: *"el enlace del canal está en el perfil"*.
 - **Prueba Piloto ASD-STE100:** Regla de estilo técnico operativo agregada a `AGENTS.md` a prueba; retirar si genera rigidez o fricción innecesaria.
 - **Asistente IA (Chat UX):** Ocultamiento de sugerencias rápidas con teclado abierto y auto-scroll suave (~250 ms) al último mensaje condicionado a proximidad del final, preservando scroll si se lee historial antiguo.
+- **Sistema de Diseño Interactivo:** Creado `docs/design-system.html` (autocontenido, con `localStorage`, validador WCAG/`DESIGN.md` en vivo y botón de exportación `Antes → Después` para aplicar ajustes).
 
 ## Errores y Fricciones a Evitar
 - No encadenar comandos con `&&` ni usar redirección `>` en PowerShell.

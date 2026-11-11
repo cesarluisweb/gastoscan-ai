@@ -2,7 +2,7 @@
 
 **Fecha:** Noviembre de 2026  
 **Iniciativa:** RM-03 (Fase 0A / Hito `E0-04`)  
-**Estado:** Pendiente de validación 🧪 (CI Build 676 en verde, run 42865178416, commit def819a)  
+**Estado:** Completada ✅ (CI Build 676/678 en verde; validado por César en *Rinde Más Dev* Build 678)  
 **Referencias Normativas:** [`docs/rm-03/contrato-v1.2.md`](file:///c:/Development/Control%20de%20gastos%20VE/docs/rm-03/contrato-v1.2.md) §4, Decisiones [`A-09`](file:///c:/Development/Control%20de%20gastos%20VE/docs/rm-03/decisiones.md), [`A-15`](file:///c:/Development/Control%20de%20gastos%20VE/docs/rm-03/decisiones.md) y Requerimiento Estructural `S3.2`.
 
 ---
@@ -315,4 +315,4 @@ Cuando el usuario modifica el campo de monto o moneda en `ReviewExpenseScreen` s
 - [x] **Compilación:** `flutter analyze --fatal-infos --fatal-warnings` sin observaciones en CI Build 676.
 - [x] **Pruebas:** 100% de las pruebas unitarias (673 pruebas) pasando en verde en GitHub Actions CI (Build 676, run 42865178416).
 - [x] **Web:** Paridad de edición de metadatos y confirmación A-15 en `panel.astro` verificada con build estático y CI Web exitoso (run 42861811435).
-- [ ] **Validación:** Aprobación explícita de César en *Rinde Más Dev* (build 676) antes de promover a producción.
+- [x] **Validación:** Aprobación explícita de César en *Rinde Más Dev* (Build 678) antes de promover a producción.

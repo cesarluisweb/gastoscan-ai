@@ -18,6 +18,13 @@
 - **Monitoreo de CI por Proceso Dormido Único:** Tras cada `git push`, lanzar **una sola** vez `scripts/wait_ci.ps1` en segundo plano (tope 25 min, consulta cada 180 s) y esperar su notificación sin volcar salida intermedia. El script imprime una única línea (`run | conclusion | build | sha`) y solo si falla agrega los steps fallidos y el reporte desde los artefactos de CI. Prohibido `gh run watch` y prohibido consultar el estado turno tras turno. **Presupuesto de API:** sin token GitHub limita a 60 peticiones/hora por IP (agotarlo deja el monitoreo ciego); con `GITHUB_TOKEN` en el entorno se dispone de 5.000/hora y puede bajarse el intervalo a 60 s. Nunca escribir ese token en un archivo versionado. **Excepción de eficiencia:** si `git diff --name-only HEAD~1 HEAD` muestra que el push solo tocó rutas cubiertas por `paths-ignore`, no lanzar el monitor (ese push no genera run). No notificar al usuario hasta confirmar `success` o hasta reportar el fallo con su guía de corrección.
 - **Canal Único de Publicación Web:** GitHub Actions es el único canal autorizado para desplegar la landing page y el panel a producción en Firebase Hosting. Tras el push a `main`, validar vía HTTP que los cambios estén visibles en `https://rindemas.cesarluis.com`.
 - **Idioma y Localización:** Mantener textos de interfaz y respuestas en español neutro/venezolano.
+- **Estilo Técnico Operativo — ASD-STE100 (En Período de Prueba):** En respuestas y explicaciones técnicas del asistente:
+  - Máximo 20 palabras por frase en instrucciones; máximo 25 en descripciones técnicas.
+  - Voz activa estricta (sujeto + verbo de acción).
+  - Una sola instrucción o idea por frase.
+  - Mismo término técnico siempre para el mismo concepto (sin sinónimos decorativos).
+  - Preferir diagramas Mermaid o tablas antes que párrafos de texto explicativo.
+  - *Nota:* Regla en período de prueba temporal; si genera fricción o rigidez innecesaria, se retira.
 - **Contraste y Paleta (`DESIGN.md`):** Fondo amarillo $\rightarrow$ texto SIEMPRE negro (`Colors.black` o `AppColors.textPrimary`). Fondo blanco/claro $\rightarrow$ texto negro o gris, NUNCA amarillo. El amarillo queda reservado exclusivamente para iconos, contenedores con texto negro y bordes de acento activo.
 - **Protocolo de Memoria:** Consultar `MEMORY.md` al iniciar una tarea y actualizarlo al finalizarla.
 - **Auditoría de Reglas (`scripts/check_rules.ps1`):** Al crear o modificar archivos en `.agents/rules/`, `.agents/skills/` o `AGENTS.md`, ejecutar obligatoriamente `powershell -ExecutionPolicy Bypass -File scripts/check_rules.ps1` y confirmar que no existan errores antes de commitear o cerrar la tarea.

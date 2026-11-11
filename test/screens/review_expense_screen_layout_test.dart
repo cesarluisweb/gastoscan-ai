@@ -1502,5 +1502,29 @@ void main() {
       expect(gastoProvider.ultimosItemsGuardados, isNotNull);
       expect(gastoProvider.ultimosItemsGuardados!.first.descripcion, equals('Pan de jamón'));
     });
+
+    testWidgets('9. Muestra bloque de guardado al final del scroll cuando el teclado esta abierto', (tester) async {
+      tester.view.physicalSize = const Size(1080, 4000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('inline_keyboard_save_section')), findsNothing);
+      expect(find.byKey(const Key('btn_guardar_gasto')), findsOneWidget);
+
+      tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('inline_keyboard_save_section')), findsOneWidget);
+      expect(find.byKey(const Key('btn_guardar_gasto')), findsOneWidget);
+
+      tester.view.viewInsets = FakeViewPadding.zero;
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('inline_keyboard_save_section')), findsNothing);
+      expect(find.byKey(const Key('btn_guardar_gasto')), findsOneWidget);
+    });
   });
 }

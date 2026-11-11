@@ -1919,6 +1919,152 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     );
   }
 
+  double _effectiveBottomInset(BuildContext context) {
+    final mqInset = MediaQuery.of(context).viewInsets.bottom;
+    if (mqInset > 0) return mqInset;
+    final view = View.maybeOf(context);
+    if (view != null && view.devicePixelRatio > 0) {
+      return view.viewInsets.bottom / view.devicePixelRatio;
+    }
+    return 0.0;
+  }
+
+  Widget _buildSummaryAndSaveActions(
+    SettingsProvider settings, {
+    required bool hasMoreInQueue,
+    required int readyCount,
+  }) {
+    final totalVal = tryParseAmount(_totalOriginalCtrl.text, isPrice: false) ?? 0.0;
+
+    String secLabel = '';
+    String secValue = '';
+    if (_selectedMoneda == 'VES') {
+      secLabel = 'Equiv. USD (BCV)';
+      final usdVal = tryParseAmount(_totalUsdCtrl.text, isPrice: false) ?? 0.0;
+      secValue = '\$ ${_formatDisplayMonto(usdVal)}';
+    } else if (_metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsBcv ||
+        _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsUsdt) {
+      secLabel = 'Pagaste';
+      final bool isBcv = _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsBcv;
+      final tRate = isBcv
+          ? _effectiveBcvRate(settings)
+          : ((_tasaUsdtFecha != null && _tasaUsdtFecha! > 0)
+              ? _tasaUsdtFecha!
+              : (tryParseAmount(_tasaUsdtCtrl.text, isPrice: false) ?? settings.tasaCambioVesUsdt));
+      final manualBs = _bolivaresAjustadosManualmente ? tryParseAmount(_totalBsManualCtrl.text, isPrice: false) : null;
+      final totalBs = (manualBs != null && manualBs > 0) ? manualBs : (totalVal * (tRate > 0 ? tRate : 1.0));
+      secValue = 'Bs. ${_formatDisplayMonto(totalBs)}';
+    } else {
+      secLabel = 'Forma de pago';
+      secValue = 'Divisa directa';
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Total de la compra',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                  ),
+                  const SizedBox(height: 2),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      '${_symbolForMoneda(_selectedMoneda)} ${_formatDisplayMonto(totalVal)}',
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    secLabel,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                  ),
+                  const SizedBox(height: 2),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      secValue,
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        if (hasMoreInQueue) ...[
+          ElevatedButton.icon(
+            key: const Key('btn_guardar_gasto'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.black,
+              minimumSize: const Size.fromHeight(48),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: _isSaving ? null : () => _guardarGasto(revisarSiguiente: true),
+            icon: const Icon(Icons.arrow_forward, color: Colors.black),
+            label: _isSaving
+                ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
+                : Text(
+                    'Guardar y revisar siguiente (${readyCount - 1} más)',
+                    style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(44),
+              side: const BorderSide(color: AppColors.border),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: _isSaving ? null : () => _guardarGasto(revisarSiguiente: false),
+            child: const Text(
+              'Guardar y salir al inicio',
+              style: TextStyle(color: AppColors.textPrimary, fontSize: 14),
+            ),
+          ),
+        ] else ...[
+          ElevatedButton(
+            key: const Key('btn_guardar_gasto'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.black,
+              minimumSize: const Size.fromHeight(48),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: _isSaving ? null : () => _guardarGasto(revisarSiguiente: false),
+            child: _isSaving
+                ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
+                : const Text('Guardar Gasto', style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final settings = Provider.of<SettingsProvider>(context);
@@ -1926,6 +2072,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     final readyCount = queueProvider.readyItems.length;
     final isQueueItem = widget.queueItemId != null;
     final hasMoreInQueue = isQueueItem && readyCount > 1;
+    final isKeyboardOpen = _effectiveBottomInset(context) > 0;
 
     return PopScope(
       canPop: false,
@@ -2017,159 +2164,39 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         }
       },
       child: Scaffold(
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 10,
-              offset: const Offset(0, -3),
-            ),
-          ],
-          border: const Border(top: BorderSide(color: AppColors.border)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: Align(
-            alignment: Alignment.bottomCenter,
-            heightFactor: 1.0,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 600),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                child: Builder(builder: (context) {
-                  final settings = Provider.of<SettingsProvider>(context);
-                  final totalVal = tryParseAmount(_totalOriginalCtrl.text, isPrice: false) ?? 0.0;
-
-                  String secLabel = '';
-                  String secValue = '';
-                  if (_selectedMoneda == 'VES') {
-                    secLabel = 'Equiv. USD (BCV)';
-                    final usdVal = tryParseAmount(_totalUsdCtrl.text, isPrice: false) ?? 0.0;
-                    secValue = '\$ ${_formatDisplayMonto(usdVal)}';
-                  } else if (_metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsBcv || _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsUsdt) {
-                    secLabel = 'Pagaste';
-                    final bool isBcv = _metodoLiquidacionUsd == MetodoLiquidacionUsd.pagadoEnBsBcv;
-                    final tRate = isBcv ? _effectiveBcvRate(settings) : ((_tasaUsdtFecha != null && _tasaUsdtFecha! > 0) ? _tasaUsdtFecha! : (tryParseAmount(_tasaUsdtCtrl.text, isPrice: false) ?? settings.tasaCambioVesUsdt));
-                    final manualBs = _bolivaresAjustadosManualmente ? tryParseAmount(_totalBsManualCtrl.text, isPrice: false) : null;
-                    final totalBs = (manualBs != null && manualBs > 0) ? manualBs : (totalVal * (tRate > 0 ? tRate : 1.0));
-                    secValue = 'Bs. ${_formatDisplayMonto(totalBs)}';
-                  } else {
-                    secLabel = 'Forma de pago';
-                    secValue = 'Divisa directa';
-                  }
-
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Text(
-                                  'Total de la compra',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
-                                ),
-                                const SizedBox(height: 2),
-                                FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    '${_symbolForMoneda(_selectedMoneda)} ${_formatDisplayMonto(totalVal)}',
-                                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  secLabel,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
-                                ),
-                                const SizedBox(height: 2),
-                                FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  alignment: Alignment.centerRight,
-                                  child: Text(
-                                    secValue,
-                                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+      bottomNavigationBar: isKeyboardOpen
+          ? null
+          : Container(
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.06),
+                    blurRadius: 10,
+                    offset: const Offset(0, -3),
+                  ),
+                ],
+                border: const Border(top: BorderSide(color: AppColors.border)),
+              ),
+              child: SafeArea(
+                top: false,
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  heightFactor: 1.0,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 600),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                      child: _buildSummaryAndSaveActions(
+                        settings,
+                        hasMoreInQueue: hasMoreInQueue,
+                        readyCount: readyCount,
                       ),
-                      const SizedBox(height: 10),
-                      if (hasMoreInQueue) ...[
-                        ElevatedButton.icon(
-                          key: const Key('btn_guardar_gasto'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.black,
-                            minimumSize: const Size.fromHeight(48),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          ),
-                          onPressed: _isSaving ? null : () => _guardarGasto(revisarSiguiente: true),
-                          icon: const Icon(Icons.arrow_forward, color: Colors.black),
-                          label: _isSaving
-                              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
-                              : Text(
-                                  'Guardar y revisar siguiente (${readyCount - 1} más)',
-                                  style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold),
-                                ),
-                        ),
-                        const SizedBox(height: 8),
-                        OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size.fromHeight(44),
-                            side: const BorderSide(color: AppColors.border),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          ),
-                          onPressed: _isSaving ? null : () => _guardarGasto(revisarSiguiente: false),
-                          child: const Text(
-                            'Guardar y salir al inicio',
-                            style: TextStyle(color: AppColors.textPrimary, fontSize: 14),
-                          ),
-                        ),
-                      ] else ...[
-                        ElevatedButton(
-                          key: const Key('btn_guardar_gasto'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.black,
-                            minimumSize: const Size.fromHeight(48),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          ),
-                          onPressed: _isSaving ? null : () => _guardarGasto(revisarSiguiente: false),
-                          child: _isSaving
-                              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
-                              : const Text('Guardar Gasto', style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
-                        ),
-                      ],
-                    ],
-                  );
-                }),
+                    ),
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
-      ),
       appBar: AppBar(
         title: Text(
           widget.existingGasto != null
@@ -3329,6 +3356,23 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                       ),
                     ],
                   ],
+                ),
+              ),
+            ],
+            if (isKeyboardOpen) ...[
+              const SizedBox(height: 16),
+              Container(
+                key: const Key('inline_keyboard_save_section'),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: _buildSummaryAndSaveActions(
+                  settings,
+                  hasMoreInQueue: hasMoreInQueue,
+                  readyCount: readyCount,
                 ),
               ),
             ],

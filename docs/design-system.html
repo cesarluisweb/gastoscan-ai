@@ -1,0 +1,2033 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rinde Más — Sistema de Diseño Interactivo (DESIGN.md)</title>
+  <style>
+    :root {
+      /* 1. Paleta Oficial AppColors */
+      --background: #F9FAFB;
+      --surface: #FFFFFF;
+      --card: #FFFFFF;
+      --cardLighter: #F3F4F6;
+      --primary: #FBF18F;
+      --primaryLight: #FEF08A;
+      --primaryDark: #FACC15;
+      --secondary: #0F172A;
+      --textPrimary: #111827;
+      --textSecondary: #6B7280;
+      --textMuted: #9CA3AF;
+      --border: #E5E7EB;
+      --divider: #F3F4F6;
+
+      /* Alertas y Estados */
+      --success: #10B981;
+      --error: #EF4444;
+      --warning: #F59E0B;
+      --info: #3B82F6;
+
+      /* Tanque de Presupuesto y Saldo Disponible */
+      --balancePositive: #16A34A;
+      --caution: #D97706;
+      --errorStrong: #DC2626;
+      --errorTint: #FEE2E2;
+      --errorBorder: #FCA5A5;
+      --markerNeutral: #4B5563;
+      --trackNeutral: #E2E8F0;
+      --trackBorder: #CBD5E1;
+      --savingsReserve: #065F46;
+      --textSpent: #475569;
+
+      /* Borradores IA (PendingExpenseCard) */
+      --draftSurface: #FFFDF5;
+      --draftBorder: #FEF08A;
+      --draftBadgeBg: #FEF3C7;
+      --draftBadgeText: #92400E;
+
+      /* 10 Categorías Canónicas */
+      --catAlimentacion: #0D9488;
+      --catEducacion: #4F46E5;
+      --catSalud: #E11D48;
+      --catHogar: #D97706;
+      --catHigiene: #06B6D4;
+      --catServicios: #7C3AED;
+      --catTransporte: #2563EB;
+      --catRopa: #EC4899;
+      --catEntretenimiento: #F97316;
+      --catOtros: #64748B;
+
+      /* 2. Tipografía */
+      --fontFamily: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --heroSize: 32px;
+      --heroWeight: 800;
+      --appBarTitleSize: 20px;
+      --appBarTitleWeight: 700;
+      --appBarLetterSpacing: -0.5px;
+      --btnFontSize: 16px;
+      --btnFontWeight: 600;
+      --bodyFontSize: 14px;
+      --itemFontSize: 13px;
+      --metaFontSize: 11px;
+      --metaFontWeight: 600;
+
+      /* 3. Espaciados, Radios y Dimensiones */
+      --cardRadius: 16px;
+      --controlRadius: 12px;
+      --btnPadH: 24px;
+      --btnPadV: 14px;
+      --inputPadH: 16px;
+      --inputPadV: 14px;
+      --focusBorderWidth: 2px;
+      --tankHeight: 10px;
+      --draftPadV: 11px;
+      --donutSize: 130px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--fontFamily);
+      background-color: #F1F5F9;
+      color: var(--textPrimary);
+      line-height: 1.5;
+      padding-bottom: 80px;
+    }
+
+    /* Barra Superior Fija del Editor */
+    .editor-topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: #0F172A;
+      color: #FFFFFF;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+      flex-wrap: wrap;
+    }
+
+    .brand-block {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--primary);
+      color: #000000;
+      font-weight: 800;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid var(--primaryDark);
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .brand-subtitle {
+      font-size: 12px;
+      color: #94A3B8;
+    }
+
+    .topbar-status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .status-pill {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-pill.ok {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34D399;
+      border: 1px solid rgba(52, 211, 153, 0.3);
+    }
+
+    .status-pill.warn {
+      background: rgba(239, 68, 68, 0.2);
+      color: #FCA5A5;
+      border: 1px solid rgba(248, 113, 113, 0.4);
+    }
+
+    .status-pill.changes {
+      background: rgba(250, 204, 21, 0.18);
+      color: var(--primary);
+      border: 1px solid rgba(250, 204, 21, 0.4);
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-top {
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 9px 16px;
+      border-radius: 10px;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-top-primary {
+      background: var(--primary);
+      color: #000000;
+    }
+
+    .btn-top-primary:hover {
+      background: var(--primaryDark);
+      transform: translateY(-1px);
+    }
+
+    .btn-top-secondary {
+      background: #1E293B;
+      color: #E2E8F0;
+      border: 1px solid #334155;
+    }
+
+    .btn-top-secondary:hover {
+      background: #334155;
+    }
+
+    /* Navegación por secciones */
+    .section-nav {
+      background: #FFFFFF;
+      border-bottom: 1px solid #E2E8F0;
+      padding: 10px 24px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      position: sticky;
+      top: 62px;
+      z-index: 90;
+    }
+
+    .section-nav a {
+      text-decoration: none;
+      color: #475569;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 8px;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+
+    .section-nav a:hover {
+      background: #F1F5F9;
+      color: #0F172A;
+    }
+
+    /* Contenedor Principal */
+    .workspace {
+      max-width: 1400px;
+      margin: 24px auto;
+      padding: 0 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    /* Alertas de Contraste en Vivo */
+    #contrastAlertsBox {
+      display: none;
+      background: #FEF2F2;
+      border: 1.5px solid #EF4444;
+      border-radius: 12px;
+      padding: 14px 18px;
+      color: #991B1B;
+      font-size: 13px;
+    }
+
+    #contrastAlertsBox.visible {
+      display: block;
+    }
+
+    #contrastAlertsBox h4 {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    #contrastAlertsBox ul {
+      margin-left: 20px;
+    }
+
+    /* Bloques de Sección */
+    .ds-section {
+      background: #FFFFFF;
+      border-radius: 18px;
+      border: 1px solid #E2E8F0;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+      scroll-margin-top: 125px;
+    }
+
+    .ds-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid #F1F5F9;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .ds-section-title {
+      font-size: 19px;
+      font-weight: 800;
+      color: #0F172A;
+      letter-spacing: -0.4px;
+    }
+
+    .ds-section-desc {
+      font-size: 13px;
+      color: #64748B;
+      margin-top: 2px;
+    }
+
+    .subsection-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #334155;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 22px 0 12px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .subsection-title:first-of-type {
+      margin-top: 4px;
+    }
+
+    /* Grilla de Tokens de Color */
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+    }
+
+    .color-card {
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      padding: 12px;
+      background: #FFFFFF;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      position: relative;
+    }
+
+    .color-card.modified {
+      border-color: #FACC15;
+      box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.25);
+    }
+
+    .color-swatch-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .color-picker-wrapper {
+      position: relative;
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .color-picker-wrapper input[type="color"] {
+      position: absolute;
+      top: -8px;
+      left: -8px;
+      width: 64px;
+      height: 64px;
+      border: none;
+      cursor: pointer;
+      background: none;
+    }
+
+    .color-meta {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .color-token-name {
+      font-family: 'Consolas', 'SFMono-Regular', monospace;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #0F172A;
+      word-break: break-all;
+    }
+
+    .color-role {
+      font-size: 11.5px;
+      color: #64748B;
+      line-height: 1.35;
+      margin-top: 2px;
+    }
+
+    .color-controls-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding-top: 6px;
+      border-top: 1px dashed #F1F5F9;
+    }
+
+    .hex-input {
+      font-family: 'Consolas', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      width: 86px;
+      padding: 4px 8px;
+      border: 1px solid #CBD5E1;
+      border-radius: 6px;
+      color: #0F172A;
+      text-transform: uppercase;
+    }
+
+    .contrast-badge {
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 6px;
+      background: #F1F5F9;
+      color: #475569;
+    }
+
+    .btn-reset-token {
+      background: none;
+      border: 1px solid #CBD5E1;
+      border-radius: 6px;
+      padding: 3px 7px;
+      font-size: 11px;
+      cursor: pointer;
+      color: #475569;
+      display: none;
+    }
+
+    .color-card.modified .btn-reset-token,
+    .slider-card.modified .btn-reset-token {
+      display: inline-block;
+    }
+
+    .btn-reset-token:hover {
+      background: #F1F5F9;
+      color: #0F172A;
+    }
+
+    /* Sliders de Tipografía y Espaciados */
+    .sliders-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 14px;
+    }
+
+    .slider-card {
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      padding: 14px;
+      background: #FFFFFF;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .slider-card.modified {
+      border-color: #FACC15;
+      box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.25);
+    }
+
+    .slider-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .slider-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: #0F172A;
+    }
+
+    .slider-token {
+      font-family: 'Consolas', monospace;
+      font-size: 11px;
+      color: #64748B;
+    }
+
+    .slider-input-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .slider-input-row input[type="range"] {
+      flex: 1;
+      accent-color: #0F172A;
+      cursor: pointer;
+    }
+
+    .slider-val-badge {
+      font-family: 'Consolas', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      background: #F1F5F9;
+      padding: 3px 8px;
+      border-radius: 6px;
+      min-width: 54px;
+      text-align: center;
+    }
+
+    /* Área de Previsualización en Vivo */
+    .preview-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-top: 18px;
+    }
+
+    @media (max-width: 960px) {
+      .preview-split {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .app-canvas {
+      background-color: var(--background);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .canvas-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--textMuted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Componentes Emulados de Flutter (AppTheme) */
+    .rm-card {
+      background-color: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--cardRadius);
+      padding: 16px;
+    }
+
+    .rm-btn-primary {
+      background-color: var(--primary);
+      color: #000000; /* Regla 2.1: SIEMPRE NEGRO */
+      font-family: var(--fontFamily);
+      font-size: var(--btnFontSize);
+      font-weight: var(--btnFontWeight);
+      padding: var(--btnPadV) var(--btnPadH);
+      border-radius: var(--controlRadius);
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: opacity 0.15s;
+    }
+
+    .rm-btn-outlined {
+      background-color: transparent;
+      color: var(--textPrimary);
+      font-family: var(--fontFamily);
+      font-size: var(--btnFontSize);
+      font-weight: 600;
+      padding: var(--btnPadV) 20px;
+      border-radius: var(--controlRadius);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .rm-btn-text {
+      background: transparent;
+      border: none;
+      color: var(--textPrimary); /* Regla 2.2: Negro sobre tarjeta blanca */
+      font-family: var(--fontFamily);
+      font-size: var(--itemFontSize);
+      font-weight: 700;
+      cursor: pointer;
+      padding: 6px 10px;
+      border-radius: 8px;
+    }
+
+    .rm-btn-text:hover {
+      background: var(--cardLighter);
+    }
+
+    .rm-fab {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background-color: var(--primary);
+      color: #000000;
+      border: none;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      cursor: pointer;
+    }
+
+    .rm-input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .rm-input-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--textSecondary);
+    }
+
+    .rm-input {
+      background-color: var(--surface);
+      color: var(--textPrimary);
+      caret-color: var(--textPrimary); /* Regla 2.2.1: Cursor SIEMPRE negro */
+      font-family: var(--fontFamily);
+      font-size: var(--bodyFontSize);
+      padding: var(--inputPadV) var(--inputPadH);
+      border-radius: var(--controlRadius);
+      border: 1px solid var(--border);
+      outline: none;
+      width: 100%;
+      transition: border-color 0.15s;
+    }
+
+    .rm-input::placeholder {
+      color: var(--textMuted);
+    }
+
+    .rm-input:focus,
+    .rm-input.focused-demo {
+      border-color: var(--primaryDark);
+      border-width: var(--focusBorderWidth);
+      padding: calc(var(--inputPadV) - 1px) calc(var(--inputPadH) - 1px);
+    }
+
+    .rm-input.error-demo {
+      border-color: var(--error);
+    }
+
+    .rm-badge {
+      background-color: var(--primaryDark);
+      color: #000000; /* Regla 2.1: Negro sobre amarillo */
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .rm-snackbar {
+      background-color: var(--primaryDark);
+      color: #000000; /* Regla 2.1 */
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: var(--bodyFontSize);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* AppBar & Selector de Mes */
+    .rm-appbar {
+      background-color: var(--background);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 4px;
+    }
+
+    .rm-appbar-title {
+      color: var(--textPrimary);
+      font-size: var(--appBarTitleSize);
+      font-weight: var(--appBarTitleWeight);
+      letter-spacing: var(--appBarLetterSpacing);
+    }
+
+    .rm-month-selector {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--textPrimary);
+      user-select: none;
+    }
+
+    .rm-month-selector.past-month {
+      border: 1.5px solid var(--primaryDark);
+      background-color: var(--surface);
+    }
+
+    .rm-month-arrow {
+      background: transparent;
+      border: none;
+      color: var(--textPrimary);
+      font-size: 15px;
+      cursor: pointer;
+      padding: 2px 4px;
+      line-height: 1;
+    }
+
+    /* SummaryCard V3 y Tanque de Presupuesto */
+    .tank-state-tabs {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .tank-tab {
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 8px;
+      border: 1px solid #CBD5E1;
+      background: #FFFFFF;
+      color: #334155;
+      cursor: pointer;
+    }
+
+    .tank-tab.active {
+      background: #0F172A;
+      color: #FFFFFF;
+      border-color: #0F172A;
+    }
+
+    .hero-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .hero-amount {
+      font-size: var(--heroSize);
+      font-weight: var(--heroWeight);
+      color: var(--balancePositive);
+      letter-spacing: -0.8px;
+      line-height: 1.15;
+    }
+
+    .lens-pill {
+      background: var(--cardLighter);
+      color: var(--textPrimary);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+    }
+
+    .tank-context-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12.5px;
+      margin-top: 14px;
+      margin-bottom: 7px;
+    }
+
+    .tank-track {
+      position: relative;
+      width: 100%;
+      height: var(--tankHeight);
+      background-color: var(--trackNeutral);
+      border: 1px solid var(--trackBorder);
+      border-radius: 999px;
+      overflow: visible;
+    }
+
+    .tank-fill- clip {
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      overflow: hidden;
+      display: flex;
+    }
+
+    .tank-notch {
+      position: absolute;
+      top: -3px;
+      bottom: -3px;
+      width: 2px;
+      background-color: var(--markerNeutral);
+      box-shadow: 0 0 0 2px var(--card);
+      z-index: 3;
+    }
+
+    /* PendingExpenseCard (Borrador IA) */
+    .rm-draft-card {
+      background-color: var(--draftSurface);
+      border: 1.2px solid var(--draftBorder);
+      border-radius: var(--cardRadius);
+      padding: var(--draftPadV) 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .rm-draft-badge {
+      background-color: var(--draftBadgeBg);
+      color: var(--draftBadgeText);
+      font-size: var(--metaFontSize);
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 6px;
+      display: inline-block;
+    }
+
+    /* DatePicker Demo */
+    .datepicker-demo {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--cardRadius);
+      padding: 14px;
+      max-width: 280px;
+    }
+
+    .dp-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      text-align: center;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    .dp-day {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--textPrimary);
+      margin: 0 auto;
+    }
+
+    .dp-day.today {
+      background-color: var(--primaryLight);
+      border: 1.5px solid var(--primaryDark);
+      color: #000000; /* Regla 2.2.2 */
+      font-weight: 700;
+    }
+
+    .dp-day.selected {
+      background-color: var(--primary);
+      color: #000000; /* Regla 2.2.2 */
+      font-weight: 700;
+    }
+
+    /* Dona de Categorías 130px */
+    .donut-card-layout {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .donut-ring {
+      width: var(--donutSize);
+      height: var(--donutSize);
+      border-radius: 50%;
+      flex-shrink: 0;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .donut-hole {
+      width: 63%;
+      height: 63%;
+      background: var(--card);
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: var(--textSecondary);
+    }
+
+    .donut-legend {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .donut-row {
+      display: flex;
+      align-items: center;
+      font-size: 12.5px;
+      padding: 3px 0;
+    }
+
+    .donut-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+
+    .donut-cat-name {
+      flex: 1;
+      color: var(--textPrimary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .donut-cat-pct {
+      width: 34px;
+      text-align: left;
+      color: var(--textSecondary);
+      font-size: 11.5px;
+    }
+
+    .donut-cat-amt {
+      width: 58px;
+      text-align: right;
+      font-weight: 700;
+      color: var(--textPrimary);
+    }
+
+    /* Modal de Exportación */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.65);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 20px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-box {
+      background: #FFFFFF;
+      border-radius: 18px;
+      max-width: 760px;
+      width: 100%;
+      max-height: 88vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+      overflow: hidden;
+    }
+
+    .modal-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid #E2E8F0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-body {
+      padding: 20px 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .export-textarea {
+      width: 100%;
+      min-height: 300px;
+      font-family: 'Consolas', 'SFMono-Regular', monospace;
+      font-size: 12.5px;
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid #CBD5E1;
+      background: #F8FAFC;
+      color: #0F172A;
+      resize: vertical;
+      line-height: 1.45;
+    }
+
+    .modal-footer {
+      padding: 14px 24px;
+      border-top: 1px solid #E2E8F0;
+      background: #F8FAFC;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- BARRA SUPERIOR FIJA -->
+  <header class="editor-topbar">
+    <div class="brand-block">
+      <div class="brand-logo">R+</div>
+      <div>
+        <div class="brand-title">Rinde Más · Sistema de Diseño Interactivo</div>
+        <div class="brand-subtitle">Fuente de verdad sincronizada con DESIGN.md, AppColors y AppTheme</div>
+      </div>
+    </div>
+
+    <div class="topbar-status">
+      <span id="contrastStatusPill" class="status-pill ok">✓ Contraste DESIGN.md y WCAG AA OK</span>
+      <span id="changesCountPill" class="status-pill changes">0 ajustes realizados</span>
+    </div>
+
+    <div class="topbar-actions">
+      <button type="button" class="btn-top btn-top-secondary" onclick="resetAllTokens()">
+        ↺ Restaurar originales
+      </button>
+      <button type="button" class="btn-top btn-top-primary" onclick="openExportModal()">
+        📋 Copiar ajustes para Antigravity
+      </button>
+    </div>
+  </header>
+
+  <!-- NAVEGACIÓN RÁPIDA -->
+  <nav class="section-nav">
+    <a href="#sec-colores">1. Paleta de Colores (AppColors)</a>
+    <a href="#sec-categorias">2. Colores de 10 Categorías</a>
+    <a href="#sec-tipografia">3. Tipografía y Escala</a>
+    <a href="#sec-espaciados">4. Espaciados, Radios y Bordes</a>
+    <a href="#sec-controles">5. Botones, Inputs y Diálogos</a>
+    <a href="#sec-negocio">6. Tanque de Saldo, Borrador IA y Dona</a>
+  </nav>
+
+  <main class="workspace">
+
+    <!-- ALERTA EN VIVO DE REGLAS DE CONTRASTE -->
+    <div id="contrastAlertsBox">
+      <h4>⚠️ Violación de Reglas de Contraste Detectada (DESIGN.md)</h4>
+      <ul id="contrastAlertsList"></ul>
+    </div>
+
+    <!-- SECCIÓN 1: PALETA DE COLORES -->
+    <section id="sec-colores" class="ds-section">
+      <div class="ds-section-header">
+        <div>
+          <h2 class="ds-section-title">1. Paleta de Colores Oficial (`AppColors`)</h2>
+          <p class="ds-section-desc">Haz clic en cualquier muestra o escribe el código Hex para ajustar los tokens en tiempo real. Se valida automáticamente contra las reglas 2.1, 2.2 y 6.3 de DESIGN.md.</p>
+        </div>
+      </div>
+
+      <h3 class="subsection-title">Fondos, Superficies y Bordes</h3>
+      <div id="grid-surfaces" class="color-grid"></div>
+
+      <h3 class="subsection-title">Acentos de Marca y Textos</h3>
+      <div id="grid-brand-text" class="color-grid"></div>
+
+      <h3 class="subsection-title">Tanque de Presupuesto, Reserva de Ahorro y Estados</h3>
+      <div id="grid-tank-states" class="color-grid"></div>
+
+      <h3 class="subsection-title">Tarjetas de Borrador IA (`PendingExpenseCard`)</h3>
+      <div id="grid-drafts" class="color-grid"></div>
+    </section>
+
+    <!-- SECCIÓN 2: 10 CATEGORÍAS CANÓNICAS -->
+    <section id="sec-categorias" class="ds-section">
+      <div class="ds-section-header">
+        <div>
+          <h2 class="ds-section-title">2. Paleta de las 10 Categorías Canónicas (`AppColors.categoryColors`)</h2>
+          <p class="ds-section-desc">Colores armónicos independientes del semáforo de presupuesto, usados en la Dona de Distribución y barras por categoría.</p>
+        </div>
+      </div>
+      <div id="grid-categories" class="color-grid"></div>
+    </section>
+
+    <!-- SECCIÓN 3: TIPOGRAFÍA -->
+    <section id="sec-tipografia" class="ds-section">
+      <div class="ds-section-header">
+        <div>
+          <h2 class="ds-section-title">3. Tipografía y Jerarquía Numérica</h2>
+          <p class="ds-section-desc">Ajusta tamaños (`sp`/`px`), pesos y espaciado de letras. La vista previa se actualiza al instante.</p>
+        </div>
+      </div>
+
+      <div class="sliders-grid" id="grid-typography"></div>
+
+      <div class="app-canvas" style="margin-top: 20px;">
+        <div class="canvas-label">
+          <span>Previsualización de Escala Tipográfica sobre `AppColors.card`</span>
+          <span>Regla 2.2: Cero texto amarillo sobre fondo claro</span>
+        </div>
+        <div class="rm-card" style="display: flex; flex-direction: column; gap: 12px;">
+          <div>
+            <span style="font-size: 11px; color: var(--textMuted); font-weight: 600;">NIVEL 1 · MONTO HÉROE (Disponible para gastar)</span>
+            <div style="font-size: var(--heroSize); font-weight: var(--heroWeight); color: var(--balancePositive);">
+              $ 440,00
+            </div>
+          </div>
+          <hr style="border: none; border-top: 1px solid var(--divider);" />
+          <div>
+            <span style="font-size: 11px; color: var(--textMuted); font-weight: 600;">TÍTULO DE APPBAR</span>
+            <div style="font-size: var(--appBarTitleSize); font-weight: var(--appBarTitleWeight); letter-spacing: var(--appBarLetterSpacing); color: var(--textPrimary);">
+              Rinde Más · Control de Gastos
+            </div>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: baseline;">
+            <div>
+              <span style="font-size: 11px; color: var(--textMuted); font-weight: 600;">CUERPO / INPUT (`bodyFontSize`)</span>
+              <div style="font-size: var(--bodyFontSize); color: var(--textPrimary);">Automercado Plaza's · Factura escaneada</div>
+            </div>
+            <div>
+              <span style="font-size: 11px; color: var(--textMuted); font-weight: 600;">DESGLOSE DE ÍTEM (`itemFontSize`)</span>
+              <div style="font-size: var(--itemFontSize); color: var(--textPrimary);">2x Café Molido 500g — <strong style="color: var(--textSecondary);">$ 8,50</strong></div>
+            </div>
+            <div>
+              <span style="font-size: 11px; color: var(--textMuted); font-weight: 600;">METADATOS / CATEGORÍA (`metaFontSize`)</span>
+              <div style="font-size: var(--metaFontSize); font-weight: var(--metaFontWeight); color: var(--textSecondary);">Alimentación · Tasa BCV Bs. 45,20</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 4: ESPACIADOS Y RADIOS -->
+    <section id="sec-espaciados" class="ds-section">
+      <div class="ds-section-header">
+        <div>
+          <h2 class="ds-section-title">4. Espaciados, Radios de Borde y Densidad (`AppTheme` y `DESIGN.md`)</h2>
+          <p class="ds-section-desc">Controla los radios de tarjetas (`16dp`), botones/inputs (`12dp`), paddings internos y dimensiones críticas.</p>
+        </div>
+      </div>
+      <div class="sliders-grid" id="grid-spacing"></div>
+    </section>
+
+    <!-- SECCIÓN 5: CONTROLES BASE -->
+    <section id="sec-controles" class="ds-section">
+      <div class="ds-section-header">
+        <div>
+          <h2 class="ds-section-title">5. Botones, Campos de Texto, Insignias y Diálogos</h2>
+          <p class="ds-section-desc">Componentes interactivos gobernados por las reglas de contraste 2.1, 2.2, 2.2.1, 2.2.2 y 3.6.</p>
+        </div>
+      </div>
+
+      <div class="preview-split">
+        <!-- Columna Izquierda: Botones, Badges y SnackBar -->
+        <div class="app-canvas">
+          <div class="canvas-label">
+            <span>Botones, Insignias y SnackBar</span>
+            <span>Regla 2.1: Fondo Amarillo → Texto Negro</span>
+          </div>
+
+          <div class="rm-card" style="display: flex; flex-direction: column; gap: 16px;">
+            <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+              <button type="button" class="rm-btn-primary">Guardar Factura</button>
+              <button type="button" class="rm-btn-outlined">Cancelar</button>
+              <button type="button" class="rm-btn-text">Gestionar</button>
+              <button type="button" class="rm-fab" title="FloatingActionButton">＋</button>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+              <div style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600;">
+                <span>Cola de escaneo IA</span>
+                <span class="rm-badge">3</span>
+              </div>
+
+              <div style="display: inline-flex; align-items: center; gap: 6px; background: var(--primary); color: #000; padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 700;">
+                <span>✓ Chip Seleccionado</span>
+              </div>
+
+              <div style="display: inline-flex; align-items: center; gap: 6px; background: var(--cardLighter); color: var(--textSecondary); padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 600;">
+                <span>Chip Inactivo</span>
+              </div>
+            </div>
+
+            <div class="rm-snackbar">
+              <span>✓ Gasto registrado con éxito</span>
+              <span style="font-size: 12px; text-decoration: underline; cursor: pointer;">Ver</span>
+            </div>
+          </div>
+
+          <!-- AlertDialog Regla 3.6 -->
+          <div class="canvas-label" style="margin-top: 4px;">
+            <span>Diálogo de Confirmación (`AlertDialog` · Regla 3.6)</span>
+          </div>
+          <div class="rm-card" style="max-width: 420px; display: flex; flex-direction: column; gap: 10px;">
+            <div style="font-size: 17px; font-weight: 700; color: var(--textPrimary);">Descartar cambios</div>
+            <div style="font-size: var(--bodyFontSize); color: var(--textSecondary);">
+              ¿Deseas descartar el formulario? Los datos no guardados de esta factura se perderán.
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px;">
+              <button type="button" class="rm-btn-text" style="color: var(--textSecondary);">Cancelar</button>
+              <button type="button" class="rm-btn-text" style="color: var(--error);">Descartar</button>
+              <button type="button" class="rm-btn-primary" style="padding: 8px 14px; font-size: 13px;">Guardar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Columna Derecha: Inputs y DatePicker -->
+        <div class="app-canvas">
+          <div class="canvas-label">
+            <span>Campos de Texto (`InputDecorationTheme` · Regla 2.2.1 y 2.3.3)</span>
+          </div>
+
+          <div class="rm-card" style="display: flex; flex-direction: column; gap: 14px;">
+            <div class="rm-input-group">
+              <label class="rm-input-label">Estado Normal (`AppColors.border`)</label>
+              <input type="text" class="rm-input" placeholder="Ej. Farmatodo Las Mercedes" value="Farmatodo Las Mercedes" />
+            </div>
+
+            <div class="rm-input-group">
+              <label class="rm-input-label">Estado con Foco Activo (`AppColors.primaryDark`, cursor negro)</label>
+              <input type="text" class="rm-input focused-demo" value="24,50" />
+            </div>
+
+            <div class="rm-input-group">
+              <label class="rm-input-label" style="color: var(--error);">Estado de Error (`AppColors.error`)</label>
+              <input type="text" class="rm-input error-demo" value="0,00" />
+              <span style="font-size: 11.5px; color: var(--error);">Ingresa un monto mayor a cero</span>
+            </div>
+          </div>
+
+          <!-- DatePicker Regla 2.2.2 -->
+          <div class="canvas-label" style="margin-top: 4px;">
+            <span>Selector de Fecha (`DatePickerTheme` · Regla 2.2.2)</span>
+          </div>
+          <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+            <div class="datepicker-demo">
+              <div style="font-size: 13px; font-weight: 700; color: var(--textPrimary); display: flex; justify-content: space-between;">
+                <span>Noviembre 2026</span>
+                <span style="color: var(--textSecondary);">‹ ›</span>
+              </div>
+              <div class="dp-grid" style="color: var(--textMuted); font-weight: 600;">
+                <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
+              </div>
+              <div class="dp-grid">
+                <span class="dp-day">9</span>
+                <span class="dp-day today" title="Hoy: Relleno primaryLight + borde primaryDark + texto negro">10</span>
+                <span class="dp-day">11</span>
+                <span class="dp-day selected" title="Seleccionado: Relleno primary + texto negro">12</span>
+                <span class="dp-day">13</span>
+                <span class="dp-day">14</span>
+                <span class="dp-day">15</span>
+              </div>
+            </div>
+            <div style="flex: 1; min-width: 180px; font-size: 12.5px; color: var(--textSecondary); display: flex; flex-direction: column; gap: 6px;">
+              <div><strong>Día actual (10):</strong> Relleno <code>primaryLight</code>, borde <code>primaryDark</code> (1.5px) y número estrictamente negro.</div>
+              <div><strong>Día elegido (12):</strong> Relleno <code>primary</code> sólido y número negro.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 6: COMPONENTES REALES DE NEGOCIO -->
+    <section id="sec-negocio" class="ds-section">
+      <div class="ds-section-header">
+        <div>
+          <h2 class="ds-section-title">6. Componentes de Negocio de Rinde Más (Interactivos)</h2>
+          <p class="ds-section-desc">Prueba en vivo los estados del Tanque de Saldo Disponible (Modelo V3), el Selector de Mes, la Tarjeta de Borrador IA y la Dona de Categorías.</p>
+        </div>
+      </div>
+
+      <div class="preview-split">
+        <!-- Columna Izquierda: AppBarMonthSelector + SummaryCard V3 -->
+        <div class="app-canvas">
+          <div class="canvas-label">
+            <span>`AppBarMonthSelector` + `SummaryCard` (Modelo Mental V3 · Sección 6.4 y 6.5)</span>
+          </div>
+
+          <!-- Simulador de AppBar con Selector de Mes -->
+          <div class="rm-appbar">
+            <span class="rm-appbar-title">Rinde Más</span>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <div class="rm-month-selector" title="Mes actual">
+                <button type="button" class="rm-month-arrow">‹</button>
+                <span>Noviembre</span>
+                <button type="button" class="rm-month-arrow">›</button>
+              </div>
+              <div class="rm-month-selector past-month" title="Fuera del mes actual (borde primaryDark)">
+                <button type="button" class="rm-month-arrow">‹</button>
+                <span>Oct</span>
+                <button type="button" class="rm-month-arrow">›</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botones de Estado del Tanque -->
+          <div>
+            <div style="font-size: 11.5px; font-weight: 700; color: var(--textSecondary); margin-bottom: 6px;">
+              PROBAR ESTADO DEL TANQUE DE SALDO DISPONIBLE:
+            </div>
+            <div class="tank-state-tabs">
+              <button type="button" class="tank-tab active" onclick="setTankState('healthy', this)">1. Saludable (Verde + Reserva)</button>
+              <button type="button" class="tank-tab" onclick="setTankState('caution', this)">2. Precaución (≤ 15% libre)</button>
+              <button type="button" class="tank-tab" onclick="setTankState('invaded', this)">3. Ahorro Invadido</button>
+              <button type="button" class="tank-tab" onclick="setTankState('empty', this)">4. Tanque Agotado (0%)</button>
+            </div>
+          </div>
+
+          <!-- Tarjeta SummaryCard V3 -->
+          <div class="rm-card" id="summaryCardDemo">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span id="tankStatusTopLabel" style="font-size: 12.5px; font-weight: 600; color: var(--textSecondary);">Disponible para gastar</span>
+              <span class="lens-pill">USD BCV ▾</span>
+            </div>
+
+            <div class="hero-row">
+              <div id="tankHeroAmount" class="hero-amount">$ 320,00</div>
+              <span id="tankExceededPill" style="display: none; background: var(--errorTint); color: var(--errorStrong); font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px;">
+                Excedido del límite
+              </span>
+            </div>
+
+            <div class="tank-context-row">
+              <span style="color: var(--textPrimary); font-weight: 600; cursor: pointer;">Límite: $ 400,00 ✏️</span>
+              <span id="tankSpentLabel" style="color: var(--textSpent); font-weight: 600;">Gastado: $ 80,00</span>
+            </div>
+
+            <!-- Barra del Tanque -->
+            <div id="tankTrackContainer" class="tank-track">
+              <div style="position: absolute; inset: 0; border-radius: 999px; overflow: hidden; display: flex;">
+                <!-- Banda de Reserva Protegida (20% izquierda = $100 sobre $500 de presupuesto total) -->
+                <div id="tankReserveBar" style="width: 20%; height: 100%; background-color: var(--savingsReserve);"></div>
+                <!-- Tramo libre disponible -->
+                <div id="tankFreeBar" style="width: 64%; height: 100%; background-color: var(--balancePositive);"></div>
+              </div>
+              <!-- Muesca de Ahorro (en 20%) -->
+              <div id="tankNotch" class="tank-notch" style="left: 20%;"></div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 12px;">
+              <span id="tankLegendText" style="color: var(--savingsReserve); font-weight: 700;">
+                🛡️ Ahorro protegido · $ 100,00
+              </span>
+              <span style="color: var(--textMuted); font-size: 11.5px;">Presupuesto total: $ 500,00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Columna Derecha: Borrador IA + Dona 130px + Desglose Bimonetario -->
+        <div class="app-canvas">
+          <div class="canvas-label">
+            <span>`PendingExpenseCard` (Regla 2.4) + Dona 130px (Regla 6.6)</span>
+          </div>
+
+          <!-- Borrador IA Con Monto -->
+          <div class="rm-draft-card">
+            <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+              <div style="width: 36px; height: 36px; border-radius: 10px; background: var(--draftBadgeBg); color: var(--draftBadgeText); display: flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0;">
+                🧾
+              </div>
+              <div style="min-width: 0;">
+                <div style="font-size: var(--bodyFontSize); font-weight: 700; color: var(--textPrimary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                  Automercado Excelsior Gama
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+                  <span class="rm-draft-badge">Pendiente de revisión</span>
+                  <span style="font-size: var(--metaFontSize); color: var(--textSecondary);">Hace 2 min</span>
+                </div>
+              </div>
+            </div>
+            <div style="text-align: right; flex-shrink: 0;">
+              <div style="font-size: var(--bodyFontSize); font-weight: 800; color: var(--textPrimary);">$ 34,20</div>
+              <div style="font-size: var(--metaFontSize); color: var(--textSecondary);">Bs. 1.545,84</div>
+            </div>
+          </div>
+
+          <!-- Borrador IA Sin Monto (Regla 2.4.3) -->
+          <div class="rm-draft-card">
+            <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+              <div style="width: 36px; height: 36px; border-radius: 10px; background: var(--draftBadgeBg); color: var(--draftBadgeText); display: flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0;">
+                📷
+              </div>
+              <div style="min-width: 0;">
+                <div style="font-size: var(--bodyFontSize); font-weight: 700; color: var(--textPrimary);">
+                  Comercio no especificado
+                </div>
+                <span class="rm-draft-badge">Monto por confirmar</span>
+              </div>
+            </div>
+            <button type="button" class="rm-btn-primary" style="padding: 7px 12px; font-size: 12px; flex-shrink: 0;">
+              Por revisar →
+            </button>
+          </div>
+
+          <!-- Dona de Distribución (Regla 6.6) -->
+          <div class="rm-card">
+            <div style="font-size: 14px; font-weight: 700; color: var(--textPrimary); margin-bottom: 12px;">
+              Distribución por Categorías (Dona 130px · Lista al 48.6%)
+            </div>
+            <div class="donut-card-layout">
+              <div id="liveDonutRing" class="donut-ring">
+                <div class="donut-hole">
+                  <strong style="color: var(--textPrimary); font-size: 13px;">$ 240</strong>
+                  <span>Total</span>
+                </div>
+              </div>
+              <div class="donut-legend">
+                <div class="donut-row">
+                  <span class="donut-dot" style="background: var(--catAlimentacion);"></span>
+                  <span class="donut-cat-name">Alimentación</span>
+                  <span class="donut-cat-pct">45%</span>
+                  <span class="donut-cat-amt">$ 108,00</span>
+                </div>
+                <div class="donut-row">
+                  <span class="donut-dot" style="background: var(--catSalud);"></span>
+                  <span class="donut-cat-name">Salud</span>
+                  <span class="donut-cat-pct">20%</span>
+                  <span class="donut-cat-amt">$ 48,00</span>
+                </div>
+                <div class="donut-row">
+                  <span class="donut-dot" style="background: var(--catTransporte);"></span>
+                  <span class="donut-cat-name">Transporte</span>
+                  <span class="donut-cat-pct">15%</span>
+                  <span class="donut-cat-amt">$ 36,00</span>
+                </div>
+                <div class="donut-row">
+                  <span class="donut-dot" style="background: var(--catServicios);"></span>
+                  <span class="donut-cat-name">Servicios</span>
+                  <span class="donut-cat-pct">12%</span>
+                  <span class="donut-cat-amt">$ 28,80</span>
+                </div>
+                <div class="donut-row">
+                  <span class="donut-dot" style="background: var(--catOtros);"></span>
+                  <span class="donut-cat-name">Otros</span>
+                  <span class="donut-cat-pct">8%</span>
+                  <span class="donut-cat-amt">$ 19,20</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL DE EXPORTACIÓN PARA ANTIGRAVITY -->
+  <div id="exportModal" class="modal-backdrop" onclick="if(event.target === this) closeExportModal()">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div>
+          <h3 style="font-size: 17px; font-weight: 800; color: #0F172A;">📋 Copiar Ajustes del Sistema de Diseño</h3>
+          <p style="font-size: 12.5px; color: #64748B;">Pega este bloque en el chat para que Antigravity sincronice Dart (`AppColors`, `AppTheme`), el panel web y `DESIGN.md`.</p>
+        </div>
+        <button type="button" class="btn-top btn-top-secondary" style="padding: 6px 10px;" onclick="closeExportModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <textarea id="exportTextarea" class="export-textarea" readonly></textarea>
+      </div>
+      <div class="modal-footer">
+        <span id="copyFeedbackText" style="font-size: 12.5px; font-weight: 600; color: #059669;"></span>
+        <div style="display: flex; gap: 10px;">
+          <button type="button" class="btn-top btn-top-secondary" onclick="closeExportModal()">Cerrar</button>
+          <button type="button" class="btn-top btn-top-primary" onclick="copyExportToClipboard()">📋 Copiar al portapapeles</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'rindemas_design_system_tokens_v1';
+
+    // Definición canónica de todos los tokens del sistema
+    const COLOR_TOKENS = [
+      // Superficies y bordes
+      { group: 'grid-surfaces', cssVar: '--background', dartName: 'AppColors.background', defaultHex: '#F9FAFB', role: 'Fondo general de pantallas (gris súper claro).' },
+      { group: 'grid-surfaces', cssVar: '--surface', dartName: 'AppColors.surface / card', defaultHex: '#FFFFFF', role: 'Fondo de tarjetas, hojas modales y diálogos.' },
+      { group: 'grid-surfaces', cssVar: '--cardLighter', dartName: 'AppColors.cardLighter', defaultHex: '#F3F4F6', role: 'Contenedores secundarios y chips inactivos.' },
+      { group: 'grid-surfaces', cssVar: '--border', dartName: 'AppColors.border', defaultHex: '#E5E7EB', role: 'Bordes de tarjetas, campos e inputs.' },
+      { group: 'grid-surfaces', cssVar: '--divider', dartName: 'AppColors.divider', defaultHex: '#F3F4F6', role: 'Divisores horizontales internos.' },
+
+      // Marca y Textos
+      { group: 'grid-brand-text', cssVar: '--primary', dartName: 'AppColors.primary', defaultHex: '#FBF18F', role: 'Amarillo pastel de acento (Botones principales, FAB, Asistente IA).' },
+      { group: 'grid-brand-text', cssVar: '--primaryLight', dartName: 'AppColors.primaryLight', defaultHex: '#FEF08A', role: 'Amarillo claro para círculo "Hoy" en DatePicker y estados suaves.' },
+      { group: 'grid-brand-text', cssVar: '--primaryDark', dartName: 'AppColors.primaryDark', defaultHex: '#FACC15', role: 'Amarillo de alto impacto para iconos, foco de input y bordes activos.' },
+      { group: 'grid-brand-text', cssVar: '--secondary', dartName: 'AppColors.secondary', defaultHex: '#0F172A', role: 'Azul medianoche / pizarra oscura de alto contraste.' },
+      { group: 'grid-brand-text', cssVar: '--textPrimary', dartName: 'AppColors.textPrimary', defaultHex: '#111827', role: 'Negro carbón para títulos, montos principales y cursor.' },
+      { group: 'grid-brand-text', cssVar: '--textSecondary', dartName: 'AppColors.textSecondary', defaultHex: '#6B7280', role: 'Gris medio para subtítulos, categorías y metadatos (mín. 4.5:1).' },
+      { group: 'grid-brand-text', cssVar: '--textMuted', dartName: 'AppColors.textMuted', defaultHex: '#9CA3AF', role: 'Gris claro para placeholders y timestamps pasivos.' },
+      { group: 'grid-brand-text', cssVar: '--textSpent', dartName: 'AppColors.textSpent', defaultHex: '#475569', role: 'Monto de contexto "Gastado" sobre la barra de presupuesto.' },
+
+      // Tanque y Estados
+      { group: 'grid-tank-states', cssVar: '--balancePositive', dartName: 'AppColors.balancePositive', defaultHex: '#16A34A', role: 'Verde de saldo disponible libre y monto héroe.' },
+      { group: 'grid-tank-states', cssVar: '--savingsReserve', dartName: 'AppColors.savingsReserve', defaultHex: '#065F46', role: 'Reserva protegida de ahorro en el tanque (Emerald 800).' },
+      { group: 'grid-tank-states', cssVar: '--caution', dartName: 'AppColors.caution', defaultHex: '#D97706', role: 'Ámbar de precaución cuando queda ≤ 15% libre en el tanque.' },
+      { group: 'grid-tank-states', cssVar: '--error', dartName: 'AppColors.error', defaultHex: '#EF4444', role: 'Errores en formularios y acciones destructivas en diálogos.' },
+      { group: 'grid-tank-states', cssVar: '--errorStrong', dartName: 'AppColors.errorStrong', defaultHex: '#DC2626', role: 'Rojo intenso cuando el gasto invade la reserva de ahorro.' },
+      { group: 'grid-tank-states', cssVar: '--errorTint', dartName: 'AppColors.errorTint', defaultHex: '#FEE2E2', role: 'Fondo rojo suave para reserva invadida o tanque agotado.' },
+      { group: 'grid-tank-states', cssVar: '--errorBorder', dartName: 'AppColors.errorBorder', defaultHex: '#FCA5A5', role: 'Borde rojo sutil del carril cuando el tanque se agota.' },
+      { group: 'grid-tank-states', cssVar: '--trackNeutral', dartName: 'AppColors.trackNeutral', defaultHex: '#E2E8F0', role: 'Carril gris base del tanque de presupuesto (Slate 200).' },
+      { group: 'grid-tank-states', cssVar: '--trackBorder', dartName: 'AppColors.trackBorder', defaultHex: '#CBD5E1', role: 'Borde interior 1dp del carril del tanque (Slate 300).' },
+      { group: 'grid-tank-states', cssVar: '--markerNeutral', dartName: 'AppColors.markerNeutral', defaultHex: '#4B5563', role: 'Muesca divisoria vertical de ahorro en estado saludable.' },
+      { group: 'grid-tank-states', cssVar: '--success', dartName: 'AppColors.success', defaultHex: '#10B981', role: 'Verde esmeralda semántico general.' },
+      { group: 'grid-tank-states', cssVar: '--warning', dartName: 'AppColors.warning', defaultHex: '#F59E0B', role: 'Ámbar semántico de advertencia general.' },
+      { group: 'grid-tank-states', cssVar: '--info', dartName: 'AppColors.info', defaultHex: '#3B82F6', role: 'Azul semántico informativo.' },
+
+      // Borrador IA
+      { group: 'grid-drafts', cssVar: '--draftSurface', dartName: 'PendingExpenseCard.surface', defaultHex: '#FFFDF5', role: 'Fondo marfil cálido de facturas en cola (evita fatiga visual).' },
+      { group: 'grid-drafts', cssVar: '--draftBorder', dartName: 'PendingExpenseCard.border', defaultHex: '#FEF08A', role: 'Borde ámbar suave (1.2px) de tarjeta en borrador.' },
+      { group: 'grid-drafts', cssVar: '--draftBadgeBg', dartName: 'PendingExpenseCard.badgeBg', defaultHex: '#FEF3C7', role: 'Fondo de pastilla de estado pendiente.' },
+      { group: 'grid-drafts', cssVar: '--draftBadgeText', dartName: 'PendingExpenseCard.badgeText', defaultHex: '#92400E', role: 'Texto ámbar oscuro sobre pastilla (contraste WCAG AAA > 7:1).' },
+
+      // 10 Categorías
+      { group: 'grid-categories', cssVar: '--catAlimentacion', dartName: "categoryColors['Alimentación']", defaultHex: '#0D9488', role: 'Teal elegante — Alimentación.' },
+      { group: 'grid-categories', cssVar: '--catEducacion', dartName: "categoryColors['Educación']", defaultHex: '#4F46E5', role: 'Índigo moderno — Educación.' },
+      { group: 'grid-categories', cssVar: '--catSalud', dartName: "categoryColors['Salud']", defaultHex: '#E11D48', role: 'Frambuesa cálido — Salud.' },
+      { group: 'grid-categories', cssVar: '--catHogar', dartName: "categoryColors['Hogar']", defaultHex: '#D97706', role: 'Ámbar tostado — Hogar.' },
+      { group: 'grid-categories', cssVar: '--catHigiene', dartName: "categoryColors['Higiene']", defaultHex: '#06B6D4', role: 'Cyan fresco — Higiene.' },
+      { group: 'grid-categories', cssVar: '--catServicios', dartName: "categoryColors['Servicios']", defaultHex: '#7C3AED', role: 'Violeta balanceado — Servicios.' },
+      { group: 'grid-categories', cssVar: '--catTransporte', dartName: "categoryColors['Transporte']", defaultHex: '#2563EB', role: 'Azul cobalto — Transporte.' },
+      { group: 'grid-categories', cssVar: '--catRopa', dartName: "categoryColors['Ropa']", defaultHex: '#EC4899', role: 'Magenta / Rosa — Ropa.' },
+      { group: 'grid-categories', cssVar: '--catEntretenimiento', dartName: "categoryColors['Entretenimiento']", defaultHex: '#F97316', role: 'Naranja vibrante — Entretenimiento.' },
+      { group: 'grid-categories', cssVar: '--catOtros', dartName: "categoryColors['Otros']", defaultHex: '#64748B', role: 'Gris pizarra — Otros.' }
+    ];
+
+    const NUMERIC_TOKENS = [
+      // Tipografía
+      { group: 'grid-typography', cssVar: '--heroSize', label: 'Monto Héroe Nivel 1 (`SummaryCard`)', tokenName: 'SummaryCard.heroFontSize', min: 22, max: 44, step: 1, defaultVal: 32, unit: 'px' },
+      { group: 'grid-typography', cssVar: '--appBarTitleSize', label: 'Título de AppBar', tokenName: 'AppBarTheme.titleTextStyle.fontSize', min: 16, max: 26, step: 1, defaultVal: 20, unit: 'px' },
+      { group: 'grid-typography', cssVar: '--btnFontSize', label: 'Texto de Botón Principal', tokenName: 'ElevatedButton.textStyle.fontSize', min: 13, max: 20, step: 1, defaultVal: 16, unit: 'px' },
+      { group: 'grid-typography', cssVar: '--bodyFontSize', label: 'Texto Base / Inputs', tokenName: 'InputDecorationTheme.fontSize', min: 12, max: 18, step: 1, defaultVal: 14, unit: 'px' },
+      { group: 'grid-typography', cssVar: '--itemFontSize', label: 'Desglose de Ítems / TextButton', tokenName: 'ExpenseItem.fontSize', min: 11, max: 16, step: 1, defaultVal: 13, unit: 'px' },
+      { group: 'grid-typography', cssVar: '--metaFontSize', label: 'Categorías, Badges y Metadatos', tokenName: 'MetaLabel.fontSize', min: 9, max: 14, step: 1, defaultVal: 11, unit: 'px' },
+
+      // Espaciados y Radios
+      { group: 'grid-spacing', cssVar: '--cardRadius', label: 'Radio de Borde de Tarjetas y Modales', tokenName: 'CardTheme.borderRadius', min: 4, max: 28, step: 1, defaultVal: 16, unit: 'px' },
+      { group: 'grid-spacing', cssVar: '--controlRadius', label: 'Radio de Botones e Inputs', tokenName: 'Control.borderRadius', min: 4, max: 24, step: 1, defaultVal: 12, unit: 'px' },
+      { group: 'grid-spacing', cssVar: '--btnPadH', label: 'Padding Horizontal Botón Principal', tokenName: 'ElevatedButton.padding.horizontal', min: 12, max: 36, step: 2, defaultVal: 24, unit: 'px' },
+      { group: 'grid-spacing', cssVar: '--btnPadV', label: 'Padding Vertical Botón Principal', tokenName: 'ElevatedButton.padding.vertical', min: 8, max: 22, step: 1, defaultVal: 14, unit: 'px' },
+      { group: 'grid-spacing', cssVar: '--inputPadH', label: 'Padding Horizontal de Inputs', tokenName: 'InputDecoration.contentPadding.horizontal', min: 10, max: 28, step: 1, defaultVal: 16, unit: 'px' },
+      { group: 'grid-spacing', cssVar: '--inputPadV', label: 'Padding Vertical de Inputs', tokenName: 'InputDecoration.contentPadding.vertical', min: 8, max: 22, step: 1, defaultVal: 14, unit: 'px' },
+      { group: 'grid-spacing', cssVar: '--focusBorderWidth', label: 'Grosor de Borde Activo en Input', tokenName: 'InputDecoration.focusedBorder.width', min: 1, max: 4, step: 0.5, defaultVal: 2, unit: 'px' },
+      { group: 'grid-spacing', cssVar: '--tankHeight', label: 'Altura de Barra del Tanque de Saldo', tokenName: 'SummaryCard.tankHeight', min: 6, max: 18, step: 1, defaultVal: 10, unit: 'px' },
+      { group: 'grid-spacing', cssVar: '--draftPadV', label: 'Padding Vertical Borrador IA (máx. 12dp)', tokenName: 'PendingExpenseCard.verticalPadding', min: 6, max: 18, step: 1, defaultVal: 11, unit: 'px' },
+      { group: 'grid-spacing', cssVar: '--donutSize', label: 'Diámetro de Dona de Categorías', tokenName: 'CategoryDonut.diameter', min: 96, max: 160, step: 2, defaultVal: 130, unit: 'px' }
+    ];
+
+    // Estado actual en memoria
+    const currentValues = {};
+
+    function initState() {
+      let saved = {};
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) saved = JSON.parse(raw);
+      } catch (e) {
+        console.warn('No se pudo leer localStorage:', e);
+      }
+
+      COLOR_TOKENS.forEach(t => {
+        currentValues[t.cssVar] = (saved[t.cssVar] || t.defaultHex).toUpperCase();
+        document.documentElement.style.setProperty(t.cssVar, currentValues[t.cssVar]);
+      });
+
+      NUMERIC_TOKENS.forEach(t => {
+        const val = saved[t.cssVar] !== undefined ? Number(saved[t.cssVar]) : t.defaultVal;
+        currentValues[t.cssVar] = val;
+        document.documentElement.style.setProperty(t.cssVar, val + t.unit);
+      });
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(currentValues));
+      } catch (e) {
+        console.warn('No se pudo guardar en localStorage:', e);
+      }
+    }
+
+    // Cálculo de luminancia y ratio de contraste WCAG 2.1
+    function hexToRgb(hex) {
+      const clean = hex.replace('#', '').trim();
+      if (clean.length !== 6) return { r: 0, g: 0, b: 0 };
+      const num = parseInt(clean, 16);
+      return {
+        r: (num >> 16) & 255,
+        g: (num >> 8) & 255,
+        b: num & 255
+      };
+    }
+
+    function relativeLuminance(hex) {
+      const { r, g, b } = hexToRgb(hex);
+      const transform = (c) => {
+        const s = c / 255;
+        return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+      };
+      return 0.2126 * transform(r) + 0.7152 * transform(g) + 0.0722 * transform(b);
+    }
+
+    function contrastRatio(hex1, hex2) {
+      const l1 = relativeLuminance(hex1);
+      const l2 = relativeLuminance(hex2);
+      const brightest = Math.max(l1, l2);
+      const darkest = Math.min(l1, l2);
+      return (brightest + 0.05) / (darkest + 0.05);
+    }
+
+    function renderColorCards() {
+      COLOR_TOKENS.forEach(token => {
+        const container = document.getElementById(token.group);
+        if (!container) return;
+
+        const val = currentValues[token.cssVar];
+        const isMod = val !== token.defaultHex.toUpperCase();
+        const card = document.createElement('div');
+        card.className = 'color-card' + (isMod ? ' modified' : '');
+        card.id = 'card-' + token.cssVar;
+
+        const ratioVsWhite = contrastRatio(val, '#FFFFFF').toFixed(1);
+        const ratioVsBlack = contrastRatio(val, '#000000').toFixed(1);
+
+        card.innerHTML = `
+          <div class="color-swatch-row">
+            <label class="color-picker-wrapper" id="swatch-${token.cssVar}" style="background-color: ${val};">
+              <input type="color" id="picker-${token.cssVar}" value="${val}"
+                oninput="updateColorToken('${token.cssVar}', this.value)" />
+            </label>
+            <div class="color-meta">
+              <div class="color-token-name">${token.dartName}</div>
+              <div class="color-role">${token.role}</div>
+            </div>
+          </div>
+          <div class="color-controls-row">
+            <input type="text" class="hex-input" id="hex-${token.cssVar}" value="${val}" maxlength="7"
+              onchange="updateColorToken('${token.cssVar}', this.value)" />
+            <span class="contrast-badge" id="contrast-${token.cssVar}">
+              vs Blanco ${ratioVsWhite}:1 · vs Negro ${ratioVsBlack}:1
+            </span>
+            <button type="button" class="btn-reset-token" title="Restaurar original (${token.defaultHex})"
+              onclick="updateColorToken('${token.cssVar}', '${token.defaultHex}')">↺</button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function renderNumericSliders() {
+      NUMERIC_TOKENS.forEach(token => {
+        const container = document.getElementById(token.group);
+        if (!container) return;
+
+        const val = currentValues[token.cssVar];
+        const isMod = Number(val) !== Number(token.defaultVal);
+        const card = document.createElement('div');
+        card.className = 'slider-card' + (isMod ? ' modified' : '');
+        card.id = 'card-' + token.cssVar;
+
+        card.innerHTML = `
+          <div class="slider-top">
+            <div>
+              <div class="slider-label">${token.label}</div>
+              <div class="slider-token">${token.tokenName} (Original: ${token.defaultVal}${token.unit})</div>
+            </div>
+            <button type="button" class="btn-reset-token" title="Restaurar original"
+              onclick="updateNumericToken('${token.cssVar}', ${token.defaultVal})">↺</button>
+          </div>
+          <div class="slider-input-row">
+            <input type="range" id="range-${token.cssVar}"
+              min="${token.min}" max="${token.max}" step="${token.step}" value="${val}"
+              oninput="updateNumericToken('${token.cssVar}', this.value)" />
+            <span class="slider-val-badge" id="val-${token.cssVar}">${val}${token.unit}</span>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function updateColorToken(cssVar, rawValue) {
+      let clean = rawValue.trim().toUpperCase();
+      if (!clean.startsWith('#')) clean = '#' + clean;
+      if (!/^#[0-9A-F]{6}$/.test(clean)) return;
+
+      const token = COLOR_TOKENS.find(t => t.cssVar === cssVar);
+      if (!token) return;
+
+      currentValues[cssVar] = clean;
+      document.documentElement.style.setProperty(cssVar, clean);
+
+      const picker = document.getElementById('picker-' + cssVar);
+      const hexInput = document.getElementById('hex-' + cssVar);
+      const swatch = document.getElementById('swatch-' + cssVar);
+      const card = document.getElementById('card-' + cssVar);
+      const badge = document.getElementById('contrast-' + cssVar);
+
+      if (picker) picker.value = clean;
+      if (hexInput) hexInput.value = clean;
+      if (swatch) swatch.style.backgroundColor = clean;
+
+      const isMod = clean !== token.defaultHex.toUpperCase();
+      if (card) card.classList.toggle('modified', isMod);
+
+      if (badge) {
+        const rW = contrastRatio(clean, '#FFFFFF').toFixed(1);
+        const rB = contrastRatio(clean, '#000000').toFixed(1);
+        badge.textContent = `vs Blanco ${rW}:1 · vs Negro ${rB}:1`;
+      }
+
+      updateDonutGradient();
+      validateDesignRules();
+      updateChangesBadge();
+      saveState();
+    }
+
+    function updateNumericToken(cssVar, rawValue) {
+      const token = NUMERIC_TOKENS.find(t => t.cssVar === cssVar);
+      if (!token) return;
+
+      const num = Number(rawValue);
+      currentValues[cssVar] = num;
+      document.documentElement.style.setProperty(cssVar, num + token.unit);
+
+      const range = document.getElementById('range-' + cssVar);
+      const valBadge = document.getElementById('val-' + cssVar);
+      const card = document.getElementById('card-' + cssVar);
+
+      if (range) range.value = num;
+      if (valBadge) valBadge.textContent = num + token.unit;
+
+      const isMod = num !== Number(token.defaultVal);
+      if (card) card.classList.toggle('modified', isMod);
+
+      validateDesignRules();
+      updateChangesBadge();
+      saveState();
+    }
+
+    function updateDonutGradient() {
+      const ring = document.getElementById('liveDonutRing');
+      if (!ring) return;
+      const c1 = currentValues['--catAlimentacion'];
+      const c2 = currentValues['--catSalud'];
+      const c3 = currentValues['--catTransporte'];
+      const c4 = currentValues['--catServicios'];
+      const c5 = currentValues['--catOtros'];
+      ring.style.background = `conic-gradient(
+        ${c1} 0% 45%,
+        ${c2} 45% 65%,
+        ${c3} 65% 80%,
+        ${c4} 80% 92%,
+        ${c5} 92% 100%
+      )`;
+    }
+
+    // Simulador de los 4 estados del Tanque de Saldo Disponible (DESIGN.md 6.4)
+    function setTankState(state, btnEl) {
+      document.querySelectorAll('.tank-tab').forEach(b => b.classList.remove('active'));
+      if (btnEl) btnEl.classList.add('active');
+
+      const hero = document.getElementById('tankHeroAmount');
+      const pill = document.getElementById('tankExceededPill');
+      const spent = document.getElementById('tankSpentLabel');
+      const track = document.getElementById('tankTrackContainer');
+      const reserveBar = document.getElementById('tankReserveBar');
+      const freeBar = document.getElementById('tankFreeBar');
+      const notch = document.getElementById('tankNotch');
+      const legend = document.getElementById('tankLegendText');
+
+      // Reset base styles
+      track.style.backgroundColor = 'var(--trackNeutral)';
+      track.style.borderColor = 'var(--trackBorder)';
+      notch.style.display = 'block';
+      pill.style.display = 'none';
+
+      if (state === 'healthy') {
+        hero.textContent = '$ 320,00';
+        hero.style.color = 'var(--balancePositive)';
+        spent.textContent = 'Gastado: $ 80,00';
+        reserveBar.style.width = '20%';
+        reserveBar.style.backgroundColor = 'var(--savingsReserve)';
+        freeBar.style.width = '64%';
+        freeBar.style.backgroundColor = 'var(--balancePositive)';
+        notch.style.backgroundColor = 'var(--markerNeutral)';
+        legend.textContent = '🛡️ Ahorro protegido · $ 100,00';
+        legend.style.color = 'var(--savingsReserve)';
+      } else if (state === 'caution') {
+        hero.textContent = '$ 45,00';
+        hero.style.color = 'var(--caution)';
+        spent.textContent = 'Gastado: $ 355,00';
+        reserveBar.style.width = '20%';
+        reserveBar.style.backgroundColor = 'var(--savingsReserve)';
+        freeBar.style.width = '11%';
+        freeBar.style.backgroundColor = 'var(--caution)';
+        notch.style.backgroundColor = 'var(--markerNeutral)';
+        legend.textContent = '🛡️ Ahorro protegido · $ 100,00 (Queda ≤ 15% libre)';
+        legend.style.color = 'var(--savingsReserve)';
+      } else if (state === 'invaded') {
+        hero.textContent = '-$ 40,00';
+        hero.style.color = 'var(--errorStrong)';
+        pill.style.display = 'inline-block';
+        spent.textContent = 'Gastado: $ 440,00';
+        track.style.backgroundColor = 'var(--errorTint)';
+        reserveBar.style.width = '12%';
+        reserveBar.style.backgroundColor = 'var(--errorStrong)';
+        freeBar.style.width = '0%';
+        notch.style.backgroundColor = 'var(--errorStrong)';
+        legend.textContent = '⚠️ Ahorro comprometido · quedan $ 60,00';
+        legend.style.color = 'var(--errorStrong)';
+      } else if (state === 'empty') {
+        hero.textContent = '-$ 100,00';
+        hero.style.color = 'var(--errorStrong)';
+        pill.style.display = 'inline-block';
+        spent.textContent = 'Gastado: $ 500,00';
+        track.style.backgroundColor = 'var(--errorTint)';
+        track.style.borderColor = 'var(--errorBorder)';
+        reserveBar.style.width = '0%';
+        freeBar.style.width = '0%';
+        notch.style.backgroundColor = 'var(--errorStrong)';
+        legend.textContent = '🚨 Ahorro comprometido · quedan $ 0,00';
+        legend.style.color = 'var(--errorStrong)';
+      }
+    }
+
+    // Validador en vivo de Reglas de Contraste de DESIGN.md
+    function validateDesignRules() {
+      const violations = [];
+
+      // Regla 2.1: Botones y badges amarillos con texto negro (#000000 o textPrimary)
+      const primaryContrast = contrastRatio(currentValues['--primary'], '#000000');
+      if (primaryContrast < 7.0) {
+        violations.push(`Regla 2.1: AppColors.primary (${currentValues['--primary']}) tiene bajo contraste (${primaryContrast.toFixed(1)}:1) con texto negro. El fondo amarillo debe mantener contraste alto con negro.`);
+      }
+
+      // Regla 2.2: textPrimary sobre surface/card
+      const textPrimaryContrast = contrastRatio(currentValues['--textPrimary'], currentValues['--surface']);
+      if (textPrimaryContrast < 7.0) {
+        violations.push(`Regla 2.2: AppColors.textPrimary (${currentValues['--textPrimary']}) sobre AppColors.surface (${currentValues['--surface']}) tiene ratio ${textPrimaryContrast.toFixed(1)}:1 (se recomienda ≥ 7:1).`);
+      }
+
+      // Regla 6.3: textSecondary sobre surface debe ser >= 4.5:1 (WCAG AA)
+      const textSecContrast = contrastRatio(currentValues['--textSecondary'], currentValues['--surface']);
+      if (textSecContrast < 4.5) {
+        violations.push(`Regla 6.3 (WCAG AA): AppColors.textSecondary (${currentValues['--textSecondary']}) sobre fondo claro cae a ${textSecContrast.toFixed(2)}:1 (mínimo obligatorio: 4.5:1).`);
+      }
+
+      // Regla 2.4.2: Badge de borrador IA debe tener contraste AAA (> 7:1)
+      const draftBadgeContrast = contrastRatio(currentValues['--draftBadgeText'], currentValues['--draftBadgeBg']);
+      if (draftBadgeContrast < 7.0) {
+        violations.push(`Regla 2.4.2 (WCAG AAA): El badge de borrador IA tiene ratio ${draftBadgeContrast.toFixed(2)}:1 entre texto (${currentValues['--draftBadgeText']}) y fondo (${currentValues['--draftBadgeBg']}). Debe ser ≥ 7.0:1.`);
+      }
+
+      // Regla 2.4.4: Padding vertical de PendingExpenseCard <= 12dp
+      if (Number(currentValues['--draftPadV']) > 12) {
+        violations.push(`Regla 2.4.4 (Densidad): El padding vertical de PendingExpenseCard está en ${currentValues['--draftPadV']}px (máximo permitido en DESIGN.md: 12dp).`);
+      }
+
+      const box = document.getElementById('contrastAlertsBox');
+      const list = document.getElementById('contrastAlertsList');
+      const pill = document.getElementById('contrastStatusPill');
+
+      if (violations.length > 0) {
+        box.classList.add('visible');
+        list.innerHTML = violations.map(v => `<li>${v}</li>`).join('');
+        pill.className = 'status-pill warn';
+        pill.textContent = `⚠️ ${violations.length} alerta(s) DESIGN.md`;
+      } else {
+        box.classList.remove('visible');
+        list.innerHTML = '';
+        pill.className = 'status-pill ok';
+        pill.textContent = '✓ Contraste DESIGN.md y WCAG AA OK';
+      }
+    }
+
+    function getModifiedTokens() {
+      const mods = [];
+      COLOR_TOKENS.forEach(t => {
+        if (currentValues[t.cssVar] !== t.defaultHex.toUpperCase()) {
+          mods.push({
+            type: 'color',
+            token: t.dartName,
+            cssVar: t.cssVar,
+            before: t.defaultHex.toUpperCase(),
+            after: currentValues[t.cssVar],
+            role: t.role
+          });
+        }
+      });
+      NUMERIC_TOKENS.forEach(t => {
+        if (Number(currentValues[t.cssVar]) !== Number(t.defaultVal)) {
+          mods.push({
+            type: 'numeric',
+            token: t.tokenName,
+            cssVar: t.cssVar,
+            before: `${t.defaultVal}${t.unit}`,
+            after: `${currentValues[t.cssVar]}${t.unit}`,
+            role: t.label
+          });
+        }
+      });
+      return mods;
+    }
+
+    function updateChangesBadge() {
+      const mods = getModifiedTokens();
+      const pill = document.getElementById('changesCountPill');
+      if (mods.length === 0) {
+        pill.textContent = '0 ajustes realizados';
+      } else if (mods.length === 1) {
+        pill.textContent = '1 ajuste activo';
+      } else {
+        pill.textContent = `${mods.length} ajustes activos`;
+      }
+    }
+
+    function resetAllTokens() {
+      localStorage.removeItem(STORAGE_KEY);
+      COLOR_TOKENS.forEach(t => updateColorToken(t.cssVar, t.defaultHex));
+      NUMERIC_TOKENS.forEach(t => updateNumericToken(t.cssVar, t.defaultVal));
+    }
+
+    function buildExportPayload() {
+      const mods = getModifiedTokens();
+      const lines = [];
+      lines.push('# Solicitud de Actualización del Sistema de Diseño (Rinde Más)');
+      lines.push('');
+
+      if (mods.length === 0) {
+        lines.push('> No se detectaron cambios respecto a los valores actuales de `DESIGN.md`, `app_colors.dart` y `app_theme.dart`.');
+        lines.push('');
+      } else {
+        lines.push(`Aplica los siguientes **${mods.length} ajustes** en \`lib/core/constants/app_colors.dart\`, \`lib/core/theme/app_theme.dart\`, \`DESIGN.md\` y \`docs/design-system.html\`:`);
+        lines.push('');
+        lines.push('## 1. Resumen de Cambios (Antes → Después)');
+        lines.push('| Token | Valor Anterior | Nuevo Valor | Uso / Componente |');
+        lines.push('| :--- | :--- | :--- | :--- |');
+        mods.forEach(m => {
+          lines.push(`| \`${m.token}\` | \`${m.before}\` | **\`${m.after}\`** | ${m.role} |`);
+        });
+        lines.push('');
+
+        const colorMods = mods.filter(m => m.type === 'color');
+        if (colorMods.length > 0) {
+          lines.push('## 2. Constantes Dart para `AppColors` (`lib/core/constants/app_colors.dart`)');
+          lines.push('```dart');
+          colorMods.forEach(m => {
+            const hexNoHash = m.after.replace('#', '');
+            lines.push(`// ${m.token}: ${m.before} -> ${m.after}`);
+            lines.push(`Color(0xFF${hexNoHash});`);
+          });
+          lines.push('```');
+          lines.push('');
+        }
+      }
+
+      lines.push('## 3. JSON Técnico de Tokens Modificados');
+      lines.push('```json');
+      const jsonObj = {};
+      mods.forEach(m => {
+        jsonObj[m.token] = { before: m.before, after: m.after, cssVar: m.cssVar };
+      });
+      lines.push(JSON.stringify(jsonObj, null, 2));
+      lines.push('```');
+
+      return lines.join('\n');
+    }
+
+    function openExportModal() {
+      const textarea = document.getElementById('exportTextarea');
+      const feedback = document.getElementById('copyFeedbackText');
+      feedback.textContent = '';
+      textarea.value = buildExportPayload();
+      document.getElementById('exportModal').classList.add('open');
+    }
+
+    function closeExportModal() {
+      document.getElementById('exportModal').classList.remove('open');
+    }
+
+    function copyExportToClipboard() {
+      const textarea = document.getElementById('exportTextarea');
+      const feedback = document.getElementById('copyFeedbackText');
+      textarea.select();
+      navigator.clipboard.writeText(textarea.value).then(() => {
+        feedback.textContent = '✓ ¡Copiado! Pégalo directamente en el chat con Antigravity.';
+      }).catch(() => {
+        document.execCommand('copy');
+        feedback.textContent = '✓ ¡Copiado al portapapeles!';
+      });
+    }
+
+    // Inicialización al cargar
+    initState();
+    renderColorCards();
+    renderNumericSliders();
+    updateDonutGradient();
+    validateDesignRules();
+    updateChangesBadge();
+  </script>
+</body>
+</html>

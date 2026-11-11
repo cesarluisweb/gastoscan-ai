@@ -106,23 +106,37 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     });
   }
 
+  double _effectiveBottomInset(BuildContext context) {
+    final mqInset = MediaQuery.of(context).viewInsets.bottom;
+    if (mqInset > 0) return mqInset;
+    final view = View.maybeOf(context);
+    if (view != null && view.devicePixelRatio > 0) {
+      return view.viewInsets.bottom / view.devicePixelRatio;
+    }
+    return 0.0;
+  }
+
   void _onFocusChange() {
     if (_focusNode.hasFocus) {
       if (_isListening) {
         _stopListening();
       }
-      _wasNearBottomBeforeKeyboard = _isNearBottom();
+      if (mounted && _effectiveBottomInset(context) == 0) {
+        _wasNearBottomBeforeKeyboard = _isNearBottom();
+      }
     }
   }
 
   @override
   void didChangeMetrics() {
     super.didChangeMetrics();
+    if (mounted) {
+      setState(() {});
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+      final bottomInset = _effectiveBottomInset(context);
       if (bottomInset > 0 && _focusNode.hasFocus && _wasNearBottomBeforeKeyboard) {
-        _wasNearBottomBeforeKeyboard = false;
         _scrollToBottomAnimated(durationMs: 250);
       }
     });
@@ -870,12 +884,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       builder: (context, _) {
         final messages = chatProvider.messages;
         final isLoading = chatProvider.isLoading;
-        final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+        final bottomInset = _effectiveBottomInset(context);
         final isKeyboardOpen = bottomInset > 0;
 
         if (bottomInset > _previousBottomInset && _wasNearBottomBeforeKeyboard && _focusNode.hasFocus) {
-          _wasNearBottomBeforeKeyboard = false;
           _scrollToBottomAnimated(durationMs: 250);
+        } else if (bottomInset == 0 && _previousBottomInset > 0) {
+          _wasNearBottomBeforeKeyboard = _isNearBottom();
         }
         _previousBottomInset = bottomInset;
 
@@ -912,6 +927,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     if (notification is ScrollStartNotification || notification is ScrollUpdateNotification) {
                       if (_isListening) {
                         _stopListening();
+                      }
+                    }
+                    if (notification is ScrollEndNotification || notification is ScrollUpdateNotification) {
+                      if (_effectiveBottomInset(context) == 0) {
+                        _wasNearBottomBeforeKeyboard = _isNearBottom();
                       }
                     }
                     return false;
@@ -1105,17 +1125,25 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             ),
             color: AppColors.surface,
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Expanded(
                   child: TextField(
+                    key: const Key('chat_input_textfield'),
                     controller: _textCtrl,
                     focusNode: _focusNode,
+                    minLines: 1,
+                    maxLines: 5,
+                    keyboardType: TextInputType.multiline,
+                    textCapitalization: TextCapitalization.sentences,
                     onTap: () {
                       if (_isListening) {
                         _stopListening();
                       }
-                      _wasNearBottomBeforeKeyboard = _isNearBottom();
-                      if (MediaQuery.of(context).viewInsets.bottom > 0 && _wasNearBottomBeforeKeyboard) {
+                      final currentInset = _effectiveBottomInset(context);
+                      if (currentInset == 0) {
+                        _wasNearBottomBeforeKeyboard = _isNearBottom();
+                      } else if (_isNearBottom()) {
                         _scrollToBottomAnimated(durationMs: 250);
                       }
                     },

@@ -632,5 +632,67 @@ void main() {
 
       expect(scrollableState.position.pixels, lessThan(100.0));
     });
+
+    testWidgets('hides suggestions when nested inside a parent Scaffold that strips MediaQuery viewInsets', (tester) async {
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<GastoProvider>.value(value: fakeGastoProvider),
+            ChangeNotifierProvider<SettingsProvider>.value(value: fakeSettingsProvider),
+            ChangeNotifierProvider<ChatProvider>(create: (_) => ChatProvider()),
+          ],
+          child: MaterialApp(
+            home: Scaffold(
+              body: ChatScreen(
+                geminiService: fakeGeminiService,
+                dbHelper: fakeDb,
+                speechToText: fakeSpeech,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('chat_suggestion_chip_0')), findsOneWidget);
+
+      tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+      addTearDown(tester.view.reset);
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('chat_suggestion_chip_0')), findsNothing);
+    });
+
+    testWidgets('input TextField supports multiline growth up to 5 lines', (tester) async {
+      tester.view.physicalSize = const Size(400, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      final inputFinder = find.byKey(const Key('chat_input_textfield'));
+      final textField = tester.widget<TextField>(inputFinder);
+      expect(textField.minLines, 1);
+      expect(textField.maxLines, 5);
+      expect(textField.keyboardType, TextInputType.multiline);
+      expect(textField.textCapitalization, TextCapitalization.sentences);
+
+      final singleLineHeight = tester.getSize(inputFinder).height;
+
+      await tester.enterText(inputFinder, 'Linea 1\nLinea 2\nLinea 3\nLinea 4');
+      await tester.pumpAndSettle();
+      final fourLinesHeight = tester.getSize(inputFinder).height;
+      expect(fourLinesHeight, greaterThan(singleLineHeight));
+
+      await tester.enterText(inputFinder, 'L1\nL2\nL3\nL4\nL5');
+      await tester.pumpAndSettle();
+      final fiveLinesHeight = tester.getSize(inputFinder).height;
+
+      await tester.enterText(inputFinder, 'L1\nL2\nL3\nL4\nL5\nL6\nL7\nL8');
+      await tester.pumpAndSettle();
+      final eightLinesHeight = tester.getSize(inputFinder).height;
+      expect(eightLinesHeight, closeTo(fiveLinesHeight, 1.0));
+    });
   });
 }
