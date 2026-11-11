@@ -433,9 +433,9 @@ import '../styles/global.css';
                 <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-5 space-y-3.5">
                     <h4 class="text-sm font-bold text-slate-900">Información General</h4>
 
-                    <!-- ¿Dónde compraste? -->
+                    <!-- ¿Dónde gastaste? -->
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">¿Dónde compraste?</label>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">¿Dónde gastaste? <span class="text-slate-400 font-normal text-[11px]">(opcional)</span></label>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-sm">🏪</span>
                             <input 
@@ -448,9 +448,9 @@ import '../styles/global.css';
                         <span class="text-[11px] text-slate-400 block mt-1">Puedes dejarlo en blanco si fue un gasto informal.</span>
                     </div>
 
-                    <!-- ¿Cuándo compraste? -->
+                    <!-- ¿Cuándo gastaste? -->
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">¿Cuándo compraste?</label>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">¿Cuándo gastaste?</label>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-sm">📅</span>
                             <input 
@@ -507,11 +507,11 @@ import '../styles/global.css';
                     </div>
                 </div>
 
-                <!-- Tarjeta 2: ¿Qué compraste? (Desglose de Ítems) -->
+                <!-- Tarjeta 2: ¿En qué gastaste? (Desglose de Ítems) -->
                 <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-5 space-y-3.5">
                     <div class="flex justify-between items-center">
                         <div>
-                            <h4 id="modal-exp-items-title" class="text-sm font-bold text-slate-900">¿Qué compraste?</h4>
+                            <h4 id="modal-exp-items-title" class="text-sm font-bold text-slate-900">¿En qué gastaste?</h4>
                             <span class="text-[11px] text-slate-400 block">Detalle del gasto para clasificarlo y comparar precios.</span>
                         </div>
                         <span id="modal-exp-items-moneda-label" class="text-xs font-semibold text-slate-500">Precios en $</span>
@@ -2480,8 +2480,8 @@ import '../styles/global.css';
 
             if (modalExpItemsTitle) {
                 modalExpItemsTitle.textContent = modalExpenseItems.length > 1
-                    ? `¿Qué compraste? (${modalExpenseItems.length} artículos)`
-                    : '¿Qué compraste?';
+                    ? `¿En qué gastaste? (${modalExpenseItems.length} artículos)`
+                    : '¿En qué gastaste?';
             }
             if (btnAddItemText) {
                 btnAddItemText.textContent = modalExpenseItems.length === 0

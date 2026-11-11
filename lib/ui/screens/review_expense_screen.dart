@@ -2309,7 +2309,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     controller: _comercioCtrl,
                     textCapitalization: TextCapitalization.words,
                     decoration: const InputDecoration(
-                      labelText: '¿Dónde compraste?',
+                      labelText: '¿Dónde gastaste? (opcional)',
                       hintText: 'Ej. Farmatodo, Panadería...',
                       prefixIcon: Icon(Icons.storefront_outlined, color: AppColors.textSecondary),
                       helperText: 'Puedes dejarlo en blanco si fue un gasto informal.',
@@ -2321,7 +2321,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     onTap: _selectDate,
                     child: InputDecorator(
                       decoration: const InputDecoration(
-                        labelText: '¿Cuándo compraste?',
+                        labelText: '¿Cuándo gastaste?',
                         prefixIcon: Icon(Icons.calendar_today_outlined, color: AppColors.textSecondary),
                       ),
                       child: Text(
@@ -2463,7 +2463,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     children: [
                       Expanded(
                         child: Text(
-                          _items.length > 1 ? '¿Qué compraste? (${_items.length} artículos)' : '¿Qué compraste?',
+                          _items.length > 1 ? '¿En qué gastaste? (${_items.length} artículos)' : '¿En qué gastaste?',
                           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                         ),
                       ),

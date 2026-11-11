@@ -171,17 +171,17 @@ void main() {
 
     // Verify body form fields are visible and rendered
     expect(find.text('Información General'), findsOneWidget);
-    expect(find.text('¿Dónde compraste?'), findsOneWidget);
-    expect(find.text('¿Cuándo compraste?'), findsOneWidget);
+    expect(find.text('¿Dónde gastaste? (opcional)'), findsOneWidget);
+    expect(find.text('¿Cuándo gastaste?'), findsOneWidget);
     expect(find.text('¿En qué moneda están los precios?'), findsOneWidget);
-    expect(find.text('¿Qué compraste?'), findsOneWidget);
+    expect(find.text('¿En qué gastaste?'), findsOneWidget);
     expect(find.text('Concepto'), findsOneWidget);
     expect(find.text('Monto total'), findsOneWidget);
     expect(find.text('\$ 0,00'), findsWidgets);
 
     // Verify TextCapitalization on store and concept fields
     final storeField = tester.widget<TextField>(
-      find.byWidgetPredicate((w) => w is TextField && w.decoration?.labelText == '¿Dónde compraste?'),
+      find.byWidgetPredicate((w) => w is TextField && w.decoration?.labelText == '¿Dónde gastaste? (opcional)'),
     );
     expect(storeField.textCapitalization, TextCapitalization.words);
 
@@ -1427,7 +1427,7 @@ void main() {
       final bsField = tester.widget<TextFormField>(bsManualInput);
       expect(bsField.controller?.text, equals('4000.00'));
 
-      await tester.tap(find.text('¿Cuándo compraste?'));
+      await tester.tap(find.text('¿Cuándo gastaste?'));
       await tester.pumpAndSettle();
 
       final okButton = find.text('OK');
@@ -1477,7 +1477,7 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      final storeField = find.widgetWithText(TextFormField, '¿Dónde compraste?');
+      final storeField = find.widgetWithText(TextFormField, '¿Dónde gastaste? (opcional)');
       await tester.enterText(storeField, 'Panadería El Sol');
       await tester.pumpAndSettle();
 

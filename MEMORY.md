@@ -12,6 +12,8 @@
 - **Sincronización Panel Web (Fase 5)** y **Selector de Mes en AppBar:** `Pendiente de validación 🧪` (CI verde, falta visto bueno visual de César).
 - **RM-03 (Fase 0A / E0-02, E0-03 y E0-04) — `Completada ✅`:** Visto bueno explícito de César otorgado en *Rinde Más Dev* (Build 678). Lentes monetarios independientes (`E0-03`), sincronización atómica con CAS, defensa de tombstones, allowlist web `A-09` y confirmación de cambio de monto `A-15` (`E0-04`) cerrados.
 - **Próximo Paso Inmediato:** Validar en teléfono físico el fix de preservación de teclado en `ChatScreen` (Build 680); elegir diseño en `MoreScreen` (`b171c76f`) y ejecutar `E0-05b`.
+- **Microcopy en formularios (gastaste + opcional):** Implementado y alineado en Flutter y Panel Web Astro.
+- **Nuevas ideas en ROADMAP:** `UX-18` (gráfica mensual en Análisis) y `AI-07` (sugerencias verticales y botón WhatsApp en chat).
 
 ## Decisiones Técnicas y de Negocio Recientes
 - **Rotación de la clave de subida: diferida** hasta que Google apruebe el acceso a Producción. No reinicia la revisión, pero el reset tarda 24-72 h y bloquearía una subida inmediata. El repositorio público conserva el `.jks` en el historial, por lo que la rotación sigue siendo necesaria.

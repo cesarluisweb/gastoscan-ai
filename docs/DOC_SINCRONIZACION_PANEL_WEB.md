@@ -66,11 +66,11 @@ Tasas de referencia fijas en la suite de pruebas: **USD BCV: 36,50 | EUR BCV: 39
 ## 4. Estructura y Comportamiento de las 4 Tarjetas en UI
 
 1. **Tarjeta 1: Información General:**
-   - `¿Dónde compraste?`: Campo de texto para el comercio (`placeholder="Ej. Farmatodo, Panadería..."`, helper text para compras informales).
-   - `¿Cuándo compraste?`: Input con límites `min="2023-01-03"` y `max="hoy"`, prevención de fechas inválidas de fin de mes, y badge reactivo con la fecha de la tasa oficial histórica consultada.
+   - `¿Dónde gastaste? (opcional)`: Campo de texto para el comercio o lugar (`placeholder="Ej. Farmatodo, Panadería..."`, helper text para compras informales).
+   - `¿Cuándo gastaste?`: Input con límites `min="2023-01-03"` y `max="hoy"`, prevención de fechas inválidas de fin de mes, y badge reactivo con la fecha de la tasa oficial histórica consultada.
    - `¿En qué moneda están los precios?`: Selector de 4 cápsulas en **orden canónico estricto (`USD → VES → USDT → EUR`)**.
-2. **Tarjeta 2: ¿Qué compraste? (Desglose de Ítems):**
-   - Título dinámico: `¿Qué compraste?` ($\le 1$ ítem) o `¿Qué compraste? (X artículos)` ($> 1$ ítem).
+2. **Tarjeta 2: ¿En qué gastaste? (Desglose de Ítems):**
+   - Título dinámico: `¿En qué gastaste?` ($\le 1$ ítem) o `¿En qué gastaste? (X artículos)` ($> 1$ ítem).
    - Filas de productos con proporciones 35% (`Cant.`) y 65% (`Precio` con prefijo de moneda).
    - Autoclasificación en tiempo real mientras el usuario escribe en `Concepto`.
    - Total calculado de solo lectura por fila.

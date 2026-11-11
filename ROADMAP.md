@@ -37,7 +37,7 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
    - Componente `AppBarMonthSelector` responsivo con 3 modos automáticos según ancho disponible (`Completo`, `Compacto`, `Mínimo`), protegido contra desbordes con `FittedBox`.
    - *Verificación:* CI Build 649 en verde (commit `0eb455a`), 22 pruebas unitarias y de widgets dedicadas.
 3. **Fase 5 (Web): Sincronización del Registro y Edición de Gastos con App Móvil:** `Pendiente de validación 🧪`
-   - Reorganización en 4 tarjetas idénticas a la app móvil (General, ¿Qué compraste?, Monto total, ¿Cómo pagaste?).
+   - Reorganización en 4 tarjetas idénticas a la app móvil (General, ¿En qué gastaste?, Monto total, ¿Cómo pagaste?).
    - Módulos puros `expense-money.js` y `category-classifier.js` con 11 pruebas unitarias (Node 24) validando paridad al céntimo (C1 a C6) y autoclasificación inteligente.
    - Eliminación de P2P en EUR, cálculo bidireccional de Bolívares/tasa cobrada en caja y protección de total dictado.
    - *Verificación:* CI Build 20 en verde (commit `14003f7`), validado en producción en `https://rindemas.cesarluis.com/panel`. Documentación técnica en `docs/DOC_SINCRONIZACION_PANEL_WEB.md`.
@@ -132,11 +132,19 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
   - *Ubicación:* En `MoreScreen` (pantalla Más).
   - *Propósito:* Capitalizar la recomendación familiar boca a boca (hijos que le instalan la app a sus familiares).
   - *Acción:* Botón accesible que abre el diálogo nativo de compartir (`Share.share`) con texto predeterminado sin rodeos y enlace directo a la ficha de Google Play.
+- `UX-18` **Evolución Mensual en Gráfica Única (Pantalla Análisis):** `Pendiente`
+  - *Problema:* El usuario debe conmutar de mes a mes manualmente para comparar su gasto histórico o identificar tendencias de ahorro.
+  - *Solución:* Incorporar en la pantalla Análisis una gráfica consolidada (barras o línea) que muestre el gasto total de los últimos meses (ej. 6 a 12 meses) en una sola vista, facilitando detectar picos de consumo y estacionalidad.
 
 ### Bloque C: Percepción con IA
 - `AI-06` **Imputación de IVA en Precios de Anaquel y Algoritmo del Centavo Residual:** `Pendiente`
   - *Problema:* Las facturas fiscales del SENIAT imprimen bases imponibles (sin IVA) para productos gravados `(G)`. Al extraer el ticket, la app crea un renglón artificial "Impuesto IVA" en categoría 'Otros', distorsionando los presupuestos por categoría y descalzando el comparador histórico de precios con las entradas manuales y por voz.
   - *Solución:* Imputar el 16% de IVA directamente en los productos gravados para reflejar el precio de anaquel que el usuario pagó en caja, preservar intactos los alimentos exentos `(E)`, resolver la discrepancia de $\pm 0,01$ mediante ajuste determinista en el producto gravado de mayor valor y mostrar la base fiscal como microcopy informativo en `ReviewExpenseScreen`.
+- `AI-07` **Refinamiento de UX en Chat del Asistente (Sugerencias Verticales y Botón Dinámico):** `Pendiente`
+  - *Problema:* Las sugerencias ocupan espacio disperso y la barra inferior mantiene dos botones simultáneos (micrófono y enviar), restando espacio al campo de texto.
+  - *Solución:*
+    1. **Sugerencias verticales y ergonómicas:** Disponer las sugerencias apiladas verticalmente (una debajo de la otra), alineadas a la derecha o al centro, con redacción corta, pocas opciones (2 a 3) y ubicadas en la zona de fácil alcance para el pulgar.
+    2. **Botón dinámico estilo mensajería (WhatsApp):** Mostrar por defecto únicamente el icono de grabar audio. Al detectar texto en el campo de entrada (`onChanged`), conmutar fluidamente el icono a enviar, liberando espacio horizontal y previniendo pulsaciones accidentales.
 
 ### Bloque D: Nuevas Herramientas Financieras
 - `FIN-14` **Flexibilidad y Opciones de Liquidación en Gastos Registrados en USDT:** `Pendiente`
