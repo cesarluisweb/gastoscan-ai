@@ -2,16 +2,16 @@
 > Regla de oro: Mantener en máximo ~50 líneas. Lo permanente se gradúa a AGENTS.md o DESIGN.md.
 
 ## Estado Actual Inmediato
-- **Rama:** `main` (commit `22cda58`; CI Android build 679 en verde, run 43050027011; orientación vertical fijada con `DeviceOrientation.portraitUp`).
+- **Rama:** `main` (commit `789e111`; CI Android build 680 en verde, run 43058347857; orientación vertical fijada con `DeviceOrientation.portraitUp`).
 - **Acceso a Producción Google Play:** Segunda ventana de prueba cerrada en curso (Día 3/14 cumplido con 12 evaluadores activos). AAB `1.5.0+669` en Play Console. Fin estimado: ~19/11/2026.
 - **Seguridad, Cuotas, Galería e Integridad (A1a, B2, C1, C2) — `Completada ✅`:** Visto bueno de César en *Rinde Más Dev* (Build 672/676). Cuota D1 (50/día UID, 20k global, VET UTC-4, fail-closed). Worker DESPLEGADO (/health 200). B2: copia en galería por defecto y sin aviso en manuales. C1/C2: saneamiento de montos y SemanticValidator al 50%. B1 planificado en `docs/DOC_REGLAS_FIRESTORE_B1.md`. Despliegue automático de reglas cortado.
 - **Seguridad de firma (P0) — `Pendiente de validación 🧪`:** `android_template/rindemas.jks` fuera de Git; firma inyectada desde Secrets. CI verificado con SHA-256 en build 671.
 - **Reproducibilidad (P0) — `Completada ✅`:** Flutter fijado en `3.47.9`, `pubspec.lock` versionado con guarda anti-drift.
-- **Artefacto para Play:** `app-release-aab` del run 43050027011 (build 679).
-- **Artefacto para pruebas en teléfono:** `rindemas-dev-apk` del run 43050027011 (*Rinde Más Dev* build 679).
+- **Artefacto para Play:** `app-release-aab` del run 43058347857 (build 680).
+- **Artefacto para pruebas en teléfono:** `rindemas-dev-apk` del run 43058347857 (*Rinde Más Dev* build 680).
 - **Sincronización Panel Web (Fase 5)** y **Selector de Mes en AppBar:** `Pendiente de validación 🧪` (CI verde, falta visto bueno visual de César).
 - **RM-03 (Fase 0A / E0-02, E0-03 y E0-04) — `Completada ✅`:** Visto bueno explícito de César otorgado en *Rinde Más Dev* (Build 678). Lentes monetarios independientes (`E0-03`), sincronización atómica con CAS, defensa de tombstones, allowlist web `A-09` y confirmación de cambio de monto `A-15` (`E0-04`) cerrados.
-- **Próximo Paso Inmediato:** Validar en teléfono físico el fix de teclado/caja multilínea en `ChatScreen` y el botón de guardado al final del scroll en `ReviewExpenseScreen`; elegir diseño en `MoreScreen` (`b171c76f`) y ejecutar `E0-05b`.
+- **Próximo Paso Inmediato:** Validar en teléfono físico el fix de preservación de teclado en `ChatScreen` (Build 680); elegir diseño en `MoreScreen` (`b171c76f`) y ejecutar `E0-05b`.
 
 ## Decisiones Técnicas y de Negocio Recientes
 - **Rotación de la clave de subida: diferida** hasta que Google apruebe el acceso a Producción. No reinicia la revisión, pero el reset tarda 24-72 h y bloquearía una subida inmediata. El repositorio público conserva el `.jks` en el historial, por lo que la rotación sigue siendo necesaria.
