@@ -1075,11 +1075,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           ),
           if (isLoading)
             const Padding(
+              key: Key('chat_loading_indicator'),
               padding: EdgeInsets.all(8.0),
               child: CircularProgressIndicator(),
             ),
           if (!isKeyboardOpen)
             Container(
+              key: const Key('chat_suggestions_container'),
               height: 40,
               margin: const EdgeInsets.only(bottom: 8),
               child: ListView.separated(
@@ -1117,6 +1119,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               ),
             ),
           Container(
+            key: const Key('chat_input_bar_container'),
             padding: EdgeInsets.only(
               left: 8,
               right: 8,

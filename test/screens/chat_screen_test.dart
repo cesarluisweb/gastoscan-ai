@@ -656,11 +656,21 @@ void main() {
 
       expect(find.byKey(const Key('chat_suggestion_chip_0')), findsOneWidget);
 
+      final inputFinder = find.byKey(const Key('chat_input_textfield'));
+      await tester.tap(inputFinder);
+      await tester.pump();
+
+      final editableBefore = tester.state<EditableTextState>(find.byType(EditableText));
+      expect(tester.testTextInput.isVisible, isTrue);
+
       tester.view.viewInsets = const FakeViewPadding(bottom: 300);
       addTearDown(tester.view.reset);
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('chat_suggestion_chip_0')), findsNothing);
+      final editableAfter = tester.state<EditableTextState>(find.byType(EditableText));
+      expect(identical(editableBefore, editableAfter), isTrue);
+      expect(tester.testTextInput.isVisible, isTrue);
     });
 
     testWidgets('input TextField supports multiline growth up to 5 lines', (tester) async {
