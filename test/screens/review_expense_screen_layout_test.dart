@@ -957,6 +957,57 @@ void main() {
     expect(find.text('Abrir'), findsOneWidget);
   });
 
+  testWidgets('ReviewExpenseScreen al presionar Atrás sin datos sale directamente sin mostrar diálogo de borrador', (tester) async {
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<GastoProvider>.value(value: gastoProvider),
+          ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+          ChangeNotifierProvider<ScanQueueProvider>.value(value: scanQueueProvider),
+        ],
+        child: MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (ctx) => ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    ctx,
+                    MaterialPageRoute(
+                      builder: (_) => const ReviewExpenseScreen(),
+                    ),
+                  );
+                },
+                child: const Text('Abrir'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Abrir'));
+    await tester.pumpAndSettle();
+
+    // No se escribe ningún comercio, monto ni artículo. Presionar Atrás directamente
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+
+    // No debe aparecer diálogo de borrador ni de descartar
+    expect(find.text('¿Guardar como borrador?'), findsNothing);
+    expect(find.text('Descartar'), findsNothing);
+    // Debe haber vuelto directamente a la pantalla de origen
+    expect(find.text('Abrir'), findsOneWidget);
+    expect(fakeDb.readyDb, isEmpty);
+  });
+
   testWidgets('ReviewExpenseScreen al presionar Atrás y Descartar no guarda en cola', (tester) async {
     tester.view.physicalSize = const Size(1080, 4000);
     tester.view.devicePixelRatio = 1.0;

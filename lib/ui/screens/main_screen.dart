@@ -549,15 +549,40 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         body: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 600),
-            child: _showingChat
-                ? ChatScreen(
-                    showBackButton: true,
-                    onBack: _closeChat,
-                  )
-                : _FadeIndexedStack(
-                    index: _currentIndex,
-                    children: _pages,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 220),
+              reverseDuration: const Duration(milliseconds: 200),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              transitionBuilder: (child, animation) {
+                final slideAnimation = Tween<Offset>(
+                  begin: const Offset(0, 0.05),
+                  end: Offset.zero,
+                ).animate(animation);
+                return FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: slideAnimation,
+                    child: child,
                   ),
+                );
+              },
+              child: _showingChat
+                  ? KeyedSubtree(
+                      key: const ValueKey('main_chat_screen'),
+                      child: ChatScreen(
+                        showBackButton: true,
+                        onBack: _closeChat,
+                      ),
+                    )
+                  : KeyedSubtree(
+                      key: const ValueKey('main_tab_pages'),
+                      child: _FadeIndexedStack(
+                        index: _currentIndex,
+                        children: _pages,
+                      ),
+                    ),
+            ),
           ),
         ),
         floatingActionButton: isKeyboardOpen

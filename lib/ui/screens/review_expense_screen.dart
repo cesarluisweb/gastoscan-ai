@@ -219,14 +219,15 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     if (_isSaving) return false;
     if (widget.existingGasto != null) return _isDirty();
     if (widget.queueItemId != null) return _isDirty();
-    if (_isDirty()) return true;
-    if (widget.extractedData != null) return true;
-    if ((_pickedImage != null && !_initialHasImage) || (_imageDeleted && _initialHasImage)) return true;
-    if (_comercioCtrl.text.trim().isNotEmpty) return true;
+
     final total = tryParseAmount(_totalOriginalCtrl.text, isPrice: false) ?? 0.0;
-    if (total > 0) return true;
-    if (_items.any((it) => it.descripcion.trim().isNotEmpty || it.precioUnitario > 0 || it.total > 0)) return true;
-    return false;
+    final bool hasAnyData = (_pickedImage != null && !_imageDeleted) ||
+        (widget.imageFile != null && !_imageDeleted) ||
+        _comercioCtrl.text.trim().isNotEmpty ||
+        total > 0 ||
+        _items.any((it) => it.descripcion.trim().isNotEmpty || it.precioUnitario > 0 || it.total > 0);
+
+    return hasAnyData;
   }
 
   Future<void> _cargarTasasChips(String fecha) async {

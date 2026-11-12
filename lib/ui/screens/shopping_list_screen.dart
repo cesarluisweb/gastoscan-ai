@@ -78,10 +78,16 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('"${item.name}" eliminado'),
-          duration: const Duration(seconds: 3),
+          content: Text(
+            '"${item.name}" eliminado',
+            style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
+          ),
+          backgroundColor: AppColors.primary,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
           action: SnackBarAction(
             label: 'Deshacer',
+            textColor: Colors.black,
             onPressed: () async {
               await DatabaseHelper.instance.insertShoppingItem(
                 ShoppingItemModel(
@@ -107,7 +113,10 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
         leading: (widget.showBackButton && widget.onBack != null)
             ? IconButton(
                 icon: const Icon(Icons.arrow_back),
-                onPressed: widget.onBack,
+                onPressed: () {
+                  ScaffoldMessenger.maybeOf(context)?.clearSnackBars();
+                  widget.onBack!();
+                },
               )
             : null,
       ),
@@ -124,6 +133,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                   child: TextField(
                     controller: _ctrl,
                     focusNode: _focusNode,
+                    textCapitalization: TextCapitalization.sentences,
                     onEditingComplete: _add,
                     decoration: const InputDecoration(
                       hintText: 'Ej. Harina Pan',
