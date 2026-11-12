@@ -1971,7 +1971,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Text(
-                    'Total de la compra',
+                    'Total del gasto',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
@@ -2778,7 +2778,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                   ),
                   const SizedBox(height: 4),
                   const Text(
-                    'Total general cobrado por la compra.',
+                    'Total general cobrado por el gasto.',
                     style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                   ),
                   const SizedBox(height: 12),
