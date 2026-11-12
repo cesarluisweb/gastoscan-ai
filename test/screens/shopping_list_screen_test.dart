@@ -63,6 +63,9 @@ void main() {
     expect(snackBar.duration, equals(const Duration(seconds: 2)));
     expect(snackBar.backgroundColor, equals(AppColors.primary));
     expect(find.text('"Leche" eliminado'), findsOneWidget);
+
+    // Drenar el temporizador del SnackBar para no dejar timers pendientes
+    await tester.pump(const Duration(seconds: 3));
   });
 
   testWidgets('ShoppingListScreen onBack clears active SnackBar', (tester) async {
@@ -84,8 +87,12 @@ void main() {
     // Tocar botón Atrás
     await tester.tap(find.byIcon(Icons.arrow_back));
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
 
     expect(backCalled, isTrue);
     expect(find.byType(SnackBar), findsNothing);
+
+    // Drenar cualquier temporizador remanente
+    await tester.pump(const Duration(seconds: 3));
   });
 }
