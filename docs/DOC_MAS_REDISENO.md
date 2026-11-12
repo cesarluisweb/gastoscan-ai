@@ -50,6 +50,10 @@ Se implementó el rediseño completo de `MoreScreen` pasando de 11 tarjetas apil
 
 ## Guía de Verificación en Dispositivo Físico (*Rinde Más Dev*)
 
+- **Artefacto:** `rindemas-dev-apk`
+- **Build de CI:** 685 (Run `43248564158`)
+- **Commit SHA:** `18c291a`
+
 | Paso | Acción en Dispositivo | Evidencia archivo:línea | Resultado Esperado |
 | :--- | :--- | :--- | :--- |
 | **1. Cabecera y AppBar** | Abrir la pestaña «Más» desde la barra inferior | `lib/ui/screens/more_screen.dart#L370-L417` | Mantiene selector de mes, botón de búsqueda y botón de Asistente IA (fondo blanco, borde gris, sin pintar de amarillo). |
