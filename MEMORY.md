@@ -4,7 +4,7 @@
 ## Estado Actual Inmediato
 - **Rama:** `main` (commit `da92c24`; CI Android build 691 en verde, run 43282854678).
 - **Acceso a Producción Google Play:** Segunda ventana de prueba cerrada en curso (Día 3/14 cumplido con 12 evaluadores activos). AAB `1.5.0+669` en Play Console. Fin estimado: ~19/11/2026.
-- **Rediseño MoreScreen (UI-02) — `Pendiente de validación 🧪`:** CI en verde (build 685). Modularizado en `MoreScreen`, `MoreRatesCard` y `MoreToolsGrid`. Hojas inferiores para preferencias, soporte y cuenta con confirmación "ELIMINAR". Retirada UI de Gemini API Key. Guía de pruebas en `docs/DOC_MAS_REDISENO.md`. Requiere visto bueno de César en *Rinde Más Dev*.
+- **Rediseño MoreScreen (UI-02) — `Pendiente de validación 🧪`:** CI en verde (build 691, `da92c24`). `MoreRatesCard`, `MoreToolsGrid` (4 tiles unificados en blanco) y `BcvLegalDisclaimerCard` (compartido con Calculadora). Ajustes en 3 filas (`Preferencias y datos` con `Moneda de reportes`, `Soporte` y `Sobre Rinde Más`) + pie pasivo de versión. Guía en `docs/DOC_MAS_REDISENO.md`. Requiere visto bueno de César en *Rinde Más Dev*.
 - **Seguridad, Cuotas, Galería e Integridad (A1a, B2, C1, C2) — `Completada ✅`:** Visto bueno de César en *Rinde Más Dev* (Build 672/676). Cuota D1 (50/día UID, 20k global, VET UTC-4, fail-closed). Worker DESPLEGADO (/health 200). B2: copia en galería por defecto y sin aviso en manuales. C1/C2: saneamiento de montos y SemanticValidator al 50%. B1 planificado en `docs/DOC_REGLAS_FIRESTORE_B1.md`. Despliegue automático de reglas cortado.
 - **Artefacto para pruebas en teléfono:** `rindemas-dev-apk` del run 43282854678 (*Rinde Más Dev* build 691).
 - **Seguridad de firma (P0) — `Pendiente de validación 🧪`:** `android_template/rindemas.jks` fuera de Git; firma inyectada desde Secrets. CI verificado con SHA-256 en build 671.
@@ -13,7 +13,7 @@
 - **Artefacto para pruebas en teléfono:** `rindemas-dev-apk` del run 43058347857 (*Rinde Más Dev* build 680).
 - **Sincronización Panel Web (Fase 5)** y **Selector de Mes en AppBar:** `Pendiente de validación 🧪` (CI verde, falta visto bueno visual de César).
 - **RM-03 (Fase 0A / E0-02, E0-03 y E0-04) — `Completada ✅`:** Visto bueno explícito de César otorgado en *Rinde Más Dev* (Build 678). Lentes monetarios independientes (`E0-03`), sincronización atómica con CAS, defensa de tombstones, allowlist web `A-09` y confirmación de cambio de monto `A-15` (`E0-04`) cerrados.
-- **Próximo Paso Inmediato:** Validar en teléfono físico el fix de preservación de teclado en `ChatScreen` (Build 680); elegir diseño en `MoreScreen` (`b171c76f`) y ejecutar `E0-05b`.
+- **Próximo Paso Inmediato:** Validar en teléfono físico (`rindemas-dev-apk` build 691) el rediseño final de `MoreScreen` (`UI-02`) y los ajustes de UX/transiciones; luego ejecutar `E0-05b`.
 - **Microcopy en formularios (gastaste + opcional):** Implementado y alineado en Flutter y Panel Web Astro.
 - **Ajustes de UX y Transiciones (Gasto, Lista, Herramientas, Chat):**
   - Registrar gasto: Retroceso sin confirmación si no se anotó ningún dato (comercio, monto, ítems o foto).

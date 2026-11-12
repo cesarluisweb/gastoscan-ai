@@ -117,7 +117,7 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 ### Bloque A: Consistencia Visual y Semántica (UI)
 - `UI-02` **Rediseño Modular de la Pestaña "Más":** `Pendiente de validación 🧪`
   - *Problema:* 11 tarjetas apiladas (~2.066 líneas monolíticas) con accesos dispersos y problemas de contraste en toggles/íconos.
-  - *Solución:* Arquitectura modular (~1.5 alturas de pantalla) en `MoreScreen`, `MoreRatesCard` y `MoreToolsGrid`. Rejilla Bento 2x2 para herramientas diarias, tarjeta compacta de cuenta (con diálogo "ELIMINAR" en zona de peligro), y 2 hojas inferiores modales para Preferencias/Datos y Soporte/Comunidad. Verificada en CI con build 685 y documentada en `docs/DOC_MAS_REDISENO.md`.
+  - *Solución:* Arquitectura modular (~1.5 alturas de pantalla) en `MoreScreen`, `MoreRatesCard`, `MoreToolsGrid` y `BcvLegalDisclaimerCard`. Rejilla Bento 2x2 unificada en blanco, tarjeta compacta de cuenta (con diálogo "ELIMINAR" en zona de peligro), 3 filas de ajustes (`Preferencias y datos` con `Moneda de reportes`, `Soporte y comunidad` y `Sobre Rinde Más`) y pie compartido de aviso BCV + versión pasiva. Verificada en CI con build 691 (`da92c24`) y documentada en `docs/DOC_MAS_REDISENO.md`.
 
 ### Bloque B: Finanzas Bimonetarias y Flujos de Captura
 - `UX-09` **Rediseño del Filtro de Comprobantes en "Gastos":** `Pendiente`
