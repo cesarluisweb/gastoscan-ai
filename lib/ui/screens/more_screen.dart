@@ -22,6 +22,9 @@ import 'receipt_gallery_screen.dart';
 import 'currency_calculator_screen.dart';
 import '../widgets/more/more_rates_card.dart';
 import '../widgets/more/more_tools_grid.dart';
+import '../widgets/currency_lens_dropdown.dart';
+import '../widgets/update_dialog.dart';
+import '../widgets/bcv_legal_disclaimer_card.dart';
 import '../../data/datasources/local/database_helper.dart';
 
 enum MoreSubView { hub, shoppingList, chat, receiptGallery, calculator }
@@ -69,7 +72,9 @@ class MoreScreenState extends State<MoreScreen> {
           _shoppingPendingCount = pendientes;
         });
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Error cargando lista de compras pendientes: $e');
+    }
   }
 
   Future<void> _cargarVersionActual() async {
@@ -80,7 +85,9 @@ class MoreScreenState extends State<MoreScreen> {
           _currentAppVersion = '${info.version} (Build ${info.buildNumber})';
         });
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Error cargando versión de la app: $e');
+    }
   }
 
   Future<void> _abrirGooglePlay() async {
@@ -213,7 +220,8 @@ class MoreScreenState extends State<MoreScreen> {
           SnackBar(content: Text(mensajeError)),
         );
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Fallo al abrir URL en app externa ($url): $e');
       try {
         final launched = await launchUrl(uri, mode: LaunchMode.platformDefault);
         if (!launched && mounted) {
@@ -221,7 +229,8 @@ class MoreScreenState extends State<MoreScreen> {
             SnackBar(content: Text(mensajeError)),
           );
         }
-      } catch (_) {
+      } catch (e2) {
+        debugPrint('Fallo al abrir URL en fallback ($url): $e2');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(mensajeError)),
@@ -249,66 +258,6 @@ class MoreScreenState extends State<MoreScreen> {
     await _abrirUrl(
       AppConstants.donarUrl,
       'No se pudo abrir la página de donaciones.',
-    );
-  }
-
-  void _mostrarAvisoLegalBcv() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        title: const Row(
-          children: [
-            Icon(Icons.gavel_outlined, color: AppColors.primaryDark),
-            SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'Aviso Legal y Tasas',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Rinde Más es una aplicación independiente de finanzas personales desarrollada por César Luis.\n\n'
-              'No representa, no está afiliada, respaldada ni patrocinada por el Banco Central de Venezuela (BCV) ni por ninguna otra entidad gubernamental o política.\n\n'
-              'Las tasas de cambio «Dólar BCV» y «Euro BCV» se consultan exclusivamente con propósitos informativos de referencia pública desde el portal oficial del BCV.',
-              style: TextStyle(fontSize: 13, color: AppColors.textPrimary, height: 1.4),
-            ),
-            const SizedBox(height: 14),
-            InkWell(
-              onTap: () {
-                Navigator.of(ctx).pop();
-                _abrirUrl('https://www.bcv.org.ve/', 'No se pudo abrir el sitio web del BCV');
-              },
-              child: const Row(
-                children: [
-                  Icon(Icons.open_in_new, size: 16, color: AppColors.textPrimary),
-                  SizedBox(width: 6),
-                  Text(
-                    'Visitar www.bcv.org.ve',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Entendido', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
     );
   }
 
@@ -456,7 +405,6 @@ class MoreScreenState extends State<MoreScreen> {
                   onRefresh: () async {
                     await settings.actualizarTasaAutomatica();
                   },
-                  onOpenBcv: () => _abrirUrl('https://www.bcv.org.ve/', 'No se pudo abrir la página del BCV'),
                 ),
                 const SizedBox(height: 16),
                 MoreToolsGrid(
@@ -571,12 +519,16 @@ class MoreScreenState extends State<MoreScreen> {
                     children: [
                       Icon(Icons.check_circle, size: 12, color: Colors.green),
                       SizedBox(width: 4),
-                      Text(
-                        'Sincronización activa',
-                        style: TextStyle(
-                          color: Colors.green,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
+                      Flexible(
+                        child: Text(
+                          'Sincronización activa',
+                          style: TextStyle(
+                            color: Colors.green,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -700,7 +652,7 @@ class MoreScreenState extends State<MoreScreen> {
 
     if (gastoProvider.gastos.isNotEmpty) {
       final decision = await mostrarDialogoFusionarOReemplazar(context);
-      if (decision == null) return;
+      if (decision == null || !mounted) return;
       descartarLocales = decision;
     }
 
@@ -713,6 +665,7 @@ class MoreScreenState extends State<MoreScreen> {
           .vincularCuentaGoogle(descartarDatosLocales: descartarLocales);
       if (!mounted) return;
       await gastoProvider.checkPendingReplaceBlock();
+      if (!mounted) return;
       if (error != null && error != 'CANCELLED') {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -724,7 +677,9 @@ class MoreScreenState extends State<MoreScreen> {
         if (descartarLocales) {
           try {
             Provider.of<ChatProvider>(context, listen: false).clearConversation();
-          } catch (_) {}
+          } catch (e) {
+            debugPrint('No se pudo limpiar ChatProvider al vincular: $e');
+          }
         }
         await Provider.of<SettingsProvider>(context, listen: false).loadSettings();
         if (!mounted) return;
@@ -763,7 +718,7 @@ class MoreScreenState extends State<MoreScreen> {
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary),
             ),
             subtitle: const Text(
-              'Fotos, exportar, notificaciones',
+              'Moneda, fotos, exportar, avisos',
               style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
             ),
             trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary, size: 20),
@@ -784,6 +739,21 @@ class MoreScreenState extends State<MoreScreen> {
             trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary, size: 20),
             onTap: () => _mostrarHojaSoporte(context),
           ),
+          const Divider(height: 1, color: AppColors.border),
+          ListTile(
+            key: const Key('more_group_about'),
+            leading: const Icon(Icons.info_outline, color: AppColors.primaryDark, size: 22),
+            title: const Text(
+              'Sobre Rinde Más',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary),
+            ),
+            subtitle: const Text(
+              'Actualizaciones, Google Play, privacidad, términos',
+              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+            ),
+            trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary, size: 20),
+            onTap: () => _mostrarHojaSobreApp(context),
+          ),
         ],
       ),
     );
@@ -795,105 +765,159 @@ class MoreScreenState extends State<MoreScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) {
-        return Material(
-          color: AppColors.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          clipBehavior: Clip.antiAlias,
-          child: SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 36,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  const Text(
-                    'Preferencias y datos',
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                  ),
-                  const SizedBox(height: 12),
-                  Consumer<SettingsProvider>(
-                    builder: (context, setProv, _) {
-                      return SwitchListTile(
-                        contentPadding: EdgeInsets.zero,
-                        activeColor: AppColors.primaryDark,
-                        title: const Text(
-                          'Guardar copia en la galería del teléfono',
-                          style: TextStyle(color: AppColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w600),
-                        ),
-                        subtitle: const Text(
-                          'Guarda una copia en el álbum "Rinde Más" de tu galería. Queda en tu teléfono aunque elimines tu cuenta.',
-                          style: TextStyle(color: AppColors.textSecondary, fontSize: 11),
-                        ),
-                        value: setProv.guardarFotos,
-                        onChanged: (val) => setProv.setGuardarFotos(val),
-                      );
-                    },
-                  ),
-                  const Divider(height: 16, color: AppColors.border),
-                  const Text(
-                    'Exportar gastos del mes',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
+        return Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          child: Material(
+            key: const Key('sheet_surface_preferences'),
+            color: AppColors.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            clipBehavior: Clip.antiAlias,
+            child: SafeArea(
+              top: false,
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () {
-                            Navigator.pop(ctx);
-                            _exportarCsv(context);
-                          },
-                          icon: const Icon(Icons.table_chart_outlined, size: 16, color: AppColors.textPrimary),
-                          label: const Text('Excel (.csv)', style: TextStyle(color: AppColors.textPrimary, fontSize: 12, fontWeight: FontWeight.bold)),
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: AppColors.border),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      Center(
+                        child: Container(
+                          width: 36,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade300,
+                            borderRadius: BorderRadius.circular(2),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () {
-                            Navigator.pop(ctx);
-                            _exportarMarkdown(context);
-                          },
-                          icon: const Icon(Icons.description_outlined, size: 16, color: AppColors.textPrimary),
-                          label: const Text('Texto (.md)', style: TextStyle(color: AppColors.textPrimary, fontSize: 12, fontWeight: FontWeight.bold)),
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: AppColors.border),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      const SizedBox(height: 14),
+                      const Text(
+                        'Preferencias y datos',
+                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                      ),
+                      const SizedBox(height: 14),
+                      AnimatedBuilder(
+                        animation: settings,
+                        builder: (animCtx, _) {
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Row(
+                                children: [
+                                  const Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Moneda de reportes',
+                                          style: TextStyle(
+                                            color: AppColors.textPrimary,
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        SizedBox(height: 2),
+                                        Text(
+                                          'Define la moneda predeterminada en Inicio, Gastos y Análisis.',
+                                          style: TextStyle(
+                                            color: AppColors.textSecondary,
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  CurrencyLensDropdown(
+                                    dropdownKey: const Key('more_currency_lens_dropdown'),
+                                    monedaSeleccionada: settings.monedaPrincipal,
+                                    onMonedaChanged: (newMoneda) {
+                                      settings.setMonedaPrincipal(newMoneda);
+                                    },
+                                  ),
+                                ],
+                              ),
+                              const Divider(height: 20, color: AppColors.border),
+                              SwitchListTile(
+                                contentPadding: EdgeInsets.zero,
+                                activeThumbColor: AppColors.primaryDark,
+                                title: const Text(
+                                  'Guardar copia en la galería del teléfono',
+                                  style: TextStyle(color: AppColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w600),
+                                ),
+                                subtitle: const Text(
+                                  'Guarda una copia en el álbum "Rinde Más" de tu galería. Queda en tu teléfono aunque elimines tu cuenta.',
+                                  style: TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                                ),
+                                value: settings.guardarFotos,
+                                onChanged: (val) => settings.setGuardarFotos(val),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                      const Divider(height: 16, color: AppColors.border),
+                      const Text(
+                        'Exportar gastos del mes',
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () {
+                                Navigator.pop(ctx);
+                                _exportarCsv(context);
+                              },
+                              icon: const Icon(Icons.table_chart_outlined, size: 16, color: AppColors.textPrimary),
+                              label: const FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text('Excel (.csv)', style: TextStyle(color: AppColors.textPrimary, fontSize: 12, fontWeight: FontWeight.bold)),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: AppColors.border),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                            ),
                           ),
-                        ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () {
+                                Navigator.pop(ctx);
+                                _exportarMarkdown(context);
+                              },
+                              icon: const Icon(Icons.description_outlined, size: 16, color: AppColors.textPrimary),
+                              label: const FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text('Texto (.md)', style: TextStyle(color: AppColors.textPrimary, fontSize: 12, fontWeight: FontWeight.bold)),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: AppColors.border),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Divider(height: 20, color: AppColors.border),
+                      ListTile(
+                        key: const Key('more_menu_notifications'),
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.notifications_outlined, color: AppColors.primaryDark, size: 22),
+                        title: const Text('Notificaciones y avisos', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                        subtitle: const Text('Recordatorios de compras y alertas del asistente', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                        trailing: const Icon(Icons.chevron_right, size: 18, color: AppColors.textSecondary),
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          _showNotificationSettingsModal(context, settings);
+                        },
                       ),
                     ],
                   ),
-                  const Divider(height: 20, color: AppColors.border),
-                  ListTile(
-                    key: const Key('more_menu_notifications'),
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.notifications_outlined, color: AppColors.primaryDark, size: 22),
-                    title: const Text('Notificaciones y avisos', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                    subtitle: const Text('Recordatorios de compras y alertas del asistente', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                    trailing: const Icon(Icons.chevron_right, size: 18, color: AppColors.textSecondary),
-                    onTap: () {
-                      Navigator.pop(ctx);
-                      _showNotificationSettingsModal(context, settings);
-                    },
-                  ),
-                ],
+                ),
               ),
             ),
           ),
@@ -905,75 +929,82 @@ class MoreScreenState extends State<MoreScreen> {
   void _mostrarHojaSoporte(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) {
-        return Material(
-          color: AppColors.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          clipBehavior: Clip.antiAlias,
-          child: SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 36,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(2),
+        return Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          child: Material(
+            key: const Key('sheet_surface_support'),
+            color: AppColors.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            clipBehavior: Clip.antiAlias,
+            child: SafeArea(
+              top: false,
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 36,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade300,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 14),
+                      const Text(
+                        'Soporte y comunidad',
+                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                      ),
+                      const SizedBox(height: 8),
+                      ListTile(
+                        key: const Key('more_menu_support_whatsapp'),
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.chat_outlined, color: AppColors.primaryDark),
+                        title: const Text('Escribir a soporte', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                        subtitle: const Text('Contáctanos directamente por WhatsApp', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                        trailing: const Icon(Icons.open_in_new, size: 16, color: AppColors.textSecondary),
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          _contactarSoporteWhatsApp();
+                        },
+                      ),
+                      const Divider(height: 1, color: AppColors.border),
+                      ListTile(
+                        key: const Key('more_menu_website'),
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.language_outlined, color: AppColors.primaryDark),
+                        title: const Text('Visitar sitio web', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                        subtitle: const Text('rindemas.cesarluis.com', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                        trailing: const Icon(Icons.open_in_new, size: 16, color: AppColors.textSecondary),
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          _abrirSitioWeb();
+                        },
+                      ),
+                      const Divider(height: 1, color: AppColors.border),
+                      ListTile(
+                        key: const Key('more_menu_donate'),
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.coffee_outlined, color: AppColors.primaryDark),
+                        title: const Text('Apoyar el proyecto ☕', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                        subtitle: const Text('Haz una donación para mantener Rinde Más gratuito', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                        trailing: const Icon(Icons.open_in_new, size: 16, color: AppColors.textSecondary),
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          _abrirDonaciones();
+                        },
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 14),
-                  const Text(
-                    'Soporte y comunidad',
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                  ),
-                  const SizedBox(height: 8),
-                  ListTile(
-                    key: const Key('more_menu_support_whatsapp'),
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.chat_outlined, color: AppColors.primaryDark),
-                    title: const Text('Escribir a soporte', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                    subtitle: const Text('Contáctanos directamente por WhatsApp', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                    trailing: const Icon(Icons.open_in_new, size: 16, color: AppColors.textSecondary),
-                    onTap: () {
-                      Navigator.pop(ctx);
-                      _contactarSoporteWhatsApp();
-                    },
-                  ),
-                  const Divider(height: 1, color: AppColors.border),
-                  ListTile(
-                    key: const Key('more_menu_website'),
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.language_outlined, color: AppColors.primaryDark),
-                    title: const Text('Visitar sitio web', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                    subtitle: const Text('rindemas.cesarluis.com', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                    trailing: const Icon(Icons.open_in_new, size: 16, color: AppColors.textSecondary),
-                    onTap: () {
-                      Navigator.pop(ctx);
-                      _abrirSitioWeb();
-                    },
-                  ),
-                  const Divider(height: 1, color: AppColors.border),
-                  ListTile(
-                    key: const Key('more_menu_donate'),
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.coffee_outlined, color: AppColors.primaryDark),
-                    title: const Text('Apoyar el proyecto ☕', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                    subtitle: const Text('Haz una donación para mantener Rinde Más gratuito', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                    trailing: const Icon(Icons.open_in_new, size: 16, color: AppColors.textSecondary),
-                    onTap: () {
-                      Navigator.pop(ctx);
-                      _abrirDonaciones();
-                    },
-                  ),
-                ],
+                ),
               ),
             ),
           ),
@@ -982,100 +1013,249 @@ class MoreScreenState extends State<MoreScreen> {
     );
   }
 
-  void _mostrarHojaCuenta(BuildContext context, bool isAnon) {
+  void _mostrarHojaSobreApp(BuildContext context) {
+    bool isCheckingUpdate = false;
+    String? updateStatusNote;
+
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) {
-        return Material(
-          color: AppColors.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          clipBehavior: Clip.antiAlias,
-          child: SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 36,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  const Text(
-                    'Cuenta y seguridad',
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                  ),
-                  const SizedBox(height: 12),
-                  OutlinedButton.icon(
-                    key: const Key('btn_cerrar_sesion'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.textSecondary,
-                      side: const BorderSide(color: AppColors.border),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                    icon: const Icon(Icons.logout, size: 16, color: AppColors.textSecondary),
-                    label: const Text('Cerrar sesión', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                      _confirmarCerrarSesion(context);
-                    },
-                  ),
-                  if (!isAnon) ...[
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.error.withOpacity(0.06),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.error.withOpacity(0.2)),
-                      ),
+        return StatefulBuilder(
+          builder: (modalCtx, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(bottom: MediaQuery.of(modalCtx).viewInsets.bottom),
+              child: Material(
+                key: const Key('sheet_surface_about'),
+                color: AppColors.surface,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                clipBehavior: Clip.antiAlias,
+                child: SafeArea(
+                  top: false,
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          const Row(
-                            children: [
-                              Icon(Icons.warning_amber_rounded, size: 18, color: AppColors.error),
-                              SizedBox(width: 6),
-                              Text('Zona de Peligro', style: TextStyle(color: AppColors.error, fontWeight: FontWeight.bold, fontSize: 13)),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          const Text(
-                            'Elimina tu usuario en la nube, presupuestos y gastos sincronizados.',
-                            style: TextStyle(color: AppColors.textSecondary, fontSize: 11),
-                          ),
-                          const SizedBox(height: 10),
-                          SizedBox(
-                            width: double.infinity,
-                            child: OutlinedButton.icon(
-                              key: const Key('btn_eliminar_cuenta'),
-                              icon: const Icon(Icons.delete_outline, size: 16, color: AppColors.error),
-                              label: const Text('Eliminar cuenta y datos', style: TextStyle(color: AppColors.error, fontSize: 12, fontWeight: FontWeight.bold)),
-                              style: OutlinedButton.styleFrom(
-                                side: const BorderSide(color: AppColors.error),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          Center(
+                            child: Container(
+                              width: 36,
+                              height: 4,
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade300,
+                                borderRadius: BorderRadius.circular(2),
                               ),
-                              onPressed: () {
-                                Navigator.pop(ctx);
-                                _confirmarEliminarCuenta(context);
-                              },
                             ),
+                          ),
+                          const SizedBox(height: 14),
+                          const Text(
+                            'Sobre Rinde Más',
+                            style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                          ),
+                          const SizedBox(height: 8),
+                          ListTile(
+                            key: const Key('more_menu_check_updates'),
+                            contentPadding: EdgeInsets.zero,
+                            leading: const Icon(Icons.system_update_outlined, color: AppColors.primaryDark),
+                            title: const Text('Buscar actualizaciones', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                            subtitle: Text(
+                              updateStatusNote ?? 'Versión actual v$_currentAppVersion',
+                              style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                            ),
+                            trailing: isCheckingUpdate
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                                  )
+                                : const Icon(Icons.chevron_right, size: 18, color: AppColors.textSecondary),
+                            onTap: isCheckingUpdate
+                                ? null
+                                : () async {
+                                    setModalState(() {
+                                      isCheckingUpdate = true;
+                                      updateStatusNote = 'Buscando nueva versión...';
+                                    });
+                                    final info = await UpdateService().checkForUpdate(force: true);
+                                    if (modalCtx.mounted) {
+                                      setModalState(() {
+                                        isCheckingUpdate = false;
+                                        if (info == null) {
+                                          updateStatusNote = 'No se pudo comprobar. Verifica en Google Play.';
+                                        } else if (!info.hasUpdate) {
+                                          updateStatusNote = 'Tienes la última versión disponible.';
+                                        } else {
+                                          updateStatusNote = 'Nueva versión disponible (v${info.version}).';
+                                        }
+                                      });
+                                    }
+                                    if (info != null && info.hasUpdate && modalCtx.mounted && context.mounted) {
+                                      Navigator.pop(modalCtx);
+                                      UpdateDialog.show(context, info);
+                                    }
+                                  },
+                          ),
+                          const Divider(height: 1, color: AppColors.border),
+                          ListTile(
+                            key: const Key('btn_ver_google_play'),
+                            contentPadding: EdgeInsets.zero,
+                            leading: const Icon(Icons.shop_outlined, color: AppColors.primaryDark),
+                            title: const Text('Ver en Google Play', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                            subtitle: const Text('Calificar Rinde Más o ver la ficha oficial', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                            trailing: const Icon(Icons.open_in_new, size: 16, color: AppColors.textSecondary),
+                            onTap: () {
+                              Navigator.pop(modalCtx);
+                              _abrirGooglePlay();
+                            },
+                          ),
+                          const Divider(height: 1, color: AppColors.border),
+                          ListTile(
+                            key: const Key('more_menu_privacy_policy'),
+                            contentPadding: EdgeInsets.zero,
+                            leading: const Icon(Icons.privacy_tip_outlined, color: AppColors.primaryDark),
+                            title: const Text('Política de privacidad', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                            subtitle: const Text('Cómo protegemos tus datos y facturas', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                            trailing: const Icon(Icons.open_in_new, size: 16, color: AppColors.textSecondary),
+                            onTap: () {
+                              Navigator.pop(modalCtx);
+                              _abrirUrl(AppConstants.privacidadUrl, 'No se pudo abrir la política de privacidad');
+                            },
+                          ),
+                          const Divider(height: 1, color: AppColors.border),
+                          ListTile(
+                            key: const Key('more_menu_terms'),
+                            contentPadding: EdgeInsets.zero,
+                            leading: const Icon(Icons.description_outlined, color: AppColors.primaryDark),
+                            title: const Text('Términos y condiciones', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                            subtitle: const Text('Condiciones de uso de Rinde Más', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                            trailing: const Icon(Icons.open_in_new, size: 16, color: AppColors.textSecondary),
+                            onTap: () {
+                              Navigator.pop(modalCtx);
+                              _abrirUrl(AppConstants.terminosUrl, 'No se pudo abrir los términos');
+                            },
                           ),
                         ],
                       ),
                     ),
-                  ],
-                ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _mostrarHojaCuenta(BuildContext context, bool isAnon) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          child: Material(
+            key: const Key('sheet_surface_account'),
+            color: AppColors.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            clipBehavior: Clip.antiAlias,
+            child: SafeArea(
+              top: false,
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 36,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade300,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      const Text(
+                        'Cuenta y seguridad',
+                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        key: const Key('btn_cerrar_sesion'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.textSecondary,
+                          side: const BorderSide(color: AppColors.border),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        icon: const Icon(Icons.logout, size: 16, color: AppColors.textSecondary),
+                        label: const Text('Cerrar sesión', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          _confirmarCerrarSesion(context);
+                        },
+                      ),
+                      if (!isAnon) ...[
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.error.withValues(alpha: 0.06),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.error.withValues(alpha: 0.2)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Row(
+                                children: [
+                                  Icon(Icons.warning_amber_rounded, size: 18, color: AppColors.error),
+                                  SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      'Zona de Peligro',
+                                      style: TextStyle(color: AppColors.error, fontWeight: FontWeight.bold, fontSize: 13),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              const Text(
+                                'Elimina tu usuario en la nube, presupuestos y gastos sincronizados.',
+                                style: TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                              ),
+                              const SizedBox(height: 10),
+                              SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton.icon(
+                                  key: const Key('btn_eliminar_cuenta'),
+                                  icon: const Icon(Icons.delete_outline, size: 16, color: AppColors.error),
+                                  label: const Text('Eliminar cuenta y datos', style: TextStyle(color: AppColors.error, fontSize: 12, fontWeight: FontWeight.bold)),
+                                  style: OutlinedButton.styleFrom(
+                                    side: const BorderSide(color: AppColors.error),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  ),
+                                  onPressed: () {
+                                    Navigator.pop(ctx);
+                                    _confirmarEliminarCuenta(context);
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
@@ -1086,48 +1266,23 @@ class MoreScreenState extends State<MoreScreen> {
 
   Widget _buildDiscreetLegalFooter() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Wrap(
-          alignment: WrapAlignment.center,
-          spacing: 8,
-          runSpacing: 4,
-          children: [
-            InkWell(
-              key: const Key('more_menu_legal_disclaimer'),
-              onTap: _mostrarAvisoLegalBcv,
-              child: const Text('Aviso BCV', style: TextStyle(fontSize: 11, color: AppColors.textSecondary, decoration: TextDecoration.underline)),
-            ),
-            const Text('·', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
-            InkWell(
-              key: const Key('more_menu_privacy_policy'),
-              onTap: () => _abrirUrl(AppConstants.privacidadUrl, 'No se pudo abrir la política de privacidad'),
-              child: const Text('Privacidad', style: TextStyle(fontSize: 11, color: AppColors.textSecondary, decoration: TextDecoration.underline)),
-            ),
-            const Text('·', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
-            InkWell(
-              key: const Key('more_menu_terms'),
-              onTap: () => _abrirUrl(AppConstants.terminosUrl, 'No se pudo abrir los términos'),
-              child: const Text('Términos', style: TextStyle(fontSize: 11, color: AppColors.textSecondary, decoration: TextDecoration.underline)),
-            ),
-          ],
+        BcvLegalDisclaimerCard(
+          cardKey: const Key('more_rates_bcv_disclaimer'),
+          linkKey: const Key('more_rates_bcv_source_link'),
+          onOpenBcv: () => _abrirUrl(
+            'https://www.bcv.org.ve/',
+            'No se pudo abrir la página del BCV',
+          ),
         ),
-        const SizedBox(height: 6),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Rinde Más v$_currentAppVersion · ',
-              style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
-            ),
-            InkWell(
-              key: const Key('btn_ver_google_play'),
-              onTap: _abrirGooglePlay,
-              child: const Text(
-                'Google Play',
-                style: TextStyle(fontSize: 11, color: AppColors.textSecondary, fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
-              ),
-            ),
-          ],
+        const SizedBox(height: 16),
+        Center(
+          child: Text(
+            'Rinde Más v$_currentAppVersion',
+            key: const Key('more_app_version_footer'),
+            style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+          ),
         ),
       ],
     );
@@ -1174,7 +1329,9 @@ class MoreScreenState extends State<MoreScreen> {
     await gastoProvider.cerrarSesion();
     try {
       Provider.of<ChatProvider>(context, listen: false).clearConversation();
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('No se pudo limpiar ChatProvider al cerrar sesión: $e');
+    }
     await scanQueue.loadQueue();
     await settingsProvider.loadSettings();
 
@@ -1196,52 +1353,54 @@ class MoreScreenState extends State<MoreScreen> {
     final confirmar = await showDialog<bool>(
       context: context,
       builder: (dialogCtx) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
+        builder: (dialogBodyCtx, setDialogState) => AlertDialog(
           title: const Text('¿Eliminar cuenta y datos?'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Esta acción es definitiva e irreversible. Se eliminará permanentemente tu usuario en la nube, tus gastos y tus presupuestos sincronizados. Los registros en este dispositivo también se borrarán.',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
-              ),
-              const SizedBox(height: 14),
-              const Text(
-                'Para confirmar, escribe "ELIMINAR" abajo:',
-                style: TextStyle(color: AppColors.textPrimary, fontSize: 13, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 6),
-              TextField(
-                key: const Key('delete_account_confirm_input'),
-                decoration: const InputDecoration(
-                  hintText: 'ELIMINAR',
-                  border: OutlineInputBorder(),
-                  isDense: true,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Esta acción es definitiva e irreversible. Se eliminará permanentemente tu usuario en la nube, tus gastos y tus presupuestos sincronizados. Los registros en este dispositivo también se borrarán.',
+                  style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
                 ),
-                onChanged: (val) {
-                  setDialogState(() {
-                    deleteConfirmText = val.trim();
-                  });
-                },
-              ),
-              const SizedBox(height: 12),
-              CheckboxListTile(
-                contentPadding: EdgeInsets.zero,
-                value: eliminarFotos,
-                activeColor: AppColors.error,
-                title: const Text(
-                  'Eliminar también los archivos de fotos de comprobantes de este teléfono',
-                  style: TextStyle(color: AppColors.textPrimary, fontSize: 13),
+                const SizedBox(height: 14),
+                const Text(
+                  'Para confirmar, escribe "ELIMINAR" abajo:',
+                  style: TextStyle(color: AppColors.textPrimary, fontSize: 13, fontWeight: FontWeight.bold),
                 ),
-                onChanged: (val) {
-                  setDialogState(() {
-                    eliminarFotos = val ?? false;
-                  });
-                },
-              ),
-            ],
+                const SizedBox(height: 6),
+                TextField(
+                  key: const Key('delete_account_confirm_input'),
+                  decoration: const InputDecoration(
+                    hintText: 'ELIMINAR',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  ),
+                  onChanged: (val) {
+                    setDialogState(() {
+                      deleteConfirmText = val.trim();
+                    });
+                  },
+                ),
+                const SizedBox(height: 12),
+                CheckboxListTile(
+                  contentPadding: EdgeInsets.zero,
+                  value: eliminarFotos,
+                  activeColor: AppColors.error,
+                  title: const Text(
+                    'Eliminar también los archivos de fotos de comprobantes de este teléfono',
+                    style: TextStyle(color: AppColors.textPrimary, fontSize: 13),
+                  ),
+                  onChanged: (val) {
+                    setDialogState(() {
+                      eliminarFotos = val ?? false;
+                    });
+                  },
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -1274,29 +1433,33 @@ class MoreScreenState extends State<MoreScreen> {
     if (!mounted) return;
 
     if (error == 'REQUIRES_PASSWORD_REAUTH') {
-      final passwordCtrl = TextEditingController();
+      String enteredPassword = '';
       final reauthConfirm = await showDialog<bool>(
         context: context,
         builder: (reauthCtx) => AlertDialog(
           title: const Text('Confirma tu contraseña'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Por seguridad, ingresa tu contraseña actual para autorizar la eliminación de tu cuenta.',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: passwordCtrl,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Contraseña',
-                  prefixIcon: Icon(Icons.lock_outline),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Por seguridad, ingresa tu contraseña actual para autorizar la eliminación de tu cuenta.',
+                  style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
                 ),
-              ),
-            ],
+                const SizedBox(height: 16),
+                TextField(
+                  obscureText: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Contraseña',
+                    prefixIcon: Icon(Icons.lock_outline),
+                  ),
+                  onChanged: (val) {
+                    enteredPassword = val.trim();
+                  },
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -1315,9 +1478,9 @@ class MoreScreenState extends State<MoreScreen> {
         ),
       );
 
-      if (reauthConfirm == true && passwordCtrl.text.isNotEmpty && mounted) {
+      if (reauthConfirm == true && enteredPassword.isNotEmpty && mounted) {
         error = await gastoProvider.eliminarCuentaYDatos(
-          reauthPassword: passwordCtrl.text.trim(),
+          reauthPassword: enteredPassword,
           eliminarFotos: eliminarFotos,
         );
       } else {
@@ -1337,7 +1500,9 @@ class MoreScreenState extends State<MoreScreen> {
     } else {
       try {
         Provider.of<ChatProvider>(context, listen: false).clearConversation();
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('No se pudo limpiar ChatProvider al eliminar cuenta: $e');
+      }
       await scanQueue.loadQueue();
       await settingsProvider.loadSettings();
       if (mounted) {
@@ -1361,115 +1526,121 @@ class MoreScreenState extends State<MoreScreen> {
       builder: (modalCtx) {
         return StatefulBuilder(
           builder: (ctx, setModalState) {
-            return Material(
-              color: AppColors.surface,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-              clipBehavior: Clip.antiAlias,
-              child: SafeArea(
-                top: false,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Center(
-                        child: Container(
-                          width: 36,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade300,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
+            return Padding(
+              padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+              child: Material(
+                key: const Key('sheet_surface_notifications'),
+                color: AppColors.surface,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                clipBehavior: Clip.antiAlias,
+                child: SafeArea(
+                  top: false,
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          const Icon(Icons.notifications_active_outlined, color: AppColors.primaryDark, size: 22),
-                          const SizedBox(width: 8),
-                          const Expanded(
-                            child: Text(
-                              'Notificaciones',
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                          Center(
+                            child: Container(
+                              width: 36,
+                              height: 4,
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade300,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
                             ),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.close, size: 20, color: AppColors.textSecondary),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              const Icon(Icons.notifications_active_outlined, color: AppColors.primaryDark, size: 22),
+                              const SizedBox(width: 8),
+                              const Expanded(
+                                child: Text(
+                                  'Notificaciones',
+                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.close, size: 20, color: AppColors.textSecondary),
+                                onPressed: () => Navigator.pop(modalCtx),
+                              ),
+                            ],
+                          ),
+                          const Text(
+                            'Personaliza cómo y cuándo Rinde Más se comunica contigo.',
+                            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                          ),
+                          const SizedBox(height: 16),
+                          SwitchListTile(
+                            contentPadding: EdgeInsets.zero,
+                            activeThumbColor: AppColors.primaryDark,
+                            title: const Text(
+                              'Recordatorio quincenal de compras',
+                              style: TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w600),
+                            ),
+                            subtitle: const Text(
+                              'Avisos los sábados cada dos semanas para fotografiar facturas y comprobantes.',
+                              style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                            ),
+                            value: settings.recordatorioFinDeSemana,
+                            onChanged: (val) {
+                              setModalState(() {});
+                              settings.setRecordatorioFinDeSemana(val);
+                            },
+                          ),
+                          const Divider(height: 16, color: AppColors.border),
+                          SwitchListTile(
+                            contentPadding: EdgeInsets.zero,
+                            activeThumbColor: AppColors.primaryDark,
+                            title: const Text(
+                              'Recordatorio de inactividad',
+                              style: TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w600),
+                            ),
+                            subtitle: const Text(
+                              'Aviso suave si pasa un mes sin registrar gastos para mantener tu presupuesto al día.',
+                              style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                            ),
+                            value: settings.recordatoriosActivos,
+                            onChanged: (val) {
+                              setModalState(() {});
+                              settings.setRecordatoriosActivos(val);
+                            },
+                          ),
+                          const Divider(height: 16, color: AppColors.border),
+                          SwitchListTile(
+                            contentPadding: EdgeInsets.zero,
+                            activeThumbColor: AppColors.primaryDark,
+                            title: const Text(
+                              'Avisos y novedades',
+                              style: TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w600),
+                            ),
+                            subtitle: const Text(
+                              'Notificaciones sobre nuevas funciones y mejoras importantes de Rinde Más.',
+                              style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                            ),
+                            value: settings.anunciosActivos,
+                            onChanged: (val) {
+                              setModalState(() {});
+                              settings.setAnunciosActivos(val);
+                            },
+                          ),
+                          const SizedBox(height: 20),
+                          ElevatedButton(
                             onPressed: () => Navigator.pop(modalCtx),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.black,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            child: const Text('Listo', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                           ),
                         ],
                       ),
-                      const Text(
-                        'Personaliza cómo y cuándo Rinde Más se comunica contigo.',
-                        style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                      ),
-                      const SizedBox(height: 16),
-                      SwitchListTile(
-                        contentPadding: EdgeInsets.zero,
-                        activeColor: AppColors.primaryDark,
-                        title: const Text(
-                          'Recordatorio quincenal de compras',
-                          style: TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w600),
-                        ),
-                        subtitle: const Text(
-                          'Avisos los sábados cada dos semanas para fotografiar facturas y comprobantes.',
-                          style: TextStyle(color: AppColors.textMuted, fontSize: 12),
-                        ),
-                        value: settings.recordatorioFinDeSemana,
-                        onChanged: (val) {
-                          setModalState(() {});
-                          settings.setRecordatorioFinDeSemana(val);
-                        },
-                      ),
-                      const Divider(height: 16, color: AppColors.border),
-                      SwitchListTile(
-                        contentPadding: EdgeInsets.zero,
-                        activeColor: AppColors.primaryDark,
-                        title: const Text(
-                          'Recordatorio de inactividad',
-                          style: TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w600),
-                        ),
-                        subtitle: const Text(
-                          'Aviso suave si pasa un mes sin registrar gastos para mantener tu presupuesto al día.',
-                          style: TextStyle(color: AppColors.textMuted, fontSize: 12),
-                        ),
-                        value: settings.recordatoriosActivos,
-                        onChanged: (val) {
-                          setModalState(() {});
-                          settings.setRecordatoriosActivos(val);
-                        },
-                      ),
-                      const Divider(height: 16, color: AppColors.border),
-                      SwitchListTile(
-                        contentPadding: EdgeInsets.zero,
-                        activeColor: AppColors.primaryDark,
-                        title: const Text(
-                          'Avisos y novedades',
-                          style: TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w600),
-                        ),
-                        subtitle: const Text(
-                          'Notificaciones sobre nuevas funciones y mejoras importantes de Rinde Más.',
-                          style: TextStyle(color: AppColors.textMuted, fontSize: 12),
-                        ),
-                        value: settings.anunciosActivos,
-                        onChanged: (val) {
-                          setModalState(() {});
-                          settings.setAnunciosActivos(val);
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: () => Navigator.pop(modalCtx),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryDark,
-                          foregroundColor: Colors.black,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        child: const Text('Listo', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),

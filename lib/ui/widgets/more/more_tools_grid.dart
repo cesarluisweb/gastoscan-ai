@@ -46,56 +46,58 @@ class MoreToolsGrid extends StatelessWidget {
             ),
           ),
         ),
-        Row(
-          children: [
-            Expanded(
-              child: _buildToolCard(
-                key: const Key('more_menu_shopping_list'),
-                icon: Icons.shopping_cart_outlined,
-                title: 'Lista de Compras',
-                subtitle: shoppingSubtitle,
-                isPrimaryHighlight: false,
-                onTap: onOpenShoppingList,
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: _buildToolCard(
+                  key: const Key('more_menu_shopping_list'),
+                  icon: Icons.shopping_cart_outlined,
+                  title: 'Lista de Compras',
+                  subtitle: shoppingSubtitle,
+                  onTap: onOpenShoppingList,
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildToolCard(
-                key: const Key('more_menu_currency_calculator'),
-                icon: Icons.calculate_outlined,
-                title: 'Calculadora',
-                subtitle: 'Bs. ⇄ Divisas',
-                isPrimaryHighlight: false,
-                onTap: onOpenCalculator,
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildToolCard(
+                  key: const Key('more_menu_currency_calculator'),
+                  icon: Icons.calculate_outlined,
+                  title: 'Calculadora',
+                  subtitle: 'Bs. ⇄ Divisas',
+                  onTap: onOpenCalculator,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildToolCard(
-                key: const Key('more_menu_view_receipts'),
-                icon: Icons.photo_library_outlined,
-                title: 'Comprobantes',
-                subtitle: receiptSubtitle,
-                isPrimaryHighlight: false,
-                onTap: onOpenReceipts,
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: _buildToolCard(
+                  key: const Key('more_menu_view_receipts'),
+                  icon: Icons.photo_library_outlined,
+                  title: 'Comprobantes',
+                  subtitle: receiptSubtitle,
+                  onTap: onOpenReceipts,
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildToolCard(
-                key: const Key('more_menu_chat_ai'),
-                icon: Icons.auto_awesome,
-                title: 'Asistente IA',
-                subtitle: 'Consulta tus finanzas',
-                isPrimaryHighlight: true, // Fondo amarillo, texto/icono negro (DESIGN.md)
-                onTap: onOpenChat,
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildToolCard(
+                  key: const Key('more_menu_chat_ai'),
+                  icon: Icons.auto_awesome,
+                  title: 'Asistente IA',
+                  subtitle: 'Consulta tus finanzas',
+                  onTap: onOpenChat,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );
@@ -106,22 +108,13 @@ class MoreToolsGrid extends StatelessWidget {
     required IconData icon,
     required String title,
     required String subtitle,
-    required bool isPrimaryHighlight,
     required VoidCallback onTap,
   }) {
-    final bgColor = isPrimaryHighlight ? AppColors.primaryDark : AppColors.card;
-    // DESIGN.md: Fondo amarillo -> texto e icono SIEMPRE negros.
-    // Sobre tarjeta blanca, el icono es primaryDark (amarillo marca) o sobre pastilla amarilla suave es negro.
-    final iconColor = isPrimaryHighlight ? AppColors.textPrimary : AppColors.textPrimary;
-    final titleColor = isPrimaryHighlight ? AppColors.textPrimary : AppColors.textPrimary;
-    final subtitleColor = isPrimaryHighlight ? AppColors.secondary : AppColors.textSecondary;
-    final borderColor = isPrimaryHighlight ? AppColors.primaryDark : AppColors.border;
-
     return Material(
-      color: bgColor,
+      color: AppColors.card,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: borderColor),
+        side: const BorderSide(color: AppColors.border),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -129,7 +122,7 @@ class MoreToolsGrid extends StatelessWidget {
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.all(12),
-          height: 104,
+          constraints: const BoxConstraints(minHeight: 104),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -138,24 +131,24 @@ class MoreToolsGrid extends StatelessWidget {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: isPrimaryHighlight ? AppColors.primaryLight : AppColors.primaryLight,
+                  color: AppColors.primaryLight,
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: isPrimaryHighlight ? Colors.black.withOpacity(0.1) : AppColors.primaryDark,
+                    color: AppColors.primaryDark,
                     width: 1,
                   ),
                 ),
-                child: Icon(icon, color: iconColor, size: 18),
+                child: Icon(icon, color: AppColors.textPrimary, size: 18),
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
-                      color: titleColor,
+                      color: AppColors.textPrimary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -163,9 +156,9 @@ class MoreToolsGrid extends StatelessWidget {
                   const SizedBox(height: 1),
                   Text(
                     subtitle,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 11,
-                      color: subtitleColor,
+                      color: AppColors.textSecondary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

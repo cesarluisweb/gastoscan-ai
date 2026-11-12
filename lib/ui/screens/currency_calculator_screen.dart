@@ -8,6 +8,7 @@ import '../../core/utils/currency_formatter.dart';
 import '../../data/models/gemini_extraction_result.dart';
 import '../../data/models/item_gasto_model.dart';
 import '../../providers/settings_provider.dart';
+import '../widgets/bcv_legal_disclaimer_card.dart';
 import 'review_expense_screen.dart';
 
 enum TipoTasaCalculadora { dolarBcv, euroBcv, usdtBinance, personalizada }
@@ -61,6 +62,7 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       _recalcularDesdeDivisa();
     });
   }
@@ -89,7 +91,7 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
   }
 
   void _recalcularDesdeDivisa() {
-    if (_isSyncing) return;
+    if (!mounted || _isSyncing) return;
     _isSyncing = true;
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     final tasa = _obtenerTasaActiva(settings);
@@ -105,7 +107,7 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
   }
 
   void _recalcularDesdeVes() {
-    if (_isSyncing) return;
+    if (!mounted || _isSyncing) return;
     _isSyncing = true;
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     final tasa = _obtenerTasaActiva(settings);
@@ -197,6 +199,18 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
       return;
     }
 
+    final bool needsConversion = _isVesOnTop
+        ? (montoVes == null || montoVes <= 0)
+        : (montoDivisa == null || montoDivisa <= 0);
+    if (needsConversion && activeRate <= 1.0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Ingresa o actualiza una tasa válida para convertir este monto.'),
+        ),
+      );
+      return;
+    }
+
     final double totalFinal;
     final String monedaFinal;
     if (_isVesOnTop) {
@@ -217,7 +231,7 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
             totalOriginal: totalFinal,
             impuestoIva: 0.0,
             moneda: monedaFinal,
-            tasaCambioDetectada: activeRate,
+            tasaCambioDetectada: activeRate > 1.0 ? activeRate : null,
             items: [
               ItemGastoModel(
                 descripcion: 'Gasto calculado',
@@ -323,6 +337,7 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
           // Campo Tasa Personalizada (si está seleccionada)
           if (_selectedTipoTasa == TipoTasaCalculadora.personalizada) ...[
             Container(
+              key: const Key('calc_custom_rate_container'),
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: AppColors.card,
@@ -366,11 +381,12 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(key: Key('calc_custom_rate_spacer'), height: 12),
           ],
 
           // Tarjeta Principal de Conversión Bidireccional
           Container(
+            key: const Key('calc_conversion_card'),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: AppColors.card,
@@ -453,19 +469,31 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Comparativa simultánea',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
+                    const Expanded(
+                      child: Text(
+                        'Comparativa simultánea',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    Text(
-                      'Para ${montoBaseDivisa.toStringAsFixed(2)} divisa',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: AppColors.textSecondary,
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          'Para ${montoBaseDivisa.toStringAsFixed(2)} divisa',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: AppColors.textSecondary,
+                          ),
+                          maxLines: 1,
+                        ),
                       ),
                     ),
                   ],
@@ -524,66 +552,10 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
           const SizedBox(height: 16),
 
           // Descargo oficial de fuentes públicas
-          Container(
-            key: const Key('calc_bcv_disclaimer_card'),
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppColors.card,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
-                  children: [
-                    Icon(Icons.info_outline_rounded, size: 16, color: AppColors.textSecondary),
-                    SizedBox(width: 8),
-                    Text(
-                      'Aviso legal sobre tasas oficiales',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Las tasas «Dólar BCV» y «Euro BCV» corresponden a información pública publicada por el Banco Central de Venezuela (BCV). Rinde Más es una aplicación independiente y no representa, no está afiliada ni cuenta con respaldo del BCV ni de ninguna entidad gubernamental.',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: AppColors.textSecondary,
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                InkWell(
-                  key: const Key('calc_bcv_source_link'),
-                  onTap: _abrirFuenteBcv,
-                  borderRadius: BorderRadius.circular(6),
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 2),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Fuente oficial: www.bcv.org.ve',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(width: 4),
-                        Icon(Icons.open_in_new, size: 12, color: AppColors.textPrimary),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          BcvLegalDisclaimerCard(
+            cardKey: const Key('calc_bcv_disclaimer_card'),
+            linkKey: const Key('calc_bcv_source_link'),
+            onOpenBcv: _abrirFuenteBcv,
           ),
           const SizedBox(height: 30),
         ],
@@ -643,6 +615,7 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
 
   Widget _buildDivisaField(double tasaActiva) {
     return Column(
+      key: const Key('calc_divisa_field_column'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
@@ -706,6 +679,7 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
 
   Widget _buildVesField() {
     return Column(
+      key: const Key('calc_ves_field_column'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
@@ -788,12 +762,18 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
           children: [
             const Icon(Icons.swap_vert, size: 16, color: AppColors.textPrimary),
             const SizedBox(width: 4),
-            Text(
-              tasaActiva > 1.0 ? '1 $_selectedCurrency = Bs. ${tasaActiva.toStringAsFixed(2)}' : '1 $_selectedCurrency = —',
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  tasaActiva > 1.0 ? '1 $_selectedCurrency = Bs. ${tasaActiva.toStringAsFixed(2)}' : '1 $_selectedCurrency = —',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                  maxLines: 1,
+                ),
               ),
             ),
           ],
@@ -817,29 +797,43 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: isHighlighted ? FontWeight.bold : FontWeight.w500,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: isHighlighted ? FontWeight.bold : FontWeight.w500,
+                    color: AppColors.textPrimary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  rate,
+                  style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerRight,
+              child: Text(
+                total,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
                 ),
+                maxLines: 1,
               ),
-              Text(
-                rate,
-                style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
-              ),
-            ],
-          ),
-          Text(
-            total,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
             ),
           ),
         ],
@@ -854,7 +848,9 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
       if (!launched) {
         await launchUrl(uri, mode: LaunchMode.platformDefault);
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Error abriendo página del BCV: $e');
+    }
   }
 }
 

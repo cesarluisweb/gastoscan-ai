@@ -2,18 +2,15 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../domain/monetary/rate_market.dart';
 import '../../../providers/settings_provider.dart';
-import '../currency_lens_dropdown.dart';
 
 class MoreRatesCard extends StatelessWidget {
   final SettingsProvider settings;
   final VoidCallback onRefresh;
-  final VoidCallback onOpenBcv;
 
   const MoreRatesCard({
     Key? key,
     required this.settings,
     required this.onRefresh,
-    required this.onOpenBcv,
   }) : super(key: key);
 
   String _textoEstadoTasa() {
@@ -34,7 +31,7 @@ class MoreRatesCard extends StatelessWidget {
       case EstadoTasaMoneda.actualizada:
         return AppColors.balancePositive;
       case EstadoTasaMoneda.referencia:
-        return AppColors.warning;
+        return const Color(0xFF92400E);
       case EstadoTasaMoneda.sinTasa:
         return AppColors.error;
     }
@@ -53,14 +50,14 @@ class MoreRatesCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Expanded(
+                flex: 6,
                 child: Row(
                   children: [
                     Icon(Icons.currency_exchange, color: AppColors.primaryDark, size: 20),
                     SizedBox(width: 8),
-                    Flexible(
+                    Expanded(
                       child: Text(
                         'Tasas de Cambio',
                         style: TextStyle(
@@ -68,6 +65,7 @@ class MoreRatesCard extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                           color: AppColors.textPrimary,
                         ),
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -75,16 +73,17 @@ class MoreRatesCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.border),
-                    ),
+              Flexible(
+                flex: 5,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
                     child: Text(
                       _textoEstadoTasa(),
                       style: TextStyle(
@@ -92,22 +91,23 @@ class MoreRatesCard extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                         color: _colorEstadoTasa(),
                       ),
+                      maxLines: 1,
                     ),
                   ),
-                  const SizedBox(width: 4),
-                  IconButton(
-                    key: const Key('refresh_rates_btn'),
-                    icon: settings.isSyncingRate
-                        ? const SizedBox(
-                            width: 14,
-                            height: 14,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
-                          )
-                        : const Icon(Icons.refresh, size: 18, color: AppColors.textSecondary),
-                    tooltip: 'Actualizar tasas',
-                    onPressed: settings.isSyncingRate ? null : onRefresh,
-                  ),
-                ],
+                ),
+              ),
+              const SizedBox(width: 4),
+              IconButton(
+                key: const Key('refresh_rates_btn'),
+                icon: settings.isSyncingRate
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                      )
+                    : const Icon(Icons.refresh, size: 18, color: AppColors.textSecondary),
+                tooltip: 'Actualizar tasas',
+                onPressed: settings.isSyncingRate ? null : onRefresh,
               ),
             ],
           ),
@@ -153,70 +153,6 @@ class MoreRatesCard extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Moneda de reportes:',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              CurrencyLensDropdown(
-                dropdownKey: const Key('more_currency_lens_dropdown'),
-                monedaSeleccionada: settings.monedaPrincipal,
-                onMonedaChanged: (newMoneda) {
-                  settings.setMonedaPrincipal(newMoneda);
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Container(
-            key: const Key('more_rates_bcv_disclaimer'),
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: AppColors.cardLighter,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Tasas de referencia tomadas de fuentes públicas oficiales (BCV). Rinde Más no representa al BCV ni a ninguna entidad gubernamental.',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: AppColors.textSecondary,
-                    height: 1.35,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                InkWell(
-                  key: const Key('more_rates_bcv_source_link'),
-                  onTap: onOpenBcv,
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Fuente oficial: www.bcv.org.ve',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(width: 4),
-                      Icon(Icons.open_in_new, size: 12, color: AppColors.textPrimary),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );
@@ -227,15 +163,17 @@ class MoreRatesCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Column(
         children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
+              maxLines: 1,
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 2),
           FittedBox(
@@ -247,13 +185,18 @@ class MoreRatesCard extends StatelessWidget {
                 fontWeight: FontWeight.bold,
                 color: AppColors.textPrimary,
               ),
+              maxLines: 1,
             ),
           ),
-          Text(
-            unit,
-            style: const TextStyle(
-              fontSize: 10,
-              color: AppColors.textMuted,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              unit,
+              style: const TextStyle(
+                fontSize: 10,
+                color: AppColors.textSecondary,
+              ),
+              maxLines: 1,
             ),
           ),
         ],

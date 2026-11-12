@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:gastoscan_ai/data/models/gasto_model.dart';
 import 'package:gastoscan_ai/data/datasources/local/database_helper.dart';
 import 'package:gastoscan_ai/providers/gasto_provider.dart';
@@ -16,9 +17,23 @@ class FakeDatabaseHelper extends DatabaseHelper {
 
   @override
   Future<List<Map<String, dynamic>>> getReadyScanQueueItems() async => [];
+
+  @override
+  Future<int> resetStaleProcessingScanQueueItems() async => 0;
+
+  @override
+  Future<int> resetFailedScanQueueItems() async => 0;
+
+  @override
+  Future<int> clearPendingScanQueueItems() async => 0;
+
+  @override
+  Future<void> limpiarBaseDatosLocal() async {}
 }
 
 class FakeGastoProvider extends GastoProvider {
+  FakeGastoProvider() : super(autoLoad: false);
+
   final List<GastoModel> _gastos = [];
 
   @override
@@ -35,6 +50,8 @@ class FakeGastoProvider extends GastoProvider {
 }
 
 class FakeSettingsProvider extends SettingsProvider {
+  FakeSettingsProvider() : super(autoLoad: false);
+
   @override
   double get tasaCambioVesUsd => 45.0;
 
@@ -58,10 +75,18 @@ void main() {
   late FakeSettingsProvider settingsProvider;
 
   setUp(() {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    SharedPreferences.setMockInitialValues({});
     fakeDb = FakeDatabaseHelper();
-    scanQueueProvider = ScanQueueProvider(dbHelper: fakeDb);
+    scanQueueProvider = ScanQueueProvider(dbHelper: fakeDb, autoProcess: false);
     gastoProvider = FakeGastoProvider();
     settingsProvider = FakeSettingsProvider();
+  });
+
+  tearDown(() {
+    scanQueueProvider.dispose();
+    settingsProvider.dispose();
+    gastoProvider.dispose();
   });
 
   Widget createWidgetUnderTest() {
@@ -170,9 +195,11 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.tap(find.byKey(const Key('calc_copy_ves_button')));
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
 
       expect(find.textContaining('Monto en Bs. copiado:'), findsOneWidget);
+      await tester.pumpAndSettle();
     });
 
     testWidgets('tapping swap pill button swaps fields, changes copy button to divisa, and recalculates properly', (tester) async {
@@ -200,8 +227,10 @@ void main() {
 
       // Tap copy divisa button
       await tester.tap(find.byKey(const Key('calc_copy_divisa_button')));
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
       expect(find.textContaining('Monto en USD copiado:'), findsOneWidget);
+      await tester.pumpAndSettle();
 
       // Swap back
       await tester.tap(find.byKey(const Key('calc_swap_button')));
@@ -254,6 +283,60 @@ void main() {
 
       final divisaField = tester.widget<TextField>(find.byKey(const Key('calc_divisa_input')));
       expect(divisaField.controller?.text, isEmpty);
+    });
+
+    testWidgets('tapping swap button preserves EditableTextState focus on divisa TextField', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byKey(const Key('calc_divisa_input')), '12');
+      await tester.pumpAndSettle();
+
+      final editableBefore = tester.state<EditableTextState>(
+        find.descendant(
+          of: find.byKey(const Key('calc_divisa_input')),
+          matching: find.byType(EditableText),
+        ),
+      );
+      expect(tester.testTextInput.isVisible, isTrue);
+
+      await tester.tap(find.byKey(const Key('calc_swap_button')));
+      await tester.pumpAndSettle();
+
+      final editableAfter = tester.state<EditableTextState>(
+        find.descendant(
+          of: find.byKey(const Key('calc_divisa_input')),
+          matching: find.byType(EditableText),
+        ),
+      );
+      expect(identical(editableBefore, editableAfter), isTrue);
+      expect(tester.testTextInput.isVisible, isTrue);
+    });
+
+    testWidgets('tapping register when conversion rate is zero shows snackbar instead of throwing', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(800, 1400));
+      addTearDown(() async => await tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('calc_chip_custom')));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byKey(const Key('calc_ves_input')), '100');
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.byKey(const Key('calc_register_expense_button')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('calc_register_expense_button')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(
+        find.text('Ingresa o actualiza una tasa válida para convertir este monto.'),
+        findsOneWidget,
+      );
+      await tester.pumpAndSettle();
     });
   });
 }
