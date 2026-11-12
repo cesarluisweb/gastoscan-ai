@@ -131,6 +131,11 @@ void main() {
     await tester.pumpWidget(createWidgetUnderTest(customUser: linkedUser));
     await tester.pumpAndSettle();
 
+    final btnAjustes = find.byKey(const Key('btn_ajustes_cuenta'));
+    expect(btnAjustes, findsOneWidget);
+    await tester.tap(btnAjustes);
+    await tester.pumpAndSettle();
+
     final btnCerrarSesion = find.widgetWithText(OutlinedButton, 'Cerrar sesión');
     expect(btnCerrarSesion, findsOneWidget);
     await tester.tap(btnCerrarSesion);
@@ -155,6 +160,11 @@ void main() {
     await tester.pumpWidget(createWidgetUnderTest(customUser: user));
     await tester.pumpAndSettle();
 
+    final btnAjustes = find.byKey(const Key('btn_ajustes_cuenta'));
+    expect(btnAjustes, findsOneWidget);
+    await tester.tap(btnAjustes);
+    await tester.pumpAndSettle();
+
     final btnEliminar = find.widgetWithText(OutlinedButton, 'Eliminar cuenta y datos');
     expect(btnEliminar, findsOneWidget);
     await tester.tap(btnEliminar);
@@ -174,6 +184,10 @@ void main() {
 
     checkboxWidget = tester.widget(checkboxFinder);
     expect(checkboxWidget.value, isTrue);
+
+    // Escribir ELIMINAR para habilitar el botón
+    await tester.enterText(find.byKey(const Key('delete_account_confirm_input')), 'ELIMINAR');
+    await tester.pumpAndSettle();
 
     // Confirm deletion
     final btnConfirmar = find.widgetWithText(ElevatedButton, 'Eliminar definitivamente');

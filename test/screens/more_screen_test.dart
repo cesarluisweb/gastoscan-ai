@@ -106,9 +106,7 @@ void main() {
     late FakeSettingsProvider settingsProvider;
 
     setUp(() {
-      final TestWidgetsFlutterBinding binding = TestWidgetsFlutterBinding.ensureInitialized();
-      binding.window.physicalSizeTestValue = const Size(1080, 4000);
-      binding.window.devicePixelRatioTestValue = 1.0;
+      TestWidgetsFlutterBinding.ensureInitialized();
       fakeDb = FakeDatabaseHelper();
       scanQueueProvider = ScanQueueProvider(dbHelper: fakeDb);
       gastoProvider = FakeGastoProvider();
@@ -116,9 +114,6 @@ void main() {
     });
 
     tearDown(() {
-      final TestWidgetsFlutterBinding binding = TestWidgetsFlutterBinding.ensureInitialized();
-      binding.window.clearPhysicalSizeTestValue();
-      binding.window.clearDevicePixelRatioTestValue();
     });
 
     Widget createWidgetUnderTest({User? customUser}) {
@@ -140,8 +135,11 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Más'), findsOneWidget);
-      expect(find.text('Respaldo en la Nube'), findsOneWidget);
+      expect(find.text('Tus datos solo están en este teléfono'), findsOneWidget);
+      expect(find.text('HERRAMIENTAS'), findsOneWidget);
       expect(find.text('Lista de Compras'), findsOneWidget);
+      expect(find.text('Calculadora'), findsOneWidget);
+      expect(find.text('Comprobantes'), findsOneWidget);
       expect(find.text('Asistente IA'), findsOneWidget);
       expect(find.text('Tasas de Cambio'), findsOneWidget);
       // Sin sincronización en vivo el provider conserva tasasSonReferencia=true
@@ -149,13 +147,10 @@ void main() {
       expect(find.text('Dólar BCV'), findsOneWidget);
       expect(find.text('Euro BCV'), findsOneWidget);
       expect(find.text('USDT P2P'), findsOneWidget);
-      expect(find.text('Almacenamiento de fotos', skipOffstage: false), findsOneWidget);
-      expect(find.text('Exportar a Excel (.csv)', skipOffstage: false), findsOneWidget);
-      expect(find.text('Exportar como Texto (.md)', skipOffstage: false), findsOneWidget);
-      expect(find.text('Escribir a soporte', skipOffstage: false), findsOneWidget);
-      expect(find.text('Visitar sitio web', skipOffstage: false), findsOneWidget);
-      expect(find.text('Apoyar el proyecto ☕', skipOffstage: false), findsOneWidget);
-      expect(find.text('Versión de la App', skipOffstage: false), findsOneWidget);
+      expect(find.byKey(const Key('more_group_preferences')), findsOneWidget);
+      expect(find.byKey(const Key('more_group_support')), findsOneWidget);
+      expect(find.byKey(const Key('more_menu_legal_disclaimer')), findsOneWidget);
+      expect(find.byKey(const Key('btn_ver_google_play')), findsOneWidget);
     });
 
     testWidgets('tapping shopping list navigates internally and back button returns to hub', (tester) async {
@@ -176,7 +171,7 @@ void main() {
 
       // We should be back in MoreScreen hub
       expect(find.text('Más'), findsOneWidget);
-      expect(find.text('Respaldo en la Nube'), findsOneWidget);
+      expect(find.text('HERRAMIENTAS'), findsOneWidget);
     });
 
     testWidgets('tapping chat navigates internally and back button returns to hub', (tester) async {
@@ -197,7 +192,7 @@ void main() {
 
       // We should be back in MoreScreen hub
       expect(find.text('Más'), findsOneWidget);
-      expect(find.text('Respaldo en la Nube'), findsOneWidget);
+      expect(find.text('HERRAMIENTAS'), findsOneWidget);
     });
 
     testWidgets('calling openChat navigates directly to chat view', (tester) async {
@@ -240,7 +235,7 @@ void main() {
 
       // We should be back in MoreScreen hub
       expect(find.text('Más'), findsOneWidget);
-      expect(find.text('Almacenamiento de fotos', skipOffstage: false), findsOneWidget);
+      expect(find.text('HERRAMIENTAS'), findsOneWidget);
     });
 
     testWidgets('tapping currency calculator navigates internally and back button returns to hub', (tester) async {
@@ -254,8 +249,6 @@ void main() {
       // We should be in CurrencyCalculatorScreen
       expect(find.byIcon(Icons.arrow_back), findsOneWidget);
       expect(find.text('Calculadora Cambiaria'), findsOneWidget);
-      expect(find.byKey(const Key('calc_divisa_input')), findsOneWidget);
-      expect(find.byKey(const Key('calc_ves_input')), findsOneWidget);
 
       // Tap back button
       await tester.tap(find.byIcon(Icons.arrow_back));
@@ -263,6 +256,7 @@ void main() {
 
       // We should be back in MoreScreen hub
       expect(find.text('Más'), findsOneWidget);
+      expect(find.text('HERRAMIENTAS'), findsOneWidget);
     });
 
     testWidgets('renders email auth button and opens email auth modal', (tester) async {
@@ -270,7 +264,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('btn_vincular_email')), findsOneWidget);
-      expect(find.text('Vincular con correo'), findsOneWidget);
+      expect(find.text('Correo'), findsOneWidget);
 
       await tester.tap(find.byKey(const Key('btn_vincular_email')));
       await tester.pumpAndSettle();
@@ -300,14 +294,13 @@ void main() {
 
       expect(googleBtn, findsOneWidget);
       expect(emailBtn, findsOneWidget);
-      expect(find.text('Vincular con Google'), findsOneWidget);
+      expect(find.text('Google'), findsOneWidget);
 
       await tester.tap(googleBtn);
       await tester.pump();
 
-      // En progreso: botón muestra "Conectando con Google...", texto de respaldo visible, y ambos botones deshabilitados
-      expect(find.text('Conectando con Google...'), findsOneWidget);
-      expect(find.text('Conectando y respaldando tus datos en la nube...'), findsOneWidget);
+      // En progreso: botón muestra "Conectando...", y ambos botones deshabilitados
+      expect(find.text('Conectando...'), findsOneWidget);
       expect(tester.widget<ElevatedButton>(find.byKey(const Key('btn_vincular_google'))).onPressed, isNull);
       expect(tester.widget<OutlinedButton>(find.byKey(const Key('btn_vincular_email'))).onPressed, isNull);
 
@@ -323,14 +316,29 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest(customUser: FakeTestUser()));
       await tester.pumpAndSettle();
 
-      final btn = find.byKey(const Key('btn_eliminar_cuenta'));
-      await tester.ensureVisible(btn);
+      // Abrir ajustes de cuenta
+      final btnAjustes = find.byKey(const Key('btn_ajustes_cuenta'));
+      expect(btnAjustes, findsOneWidget);
+      await tester.tap(btnAjustes);
       await tester.pumpAndSettle();
+
+      final btn = find.byKey(const Key('btn_eliminar_cuenta'));
+      expect(btn, findsOneWidget);
       await tester.tap(btn);
       await tester.pumpAndSettle();
 
       expect(find.text('¿Eliminar cuenta y datos?'), findsOneWidget);
-      await tester.tap(find.text('Eliminar definitivamente'));
+
+      // El botón debe estar deshabilitado antes de escribir ELIMINAR
+      final confirmBtnFinder = find.widgetWithText(ElevatedButton, 'Eliminar definitivamente');
+      expect(tester.widget<ElevatedButton>(confirmBtnFinder).onPressed, isNull);
+
+      // Ingresar ELIMINAR
+      await tester.enterText(find.byKey(const Key('delete_account_confirm_input')), 'eliminar');
+      await tester.pumpAndSettle();
+      expect(tester.widget<ElevatedButton>(confirmBtnFinder).onPressed, isNotNull);
+
+      await tester.tap(confirmBtnFinder);
       await tester.pumpAndSettle();
 
       expect(find.text('Cuenta y datos eliminados. Sesión cerrada.'), findsOneWidget);
@@ -341,37 +349,44 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest(customUser: FakeTestUser()));
       await tester.pumpAndSettle();
 
-      final btn = find.byKey(const Key('btn_eliminar_cuenta'));
-      await tester.ensureVisible(btn);
+      final btnAjustes = find.byKey(const Key('btn_ajustes_cuenta'));
+      await tester.tap(btnAjustes);
       await tester.pumpAndSettle();
+
+      final btn = find.byKey(const Key('btn_eliminar_cuenta'));
       await tester.tap(btn);
       await tester.pumpAndSettle();
 
       expect(find.text('¿Eliminar cuenta y datos?'), findsOneWidget);
-      await tester.tap(find.text('Eliminar definitivamente'));
+
+      await tester.enterText(find.byKey(const Key('delete_account_confirm_input')), 'ELIMINAR');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Eliminar definitivamente'));
       await tester.pumpAndSettle();
 
       expect(find.text('Sin conexión a internet. Verifica tu red.'), findsOneWidget);
       expect(find.text('Cuenta y datos eliminados. Sesión cerrada.'), findsNothing);
     });
 
-    testWidgets('Danger Zone is hidden for anonymous users and visible for logged in users', (tester) async {
+    testWidgets('Danger Zone is hidden for anonymous users and visible for logged in users in sheet', (tester) async {
       // Usuario anónimo por defecto
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      expect(find.text('Zona de Peligro'), findsNothing);
-      expect(find.byKey(const Key('btn_eliminar_cuenta')), findsNothing);
+      expect(find.byKey(const Key('btn_ajustes_cuenta')), findsNothing);
+      expect(find.byKey(const Key('btn_borrar_datos_local')), findsOneWidget);
 
       // Usuario con cuenta vinculada
       await tester.pumpWidget(createWidgetUnderTest(customUser: FakeTestUser()));
       await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('btn_cerrar_sesion')), findsOneWidget);
-      final dangerZoneText = find.text('Zona de Peligro');
-      await tester.ensureVisible(dangerZoneText);
+      expect(find.byKey(const Key('btn_ajustes_cuenta')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('btn_ajustes_cuenta')));
       await tester.pumpAndSettle();
-      expect(dangerZoneText, findsOneWidget);
+
+      expect(find.byKey(const Key('btn_cerrar_sesion')), findsOneWidget);
+      expect(find.text('Zona de Peligro'), findsOneWidget);
       expect(find.byKey(const Key('btn_eliminar_cuenta')), findsOneWidget);
     });
 
@@ -403,7 +418,7 @@ void main() {
       expect(find.text('Aviso Legal y Tasas'), findsNothing);
     });
 
-    testWidgets('renders version card with Google Play button in MoreScreen', (tester) async {
+    testWidgets('renders version links with Google Play button in MoreScreen', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
@@ -413,7 +428,8 @@ void main() {
 
       expect(googlePlayBtn, findsOneWidget);
       expect(find.text('Google Play'), findsOneWidget);
-      expect(find.text('Versión de la App'), findsOneWidget);
+      expect(find.byKey(const Key('more_menu_privacy_policy')), findsOneWidget);
+      expect(find.byKey(const Key('more_menu_terms')), findsOneWidget);
     });
 
     testWidgets('al tocar refresh_rates_btn ejecuta actualizacion silenciosa', (tester) async {

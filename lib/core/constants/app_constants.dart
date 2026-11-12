@@ -251,6 +251,8 @@ class AppConstants {
   // Enlaces Oficiales Web y Donaciones
   static const String websiteUrl = 'https://rindemas.cesarluis.com';
   static const String donarUrl = 'https://rindemas.cesarluis.com/#donar';
+  static const String privacidadUrl = 'https://rindemas.cesarluis.com/privacidad';
+  static const String terminosUrl = 'https://rindemas.cesarluis.com/terminos';
 
   // Autenticación Google OAuth Web Client ID
   static const String googleWebClientId =
