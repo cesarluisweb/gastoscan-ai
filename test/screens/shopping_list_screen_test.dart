@@ -27,7 +27,7 @@ void main() {
 
   testWidgets('ShoppingListScreen input field has textCapitalization set to sentences', (tester) async {
     await tester.pumpWidget(buildTestWidget());
-    await tester.pumpAndSettle();
+    await tester.pump();
 
     final textFieldFinder = find.byType(TextField);
     expect(textFieldFinder, findsOneWidget);
@@ -42,7 +42,8 @@ void main() {
     );
 
     await tester.pumpWidget(buildTestWidget());
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.text('Leche'), findsOneWidget);
 
@@ -51,6 +52,7 @@ void main() {
     expect(deleteBtn, findsOneWidget);
     await tester.tap(deleteBtn);
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
 
     // Verificar SnackBar
     final snackBarFinder = find.byType(SnackBar);
@@ -70,11 +72,13 @@ void main() {
 
     bool backCalled = false;
     await tester.pumpWidget(buildTestWidget(onBack: () => backCalled = true));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
 
     // Eliminar para mostrar SnackBar
     await tester.tap(find.byIcon(Icons.delete_outline));
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
     expect(find.byType(SnackBar), findsOneWidget);
 
     // Tocar botón Atrás
