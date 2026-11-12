@@ -90,7 +90,7 @@ void main() {
       await tester.tap(find.text('Más'));
       await tester.pumpAndSettle();
       expect(find.text('Más'), findsWidgets);
-      expect(find.text('Respaldo en la Nube'), findsOneWidget);
+      expect(find.text('HERRAMIENTAS'), findsOneWidget);
       expect(find.text('Lista de Compras'), findsOneWidget);
       expect(find.text('Asistente IA'), findsWidgets);
     });
@@ -135,6 +135,13 @@ void main() {
     });
 
     testWidgets('tapping Asistente IA in Mas and pressing back returns to Mas hub', (tester) async {
+      tester.view.physicalSize = const Size(1080, 4000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
@@ -153,7 +160,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Más'), findsWidgets);
-      expect(find.text('Respaldo en la Nube'), findsOneWidget);
+      expect(find.text('HERRAMIENTAS'), findsOneWidget);
     });
 
     testWidgets('system back on non-home tab returns to Inicio', (tester) async {

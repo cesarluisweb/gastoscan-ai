@@ -130,7 +130,17 @@ void main() {
       );
     }
 
+    void setLargeViewport(WidgetTester tester) {
+      tester.view.physicalSize = const Size(1080, 4000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+    }
+
     testWidgets('renders all hub sections in main view', (tester) async {
+      setLargeViewport(tester);
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
@@ -154,6 +164,7 @@ void main() {
     });
 
     testWidgets('tapping shopping list navigates internally and back button returns to hub', (tester) async {
+      setLargeViewport(tester);
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
@@ -175,6 +186,7 @@ void main() {
     });
 
     testWidgets('tapping chat navigates internally and back button returns to hub', (tester) async {
+      setLargeViewport(tester);
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
@@ -196,6 +208,7 @@ void main() {
     });
 
     testWidgets('calling openChat navigates directly to chat view', (tester) async {
+      setLargeViewport(tester);
       final GlobalKey<MoreScreenState> moreKey = GlobalKey<MoreScreenState>();
       await tester.pumpWidget(
         MultiProvider(
@@ -218,11 +231,12 @@ void main() {
     });
 
     testWidgets('tapping view receipts navigates to ReceiptGalleryScreen and back button returns to hub', (tester) async {
+      setLargeViewport(tester);
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
       // Tap view receipts
-      await tester.tap(find.byKey(const Key('more_menu_view_receipts'), skipOffstage: false));
+      await tester.tap(find.byKey(const Key('more_menu_view_receipts')));
       await tester.pumpAndSettle();
 
       // We should be in ReceiptGalleryScreen
@@ -239,11 +253,12 @@ void main() {
     });
 
     testWidgets('tapping currency calculator navigates internally and back button returns to hub', (tester) async {
+      setLargeViewport(tester);
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
       // Tap currency calculator
-      await tester.tap(find.byKey(const Key('more_menu_currency_calculator'), skipOffstage: false));
+      await tester.tap(find.byKey(const Key('more_menu_currency_calculator')));
       await tester.pumpAndSettle();
 
       // We should be in CurrencyCalculatorScreen
@@ -260,6 +275,7 @@ void main() {
     });
 
     testWidgets('renders email auth button and opens email auth modal', (tester) async {
+      setLargeViewport(tester);
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
@@ -283,6 +299,7 @@ void main() {
     });
 
     testWidgets('tapping vincular con google shows loading state and disables buttons while in progress', (tester) async {
+      setLargeViewport(tester);
       final completer = Completer<String?>();
       gastoProvider.vincularGoogleCompleter = completer;
 
@@ -312,6 +329,7 @@ void main() {
     });
 
     testWidgets('tapping eliminar cuenta and confirming shows success snackbar on success', (tester) async {
+      setLargeViewport(tester);
       gastoProvider.errorEliminarCuenta = null;
       await tester.pumpWidget(createWidgetUnderTest(customUser: FakeTestUser()));
       await tester.pumpAndSettle();
@@ -345,6 +363,7 @@ void main() {
     });
 
     testWidgets('tapping eliminar cuenta and confirming shows error snackbar on failure', (tester) async {
+      setLargeViewport(tester);
       gastoProvider.errorEliminarCuenta = 'Sin conexión a internet. Verifica tu red.';
       await tester.pumpWidget(createWidgetUnderTest(customUser: FakeTestUser()));
       await tester.pumpAndSettle();
@@ -370,6 +389,7 @@ void main() {
     });
 
     testWidgets('Danger Zone is hidden for anonymous users and visible for logged in users in sheet', (tester) async {
+      setLargeViewport(tester);
       // Usuario anónimo por defecto
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
@@ -391,18 +411,15 @@ void main() {
     });
 
     testWidgets('renders rates legal disclaimer and legal disclaimer menu item in MoreScreen', (tester) async {
+      setLargeViewport(tester);
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
       final ratesDisclaimer = find.byKey(const Key('more_rates_bcv_disclaimer'));
-      await tester.ensureVisible(ratesDisclaimer);
-      await tester.pumpAndSettle();
       expect(ratesDisclaimer, findsOneWidget);
       expect(find.byKey(const Key('more_rates_bcv_source_link')), findsOneWidget);
 
       final legalItem = find.byKey(const Key('more_menu_legal_disclaimer'));
-      await tester.ensureVisible(legalItem);
-      await tester.pumpAndSettle();
       expect(legalItem, findsOneWidget);
 
       // Tap on legal disclaimer item to open dialog
@@ -419,13 +436,11 @@ void main() {
     });
 
     testWidgets('renders version links with Google Play button in MoreScreen', (tester) async {
+      setLargeViewport(tester);
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
       final googlePlayBtn = find.byKey(const Key('btn_ver_google_play'));
-      await tester.ensureVisible(googlePlayBtn);
-      await tester.pumpAndSettle();
-
       expect(googlePlayBtn, findsOneWidget);
       expect(find.text('Google Play'), findsOneWidget);
       expect(find.byKey(const Key('more_menu_privacy_policy')), findsOneWidget);
@@ -433,13 +448,11 @@ void main() {
     });
 
     testWidgets('al tocar refresh_rates_btn ejecuta actualizacion silenciosa', (tester) async {
+      setLargeViewport(tester);
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
       final refreshBtn = find.byKey(const Key('refresh_rates_btn'));
-      await tester.ensureVisible(refreshBtn);
-      await tester.pumpAndSettle();
-
       expect(refreshBtn, findsOneWidget);
       await tester.tap(refreshBtn);
       await tester.pump();
