@@ -6,7 +6,14 @@ import '../../data/models/shopping_item_model.dart';
 class ShoppingListScreen extends StatefulWidget {
   final bool showBackButton;
   final VoidCallback? onBack;
-  const ShoppingListScreen({Key? key, this.showBackButton = false, this.onBack}) : super(key: key);
+  final DatabaseHelper? dbHelper;
+
+  const ShoppingListScreen({
+    Key? key,
+    this.showBackButton = false,
+    this.onBack,
+    this.dbHelper,
+  }) : super(key: key);
 
   @override
   State<ShoppingListScreen> createState() => _ShoppingListScreenState();
@@ -17,6 +24,8 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
   final _focusNode = FocusNode();
   List<ShoppingItemModel> _items = [];
   bool _isLoading = true;
+
+  DatabaseHelper get _db => widget.dbHelper ?? DatabaseHelper.instance;
 
   @override
   void initState() {
@@ -33,7 +42,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
 
   Future<void> _loadItems() async {
     try {
-      final items = await DatabaseHelper.instance.getAllShoppingItems();
+      final items = await _db.getAllShoppingItems();
       if (mounted) {
         setState(() {
           _items = items;
@@ -59,20 +68,20 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
       name: text,
       createdAt: DateTime.now().toIso8601String(),
     );
-    await DatabaseHelper.instance.insertShoppingItem(newItem);
+    await _db.insertShoppingItem(newItem);
     _ctrl.clear();
     _loadItems();
     _focusNode.requestFocus();
   }
 
   Future<void> _toggle(ShoppingItemModel item) async {
-    await DatabaseHelper.instance.updateShoppingItemStatus(item.id!, item.isPurchased == 0);
+    await _db.updateShoppingItemStatus(item.id!, item.isPurchased == 0);
     _loadItems();
   }
 
   Future<void> _delete(ShoppingItemModel item) async {
     if (item.id == null) return;
-    await DatabaseHelper.instance.deleteShoppingItem(item.id!);
+    await _db.deleteShoppingItem(item.id!);
     if (mounted) {
       _loadItems();
       ScaffoldMessenger.of(context).clearSnackBars();
@@ -89,7 +98,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
             label: 'Deshacer',
             textColor: Colors.black,
             onPressed: () async {
-              await DatabaseHelper.instance.insertShoppingItem(
+              await _db.insertShoppingItem(
                 ShoppingItemModel(
                   name: item.name,
                   isPurchased: item.isPurchased,
