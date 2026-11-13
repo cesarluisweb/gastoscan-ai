@@ -550,13 +550,13 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 600),
             child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 220),
-              reverseDuration: const Duration(milliseconds: 200),
+              duration: const Duration(milliseconds: 150),
+              reverseDuration: const Duration(milliseconds: 130),
               switchInCurve: Curves.easeOutCubic,
               switchOutCurve: Curves.easeInCubic,
               transitionBuilder: (child, animation) {
                 final slideAnimation = Tween<Offset>(
-                  begin: const Offset(0, 0.05),
+                  begin: const Offset(0.04, 0),
                   end: Offset.zero,
                 ).animate(animation);
                 return FadeTransition(

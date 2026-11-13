@@ -67,7 +67,7 @@ void main() {
     expect(textField.textCapitalization, equals(TextCapitalization.sentences));
   });
 
-  testWidgets('ShoppingListScreen deleting item shows floating SnackBar with correct contrast and duration', (tester) async {
+  testWidgets('ShoppingListScreen deleting item shows standard fixed SnackBar with discreet undo button', (tester) async {
     await fakeDb.insertShoppingItem(
       ShoppingItemModel(name: 'Leche', createdAt: DateTime.now().toIso8601String()),
     );
@@ -83,15 +83,23 @@ void main() {
     await tester.tap(deleteBtn);
     await tester.pump();
 
-    // Verificar SnackBar
+    // Verificar SnackBar fijo en la barra inferior (igual a Gasto guardado)
     final snackBarFinder = find.byType(SnackBar);
     expect(snackBarFinder, findsOneWidget);
 
     final snackBar = tester.widget<SnackBar>(snackBarFinder);
-    expect(snackBar.behavior, equals(SnackBarBehavior.floating));
+    expect(snackBar.behavior, isNot(equals(SnackBarBehavior.floating)));
+    expect(snackBar.action, isNull);
     expect(snackBar.duration, equals(const Duration(seconds: 2)));
-    expect(snackBar.backgroundColor, equals(AppColors.primary));
+    expect(snackBar.backgroundColor, equals(AppColors.primaryDark));
     expect(find.text('"Leche" eliminado'), findsOneWidget);
+    expect(find.byIcon(Icons.undo_rounded), findsOneWidget);
+    expect(find.text('Deshacer'), findsOneWidget);
+
+    // Probar que el botón Deshacer restaura el artículo
+    await tester.tap(find.byKey(const Key('shopping_undo_delete_button')));
+    await tester.pump();
+    expect(find.text('Leche'), findsOneWidget);
 
     // Drenar el temporizador del SnackBar para cerrar la prueba limpiamente
     await tester.pump(const Duration(seconds: 3));

@@ -17,8 +17,8 @@
 - **Microcopy en formularios (gastaste + opcional):** Implementado y alineado en Flutter y Panel Web Astro.
 - **Ajustes de UX y Transiciones (Gasto, Lista, Herramientas, Chat):**
   - Registrar gasto: Retroceso sin confirmación si no se anotó ningún dato (comercio, monto, ítems o foto).
-  - Lista de compras: Mayúscula automática al iniciar escritura (`TextCapitalization.sentences`) y SnackBar flotante de 2 s con contraste estricto que se limpia al salir.
-  - Transiciones sutiles: `AnimatedSwitcher` (220 ms, curva cúbica y deslizamiento vertical suave) en apertura y cierre de Lista de compras, Calculadora, Comprobantes y Asistente IA.
+  - Lista de compras: Mayúscula automática (`TextCapitalization.sentences`) y barra inferior fija (`AppColors.primaryDark`, 2 s, igual a "Gasto guardado") con botón discreto `Deshacer` + icono (`Icons.undo_rounded`).
+  - Transiciones sutiles: `AnimatedSwitcher` rápido (150 ms / 130 ms) con deslizamiento horizontal de derecha a izquierda (`Offset(0.04, 0)`) en Lista de compras, Calculadora, Comprobantes y Asistente IA.
 - **Nuevas ideas en ROADMAP:** `UX-18` (gráfica mensual en Análisis) y `AI-07` (sugerencias verticales y botón WhatsApp en chat).
 
 ## Decisiones Técnicas y de Negocio Recientes

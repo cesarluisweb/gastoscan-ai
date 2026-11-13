@@ -87,27 +87,57 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            '"${item.name}" eliminado',
-            style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
-          ),
-          backgroundColor: AppColors.primary,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 2),
-          action: SnackBarAction(
-            label: 'Deshacer',
-            textColor: Colors.black,
-            onPressed: () async {
-              await _db.insertShoppingItem(
-                ShoppingItemModel(
-                  name: item.name,
-                  isPurchased: item.isPurchased,
-                  createdAt: DateTime.now().toIso8601String(),
+          content: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '"${item.name}" eliminado',
+                  style: const TextStyle(color: Colors.black),
+                  overflow: TextOverflow.ellipsis,
                 ),
-              );
-              if (mounted) _loadItems();
-            },
+              ),
+              const SizedBox(width: 8),
+              InkWell(
+                key: const Key('shopping_undo_delete_button'),
+                borderRadius: BorderRadius.circular(6),
+                onTap: () async {
+                  ScaffoldMessenger.maybeOf(context)?.hideCurrentSnackBar();
+                  await _db.insertShoppingItem(
+                    ShoppingItemModel(
+                      name: item.name,
+                      isPurchased: item.isPurchased,
+                      createdAt: DateTime.now().toIso8601String(),
+                    ),
+                  );
+                  if (mounted) _loadItems();
+                },
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.undo_rounded,
+                        size: 15,
+                        color: Colors.black87,
+                      ),
+                      SizedBox(width: 4),
+                      Text(
+                        'Deshacer',
+                        style: TextStyle(
+                          color: Colors.black87,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
+          backgroundColor: AppColors.primaryDark,
+          duration: const Duration(seconds: 2),
         ),
       );
     }
