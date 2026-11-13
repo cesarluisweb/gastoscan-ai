@@ -137,6 +137,13 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
   - *Solución:* Incorporar en la pantalla Análisis una gráfica consolidada (barras o línea) que muestre el gasto total de los últimos meses (ej. 6 a 12 meses) en una sola vista, facilitando detectar picos de consumo y estacionalidad.
 
 ### Bloque C: Percepción con IA
+- `AI-05` **Dictado Continuo por Voz, Blindaje Determinístico de Fechas y Alineación de Período:** `Completada ✅`
+  - *Problema:* El motor nativo de voz borraba texto previo tras pausas cortas, Gemini alucinaba fechas desfasadas por falta de ancla temporal y el gasto guardado quedaba oculto visualmente por desfase del filtro mensual.
+  - *Solución:*
+    1. **Buffer de Voz Acumulativo:** Integración de `joinSpeechParts` y `shouldCommitPreviousSpeechSegment` para acumular segmentos confirmados entre pausas sin sobrescritura en `VoiceExpenseSheet` y `ChatScreen`.
+    2. **Anclaje Temporal Determinista:** Inyección de `fecha_hoy` en cliente y Cloudflare Worker (`fechaReferenciaHoy`), con resolución determinista en `GeminiService.resolveSpokenExpenseDate` para calcular fechas relativas (*hoy*, *ayer*, *antier*, *hace X días*) e impedir alucinaciones del LLM.
+    3. **Alineación de Filtro en Guardado:** `GastoProvider.agregarGasto` sincroniza automáticamente `_selectedYear` y `_selectedMonth` con la fecha del gasto antes de recargar datos en SQLite.
+  - *Verificación:* CI Build 692 en verde (commit `1fdd815`), Worker desplegado (`6709639`), pruebas automatizadas en `voice_expense_sheet_test.dart` y validación física confirmada por César en *Rinde Más Dev*. Documentado en `docs/DOC_DICTADO_VOZ_CONTINUO.md`.
 - `AI-06` **Imputación de IVA en Precios de Anaquel y Algoritmo del Centavo Residual:** `Pendiente`
   - *Problema:* Las facturas fiscales del SENIAT imprimen bases imponibles (sin IVA) para productos gravados `(G)`. Al extraer el ticket, la app crea un renglón artificial "Impuesto IVA" en categoría 'Otros', distorsionando los presupuestos por categoría y descalzando el comparador histórico de precios con las entradas manuales y por voz.
   - *Solución:* Imputar el 16% de IVA directamente en los productos gravados para reflejar el precio de anaquel que el usuario pagó en caja, preservar intactos los alimentos exentos `(E)`, resolver la discrepancia de $\pm 0,01$ mediante ajuste determinista en el producto gravado de mayor valor y mostrar la base fiscal como microcopy informativo en `ReviewExpenseScreen`.
