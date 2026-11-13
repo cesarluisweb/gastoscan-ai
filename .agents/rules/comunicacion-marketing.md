@@ -6,7 +6,7 @@ description: "Consultar al redactar mensajes de soporte, respuestas en foros o c
 # Comunicación con Comunidades, Soporte y Marketing (Voz de César)
 
 ## 1. Bitácora de Marketing Obligatoria
-- **Registro Centralizado:** Toda acción, publicación en foros, experimento, campaña publicitaria o aprendizaje recopilado de la comunidad DEBE documentarse y actualizarse inmediatamente en `DOC_BITACORA_MARKETING.md`.
+- **Registro Centralizado:** Toda acción, publicación en foros, experimento, campaña publicitaria o aprendizaje recopilado de la comunidad DEBE documentarse y actualizarse inmediatamente en `docs/DOC_BITACORA_MARKETING.md`.
 
 ## 2. Pautas Editoriales de Redacción (Estilo de César)
 Al redactar propuestas de respuestas para Reddit (ej. r/vzla), redes sociales, soporte técnico o mensajes directos, adoptar rigurosamente el estilo de César:

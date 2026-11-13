@@ -2,7 +2,7 @@
 
 Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, ordenadas estratégicamente por prioridad, impacto de valor para el usuario venezolano y viabilidad técnica.
 
-> 📜 **Histórico de Hitos Completados:** Para consultar el detalle técnico y la bitácora de todas las fases y tareas ya finalizadas, consulta [ROADMAP_HISTORICO.md](ROADMAP_HISTORICO.md).
+> 📜 **Histórico de Hitos Completados:** Para consultar el detalle técnico y la bitácora de todas las fases y tareas ya finalizadas, consulta [ROADMAP_HISTORICO.md](docs/archive/2026-Q4/ROADMAP_HISTORICO.md).
 
 ---
 
@@ -106,12 +106,12 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 
 ## Fase 5: Marketing, Lanzamiento y Tracción (En Progreso 🔄)
 *Hitos para validar el producto con usuarios reales en Venezuela:*
-- **Subida a Google Play Store (Closed Testing & Solicitud de Producción):** `Pendiente de validación 🧪` 14 días ininterrumpidos completados con 12 evaluadores activos (20/10/2026 - 03/11/2026). Cero bloqueos (crashes) y cero ANR reportados. Cuestionario de evaluación respondido y solicitud de acceso a producción enviada formalmente el 04/11/2026 (en revisión por Google Play). Documentación completa en [`DOC_CUESTIONARIO_PRODUCCION.md`](DOC_CUESTIONARIO_PRODUCCION.md).
+- **Subida a Google Play Store (Closed Testing & Solicitud de Producción):** `Pendiente de validación 🧪` 14 días ininterrumpidos completados con 12 evaluadores activos (20/10/2026 - 03/11/2026). Cero bloqueos (crashes) y cero ANR reportados. Cuestionario de evaluación respondido y solicitud de acceso a producción enviada formalmente el 04/11/2026 (en revisión por Google Play). Documentación completa en [`docs/DOC_CUESTIONARIO_PRODUCCION.md`](docs/DOC_CUESTIONARIO_PRODUCCION.md).
   - **Estado verificado en Play Console al 05/11/2026:** la sección **Producción** aparece como **Inactivo** y el panel muestra *"Hemos recibido tu solicitud de acceso a producción. Estamos revisando tu formulario de solicitud. Enviaremos un correo al propietario de la cuenta con las novedades. Este proceso suele tardar 7 días o menos, pero en ocasiones puede llevar más tiempo."* (solicitud enviada el miércoles 04/11/2026 a las 07:42).
   - **Implicación operativa:** mientras Producción siga `Inactivo` no se puede crear un release de producción. El AAB `1.5.0 (669)` se sube a **prueba cerrada** y se promociona el mismo artefacto cuando Google apruebe.
 - **Código QR de Descarga en Landing (Desktop):** `Pendiente` Incorporar tarjeta con código QR dinámico en `rindemas.cesarluis.com` para escanear e instalar directamente desde una PC.
 - **Correo de Bienvenida Automatizado:** `Pendiente` Disparar correo de bienvenida y guía de primeros pasos cuando el usuario vincule su cuenta de Google (vía trigger de Cloud Functions o Firestore).
-- **Ejecución del Plan de Crecimiento (Primeros 100 Usuarios):** `Pendiente` Despliegue de tácticas comunitarias y orgánicas en grupos venezolanos según `DOC_BITACORA_MARKETING.md` y `.agents/skills/growth-first-100-users/SKILL.md`:
+- **Ejecución del Plan de Crecimiento (Primeros 100 Usuarios):** `Pendiente` Despliegue de tácticas comunitarias y orgánicas en grupos venezolanos según `docs/DOC_BITACORA_MARKETING.md` y `.agents/skills/growth-first-100-users/SKILL.md`:
   - *Post de Victoria en Reddit:* Lanzamiento en `r/vzla` y `r/AskVenezuela` agradeciendo el apoyo de los evaluadores y compartiendo el enlace oficial de Google Play.
   - *Outreach a Micro-Creadores:* Acercamiento directo (cero comercial) a creadores de comparativas de supermercado (Forum, Farmatodo, Makro) y creadoras de gestión del hogar / compras familiares (25-54 años).
   - *Videos Formato F (Dilema del Bolívar):* Capitalizar búsquedas orgánicas de TikTok (*"cómo ahorrar si uno gana en bolívares"*).
@@ -170,7 +170,7 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
     1. **Selector `[ Contado | ⚡ Cashea / Cuotas ]` en captura:** Permite elegir inicial (`60%`, `50%`, `40%`, `20%` o manual) y número de cuotas (`3`, `6`, `9`, `12` cada 14 días) con algoritmo del centavo residual.
     2. **Criterio de Caja + Compromisos Visibles:** Solo la inicial pagada impacta el disponible actual; las cuotas futuras se generan como compromisos en USD con `estado_pago = 'PENDIENTE'` en sus fechas de vencimiento (+14, +28, +42 días), visibles en banner preventivo (*"⚡ Cuotas por pagar este mes"*).
     3. **Liquidación en 1 toque y notificaciones locales:** Avisos locales previos y botón `[ ✓ Pagar cuota ]` que precarga la tasa BCV del día, permite adjuntar captura de Pago Móvil y pasa a `'PAGADO'`.
-    4. **Soporte en IA y Paridad Web:** Detección en voz/OCR e inyección en el Asistente IA. Ver [`DOC_PLAN_CASHEA.md`](DOC_PLAN_CASHEA.md).
+    4. **Soporte en IA y Paridad Web:** Detección en voz/OCR e inyección en el Asistente IA. Ver [`docs/DOC_PLAN_CASHEA.md`](docs/DOC_PLAN_CASHEA.md).
 
 ### Bloque E: Respaldo y Soberanía de Datos (Local-First Backup)
 - `BACKUP-01` **Exportación e Importación Completa con Comprobantes (.zip):** `Pendiente`

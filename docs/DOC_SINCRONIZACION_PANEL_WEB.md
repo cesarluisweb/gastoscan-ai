@@ -1,7 +1,7 @@
 # Documentación Técnica: Sincronización del Registro y Edición de Gastos en Panel Web
 
 > **Estado:** Implementada 🔧 (Pendiente de validación 🧪 tras CI y despliegue a producción).  
-> **Referencia:** Fase 5 de [`DOC_MODERNIZACION_PANEL_WEB.md`](../DOC_MODERNIZACION_PANEL_WEB.md).  
+> **Referencia:** Fase 5 de [`DOC_MODERNIZACION_PANEL_WEB.md`](DOC_MODERNIZACION_PANEL_WEB.md).  
 > **Archivos clave:**  
 > - [`landing/src/pages/panel.astro`](../landing/src/pages/panel.astro)  
 > - [`landing/src/lib/expense-money.js`](../landing/src/lib/expense-money.js)  

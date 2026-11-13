@@ -1,6 +1,6 @@
 ---
 name: revisor-adversarial
-description: Procedimiento de auditoría adversarial pre-CI mediante subagente independiente para detectar bugs reales de ciclo de vida en dispositivo físico (reconciliación de Elements/Keys, pérdida de foco o TextInputConnection, propagación de MediaQuery en Scaffolds anidados, desbordes RenderFlex y cumplimiento de reglas) antes de hacer git push a GitHub Actions.
+description: Auditoría adversarial pre-CI con subagente independiente para detectar bugs de ciclo de vida en dispositivo físico antes de `git push`.
 ---
 
 # Revisor Adversarial Pre-CI (Rinde Más)

@@ -1,118 +1,98 @@
 # Reglas Técnicas del Proyecto (Rinde Más)
 
-## 0. Identidad del Proyecto y Entorno
-- **Nombre y Propósito:** Rinde Más (`AppConstants.appName`) es una aplicación de finanzas personales *Local-First* para Venezuela, enfocada en presupuestos bimonetarios (VES/USD), tasas oficiales del BCV, escaneo OCR de facturas con IA y listas de compras, sin conciliaciones bancarias complejas ni múltiples cuentas.
-- **Stack Tecnológico:** Flutter (Dart), Astro + Tailwind (Web), SQLite (`sqflite`), Firebase Auth y Cloud Firestore, Cloudflare Workers (Gateway de IA), Google Gemini API y GitHub Actions (CI/CD).
-- **Ruta de Trabajo Oficial:** `C:\Development\Control de gastos VE`. Prohibido operar o buscar archivos en rutas del Disco H.
-- **Sin Flutter Local:** El SDK de Flutter NO está instalado en la máquina local del usuario. Todo build, análisis estático y suite de pruebas se ejecuta exclusivamente en la nube mediante GitHub Actions CI.
+## 0. Identidad y Entorno
+- **Producto:** Rinde Más (`AppConstants.appName`), finanzas personales *Local-First* para Venezuela. Presupuestos bimonetarios VES/USD, tasas BCV, OCR con IA y listas de compras. Sin conciliación bancaria ni múltiples cuentas.
+- **Stack:** Flutter (Dart), Astro + Tailwind, SQLite (`sqflite`), Firebase Auth y Firestore, Cloudflare Workers (gateway de IA), Gemini y GitHub Actions.
+- **Ruta oficial:** `C:\Development\Control de gastos VE`. Prohibido operar en rutas del Disco H.
+- **Sin Flutter local:** builds, análisis y pruebas se ejecutan solo en GitHub Actions CI.
 
 ## 1. Entorno PowerShell Seguro (Windows)
-- **Codificación UTF-8 Obligatoria:** Al crear, modificar o leer archivos con PowerShell (`Get-Content`, `Set-Content`, `Out-File`), usar SIEMPRE el parámetro `-Encoding UTF8`. En PowerShell 5.1, `Get-Content` omite UTF-8 y asume ANSI/Windows-1252 por defecto, corrompiendo caracteres con acento (`artículo` → `artÃ­culo`) al reescribirlos. Para normalización de finales de línea (`\r\n` a `\n`), preferir Node.js (`fs.readFileSync(..., 'utf8')`) o las herramientas nativas del agente (`edit_file`, `write_file`).
-- **Prohibición del Operador `>`:** Prohibido usar el operador de redirección `>` en PowerShell (guarda en UTF-16 LE). Usar siempre tuberías: `... | Out-File archivo.ext -Encoding utf8`.
-- **Separador de Comandos en PowerShell 5.1:** Prohibido encadenar comandos con `&&` (provoca `ParserError`). Utilizar siempre el punto y coma `;` o invocar comandos en pasos independientes.
-- **Operaciones Git y Monitoreo de CI en Sandbox de Windows:** Los comandos Git de solo lectura (`status`, `diff`, `log`, `show`) deben ejecutarse en sandbox estándar (`BypassSandbox: false`). Los comandos que mutan el índice o crean archivos de bloqueo en `.git/` (`add`, `commit`, `checkout`, `restore`), los que requieren red (`push`, `fetch`) y el script de monitoreo `scripts/wait_ci.ps1` (que consulta la API REST de GitHub) deben ejecutarse OBLIGATORIAMENTE con `BypassSandbox: true` para evitar fallos de permisos o errores de resolución de red (`ENOTFOUND api.github.com`).
+- **UTF-8 obligatorio:** usa `-Encoding UTF8` en `Get-Content`, `Set-Content` y `Out-File`. PowerShell 5.1 lee ANSI por defecto y corrompe acentos.
+- **Finales de línea:** normaliza con Node.js o con las herramientas del agente, nunca con PowerShell.
+- **Prohibido `>`:** guarda en UTF-16 LE. Usa tuberías con `Out-File archivo -Encoding utf8`.
+- **Prohibido `&&`:** en PowerShell 5.1 provoca `ParserError`. Usa `;` o pasos separados.
+- **Git de solo lectura** (`status`, `diff`, `log`, `show`): sandbox estándar.
+- **Git con escritura** (`add`, `commit`, `checkout`, `restore`), red (`push`, `fetch`) y `scripts/wait_ci.ps1`: sandbox con `BypassSandbox: true`.
 
-## 2. Semáforo Ejecutivo de Autonomía
+## 2. Semáforo Ejecutivo
 
-### 🟢 Siempre (Incondicional):
-- **Monitoreo de CI por Proceso Dormido Único:** Tras cada `git push`, lanzar **una sola** vez `scripts/wait_ci.ps1` en segundo plano (tope 25 min, consulta cada 180 s) y esperar su notificación sin volcar salida intermedia. El script imprime una única línea (`run | conclusion | build | sha`) y solo si falla agrega los steps fallidos y el reporte desde los artefactos de CI. Prohibido `gh run watch` y prohibido consultar el estado turno tras turno. **Presupuesto de API:** sin token GitHub limita a 60 peticiones/hora por IP (agotarlo deja el monitoreo ciego); con `GITHUB_TOKEN` en el entorno se dispone de 5.000/hora y puede bajarse el intervalo a 60 s. Nunca escribir ese token en un archivo versionado. **Excepción de eficiencia:** si `git diff --name-only HEAD~1 HEAD` muestra que el push solo tocó rutas cubiertas por `paths-ignore`, no lanzar el monitor (ese push no genera run). No notificar al usuario hasta confirmar `success` o hasta reportar el fallo con su guía de corrección.
-- **Canal Único de Publicación Web:** GitHub Actions es el único canal autorizado para desplegar la landing page y el panel a producción en Firebase Hosting. Tras el push a `main`, validar vía HTTP que los cambios estén visibles en `https://rindemas.cesarluis.com`.
-- **Idioma y Localización:** Mantener textos de interfaz y respuestas en español neutro/venezolano.
-- **Estilo Técnico Operativo — ASD-STE100 (En Período de Prueba):** En respuestas y explicaciones técnicas del asistente:
-  - Máximo 20 palabras por frase en instrucciones; máximo 25 en descripciones técnicas.
-  - Voz activa estricta (sujeto + verbo de acción).
-  - Una sola instrucción o idea por frase.
-  - Mismo término técnico siempre para el mismo concepto (sin sinónimos decorativos).
-  - Preferir diagramas Mermaid o tablas antes que párrafos de texto explicativo.
-  - *Nota:* Regla en período de prueba temporal; si genera fricción o rigidez innecesaria, se retira.
-- **Contraste y Paleta (`DESIGN.md`):** Fondo amarillo $\rightarrow$ texto SIEMPRE negro (`Colors.black` o `AppColors.textPrimary`). Fondo blanco/claro $\rightarrow$ texto negro o gris, NUNCA amarillo. El amarillo queda reservado exclusivamente para iconos, contenedores con texto negro y bordes de acento activo.
-- **Protocolo de Memoria:** Consultar `MEMORY.md` al iniciar una tarea y actualizarlo al finalizarla.
-- **Auditoría de Reglas (`scripts/check_rules.ps1`):** Al crear o modificar archivos en `.agents/rules/`, `.agents/skills/` o `AGENTS.md`, ejecutar obligatoriamente `powershell -ExecutionPolicy Bypass -File scripts/check_rules.ps1` y confirmar que no existan errores antes de commitear o cerrar la tarea.
-- **Iteración Rápida:** Romper el análisis e iterar hacia la acción (editar/probar) en un máximo de 2 lecturas por bloque de código.
+### 🟢 Siempre
+- **CI por proceso dormido único:** tras cada `git push`, lanza una sola vez `scripts/wait_ci.ps1` en segundo plano (tope 25 min, cada 180 s). Prohibido `gh run watch` y consultar turno tras turno. **API:** sin token son 60 peticiones/hora por IP; con `GITHUB_TOKEN` son 5.000/hora. Nunca escribas el token en un archivo versionado. **Excepción:** si el push solo tocó rutas de `paths-ignore`, no lances el monitor.
+- **Sin cantar victoria:** no anuncies éxito hasta `conclusion: success`. Si falla, reporta el fallo con su guía de corrección.
+- **Publicación web:** solo GitHub Actions despliega landing y panel. Tras el push a `main`, valida por HTTP `https://rindemas.cesarluis.com`.
+- **Idioma:** interfaz y respuestas en español neutro/venezolano.
+- **Estilo técnico ASD-STE100 (en prueba):** máximo 20 palabras por frase en instrucciones; 25 en descripciones. Voz activa, una idea por frase, un término por concepto. Prefiere tablas o Mermaid.
+- **Contraste:** fondo amarillo → texto negro. Fondo claro → texto negro o gris, nunca amarillo (ver `DESIGN.md`).
+- **Memoria:** lee `MEMORY.md` al iniciar y actualízalo al terminar.
+- **Auditoría de reglas:** tras editar `AGENTS.md`, `.agents/rules/` o `.agents/skills/`, ejecuta `scripts/check_rules.ps1` sin errores.
+- **Iteración rápida:** máximo 2 lecturas por bloque de código antes de editar o probar.
+- **Ahorro de contexto:** lee `docs/INDEX.md` antes de buscar documentación. Nunca leas `docs/archive/`, `scripts/legacy/`, `build_artifacts/` ni `node_modules`.
 
-### ⚠️ Pregunta antes (Consultar a César):
-- Añadir, eliminar o actualizar dependencias en `pubspec.yaml` o `package.json` (instalar existentes con `npm install` está permitido).
-- Modificar esquemas de datos (tablas SQLite, índices, colecciones o reglas de Firestore).
-- Cambiar la arquitectura de navegación principal o flujos de autenticación.
-- Eliminar archivos existentes de código o documentación.
-- Alternar la visibilidad del repositorio (actualmente **Público** durante el desarrollo; debe volver a **Privado** al terminar) sin autorización explícita de César.
-- Al realizar cambios significativos en formularios, flujos de registro, reglas de negocio o cálculo financiero en la app Flutter, **preguntar explícitamente a César** si también deben sincronizarse y adaptarse al panel web antes de dar por cerrada la tarea.
+### ⚠️ Pregunta antes (a César)
+- Añadir, quitar o actualizar dependencias en `pubspec.yaml` o `package.json`.
+- Cambiar esquemas SQLite, índices, colecciones o reglas de Firestore.
+- Cambiar la navegación principal o los flujos de autenticación.
+- Eliminar archivos de código o documentación.
+- Alternar la visibilidad del repositorio (hoy público; vuelve a privado al terminar).
+- Sincronizar al panel web cambios de formularios, flujos, reglas de negocio o cálculo financiero.
 
-### 🚫 Nunca (Prohibiciones estrictas en una línea):
-- Modificar archivos en `android/` de forma manual o local (CI los regenera).
-- Usar el operador `>` o el operador `&&` en PowerShell.
-- Cantar victoria o decir que la app "está lista para descargar" tras un commit sin confirmar CI en verde.
-- Ejecutar `firebase deploy` en local salvo emergencia técnica expresa autorizada por César.
-- Alojar archivos binarios `.apk` en `landing/public/` o `landing/dist/` (Firebase Spark los bloquea con HTTP 400).
-- Usar dominios con proxy naranja de Cloudflare como `FTP_SERVER` en CI/CD (bloquea el puerto 21 de FTP).
-- Introducir conciliación bancaria o microgestión de múltiples cuentas (anti-filosofía de Rinde Más).
-- Utilizar ratios de cambio cableados o asumir paridad 1:1 entre divisas (salvo la paridad directa USD/USDT según `dinero-datos.md`).
-- Inventar categorías fuera de las 10 canónicas oficiales de `AppConstants.categorias`.
-- Implementar cobros digitales dentro de la app Android fuera de Google Play Billing (riesgo de suspensión de cuenta).
-- Prometer paquetes de IA vitalicia ilimitada en planes o microcopy.
-- Escribir contraseñas, tokens o API keys en texto plano en archivos versionados por git.
-- Afirmar que los datos se guardan en el "Google Drive personal" o saturar la interfaz con tecnicismos como "Firebase".
-- Ejecutar bucles de relectura redundante (`view_file` más de 2 veces sobre el mismo rango sin cambios intermedios).
-- Descargar el log completo de un job de CI (devuelve HTTP 403 en repositorio privado y es de tamaño enorme) o iterar consultas de estado al API de GitHub. Ante fallo, extraer solo los steps con `conclusion == failure` y el log del artefacto correspondiente mediante `scripts/wait_ci.ps1` o la API de GitHub Actions.
-- Silenciar excepciones en bloques `catch (_) {}` sin registrar el error en capas críticas (red, base de datos, `SharedPreferences`, autenticación o pasarela de IA).
-- Activar ofuscación o reescritura de bytecode en la capa Java/Kotlin en CI (`-dontobfuscate`, `-dontoptimize` y preservación de `-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod` son obligatorios).
-- Ignorar o eliminar `pubspec.lock` del control de versiones (debe permanecer siempre versionado para garantizar compilaciones idénticas en CI y local).
-- Exponer trazas de error técnicas o `PlatformException` directamente al usuario final en la interfaz gráfica.
+### 🚫 Nunca
+- Editar `android/` a mano: CI lo regenera.
+- Usar `>` o `&&` en PowerShell.
+- Declarar la app lista para descargar sin CI en verde.
+- Ejecutar `firebase deploy` local sin emergencia autorizada.
+- Alojar `.apk` en `landing/public/` o `landing/dist/`: Firebase Spark responde HTTP 400.
+- Usar como `FTP_SERVER` un dominio con proxy naranja de Cloudflare: bloquea el puerto 21.
+- Introducir conciliación bancaria o microgestión de múltiples cuentas.
+- Cablear ratios de cambio o asumir paridad 1:1 (solo USD/USDT).
+- Inventar categorías fuera de las 10 de `AppConstants.categorias`.
+- Implementar cobros digitales fuera de Google Play Billing.
+- Prometer paquetes de IA vitalicia ilimitada.
+- Escribir contraseñas, tokens o API keys en archivos versionados.
+- Afirmar que los datos van al "Google Drive personal" ni saturar con "Firebase".
+- Releer el mismo rango más de 2 veces sin cambios intermedios.
+- Descargar el log completo de un job (HTTP 403) ni iterar consultas al API de GitHub.
+- Silenciar excepciones con `catch (_) {}` en red, base de datos, `SharedPreferences`, autenticación o gateway de IA.
+- Activar ofuscación o reescritura de bytecode: obligatorios `-dontobfuscate`, `-dontoptimize` y `-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod`.
+- Ignorar o eliminar `pubspec.lock`.
+- Exponer trazas de error o `PlatformException` al usuario final.
 
-## 3. Protocolo de Memoria Dinámica (`MEMORY.md`)
-1. **Al iniciar:** Leer `MEMORY.md` para situarse en el estado inmediato de trabajo.
-2. **Al finalizar:** Actualizar `MEMORY.md` con el estado final, decisiones tomadas y errores a evitar.
-3. **Brevedad Estricta:** Mantener `MEMORY.md` en máximo ~50 líneas, depurando apuntes obsoletos.
-4. **Graduación Obligatoria:** Si una lección o patrón se vuelve permanente, moverlo al archivo definitivo correspondiente (`AGENTS.md`, `DESIGN.md`, `PROJECT.md` o `.agents/rules/`) y eliminarlo de `MEMORY.md`.
-5. **Prohibido Anotar Solo en MEMORY.md:** Cuando César pida 'anotar algo', registrarlo de inmediato en su documento definitivo. `MEMORY.md` es solo un borrador volátil de trabajo inmediato.
+## 3. Memoria Dinámica (`MEMORY.md`)
+1. Lee `MEMORY.md` al iniciar la tarea.
+2. Actualízalo al terminar: estado, decisiones y errores.
+3. Máximo ~50 líneas y una idea por línea. Depura lo obsoleto.
+4. Si una lección es permanente, muévela a `AGENTS.md`, `DESIGN.md`, `PROJECT.md` o `.agents/rules/`.
+5. Si César pide dejar algo por escrito, usa el documento definitivo, no solo `MEMORY.md`.
 
-## 4. Protocolo de Documentación y ROADMAP
+## 4. Documentación y ROADMAP
 
-### Estados Oficiales de Tareas en `ROADMAP.md`:
-- `Pendiente`: Tarea planificada no iniciada.
-- `Implementada 🔧`: Código commiteado en `main` y CI en curso o aún no confirmado en verde.
-- `Pendiente de validación 🧪`: CI en verde (`conclusion: success`). Las pruebas manuales en dispositivo físico se realizan exclusivamente descargando el artefacto `rindemas-dev-apk` (*Rinde Más Dev*), preservando intacta la app oficial de Google Play en el teléfono de César.
-- `Completada ✅`:
-  - **Tareas no críticas:** El agente puede marcarla cuando CI esté en verde y se hayan completado las verificaciones técnicas. Si requiere prueba en dispositivo no cubierta por CI, mantenerla en 🧪 y avisar a César.
-  - **Tareas críticas:** El agente se detiene obligatoriamente en `Pendiente de validación 🧪`. **Solo César marca `Completada ✅`** tras su visto bueno explícito en *Rinde Más Dev*. La promoción a Google Play Console se realiza utilizando el artefacto `app-release-aab` generado en esa misma corrida de GitHub Actions.
+| Estado | Significado |
+|---|---|
+| `Pendiente` | Planificada, sin iniciar |
+| `Implementada 🔧` | Commiteada en `main`; CI en curso o sin verificar |
+| `Pendiente de validación 🧪` | CI en verde; falta prueba en dispositivo |
+| `Completada ✅` | Aprobada |
 
-### Definición Estricta de Tareas Críticas:
-Se considera Tarea Crítica cualquier cambio que involucre:
-1. Dinero, monedas (VES/USD/EUR/USDT), tasas de cambio o cálculos financieros.
-2. Autenticación, sesiones y manejo de credenciales o tokens.
-3. Esquemas de datos (migraciones SQLite, índices, colecciones o reglas de Firestore).
-4. Sincronización en la nube (`SyncService`) y borrado de cuentas o purga de datos.
-5. Refactorizaciones que afecten a dos o más subsistemas simultáneamente (móvil, web, Cloudflare Worker).
-6. Monetización: Google Play Billing, anuncios (Better Ads), cuotas de IA y planes.
-7. Publicación: releases del APK/AAB a Play Store y cambios de configuración de hosting o dominios.
-8. Flujos de usuario de onboarding, login/vinculación y escaneo/revisión de compras.
-9. Modificaciones que afecten afirmaciones públicas sobre privacidad, seguridad, tratamiento de datos, términos, precios, límites o promesas a usuarios.
+- **Tarea crítica:** dinero, auth, esquemas de datos, sincronización, refactor multi-subsistema, monetización, publicación, onboarding/login/escaneo o afirmaciones públicas. Se detiene en 🧪 y solo César la marca ✅.
+- **Documento técnico:** toda tarea crítica deja un `DOC_*.md` en `docs/` con guía de pruebas.
+- **Guía de pruebas válida:** cita archivo:línea real de `lib/ui/`, ruta alcanzable, SHA y número de build. Prohibido inventar controles a partir de servicios o modelos.
+- **No críticas:** el agente puede marcarlas ✅ si CI está en verde.
 
-*Protocolo para Tareas Críticas:* Registrar los cambios en un documento técnico dedicado (`DOC_*.md`), proveer a César una guía de pruebas paso a paso y esperar su visto bueno antes de dar por cerrada la tarea.
-
-*Validación de Guías de Pruebas en Dispositivo:* Antes de redactar cualquier guía de pruebas paso a paso en dispositivo físico, el asistente debe inspeccionar el código fuente de los widgets en `lib/ui/` y aportar evidencia archivo:línea de que cada menú, ruta y campo descrito existe físicamente en la build que se va a instalar. Queda prohibido presuponer controles visuales a partir de métodos de servicios, proveedores o modelos. Se considera inválida cualquier guía que:
-1. Nombre un control cuyo `onTap`/`onPressed`/`TextField` no exista en `lib/ui/`.
-2. Describa una ruta sin verificar que es alcanzable (navegación real, sin feature flag ni condicional que la oculte).
-3. No indique el SHA del commit y el número de build del artefacto que se está probando.
-4. Referencie un método (p. ej. `SettingsProvider.setTasaCambio`) sin listar sus llamadores reales vía búsqueda en `lib/ui/`. Si la lista de llamadores está vacía, el flujo no es probable en dispositivo y debe declararse como tal, no maquetarse como instrucción.
-
-## 5. Índice de Consulta Directa ("Si vas a hacer X, consulta Y")
-
-Antes de ejecutar tareas en áreas específicas, consulta la regla modular o skill correspondiente:
-
-- **Código Dart, maquetación de widgets, imports o modelos:** Consulta [`.agents/rules/flutter-desarrollo.md`](./.agents/rules/flutter-desarrollo.md).
-- **Pruebas unitarias, de widgets, fakes o mocks en Dart:** Consulta [`.agents/rules/flutter-testing.md`](./.agents/rules/flutter-testing.md).
-- **Auditoría adversarial antes de compilar en CI (`git push`):** Ejecuta la skill [`.agents/skills/revisor-adversarial/SKILL.md`](./.agents/skills/revisor-adversarial/SKILL.md).
-- **Landing page, panel web, Astro o `firebase.json`:** Consulta [`.agents/rules/web.md`](./.agents/rules/web.md).
-- **Compilar y publicar la landing o panel web:** Ejecuta la skill [`.agents/skills/desplegar-landing/SKILL.md`](./.agents/skills/desplegar-landing/SKILL.md).
-- **Pipeline de CI/CD, inyección en Android o distribución de artefactos:** Consulta [`.agents/rules/ci-distribucion.md`](./.agents/rules/ci-distribucion.md).
-- **Diagnosticar fallos de CI o leer reportes de tests remotos:** Ejecuta la skill [`.agents/skills/diagnosticar-ci/SKILL.md`](./.agents/skills/diagnosticar-ci/SKILL.md).
-- **Cloudflare Worker, autenticación JWT de Firebase o endpoints de IA:** Consulta [`.agents/rules/gateway-cloudflare.md`](./.agents/rules/gateway-cloudflare.md).
-- **Montos, monedas, tasas, presupuestos mensuales o categorías:** Consulta [`.agents/rules/dinero-datos.md`](./.agents/rules/dinero-datos.md).
-- **Extracción OCR con Gemini, prompts de IA, voz o desambiguación:** Consulta [`.agents/rules/ia-ocr-voz.md`](./.agents/rules/ia-ocr-voz.md).
-- **Autenticación, Firestore, almacenamiento local o privacidad:** Consulta [`.agents/rules/privacidad-seguridad.md`](./.agents/rules/privacidad-seguridad.md).
-- **Textos de interfaz, modales, notificaciones o microcopy de facturas:** Consulta [`.agents/rules/marca-terminologia.md`](./.agents/rules/marca-terminologia.md).
-- **Respuestas para comunidades (Reddit), soporte o marketing:** Consulta [`.agents/rules/comunicacion-marketing.md`](./.agents/rules/comunicacion-marketing.md) y la skill [`.agents/skills/respuestas-comunidad/SKILL.md`](./.agents/skills/respuestas-comunidad/SKILL.md).
-- **Cuotas de Gemini, modelos vigentes o IDs operativos:** Consulta [`docs/GATEWAY.md`](./docs/GATEWAY.md).
-- **Modelo de negocio, visión estratégica y roadmap:** Consulta [`PROJECT.md`](./PROJECT.md) y [`ROADMAP.md`](./ROADMAP.md).
-- **Tokens de interfaz y reglas visuales:** Consulta [`DESIGN.md`](./DESIGN.md).
+## 5. Índice de Consulta Directa
+- **Documentación y rutas:** [`docs/INDEX.md`](./docs/INDEX.md).
+- **Código Dart, widgets, importaciones:** [`.agents/rules/flutter-desarrollo.md`](./.agents/rules/flutter-desarrollo.md).
+- **Pruebas, fakes y mocks:** [`.agents/rules/flutter-testing.md`](./.agents/rules/flutter-testing.md).
+- **Auditoría adversarial pre-push:** [`.agents/skills/revisor-adversarial/SKILL.md`](./.agents/skills/revisor-adversarial/SKILL.md).
+- **Landing, panel, Astro o `firebase.json`:** [`.agents/rules/web.md`](./.agents/rules/web.md).
+- **Compilar y publicar web:** [`.agents/skills/desplegar-landing/SKILL.md`](./.agents/skills/desplegar-landing/SKILL.md).
+- **CI/CD, inyección Android y artefactos:** [`.agents/rules/ci-distribucion.md`](./.agents/rules/ci-distribucion.md).
+- **Diagnosticar CI:** [`.agents/skills/diagnosticar-ci/SKILL.md`](./.agents/skills/diagnosticar-ci/SKILL.md).
+- **Cloudflare Worker, JWT y endpoints de IA:** [`.agents/rules/gateway-cloudflare.md`](./.agents/rules/gateway-cloudflare.md).
+- **Montos, monedas, tasas y presupuestos:** [`.agents/rules/dinero-datos.md`](./.agents/rules/dinero-datos.md).
+- **OCR, prompts y voz:** [`.agents/rules/ia-ocr-voz.md`](./.agents/rules/ia-ocr-voz.md).
+- **Auth, Firestore, SQLite y privacidad:** [`.agents/rules/privacidad-seguridad.md`](./.agents/rules/privacidad-seguridad.md).
+- **Textos de interfaz y microcopy:** [`.agents/rules/marca-terminologia.md`](./.agents/rules/marca-terminologia.md).
+- **Comunidad, soporte y marketing:** [`.agents/rules/comunicacion-marketing.md`](./.agents/rules/comunicacion-marketing.md) y [`.agents/skills/respuestas-comunidad/SKILL.md`](./.agents/skills/respuestas-comunidad/SKILL.md).
+- **Cuotas de Gemini y modelos:** [`docs/GATEWAY.md`](./docs/GATEWAY.md).
+- **Negocio, visión y roadmap:** [`PROJECT.md`](./PROJECT.md) y [`ROADMAP.md`](./ROADMAP.md).
+- **Tokens de interfaz:** [`DESIGN.md`](./DESIGN.md).

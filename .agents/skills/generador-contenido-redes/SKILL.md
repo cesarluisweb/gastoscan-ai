@@ -144,4 +144,4 @@ Al redactar un guión para César, utilizar siempre esta estructura tabular:
 ## 6. Registro Obligatorio
 
 Toda publicación, reacción destacada o aprendizaje recopilado en redes o comunidades debe registrarse en:
-`DOC_BITACORA_MARKETING.md`
+`docs/DOC_BITACORA_MARKETING.md`

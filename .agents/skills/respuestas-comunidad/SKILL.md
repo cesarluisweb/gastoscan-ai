@@ -64,4 +64,4 @@ Esta habilidad se activa al preparar mensajes para usuarios, publicaciones en Re
 
 ## 3. Registro Obligatorio en Bitácora
 Tras interactuar en comunidades, registrar el enlace, la reacción del usuario y el aprendizaje obtenido en:
-`DOC_BITACORA_MARKETING.md`
+`docs/DOC_BITACORA_MARKETING.md`

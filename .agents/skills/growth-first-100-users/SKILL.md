@@ -60,7 +60,7 @@ Google Play exige para cuentas personales nuevas creadas después de noviembre d
    * Enlace en tienda: `https://play.google.com/store/apps/details?id=com.cesarluis.rindemas`
 
 ### Bitácora Obligatoria para Solicitud de Producción (Apply for Production)
-Al finalizar los 14 días, Google evaluará la solicitud mediante un formulario obligatorio. Se debe llevar registro activo continuo en [`DOC_CUESTIONARIO_PRODUCCION.md`](../../DOC_CUESTIONARIO_PRODUCCION.md):
+Al finalizar los 14 días, Google evaluará la solicitud mediante un formulario obligatorio. Se debe llevar registro activo continuo en [`docs/DOC_CUESTIONARIO_PRODUCCION.md`](../../../docs/DOC_CUESTIONARIO_PRODUCCION.md):
 1. **Dispositivos reales evaluados:** Registrar modelos exactos reportados por evaluadores (ej. Redmi Note 11S, Samsung Galaxy, etc.).
 2. **Uso real de funciones principales:** Pruebas de persistencia local en SQLite, filtros por mes, escaneo de facturas con IA, cálculo de tasas BCV/P2P y presupuestos mensuales.
 3. **Feedback recopilado y fallos reportados:** Respuestas de evaluadores, capturas enviadas y confirmación de estabilidad (cero crashes).
@@ -84,7 +84,7 @@ Para evitar que los evaluadores desinstalen la app o sientan saturación de mens
 
 El 70% de las descargas en utilidades provienen de personas buscando palabras exactas en el buscador de la tienda.
 
-* **Ficha Oficial para Google Play:** Consultar y copiar los textos definitivos de título, descripción breve, descripción completa y formulario Data Safety desde [`FICHA_GOOGLE_PLAY.md`](../../FICHA_GOOGLE_PLAY.md) en la raíz del repositorio.
+* **Ficha Oficial para Google Play:** Consultar y copiar los textos definitivos de título, descripción breve, descripción completa y formulario Data Safety desde [`docs/FICHA_GOOGLE_PLAY.md`](../../../docs/FICHA_GOOGLE_PLAY.md) en la carpeta `docs/`.
 
 ### Palabras Clave de Búsqueda Frecuente
 * `control de gastos venezuela`

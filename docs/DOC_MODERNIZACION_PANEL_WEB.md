@@ -1,7 +1,7 @@
 # Modernización y Paridad del Panel Web (Rinde Más)
 
 ## 1. Contexto y Objetivos
-El panel web de Rinde Más ([`landing/src/pages/panel.astro`](./landing/src/pages/panel.astro)) permite a los usuarios acceder a sus finanzas, presupuestos mensuales y desgloses de facturas desde cualquier navegador en PC, Mac o iPhone. Con las mejoras recientes en la app móvil (soporte multimoneda, presupuesto con meta de ahorro y motor determinista de proyección de gasto), el panel web requería actualización para mantener paridad estricta y evitar sobreescritura de datos en Firestore.
+El panel web de Rinde Más ([`landing/src/pages/panel.astro`](../landing/src/pages/panel.astro)) permite a los usuarios acceder a sus finanzas, presupuestos mensuales y desgloses de facturas desde cualquier navegador en PC, Mac o iPhone. Con las mejoras recientes en la app móvil (soporte multimoneda, presupuesto con meta de ahorro y motor determinista de proyección de gasto), el panel web requería actualización para mantener paridad estricta y evitar sobreescritura de datos en Firestore.
 
 ---
 
