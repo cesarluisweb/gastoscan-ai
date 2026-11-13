@@ -8,7 +8,8 @@
 - **Mapa de código:** `docs/CODE_MAP.md` se regenera con `node scripts/gen_code_map.js`; el hook de pre-commit lo actualiza.
 
 ## Tareas en Curso
-- **E0-05b (diagnóstico Q01..Q20):** `Implementada 🔧` en working tree (`lib/domain/diagnostics/`, `tool/diagnose_sqlite.dart`, `test/diagnostics/`). Pendiente de commit/push/CI.
+- **E0-05b (diagnóstico Q01..Q20):** `Implementada 🔧` en `d420282` (CI en curso).
+- **B1 (reglas Firestore):** `Implementada 🔧` en working tree (`firestore.rules`, `test_rules.yml`, `audit_firestore.yml`, `A-11-bis`). Pendiente de CI, auditoría y despliegue manual.
 - **Pendientes de cierre administrativo:** firma P0 (rotar upload key tras aprobar Producción) y solicitud de Producción en Google Play.
 
 ## Completadas

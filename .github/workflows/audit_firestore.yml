@@ -1,0 +1,29 @@
+name: Auditar Firestore en Produccion (Solo Lectura)
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit-firestore:
+    name: Auditoria Read-Only de Produccion
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependencias de auditoria
+        run: npm install --prefix scripts/audit_firestore
+
+      - name: Ejecutar auditoria solo lectura (sin PII)
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa-readonly.json
+        run: |
+          printf '%s' '${{ secrets.FIREBASE_SA_READONLY_JSON }}' > "$GOOGLE_APPLICATION_CREDENTIALS"
+          npm --prefix scripts/audit_firestore run audit
+          rm -f "$GOOGLE_APPLICATION_CREDENTIALS"

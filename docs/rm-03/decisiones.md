@@ -120,6 +120,14 @@
 - **Restricciones:** Prohibido modificar `firestore.rules` durante la Fase 0A. Documentar formalmente que la contención en la nube queda pendiente de esta fase posterior.
 - **Fase de aplicación:** Fase C (posterior a Fase 0).
 
+### A-11-bis — Enmienda: Adelanto de endurecimiento `B1` en `firestore.rules`
+
+- **Identificador:** `A-11-bis`
+- **Decisión aprobada:** Se adelanta el endurecimiento de `firestore.rules` (`B1`) tras completar `E0-01..E0-04`, **sin imponer versión mínima de cliente (`min_supported_app_version`)**.
+- **Alcance:** `firestore.rules` (`/users/{uid}/gastos/{gastoId}`, `/users/{uid}/presupuestos/{presupuestoId}`, `/config/recordatorios`).
+- **Restricciones:** Las reglas de `update` validan `diff(resource.data).affectedKeys()` para no romper documentos legacy; la imposición de `min_supported_app_version` y el retiro del campo legacy `synced` permanecen diferidos a Fase C.
+- **Aprobación:** Autorizada explícitamente por César el 13/11/2026.
+
 ---
 
 ### A-12 — Habilitación de la Fase 0B (Guardado sin tasa con sincronización)

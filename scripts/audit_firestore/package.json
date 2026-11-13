@@ -1,0 +1,12 @@
+{
+  "name": "rindemas-firestore-audit",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "audit": "node audit.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.7.0"
+  }
+}

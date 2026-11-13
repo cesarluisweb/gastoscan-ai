@@ -100,7 +100,7 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 
 | Ítem / Área | Prioridad | Estado | Detalle |
 | :--- | :---: | :---: | :--- |
-| **Endurecimiento de reglas de Firestore (`B1`)** | P0 | `Pendiente` | Plan completo en `docs/DOC_REGLAS_FIRESTORE_B1.md`; requiere sesión dedicada con emulador. |
+| **Endurecimiento de reglas de Firestore (`B1`)** | P0 | `Implementada 🔧` | Reglas endurecidas con `diff()` en `firestore.rules`, suite `RT-01..RT-24` (`test_rules.yml`) y auditoría read-only (`audit_firestore.yml`). Pendiente de CI y despliegue manual. |
 | **Búsqueda histórica eficiente (tabla normalizada)** | P2 | `Pendiente` | Condicionado a métricas en dispositivo > 300 ms. |
 | **Crear `ShoppingListProvider` / Repository** | P2 | `Pendiente` | Desacoplar pantallas y chat de llamadas directas a `DatabaseHelper.instance`. |
 | **Actualizar `README.md` a la realidad** | P2 | `Pendiente` | Sigue listando Cloud Functions y archivos inexistentes del proyecto inicial. |

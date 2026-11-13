@@ -1,12 +1,141 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /users/{userId}/gastos/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+    // Nota de migración: las reglas usan rutas exactas (sin comodín recursivo {document=**}).
+    // No existen subcolecciones bajo gastos ni presupuestos en Flutter ni en el panel web.
+
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
     }
-    match /users/{userId}/presupuestos/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    function esFechaISO(v) {
+      return v is string && v.matches('^\\d{4}-\\d{2}-\\d{2}$');
     }
+    function esCentavos(v) {
+      return v is int && v >= 0 && v <= 100000000000;
+    }
+    function esTasa(v) {
+      return v is number && v >= 0.0 && v <= 1000000000.0;
+    }
+    function esMoneda(v) {
+      return v in ['VES', 'USD', 'EUR', 'USDT'];
+    }
+    function esCategoria(v) {
+      return v in ['Alimentación', 'Salud', 'Higiene', 'Educación', 'Hogar',
+                   'Servicios', 'Transporte', 'Ropa', 'Entretenimiento', 'Otros'];
+    }
+
+    // Fuente: GastoFirestoreMapper.toPayload + panel.astro:3385-3404
+    // Nota: 'synced' es un campo legacy escrito por panel.astro; se retirará en Fase C.
+    function clavesGasto() {
+      return ['uuid', 'fecha', 'comercio', 'moneda', 'total_original', 'total_usd',
+              'total_usdt', 'total_eur', 'tasa_cambio', 'tasa_usdt', 'tasa_eur',
+              'metodo_liquidacion', 'fuente_tasa_cambio', 'fecha_tasa_cambio',
+              'categoria', 'items', 'creado_en', 'actualizado_en', 'eliminado_en',
+              'ocr_text', 'synced'];
+    }
+
+    match /users/{uid}/gastos/{gastoId} {
+      allow read, delete: if isOwner(uid);
+
+      allow create: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(clavesGasto())
+        && request.resource.data.uuid is string
+        && request.resource.data.uuid == gastoId
+        && request.resource.data.uuid.size() <= 64
+        && esFechaISO(request.resource.data.fecha)
+        && request.resource.data.comercio is string
+        && request.resource.data.comercio.size() <= 300
+        && esMoneda(request.resource.data.moneda)
+        && esCentavos(request.resource.data.total_original)
+        && esCentavos(request.resource.data.total_usd)
+        && esCategoria(request.resource.data.categoria)
+        && request.resource.data.items is list
+        && request.resource.data.items.size() <= 500
+        && esTasa(request.resource.data.tasa_cambio)
+        && request.resource.data.creado_en is string
+        && request.resource.data.creado_en.size() <= 40;
+
+      allow update: if isOwner(uid) && gastoUpdateValido(gastoId);
+    }
+
+    function gastoUpdateValido(gastoId) {
+      let d = request.resource.data;
+      let c = d.diff(resource.data).affectedKeys();
+      return c.hasOnly(clavesGasto())
+        && (!c.hasAny(['uuid']) || (d.uuid is string && d.uuid == gastoId && d.uuid.size() <= 64))
+        && (!c.hasAny(['creado_en']) || !('creado_en' in resource.data) || d.creado_en == resource.data.creado_en)
+        && (!c.hasAny(['fecha']) || esFechaISO(d.fecha))
+        && (!c.hasAny(['comercio']) || (d.comercio is string && d.comercio.size() <= 300))
+        && (!c.hasAny(['moneda']) || esMoneda(d.moneda))
+        && (!c.hasAny(['categoria']) || esCategoria(d.categoria))
+        && (!c.hasAny(['total_original']) || esCentavos(d.total_original))
+        && (!c.hasAny(['total_usd']) || esCentavos(d.total_usd))
+        && (!c.hasAny(['total_usdt']) || d.total_usdt == null || esCentavos(d.total_usdt))
+        && (!c.hasAny(['total_eur']) || d.total_eur == null || esCentavos(d.total_eur))
+        && (!c.hasAny(['tasa_cambio']) || esTasa(d.tasa_cambio))
+        && (!c.hasAny(['tasa_usdt']) || d.tasa_usdt == null || esTasa(d.tasa_usdt))
+        && (!c.hasAny(['tasa_eur']) || d.tasa_eur == null || esTasa(d.tasa_eur))
+        && (!c.hasAny(['metodo_liquidacion']) || d.metodo_liquidacion == null
+              || d.metodo_liquidacion in ['DIVISA', 'BS_BCV', 'BS_USDT'])
+        && (!c.hasAny(['fuente_tasa_cambio']) || d.fuente_tasa_cambio == null
+              || (d.fuente_tasa_cambio is string && d.fuente_tasa_cambio.size() <= 120))
+        && (!c.hasAny(['fecha_tasa_cambio']) || d.fecha_tasa_cambio == null
+              || (d.fecha_tasa_cambio is string && d.fecha_tasa_cambio.size() <= 64))
+        && (!c.hasAny(['items']) || (d.items is list && d.items.size() <= 500))
+        && (!c.hasAny(['ocr_text']) || d.ocr_text == null
+              || (d.ocr_text is string && d.ocr_text.size() <= 100000))
+        && (!c.hasAny(['eliminado_en']) || d.eliminado_en == null
+              || (d.eliminado_en is string && d.eliminado_en.size() <= 40))
+        && (!c.hasAny(['actualizado_en']) || (d.actualizado_en is string && d.actualizado_en.size() <= 40))
+        && (!c.hasAny(['synced']) || (d.synced is int && (d.synced == 0 || d.synced == 1)));
+    }
+
+    match /users/{uid}/presupuestos/{presupuestoId} {
+      allow read, delete: if isOwner(uid);
+      allow create: if isOwner(uid) && presupuestoCreateValido(presupuestoId);
+      allow update: if isOwner(uid) && presupuestoUpdateValido(presupuestoId);
+    }
+
+    function clavesPresupuesto() {
+      return ['anio', 'mes', 'presupuesto_general', 'meta_ahorro', 'moneda',
+              'categorias', 'actualizado_en'];
+    }
+    function camposPresupuesto(d) {
+      return d.anio is int && d.anio >= 2020 && d.anio <= 2100
+        && d.mes is int && d.mes >= 1 && d.mes <= 12
+        && d.presupuesto_general is number && d.presupuesto_general >= 0
+        && d.presupuesto_general <= 1000000000
+        && d.meta_ahorro is number && d.meta_ahorro >= 0
+        && d.meta_ahorro <= 1000000000
+        && esMoneda(d.moneda)
+        && d.categorias is map
+        && d.categorias.size() <= 10
+        && d.categorias.keys().hasOnly(['Alimentación', 'Salud', 'Higiene', 'Educación', 'Hogar',
+                                        'Servicios', 'Transporte', 'Ropa', 'Entretenimiento', 'Otros'])
+        && d.actualizado_en is string && d.actualizado_en.size() <= 40;
+    }
+    function presupuestoCreateValido(pid) {
+      return pid.matches('^\\d{4}_\\d{2}$')
+        && request.resource.data.keys().hasOnly(clavesPresupuesto())
+        && camposPresupuesto(request.resource.data);
+    }
+    function presupuestoUpdateValido(pid) {
+      let d = request.resource.data;
+      let c = d.diff(resource.data).affectedKeys();
+      return pid.matches('^\\d{4}_\\d{2}$')
+        && c.hasOnly(clavesPresupuesto())
+        && (!c.hasAny(['anio']) || (d.anio is int && d.anio >= 2020 && d.anio <= 2100))
+        && (!c.hasAny(['mes']) || (d.mes is int && d.mes >= 1 && d.mes <= 12))
+        && (!c.hasAny(['presupuesto_general']) || (d.presupuesto_general is number && d.presupuesto_general >= 0 && d.presupuesto_general <= 1000000000))
+        && (!c.hasAny(['meta_ahorro']) || (d.meta_ahorro is number && d.meta_ahorro >= 0 && d.meta_ahorro <= 1000000000))
+        && (!c.hasAny(['moneda']) || esMoneda(d.moneda))
+        && (!c.hasAny(['categorias']) || (d.categorias is map && d.categorias.size() <= 10
+              && d.categorias.keys().hasOnly(['Alimentación', 'Salud', 'Higiene', 'Educación', 'Hogar',
+                                              'Servicios', 'Transporte', 'Ropa', 'Entretenimiento', 'Otros'])))
+        && (!c.hasAny(['actualizado_en']) || (d.actualizado_en is string && d.actualizado_en.size() <= 40));
+    }
+
     match /config/recordatorios {
       allow read: if request.auth != null;
       allow write: if false;

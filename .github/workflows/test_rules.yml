@@ -1,0 +1,45 @@
+name: Probar Reglas de Firestore (Emulador)
+on:
+  push:
+    paths:
+      - 'firestore.rules'
+      - 'firebase.json'
+      - 'test/firestore_rules/**'
+      - 'lib/data/models/gasto_firestore_mapper.dart'
+      - 'lib/data/datasources/remote/**'
+      - 'lib/services/sync_service.dart'
+      - 'landing/src/pages/panel.astro'
+  pull_request:
+    paths:
+      - 'firestore.rules'
+      - 'firebase.json'
+      - 'test/firestore_rules/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-rules:
+    name: Firestore Emulator Tests (RT-01..RT-24)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'test/firestore_rules/package.json'
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Instalar dependencias de prueba
+        run: npm install --prefix test/firestore_rules
+
+      - name: Ejecutar pruebas en Firebase Emulator
+        run: npx firebase-tools@15.35.0 emulators:exec --only firestore --project demo-rindemas "npm --prefix test/firestore_rules test"
