@@ -1475,9 +1475,16 @@ import '../styles/global.css';
                     }
                 });
 
-                // Ordenar más recientes primero
-                allUserGastos.sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
-                currentGastos.sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
+                // Ordenar más recientes primero (fecha y desempate por creado_en / actualizado_en)
+                const compareGastosDesc = (a, b) => {
+                    const fechaCmp = (b.fecha || '').localeCompare(a.fecha || '');
+                    if (fechaCmp !== 0) return fechaCmp;
+                    const tsB = b.creado_en || b.actualizado_en || '';
+                    const tsA = a.creado_en || a.actualizado_en || '';
+                    return tsB.localeCompare(tsA);
+                };
+                allUserGastos.sort(compareGastosDesc);
+                currentGastos.sort(compareGastosDesc);
 
                 renderMetrics();
                 renderCategories();
