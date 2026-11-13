@@ -19,4 +19,17 @@ if [ -n "$STAGED_RULES" ]; then
     fi
 fi
 
+# Regenera el mapa de codigo si el commit toca lib/ o test/.
+STAGED_CODE=$(git diff --cached --name-only | grep -E '^(lib/|test/)')
+
+if [ -n "$STAGED_CODE" ]; then
+    echo "[CODE_MAP] Actualizando docs/CODE_MAP.md..."
+    node scripts/gen_code_map.js
+    if [ $? -ne 0 ]; then
+        echo "[ERROR] No se pudo generar docs/CODE_MAP.md."
+        exit 1
+    fi
+    git add docs/CODE_MAP.md
+fi
+
 exit 0

@@ -16,6 +16,7 @@ on:
       - 'scripts/**'
       - 'LICENSE'
       - '.gitignore'
+      - '.githooks/**'
   workflow_dispatch:
 
 permissions:

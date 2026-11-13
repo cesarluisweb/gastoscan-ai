@@ -5,6 +5,7 @@
 - **Rama:** `main`. Árbol limpio.
 - **Docs reorganizados:** raíz con 6 `.md`; todo lo técnico en `docs/`; histórico en `docs/archive/2026-Q4/`.
 - **Router de documentación:** `docs/INDEX.md`.
+- **Mapa de código:** `docs/CODE_MAP.md` se regenera con `node scripts/gen_code_map.js`; el hook de pre-commit lo actualiza.
 
 ## Tareas en Curso
 - **Comparador de Precios v2:** `Pendiente de validación 🧪` (build 700, `02233c6`). Doc en `docs/DOC_COMPARADOR_PRECIOS.md`.

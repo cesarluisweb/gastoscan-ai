@@ -12,6 +12,7 @@
 | `PROJECT.md` | Visión, modelo de negocio y estrategia |
 | `DESIGN.md` | Tokens, paleta, tipografía y reglas visuales |
 | `README.md` | Onboarding humano y stack |
+| `docs/CODE_MAP.md` | Mapa generado de `lib/` con símbolos y pruebas que lo cubren |
 
 ## 2. Reglas modulares (`.agents/rules/`)
 

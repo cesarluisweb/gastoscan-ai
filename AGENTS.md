@@ -80,6 +80,7 @@
 
 ## 5. Índice de Consulta Directa
 - **Documentación y rutas:** [`docs/INDEX.md`](./docs/INDEX.md).
+- **Mapa de código (antes de buscar en `lib/`):** [`docs/CODE_MAP.md`](./docs/CODE_MAP.md).
 - **Código Dart, widgets, importaciones:** [`.agents/rules/flutter-desarrollo.md`](./.agents/rules/flutter-desarrollo.md).
 - **Pruebas, fakes y mocks:** [`.agents/rules/flutter-testing.md`](./.agents/rules/flutter-testing.md).
 - **Auditoría adversarial pre-push:** [`.agents/skills/revisor-adversarial/SKILL.md`](./.agents/skills/revisor-adversarial/SKILL.md).
