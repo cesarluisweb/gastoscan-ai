@@ -167,7 +167,7 @@ void main() {
       expect(fakeGastoProvider.selectedMonth, equals(now.month));
     });
 
-    testWidgets('Dashboard: shows jump to latest month button when viewing empty current month with prior expenses',
+    testWidgets('Dashboard: shows encouraging message without jump button when viewing empty current month even with prior expenses',
         (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 1.0;
@@ -182,15 +182,32 @@ void main() {
       await tester.pumpWidget(createDashboardWidget());
       await tester.pumpAndSettle();
 
-      final jumpBtnFinder = find.byKey(const Key('empty_state_jump_to_latest_btn'));
-      expect(jumpBtnFinder, findsOneWidget);
+      expect(find.byKey(const Key('empty_state_jump_to_latest_btn')), findsNothing);
       expect(find.byKey(const Key('empty_state_return_to_current_month_btn')), findsNothing);
+      expect(find.text('Sin gastos este mes'), findsOneWidget);
+      expect(find.textContaining('Registra tu primera compra del mes'), findsOneWidget);
+    });
 
-      await tester.tap(jumpBtnFinder);
+    testWidgets('Dashboard: future month shows left-pointing back arrow icon on jump/return button',
+        (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final now = DateTime.now();
+      fakeGastoProvider.cambiarMes(now.year + 1, 1);
+      fakeGastoProvider.setUltimoMes({'year': now.year, 'month': now.month});
+
+      await tester.pumpWidget(createDashboardWidget());
       await tester.pumpAndSettle();
 
-      expect(fakeGastoProvider.selectedYear, equals(pastYear));
-      expect(fakeGastoProvider.selectedMonth, equals(pastMonth));
+      final returnBtnFinder = find.byKey(const Key('empty_state_return_to_current_month_btn'));
+      expect(returnBtnFinder, findsOneWidget);
+      final backIconFinder = find.descendant(of: returnBtnFinder, matching: find.byIcon(Icons.arrow_back));
+      final textFinder = find.descendant(of: returnBtnFinder, matching: find.textContaining('Volver al mes actual'));
+      expect(backIconFinder, findsOneWidget);
+      expect(find.descendant(of: returnBtnFinder, matching: find.byIcon(Icons.arrow_forward)), findsNothing);
+      expect(tester.getTopLeft(backIconFinder).dx, lessThan(tester.getTopLeft(textFinder).dx));
     });
 
     testWidgets('Dashboard: deduplication - when ultimo is current month and viewing empty historical month, renders exactly 1 main button',

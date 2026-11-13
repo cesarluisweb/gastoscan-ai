@@ -635,7 +635,14 @@ class ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
         ultimoAnio == now.year &&
         ultimoMes == now.month;
 
+    final int selectedYm = gastoProvider.selectedYear * 12 + gastoProvider.selectedMonth;
+    final int currentYm = now.year * 12 + now.month;
+    final int? ultimoYm = (ultimoAnio != null && ultimoMes != null)
+        ? (ultimoAnio * 12 + ultimoMes)
+        : null;
+
     final bool tieneGastosEnOtroMes = !isFiltered &&
+        !isCurrentMonth &&
         ultimo != null &&
         ultimoAnio != null &&
         ultimoMes != null &&
@@ -650,11 +657,11 @@ class ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
 
     final String subtitulo = isFiltered
         ? 'Intenta con otro término o filtro de categoría.'
-        : (tieneGastosEnOtroMes
-            ? 'Tienes compras registradas en $ultimoMesNombre $ultimoAnio.'
-            : (!isCurrentMonth
-                ? 'Estás consultando un período histórico sin compras.'
-                : 'Presiona "+" para registrar tu primera compra.'));
+        : (isCurrentMonth
+            ? 'Registra tu primera compra del mes con el botón "+" o escanea un recibo para empezar.'
+            : (tieneGastosEnOtroMes
+                ? 'Tienes compras registradas en $ultimoMesNombre $ultimoAnio.'
+                : 'Estás consultando un período sin compras.'));
 
     return Center(
       child: Container(
@@ -710,14 +717,23 @@ class ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Volver al mes actual ($mesActualNombre ${now.year})',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                      ),
-                      const SizedBox(width: 8),
-                      const Icon(Icons.arrow_forward, size: 16),
-                    ],
+                    children: currentYm < selectedYm
+                        ? [
+                            const Icon(Icons.arrow_back, size: 16),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Volver al mes actual ($mesActualNombre ${now.year})',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                            ),
+                          ]
+                        : [
+                            Text(
+                              'Volver al mes actual ($mesActualNombre ${now.year})',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                            ),
+                            const SizedBox(width: 8),
+                            const Icon(Icons.arrow_forward, size: 16),
+                          ],
                   ),
                 ),
               ),
@@ -741,14 +757,23 @@ class ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Ver gastos de $ultimoMesNombre $ultimoAnio',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                      ),
-                      const SizedBox(width: 8),
-                      const Icon(Icons.arrow_forward, size: 16),
-                    ],
+                    children: (ultimoYm != null && ultimoYm < selectedYm)
+                        ? [
+                            const Icon(Icons.arrow_back, size: 16),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Ver gastos de $ultimoMesNombre $ultimoAnio',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                            ),
+                          ]
+                        : [
+                            Text(
+                              'Ver gastos de $ultimoMesNombre $ultimoAnio',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                            ),
+                            const SizedBox(width: 8),
+                            const Icon(Icons.arrow_forward, size: 16),
+                          ],
                   ),
                 ),
               ),

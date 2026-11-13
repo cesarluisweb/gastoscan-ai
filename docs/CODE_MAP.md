@@ -13,9 +13,9 @@
 | `domain/` | 8 | 998 |
 | `providers/` | 4 | 1960 |
 | `services/` | 13 | 4438 |
-| `ui/` | 31 | 18874 |
+| `ui/` | 31 | 18924 |
 | `(raiz)/` | 2 | 106 |
-| **Total** | **78** | **31547** |
+| **Total** | **78** | **31597** |
 
 ## core/
 
@@ -94,8 +94,8 @@
 | `lib/ui/screens/analysis_screen.dart` | 871 | `AnalysisScreen` | `analysis_screen_redesign_test.dart`, `dashboard_category_budget_test.dart`, `lote_4_ui_resilience_and_performance_test.dart` |
 | `lib/ui/screens/chat_screen.dart` | 1264 | `ChatSuggestion`, `ChatScreen` | `chat_screen_test.dart` |
 | `lib/ui/screens/currency_calculator_screen.dart` | 857 | `TipoTasaCalculadora`, `CurrencyCalculatorScreen` | `currency_calculator_screen_test.dart` |
-| `lib/ui/screens/dashboard_screen.dart` | 750 | `DashboardScreen` | `dashboard_screen_test.dart`, `smart_empty_state_and_lifecycle_test.dart` |
-| `lib/ui/screens/expense_history_screen.dart` | 802 | `ExpenseHistoryScreen`, `ExpenseHistoryScreenState` | `dashboard_search_test.dart`, `expense_history_screen_test.dart`, `lote_4_ui_resilience_and_performance_test.dart`, +1 |
+| `lib/ui/screens/dashboard_screen.dart` | 775 | `DashboardScreen` | `dashboard_screen_test.dart`, `smart_empty_state_and_lifecycle_test.dart` |
+| `lib/ui/screens/expense_history_screen.dart` | 827 | `ExpenseHistoryScreen`, `ExpenseHistoryScreenState` | `dashboard_search_test.dart`, `expense_history_screen_test.dart`, `lote_4_ui_resilience_and_performance_test.dart`, +1 |
 | `lib/ui/screens/main_screen.dart` | 706 | `MainScreen` | `main_screen_launch_action_test.dart`, `main_screen_no_auto_repair_test.dart`, `navigation_test.dart`, +1 |
 | `lib/ui/screens/more_screen.dart` | 1606 | `MoreSubView`, `MoreScreen`, `MoreScreenState` | `more_screen_test.dart`, `more_screen_copy_and_dialogs_test.dart` |
 | `lib/ui/screens/receipt_gallery_screen.dart` | 532 | `ReceiptGalleryScreen` | `receipt_gallery_screen_test.dart` |

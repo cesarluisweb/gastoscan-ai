@@ -19,6 +19,8 @@ Para consultar las tareas activas, en progreso y la visión futura, dirígete a 
 10. [Fase 7: Arquitectura de Producción, Confiabilidad y DevOps](#fase-7-arquitectura-de-producción-confiabilidad-y-devops)
 11. [Fase 8.1: Modernización y Paridad del Panel Web](#fase-81-modernización-y-paridad-del-panel-web)
 12. [Auditoría Argon y Calidad de Sincronización](#auditoría-argon-y-calidad-de-sincronización)
+13. [Fase 0 (RM-03): Integridad Financiera y Multimoneda](#fase-0-rm-03-integridad-financiera-y-multimoneda)
+14. [Hitos Recientes: IA por Voz, Seguridad, Reproducibilidad e Higiene](#hitos-recientes-ia-por-voz-seguridad-reproducibilidad-e-higiene)
 
 ---
 
@@ -201,3 +203,26 @@ Para consultar las tareas activas, en progreso y la visión futura, dirígete a 
 - `AI-01`: 5 chips analíticos diferenciados sin acciones destructivas, inyección de `tasa_usdt` en contexto y saludo guiado.
 - `LOTE-03` **Integridad de Sincronización Cloud/Offline, Privacidad Local y Resiliencia SQLite:** Serialización pura con `GastoFirestoreMapper`, reemplazo atómico en una sola transacción SQLite, cerrojo de conflicto "Borrado Gana", bloqueo durable en `SharedPreferences` con reintento guiado, token monótono de tasas en revisión y diálogo de borrado seguro de fotos en `MoreScreen`.
 - `LOTE-04` **Resiliencia UI en Bolívares (360dp), Rendimiento en Historial y Escáner:** Protección en filas de montos con `FittedBox(fit: BoxFit.scaleDown)` contra desbordes de pantalla en cifras millonarias en bolívares, virtualización de lista en `ExpenseHistoryScreen`, integración de `DocumentScannerService` con recorte inteligente y unificación de evaluación OCR.
+
+---
+
+## Fase 0 (RM-03): Integridad Financiera y Multimoneda
+*Contrato normativo `docs/rm-03/contrato-v1.2.md`, decisiones vinculantes `A-01` a `A-16` y `D-01` a `D-09`:*
+- `E0-05a` **Neutralización de auto-reparaciones automáticas 850 / 474:** Neutralizada la ejecución en segundo plano en `main_screen.dart` y `sync_service.dart`; `dryRun = true` por defecto (commit `de17323`).
+- `E0-01` **Arnés de pruebas SQLite real en memoria:** Dependencia `sqflite_common_ffi` incorporada en `dev_dependencies` y validada en CI (commit `de17323`).
+- `E0-02` **Dominio monetario, tuplas inmutables y saneamiento de caché de tasas (A-07):** Aceptada técnicamente en 8.ª reauditoría adversarial (`docs/rm-03/auditorias/octava-reauditoria-u1-u2-deepseek.md`). R-01, B-02, B-05, M-05, M-08, NEW-3b, N-09 y D-05 resueltos con 127 pruebas monetarias. CI Build 665 en verde (commit `b58965a`, run 42734265430) con visto bueno de César en *Rinde Más Dev*.
+- `E0-03` **Integración en lectores móviles, pantallas y panel web (A-16):** Independencia estricta por moneda (D-04 / H-1), denominaciones visuales canónicas (D-07), bloqueo de `EUR + BS_USDT` en UI (A-04) y lectura sin invención de equivalencias (`resolvePersistedExpense` y `ResumenLenteMonetario`, A-16 / H-2). Centralización de `_convertBudgetToLens` resuelta dentro de este hito. Validado en dispositivo físico en *Rinde Más Dev* (Build 678, `docs/DOC_E0_03_LECTORES_MULTIMONEDA.md`).
+- `E0-04` **Sincronización atómica `synced = 0`, tombstones remotos y CAS (A-09, A-15, S3.2):** CAS optimista con `marcarGastoSincronizadoCondicional`, defensa de tombstones `ConflictoTombstoneRemoto`, idempotencia post-crash `sonContenidoNegocioIdentico` con normalización canónica de categorías, allowlist estricta de metadatos en panel web y diálogo de confirmación de cambio de importe. Validado en dispositivo físico en *Rinde Más Dev* (Build 678, `docs/DOC_E0_04_SYNC_CAS_TOMBSTONES.md`).
+
+---
+
+## Hitos Recientes: IA por Voz, Seguridad, Reproducibilidad e Higiene
+- `AI-05` **Dictado Continuo por Voz, Blindaje Determinístico de Fechas y Alineación de Período:** Buffer acumulativo de voz (`joinSpeechParts`, `shouldCommitPreviousSpeechSegment`) en `VoiceExpenseSheet` y `ChatScreen`, anclaje temporal determinista (`fecha_hoy` y `resolveSpokenExpenseDate`), y sincronización automática del filtro mensual en `GastoProvider.agregarGasto`. CI Build 692 en verde (commit `1fdd815`), Worker desplegado (`6709639`), validado en *Rinde Más Dev* (`docs/DOC_DICTADO_VOZ_CONTINUO.md`).
+- **Seguridad de IA, Cuotas, Galería e Integridad (A1a, B2, C1, C2):** Validado en dispositivo físico en *Rinde Más Dev* (Build 672, commit `87c8da0`). Cuota compartida persistente en Cloudflare D1 (50/día por UID, 20.000 global, fail-closed, corte VET UTC-4, `/health` HTTP 200), copia persistente de comprobantes en álbum "Rinde Más" activada por defecto y saneamiento estricto de montos en `GeminiExtractionResult` con tolerancia 0.50 en visión.
+- **Reproducibilidad y Congelación de CI/CD:** Flutter fijado en `3.47.9` en `.github/workflows/build_apk.yml`, `pubspec.lock` versionado con guarda anti-drift en CI, `cloud_functions` eliminado y logs desacoplados como artefacto `test_results.txt` (Builds 641 y 664, 638 pruebas, commit `5219134`).
+- **Higiene de Repositorio y Documentación:** Purgados 2.115 archivos de `firebase_functions/node_modules/` del índice Git, `test_results.txt` desvinculado y añadido a `.gitignore`, `stash@{0}` (`wip-lote-4-ui`) descartado tras verificar integración en `59c1b64`, y reorganización documental (raíz con 6 `.md`, técnico en `docs/`, histórico en `docs/archive/2026-Q4/`, `docs/INDEX.md` y `docs/CODE_MAP.md` en Builds 701-702, commits `856aa67` y `e827d86`).
+- **Selector de Mes Responsivo en AppBar:** Componente `AppBarMonthSelector` en Inicio, Gastos, Análisis y Más con 3 modos automáticos (`Completo`, `Compacto`, `Mínimo`) y protección `FittedBox` (CI Build 649, commit `0eb455a`, 22 pruebas).
+- **Fase 5 (Web): Sincronización del Registro y Edición de Gastos con App Móvil:** Reorganización en 4 tarjetas idénticas a la app móvil, módulos `expense-money.js` y `category-classifier.js` con paridad al céntimo (C1–C6) y autoclasificación (Web Build 20, commit `14003f7`, `docs/DOC_SINCRONIZACION_PANEL_WEB.md`).
+- **Comparador de Precios v2:** Esquema SQLite v19 (`descripcion_norm`), `findPriceHistory` (ventana 60 días), 3 prioridades de aviso y paridad web en `price-comparator.js` (CI Build 700, commit `02233c6`, `docs/DOC_COMPARADOR_PRECIOS.md`).
+- **`UI-02` Rediseño Modular de la Pestaña "Más":** Arquitectura modular en `MoreScreen`, `MoreRatesCard`, `MoreToolsGrid` y `BcvLegalDisclaimerCard`, rejilla Bento 2x2 y diálogo "ELIMINAR" (CI Build 703, commit `cc89f5e`, `docs/DOC_MAS_REDISENO.md`).
+- **Arquitectura de Arranque y Datos Local-First:** Cold start desacoplado en `main.dart`, `SyncCoordinator` (cerrojo, debounce 2s, throttle 5m) y `PendingLaunchAction` en `NotificationService` (13 pruebas dedicadas, `docs/DOC_ARRANQUE_LOCAL_FIRST.md`).

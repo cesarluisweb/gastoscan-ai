@@ -8,13 +8,12 @@
 - **Mapa de código:** `docs/CODE_MAP.md` se regenera con `node scripts/gen_code_map.js`; el hook de pre-commit lo actualiza.
 
 ## Tareas en Curso
-- **Comparador de Precios v2:** `Pendiente de validación 🧪` (build 700, `02233c6`). Doc en `docs/DOC_COMPARADOR_PRECIOS.md`.
-- **Próximo paso:** prueba en dispositivo físico por César en *Rinde Más Dev*; luego retomar `E0-05b`.
-- **Validaciones pendientes de César en *Rinde Más Dev*:** Comparador de Precios v2 (build 700), MoreScreen UI-02 (build 703, `cc89f5e`), Selector de Mes en AppBar (build 649, `0eb455a`), Fase 5 Web (build 20, `14003f7`), firma P0 (build 671).
-- **UX-14 (estado vacío contextual):** `Implementada 🔧` (`5ac3684`).
-- **Idea pendiente:** validar en dispositivo dictado por voz (build 692, `1fdd815`) junto al resto.
+- **UX-14 (estado vacío contextual):** `Implementada 🔧` (sin botón en mes actual y flecha atrás a la izquierda en meses futuros; pendiente CI).
+- **Pendientes de cierre administrativo:** firma P0 (rotar upload key tras aprobar Producción) y solicitud de Producción en Google Play.
 
 ## Completadas
+- **Validadas en dispositivo por César (13/11/2026):** ✅ Selector de Mes en AppBar (build 649), Fase 5 Web (build 20), Comparador de Precios v2 (build 700), MoreScreen `UI-02` (build 703) y Arquitectura de Arranque Local-First.
+- **Limpieza de ROADMAP.md:** ✅ Hitos completados movidos a `docs/archive/2026-Q4/ROADMAP_HISTORICO.md`.
 - **Reorganización de documentación y mapa de código:** ✅ builds 701 y 702 (`856aa67`, `e827d86`). Raíz con 6 `.md`, histórico en `docs/archive/2026-Q4/`, `docs/INDEX.md` y `docs/CODE_MAP.md` generado por script.
 - **Dictado por voz:** ✅ build 692, `1fdd815`.
 - **RM-03 E0-02, E0-03 y E0-04:** ✅ build 678.

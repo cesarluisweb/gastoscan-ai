@@ -585,7 +585,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ultimoAnio == now.year &&
         ultimoMes == now.month;
 
-    final bool tieneGastosEnOtroMes = ultimo != null &&
+    final int selectedYm = gastoProvider.selectedYear * 12 + gastoProvider.selectedMonth;
+    final int currentYm = now.year * 12 + now.month;
+    final int? ultimoYm = (ultimoAnio != null && ultimoMes != null)
+        ? (ultimoAnio * 12 + ultimoMes)
+        : null;
+
+    final bool tieneGastosEnOtroMes = !isCurrentMonth &&
+        ultimo != null &&
         ultimoAnio != null &&
         ultimoMes != null &&
         (ultimoAnio != gastoProvider.selectedYear || ultimoMes != gastoProvider.selectedMonth);
@@ -595,11 +602,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ? 'Sin gastos este mes'
         : 'Sin gastos en $mesSeleccionadoNombre ${gastoProvider.selectedYear}';
 
-    final String subtitulo = tieneGastosEnOtroMes
-        ? 'Tus compras registradas más recientes corresponden a $ultimoMesNombre $ultimoAnio.'
-        : (!isCurrentMonth
-            ? 'Estás consultando un período histórico sin compras registradas.'
-            : 'Registra tu primera compra para crear tu historial.');
+    final String subtitulo = isCurrentMonth
+        ? 'Registra tu primera compra del mes con el botón "+" o escanea un recibo para empezar.'
+        : (tieneGastosEnOtroMes
+            ? 'Tus compras registradas más recientes corresponden a $ultimoMesNombre $ultimoAnio.'
+            : 'Estás consultando un período sin compras registradas.');
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
@@ -650,14 +657,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Volver al mes actual ($mesActualNombre ${now.year})',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                    ),
-                    const SizedBox(width: 8),
-                    const Icon(Icons.arrow_forward, size: 16),
-                  ],
+                  children: currentYm < selectedYm
+                      ? [
+                          const Icon(Icons.arrow_back, size: 16),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Volver al mes actual ($mesActualNombre ${now.year})',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                          ),
+                        ]
+                      : [
+                          Text(
+                            'Volver al mes actual ($mesActualNombre ${now.year})',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.arrow_forward, size: 16),
+                        ],
                 ),
               ),
             ),
@@ -681,14 +697,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Ver gastos de $ultimoMesNombre $ultimoAnio',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                    ),
-                    const SizedBox(width: 8),
-                    const Icon(Icons.arrow_forward, size: 16),
-                  ],
+                  children: (ultimoYm != null && ultimoYm < selectedYm)
+                      ? [
+                          const Icon(Icons.arrow_back, size: 16),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Ver gastos de $ultimoMesNombre $ultimoAnio',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                          ),
+                        ]
+                      : [
+                          Text(
+                            'Ver gastos de $ultimoMesNombre $ultimoAnio',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.arrow_forward, size: 16),
+                        ],
                 ),
               ),
             ),
