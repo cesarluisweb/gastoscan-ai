@@ -15,6 +15,7 @@
 - **Idea pendiente:** validar en dispositivo dictado por voz (build 692, `1fdd815`) junto al resto.
 
 ## Completadas
+- **Reorganización de documentación y mapa de código:** ✅ builds 701 y 702 (`856aa67`, `e827d86`). Raíz con 6 `.md`, histórico en `docs/archive/2026-Q4/`, `docs/INDEX.md` y `docs/CODE_MAP.md` generado por script.
 - **Dictado por voz:** ✅ build 692, `1fdd815`.
 - **RM-03 E0-02, E0-03 y E0-04:** ✅ build 678.
 - **Reproducibilidad:** ✅ Flutter `3.47.9` y `pubspec.lock` versionado.
