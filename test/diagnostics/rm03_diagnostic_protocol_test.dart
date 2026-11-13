@@ -170,7 +170,7 @@ void main() {
       expect(report.byCode('Q04')?.affectedCount, equals(1));
       expect(report.byCode('Q05')?.affectedCount, equals(2));
       expect(report.byCode('Q05')?.breakdown, equals({'NULL': 1, 'CERO': 1}));
-      expect(report.byCode('Q06')?.affectedCount, equals(1));
+      expect(report.byCode('Q06')?.affectedCount, equals(2));
       expect(report.byCode('Q17')?.affectedCount, equals(1));
       expect(report.byCode('Q18')?.breakdown['ETIQUETA_NO_ISO'], equals(1));
       expect(report.byCode('Q19')?.affectedCount, equals(1));
