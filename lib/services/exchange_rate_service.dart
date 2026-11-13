@@ -588,9 +588,6 @@ class ExchangeRateService {
     _failedWrites.add(key);
   }
 
-  static void _onKeyWriteConfirmed(String key, [Object? value]) => onKeyWriteConfirmed(key, value);
-  static void _onKeyWriteFailed(String key) => onKeyWriteFailed(key);
-
   /// Escribe un valor numérico de tasa en [prefs], notificando confirmación física
   /// o registrando el fallo si la plataforma retorna `false` o lanza una excepción (M-05).
   static Future<bool> safeSetDouble(SharedPreferences prefs, String key, double value) async {
