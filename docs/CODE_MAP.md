@@ -10,12 +10,12 @@
 |---|---|---|
 | `core/` | 8 | 932 |
 | `data/` | 12 | 4239 |
-| `domain/` | 8 | 998 |
+| `domain/` | 10 | 1816 |
 | `providers/` | 4 | 1960 |
 | `services/` | 13 | 4438 |
 | `ui/` | 31 | 18924 |
 | `(raiz)/` | 2 | 106 |
-| **Total** | **78** | **31597** |
+| **Total** | **80** | **32415** |
 
 ## core/
 
@@ -34,7 +34,7 @@
 
 | Archivo | Líneas | Símbolos | Pruebas |
 |---|---|---|---|
-| `lib/data/datasources/local/database_helper.dart` | 2229 | `UnitPriceRef`, `PriceHistory`, `DatabaseHelper` | `database_helper_batch_and_async_test.dart`, `database_helper_category_test.dart`, `database_helper_fts_test.dart`, +32 |
+| `lib/data/datasources/local/database_helper.dart` | 2229 | `UnitPriceRef`, `PriceHistory`, `DatabaseHelper` | `database_helper_batch_and_async_test.dart`, `database_helper_category_test.dart`, `database_helper_fts_test.dart`, +33 |
 | `lib/data/datasources/remote/firestore_gastos_remote_data_source.dart` | 72 | `FirestoreGastosRemoteDataSource` | - |
 | `lib/data/datasources/remote/gastos_remote_data_source.dart` | 26 | `RemoteGasto`, `RemotePresupuesto`, `GastosRemoteDataSource` | `reparar_tasas_dry_run_test.dart`, `sync_orchestration_test.dart` |
 | `lib/data/datasources/remote/gemini_service.dart` | 675 | `GeminiService` | `database_helper_batch_and_async_test.dart`, `chat_screen_test.dart`, `gemini_service_security_test.dart`, +2 |
@@ -51,6 +51,8 @@
 
 | Archivo | Líneas | Símbolos | Pruebas |
 |---|---|---|---|
+| `lib/domain/diagnostics/rm03_copy_strategy.dart` | 108 | `Rm03DiagnosticIoException`, `Rm03CopyStrategy`, `FileRm03CopyStrategy` | `rm03_diagnostic_protocol_test.dart` |
+| `lib/domain/diagnostics/rm03_diagnostic_protocol.dart` | 710 | `Rm03DiagnosticSecurityException`, `Rm03DiagnosticSchemaException`, `Rm03QueryResult`, `Rm03DiagnosticReport`, +1 | `rm03_diagnostic_protocol_test.dart` |
 | `lib/domain/finance/savings_health_calculator.dart` | 54 | `SavingsHealthCalculator` | `savings_health_calculator_test.dart` |
 | `lib/domain/finance/savings_health_models.dart` | 47 | `SavingsGoalStatus`, `SavingsHealthSnapshot` | `savings_health_calculator_test.dart` |
 | `lib/domain/monetary/expense_tuple.dart` | 347 | `ExpenseTuple`, `TupleFailureCode`, `TupleBuildResult`, `TupleBuildSuccess`, +1 | `build_new_expense_tuple_test.dart` |

@@ -50,7 +50,7 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 
 ## Fase 0: Integridad Financiera y Multimoneda (Iniciativa RM-03 — Cierre)
 *Hitos `E0-01` a `E0-05a` completados; ver [ROADMAP_HISTORICO.md](docs/archive/2026-Q4/ROADMAP_HISTORICO.md).*
-- `E0-05b` **Protocolo de diagnóstico de datos existentes (Q01..Q20):** `Pendiente` Consultas de solo lectura sobre fixtures de prueba sin PII (A-14).
+- `E0-05b` **Protocolo de diagnóstico de datos existentes (Q01..Q20):** `Implementada 🔧` Consultas de solo lectura (`PRAGMA query_only = ON`, copia temporal con soporte WAL, sin PII) en `lib/domain/diagnostics/` y CLI `tool/diagnose_sqlite.dart`. Doc en [`docs/DOC_E0_05B_DIAGNOSTICO_Q01_Q20.md`](docs/DOC_E0_05B_DIAGNOSTICO_Q01_Q20.md). Pendiente de CI y validación de César (`A-14`).
 
 ---
 

@@ -59,6 +59,7 @@
 | Play Store | `docs/DOC_FICHA_PLAY_STORE.md`, `docs/FICHA_GOOGLE_PLAY.md`, `docs/DOC_DECLARACION_SEGURIDAD_DATOS_PLAY.md`, `docs/DOC_CUESTIONARIO_PRODUCCION.md` |
 | Marketing | `docs/DOC_BITACORA_MARKETING.md`, `docs/GUIA_BROADCAST_FIREBASE.md` |
 | Firestore | `docs/DOC_REGLAS_FIRESTORE_B1.md` |
+| Diagnóstico RM-03 | `docs/DOC_E0_05B_DIAGNOSTICO_Q01_Q20.md` |
 | Diseño | `docs/design-system.html` |
 
 ## 5. Contrato RM-03 (`docs/rm-03/`)
@@ -67,8 +68,9 @@
 |---|---|
 | `contrato-v1.2.md` | Contrato normativo multimoneda |
 | `especificacion-consolidada-u1-u2.md` | Especificación de hitos U1-U2 |
-| `estado-actual.md` | Estado de E0-02 a E0-04 |
+| `estado-actual.md` | Estado de E0-02 a E0-05b |
 | `decisiones.md` | Decisiones aprobadas (D-04, D-06, D-07) |
+| `diagnostico-q01-q20.md` | Catálogo normativo read-only Q1..Q19 + Q20 |
 | `auditorias/` | Historial de reauditorías (solo consulta) |
 
 ## 6. Archivo histórico (`docs/archive/2026-Q4/`)
