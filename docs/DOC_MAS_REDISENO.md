@@ -51,8 +51,8 @@ Todas las hojas usan el patrón canónico (`Padding(viewInsets.bottom)` $\righta
 ## Guía de Verificación en Dispositivo Físico (*Rinde Más Dev*)
 
 - **Artefacto:** `rindemas-dev-apk`
-- **Build de CI:** 693 (Run `43437129915`)
-- **Commit SHA:** `fb7cecb`
+- **Build de CI:** 703 (Run `43483108908`)
+- **Commit SHA:** `cc89f5e`
 
 | Paso | Acción en Dispositivo | Evidencia archivo:línea | Resultado Esperado |
 | :--- | :--- | :--- | :--- |

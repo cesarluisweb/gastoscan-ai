@@ -10,7 +10,7 @@
 ## Tareas en Curso
 - **Comparador de Precios v2:** `Pendiente de validación 🧪` (build 700, `02233c6`). Doc en `docs/DOC_COMPARADOR_PRECIOS.md`.
 - **Próximo paso:** prueba en dispositivo físico por César en *Rinde Más Dev*; luego retomar `E0-05b`.
-- **Validaciones pendientes de César en *Rinde Más Dev*:** Comparador de Precios v2 (build 700), MoreScreen UI-02 (build 693, `fb7cecb`), Selector de Mes en AppBar (build 649, `0eb455a`), Fase 5 Web (build 20, `14003f7`), firma P0 (build 671).
+- **Validaciones pendientes de César en *Rinde Más Dev*:** Comparador de Precios v2 (build 700), MoreScreen UI-02 (build 703, `cc89f5e`), Selector de Mes en AppBar (build 649, `0eb455a`), Fase 5 Web (build 20, `14003f7`), firma P0 (build 671).
 - **UX-14 (estado vacío contextual):** `Implementada 🔧` (`5ac3684`).
 - **Idea pendiente:** validar en dispositivo dictado por voz (build 692, `1fdd815`) junto al resto.
 
