@@ -595,6 +595,27 @@ class GastoProvider with ChangeNotifier {
     }
   }
 
+  Future<Map<String, PriceHistory>> buscarHistorialPrecios(
+    List<String> descripcionesNormalizadas, {
+    int? excludeGastoId,
+    String? comercioActual,
+    int diasVentana = 60,
+    DateTime? referenceDate,
+  }) async {
+    try {
+      return await _repository.buscarHistorialPrecios(
+        descripcionesNormalizadas,
+        excludeGastoId: excludeGastoId,
+        comercioActual: comercioActual,
+        diasVentana: diasVentana,
+        referenceDate: referenceDate,
+      );
+    } catch (e) {
+      debugPrint('Error en GastoProvider.buscarHistorialPrecios: $e');
+      return const {};
+    }
+  }
+
   Future<Map<String, dynamic>?> buscarPrecioAnterior(String descripcion, {int? excludeGastoId}) async {
     return await _repository.buscarPrecioAnterior(descripcion, excludeGastoId: excludeGastoId);
   }

@@ -807,6 +807,7 @@ import '../styles/global.css';
         } from 'firebase/firestore';
         import { computeExpenseTotals, computeItemCents } from '../lib/expense-money.js';
         import { clasificarCategoria, sincronizarCategoriaImpuestos, isTaxDescription, normalizar as normalizarTexto } from '../lib/category-classifier.js';
+        import { normalizeProductText, findPriceHistoryFromGastos, evaluatePriceComparison } from '../lib/price-comparator.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyA5HMxpemkmCC-uKwMIyP9TP3Cxf8MDq8o",
@@ -907,6 +908,7 @@ import '../styles/global.css';
         let selectedYear = now.getFullYear();
         let selectedMonth = now.getMonth() + 1; // 1 - 12
         let currentGastos = [];
+        let allUserGastos = [];
         let currentPresupuesto = { general: 0, meta_ahorro: 0, moneda: 'USD', categorias: {} };
         let activeLens = null;
 
@@ -1458,17 +1460,23 @@ import '../styles/global.css';
                 const gastosSnap = await getDocs(gastosRef);
 
                 currentGastos = [];
+                allUserGastos = [];
                 gastosSnap.forEach(d => {
                     const g = d.data();
-                    if (!g.eliminado_en && g.fecha && g.fecha.startsWith(monthPrefix)) {
-                        currentGastos.push({
+                    if (!g.eliminado_en && g.fecha) {
+                        const fullDoc = {
                             id: d.id,
                             ...g
-                        });
+                        };
+                        allUserGastos.push(fullDoc);
+                        if (g.fecha.startsWith(monthPrefix)) {
+                            currentGastos.push(fullDoc);
+                        }
                     }
                 });
 
                 // Ordenar más recientes primero
+                allUserGastos.sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
                 currentGastos.sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
 
                 renderMetrics();
@@ -2574,6 +2582,7 @@ import '../styles/global.css';
                             </span>
                         </div>
                     </div>
+                    <p class="item-price-comparison hidden pt-1 pl-0.5 text-[11px] font-semibold leading-snug"></p>
                 `;
 
                 const inputDesc = card.querySelector('.item-input-desc');
@@ -2581,8 +2590,49 @@ import '../styles/global.css';
                 const inputPrecio = card.querySelector('.item-input-precio');
                 const inputCat = card.querySelector('.item-input-cat');
                 const lblTotal = card.querySelector('.item-label-total');
+                const lblComparison = card.querySelector('.item-price-comparison');
                 const btnRemove = card.querySelector('.btn-remove-item');
 
+                const updateComparisonLine = () => {
+                    if (!lblComparison) return;
+                    const norm = normalizeProductText(item.descripcion || '');
+                    if (norm.length <= 2) {
+                        lblComparison.textContent = '';
+                        lblComparison.className = 'item-price-comparison hidden pt-1 pl-0.5 text-[11px] font-semibold leading-snug';
+                        return;
+                    }
+                    const cant = Number(item.cantidad) > 0 ? Number(item.cantidad) : 1;
+                    const unitPrice = Number(item.precio) || 0;
+                    const tasaUsd = activeRates.usd > 0 ? activeRates.usd : 1.0;
+                    const currentUnitUsd = expMoneda === 'VES' ? (unitPrice / tasaUsd) : unitPrice;
+                    const comercioActual = modalExpComercio?.value || '';
+
+                    const historyMap = findPriceHistoryFromGastos(allUserGastos, [norm], {
+                        excludeGastoId: editingGastoId,
+                        comercioActual,
+                    });
+                    const verdict = evaluatePriceComparison({
+                        currentUnitUsd,
+                        history: historyMap[norm],
+                        comercioActual,
+                    });
+
+                    if (!verdict) {
+                        lblComparison.textContent = '';
+                        lblComparison.className = 'item-price-comparison hidden pt-1 pl-0.5 text-[11px] font-semibold leading-snug';
+                        return;
+                    }
+
+                    lblComparison.textContent = verdict.text;
+                    const colorClass = verdict.tone === 'error'
+                        ? 'text-rose-600 font-semibold'
+                        : verdict.tone === 'good'
+                            ? 'text-slate-900 font-semibold'
+                            : 'text-slate-500 font-medium';
+                    lblComparison.className = `item-price-comparison block pt-1 pl-0.5 text-[11px] leading-snug ${colorClass}`;
+                };
+
+                let descDebounce = null;
                 inputDesc?.addEventListener('input', (e) => {
                     item.descripcion = e.target.value;
                     if (!item.categoriaManual && !isTaxDescription(item.descripcion)) {
@@ -2596,6 +2646,8 @@ import '../styles/global.css';
                         }
                     }
                     tryAutoSumItems();
+                    if (descDebounce) clearTimeout(descDebounce);
+                    descDebounce = setTimeout(updateComparisonLine, 400);
                 });
 
                 inputCat?.addEventListener('change', (e) => {
@@ -2615,6 +2667,7 @@ import '../styles/global.css';
                         lblTotal.textContent = formatMoney(tot, expMoneda);
                     }
                     tryAutoSumItems();
+                    updateComparisonLine();
                 };
 
                 inputCant?.addEventListener('input', recalcItem);
@@ -2626,11 +2679,26 @@ import '../styles/global.css';
                     tryAutoSumItems();
                 });
 
+                updateComparisonLine();
+                card._updateComparisonLine = updateComparisonLine;
                 modalExpItemsList.appendChild(card);
             });
 
             checkDiscrepancy();
         };
+
+        let comercioComparisonDebounce = null;
+        modalExpComercio?.addEventListener('input', () => {
+            if (comercioComparisonDebounce) clearTimeout(comercioComparisonDebounce);
+            comercioComparisonDebounce = setTimeout(() => {
+                if (!modalExpItemsList) return;
+                modalExpItemsList.querySelectorAll(':scope > div').forEach((cardEl) => {
+                    if (typeof cardEl._updateComparisonLine === 'function') {
+                        cardEl._updateComparisonLine();
+                    }
+                });
+            }, 400);
+        });
 
         const setCurrencyButtonActive = (activeBtn) => {
             const buttons = [btnCurrencyUsd, btnCurrencyVes, btnCurrencyUsdt, btnCurrencyEur];
@@ -3231,8 +3299,10 @@ import '../styles/global.css';
                     const prNominal = Number(it.precio) || 0;
                     const cents = computeItemCents(it, computed.ratioConversionItems);
 
+                    const descFinal = (it.descripcion || '').trim() || `Producto ${idx + 1}`;
                     return {
-                        descripcion: (it.descripcion || '').trim() || `Producto ${idx + 1}`,
+                        descripcion: descFinal,
+                        descripcion_norm: normalizeProductText(descFinal),
                         cantidad: cant,
                         precio_unitario: cents.precio_unitario,
                         total: cents.total,

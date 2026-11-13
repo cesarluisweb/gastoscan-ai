@@ -2,7 +2,15 @@
 > Regla de oro: Mantener en máximo ~50 líneas. Lo permanente se gradúa a AGENTS.md o DESIGN.md.
 
 ## Estado Actual Inmediato
-- **Rama:** `main` (commit `1fdd815`; CI Android build 692 en verde, run 43428721902).
+- **Rama:** `main` (commit base `1fdd815`; cambios en working tree listos para continuar con otro modelo).
+- **Comparador de Precios v2 (En curso — Traspaso de modelo):**
+  - **Fases 1 a 5 + Web Astro IMPLEMENTADAS en disco:**
+    - `lib/data/datasources/local/database_helper.dart`: Migración SQLite v18 → v19 (`descripcion_norm`, backfill por lotes de 500 e índice `idx_items_gasto_desc_norm`), `_itemRow` en las rutas de escritura, `normalizeCommerce`, `formatCommerceDisplay`, `formatRelativePriceDate`, `UnitPriceRef`, `PriceHistory` y `findPriceHistory`.
+    - `lib/data/repositories/gasto_repository.dart` y `lib/providers/gasto_provider.dart`: `buscarHistorialPrecios`.
+    - `lib/ui/screens/review_expense_screen.dart`: Mapa `Map<String, PriceHistory>` por `item.clientKey`, debounce 400 ms en concepto y comercio, widget `_PriceComparisonLine` (prioridad 1 mismo comercio 0-30d, prioridad 2 mercado 0-30d, prioridad 3 referencia gris 31-60d sin %).
+    - `landing/src/lib/price-comparator.js`, `landing/test/price-comparator.test.js` (14/14 tests en verde con `node --test`) y `landing/src/pages/panel.astro` sincronizados.
+    - Suites Flutter creadas/actualizadas: `test/datasources/database_helper_migration_v19_test.dart`, `test/datasources/database_helper_price_history_test.dart`, `test/screens/review_expense_price_history_test.dart` y fakes actualizados en `test/datasources/database_helper_in_memory_harness_test.dart`, `test/screens/review_expense_screen_layout_test.dart`, `test/screens/review_expense_token_test.dart`, `test/screens/currency_calculator_screen_test.dart` y `test/widgets/voice_expense_sheet_test.dart`.
+  - **Pendiente para el siguiente modelo (Fase 6 + CI):** Crear `docs/DOC_COMPARADOR_PRECIOS.md`, actualizar `ROADMAP.md`, ejecutar auditoría adversarial, hacer `git commit` + `git push` y monitorear CI con `scripts/wait_ci.ps1`.
 - **Acceso a Producción Google Play:** Segunda ventana de prueba cerrada en curso (Día 3/14 cumplido con 12 evaluadores activos). AAB `1.5.0+669` en Play Console. Fin estimado: ~19/11/2026.
 - **Corrección Dictado por Voz — `Completada ✅`:** Visto bueno de César en *Rinde Más Dev* (Build 692, `1fdd815`). Acumulación de segmentos tras pausas sin sobrescritura, resolución determinística de fechas y alineación de mes en lista de gastos.
 - **Rediseño MoreScreen (UI-02) — `Pendiente de validación 🧪`:** CI en verde (build 693, `fb7cecb`). `MoreRatesCard` (estado sin borde a la derecha y 3 mini-tarjetas con icono), `MoreToolsGrid` (4 tiles unificados en blanco) y `BcvLegalDisclaimerCard`. Ajustes en 3 filas (`Preferencias y datos` con `Moneda de reportes`, `Soporte` y `Sobre Rinde Más` con `Ver en Google Play`). Guía en `docs/DOC_MAS_REDISENO.md`. Requiere visto bueno de César en *Rinde Más Dev*.

@@ -153,35 +153,15 @@ class ExchangeRateService {
         final gUsdt = isValidMonetaryRate(rawGwUsdt) ? (rawGwUsdt as num).toDouble() : null;
         if (gUsd != null) {
           final now = DateTime.now();
-          if (await prefs.setDouble('cached_rate_usd', gUsd)) {
-            _onKeyWriteConfirmed('cached_rate_usd');
-          } else {
-            _onKeyWriteFailed('cached_rate_usd');
-          }
-          if (await prefs.setDouble('cached_exchange_rate', gUsd)) {
-            _onKeyWriteConfirmed('cached_exchange_rate');
-          } else {
-            _onKeyWriteFailed('cached_exchange_rate');
-          }
+          await safeSetDouble(prefs, 'cached_rate_usd', gUsd);
+          await safeSetDouble(prefs, 'cached_exchange_rate', gUsd);
           if (gEur != null) {
-            if (await prefs.setDouble('cached_rate_eur', gEur)) {
-              _onKeyWriteConfirmed('cached_rate_eur');
-            } else {
-              _onKeyWriteFailed('cached_rate_eur');
-            }
+            await safeSetDouble(prefs, 'cached_rate_eur', gEur);
           }
           if (gUsdt != null) {
-            if (await prefs.setDouble('cached_rate_usdt', gUsdt)) {
-              _onKeyWriteConfirmed('cached_rate_usdt');
-            } else {
-              _onKeyWriteFailed('cached_rate_usdt');
-            }
+            await safeSetDouble(prefs, 'cached_rate_usdt', gUsdt);
           }
-          if (await prefs.setString('cached_exchange_rates_timestamp', now.toIso8601String())) {
-            _onKeyWriteConfirmed('cached_exchange_rates_timestamp');
-          } else {
-            _onKeyWriteFailed('cached_exchange_rates_timestamp');
-          }
+          await safeSetString(prefs, 'cached_exchange_rates_timestamp', now.toIso8601String());
           return ExchangeRatesData(
             usd: gUsd,
             eur: gEur ?? (eurRate ?? 0.0),
@@ -204,46 +184,26 @@ class ExchangeRateService {
 
     if (isValidMonetaryRate(results[0])) {
       usdRate = results[0]!;
-      if (await prefs.setDouble('cached_rate_usd', usdRate)) {
-        _onKeyWriteConfirmed('cached_rate_usd');
-      } else {
-        _onKeyWriteFailed('cached_rate_usd');
-      }
-      if (await prefs.setDouble('cached_exchange_rate', usdRate)) {
-        _onKeyWriteConfirmed('cached_exchange_rate');
-      } else {
-        _onKeyWriteFailed('cached_exchange_rate');
-      }
+      await safeSetDouble(prefs, 'cached_rate_usd', usdRate);
+      await safeSetDouble(prefs, 'cached_exchange_rate', usdRate);
       fetchedAny = true;
     }
 
     if (isValidMonetaryRate(results[1])) {
       eurRate = results[1]!;
-      if (await prefs.setDouble('cached_rate_eur', eurRate)) {
-        _onKeyWriteConfirmed('cached_rate_eur');
-      } else {
-        _onKeyWriteFailed('cached_rate_eur');
-      }
+      await safeSetDouble(prefs, 'cached_rate_eur', eurRate);
       fetchedAny = true;
     }
 
     if (isValidMonetaryRate(results[2])) {
       usdtRate = results[2]!;
-      if (await prefs.setDouble('cached_rate_usdt', usdtRate)) {
-        _onKeyWriteConfirmed('cached_rate_usdt');
-      } else {
-        _onKeyWriteFailed('cached_rate_usdt');
-      }
+      await safeSetDouble(prefs, 'cached_rate_usdt', usdtRate);
       fetchedAny = true;
     }
 
     if (fetchedAny) {
       final now = DateTime.now();
-      if (await prefs.setString('cached_exchange_rates_timestamp', now.toIso8601String())) {
-        _onKeyWriteConfirmed('cached_exchange_rates_timestamp');
-      } else {
-        _onKeyWriteFailed('cached_exchange_rates_timestamp');
-      }
+      await safeSetString(prefs, 'cached_exchange_rates_timestamp', now.toIso8601String());
       return ExchangeRatesData(
         usd: isValidMonetaryRate(usdRate) ? usdRate! : 0.0,
         eur: isValidMonetaryRate(eurRate) ? eurRate! : 0.0,
@@ -479,11 +439,7 @@ class ExchangeRateService {
             final rawRate = item['promedio'];
             if (isValidMonetaryRate(rawRate)) {
               final rate = (rawRate as num).toDouble();
-              if (await prefs.setDouble(cacheKey, rate)) {
-                _onKeyWriteConfirmed(cacheKey);
-              } else {
-                _onKeyWriteFailed(cacheKey);
-              }
+              await safeSetDouble(prefs, cacheKey, rate);
               return rate;
             }
           }
@@ -507,11 +463,7 @@ class ExchangeRateService {
         }
 
         if (lastValidRate != null) {
-          if (await prefs.setDouble(cacheKey, lastValidRate)) {
-            _onKeyWriteConfirmed(cacheKey);
-          } else {
-            _onKeyWriteFailed(cacheKey);
-          }
+          await safeSetDouble(prefs, cacheKey, lastValidRate);
           return lastValidRate;
         }
       }
@@ -532,11 +484,7 @@ class ExchangeRateService {
             final rawVes = data['usd']?['ves'];
             if (isValidMonetaryRate(rawVes)) {
               final vesRate = (rawVes as num).toDouble();
-              if (await prefs.setDouble(cacheKey, vesRate)) {
-                _onKeyWriteConfirmed(cacheKey);
-              } else {
-                _onKeyWriteFailed(cacheKey);
-              }
+              await safeSetDouble(prefs, cacheKey, vesRate);
               return vesRate;
             }
           }
@@ -568,6 +516,9 @@ class ExchangeRateService {
   /// Claves cuya persistencia física válida en disco ha sido confirmada durante la generación actual (M-05 TOCTOU).
   static final Set<String> _confirmedWrites = {};
 
+  /// Valores confirmados en disco asociados a las claves en [_confirmedWrites] para su eventual restauración (M-05 §2.5 / 9.ª reauditoría).
+  static final Map<String, Object> _confirmedValues = {};
+
   /// Claves cuya persistencia física en disco ha fallado durante la generación actual (M-05 Scan).
   static final Set<String> _failedWrites = {};
 
@@ -596,6 +547,10 @@ class ExchangeRateService {
   @visibleForTesting
   static Set<String> get confirmedWrites => Set.unmodifiable(_confirmedWrites);
 
+  /// Retorna el mapa de valores con escritura confirmada (M-05).
+  @visibleForTesting
+  static Map<String, Object> get confirmedValues => Map.unmodifiable(_confirmedValues);
+
   /// Retorna el conjunto de claves con escritura fallida no confirmada en disco (M-05).
   @visibleForTesting
   static Set<String> get failedWrites => Set.unmodifiable(_failedWrites);
@@ -606,6 +561,7 @@ class ExchangeRateService {
     _purgeGeneration++;
     _pendingPurgeOperations.clear();
     _confirmedWrites.clear();
+    _confirmedValues.clear();
     _failedWrites.clear();
     _purgeMarkPendingConfirmation = false;
     _activePurgeFuture = null;
@@ -613,11 +569,14 @@ class ExchangeRateService {
 
   /// Si una escritura física en disco de un valor válido para [key] se confirmó correctamente,
   /// rescinde cualquier operación de purga pendiente obsoleta sobre esa misma clave (M-05)
-  /// y registra la confirmación física para proteger contra condiciones de carrera TOCTOU.
-  static void onKeyWriteConfirmed(String key) {
+  /// y registra la confirmación física y su valor para proteger contra condiciones de carrera TOCTOU.
+  static void onKeyWriteConfirmed(String key, [Object? value]) {
     _failedWrites.remove(key);
     _pendingPurgeOperations.remove(key);
     _confirmedWrites.add(key);
+    if (value != null) {
+      _confirmedValues[key] = value;
+    }
   }
 
   /// Si una escritura física en disco falló en plataforma (`return false` o excepción),
@@ -625,11 +584,66 @@ class ExchangeRateService {
   /// aunque su valor volátil en la memoria de SharedPreferences parezca válido (M-05).
   static void onKeyWriteFailed(String key) {
     _confirmedWrites.remove(key);
+    _confirmedValues.remove(key);
     _failedWrites.add(key);
   }
 
-  static void _onKeyWriteConfirmed(String key) => onKeyWriteConfirmed(key);
+  static void _onKeyWriteConfirmed(String key, [Object? value]) => onKeyWriteConfirmed(key, value);
   static void _onKeyWriteFailed(String key) => onKeyWriteFailed(key);
+
+  /// Escribe un valor numérico de tasa en [prefs], notificando confirmación física
+  /// o registrando el fallo si la plataforma retorna `false` o lanza una excepción (M-05).
+  static Future<bool> safeSetDouble(SharedPreferences prefs, String key, double value) async {
+    try {
+      final ok = await prefs.setDouble(key, value);
+      if (ok) {
+        onKeyWriteConfirmed(key, value);
+        return true;
+      } else {
+        onKeyWriteFailed(key);
+        return false;
+      }
+    } catch (_) {
+      onKeyWriteFailed(key);
+      return false;
+    }
+  }
+
+  /// Escribe un String (ej. timestamp) en [prefs], notificando confirmación física
+  /// o registrando el fallo si la plataforma retorna `false` o lanza una excepción (M-05).
+  static Future<bool> safeSetString(SharedPreferences prefs, String key, String value) async {
+    try {
+      final ok = await prefs.setString(key, value);
+      if (ok) {
+        onKeyWriteConfirmed(key, value);
+        return true;
+      } else {
+        onKeyWriteFailed(key);
+        return false;
+      }
+    } catch (_) {
+      onKeyWriteFailed(key);
+      return false;
+    }
+  }
+
+  /// Escribe un booleano en [prefs], notificando confirmación física
+  /// o registrando el fallo si la plataforma retorna `false` o lanza una excepción (M-05).
+  static Future<bool> safeSetBool(SharedPreferences prefs, String key, bool value) async {
+    try {
+      final ok = await prefs.setBool(key, value);
+      if (ok) {
+        onKeyWriteConfirmed(key, value);
+        return true;
+      } else {
+        onKeyWriteFailed(key);
+        return false;
+      }
+    } catch (_) {
+      onKeyWriteFailed(key);
+      return false;
+    }
+  }
 
   /// Valida si una cadena ISO 'YYYY-MM-DD' corresponde a una fecha real del calendario gregoriano.
   static bool _isValidCalendarDate(String dateStr) {
@@ -989,6 +1003,9 @@ class ExchangeRateService {
 
     // Claves marcadas como inválidas no pueden ser protegidas por confirmaciones de escrituras anteriores (M-05).
     _confirmedWrites.removeAll(keysToRemove);
+    for (final k in keysToRemove) {
+      _confirmedValues.remove(k);
+    }
 
     for (final k in keysToRemove) {
       if (_purgeGeneration != currentGen) break;
@@ -998,7 +1015,7 @@ class ExchangeRateService {
       // NUNCA basándose únicamente en la lectura de memoria de prefs.get(k).
       // NUNCA omitir el borrado de claves con corrupción estructural (fechas imposibles o tipos corruptos, R-01).
       final bool writeConfirmed = _confirmedWrites.contains(k);
-      final currentVal = prefs.get(k);
+      final currentVal = _confirmedValues[k] ?? prefs.get(k);
 
       if (writeConfirmed) {
         if (k == 'cached_exchange_rates_timestamp') {
@@ -1033,8 +1050,28 @@ class ExchangeRateService {
         if (_purgeGeneration != currentGen) break;
         if (_confirmedWrites.contains(k)) {
           // Si durante el await de remove se confirmó concurrentemente una escritura física fresca,
-          // se rescinde la operación y se preserva el dato fresco (§2.5).
+          // se rescinde la operación y se restaura el valor confirmado en disco para no perder la tasa fresca (M-05 §2.5 / 9.ª reauditoría).
           _pendingPurgeOperations.remove(k);
+          final confirmedVal = _confirmedValues[k] ?? prefs.get(k);
+          if (confirmedVal != null) {
+            bool restoreOk = false;
+            try {
+              if (confirmedVal is double) {
+                restoreOk = await prefs.setDouble(k, confirmedVal);
+              } else if (confirmedVal is String) {
+                restoreOk = await prefs.setString(k, confirmedVal);
+              } else if (confirmedVal is bool) {
+                restoreOk = await prefs.setBool(k, confirmedVal);
+              }
+            } catch (e) {
+              debugPrint('ExchangeRateService: Error restaurando valor fresco para $k: $e');
+              restoreOk = false;
+            }
+            if (!restoreOk) {
+              allWritesSucceeded = false;
+              _pendingPurgeOperations[k] = PendingPurgeOperation.remove(key: k, entriesCleanedCount: 1);
+            }
+          }
         } else if (removed) {
           _pendingPurgeOperations.remove(k);
           _failedWrites.remove(k);

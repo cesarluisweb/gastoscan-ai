@@ -16,7 +16,7 @@ void main() {
       await harness.tearDown();
     });
 
-    test('1. Abre base SQLite en memoria con esquema v18 y la cierra limpiamente', () async {
+    test('1. Abre base SQLite en memoria con esquema v19 y la cierra limpiamente', () async {
       // 1.1 Estado inicial abierto
       expect(harness.isOpen, isTrue);
       expect(DatabaseHelper.testDatabase, isNotNull);
@@ -24,7 +24,7 @@ void main() {
       // 1.2 Version de esquema en PRAGMA de SQLite real
       final versionResult = await harness.db.rawQuery('PRAGMA user_version;');
       final userVersion = (versionResult.first['user_version'] as num?)?.toInt();
-      expect(userVersion, equals(18));
+      expect(userVersion, equals(19));
 
       // 1.3 Verificacion de integridad referencial activada
       final fkResult = await harness.db.rawQuery('PRAGMA foreign_keys;');
@@ -53,6 +53,7 @@ void main() {
       expect(indexNames, contains('idx_gastos_fecha'));
       expect(indexNames, contains('idx_gastos_categoria'));
       expect(indexNames, contains('idx_items_gasto_gasto_id'));
+      expect(indexNames, contains('idx_items_gasto_desc_norm'));
       expect(indexNames, contains('idx_scan_queue_status'));
       expect(indexNames, contains('idx_scan_queue_image_hash'));
       expect(indexNames, contains('idx_gastos_synced'));

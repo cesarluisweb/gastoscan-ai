@@ -63,6 +63,15 @@ class FakeDatabaseHelper extends DatabaseHelper {
 class FakeGastoProvider extends GastoProvider {
   @override
   Future<void> cargarDatos() async {}
+
+  @override
+  Future<Map<String, PriceHistory>> buscarHistorialPrecios(
+    List<String> descripcionesNormalizadas, {
+    int? excludeGastoId,
+    String? comercioActual,
+    int diasVentana = 60,
+    DateTime? referenceDate,
+  }) async => const {};
 }
 
 class FakeSettingsProvider extends SettingsProvider {

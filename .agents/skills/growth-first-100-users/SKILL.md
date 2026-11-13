@@ -145,6 +145,28 @@ Para desarrolladores en solitario que no desean aparecer en cámara ni grabar lo
 2. **Subvención Cruzada y Prevención del Anti-patrón Rial:** El escaneo básico se mantiene generoso y abierto para el uso cotidiano familiar, protegido únicamente por el cerrojo anti-abuso de 50 facturas/día en Cloudflare Gateway (`SEC-13`). Se evita estrictamente imponer cuotas bajas prematuras (10-15 facturas) que espanten a los usuarios. Los anuncios intersticiales discretos en pausas naturales (tras guardar el gasto) subvencionan el costo de API.
 3. **Conversión a Rinde Más Pro ($1.99/mes o $19.99/año):** Propuesta de valor basada en utilidades avanzadas reales (cero publicidad, exportación contable en PDF/Excel desglosado, respaldo de fotos de comprobantes en la nube, categorías ilimitadas y BYOK).
 
+### 6.1 Matriz de Distribución y Ventas de Software (Enfoque Rinde Más)
+
+De los modelos clásicos de distribución de software, Rinde Más adopta un enfoque híbrido optimizado para consumo B2C en Venezuela:
+
+1. **Estrategias Activas Prioritarias:**
+   - **Freemium Equilibrado:** Escaneo básico generoso (tope de seguridad de 50/día) y funciones Pro ($1,99/mes) para usuarios intensivos.
+   - **Posicionamiento contra un Enemigo Común:** Combate la pérdida de dinero por redondeos de vueltos y las aplicaciones internacionales que ignoran los bolívares y la tasa BCV.
+   - **Viralidad Interna Orgánica:** Inclusión de pie de marca (*"Generado con Rinde Más"*) en reportes mensuales exportados y listas de compras compartidas por WhatsApp.
+   - **Comunidad en WhatsApp:** Canal oficial con alertas de tasa BCV, consejos de compras y tips de ahorro familiar para sostener retención sin costo.
+   - **Micro-influencers de Nicho:** Alianzas de contenido orgánico con creadores de compras cotidianas y presupuesto familiar (sin pauta comercial pagada).
+   - **Construcción en Público (Build in Public):** Compartir métricas, decisiones técnicas y aprendizajes en X (Twitter), TikTok y Reddit (`r/vzla`).
+
+2. **Estrategias en Reserva (Fase de Escalamiento):**
+   - **Referidos:** Recompensar invitaciones directas con 1 mes de plan Pro.
+   - **Diagnóstico Gratuito Web:** Calculadora interactiva en la landing page (*"Calcula cuánto pierdes al mes por distorsión cambiaria"*).
+   - **Lanzamiento Coordinado:** Campaña de atención concentrada al habilitar Producción pública en Google Play Store.
+   - **Monetización Indirecta:** Acuerdos comerciales con comercios o cadenas para visibilizar ofertas locales en la lista de compras.
+
+3. **Plataformas Prohibidas / Descartadas:**
+   - **Lifetime Deals (LTD / AppSumo):** Prohibido vender licencias vitalicias de pago único. El costo marginal recurrente de Google Gemini y Cloudflare Gateway hace insostenible el modelo a largo plazo. Además, AppSumo retiene del 50% al 70% del valor y su audiencia es B2B global angloparlante.
+   - **Venta Fuera de Google Play en Android:** Toda transacción digital en la app móvil debe cursar por Google Play Billing.
+
 ---
 
 ## 7. Métricas Clave de Control

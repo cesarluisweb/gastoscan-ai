@@ -91,6 +91,22 @@ class GastoRepository {
     );
   }
 
+  Future<Map<String, PriceHistory>> buscarHistorialPrecios(
+    List<String> descripcionesNormalizadas, {
+    int? excludeGastoId,
+    String? comercioActual,
+    int diasVentana = 60,
+    DateTime? referenceDate,
+  }) {
+    return _dbHelper.findPriceHistory(
+      descripcionesNormalizadas,
+      excludeGastoId: excludeGastoId,
+      comercioActual: comercioActual,
+      diasVentana: diasVentana,
+      referenceDate: referenceDate,
+    );
+  }
+
   Future<Map<String, dynamic>?> buscarPrecioAnterior(String descripcion, {int? excludeGastoId}) {
     return _dbHelper.findPreviousPrice(descripcion, excludeGastoId: excludeGastoId);
   }

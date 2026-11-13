@@ -46,6 +46,15 @@ class FakeGastoProvider extends GastoProvider {
   Future<void> sincronizarConFirestore() async {}
 
   @override
+  Future<Map<String, PriceHistory>> buscarHistorialPrecios(
+    List<String> descripcionesNormalizadas, {
+    int? excludeGastoId,
+    String? comercioActual,
+    int diasVentana = 60,
+    DateTime? referenceDate,
+  }) async => const {};
+
+  @override
   Future<Map<String, dynamic>?> buscarPrecioAnterior(String descripcion, {int? excludeGastoId}) async => null;
 }
 

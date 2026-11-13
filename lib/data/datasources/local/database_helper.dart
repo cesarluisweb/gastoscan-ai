@@ -10,6 +10,61 @@ import '../../../core/constants/app_constants.dart';
 import '../../../domain/monetary/rate_market.dart';
 import '../../../domain/monetary/resumen_lente_monetario.dart';
 
+class UnitPriceRef {
+  final double precioUsd;
+  final String fecha;
+  final String comercio;
+  final String comercioNorm;
+  final double cantidad;
+  final int gastoId;
+
+  const UnitPriceRef({
+    required this.precioUsd,
+    required this.fecha,
+    required this.comercio,
+    required this.comercioNorm,
+    required this.cantidad,
+    this.gastoId = 0,
+  });
+}
+
+class PriceHistory {
+  final String descripcionNorm;
+  final int registros;
+  final UnitPriceRef? mismoComercio;
+  final UnitPriceRef? mejorPrecio;
+  final List<UnitPriceRef> entradas;
+
+  const PriceHistory({
+    this.descripcionNorm = '',
+    required this.registros,
+    this.mismoComercio,
+    this.mejorPrecio,
+    this.entradas = const [],
+  });
+
+  /// Resuelve la compra más reciente en el comercio indicado a partir de las entradas
+  /// o del campo precalculado `mismoComercio`.
+  UnitPriceRef? mismoComercioPara(String? comercioActual) {
+    if (comercioActual == null || comercioActual.trim().isEmpty) {
+      return mismoComercio;
+    }
+    final norm = DatabaseHelper.normalizeCommerce(comercioActual);
+    if (norm.isEmpty) return null;
+    if (entradas.isNotEmpty) {
+      for (final ref in entradas) {
+        if (ref.comercioNorm == norm) return ref;
+      }
+      return null;
+    }
+    if (mismoComercio != null &&
+        (mismoComercio!.comercioNorm.isEmpty || mismoComercio!.comercioNorm == norm)) {
+      return mismoComercio;
+    }
+    return null;
+  }
+}
+
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
@@ -34,7 +89,7 @@ class DatabaseHelper {
   static Database? get testDatabase => _database;
 
   /// [E0-01] Abre una base de datos SQLite de prueba en memoria utilizando el esquema
-  /// y las migraciones oficiales de produccion de DatabaseHelper (v18).
+  /// y las migraciones oficiales de produccion de DatabaseHelper (v19).
   @visibleForTesting
   static Future<Database> openTestDatabase({
     required DatabaseFactory factory,
@@ -44,7 +99,7 @@ class DatabaseHelper {
     final db = await factory.openDatabase(
       dbPath,
       options: OpenDatabaseOptions(
-        version: 18,
+        version: 19,
         onCreate: instance._createDB,
         onUpgrade: instance._upgradeDB,
         onConfigure: instance._onConfigure,
@@ -67,7 +122,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 18,
+      version: 19,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
       onConfigure: _onConfigure,
@@ -327,6 +382,39 @@ class DatabaseHelper {
           AND (total_eur IS NULL OR total_eur = 0)
       ''');
     }
+    if (oldVersion < 19) {
+      try {
+        await db.execute("ALTER TABLE items_gasto ADD COLUMN descripcion_norm TEXT DEFAULT ''");
+      } catch (e) {
+        debugPrint('DatabaseHelper: columna descripcion_norm ya existe o error en ALTER: $e');
+      }
+
+      final rows = await db.query('items_gasto', columns: ['id', 'descripcion']);
+      if (rows.isNotEmpty) {
+        await db.transaction((txn) async {
+          for (var i = 0; i < rows.length; i += 500) {
+            final end = (i + 500 > rows.length) ? rows.length : i + 500;
+            final batch = txn.batch();
+            for (var j = i; j < end; j++) {
+              final row = rows[j];
+              final id = row['id'] as int?;
+              if (id == null) continue;
+              final rawDesc = (row['descripcion'] as String?) ?? '';
+              final norm = normalizeProductText(rawDesc);
+              batch.update(
+                'items_gasto',
+                {'descripcion_norm': norm},
+                where: 'id = ?',
+                whereArgs: [id],
+              );
+            }
+            await batch.commit(noResult: true);
+          }
+        });
+      }
+
+      await db.execute('CREATE INDEX IF NOT EXISTS idx_items_gasto_desc_norm ON items_gasto (descripcion_norm);');
+    }
   }
 
   Future<void> _onConfigure(Database db) async {
@@ -374,6 +462,7 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         gasto_id INTEGER NOT NULL,
         descripcion TEXT NOT NULL,
+        descripcion_norm TEXT DEFAULT '',
         cantidad REAL NOT NULL,
         precio_unitario INTEGER NOT NULL,
         total INTEGER NOT NULL,
@@ -449,6 +538,7 @@ class DatabaseHelper {
     await db.execute('CREATE INDEX idx_gastos_fecha ON gastos (fecha);');
     await db.execute('CREATE INDEX idx_gastos_categoria ON gastos (categoria);');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_items_gasto_gasto_id ON items_gasto (gasto_id);');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_items_gasto_desc_norm ON items_gasto (descripcion_norm);');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_scan_queue_status ON scan_queue (status);');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_scan_queue_image_hash ON scan_queue (image_hash);');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_gastos_synced ON gastos (synced);');
@@ -468,15 +558,21 @@ class DatabaseHelper {
     }
   }
 
+  static Map<String, dynamic> _itemRow(ItemGastoModel item, int gastoId) {
+    final map = item.toMap();
+    map['gasto_id'] = gastoId;
+    map['descripcion_norm'] = normalizeProductText(item.descripcion);
+    map.remove('id');
+    return map;
+  }
+
   /// Inserta un gasto con sus ítems asociados de forma atómica en una transacción
   Future<int> insertGasto(GastoModel gasto, List<ItemGastoModel> items) async {
     final db = await instance.database;
     final gastoId = await db.transaction((txn) async {
       final id = await txn.insert('gastos', gasto.toMap());
       for (final item in items) {
-        final itemMap = item.toMap();
-        itemMap['gasto_id'] = id;
-        await txn.insert('items_gasto', itemMap);
+        await txn.insert('items_gasto', _itemRow(item, id));
       }
       return id;
     });
@@ -500,10 +596,10 @@ class DatabaseHelper {
 
       // Elimina los ítems anteriores y reinserta los actualizados
       await txn.delete('items_gasto', where: 'gasto_id = ?', whereArgs: [gasto.id]);
-      for (final item in items) {
-        final itemMap = item.toMap();
-        itemMap['gasto_id'] = gasto.id;
-        await txn.insert('items_gasto', itemMap);
+      if (gasto.id != null) {
+        for (final item in items) {
+          await txn.insert('items_gasto', _itemRow(item, gasto.id!));
+        }
       }
     });
 
@@ -824,6 +920,8 @@ class DatabaseHelper {
 
   static String normalizeProductText(String text) {
     return text
+        .replaceAll(RegExp(r'\s*\([GERgerExX]+\)\s*$', caseSensitive: false), '')
+        .replaceAll(RegExp(r'\s*-(G|E|R)\s*$', caseSensitive: false), '')
         .toLowerCase()
         .replaceAll('á', 'a')
         .replaceAll('é', 'e')
@@ -831,9 +929,140 @@ class DatabaseHelper {
         .replaceAll('ó', 'o')
         .replaceAll('ú', 'u')
         .replaceAll('ü', 'u')
+        .replaceAll('ñ', 'n')
+        .replaceAll('ç', 'c')
         .replaceAll(RegExp(r'[^\w\s]'), '')
         .replaceAll(RegExp(r'\s+'), ' ')
         .trim();
+  }
+
+  static const Set<String> _genericCommercePlaceholders = {
+    'compra general',
+    'otro comercio',
+    'comercio no especificado',
+    'comercio desconocido',
+    'comercio',
+    'varios',
+    'gasto general',
+    'sin comercio',
+    'sin nombre',
+  };
+
+  static const Set<String> _commerceNoiseTokens = {
+    'ca',
+    'sa',
+    'srl',
+    'rl',
+    'cc',
+    'compania',
+    'anonima',
+    'sociedad',
+    'rif',
+    'sucursal',
+    'suc',
+    'centro',
+    'comercial',
+    'inversiones',
+    'inv',
+    'distribuidora',
+    'dist',
+    'corporacion',
+    'corp',
+  };
+
+  /// Normaliza el nombre de un comercio para comparaciones deterministas:
+  /// minúsculas, sin acentos, sin RIF y sin sufijos societarios o de centro comercial (ej. C.A., S.A., C.C.).
+  static String normalizeCommerce(String text) {
+    var clean = text
+        .toLowerCase()
+        .replaceAll('á', 'a')
+        .replaceAll('é', 'e')
+        .replaceAll('í', 'i')
+        .replaceAll('ó', 'o')
+        .replaceAll('ú', 'u')
+        .replaceAll('ü', 'u')
+        .replaceAll('ñ', 'n')
+        .replaceAll('ç', 'c')
+        .replaceAll(RegExp(r"['’]s\b"), '')
+        .replaceAll(RegExp(r'\b(?:rif\s*)?[jvgpe]\s*[-.]?\s*\d{5,10}(?:[-.]?\d)?\b'), ' ')
+        .replaceAll(RegExp(r'\bc\s*\.\s*a\s*\.?(?=\s|$|,)'), ' ')
+        .replaceAll(RegExp(r'\bs\s*\.\s*a\s*\.?(?=\s|$|,)'), ' ')
+        .replaceAll(RegExp(r'\bs\s*\.\s*r\s*\.\s*l\s*\.?(?=\s|$|,)'), ' ')
+        .replaceAll(RegExp(r'\br\s*\.\s*l\s*\.?(?=\s|$|,)'), ' ')
+        .replaceAll(RegExp(r'\bc\s*\.\s*c\s*\.?(?=\s|$|,)'), ' ')
+        .replaceAll(RegExp(r'[^\w\s]'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+
+    if (clean.isEmpty || _genericCommercePlaceholders.contains(clean)) {
+      return '';
+    }
+
+    final words = clean.split(' ').where((w) => w.isNotEmpty).map((w) {
+      if (w == 'automercados') return 'automercado';
+      if (w == 'supermercados') return 'supermercado';
+      if (w == 'hipermercados') return 'hipermercado';
+      if (w == 'farmacias') return 'farmacia';
+      if (w == 'plazas') return 'plaza';
+      return w;
+    }).toList();
+
+    final filtered = words.where((w) => !_commerceNoiseTokens.contains(w)).toList();
+    final result = (filtered.isNotEmpty ? filtered : words).join(' ').trim();
+    if (_genericCommercePlaceholders.contains(result)) return '';
+    return result;
+  }
+
+  /// Formatea el nombre del comercio para mostrarlo limpio en la interfaz (sin RIF ni sufijos fiscales).
+  static String formatCommerceDisplay(String text) {
+    var clean = text
+        .replaceAll(RegExp(r'\b(?:RIF\s*[:.]?\s*)?[JVGPEjvgpe]\s*[-.]?\s*\d{5,10}(?:[-.]?\d)?\b'), '')
+        .replaceAll(RegExp(r',?\s*\b(?:C\.?\s*A\.?|S\.?\s*A\.?|S\.?\s*R\.?\s*L\.?|R\.?\s*L\.?|C\.?\s*C\.?)\s*$', caseSensitive: false), '')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+
+    if (clean.isEmpty || _genericCommercePlaceholders.contains(clean.toLowerCase())) {
+      return 'Otro comercio';
+    }
+
+    final hasLetters = clean.contains(RegExp(r'[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]'));
+    final isAllUpper = hasLetters && clean == clean.toUpperCase();
+    final isAllLower = hasLetters && clean == clean.toLowerCase();
+    if (isAllUpper || isAllLower) {
+      clean = clean.split(' ').map((word) {
+        if (word.isEmpty) return word;
+        final lower = word.toLowerCase();
+        return lower[0].toUpperCase() + lower.substring(1);
+      }).join(' ');
+    }
+    return clean;
+  }
+
+  /// Formatea una fecha ISO (yyyy-MM-dd) como etiqueta relativa en español:
+  /// `hoy`, `ayer`, `hace N días`, `hace N semanas`, `hace N meses`.
+  static String formatRelativePriceDate(String fechaIso, {DateTime? referenceDate}) {
+    final days = daysBetweenIsoAndReference(fechaIso, referenceDate: referenceDate);
+    if (days == null || days <= 0) return 'hoy';
+    if (days == 1) return 'ayer';
+    if (days < 7) return 'hace $days días';
+    if (days < 30) {
+      final weeks = days ~/ 7;
+      return weeks <= 1 ? 'hace 1 semana' : 'hace $weeks semanas';
+    }
+    final months = days ~/ 30;
+    return months <= 1 ? 'hace 1 mes' : 'hace $months meses';
+  }
+
+  /// Calcula la diferencia en días calendario entre una fecha ISO y la fecha de referencia.
+  static int? daysBetweenIsoAndReference(String fechaIso, {DateTime? referenceDate}) {
+    final raw = fechaIso.trim();
+    if (raw.length < 10) return null;
+    final parsed = DateTime.tryParse(raw.substring(0, 10));
+    if (parsed == null) return null;
+    final ref = referenceDate ?? DateTime.now();
+    final refUtc = DateTime.utc(ref.year, ref.month, ref.day);
+    final parsedUtc = DateTime.utc(parsed.year, parsed.month, parsed.day);
+    return refUtc.difference(parsedUtc).inDays;
   }
 
   static bool isTaxItem(String descripcion) {
@@ -843,71 +1072,186 @@ class DatabaseHelper {
     return taxKeywords.any((kw) => clean == kw || clean.startsWith('$kw ') || clean.contains('iva 16') || clean.contains('iva 8'));
   }
 
-  /// Busca la última vez que se compró exactamente el mismo producto para comparar precio por unidad.
-  /// Siempre devuelve el precio equivalente por unidad en USD para evitar comparaciones engañosas por cantidades o inflación.
-  Future<Map<String, dynamic>?> findPreviousPrice(String descripcion, {int? excludeGastoId}) async {
-    final cleanDesc = normalizeProductText(descripcion);
-    if (cleanDesc.length <= 2) return null;
-    if (isTaxItem(cleanDesc)) return null;
+  /// Extrae el precio unitario equivalente en USD para una fila de `items_gasto` unida con `gastos`.
+  static double _unitPriceUsd(Map<String, dynamic> row) {
+    final moneda = row['moneda'] as String? ?? 'USD';
+    final tasaRow = (row['tasa_cambio'] as num?)?.toDouble() ?? 1.0;
+    final totalOrig = (row['total_original'] as num?)?.toDouble() ?? 0.0;
+    final totalUsd = (row['total_usd'] as num?)?.toDouble() ?? 0.0;
+    final cant = (row['cantidad'] as num?)?.toDouble() ?? 1.0;
+    final totalItem = (row['total'] as num?)?.toDouble() ?? 0.0;
+    final precioUnitItem = (row['precio_unitario'] as num?)?.toDouble() ?? 0.0;
+
+    double unitPriceInCurrency;
+    if (totalItem > 0 && cant > 0) {
+      unitPriceInCurrency = (totalItem / 100.0) / cant;
+    } else {
+      unitPriceInCurrency = precioUnitItem / 100.0;
+    }
+
+    double tasa = tasaRow > 0 ? tasaRow : 1.0;
+    if (tasa == 1.0 && totalOrig > 0 && totalUsd > 0 && (totalOrig / totalUsd) > 2.0) {
+      tasa = totalOrig / totalUsd;
+    }
+
+    double prevUsd = unitPriceInCurrency;
+    if (moneda == 'VES') {
+      prevUsd = unitPriceInCurrency / tasa;
+    } else {
+      if (totalUsd > 0 && unitPriceInCurrency > (totalUsd / 100.0) * 2.0 && tasa > 1.0) {
+        prevUsd = unitPriceInCurrency / tasa;
+      }
+    }
+    return prevUsd;
+  }
+
+  /// Consulta en un solo lote el historial de precios unitarios en USD dentro de la ventana de días.
+  Future<Map<String, PriceHistory>> findPriceHistory(
+    List<String> descripcionesNormalizadas, {
+    int? excludeGastoId,
+    String? comercioActual,
+    int diasVentana = 60,
+    DateTime? referenceDate,
+  }) async {
+    final validDescs = <String>{};
+    for (final raw in descripcionesNormalizadas) {
+      final norm = normalizeProductText(raw);
+      if (norm.length > 2 && !isTaxItem(norm)) {
+        validDescs.add(norm);
+      }
+    }
+    if (validDescs.isEmpty) return {};
 
     final db = await instance.database;
+    final ref = referenceDate ?? DateTime.now();
+    final refUtc = DateTime.utc(ref.year, ref.month, ref.day);
+    final cutoffUtc = refUtc.subtract(Duration(days: diasVentana));
+    final fechaLimiteIso =
+        '${cutoffUtc.year.toString().padLeft(4, '0')}-${cutoffUtc.month.toString().padLeft(2, '0')}-${cutoffUtc.day.toString().padLeft(2, '0')}';
+
+    String comercioActualNorm = normalizeCommerce(comercioActual ?? '');
+    if (comercioActualNorm.isEmpty && excludeGastoId != null) {
+      final currentRows = await db.query(
+        'gastos',
+        columns: ['comercio'],
+        where: 'id = ?',
+        whereArgs: [excludeGastoId],
+        limit: 1,
+      );
+      if (currentRows.isNotEmpty) {
+        comercioActualNorm = normalizeCommerce((currentRows.first['comercio'] as String?) ?? '');
+      }
+    }
+
+    final descList = validDescs.toList();
+    final placeholders = List.filled(descList.length, '?').join(',');
+    final whereArgs = <Object?>[
+      ...descList,
+      fechaLimiteIso,
+      if (excludeGastoId != null) excludeGastoId,
+    ];
 
     final result = await db.rawQuery('''
-      SELECT i.precio_unitario, i.cantidad, i.total, i.descripcion,
+      SELECT i.precio_unitario, i.cantidad, i.total, i.descripcion, i.descripcion_norm,
              g.id as gasto_id, g.fecha, g.moneda, g.total_original, g.total_usd, g.comercio, g.tasa_cambio
       FROM items_gasto i
       JOIN gastos g ON i.gasto_id = g.id
-      ${excludeGastoId != null ? 'WHERE g.id != $excludeGastoId' : ''}
+      WHERE i.descripcion_norm IN ($placeholders)
+        AND g.eliminado_en IS NULL
+        AND substr(g.fecha, 1, 10) >= ?
+        ${excludeGastoId != null ? 'AND g.id != ?' : ''}
       ORDER BY g.fecha DESC, g.id DESC
-      LIMIT 250
-    ''');
+      LIMIT 600
+    ''', whereArgs);
 
+    final grouped = <String, List<UnitPriceRef>>{};
     for (final row in result) {
-      final prevDesc = row['descripcion'] as String? ?? '';
+      final prevDesc = (row['descripcion'] as String?) ?? '';
       if (isTaxItem(prevDesc)) continue;
 
-      final cleanPrevDesc = normalizeProductText(prevDesc);
-      // Debe ser exactamente el mismo producto normalizado
-      if (cleanPrevDesc != cleanDesc) continue;
+      final normDesc = ((row['descripcion_norm'] as String?)?.isNotEmpty == true)
+          ? (row['descripcion_norm'] as String)
+          : normalizeProductText(prevDesc);
+      if (!validDescs.contains(normDesc)) continue;
 
-      final moneda = row['moneda'] as String? ?? 'USD';
-      final tasaRow = (row['tasa_cambio'] as num?)?.toDouble() ?? 1.0;
-      final totalOrig = (row['total_original'] as num?)?.toDouble() ?? 0.0;
-      final totalUsd = (row['total_usd'] as num?)?.toDouble() ?? 0.0;
+      final fechaStr = (row['fecha'] as String?) ?? '';
+      final ageDays = daysBetweenIsoAndReference(fechaStr, referenceDate: refUtc);
+      if (ageDays == null || ageDays > diasVentana) continue;
+
+      final prevUsd = _unitPriceUsd(row);
+      if (prevUsd <= 0) continue;
+
       final cant = (row['cantidad'] as num?)?.toDouble() ?? 1.0;
-      final totalItem = (row['total'] as num?)?.toDouble() ?? 0.0;
-      final precioUnitItem = (row['precio_unitario'] as num?)?.toDouble() ?? 0.0;
+      final rawComercio = (row['comercio'] as String?) ?? 'Otro comercio';
+      final gastoId = (row['gasto_id'] as num?)?.toInt() ?? 0;
 
-      // Precio por unidad real en la moneda del gasto (en decimales)
-      double unitPriceInCurrency;
-      if (totalItem > 0 && cant > 0) {
-        unitPriceInCurrency = (totalItem / 100.0) / cant;
-      } else {
-        unitPriceInCurrency = precioUnitItem / 100.0;
-      }
+      grouped.putIfAbsent(normDesc, () => []).add(
+        UnitPriceRef(
+          precioUsd: prevUsd,
+          fecha: fechaStr,
+          comercio: formatCommerceDisplay(rawComercio),
+          comercioNorm: normalizeCommerce(rawComercio),
+          cantidad: cant,
+          gastoId: gastoId,
+        ),
+      );
+    }
 
-      double tasa = tasaRow > 0 ? tasaRow : 1.0;
-      if (tasa == 1.0 && totalOrig > 0 && totalUsd > 0 && (totalOrig / totalUsd) > 2.0) {
-        tasa = totalOrig / totalUsd;
-      }
+    final output = <String, PriceHistory>{};
+    for (final entry in grouped.entries) {
+      final descNorm = entry.key;
+      final refs = entry.value;
+      if (refs.isEmpty) continue;
 
-      double prevUsd = unitPriceInCurrency;
-      if (moneda == 'VES') {
-        prevUsd = unitPriceInCurrency / tasa;
-      } else {
-        if (totalUsd > 0 && unitPriceInCurrency > (totalUsd / 100.0) * 2.0 && tasa > 1.0) {
-          prevUsd = unitPriceInCurrency / tasa;
+      UnitPriceRef? mismoComercio;
+      if (comercioActualNorm.isNotEmpty) {
+        for (final r in refs) {
+          if (r.comercioNorm == comercioActualNorm) {
+            mismoComercio = r;
+            break;
+          }
         }
       }
 
-      return {
-        'precio_usd': prevUsd,
-        'fecha': row['fecha'] as String? ?? '',
-        'comercio': row['comercio'] as String? ?? 'Otro comercio',
-        'cantidad': cant,
-      };
+      // Mejor precio: prioriza compras vigentes (0..30 días) si existen; si no, menor de la ventana.
+      final refsVigentes = refs.where((r) {
+        final d = daysBetweenIsoAndReference(r.fecha, referenceDate: refUtc);
+        return d != null && d <= 30;
+      }).toList();
+      final poolMejor = refsVigentes.isNotEmpty ? refsVigentes : refs;
+      UnitPriceRef mejorPrecio = poolMejor.first;
+      for (final r in poolMejor.skip(1)) {
+        if (r.precioUsd < mejorPrecio.precioUsd) {
+          mejorPrecio = r;
+        }
+      }
+
+      output[descNorm] = PriceHistory(
+        descripcionNorm: descNorm,
+        registros: refs.length,
+        mismoComercio: mismoComercio,
+        mejorPrecio: mejorPrecio,
+        entradas: refs,
+      );
     }
-    return null;
+
+    return output;
+  }
+
+  /// Obsoleto: usar `findPriceHistory` para comparaciones por lote con ventana temporal.
+  Future<Map<String, dynamic>?> findPreviousPrice(String descripcion, {int? excludeGastoId}) async {
+    final cleanDesc = normalizeProductText(descripcion);
+    if (cleanDesc.length <= 2 || isTaxItem(cleanDesc)) return null;
+    final historyMap = await findPriceHistory([cleanDesc], excludeGastoId: excludeGastoId);
+    final history = historyMap[cleanDesc];
+    final ref = history?.entradas.isNotEmpty == true ? history!.entradas.first : history?.mejorPrecio;
+    if (ref == null) return null;
+    return {
+      'precio_usd': ref.precioUsd,
+      'fecha': ref.fecha,
+      'comercio': ref.comercio,
+      'cantidad': ref.cantidad,
+    };
   }
 
   // --- SHOPPING LIST CRUD ---
@@ -1837,10 +2181,7 @@ class DatabaseHelper {
         final gId = await txn.insert('gastos', gMap);
 
         for (final item in gasto.items) {
-          final iMap = item.toMap()
-            ..['gasto_id'] = gId
-            ..remove('id');
-          await txn.insert('items_gasto', iMap);
+          await txn.insert('items_gasto', _itemRow(item, gId));
         }
 
         try {

@@ -6,6 +6,7 @@ import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:gastoscan_ai/core/constants/app_constants.dart';
 import 'package:gastoscan_ai/services/exchange_rate_service.dart';
+import 'package:gastoscan_ai/providers/settings_provider.dart';
 
 /// Fake configurable de SharedPreferences que implementa un modelo de dos estados (O2):
 /// - memory: estado de la caché síncrona en memoria.
@@ -76,11 +77,9 @@ class TestSharedPreferences extends Fake implements SharedPreferences {
     memory[key] = value;
     setStringValues[key] = value;
     if (throwOnSetString) {
-      ExchangeRateService.onKeyWriteFailed(key);
       throw Exception('Simulated disk/IO error on setString');
     }
     if (returnFalseOnSetString) {
-      ExchangeRateService.onKeyWriteFailed(key);
       return false;
     }
     disk[key] = value;
@@ -93,11 +92,9 @@ class TestSharedPreferences extends Fake implements SharedPreferences {
     memory[key] = value;
     setDoubleValues[key] = value;
     if (throwOnSetDouble) {
-      ExchangeRateService.onKeyWriteFailed(key);
       throw Exception('Simulated disk/IO error on setDouble');
     }
     if (returnFalseOnSetDouble) {
-      ExchangeRateService.onKeyWriteFailed(key);
       return false;
     }
     disk[key] = value;
@@ -109,11 +106,9 @@ class TestSharedPreferences extends Fake implements SharedPreferences {
     memory[key] = value;
     setBoolValues[key] = value;
     if (throwOnSetBool) {
-      ExchangeRateService.onKeyWriteFailed(key);
       throw Exception('Simulated disk/IO error on setBool');
     }
     if (returnFalseOnSetBool) {
-      ExchangeRateService.onKeyWriteFailed(key);
       return false;
     }
     disk[key] = value;
@@ -1519,7 +1514,7 @@ void main() {
         final store = TestSharedPreferences({'cached_rate_usd': 0.5});
         store.returnFalseOnSetDouble = true;
 
-        final ok = await store.setDouble('cached_rate_usd', 60.0);
+        final ok = await ExchangeRateService.safeSetDouble(store, 'cached_rate_usd', 60.0);
         expect(ok, isFalse);
         expect(store.memory['cached_rate_usd'], equals(60.0));
         expect(store.disk['cached_rate_usd'], equals(0.5));
@@ -1529,6 +1524,41 @@ void main() {
         expect(res, equals(1));
         expect(store.disk.containsKey('cached_rate_usd'), isFalse);
         expect(store.disk[ExchangeRateService.prefKeyCacheHistoricaPurgada], isTrue);
+      });
+
+      test('M-05 scan: setDouble que lanza en setTasaCambio debe registrar fallo y no blindar disco', () async {
+        final store = TestSharedPreferences({AppConstants.prefTasaCambio: 0.5});
+        store.throwOnSetDouble = true;
+
+        final settings = SettingsProvider(prefsInstance: store, autoLoad: false);
+        try {
+          await settings.setTasaCambio(60.0);
+        } catch (_) {}
+
+        expect(store.memory[AppConstants.prefTasaCambio], equals(60.0));
+        expect(store.disk[AppConstants.prefTasaCambio], equals(0.5));
+
+        store.throwOnSetDouble = false;
+        final res = await ExchangeRateService.ensureCacheHistoricaPurgada(prefsInstance: store);
+
+        expect(res, equals(1));
+        expect(store.disk.containsKey(AppConstants.prefTasaCambio), isFalse);
+        expect(store.disk[ExchangeRateService.prefKeyCacheHistoricaPurgada], isTrue);
+      });
+
+      test('M-05 post-remove: una confirmacion durante el await de remove no debe perder la tasa fresca', () async {
+        final store = TestSharedPreferences({'cached_rate_usd': 0.5});
+        store.onKeyRemovedAsync = (key) async {
+          if (key == 'cached_rate_usd') {
+            store.disk['cached_rate_usd'] = 60.0;
+            store.memory['cached_rate_usd'] = 60.0;
+            ExchangeRateService.onKeyWriteConfirmed('cached_rate_usd', 60.0);
+          }
+        };
+
+        await ExchangeRateService.purgarCacheHistoricaInvalida(prefsInstance: store);
+
+        expect(store.disk['cached_rate_usd'], equals(60.0));
       });
 
       test('M-04: Timestamp con fecha de calendario imposible (2026-02-30) se purga como corrupto', () async {

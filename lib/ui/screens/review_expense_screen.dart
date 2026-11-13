@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -35,6 +36,7 @@ class ReviewExpenseScreen extends StatefulWidget {
   final GeminiExtractionResult? extractedData;
   final GastoModel? existingGasto;
   final int? queueItemId;
+  final DateTime? currentDate;
 
   const ReviewExpenseScreen({
     Key? key,
@@ -42,6 +44,7 @@ class ReviewExpenseScreen extends StatefulWidget {
     this.extractedData,
     this.existingGasto,
     this.queueItemId,
+    this.currentDate,
   }) : super(key: key);
 
   static void showImagePickerOptions(
@@ -521,24 +524,61 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     _verificarPreciosAnteriores();
   }
 
-  Map<int, Map<String, dynamic>> _priceComparisons = {};
+  Map<String, PriceHistory> _priceComparisons = {};
+  Timer? _priceCheckDebounce;
+
+  DateTime get _effectiveReferenceDate => widget.currentDate ?? DateTime.now();
+
+  void _schedulePriceComparisonCheck() {
+    _priceCheckDebounce?.cancel();
+    _priceCheckDebounce = Timer(const Duration(milliseconds: 400), () {
+      if (mounted) {
+        _verificarPreciosAnteriores();
+      }
+    });
+  }
 
   Future<void> _verificarPreciosAnteriores() async {
     final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
-    for (int i = 0; i < _items.length; i++) {
-      final desc = _items[i].descripcion;
-      if (desc.trim().length > 2 && !DatabaseHelper.isTaxItem(desc)) {
-        final previo = await gastoProvider.buscarPrecioAnterior(
-          desc,
-          excludeGastoId: widget.existingGasto?.id,
-        );
-        if (previo != null && mounted) {
-          setState(() {
-            _priceComparisons[i] = previo;
-          });
+    final normToClientKeys = <String, List<String>>{};
+    for (final it in _items) {
+      final norm = DatabaseHelper.normalizeProductText(it.descripcion);
+      if (norm.length > 2 && !DatabaseHelper.isTaxItem(norm)) {
+        normToClientKeys.putIfAbsent(norm, () => []).add(it.clientKey);
+      }
+    }
+
+    if (normToClientKeys.isEmpty) {
+      if (_priceComparisons.isNotEmpty && mounted) {
+        setState(() {
+          _priceComparisons = {};
+        });
+      }
+      return;
+    }
+
+    final historyByDesc = await gastoProvider.buscarHistorialPrecios(
+      normToClientKeys.keys.toList(),
+      excludeGastoId: widget.existingGasto?.id,
+      comercioActual: _comercioCtrl.text,
+      referenceDate: _effectiveReferenceDate,
+    );
+
+    if (!mounted) return;
+
+    final nextMap = <String, PriceHistory>{};
+    for (final entry in normToClientKeys.entries) {
+      final history = historyByDesc[entry.key];
+      if (history != null) {
+        for (final clientKey in entry.value) {
+          nextMap[clientKey] = history;
         }
       }
     }
+
+    setState(() {
+      _priceComparisons = nextMap;
+    });
   }
 
   IconData _getCategoryIcon(String categoria) => AppConstants.getCategoryIcon(categoria);
@@ -673,6 +713,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
 
   @override
   void dispose() {
+    _priceCheckDebounce?.cancel();
     _settingsProvider?.removeListener(_onSettingsChanged);
     _comercioCtrl.dispose();
     _totalOriginalCtrl.dispose();
@@ -934,8 +975,10 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
   }
 
   void _removeItem(int index) {
+    final removedKey = _items[index].clientKey;
     setState(() {
       _items.removeAt(index);
+      _priceComparisons.remove(removedKey);
       _sincronizarCategoriaImpuestos();
     });
   }
@@ -2311,6 +2354,10 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                   TextFormField(
                     controller: _comercioCtrl,
                     textCapitalization: TextCapitalization.words,
+                    onChanged: (_) {
+                      setState(() {});
+                      _schedulePriceComparisonCheck();
+                    },
                     decoration: const InputDecoration(
                       labelText: '¿Dónde gastaste? (opcional)',
                       hintText: 'Ej. Farmatodo, Panadería...',
@@ -2492,52 +2539,25 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                       final idx = entry.key;
                       final item = entry.value;
 
-                      Widget? priceWarning;
-                      if (_priceComparisons.containsKey(idx)) {
-                        final prevData = _priceComparisons[idx]!;
-                        final prevUsd = (prevData['precio_usd'] as num?)?.toDouble() ?? 0.0;
-                        final prevComercio = prevData['comercio'] as String? ?? '';
+                      final cant = item.cantidad > 0 ? item.cantidad : 1.0;
+                      double unitPrice = item.precioUnitarioDisplay;
+                      if (item.totalDisplay > 0) {
+                        unitPrice = item.totalDisplay / cant;
+                      }
 
-                        final cant = item.cantidad > 0 ? item.cantidad : 1.0;
-                        double unitPrice = item.precioUnitarioDisplay;
-                        if (item.totalDisplay > 0) {
-                          unitPrice = item.totalDisplay / cant;
-                        }
-
-                        double currentUsd = unitPrice;
-                        final tasa = tryParseAmount(_tasaCambioCtrl.text, isPrice: false) ?? 1.0;
-                        if (_selectedMoneda == 'VES') {
-                          if (tasa > 0) currentUsd = unitPrice / tasa;
-                        } else {
-                          double sumItems = _items.fold(0.0, (prev, it) => prev + it.totalDisplay);
-                          final totalOrig = tryParseAmount(_totalOriginalCtrl.text, isPrice: false) ?? 0.0;
-                          if (totalOrig > 0 && sumItems > totalOrig * 5 && tasa > 0) {
-                            currentUsd = unitPrice / tasa;
-                          }
-                        }
-
-                        if (prevUsd > 0 && currentUsd > 0) {
-                          if (currentUsd > (prevUsd * 1.05)) {
-                            final diff = ((currentUsd / prevUsd) - 1) * 100;
-                            priceWarning = Padding(
-                              padding: const EdgeInsets.only(top: 4, left: 4),
-                              child: Text(
-                                '🔺 Está ${diff.toStringAsFixed(0)}% más caro por unidad que en $prevComercio',
-                                style: const TextStyle(color: AppColors.error, fontSize: 11, fontWeight: FontWeight.w600),
-                              ),
-                            );
-                          } else if (currentUsd < (prevUsd * 0.95)) {
-                            final diff = (1 - (currentUsd / prevUsd)) * 100;
-                            priceWarning = Padding(
-                              padding: const EdgeInsets.only(top: 4, left: 4),
-                              child: Text(
-                                '🟢 Te salió un ${diff.toStringAsFixed(0)}% más económico por unidad que en $prevComercio',
-                                style: const TextStyle(color: AppColors.textPrimary, fontSize: 11, fontWeight: FontWeight.w600),
-                              ),
-                            );
-                          }
+                      double currentUsd = unitPrice;
+                      final tasa = tryParseAmount(_tasaCambioCtrl.text, isPrice: false) ?? 1.0;
+                      if (_selectedMoneda == 'VES') {
+                        if (tasa > 0) currentUsd = unitPrice / tasa;
+                      } else {
+                        final sumItems = _items.fold(0.0, (prev, it) => prev + it.totalDisplay);
+                        final totalOrig = tryParseAmount(_totalOriginalCtrl.text, isPrice: false) ?? 0.0;
+                        if (totalOrig > 0 && sumItems > totalOrig * 5 && tasa > 0) {
+                          currentUsd = unitPrice / tasa;
                         }
                       }
+
+                      final itemHistory = _priceComparisons[item.clientKey];
 
                       return Card(
                         key: ValueKey('item_card_${item.clientKey}'),
@@ -2589,6 +2609,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                             });
                                           }
                                         }
+                                        _schedulePriceComparisonCheck();
                                       },
                                     ),
                                   ),
@@ -2731,10 +2752,15 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                   ),
                                 ],
                               ),
-                              if (priceWarning != null) ...[
-                                const SizedBox(height: 8),
-                                priceWarning,
-                              ],
+                              if (itemHistory != null)
+                                _PriceComparisonLine(
+                                  key: ValueKey('price_comparison_${item.clientKey}'),
+                                  clientKey: item.clientKey,
+                                  history: itemHistory,
+                                  currentUsd: currentUsd,
+                                  comercioActual: _comercioCtrl.text,
+                                  referenceDate: _effectiveReferenceDate,
+                                ),
                             ],
                           ),
                         ),
@@ -3512,6 +3538,156 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     ReviewExpenseScreen.showImagePickerOptions(
       context,
       onPickImage: _pickImage,
+    );
+  }
+}
+
+String _relativeDate(String fechaIso, {DateTime? referenceDate}) {
+  return DatabaseHelper.formatRelativePriceDate(fechaIso, referenceDate: referenceDate);
+}
+
+class _PriceComparisonLine extends StatelessWidget {
+  final String clientKey;
+  final PriceHistory history;
+  final double currentUsd;
+  final String comercioActual;
+  final DateTime referenceDate;
+
+  const _PriceComparisonLine({
+    super.key,
+    required this.clientKey,
+    required this.history,
+    required this.currentUsd,
+    required this.comercioActual,
+    required this.referenceDate,
+  });
+
+  UnitPriceRef? _bestRecentPrice() {
+    if (history.entradas.isNotEmpty) {
+      UnitPriceRef? best;
+      for (final ref in history.entradas) {
+        final age = DatabaseHelper.daysBetweenIsoAndReference(ref.fecha, referenceDate: referenceDate);
+        if (age != null && age >= 0 && age <= 30 && ref.precioUsd > 0) {
+          if (best == null || ref.precioUsd < best.precioUsd) {
+            best = ref;
+          }
+        }
+      }
+      if (best != null) return best;
+    }
+    final mp = history.mejorPrecio;
+    if (mp != null && mp.precioUsd > 0) {
+      final age = DatabaseHelper.daysBetweenIsoAndReference(mp.fecha, referenceDate: referenceDate);
+      if (age != null && age >= 0 && age <= 30) {
+        return mp;
+      }
+    }
+    return null;
+  }
+
+  UnitPriceRef? _referenceOldPrice(UnitPriceRef? mismoComercioRef) {
+    if (mismoComercioRef != null && mismoComercioRef.precioUsd > 0) {
+      final age = DatabaseHelper.daysBetweenIsoAndReference(mismoComercioRef.fecha, referenceDate: referenceDate);
+      if (age != null && age >= 31 && age <= 60) {
+        return mismoComercioRef;
+      }
+    }
+    final mp = history.mejorPrecio;
+    if (mp != null && mp.precioUsd > 0) {
+      final age = DatabaseHelper.daysBetweenIsoAndReference(mp.fecha, referenceDate: referenceDate);
+      if (age != null && age >= 31 && age <= 60) {
+        return mp;
+      }
+    }
+    for (final ref in history.entradas) {
+      final age = DatabaseHelper.daysBetweenIsoAndReference(ref.fecha, referenceDate: referenceDate);
+      if (age != null && age >= 31 && age <= 60 && ref.precioUsd > 0) {
+        return ref;
+      }
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final mismoComercioRef = history.mismoComercioPara(comercioActual);
+    final mismoAge = mismoComercioRef != null
+        ? DatabaseHelper.daysBetweenIsoAndReference(mismoComercioRef.fecha, referenceDate: referenceDate)
+        : null;
+
+    String? message;
+    Color textColor = AppColors.textPrimary;
+    FontWeight weight = FontWeight.w600;
+
+    // Prioridad 1: Coincidencia en el mismo comercio (0 a 30 días)
+    if (mismoComercioRef != null &&
+        mismoComercioRef.precioUsd > 0 &&
+        mismoAge != null &&
+        mismoAge >= 0 &&
+        mismoAge <= 30) {
+      if (currentUsd <= 0) return const SizedBox.shrink();
+      final prevUsd = mismoComercioRef.precioUsd;
+      final comercioDisplay = DatabaseHelper.formatCommerceDisplay(mismoComercioRef.comercio);
+      final relDate = _relativeDate(mismoComercioRef.fecha, referenceDate: referenceDate);
+      if (currentUsd > (prevUsd * 1.05)) {
+        final diff = ((currentUsd / prevUsd) - 1) * 100;
+        message = '🔺 Está ${diff.toStringAsFixed(0)}% más caro por unidad en $comercioDisplay ($relDate)';
+        textColor = AppColors.error;
+      } else if (currentUsd < (prevUsd * 0.95)) {
+        final diff = (1 - (currentUsd / prevUsd)) * 100;
+        message = '🟢 Te salió un ${diff.toStringAsFixed(0)}% más económico por unidad en $comercioDisplay ($relDate)';
+        textColor = AppColors.textPrimary;
+      } else {
+        return const SizedBox.shrink();
+      }
+    } else {
+      // Prioridad 2: Sin coincidencia en el comercio (0 a 30 días) -> Mejor precio del mercado (0 a 30 días)
+      final mejorReciente = _bestRecentPrice();
+      if (mejorReciente != null) {
+        if (currentUsd <= 0) return const SizedBox.shrink();
+        final prevUsd = mejorReciente.precioUsd;
+        final comercioDisplay = DatabaseHelper.formatCommerceDisplay(mejorReciente.comercio);
+        final relDate = _relativeDate(mejorReciente.fecha, referenceDate: referenceDate);
+        if (currentUsd > (prevUsd * 1.05)) {
+          final diff = ((currentUsd / prevUsd) - 1) * 100;
+          message = '🔺 Está ${diff.toStringAsFixed(0)}% más caro por unidad que en $comercioDisplay ($relDate)';
+          textColor = AppColors.error;
+        } else if (currentUsd < (prevUsd * 0.95)) {
+          final diff = (1 - (currentUsd / prevUsd)) * 100;
+          message = '🟢 Te salió un ${diff.toStringAsFixed(0)}% más económico por unidad que en $comercioDisplay ($relDate)';
+          textColor = AppColors.textPrimary;
+        } else {
+          return const SizedBox.shrink();
+        }
+      } else {
+        // Prioridad 3: Cualquier dato entre 31 y 60 días -> línea gris de referencia sin porcentaje
+        final oldRef = _referenceOldPrice(mismoComercioRef);
+        if (oldRef != null) {
+          final prevUsd = oldRef.precioUsd;
+          final comercioDisplay = DatabaseHelper.formatCommerceDisplay(oldRef.comercio);
+          final relDate = _relativeDate(oldRef.fecha, referenceDate: referenceDate);
+          message = 'Referencia: \$${prevUsd.toStringAsFixed(2)}/ud en $comercioDisplay ($relDate)';
+          textColor = AppColors.textMuted;
+          weight = FontWeight.w500;
+        }
+      }
+    }
+
+    if (message == null) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 10, left: 4),
+      child: Text(
+        message,
+        key: ValueKey('price_comparison_$clientKey'),
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          color: textColor,
+          fontSize: 11,
+          fontWeight: weight,
+        ),
+      ),
     );
   }
 }
