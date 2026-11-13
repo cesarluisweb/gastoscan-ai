@@ -355,6 +355,20 @@ class GastoProvider with ChangeNotifier {
         await dbHelper.markShoppingItemsAsPurchased(shoppingItemIds, newId);
       }
 
+      final fechaParts = gasto.fecha.split('-');
+      if (fechaParts.length >= 2) {
+        final parsedYear = int.tryParse(fechaParts[0]);
+        final parsedMonth = int.tryParse(fechaParts[1]);
+        if (parsedYear != null &&
+            parsedMonth != null &&
+            parsedYear >= 2000 &&
+            parsedMonth >= 1 &&
+            parsedMonth <= 12) {
+          _selectedYear = parsedYear;
+          _selectedMonth = parsedMonth;
+        }
+      }
+
       await cargarDatos();
       _syncCoordinator.notifyLocalChange();
       NotificationService.instance.recordActivityAndReschedule();

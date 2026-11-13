@@ -293,6 +293,90 @@ class GeminiService {
     return normalized;
   }
 
+  static String _formatIsoDate(DateTime date) {
+    final y = date.year.toString().padLeft(4, '0');
+    final m = date.month.toString().padLeft(2, '0');
+    final d = date.day.toString().padLeft(2, '0');
+    return '$y-$m-$d';
+  }
+
+  /// Resuelve de forma determinista la fecha de un gasto dictado por voz.
+  /// Si el usuario no mencionó ninguna referencia temporal explícita, retorna
+  /// la fecha de hoy para neutralizar fechas alucinadas por el LLM.
+  static String resolveSpokenExpenseDate(
+    String spokenText,
+    dynamic rawAiFecha, {
+    DateTime? currentDate,
+  }) {
+    final now = currentDate ?? DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final todayIso = _formatIsoDate(today);
+    final lower = spokenText.toLowerCase();
+
+    if (RegExp(r'\b(antier|anteayer)\b').hasMatch(lower)) {
+      return _formatIsoDate(today.subtract(const Duration(days: 2)));
+    }
+    if (RegExp(r'\b(ayer|anoche)\b').hasMatch(lower)) {
+      return _formatIsoDate(today.subtract(const Duration(days: 1)));
+    }
+
+    final haceDiasMatch = RegExp(
+      r'\bhace\s+(\d+|un|una|dos|tres|cuatro|cinco|seis|siete)\s+d[ií]as?\b',
+    ).firstMatch(lower);
+    if (haceDiasMatch != null) {
+      const wordsToNum = <String, int>{
+        'un': 1,
+        'una': 1,
+        'dos': 2,
+        'tres': 3,
+        'cuatro': 4,
+        'cinco': 5,
+        'seis': 6,
+        'siete': 7,
+      };
+      final rawToken = haceDiasMatch.group(1)!;
+      final days = int.tryParse(rawToken) ?? wordsToNum[rawToken] ?? 0;
+      if (days > 0) {
+        return _formatIsoDate(today.subtract(Duration(days: days)));
+      }
+    }
+
+    final hasCalendarRef = RegExp(
+      r'\b(lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo)\b|'
+      r'\b(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre)\b|'
+      r'\b\d{1,2}[\/\-\.]\d{1,2}(?:[\/\-\.]\d{2,4})?\b|'
+      r'\b\d{4}-\d{2}-\d{2}\b|'
+      r'\bel\s+d[ií]a\s+\d{1,2}\b|'
+      r'\bel\s+\d{1,2}\s+de\b',
+    ).hasMatch(lower);
+
+    if (!hasCalendarRef) {
+      return todayIso;
+    }
+
+    if (rawAiFecha == null || rawAiFecha.toString().trim().isEmpty) {
+      return todayIso;
+    }
+
+    var parsedIso = GeminiExtractionResult.parseExtractionDate(rawAiFecha);
+    final parsedDate = DateTime.tryParse(parsedIso);
+    if (parsedDate == null) {
+      return todayIso;
+    }
+
+    final hasExplicitFourDigitYear = RegExp(r'\b20\d{2}\b').hasMatch(lower);
+    if (!hasExplicitFourDigitYear && parsedDate.year != today.year) {
+      final daysInMonth = DateTime(today.year, parsedDate.month + 1, 0).day;
+      final safeDay = parsedDate.day.clamp(1, daysInMonth);
+      parsedIso = _formatIsoDate(DateTime(today.year, parsedDate.month, safeDay));
+    }
+
+    if (parsedIso.compareTo(todayIso) > 0) {
+      return todayIso;
+    }
+    return parsedIso;
+  }
+
   GeminiExtractionResult _mapArgsToExtractionResult(
     Map args,
     String spokenText, {
@@ -303,9 +387,7 @@ class GeminiService {
     final String comercio = args['comercio']?.toString().trim().isNotEmpty == true
         ? args['comercio'].toString().trim()
         : 'Varios';
-    final String fecha = args['fecha']?.toString().trim().isNotEmpty == true
-        ? args['fecha'].toString().trim()
-        : DateTime.now().toIso8601String().substring(0, 10);
+    final String fecha = resolveSpokenExpenseDate(spokenText, args['fecha']);
     final String categoriaRaw = args['categoria']?.toString().trim() ?? 'Otros';
     final String categoria = AppConstants.normalizarCategoria(categoriaRaw);
     final String monedaArg = args['moneda']?.toString() ?? '';

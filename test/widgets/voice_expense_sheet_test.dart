@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:speech_to_text/speech_recognition_result.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:gastoscan_ai/data/datasources/local/database_helper.dart';
 import 'package:gastoscan_ai/data/datasources/remote/gemini_service.dart';
 import 'package:gastoscan_ai/data/models/gemini_extraction_result.dart';
@@ -65,6 +68,65 @@ class FakeGastoProvider extends GastoProvider {
 class FakeSettingsProvider extends SettingsProvider {
   @override
   Future<void> loadSettings() async {}
+}
+
+class FakeSpeechRecognitionResult extends Fake implements SpeechRecognitionResult {
+  @override
+  final String recognizedWords;
+
+  @override
+  final bool finalResult;
+
+  FakeSpeechRecognitionResult(this.recognizedWords, {this.finalResult = false});
+}
+
+class FakeSpeechToText extends Fake implements stt.SpeechToText {
+  void Function(SpeechRecognitionResult)? onResultCallback;
+  void Function(String)? onStatusCallback;
+  bool isListeningValue = false;
+  int stopCallCount = 0;
+  int listenCallCount = 0;
+
+  @override
+  bool get isListening => isListeningValue;
+
+  @override
+  Future<void> stop() async {
+    stopCallCount++;
+    isListeningValue = false;
+  }
+
+  @override
+  Future<void> cancel() async {
+    stopCallCount++;
+    isListeningValue = false;
+  }
+
+  void emitResult(String words, {bool finalResult = false}) {
+    onResultCallback?.call(FakeSpeechRecognitionResult(words, finalResult: finalResult));
+  }
+
+  void emitStatus(String status) {
+    onStatusCallback?.call(status);
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) {
+    if (invocation.memberName == #initialize) {
+      onStatusCallback = invocation.namedArguments[#onStatus] as void Function(String)?;
+      return Future.value(true);
+    }
+    if (invocation.memberName == #locales) {
+      return Future.value(<stt.LocaleName>[stt.LocaleName('es_ES', 'Spanish')]);
+    }
+    if (invocation.memberName == #listen) {
+      listenCallCount++;
+      isListeningValue = true;
+      onResultCallback = invocation.namedArguments[#onResult] as void Function(SpeechRecognitionResult)?;
+      return Future.value(true);
+    }
+    return super.noSuchMethod(invocation);
+  }
 }
 
 void main() {
@@ -320,6 +382,188 @@ void main() {
       expect(r.items.first.precioUnitario, equals(600));
       expect(r.items.first.total, equals(300));
       expect(r.items.first.categoria, equals('Alimentación'));
+    });
+  });
+
+  group('VoiceExpenseSheet Continuous Dictation & Date Resolution Tests', () {
+    test('shouldCommitPreviousSpeechSegment distingue expansión en vivo de nuevo segmento tras pausa', () {
+      // Misma frase creciendo en vivo: NO debe consolidar aún
+      expect(
+        VoiceExpenseSheet.shouldCommitPreviousSpeechSegment(
+          'Compré medio',
+          'Compré medio kilo de queso',
+          wasFinalized: false,
+        ),
+        isFalse,
+      );
+
+      // Segmento previo finalizado por el motor: SÍ debe consolidar
+      expect(
+        VoiceExpenseSheet.shouldCommitPreviousSpeechSegment(
+          'Compré medio kilo de queso',
+          'por cuatro dólares',
+          wasFinalized: true,
+        ),
+        isTrue,
+      );
+
+      // Reinicio de búfer tras pausa sin finalResult previo (2+ palabras previas, nueva palabra inicial)
+      expect(
+        VoiceExpenseSheet.shouldCommitPreviousSpeechSegment(
+          'Compré arroz',
+          'y caraotas en el mercado',
+          wasFinalized: false,
+        ),
+        isTrue,
+      );
+
+      // Corrección fonética temprana de una sola palabra similar sin pausa: NO consolidar
+      expect(
+        VoiceExpenseSheet.shouldCommitPreviousSpeechSegment(
+          'Compro',
+          'Compré',
+          wasFinalized: false,
+          gap: const Duration(milliseconds: 120),
+        ),
+        isFalse,
+      );
+    });
+
+    testWidgets('preserva texto transcrito cuando el motor reinicia palabras tras una pausa breve', (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      final fakeGemini = FakeGeminiVoiceService();
+      final fakeDb = FakeDatabaseHelper();
+      final queueProvider = ScanQueueProvider(dbHelper: fakeDb, autoProcess: false);
+      final fakeGasto = FakeGastoProvider();
+      final fakeSettings = FakeSettingsProvider();
+      final fakeSpeech = FakeSpeechToText();
+      addTearDown(queueProvider.dispose);
+      addTearDown(fakeGasto.dispose);
+      addTearDown(fakeSettings.dispose);
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<ScanQueueProvider>.value(value: queueProvider),
+            ChangeNotifierProvider<GastoProvider>.value(value: fakeGasto),
+            ChangeNotifierProvider<SettingsProvider>.value(value: fakeSettings),
+          ],
+          child: MaterialApp(
+            home: Scaffold(
+              body: VoiceExpenseSheet(
+                geminiService: fakeGemini,
+                speechToText: fakeSpeech,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final inputFinder = find.byKey(const Key('voice_expense_input_field'));
+      TextField field() => tester.widget<TextField>(inputFinder);
+
+      fakeSpeech.emitResult('Compré medio kilo');
+      await tester.pump();
+      expect(field().controller!.text, equals('Compré medio kilo'));
+
+      fakeSpeech.emitResult('Compré medio kilo de queso', finalResult: true);
+      await tester.pump();
+      expect(field().controller!.text, equals('Compré medio kilo de queso'));
+
+      // Pausa breve: motor emite vacío y luego nuevo segmento desde cero
+      fakeSpeech.emitResult('');
+      await tester.pump();
+      expect(field().controller!.text, equals('Compré medio kilo de queso'));
+
+      fakeSpeech.emitResult('por cuatro dólares');
+      await tester.pump();
+      expect(field().controller!.text, equals('Compré medio kilo de queso por cuatro dólares'));
+
+      // Segunda pausa sin finalResult previo (reinicio de búfer)
+      fakeSpeech.emitResult('en el automercado');
+      await tester.pump();
+      expect(
+        field().controller!.text,
+        equals('Compré medio kilo de queso por cuatro dólares en el automercado'),
+      );
+
+      // Si el usuario detiene manualmente el micrófono, resultados tardíos se ignoran
+      await tester.tap(find.byIcon(Icons.mic));
+      await tester.pump();
+      fakeSpeech.emitResult('ruido tardío');
+      await tester.pump();
+      expect(
+        field().controller!.text,
+        equals('Compré medio kilo de queso por cuatro dólares en el automercado'),
+      );
+    });
+
+    test('resolveSpokenExpenseDate neutraliza fechas alucinadas y resuelve expresiones relativas', () {
+      final refDate = DateTime(2026, 11, 13);
+
+      // Sin mención temporal: ignora fecha alucinada por Gemini
+      expect(
+        GeminiService.resolveSpokenExpenseDate(
+          'Compré queso por 4 dólares en el mercado',
+          '2024-03-15',
+          currentDate: refDate,
+        ),
+        equals('2026-11-13'),
+      );
+
+      // Expresiones relativas
+      expect(
+        GeminiService.resolveSpokenExpenseDate(
+          'Ayer compré pan por 2 dólares',
+          '2024-01-01',
+          currentDate: refDate,
+        ),
+        equals('2026-11-12'),
+      );
+      expect(
+        GeminiService.resolveSpokenExpenseDate(
+          'Antier pagué 10 dólares de internet',
+          null,
+          currentDate: refDate,
+        ),
+        equals('2026-11-11'),
+      );
+      expect(
+        GeminiService.resolveSpokenExpenseDate(
+          'Hace 3 días compré café',
+          null,
+          currentDate: refDate,
+        ),
+        equals('2026-11-10'),
+      );
+
+      // Fecha explícita sin año: adopta el año actual
+      expect(
+        GeminiService.resolveSpokenExpenseDate(
+          'Compré el 5 de octubre una medicina',
+          '2024-10-05',
+          currentDate: refDate,
+        ),
+        equals('2026-10-05'),
+      );
+
+      // Fecha explícita con año: respeta el año dictado
+      expect(
+        GeminiService.resolveSpokenExpenseDate(
+          'Compré el 5 de octubre de 2025 una medicina',
+          '2025-10-05',
+          currentDate: refDate,
+        ),
+        equals('2025-10-05'),
+      );
     });
   });
 }

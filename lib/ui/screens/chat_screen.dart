@@ -14,6 +14,7 @@ import '../../data/models/shopping_item_model.dart';
 import '../../data/models/gemini_extraction_result.dart';
 import '../../providers/scan_queue_provider.dart';
 import '../../providers/chat_provider.dart';
+import '../widgets/voice_expense_sheet.dart';
 import 'review_expense_screen.dart';
 
 class ChatSuggestion {
@@ -80,6 +81,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   String? _spanishLocaleId;
   double _previousBottomInset = 0.0;
   bool _wasNearBottomBeforeKeyboard = true;
+  String _committedSpeechText = '';
+  String _currentSpeechSegment = '';
+  bool _speechSegmentFinalized = false;
+  bool _manualStopRequested = false;
+  DateTime? _lastSpeechResultAt;
 
   ChatProvider _getChatProvider(BuildContext context) {
     if (widget.chatProvider != null) return widget.chatProvider!;
@@ -163,7 +169,18 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _stopListening({bool cancel = false}) async {
+    _manualStopRequested = true;
     _isListening = false;
+    if (cancel) {
+      _committedSpeechText = '';
+      _currentSpeechSegment = '';
+      _speechSegmentFinalized = false;
+      _lastSpeechResultAt = null;
+    } else {
+      _committedSpeechText = _textCtrl.text.trim();
+      _currentSpeechSegment = '';
+      _speechSegmentFinalized = false;
+    }
     if (mounted) {
       setState(() {});
     }
@@ -183,7 +200,18 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           if (mounted) setState(() => _isListening = false);
         },
         onStatus: (status) {
-          if (mounted && (status == 'done' || status == 'notListening')) {
+          if (!mounted) return;
+          if (status == 'listening' && !_manualStopRequested) {
+            setState(() => _isListening = true);
+          } else if (status == 'done' || status == 'notListening') {
+            if (_currentSpeechSegment.isNotEmpty) {
+              _committedSpeechText = VoiceExpenseSheet.joinSpeechParts(
+                _committedSpeechText,
+                _currentSpeechSegment,
+              );
+              _currentSpeechSegment = '';
+              _speechSegmentFinalized = false;
+            }
             setState(() => _isListening = false);
           }
         },
@@ -206,29 +234,68 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<void> _toggleListening() async {
     if (!_speechAvailable) {
       await _initSpeech();
+      if (!mounted) return;
     }
 
     if (_isListening) {
       await _stopListening();
+      return;
     } else {
       if (_speechAvailable) {
         _focusNode.unfocus();
-        String previousText = _textCtrl.text;
-        if (previousText.isNotEmpty && !previousText.endsWith(' ')) {
-          previousText += ' ';
-        }
+        _manualStopRequested = false;
+        _committedSpeechText = _textCtrl.text.trim();
+        _currentSpeechSegment = '';
+        _speechSegmentFinalized = false;
+        _lastSpeechResultAt = null;
         if (mounted) setState(() => _isListening = true);
         await _speech.listen(
           localeId: _spanishLocaleId,
           onResult: (val) {
-            if (mounted && _isListening) {
-              setState(() {
-                _textCtrl.text = previousText + val.recognizedWords;
-                _textCtrl.selection = TextSelection.fromPosition(
-                  TextPosition(offset: _textCtrl.text.length),
-                );
-              });
+            if (!mounted || _manualStopRequested) return;
+            final incoming = val.recognizedWords.trim();
+            final now = DateTime.now();
+
+            if (incoming.isEmpty) {
+              if (val.finalResult && _currentSpeechSegment.isNotEmpty) {
+                _speechSegmentFinalized = true;
+              }
+              return;
             }
+
+            final gap = _lastSpeechResultAt != null ? now.difference(_lastSpeechResultAt!) : null;
+            if (_currentSpeechSegment.isNotEmpty &&
+                VoiceExpenseSheet.shouldCommitPreviousSpeechSegment(
+                  _currentSpeechSegment,
+                  incoming,
+                  wasFinalized: _speechSegmentFinalized,
+                  gap: gap,
+                )) {
+              _committedSpeechText = VoiceExpenseSheet.joinSpeechParts(
+                _committedSpeechText,
+                _currentSpeechSegment,
+              );
+              _currentSpeechSegment = incoming;
+              _speechSegmentFinalized = val.finalResult;
+            } else {
+              _currentSpeechSegment = incoming;
+              if (val.finalResult) {
+                _speechSegmentFinalized = true;
+              }
+            }
+
+            _lastSpeechResultAt = now;
+            final combined = VoiceExpenseSheet.joinSpeechParts(
+              _committedSpeechText,
+              _currentSpeechSegment,
+            );
+
+            setState(() {
+              _textCtrl.text = combined;
+              _textCtrl.selection = TextSelection.fromPosition(
+                TextPosition(offset: _textCtrl.text.length),
+              );
+            });
           },
           listenFor: const Duration(seconds: 60),
           pauseFor: const Duration(seconds: 10),
@@ -287,9 +354,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final String comercio = gastoData['comercio']?.toString().trim().isNotEmpty == true
         ? gastoData['comercio'].toString().trim()
         : 'General';
-    final String fecha = gastoData['fecha']?.toString().trim().isNotEmpty == true
-        ? gastoData['fecha'].toString().trim()
-        : DateTime.now().toIso8601String().substring(0, 10);
+    final String fecha = GeminiService.resolveSpokenExpenseDate(
+      rawUserText,
+      gastoData['fecha'],
+    );
     final String categoria = AppConstants.normalizarCategoria(gastoData['categoria']?.toString().trim() ?? 'Otros');
     final String monedaArg = gastoData['moneda']?.toString() ?? '';
     final String monedaGasto = AppConstants.normalizarMoneda(
@@ -446,6 +514,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             : gastoProvider.totalMesUsd);
 
     return {
+      'fecha_hoy': DateTime.now().toIso8601String().substring(0, 10),
       'tasa_bcv_usd': settings.tasaCambioVesUsd,
       'tasa_bcv_eur': settings.tasaCambioVesEur,
       'tasa_usdt': settings.tasaCambioVesUsdt,
@@ -479,12 +548,17 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
     if (_isListening || _speech.isListening) {
       await _stopListening(cancel: true);
+      if (!mounted) return;
     }
 
     final chatProvider = _getChatProvider(context);
     chatProvider.addMessage({'role': 'user', 'text': text});
     if (textOverride == null) {
       _textCtrl.clear();
+      _committedSpeechText = '';
+      _currentSpeechSegment = '';
+      _speechSegmentFinalized = false;
+      _lastSpeechResultAt = null;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && !_isListening && _textCtrl.text.isNotEmpty) {
           _textCtrl.clear();

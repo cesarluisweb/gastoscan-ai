@@ -29,6 +29,73 @@ class VoiceExpenseSheet extends StatefulWidget {
     );
   }
 
+  static String joinSpeechParts(String committed, String current) {
+    final c = committed.trim();
+    final cur = current.trim();
+    if (c.isEmpty) return cur;
+    if (cur.isEmpty) return c;
+    return '$c $cur';
+  }
+
+  static String _normalizeSpeechForComparison(String text) {
+    return text
+        .toLowerCase()
+        .replaceAll('á', 'a')
+        .replaceAll('é', 'e')
+        .replaceAll('í', 'i')
+        .replaceAll('ó', 'o')
+        .replaceAll('ú', 'u')
+        .replaceAll('ü', 'u')
+        .replaceAll('ñ', 'n')
+        .replaceAll(RegExp(r'[^\w\s]'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+  }
+
+  /// Determina si el motor nativo de voz inició un nuevo segmento (por pausa breve)
+  /// en lugar de seguir expandiendo o corrigiendo la frase en curso.
+  static bool shouldCommitPreviousSpeechSegment(
+    String previousSegment,
+    String incomingSegment, {
+    required bool wasFinalized,
+    Duration? gap,
+  }) {
+    final prevNorm = _normalizeSpeechForComparison(previousSegment);
+    final incNorm = _normalizeSpeechForComparison(incomingSegment);
+    if (prevNorm.isEmpty || incNorm.isEmpty) return false;
+    if (incNorm == prevNorm || incNorm.startsWith(prevNorm)) return false;
+    if (wasFinalized) return true;
+
+    final prevWords = prevNorm.split(' ');
+    final incWords = incNorm.split(' ');
+    if (prevNorm.startsWith(incNorm) && prevWords.length >= 2 && incWords.length < prevWords.length) {
+      return true;
+    }
+
+    if (prevWords.first != incWords.first) {
+      if (prevWords.length >= 2) return true;
+      if (gap != null && gap.inMilliseconds >= 500) return true;
+      if (prevWords.first.length < 2 ||
+          incWords.first.length < 2 ||
+          prevWords.first.substring(0, 2) != incWords.first.substring(0, 2)) {
+        return true;
+      }
+      return false;
+    }
+
+    if (prevWords.length >= 3 && incWords.length <= prevWords.length - 2) {
+      return true;
+    }
+    if (gap != null &&
+        gap.inMilliseconds >= 700 &&
+        incWords.length <= 2 &&
+        incWords.length < prevWords.length) {
+      return true;
+    }
+
+    return false;
+  }
+
   @override
   State<VoiceExpenseSheet> createState() => _VoiceExpenseSheetState();
 }
@@ -44,6 +111,11 @@ class _VoiceExpenseSheetState extends State<VoiceExpenseSheet> {
   bool _isProcessing = false;
   String? _spanishLocaleId;
   String _statusMessage = 'Preparando micrófono...';
+  String _committedText = '';
+  String _currentSegmentText = '';
+  bool _segmentFinalized = false;
+  bool _manualStopRequested = false;
+  DateTime? _lastResultAt;
 
   @override
   void initState() {
@@ -55,6 +127,7 @@ class _VoiceExpenseSheetState extends State<VoiceExpenseSheet> {
 
   @override
   void dispose() {
+    _manualStopRequested = true;
     _speech.stop();
     _textCtrl.dispose();
     _focusNode.dispose();
@@ -73,23 +146,37 @@ class _VoiceExpenseSheetState extends State<VoiceExpenseSheet> {
           }
         },
         onStatus: (status) {
-          if (mounted) {
-            if (status == 'done' || status == 'notListening') {
-              setState(() {
-                _isListening = false;
+          if (!mounted) return;
+          if (status == 'listening' && !_manualStopRequested && !_isProcessing) {
+            setState(() {
+              _isListening = true;
+              _statusMessage = 'Escuchando... toca el micrófono para pausar';
+            });
+          } else if (status == 'done' || status == 'notListening') {
+            if (_currentSegmentText.isNotEmpty) {
+              _committedText = VoiceExpenseSheet.joinSpeechParts(_committedText, _currentSegmentText);
+              _currentSegmentText = '';
+              _segmentFinalized = false;
+            }
+            setState(() {
+              _isListening = false;
+              if (!_isProcessing) {
                 if (_textCtrl.text.trim().isNotEmpty) {
                   _statusMessage = 'Pausado. Puedes editar el texto o procesar.';
                 } else {
                   _statusMessage = 'Toca el micrófono para hablar o escribe';
                 }
-              });
-            }
+              }
+            });
           }
         },
       );
 
+      if (!mounted || _manualStopRequested) return;
+
       if (_speechAvailable) {
         final locales = await _speech.locales();
+        if (!mounted || _manualStopRequested) return;
         for (final loc in locales) {
           if (loc.localeId.toLowerCase().startsWith('es')) {
             _spanishLocaleId = loc.localeId;
@@ -119,11 +206,11 @@ class _VoiceExpenseSheetState extends State<VoiceExpenseSheet> {
     if (!_speechAvailable) return;
 
     _focusNode.unfocus();
-
-    String previousText = _textCtrl.text.trim();
-    if (previousText.isNotEmpty) {
-      previousText += ' ';
-    }
+    _manualStopRequested = false;
+    _committedText = _textCtrl.text.trim();
+    _currentSegmentText = '';
+    _segmentFinalized = false;
+    _lastResultAt = null;
 
     setState(() {
       _isListening = true;
@@ -133,14 +220,45 @@ class _VoiceExpenseSheetState extends State<VoiceExpenseSheet> {
     await _speech.listen(
       localeId: _spanishLocaleId,
       onResult: (val) {
-        if (mounted && _isListening) {
-          setState(() {
-            _textCtrl.text = previousText + val.recognizedWords;
-            _textCtrl.selection = TextSelection.fromPosition(
-              TextPosition(offset: _textCtrl.text.length),
-            );
-          });
+        if (!mounted || _manualStopRequested || _isProcessing) return;
+
+        final incoming = val.recognizedWords.trim();
+        final now = DateTime.now();
+
+        if (incoming.isEmpty) {
+          if (val.finalResult && _currentSegmentText.isNotEmpty) {
+            _segmentFinalized = true;
+          }
+          return;
         }
+
+        final gap = _lastResultAt != null ? now.difference(_lastResultAt!) : null;
+        if (_currentSegmentText.isNotEmpty &&
+            VoiceExpenseSheet.shouldCommitPreviousSpeechSegment(
+              _currentSegmentText,
+              incoming,
+              wasFinalized: _segmentFinalized,
+              gap: gap,
+            )) {
+          _committedText = VoiceExpenseSheet.joinSpeechParts(_committedText, _currentSegmentText);
+          _currentSegmentText = incoming;
+          _segmentFinalized = val.finalResult;
+        } else {
+          _currentSegmentText = incoming;
+          if (val.finalResult) {
+            _segmentFinalized = true;
+          }
+        }
+
+        _lastResultAt = now;
+        final combined = VoiceExpenseSheet.joinSpeechParts(_committedText, _currentSegmentText);
+
+        setState(() {
+          _textCtrl.text = combined;
+          _textCtrl.selection = TextSelection.fromPosition(
+            TextPosition(offset: _textCtrl.text.length),
+          );
+        });
       },
       listenFor: const Duration(seconds: 60),
       pauseFor: const Duration(seconds: 10),
@@ -148,10 +266,14 @@ class _VoiceExpenseSheetState extends State<VoiceExpenseSheet> {
   }
 
   Future<void> _stopListening() async {
-    await _speech.stop();
+    _manualStopRequested = true;
+    _isListening = false;
+    _committedText = _textCtrl.text.trim();
+    _currentSegmentText = '';
+    _segmentFinalized = false;
+
     if (mounted) {
       setState(() {
-        _isListening = false;
         if (_textCtrl.text.trim().isNotEmpty) {
           _statusMessage = 'Pausado. Puedes editar el texto o procesar.';
         } else {
@@ -159,13 +281,17 @@ class _VoiceExpenseSheetState extends State<VoiceExpenseSheet> {
         }
       });
     }
+
+    await _speech.stop();
   }
 
   Future<void> _processExpense() async {
     final text = _textCtrl.text.trim();
     if (text.isEmpty) return;
 
+    _manualStopRequested = true;
     await _speech.stop();
+    if (!mounted) return;
     _focusNode.unfocus();
     setState(() {
       _isListening = false;
@@ -180,32 +306,32 @@ class _VoiceExpenseSheetState extends State<VoiceExpenseSheet> {
         monedaPrincipal: settings.monedaPrincipal,
       );
 
-      if (mounted) {
-        if (extractionResults.length > 1) {
-          final queueProvider = Provider.of<ScanQueueProvider>(context, listen: false);
-          final insertedIds = await queueProvider.enqueueReadyExtractionResults(extractionResults);
+      if (!mounted) return;
+      if (extractionResults.length > 1) {
+        final queueProvider = Provider.of<ScanQueueProvider>(context, listen: false);
+        final insertedIds = await queueProvider.enqueueReadyExtractionResults(extractionResults);
+        if (!mounted) return;
 
-          Navigator.pop(context);
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ReviewExpenseScreen(
-                extractedData: extractionResults.first,
-                queueItemId: insertedIds.first,
-              ),
+        final navigator = Navigator.of(context);
+        navigator.pop();
+        navigator.push(
+          MaterialPageRoute(
+            builder: (context) => ReviewExpenseScreen(
+              extractedData: extractionResults.first,
+              queueItemId: insertedIds.first,
             ),
-          );
-        } else if (extractionResults.isNotEmpty) {
-          Navigator.pop(context);
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ReviewExpenseScreen(
-                extractedData: extractionResults.first,
-              ),
+          ),
+        );
+      } else if (extractionResults.isNotEmpty) {
+        final navigator = Navigator.of(context);
+        navigator.pop();
+        navigator.push(
+          MaterialPageRoute(
+            builder: (context) => ReviewExpenseScreen(
+              extractedData: extractionResults.first,
             ),
-          );
-        }
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -337,12 +463,18 @@ class _VoiceExpenseSheetState extends State<VoiceExpenseSheet> {
                             onPressed: () {
                               setState(() {
                                 _textCtrl.clear();
+                                _committedText = '';
+                                _currentSegmentText = '';
+                                _segmentFinalized = false;
                               });
                             },
                           )
                         : null,
                   ),
-                  onChanged: (_) {
+                  onChanged: (value) {
+                    _committedText = value.trim();
+                    _currentSegmentText = '';
+                    _segmentFinalized = false;
                     setState(() {});
                   },
                   onTap: () {

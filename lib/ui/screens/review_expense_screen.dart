@@ -422,7 +422,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       final bool esComercioGenerico = rawComercio.toLowerCase() == 'comercio no especificado' ||
           rawComercio.toLowerCase() == 'comercio desconocido';
       _comercioCtrl = TextEditingController(text: esComercioGenerico ? '' : rawComercio);
-      _selectedFecha = data?.fecha ?? DateTime.now().toIso8601String().substring(0, 10);
+      _selectedFecha = data != null
+          ? GeminiExtractionResult.parseExtractionDate(data.fecha)
+          : DateTime.now().toIso8601String().substring(0, 10);
       
       final detectedMoneda = data?.moneda.trim();
       if (detectedMoneda != null && detectedMoneda.isNotEmpty && AppConstants.monedas.contains(detectedMoneda)) {
