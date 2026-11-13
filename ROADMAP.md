@@ -25,15 +25,12 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 
 ## Tareas en Validación Activa por César (`Pendiente de validación 🧪` / `Implementada 🔧`)
 
-*Tareas integradas en `main` que permanecen pendientes de verificación o cierre administrativo:*
+*Tareas integradas en `main` que permanecen pendientes de cierre administrativo:*
 
-1. `UX-14` **Estado Vacío Contextual Inteligente y Sincronización Temporal de Sesión:** `Implementada 🔧`
-   - Detección automática del último mes con compras (`obtenerUltimoMesConGastos()`), incentivo sin botón cuando el mes actual está vacío, flecha izquierda hacia atrás al consultar meses futuros y `[Volver al mes actual]` en períodos históricos.
-   - Restablecimiento automático al mes en curso tras inactividad mayor a 30 minutos al reanudar la app (`WidgetsBindingObserver`).
-2. **Seguridad Crítica de Firma (Keystore):** `Pendiente de validación 🧪`
+1. **Seguridad Crítica de Firma (Keystore):** `Pendiente de validación 🧪`
    - `rindemas.jks` retirado de Git y firma inyectada desde GitHub Secrets con guardas SHA-1/SHA-256 en CI (Builds 664/671).
    - *Pendiente posterior:* Rotación de la upload key tras aprobación de Producción en Google Play.
-3. **Subida a Google Play Store (Solicitud de Producción):** `Pendiente de validación 🧪`
+2. **Subida a Google Play Store (Solicitud de Producción):** `Pendiente de validación 🧪`
    - Prueba cerrada de 14 días completada con 12 evaluadores (cero crashes / cero ANR). Solicitud de producción enviada el 04/11/2026 (en revisión). Doc en [`docs/DOC_CUESTIONARIO_PRODUCCION.md`](docs/DOC_CUESTIONARIO_PRODUCCION.md).
 
 ---
