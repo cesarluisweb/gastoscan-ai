@@ -197,6 +197,7 @@ void main() {
         fecha: '2026-11-13',
         moneda: 'USD',
         totalOriginal: 6.40,
+        impuestoIva: 0.0,
         items: [
           ItemGastoModel(
             descripcion: 'Café Molido',
@@ -287,6 +288,7 @@ void main() {
         fecha: '2026-11-13',
         moneda: 'USD',
         totalOriginal: 7.06,
+        impuestoIva: 0.0,
         items: [
           ItemGastoModel(
             descripcion: 'Leche Entera',
@@ -374,6 +376,7 @@ void main() {
         fecha: '2026-11-13',
         moneda: 'USD',
         totalOriginal: 4.50,
+        impuestoIva: 0.0,
         items: [
           ItemGastoModel(
             descripcion: 'Harina PAN',
