@@ -96,6 +96,9 @@ void main() {
     expect(find.byIcon(Icons.undo_rounded), findsOneWidget);
     expect(find.text('Deshacer'), findsOneWidget);
 
+    // Avanzar la animación de entrada del SnackBar (250 ms) para que quede en pantalla
+    await tester.pump(const Duration(milliseconds: 300));
+
     // Probar que el botón Deshacer restaura el artículo
     await tester.tap(find.byKey(const Key('shopping_undo_delete_button')));
     await tester.pump();
