@@ -8,8 +8,8 @@
 - **Mapa de código:** `docs/CODE_MAP.md` se regenera con `node scripts/gen_code_map.js`; el hook de pre-commit lo actualiza.
 
 ## Tareas en Curso
-- **E0-05b (diagnóstico Q01..Q20):** `Pendiente de validación 🧪` (build 707, `4dafbf9`, run `43499866405`).
-- **B1 (reglas Firestore):** `Pendiente de validación 🧪` (`4f2bff6`, emulador `43499032804` en verde). Falta correr `audit_firestore.yml` y desplegar con `deploy_rules.yml` (`DEPLOY`).
+- **E0-05b (diagnóstico Q01..Q20):** ✅ Completada (build 707, `4dafbf9`, run `43499866405`). Fase 0 cerrada.
+- **B1 (reglas Firestore):** ✅ Completada (`4f2bff6`, emulador `43499032804` en verde, auditada y validada en producción).
 - **Pendientes de cierre administrativo:** firma P0 (rotar upload key tras aprobar Producción) y solicitud de Producción en Google Play.
 
 ## Completadas
