@@ -13,9 +13,9 @@
 | `domain/` | 8 | 998 |
 | `providers/` | 4 | 1960 |
 | `services/` | 13 | 4438 |
-| `ui/` | 31 | 18859 |
+| `ui/` | 31 | 18874 |
 | `(raiz)/` | 2 | 106 |
-| **Total** | **78** | **31532** |
+| **Total** | **78** | **31547** |
 
 ## core/
 
@@ -114,7 +114,7 @@
 | `lib/ui/widgets/expense_card.dart` | 534 | `ExpenseCard` | `currency_display_test.dart`, `expense_card_test.dart` |
 | `lib/ui/widgets/global_scan_queue_banner.dart` | 647 | `GlobalScanQueueBanner` | `global_scan_queue_banner_test.dart` |
 | `lib/ui/widgets/month_selector_bar.dart` | 241 | `MonthSelectorBar` | `month_selector_bar_test.dart` |
-| `lib/ui/widgets/more/more_rates_card.dart` | 239 | `MoreRatesCard` | - |
+| `lib/ui/widgets/more/more_rates_card.dart` | 254 | `MoreRatesCard` | - |
 | `lib/ui/widgets/more/more_tools_grid.dart` | 175 | `MoreToolsGrid` | - |
 | `lib/ui/widgets/pending_expense_card.dart` | 273 | `PendingExpenseCard` | `lote_4_ui_resilience_and_performance_test.dart` |
 | `lib/ui/widgets/purchase_radiography_card.dart` | 297 | `PurchaseRadiographyCard` | - |

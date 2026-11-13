@@ -63,68 +63,83 @@ class MoreRatesCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              const Expanded(
-                child: Row(
-                  children: [
-                    Icon(Icons.currency_exchange, color: AppColors.primaryDark, size: 20),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Tasas de Cambio',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              return Row(
+                children: [
+                  const Expanded(
+                    child: Row(
+                      children: [
+                        Icon(Icons.currency_exchange, color: AppColors.primaryDark, size: 20),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Tasas de Cambio',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerRight,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(_iconoEstadoTasa(), size: 12, color: estadoColor),
-                      const SizedBox(width: 4),
-                      Text(
-                        _textoEstadoTasa(),
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: estadoColor,
-                        ),
-                        maxLines: 1,
-                      ),
-                    ],
                   ),
-                ),
-              ),
-              const SizedBox(width: 4),
-              IconButton(
-                key: const Key('refresh_rates_btn'),
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                padding: EdgeInsets.zero,
-                visualDensity: VisualDensity.compact,
-                icon: settings.isSyncingRate
-                    ? const SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
-                      )
-                    : const Icon(Icons.refresh, size: 18, color: AppColors.textSecondary),
-                tooltip: 'Actualizar tasas',
-                onPressed: settings.isSyncingRate ? null : onRefresh,
-              ),
-            ],
+                  const SizedBox(width: 8),
+                  ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: constraints.maxWidth * 0.50),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerRight,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(_iconoEstadoTasa(), size: 12, color: estadoColor),
+                                const SizedBox(width: 4),
+                                Text(
+                                  _textoEstadoTasa(),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: estadoColor,
+                                  ),
+                                  maxLines: 1,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        IconButton(
+                          key: const Key('refresh_rates_btn'),
+                          constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                          padding: EdgeInsets.zero,
+                          visualDensity: VisualDensity.compact,
+                          style: IconButton.styleFrom(
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          icon: settings.isSyncingRate
+                              ? const SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                                )
+                              : const Icon(Icons.refresh, size: 18, color: AppColors.textSecondary),
+                          tooltip: 'Actualizar tasas',
+                          onPressed: settings.isSyncingRate ? null : onRefresh,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 12),
           Row(
