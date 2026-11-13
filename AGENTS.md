@@ -26,7 +26,8 @@
 - **Memoria:** lee `MEMORY.md` al iniciar y actualízalo al terminar.
 - **Auditoría de reglas:** tras editar `AGENTS.md`, `.agents/rules/` o `.agents/skills/`, ejecuta `scripts/check_rules.ps1` sin errores.
 - **Iteración rápida:** máximo 2 lecturas por bloque de código antes de editar o probar.
-- **Ahorro de contexto:** lee `docs/INDEX.md` antes de buscar documentación. Nunca leas `docs/archive/`, `scripts/legacy/`, `build_artifacts/` ni `node_modules`.
+- **Ahorro de contexto:** lee `docs/INDEX.md` antes de buscar docs y `docs/CODE_MAP.md` antes de buscar en `lib/` o `test/`. Lee solo rangos necesarios. Nunca leas `docs/archive/`, `scripts/legacy/`, `build_artifacts/` ni `node_modules`.
+- **Higiene de tokens:** mantén la raíz libre de `DOC_*`/`PLAN_*` y archivos temporales. Archiva documentación cerrada en `docs/archive/` y no dejes carpetas de runs en `.agents/`.
 
 ### ⚠️ Pregunta antes (a César)
 - Añadir, quitar o actualizar dependencias en `pubspec.yaml` o `package.json`.
