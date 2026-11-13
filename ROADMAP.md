@@ -50,7 +50,7 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 
 ## Fase 0: Integridad Financiera y Multimoneda (Iniciativa RM-03 — Cierre)
 *Hitos `E0-01` a `E0-05a` completados; ver [ROADMAP_HISTORICO.md](docs/archive/2026-Q4/ROADMAP_HISTORICO.md).*
-- `E0-05b` **Protocolo de diagnóstico de datos existentes (Q01..Q20):** `Implementada 🔧` Consultas de solo lectura (`PRAGMA query_only = ON`, copia temporal con soporte WAL, sin PII) en `lib/domain/diagnostics/` y CLI `tool/diagnose_sqlite.dart`. Doc en [`docs/DOC_E0_05B_DIAGNOSTICO_Q01_Q20.md`](docs/DOC_E0_05B_DIAGNOSTICO_Q01_Q20.md). Pendiente de CI y validación de César (`A-14`).
+- `E0-05b` **Protocolo de diagnóstico de datos existentes (Q01..Q20):** `Pendiente de validación 🧪` Consultas de solo lectura (`PRAGMA query_only = ON`, copia temporal con soporte WAL, sin PII) en `lib/domain/diagnostics/` y CLI `tool/diagnose_sqlite.dart`. Doc en [`docs/DOC_E0_05B_DIAGNOSTICO_Q01_Q20.md`](docs/DOC_E0_05B_DIAGNOSTICO_Q01_Q20.md). CI en verde (build 707, `4dafbf9`).
 
 ---
 
@@ -100,7 +100,7 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 
 | Ítem / Área | Prioridad | Estado | Detalle |
 | :--- | :---: | :---: | :--- |
-| **Endurecimiento de reglas de Firestore (`B1`)** | P0 | `Implementada 🔧` | Reglas endurecidas con `diff()` en `firestore.rules`, suite `RT-01..RT-24` (`test_rules.yml`) y auditoría read-only (`audit_firestore.yml`). Pendiente de CI y despliegue manual. |
+| **Endurecimiento de reglas de Firestore (`B1`)** | P0 | `Pendiente de validación 🧪` | Reglas endurecidas con `diff()` en `firestore.rules`, suite `RT-01..RT-24` en verde (CI `43499032804`, build 1, `4f2bff6`) y auditoría read-only (`audit_firestore.yml`). Pendiente de auditoría y despliegue manual. |
 | **Búsqueda histórica eficiente (tabla normalizada)** | P2 | `Pendiente` | Condicionado a métricas en dispositivo > 300 ms. |
 | **Crear `ShoppingListProvider` / Repository** | P2 | `Pendiente` | Desacoplar pantallas y chat de llamadas directas a `DatabaseHelper.instance`. |
 | **Actualizar `README.md` a la realidad** | P2 | `Pendiente` | Sigue listando Cloud Functions y archivos inexistentes del proyecto inicial. |
