@@ -72,7 +72,7 @@
 
 ## 6. Archivo histórico (`docs/archive/2026-Q4/`)
 
-Contiene 25 documentos cerrados: planes viejos, auditorías, correcciones y el `ROADMAP_HISTORICO.md`.
+Contiene 26 documentos cerrados: planes viejos, auditorías, correcciones y el `ROADMAP_HISTORICO.md`.
 No leer salvo que César pida antecedentes de una fase terminada.
 
 ## 7. Rutas que nunca se leen
