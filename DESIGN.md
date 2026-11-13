@@ -112,6 +112,8 @@ ScaffoldMessenger.of(context).showSnackBar(
 );
 ```
 
+Si requiere acción (ej. `Deshacer`), mantener la barra fija sin `SnackBarAction` y colocar un `InkWell` discreto (`Icons.undo_rounded` `15 dp` + texto `12 sp` en `Colors.black87`) dentro de `content` (`Row` con `Expanded` para el mensaje).
+
 ### 3.3 Botón de Acción Principal (`ElevatedButton`)
 ```dart
 ElevatedButton(
