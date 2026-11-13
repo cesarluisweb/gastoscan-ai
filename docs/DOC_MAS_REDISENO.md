@@ -10,9 +10,8 @@ Se implementó el rediseño y refinamiento final de `MoreScreen`, reorganizando 
   - Tarjeta compartida de descargo e independencia respecto al BCV y enlace oficial.
   - Utilizada tanto al pie de `MoreScreen` (`Key('more_rates_bcv_disclaimer')`) como en `CurrencyCalculatorScreen` (`Key('calc_bcv_disclaimer_card')`).
 - `lib/ui/widgets/more/more_rates_card.dart`:
-  - Cabecera con icono oficial `Icons.currency_exchange` en `AppColors.primaryDark` (`#L58`).
-  - Insignia real de frescura de tasa (`✓ Actualizada hoy`, `Última registrada`, `Sin tasa disponible`, `Tasa manual`) y botón `Key('refresh_rates_btn')` (`#L101`).
-  - 3 columnas compactas con `FittedBox(fit: BoxFit.scaleDown)`: Dólar BCV (`#L126`), Euro BCV (`#L136`) y USDT P2P (`#L146`).
+  - Cabecera con icono oficial `Icons.currency_exchange` (`#L69`), título «Tasas de Cambio» a la izquierda, y estado de frescura sin borde junto al botón `Key('refresh_rates_btn')` (`#L112`) a la derecha (`#L66-L128`).
+  - 3 mini-tarjetas internas separadas (`rate_card_usd`, `rate_card_eur`, `rate_card_usdt`, `#L130-L236`) en fondo claro (`AppColors.surface`), borde suave y sin sombra, con iconos Material nativos (`Icons.attach_money`, `Icons.euro`, `Icons.toll_outlined`) de peso 0 KB.
   - Sin selector de moneda ni texto legal interno para mantener la tarjeta enfocada solo en valores de mercado.
 - `lib/ui/widgets/more/more_tools_grid.dart`:
   - Cuadrícula 2×2 dentro de `IntrinsicHeight` (`#L49`, `#L76`) con altura mínima de 104 dp para resistir escalado tipográfico `1.3x`.
@@ -32,11 +31,10 @@ Todas las hojas usan el patrón canónico (`Padding(viewInsets.bottom)` $\righta
   - Escribir a soporte por WhatsApp (`Key('more_menu_support_whatsapp')`, `#L968`).
   - Visitar sitio web (`Key('more_menu_website')`, `#L981`).
   - Apoyar el proyecto ☕ (`Key('more_menu_donate')`, `#L994`).
-- **Sobre Rinde Más** (`Key('more_group_about')`, `more_screen.dart#L744`):
-  - Buscar actualizaciones con `UpdateService` (`Key('more_menu_check_updates')`, `#L1060`).
-  - Ver en Google Play (`Key('btn_ver_google_play')`, `#L1103`).
-  - Política de privacidad (`Key('more_menu_privacy_policy')`, `#L1116`).
-  - Términos y condiciones (`Key('more_menu_terms')`, `#L1129`).
+- **Sobre Rinde Más** (`Key('more_group_about')`, `more_screen.dart#L743`):
+  - Ver en Google Play (`Key('btn_ver_google_play')`, `#L1044`) con subtítulo de actualizaciones, reseñas y versión actual.
+  - Política de privacidad (`Key('more_menu_privacy_policy')`, `#L1060`).
+  - Términos y condiciones (`Key('more_menu_terms')`, `#L1073`).
 
 ### 3. Gestión de Cuenta, Zona de Peligro y Pie de Página
 - **Cuenta Vinculada** (`more_screen.dart#L530-L547`):
@@ -53,15 +51,15 @@ Todas las hojas usan el patrón canónico (`Padding(viewInsets.bottom)` $\righta
 ## Guía de Verificación en Dispositivo Físico (*Rinde Más Dev*)
 
 - **Artefacto:** `rindemas-dev-apk`
-- **Build de CI:** 691 (Run `43282854678`)
-- **Commit SHA:** `da92c24` (cambios de `MoreScreen` aterrizados desde `4039a92` y verificados en build `691`)
+- **Build de CI:** 693 (Run `43437129915`)
+- **Commit SHA:** `fb7cecb`
 
 | Paso | Acción en Dispositivo | Evidencia archivo:línea | Resultado Esperado |
 | :--- | :--- | :--- | :--- |
 | **1. Cabecera y Orden** | Abrir la pestaña «Más» desde la barra inferior | `lib/ui/screens/more_screen.dart#L345-L430` | AppBar conserva selector de mes, búsqueda y botón de IA sin fondo amarillo. El cuerpo muestra Cuenta, Tasas, Bento 2×2, Ajustes y Pie BCV. |
-| **2. Tarjeta de Tasas** | Revisar la tarjeta «Tasas de cambio» y tocar refrescar | `lib/ui/widgets/more/more_rates_card.dart#L58-L155` | Muestra Dólar BCV, Euro BCV, USDT P2P e insignia real de frescura con botón `↻`. Ya no muestra selector de moneda ni descargo BCV interno. |
+| **2. Tarjeta de Tasas** | Revisar la tarjeta «Tasas de cambio» y tocar refrescar | `lib/ui/widgets/more/more_rates_card.dart#L66-L236` | Título a la izquierda; estado sin borde y botón `↻` juntos a la derecha. Muestra 3 mini-tarjetas (`Dólar BCV`, `Euro BCV`, `USDT P2P`) con icono y fondo claro sin sombra. |
 | **3. Bento 2×2 Unificado** | Inspeccionar los 4 bloques de «Herramientas» y abrir Calculadora | `lib/ui/widgets/more/more_tools_grid.dart#L49-L140` y `lib/ui/screens/currency_calculator_screen.dart#L555` | Los 4 cuadros (incluido «Asistente IA») comparten fondo blanco con insignia amarilla suave. La Calculadora muestra la misma tarjeta BCV al pie. |
 | **4. Preferencias y Moneda** | Tocar «Preferencias y datos» y cambiar «Moneda de reportes» | `lib/ui/screens/more_screen.dart#L714-L855` | Abre hoja inferior con selector `CurrencyLensDropdown` reactivo, switch de galería, botones `Excel (.csv)` / `Texto (.md)` y Notificaciones. |
-| **5. Soporte y Sobre Rinde Más** | Tocar «Soporte y comunidad» y luego «Sobre Rinde Más» | `lib/ui/screens/more_screen.dart#L729-L756`, `#L929-L1150` | La fila 2 abre WhatsApp, Sitio web y Apoyar. La fila 3 abre Buscar actualizaciones, Google Play, Privacidad y Términos. |
+| **5. Soporte y Sobre Rinde Más** | Tocar «Soporte y comunidad» y luego «Sobre Rinde Más» | `lib/ui/screens/more_screen.dart#L729-L756`, `#L928-L1103` | La fila 2 abre WhatsApp, Sitio web y Apoyar. La fila 3 abre Ver en Google Play, Privacidad y Términos (sin opción redundante de buscar actualizaciones). |
 | **6. Pie BCV y Versión** | Desplazar hasta el final de la pantalla «Más» | `lib/ui/screens/more_screen.dart#L1267-L1289` y `lib/ui/widgets/bcv_legal_disclaimer_card.dart#L6-L60` | Muestra la tarjeta compartida de aviso legal BCV con su enlace oficial y, debajo, únicamente `Rinde Más v<versión>` centrado. |
 | **7. Ajustes de Cuenta** | Tocar el engranaje `⚙️` en la tarjeta de cuenta y probar «Eliminar cuenta» | `lib/ui/screens/more_screen.dart#L540`, `#L1153-L1255`, `#L1374-L1419` | Despliega «Cerrar sesión» y «Zona de Peligro». En el diálogo, el botón rojo se habilita solo al escribir `ELIMINAR` *(cancelar sin confirmar)*. |
