@@ -23,7 +23,6 @@ import 'currency_calculator_screen.dart';
 import '../widgets/more/more_rates_card.dart';
 import '../widgets/more/more_tools_grid.dart';
 import '../widgets/currency_lens_dropdown.dart';
-import '../widgets/update_dialog.dart';
 import '../widgets/bcv_legal_disclaimer_card.dart';
 import '../../data/datasources/local/database_helper.dart';
 
@@ -748,7 +747,7 @@ class MoreScreenState extends State<MoreScreen> {
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary),
             ),
             subtitle: const Text(
-              'Actualizaciones, Google Play, privacidad, términos',
+              'Google Play, privacidad, términos',
               style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
             ),
             trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary, size: 20),
@@ -1014,137 +1013,90 @@ class MoreScreenState extends State<MoreScreen> {
   }
 
   void _mostrarHojaSobreApp(BuildContext context) {
-    bool isCheckingUpdate = false;
-    String? updateStatusNote;
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) {
-        return StatefulBuilder(
-          builder: (modalCtx, setModalState) {
-            return Padding(
-              padding: EdgeInsets.only(bottom: MediaQuery.of(modalCtx).viewInsets.bottom),
-              child: Material(
-                key: const Key('sheet_surface_about'),
-                color: AppColors.surface,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                clipBehavior: Clip.antiAlias,
-                child: SafeArea(
-                  top: false,
-                  child: SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Center(
-                            child: Container(
-                              width: 36,
-                              height: 4,
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade300,
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
+        return Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          child: Material(
+            key: const Key('sheet_surface_about'),
+            color: AppColors.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            clipBehavior: Clip.antiAlias,
+            child: SafeArea(
+              top: false,
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 36,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade300,
+                            borderRadius: BorderRadius.circular(2),
                           ),
-                          const SizedBox(height: 14),
-                          const Text(
-                            'Sobre Rinde Más',
-                            style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                          ),
-                          const SizedBox(height: 8),
-                          ListTile(
-                            key: const Key('more_menu_check_updates'),
-                            contentPadding: EdgeInsets.zero,
-                            leading: const Icon(Icons.system_update_outlined, color: AppColors.primaryDark),
-                            title: const Text('Buscar actualizaciones', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                            subtitle: Text(
-                              updateStatusNote ?? 'Versión actual v$_currentAppVersion',
-                              style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
-                            ),
-                            trailing: isCheckingUpdate
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
-                                  )
-                                : const Icon(Icons.chevron_right, size: 18, color: AppColors.textSecondary),
-                            onTap: isCheckingUpdate
-                                ? null
-                                : () async {
-                                    setModalState(() {
-                                      isCheckingUpdate = true;
-                                      updateStatusNote = 'Buscando nueva versión...';
-                                    });
-                                    final info = await UpdateService().checkForUpdate(force: true);
-                                    if (modalCtx.mounted) {
-                                      setModalState(() {
-                                        isCheckingUpdate = false;
-                                        if (info == null) {
-                                          updateStatusNote = 'No se pudo comprobar. Verifica en Google Play.';
-                                        } else if (!info.hasUpdate) {
-                                          updateStatusNote = 'Tienes la última versión disponible.';
-                                        } else {
-                                          updateStatusNote = 'Nueva versión disponible (v${info.version}).';
-                                        }
-                                      });
-                                    }
-                                    if (info != null && info.hasUpdate && modalCtx.mounted && context.mounted) {
-                                      Navigator.pop(modalCtx);
-                                      UpdateDialog.show(context, info);
-                                    }
-                                  },
-                          ),
-                          const Divider(height: 1, color: AppColors.border),
-                          ListTile(
-                            key: const Key('btn_ver_google_play'),
-                            contentPadding: EdgeInsets.zero,
-                            leading: const Icon(Icons.shop_outlined, color: AppColors.primaryDark),
-                            title: const Text('Ver en Google Play', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                            subtitle: const Text('Calificar Rinde Más o ver la ficha oficial', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                            trailing: const Icon(Icons.open_in_new, size: 16, color: AppColors.textSecondary),
-                            onTap: () {
-                              Navigator.pop(modalCtx);
-                              _abrirGooglePlay();
-                            },
-                          ),
-                          const Divider(height: 1, color: AppColors.border),
-                          ListTile(
-                            key: const Key('more_menu_privacy_policy'),
-                            contentPadding: EdgeInsets.zero,
-                            leading: const Icon(Icons.privacy_tip_outlined, color: AppColors.primaryDark),
-                            title: const Text('Política de privacidad', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                            subtitle: const Text('Cómo protegemos tus datos y facturas', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                            trailing: const Icon(Icons.open_in_new, size: 16, color: AppColors.textSecondary),
-                            onTap: () {
-                              Navigator.pop(modalCtx);
-                              _abrirUrl(AppConstants.privacidadUrl, 'No se pudo abrir la política de privacidad');
-                            },
-                          ),
-                          const Divider(height: 1, color: AppColors.border),
-                          ListTile(
-                            key: const Key('more_menu_terms'),
-                            contentPadding: EdgeInsets.zero,
-                            leading: const Icon(Icons.description_outlined, color: AppColors.primaryDark),
-                            title: const Text('Términos y condiciones', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                            subtitle: const Text('Condiciones de uso de Rinde Más', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                            trailing: const Icon(Icons.open_in_new, size: 16, color: AppColors.textSecondary),
-                            onTap: () {
-                              Navigator.pop(modalCtx);
-                              _abrirUrl(AppConstants.terminosUrl, 'No se pudo abrir los términos');
-                            },
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 14),
+                      const Text(
+                        'Sobre Rinde Más',
+                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                      ),
+                      const SizedBox(height: 8),
+                      ListTile(
+                        key: const Key('btn_ver_google_play'),
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.shop_outlined, color: AppColors.primaryDark),
+                        title: const Text('Ver en Google Play', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                        subtitle: Text(
+                          'Actualizaciones, reseñas · v$_currentAppVersion',
+                          style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                        ),
+                        trailing: const Icon(Icons.open_in_new, size: 16, color: AppColors.textSecondary),
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          _abrirGooglePlay();
+                        },
+                      ),
+                      const Divider(height: 1, color: AppColors.border),
+                      ListTile(
+                        key: const Key('more_menu_privacy_policy'),
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.privacy_tip_outlined, color: AppColors.primaryDark),
+                        title: const Text('Política de privacidad', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                        subtitle: const Text('Cómo protegemos tus datos y facturas', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                        trailing: const Icon(Icons.open_in_new, size: 16, color: AppColors.textSecondary),
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          _abrirUrl(AppConstants.privacidadUrl, 'No se pudo abrir la política de privacidad');
+                        },
+                      ),
+                      const Divider(height: 1, color: AppColors.border),
+                      ListTile(
+                        key: const Key('more_menu_terms'),
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.description_outlined, color: AppColors.primaryDark),
+                        title: const Text('Términos y condiciones', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                        subtitle: const Text('Condiciones de uso de Rinde Más', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                        trailing: const Icon(Icons.open_in_new, size: 16, color: AppColors.textSecondary),
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          _abrirUrl(AppConstants.terminosUrl, 'No se pudo abrir los términos');
+                        },
+                      ),
+                    ],
                   ),
                 ),
               ),
-            );
-          },
+            ),
+          ),
         );
       },
     );

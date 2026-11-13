@@ -500,12 +500,16 @@ void main() {
       Navigator.of(tester.element(find.byKey(const Key('sheet_surface_support')))).pop();
       await tester.pumpAndSettle();
 
+      expect(find.byKey(const Key('rate_card_usd')), findsOneWidget);
+      expect(find.byKey(const Key('rate_card_eur')), findsOneWidget);
+      expect(find.byKey(const Key('rate_card_usdt')), findsOneWidget);
+
       await tester.tap(find.byKey(const Key('more_group_about')));
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('sheet_surface_about')), findsOneWidget);
-      expect(find.byKey(const Key('more_menu_check_updates')), findsOneWidget);
-      expect(find.text('Buscar actualizaciones'), findsOneWidget);
+      expect(find.byKey(const Key('more_menu_check_updates')), findsNothing);
+      expect(find.text('Buscar actualizaciones'), findsNothing);
       expect(find.byKey(const Key('btn_ver_google_play')), findsOneWidget);
       expect(find.text('Ver en Google Play'), findsOneWidget);
       expect(find.byKey(const Key('more_menu_privacy_policy')), findsOneWidget);
