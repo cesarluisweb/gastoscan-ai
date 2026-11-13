@@ -870,6 +870,9 @@ async function handleChatAnalyst(request, geminiKey, isCustomKey = false) {
     const { messages, contextData, modo } = data;
     const isDictadoGasto = modo === "dictado_gasto";
     const defaultMoneda = (contextData && contextData.moneda_principal) ? contextData.moneda_principal : "USD";
+    const fechaReferenciaHoy = (contextData && typeof contextData.fecha_hoy === "string" && contextData.fecha_hoy.trim())
+      ? contextData.fecha_hoy.trim()
+      : getVenezuelaDateString();
 
     if (!messages || !Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: "Faltan los mensajes o formato inválido." }), {
@@ -919,6 +922,14 @@ REGLAS DE EXTRACCIÓN DE PRODUCTOS (ESTRICTO):
    - Extrae el nombre del establecimiento (ej. "New Market", "Farmatodo"). Si no mencionó comercio, usa "Varios".
 7. Múltiples Comercios:
    - Si el dictado incluye compras en comercios distintos (ej. "compré medicinas en Farmatodo y luego comida en Central Madeirense"), desglosa cada comercio independiente en el array "gastos".
+8. Fechas y Referencias Temporales:
+   - La fecha de hoy es estrictamente "${fechaReferenciaHoy}" (formato YYYY-MM-DD).
+   - Si el usuario dice "hoy" o no especifica fecha: usa "${fechaReferenciaHoy}".
+   - Si dice "ayer" o "anoche": calcula la fecha correspondiente a 1 día antes de "${fechaReferenciaHoy}".
+   - Si dice "antier" o "anteayer": calcula la fecha correspondiente a 2 días antes de "${fechaReferenciaHoy}".
+   - Si dice "hace X días": calcula la fecha restando X días a "${fechaReferenciaHoy}".
+   - Si dice un día de la semana o fecha explícita (ej. "el lunes", "el 3 de noviembre"): calcula la fecha en formato YYYY-MM-DD tomando como ancla "${fechaReferenciaHoy}". NUNCA uses fechas futuras ni años distintos sin confirmación explícita.
+   - En fechas numéricas latinoamericanas (DD/MM/YYYY), interpreta siempre el día primero (03/11/2026 -> 2026-11-03).
 `;
     } else {
       systemPrompt = `Eres un asistente financiero y de compras experto y amigable para un usuario en Venezuela dentro de la app Rinde Más.
@@ -1003,7 +1014,7 @@ Nota de análisis cambiario: La diferencia entre total_usd_bcv y total_usdt_p2p 
         type: "object",
         properties: {
           comercio: { type: "string", description: "Nombre del local o 'Varios' si no se especifica." },
-          fecha: { type: "string", description: "Fecha en formato YYYY-MM-DD. Si el usuario indica una fecha numérica como 03/11/2026, interpreta estrictamente el formato latinoamericano DD/MM/YYYY (03 de noviembre de 2026 -> 2026-11-03). Usa la fecha actual si no dice otra." },
+          fecha: { type: "string", description: "Fecha en formato YYYY-MM-DD. Si no se indica fecha, usa estrictamente '" + fechaReferenciaHoy + "'. Si el usuario indica una fecha numérica como 03/11/2026, interpreta estrictamente el formato latinoamericano DD/MM/YYYY (03 de noviembre de 2026 -> 2026-11-03)." },
           moneda: { type: "string", description: "Moneda de la compra: VES, USD, EUR o USDT. Si no se especificó divisa, usa '" + defaultMoneda + "'." },
           monto_original: { type: "number", description: "Monto total pagado en la moneda original (o 0 si no se mencionó precio)." },
           total_usd: { type: "number", description: "Monto total estimado en dólares (o 0 si no se mencionó precio)." },
@@ -1033,7 +1044,7 @@ Nota de análisis cambiario: La diferencia entre total_usd_bcv y total_usdt_p2p 
               type: "object",
               properties: {
                 comercio: { type: "string", description: "Nombre del establecimiento de esta compra." },
-                fecha: { type: "string", description: "Fecha en formato YYYY-MM-DD. Interpreta fechas numéricas como DD/MM/YYYY." },
+                fecha: { type: "string", description: "Fecha en formato YYYY-MM-DD. Si no se indica fecha, usa estrictamente '" + fechaReferenciaHoy + "'. Interpreta fechas numéricas como DD/MM/YYYY." },
                 moneda: { type: "string", description: "Moneda de esta compra: VES, USD, EUR o USDT." },
                 monto_original: { type: "number", description: "Monto total pagado en la moneda de esta compra (o 0 si no se mencionó)." },
                 total_usd: { type: "number", description: "Monto total estimado en USD (o 0 si no se mencionó)." },
