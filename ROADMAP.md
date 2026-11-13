@@ -41,13 +41,13 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
    - Módulos puros `expense-money.js` y `category-classifier.js` con 11 pruebas unitarias (Node 24) validando paridad al céntimo (C1 a C6) y autoclasificación inteligente.
    - Eliminación de P2P en EUR, cálculo bidireccional de Bolívares/tasa cobrada en caja y protección de total dictado.
    - *Verificación:* CI Build 20 en verde (commit `14003f7`), validado en producción en `https://rindemas.cesarluis.com/panel`. Documentación técnica en `docs/DOC_SINCRONIZACION_PANEL_WEB.md`.
-4. **Comparador de Precios v2 (Historial, Normalización de Comercios, Ventana Temporal y Paridad Web):** `Implementada 🔧`
+4. **Comparador de Precios v2 (Historial, Normalización de Comercios, Ventana Temporal y Paridad Web):** `Pendiente de validación 🧪`
    - Esquema SQLite v19 con columna `descripcion_norm`, backfill por lotes de 500 filas e índice dedicado `idx_items_gasto_desc_norm`.
    - Consulta única por lote `findPriceHistory` (límite 600, ventana máxima 60 días) y normalización de comercios (`normalizeCommerce` / `formatCommerceDisplay`).
    - Priorización de avisos en pantalla: Prioridad 1 mismo comercio (0 a 30 días), Prioridad 2 mejor precio del mercado (0 a 30 días), Prioridad 3 referencia neutra gris (31 a 60 días sin %). Silencio bajo 5%.
    - Mapeo por `clientKey` para eliminar desfasajes de lista al borrar artículos intermedios.
    - Paridad completa en panel web Astro (`price-comparator.js`, 14 tests nativos `node --test` y reactividad con debounce en `panel.astro`).
-   - *Verificación:* Pruebas unitarias y de widgets en `test/datasources/database_helper_migration_v19_test.dart`, `test/datasources/database_helper_price_history_test.dart` y `test/screens/review_expense_price_history_test.dart`. Documentación técnica en `docs/DOC_COMPARADOR_PRECIOS.md`.
+   - *Verificación:* CI Build 700 en verde (commit `02233c6`), pruebas unitarias y de widgets en `test/datasources/database_helper_migration_v19_test.dart`, `test/datasources/database_helper_price_history_test.dart` y `test/screens/review_expense_price_history_test.dart`. Documentación técnica en `docs/DOC_COMPARADOR_PRECIOS.md`.
 
 ---
 

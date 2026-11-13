@@ -2,14 +2,14 @@
 > Máximo ~50 líneas. Una idea por línea. Lo permanente se gradúa a `AGENTS.md`, `DESIGN.md` o `.agents/rules/`.
 
 ## Estado Inmediato
-- **Rama:** `main`, HEAD `d5bd89f`. Árbol limpio.
+- **Rama:** `main`. Árbol limpio.
 - **Docs reorganizados:** raíz con 6 `.md`; todo lo técnico en `docs/`; histórico en `docs/archive/2026-Q4/`.
 - **Router de documentación:** `docs/INDEX.md`.
 
 ## Tareas en Curso
-- **Comparador de Precios v2:** `Implementada 🔧` (commits `7dfc82b`, `e576329`, `d5bd89f`). Doc en `docs/DOC_COMPARADOR_PRECIOS.md`. CI sin confirmar localmente.
-- **Próximo paso:** verificar CI del comparador y luego ejecutar `E0-05b`.
-- **Validaciones pendientes de César en *Rinde Más Dev*:** MoreScreen UI-02 (build 693, `fb7cecb`), Selector de Mes en AppBar (build 649, `0eb455a`), Fase 5 Web (build 20, `14003f7`), firma P0 (build 671).
+- **Comparador de Precios v2:** `Pendiente de validación 🧪` (build 700, `02233c6`). Doc en `docs/DOC_COMPARADOR_PRECIOS.md`.
+- **Próximo paso:** prueba en dispositivo físico por César en *Rinde Más Dev*; luego retomar `E0-05b`.
+- **Validaciones pendientes de César en *Rinde Más Dev*:** Comparador de Precios v2 (build 700), MoreScreen UI-02 (build 693, `fb7cecb`), Selector de Mes en AppBar (build 649, `0eb455a`), Fase 5 Web (build 20, `14003f7`), firma P0 (build 671).
 - **UX-14 (estado vacío contextual):** `Implementada 🔧` (`5ac3684`).
 - **Idea pendiente:** validar en dispositivo dictado por voz (build 692, `1fdd815`) junto al resto.
 

@@ -88,3 +88,12 @@ Inspección realizada en `lib/ui/screens/review_expense_screen.dart`:
 ### Caso 4: Eliminación de Ítem sin Desfase
 1. En un formulario con 2 artículos que tengan avisos de comparación distintos, eliminar el primer artículo tocando la papelera.
 2. **Verificación:** El segundo artículo debe conservar su aviso exacto sin desfasarse ni adoptar datos del ítem eliminado.
+
+---
+
+## 5. Metadatos de Validación CI
+* **Build CI:** 700
+* **Commit SHA:** `02233c6`
+* **Workflow:** `build_apk.yml` (Compilar APK Android)
+* **Estado:** `Pendiente de validación 🧪` (espera visto bueno de César en dispositivo físico).
+
