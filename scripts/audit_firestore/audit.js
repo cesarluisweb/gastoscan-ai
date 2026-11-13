@@ -23,6 +23,8 @@ const stats = {
   nonIsoFechaTasa: 0,
   presupuestos: 0,
   presupuestosBadId: 0,
+  extraKeyNames: {},
+  presupuestoBadIdTypes: {},
 };
 
 const isoRe = /^\d{4}-\d{2}-\d{2}$/;
@@ -37,7 +39,12 @@ for (const userRef of usersSnap) {
     stats.gastos++;
     const d = docSnap.data();
     const extra = Object.keys(d).filter((k) => !ALLOWED_GASTO_KEYS.has(k));
-    if (extra.length > 0) stats.extraKeys++;
+    if (extra.length > 0) {
+      stats.extraKeys++;
+      for (const k of extra) {
+        stats.extraKeyNames[k] = (stats.extraKeyNames[k] || 0) + 1;
+      }
+    }
     if (d.uuid !== docSnap.id) stats.uuidMismatch++;
     if (!d.fecha || !d.creado_en || typeof d.total_usd !== 'number') stats.missingCore++;
     if (d.tasa_cambio === 1 || d.tasa_cambio === 1.0) stats.tasaUno++;
@@ -50,7 +57,13 @@ for (const userRef of usersSnap) {
   const presSnap = await userRef.collection('presupuestos').get();
   for (const pSnap of presSnap.docs) {
     stats.presupuestos++;
-    if (!pidRe.test(pSnap.id)) stats.presupuestosBadId++;
+    if (!pidRe.test(pSnap.id)) {
+      stats.presupuestosBadId++;
+      const kind = pSnap.id === 'user_settings'
+        ? 'user_settings'
+        : (/^\d{4}_\d$/.test(pSnap.id) ? 'YYYY_M' : `OTHER_LEN_${pSnap.id.length}`);
+      stats.presupuestoBadIdTypes[kind] = (stats.presupuestoBadIdTypes[kind] || 0) + 1;
+    }
   }
 }
 
