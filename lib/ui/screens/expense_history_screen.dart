@@ -396,6 +396,7 @@ class ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
                             tasaUsdt: settings.tasaCambioVesUsdt,
                             showDirectItemBreakdown: true,
                             initiallyExpanded: query.isNotEmpty && gasto.items.any((item) => _normalizeText(item.descripcion).contains(query)),
+                            searchQuery: query,
                             onEdit: () {
                               Navigator.push(
                                 context,

@@ -13,15 +13,15 @@
 | `domain/` | 10 | 1816 |
 | `providers/` | 4 | 1960 |
 | `services/` | 13 | 4438 |
-| `ui/` | 31 | 18924 |
+| `ui/` | 31 | 19078 |
 | `(raiz)/` | 2 | 106 |
-| **Total** | **80** | **32415** |
+| **Total** | **80** | **32569** |
 
 ## core/
 
 | Archivo | Líneas | Símbolos | Pruebas |
 |---|---|---|---|
-| `lib/core/constants/app_colors.dart` | 69 | `AppColors` | `app_colors_budget_progress_test.dart`, `dashboard_category_budget_test.dart`, `more_screen_test.dart`, +5 |
+| `lib/core/constants/app_colors.dart` | 69 | `AppColors` | `app_colors_budget_progress_test.dart`, `dashboard_category_budget_test.dart`, `more_screen_test.dart`, +6 |
 | `lib/core/constants/app_constants.dart` | 261 | `AppConstants` | `categoria_model_test.dart`, `gasto_provider_rate_cache_test.dart`, `settings_provider_notifications_test.dart`, +10 |
 | `lib/core/theme/app_theme.dart` | 151 | `AppTheme` | - |
 | `lib/core/utils/amount_parser.dart` | 98 | - | `amount_parser_test.dart` |
@@ -97,7 +97,7 @@
 | `lib/ui/screens/chat_screen.dart` | 1264 | `ChatSuggestion`, `ChatScreen` | `chat_screen_test.dart` |
 | `lib/ui/screens/currency_calculator_screen.dart` | 857 | `TipoTasaCalculadora`, `CurrencyCalculatorScreen` | `currency_calculator_screen_test.dart` |
 | `lib/ui/screens/dashboard_screen.dart` | 775 | `DashboardScreen` | `dashboard_screen_test.dart`, `smart_empty_state_and_lifecycle_test.dart` |
-| `lib/ui/screens/expense_history_screen.dart` | 827 | `ExpenseHistoryScreen`, `ExpenseHistoryScreenState` | `dashboard_search_test.dart`, `expense_history_screen_test.dart`, `lote_4_ui_resilience_and_performance_test.dart`, +1 |
+| `lib/ui/screens/expense_history_screen.dart` | 828 | `ExpenseHistoryScreen`, `ExpenseHistoryScreenState` | `dashboard_search_test.dart`, `expense_history_screen_test.dart`, `lote_4_ui_resilience_and_performance_test.dart`, +1 |
 | `lib/ui/screens/main_screen.dart` | 706 | `MainScreen` | `main_screen_launch_action_test.dart`, `main_screen_no_auto_repair_test.dart`, `navigation_test.dart`, +1 |
 | `lib/ui/screens/more_screen.dart` | 1606 | `MoreSubView`, `MoreScreen`, `MoreScreenState` | `more_screen_test.dart`, `more_screen_copy_and_dialogs_test.dart` |
 | `lib/ui/screens/receipt_gallery_screen.dart` | 532 | `ReceiptGalleryScreen` | `receipt_gallery_screen_test.dart` |
@@ -113,7 +113,7 @@
 | `lib/ui/widgets/currency_lens_dropdown.dart` | 132 | `CurrencyLensDropdown` | `analysis_screen_redesign_test.dart` |
 | `lib/ui/widgets/currency_radiography_card.dart` | 217 | `CurrencyRadiographyCard` | - |
 | `lib/ui/widgets/daily_evolution_card.dart` | 378 | `DailyEvolutionCard` | `daily_evolution_card_test.dart` |
-| `lib/ui/widgets/expense_card.dart` | 534 | `ExpenseCard` | `currency_display_test.dart`, `expense_card_test.dart` |
+| `lib/ui/widgets/expense_card.dart` | 687 | `ExpenseCard` | `currency_display_test.dart`, `expense_card_test.dart` |
 | `lib/ui/widgets/global_scan_queue_banner.dart` | 647 | `GlobalScanQueueBanner` | `global_scan_queue_banner_test.dart` |
 | `lib/ui/widgets/month_selector_bar.dart` | 241 | `MonthSelectorBar` | `month_selector_bar_test.dart` |
 | `lib/ui/widgets/more/more_rates_card.dart` | 254 | `MoreRatesCard` | - |

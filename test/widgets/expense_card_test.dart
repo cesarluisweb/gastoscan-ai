@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gastoscan_ai/core/constants/app_colors.dart';
 import 'package:gastoscan_ai/core/constants/app_constants.dart';
 import 'package:gastoscan_ai/data/models/gasto_model.dart';
 import 'package:gastoscan_ai/data/models/item_gasto_model.dart';
@@ -291,6 +292,67 @@ void main() {
       expect(find.text(r'$ 2,00'), findsNWidgets(2));
       // Unit subtitle shows primary in Bs and secondary in USD
       expect(find.textContaining('2x a Bs. 45,00 (\$ 1,00) c/u'), findsOneWidget);
+    });
+
+    testWidgets('highlights and underlines matching item and store name when searchQuery is provided', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: ExpenseCard(
+                gasto: baseGastoConItems,
+                onDelete: () {},
+                onEdit: () {},
+                showDirectItemBreakdown: true,
+                initiallyExpanded: true,
+                searchQuery: 'cafe',
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // El ítem 5 ('1x Café') debe ser visible y resaltado aunque haya más de 4 ítems
+      expect(find.text('1x Café'), findsOneWidget);
+
+      final highlightedText = tester.widget<Text>(find.text('1x Café'));
+      final rootSpan = highlightedText.textSpan as TextSpan;
+      final children = rootSpan.children!.cast<TextSpan>();
+
+      final matchSpan = children.firstWhere((s) => s.text == 'Café');
+      expect(matchSpan.style?.backgroundColor, AppColors.primaryLight);
+      expect(matchSpan.style?.color, AppColors.textPrimary);
+      expect(matchSpan.style?.decoration, TextDecoration.underline);
+      expect(matchSpan.style?.fontWeight, FontWeight.bold);
+
+      // El prefijo '1x ' no debe estar resaltado
+      final prefixSpan = children.firstWhere((s) => s.text == '1x ');
+      expect(prefixSpan.style?.backgroundColor, isNull);
+    });
+
+    testWidgets('does not highlight quantity prefix when searchQuery is numeric', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: ExpenseCard(
+                gasto: baseGastoConItems,
+                onDelete: () {},
+                onEdit: () {},
+                showDirectItemBreakdown: true,
+                initiallyExpanded: true,
+                searchQuery: '1',
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // '1x Jabón' tiene '1x ' como prefijo, pero 'Jabón' no contiene '1', así que no usa TextSpan resaltado
+      final jabonText = tester.widget<Text>(find.text('1x Jabón'));
+      expect(jabonText.textSpan, isNull);
     });
   });
 }

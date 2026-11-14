@@ -39,6 +39,7 @@ class ExpenseCard extends StatefulWidget {
   final double tasaCambio;
   final double tasaEur;
   final double tasaUsdt;
+  final String? searchQuery;
 
   const ExpenseCard({
     Key? key,
@@ -51,6 +52,7 @@ class ExpenseCard extends StatefulWidget {
     this.tasaCambio = 1.0,
     this.tasaEur = 0.0,
     this.tasaUsdt = 0.0,
+    this.searchQuery,
   }) : super(key: key);
 
   @override
@@ -79,6 +81,129 @@ class _ExpenseCardState extends State<ExpenseCard> {
         _showAllItems = true;
       }
     }
+  }
+
+  String _normalizeChar(String ch) {
+    switch (ch.toLowerCase()) {
+      case 'á':
+        return 'a';
+      case 'é':
+        return 'e';
+      case 'í':
+        return 'i';
+      case 'ó':
+        return 'o';
+      case 'ú':
+      case 'ü':
+        return 'u';
+      default:
+        return ch.toLowerCase();
+    }
+  }
+
+  String _normalizeForSearch(String text) {
+    final buffer = StringBuffer();
+    for (int i = 0; i < text.length; i++) {
+      buffer.write(_normalizeChar(text[i]));
+    }
+    return buffer.toString();
+  }
+
+  Widget _buildHighlightedText(
+    String text, {
+    required String? query,
+    required TextStyle style,
+    String prefix = '',
+    int? maxLines,
+    TextOverflow overflow = TextOverflow.ellipsis,
+  }) {
+    final trimmedQuery = query?.trim() ?? '';
+    if (trimmedQuery.isEmpty || text.isEmpty) {
+      return Text(
+        '$prefix$text',
+        style: style,
+        maxLines: maxLines,
+        overflow: overflow,
+      );
+    }
+
+    final normQuery = _normalizeForSearch(trimmedQuery);
+    if (normQuery.isEmpty) {
+      return Text(
+        '$prefix$text',
+        style: style,
+        maxLines: maxLines,
+        overflow: overflow,
+      );
+    }
+
+    final normBuffer = StringBuffer();
+    final List<int> origStartForNorm = [];
+    final List<int> origEndForNorm = [];
+    for (int i = 0; i < text.length; i++) {
+      final normCh = _normalizeChar(text[i]);
+      for (int k = 0; k < normCh.length; k++) {
+        normBuffer.write(normCh[k]);
+        origStartForNorm.add(i);
+        origEndForNorm.add(i + 1);
+      }
+    }
+
+    final normText = normBuffer.toString();
+    final List<InlineSpan> spans = [];
+    if (prefix.isNotEmpty) {
+      spans.add(TextSpan(text: prefix));
+    }
+    int searchFrom = 0;
+    int origCursor = 0;
+    bool hasMatch = false;
+
+    while (searchFrom <= normText.length - normQuery.length) {
+      final matchIndex = normText.indexOf(normQuery, searchFrom);
+      if (matchIndex == -1) break;
+
+      hasMatch = true;
+      final origMatchStart = origStartForNorm[matchIndex];
+      final origMatchEnd = origEndForNorm[matchIndex + normQuery.length - 1];
+
+      if (origMatchStart > origCursor) {
+        spans.add(TextSpan(text: text.substring(origCursor, origMatchStart)));
+      }
+      spans.add(
+        TextSpan(
+          text: text.substring(origMatchStart, origMatchEnd),
+          style: style.copyWith(
+            backgroundColor: AppColors.primaryLight,
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.bold,
+            decoration: TextDecoration.underline,
+            decorationColor: AppColors.textPrimary,
+            decorationThickness: 2.0,
+          ),
+        ),
+      );
+      origCursor = origMatchEnd;
+      searchFrom = matchIndex + normQuery.length;
+    }
+
+    if (!hasMatch) {
+      return Text(
+        '$prefix$text',
+        style: style,
+        maxLines: maxLines,
+        overflow: overflow,
+      );
+    }
+
+    if (origCursor < text.length) {
+      spans.add(TextSpan(text: text.substring(origCursor)));
+    }
+
+    return Text.rich(
+      TextSpan(style: style, children: spans),
+      maxLines: maxLines,
+      overflow: overflow,
+    );
   }
 
   @override
@@ -180,8 +305,9 @@ class _ExpenseCardState extends State<ExpenseCard> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        _buildHighlightedText(
                           toTitleCase(widget.gasto.comercio),
+                          query: widget.searchQuery,
                           style: const TextStyle(
                             color: AppColors.textPrimary,
                             fontWeight: FontWeight.bold,
@@ -398,85 +524,112 @@ class _ExpenseCardState extends State<ExpenseCard> {
                           unitPriceSubtext = '';
                         }
 
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Container(
-                                width: 20,
-                                height: 20,
-                                decoration: BoxDecoration(
-                                  color: itCatColor.withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Icon(itCatIcon, size: 12, color: itCatColor),
+                        final String trimmedQuery = widget.searchQuery?.trim() ?? '';
+                        final String normQuery = trimmedQuery.isNotEmpty
+                            ? _normalizeForSearch(trimmedQuery)
+                            : '';
+                        final bool itemMatchesQuery = normQuery.isNotEmpty &&
+                            _normalizeForSearch(cleanDesc).contains(normQuery);
+
+                        final itemRow = Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 20,
+                              height: 20,
+                              decoration: BoxDecoration(
+                                color: itCatColor.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(4),
                               ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
+                              child: Icon(itCatIcon, size: 12, color: itCatColor),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildHighlightedText(
+                                    cleanDesc,
+                                    prefix: '${it.cantidad.toStringAsFixed(it.cantidad % 1 == 0 ? 0 : 2)}x ',
+                                    query: widget.searchQuery,
+                                    style: const TextStyle(
+                                      color: AppColors.textPrimary,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  if (it.cantidad > 1) ...[
+                                    const SizedBox(height: 2),
                                     Text(
-                                      '${it.cantidad.toStringAsFixed(it.cantidad % 1 == 0 ? 0 : 2)}x $cleanDesc',
+                                      unitPriceSubtext,
                                       style: const TextStyle(
-                                        color: AppColors.textPrimary,
-                                        fontSize: 13,
+                                        color: AppColors.textSecondary,
+                                        fontSize: 11,
                                         fontWeight: FontWeight.w500,
                                       ),
                                       overflow: TextOverflow.ellipsis,
                                     ),
-                                    if (it.cantidad > 1) ...[
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        unitPriceSubtext,
-                                        style: const TextStyle(
-                                          color: AppColors.textSecondary,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
                                   ],
-                                ),
+                                ],
                               ),
-                              const SizedBox(width: 8),
-                              ConstrainedBox(
-                                constraints: const BoxConstraints(maxWidth: 130),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    FittedBox(
-                                      fit: BoxFit.scaleDown,
-                                      alignment: Alignment.centerRight,
-                                      child: Text(
-                                        itemText,
-                                        style: const TextStyle(
-                                          color: AppColors.textPrimary,
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                            ),
+                            const SizedBox(width: 8),
+                            ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 130),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    alignment: Alignment.centerRight,
+                                    child: Text(
+                                      itemText,
+                                      style: const TextStyle(
+                                        color: AppColors.textPrimary,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    FittedBox(
-                                      fit: BoxFit.scaleDown,
-                                      alignment: Alignment.centerRight,
-                                      child: Text(
-                                        secondaryItemText,
-                                        style: const TextStyle(
-                                          color: AppColors.textSecondary,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.normal,
-                                        ),
+                                  ),
+                                  FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    alignment: Alignment.centerRight,
+                                    child: Text(
+                                      secondaryItemText,
+                                      style: const TextStyle(
+                                        color: AppColors.textSecondary,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.normal,
                                       ),
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
+                        );
+
+                        if (itemMatchesQuery) {
+                          return Container(
+                            margin: const EdgeInsets.symmetric(vertical: 2),
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryLight.withValues(alpha: 0.35),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: AppColors.primaryDark.withValues(alpha: 0.65),
+                                width: 1,
+                              ),
+                            ),
+                            child: itemRow,
+                          );
+                        }
+
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: itemRow,
                         );
                       }),
                       if (widget.showDirectItemBreakdown && hasMoreThan4) ...[
