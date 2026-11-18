@@ -8,11 +8,14 @@
 - **Mapa de código:** `docs/CODE_MAP.md` se regenera con `node scripts/gen_code_map.js`; el hook de pre-commit lo actualiza.
 
 ## Tareas en Curso
+- **UX-20 (rediseño de ítems en ReviewExpenseScreen - Variante 1-B):** 🧪 Pendiente de validación en dispositivo. Tarjetas en cardLighter, badge [N], concepto en w600, pastilla de categoría y deshacer al eliminar.
+- **AI-09 (detección fotos y facturas duplicadas):** Planificada en `ROADMAP.md` y documentada en `docs/DOC_PLAN_DETECCION_DUPLICADOS.md`. Pendiente definición de esquema SQLite (v20 vs v19).
 - **E0-05b (diagnóstico Q01..Q20):** ✅ Completada (build 707, `4dafbf9`, run `43499866405`). Fase 0 cerrada.
 - **B1 (reglas Firestore):** ✅ Completada (`4f2bff6`, emulador `43499032804` en verde, auditada y validada en producción).
 - **Pendientes de cierre administrativo:** firma P0 (rotar upload key tras aprobar Producción) y solicitud de Producción en Google Play.
 
 ## Completadas
+- **Resaltado de búsqueda en ExpenseCard:** ✅ build 708 (`0a37f8d`, run `43606952757`). Subraya y enmarca ítems y comercios coincidentes.
 - **Validadas en dispositivo por César (13/11/2026):** ✅ `UX-14` (build 704, `873367e`), Selector de Mes en AppBar (build 649), Fase 5 Web (build 20), Comparador de Precios v2 (build 700), MoreScreen `UI-02` (build 703) y Arquitectura de Arranque Local-First.
 - **Limpieza de ROADMAP.md:** ✅ Hitos completados movidos a `docs/archive/2026-Q4/ROADMAP_HISTORICO.md`.
 - **Reorganización de documentación y mapa de código:** ✅ builds 701 y 702 (`856aa67`, `e827d86`). Raíz con 6 `.md`, histórico en `docs/archive/2026-Q4/`, `docs/INDEX.md` y `docs/CODE_MAP.md` generado por script.
@@ -31,7 +34,8 @@
 - AppBarMonthSelector: mes completo, 3 letras bajo 145 dp, borde amarillo fuera del mes actual.
 - Barra de totales anclada al borde físico para proteger el viewport del teclado (`DESIGN.md` 4.7).
 - Toda aceptación exige CI en verde; la inspección estática no sustituye pruebas.
-- Redes: bio con Canal de WhatsApp; colaboración manual con `@lili9077p`.
+- Comparador de precios: compara por unidad comprada en ticket (`total / cant`), no por peso/volumen (kg/L pendiente en Fase 8).
+- Redes: bio con Canal de WhatsApp; colab con `@lili9077p`; ganchos: ceguera del Pago Móvil y memoria histórica (exámenes/repuestos).
 - Estilo ASD-STE100 en período de prueba; retirar si genera fricción.
 
 ## Errores a Evitar

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -976,11 +977,65 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
 
   void _removeItem(int index) {
     final removedKey = _items[index].clientKey;
+    final removedItem = _items[index];
+    final removedHistory = _priceComparisons[removedKey];
+    final removedIndex = index;
+
     setState(() {
       _items.removeAt(index);
       _priceComparisons.remove(removedKey);
       _sincronizarCategoriaImpuestos();
     });
+
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 5),
+        backgroundColor: AppColors.primaryDark,
+        content: Row(
+          children: [
+            const Expanded(
+              child: Text(
+                'Artículo eliminado',
+                style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500),
+              ),
+            ),
+            InkWell(
+              onTap: () {
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                setState(() {
+                  final insertIndex = removedIndex <= _items.length ? removedIndex : _items.length;
+                  _items.insert(insertIndex, removedItem);
+                  if (removedHistory != null) {
+                    _priceComparisons[removedItem.clientKey] = removedHistory;
+                  }
+                  _sincronizarCategoriaImpuestos();
+                  _recalcularTotal();
+                });
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Icon(Icons.undo_rounded, size: 15, color: Colors.black87),
+                    SizedBox(width: 4),
+                    Text(
+                      'Deshacer',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _guardarGasto({bool revisarSiguiente = false}) async {
@@ -2523,11 +2578,6 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Detalle del gasto para clasificarlo y comparar precios.',
-                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                  ),
                   const SizedBox(height: 12),
                   if (_items.isEmpty)
                     const Padding(
@@ -2561,29 +2611,73 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
 
                       return Card(
                         key: ValueKey('item_card_${item.clientKey}'),
-                        margin: const EdgeInsets.symmetric(vertical: 6),
+                        margin: const EdgeInsets.symmetric(vertical: 8),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
-                          side: const BorderSide(color: AppColors.border),
+                          side: BorderSide.none,
                         ),
                         elevation: 0,
-                        color: AppColors.surface,
+                        color: AppColors.cardLighter,
                         child: Padding(
                           padding: const EdgeInsets.all(12),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Fila 1: Descripción + Papelera
+                              // Fila 1: [N] + Concepto (w600) + Papelera
                               Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
+                                  Container(
+                                    width: 24,
+                                    height: 24,
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFE5E7EB),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      '${idx + 1}',
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        color: Color(0xFF4B5563),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
                                   Expanded(
                                     child: TextFormField(
                                       initialValue: item.descripcion,
                                       textCapitalization: TextCapitalization.sentences,
-                                      decoration: const InputDecoration(
-                                        labelText: 'Concepto',
-                                        hintText: 'Ej. Harina PAN, Taxi...',
-                                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                      textInputAction: TextInputAction.next,
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                      decoration: InputDecoration(
+                                        filled: true,
+                                        fillColor: AppColors.surface,
+                                        hintText: 'Nombre del artículo',
+                                        hintStyle: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.normal,
+                                          color: AppColors.textMuted,
+                                        ),
+                                        suffixIcon: const Icon(
+                                          Icons.edit_outlined,
+                                          size: 16,
+                                          color: AppColors.textMuted,
+                                        ),
+                                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                          borderSide: const BorderSide(color: AppColors.border),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                          borderSide: const BorderSide(color: AppColors.primaryDark, width: 2),
+                                        ),
                                       ),
                                       onChanged: (v) {
                                         _items[idx] = _items[idx].copyWith(descripcion: v);
@@ -2613,14 +2707,22 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                       },
                                     ),
                                   ),
-                                  if (_items.length > 1)
+                                  if (_items.length > 1) ...[
+                                    const SizedBox(width: 4),
                                     IconButton(
-                                      icon: const Icon(Icons.delete_outline, color: AppColors.error),
+                                      icon: Icon(
+                                        Icons.delete_outline,
+                                        size: 20,
+                                        color: AppColors.error.withValues(alpha: 0.75),
+                                      ),
+                                      constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                                      padding: EdgeInsets.zero,
                                       onPressed: () => _removeItem(idx),
                                     ),
+                                  ],
                                 ],
                               ),
-                              const SizedBox(height: 10),
+                              const SizedBox(height: 8),
                               // Fila 2: Cantidad (35%) y Precio (65%)
                               Row(
                                 children: [
@@ -2629,9 +2731,21 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                     child: TextFormField(
                                       initialValue: _formatDouble(item.cantidad),
                                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                      decoration: const InputDecoration(
+                                      textInputAction: TextInputAction.next,
+                                      decoration: InputDecoration(
+                                        filled: true,
+                                        fillColor: AppColors.surface,
                                         labelText: 'Cant.',
-                                        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                                        labelStyle: const TextStyle(fontSize: 12, color: Color(0xFF4B5563)),
+                                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                          borderSide: const BorderSide(color: AppColors.border),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                          borderSide: const BorderSide(color: AppColors.primaryDark, width: 2),
+                                        ),
                                       ),
                                       onChanged: (v) {
                                         final cant = tryParseAmount(v, isPrice: false) ?? 1.0;
@@ -2651,11 +2765,23 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                     child: TextFormField(
                                       initialValue: _formatDouble(item.precioUnitarioDisplay),
                                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                      textInputAction: idx < _items.length - 1 ? TextInputAction.next : TextInputAction.done,
                                       decoration: InputDecoration(
-                                        labelText: 'Precio',
+                                        filled: true,
+                                        fillColor: AppColors.surface,
+                                        labelText: 'Precio unit.',
+                                        labelStyle: const TextStyle(fontSize: 12, color: Color(0xFF4B5563)),
                                         prefixText: '${_symbolForMoneda(_selectedMoneda)} ',
-                                        prefixStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+                                        prefixStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF4B5563)),
                                         contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                          borderSide: const BorderSide(color: AppColors.border),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                          borderSide: const BorderSide(color: AppColors.primaryDark, width: 2),
+                                        ),
                                       ),
                                       onChanged: (v) {
                                         final prec = tryParseAmount(v, isPrice: false) ?? 0.0;
@@ -2671,84 +2797,100 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 10),
-                              // Fila 3: Categoría (65%) y Total calculado (35%)
+                              const SizedBox(height: 8),
+                              // Fila 3: Categoría (Pastilla) y Total (cifras tabulares)
                               Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Expanded(
-                                    flex: 65,
-                                    child: DropdownButtonFormField<String>(
-                                      isExpanded: true,
-                                      value: AppConstants.categorias.contains(item.categoria) ? item.categoria : 'Otros',
-                                      decoration: const InputDecoration(
-                                        labelText: 'Categoría',
-                                        isDense: true,
-                                        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                  Flexible(
+                                    child: Container(
+                                      height: 34,
+                                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.surface,
+                                        borderRadius: BorderRadius.circular(17),
+                                        border: Border.all(color: AppColors.border),
                                       ),
-                                      dropdownColor: AppColors.surface,
-                                      items: AppConstants.categorias.map((cat) {
-                                        final catColor = AppColors.categoryColors[cat] ?? AppColors.textSecondary;
-                                        final catIcon = _getCategoryIcon(cat);
-                                        return DropdownMenuItem(
-                                          value: cat,
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Container(
-                                                width: 22,
-                                                height: 22,
-                                                decoration: BoxDecoration(
-                                                  color: catColor.withValues(alpha: 0.15),
-                                                  shape: BoxShape.circle,
-                                                ),
-                                                child: Icon(catIcon, size: 13, color: catColor),
+                                      child: DropdownButtonHideUnderline(
+                                        child: DropdownButton<String>(
+                                          isDense: true,
+                                          value: AppConstants.categorias.contains(item.categoria) ? item.categoria : 'Otros',
+                                          icon: const Icon(Icons.arrow_drop_down, size: 18, color: Color(0xFF4B5563)),
+                                          dropdownColor: AppColors.surface,
+                                          borderRadius: BorderRadius.circular(12),
+                                          items: AppConstants.categorias.map((cat) {
+                                            final catColor = AppColors.categoryColors[cat] ?? AppColors.textSecondary;
+                                            final catIcon = _getCategoryIcon(cat);
+                                            return DropdownMenuItem<String>(
+                                              value: cat,
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Container(
+                                                    width: 20,
+                                                    height: 20,
+                                                    decoration: BoxDecoration(
+                                                      color: catColor.withValues(alpha: 0.15),
+                                                      shape: BoxShape.circle,
+                                                    ),
+                                                    child: Icon(catIcon, size: 12, color: catColor),
+                                                  ),
+                                                  const SizedBox(width: 6),
+                                                  Text(
+                                                    cat,
+                                                    overflow: TextOverflow.ellipsis,
+                                                    style: const TextStyle(
+                                                      fontSize: 12,
+                                                      fontWeight: FontWeight.w500,
+                                                      color: AppColors.textPrimary,
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
-                                              const SizedBox(width: 6),
-                                              Expanded(
-                                                child: Text(cat, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13)),
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      }).toList(),
-                                      onChanged: (val) {
-                                        if (val != null) {
-                                          setState(() {
-                                            _items[idx] = _items[idx].copyWith(
-                                              categoria: val,
-                                              origenCategoria: OrigenCategoria.manual,
                                             );
-                                            _sincronizarCategoriaImpuestos();
-                                          });
-                                        }
-                                      },
+                                          }).toList(),
+                                          onChanged: (val) {
+                                            if (val != null) {
+                                              setState(() {
+                                                _items[idx] = _items[idx].copyWith(
+                                                  categoria: val,
+                                                  origenCategoria: OrigenCategoria.manual,
+                                                );
+                                                _sincronizarCategoriaImpuestos();
+                                              });
+                                            }
+                                          },
+                                        ),
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(width: 8),
-                                  Expanded(
-                                    flex: 35,
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.end,
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        const Text(
-                                          'Total',
-                                          style: TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Text(
+                                        'Total',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w500,
+                                          color: Color(0xFF4B5563),
                                         ),
-                                        const SizedBox(height: 2),
-                                        FittedBox(
-                                          fit: BoxFit.scaleDown,
-                                          child: Text(
-                                            '${_symbolForMoneda(_selectedMoneda)} ${_formatDisplayMonto(_items[idx].totalDisplay)}',
-                                            style: const TextStyle(
-                                              fontSize: 15,
-                                              fontWeight: FontWeight.bold,
-                                              color: AppColors.textPrimary,
-                                            ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          '${_symbolForMoneda(_selectedMoneda)} ${_formatDisplayMonto(_items[idx].totalDisplay)}',
+                                          style: const TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.textPrimary,
+                                            fontFeatures: [FontFeature.tabularFigures()],
                                           ),
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),

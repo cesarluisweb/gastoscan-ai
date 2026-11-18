@@ -76,14 +76,22 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 - `UX-16` **Sistema Ligero de Etiquetas (Tags) para Gastos:** `Pendiente` Etiquetas opcionales (`#tags`) en captura y filtro de historial sin alterar las categorías canónicas.
 - `UX-17` **Botón y Flujo de Referidos Simple ("Compartir Rinde Más por WhatsApp"):** `Pendiente` Botón en `MoreScreen` con `Share.share` y enlace directo a Google Play.
 - `UX-18` **Evolución Mensual en Gráfica Única (Pantalla Análisis):** `Pendiente` Gráfica consolidada de los últimos 6 a 12 meses en una sola vista.
+- `UX-19` **(Idea en evaluación) Simplificación del Registro Manual:** `Pendiente` Evaluar agilización de gastos sueltos sin lista de ítems detallados, preservando el método de liquidación (`MetodoLiquidacion`) y chips frecuentes (`UX-15`).
+- `UX-20` **Rediseño de Ítems en Revisión de Factura (Variante 1-B):** `Pendiente de validación 🧪` Jerarquía visual en artículos (tarjetas en `cardLighter`, badge `[N]`, concepto en `w600`, pastilla compacta de categoría, cifras tabulares y deshacer al eliminar). Ver [`docs/DOC_REDISENO_ITEMS_FACTURA.md`](docs/DOC_REDISENO_ITEMS_FACTURA.md).
 
 ### Bloque C: Percepción con IA
 - `AI-06` **Imputación de IVA en Precios de Anaquel y Algoritmo del Centavo Residual:** `Pendiente` Imputar 16% de IVA a productos gravados `(G)` preservando exentos `(E)`, ajustando $\pm 0,01$ en el ítem de mayor valor y mostrando base fiscal en `ReviewExpenseScreen`.
 - `AI-07` **Refinamiento de UX en Chat del Asistente (Sugerencias Verticales y Botón Dinámico):** `Pendiente` Sugerencias apiladas verticalmente (2 a 3 opciones) y botón dinámico micrófono/enviar estilo WhatsApp.
+- `AI-08` **Consejos Dinámicos en Tarjeta Asistente IA (Inicio):** `Pendiente` Rotación de consejos de valor real (ej. *"Comprar en el sitio correcto te ayuda a estirar el presupuesto. Rinde Más recuerda tus compras y te avisa dónde te salió más barato cada producto"*) combinados con cálculo de ritmo diario y generación periódica con Gemini en segundo plano según gastos reales.
+- `AI-09` **Detección Preventiva de Fotos y Facturas Duplicadas:** `Pendiente` Control en dos capas para evitar duplicados en la cola de escaneo (por hash SHA-256) y alertas semánticas en revisión/guardado (mismo comercio, fecha y monto) con opción de descarte inmediato. Ver [`docs/DOC_PLAN_DETECCION_DUPLICADOS.md`](docs/DOC_PLAN_DETECCION_DUPLICADOS.md).
 
 ### Bloque D: Nuevas Herramientas Financieras
 - `FIN-14` **Flexibilidad y Opciones de Liquidación en Gastos Registrados en USDT:** `Pendiente` Habilitar `BS_BCV`, `BS_USDT` y `DIVISA` al registrar en `USDT`, almacenando contravalor con `tasaUsdt` de la fecha.
 - `FIN-15` **Soporte Nativo para Cashea y Compras en Cuotas:** `Pendiente` Selector `[ Contado | ⚡ Cashea / Cuotas ]`, cuotas cada 14 días como compromisos `'PENDIENTE'`, liquidación en 1 toque, notificaciones y paridad IA/Web. Ver [`docs/DOC_PLAN_CASHEA.md`](docs/DOC_PLAN_CASHEA.md).
+- `FIN-16` **Gastos Fijos / Recurrentes Mensuales:** `Pendiente` Plantillas o recordatorios de pagos fijos mensuales (alquiler, internet, servicios) para registrarlos con un toque sin llenarlos desde cero cada mes.
+
+### Bloque E: Inteligencia de Precios y Antiinflación (Post-Play)
+- `RADAR-01` **Radar de Precios e Historial de Variación:** `Pendiente` Pantalla dedicada de consulta sobre el historial de compras recientes (últimos 30–60 días) comparando precios unitarios en USD para reportar variaciones porcentuales y el mejor comercio registrado.
 
 ### Bloque E: Respaldo y Soberanía de Datos (Local-First Backup)
 - `BACKUP-01` **Exportación e Importación Completa con Comprobantes (.zip):** `Pendiente` Empaquetado de SQLite y `recibo_*.jpg` con restauración transaccional sin colisiones.

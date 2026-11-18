@@ -184,7 +184,7 @@ void main() {
     expect(find.text('¿Cuándo gastaste?'), findsOneWidget);
     expect(find.text('¿En qué moneda están los precios?'), findsOneWidget);
     expect(find.text('¿En qué gastaste?'), findsOneWidget);
-    expect(find.text('Concepto'), findsOneWidget);
+    expect(find.text('Nombre del artículo'), findsOneWidget);
     expect(find.text('Monto total'), findsOneWidget);
     expect(find.text('\$ 0,00'), findsWidgets);
 
@@ -195,7 +195,7 @@ void main() {
     expect(storeField.textCapitalization, TextCapitalization.words);
 
     final conceptField = tester.widget<TextField>(
-      find.byWidgetPredicate((w) => w is TextField && w.decoration?.labelText == 'Concepto'),
+      find.byWidgetPredicate((w) => w is TextField && w.decoration?.hintText == 'Nombre del artículo'),
     );
     expect(conceptField.textCapitalization, TextCapitalization.sentences);
 
@@ -1269,9 +1269,9 @@ void main() {
     await tester.pumpWidget(createWidgetUnderTest());
     await tester.pumpAndSettle();
 
-    // Localizar el campo Concepto
+    // Localizar el campo Concepto (Nombre del artículo)
     final conceptFinder = find.byWidgetPredicate(
-      (w) => w is TextField && w.decoration?.labelText == 'Concepto',
+      (w) => w is TextField && w.decoration?.hintText == 'Nombre del artículo',
     );
     expect(conceptFinder, findsOneWidget);
 
@@ -1299,7 +1299,7 @@ void main() {
     expect(find.text('Salud'), findsWidgets);
 
     // 5. Seleccionar manualmente 'Hogar' en el Dropdown
-    final dropdownFinder = find.byType(DropdownButtonFormField<String>).first;
+    final dropdownFinder = find.byType(DropdownButton<String>).first;
     await tester.tap(dropdownFinder);
     await tester.pumpAndSettle();
 
@@ -1541,7 +1541,9 @@ void main() {
       await tester.enterText(storeField, 'Panadería El Sol');
       await tester.pumpAndSettle();
 
-      final conceptField = find.widgetWithText(TextFormField, 'Concepto');
+      final conceptField = find.byWidgetPredicate(
+        (w) => w is TextField && w.decoration?.hintText == 'Nombre del artículo',
+      );
       await tester.enterText(conceptField, 'Pan de jamón');
       await tester.pumpAndSettle();
 
@@ -1585,6 +1587,85 @@ void main() {
 
       expect(find.byKey(const Key('inline_keyboard_save_section')), findsNothing);
       expect(find.byKey(const Key('btn_guardar_gasto')), findsOneWidget);
+    });
+
+    testWidgets('10. Variante 1-B: Tarjetas de items con numeracion, pastilla de categoria y deshacer al eliminar', (tester) async {
+      tester.view.physicalSize = const Size(1080, 4000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      final extractedWithTwoItems = GeminiExtractionResult(
+        comercio: 'Automercado Plaza',
+        fecha: '2026-11-18',
+        moneda: 'USD',
+        totalOriginal: 20.0,
+        impuestoIva: 0.0,
+        items: [
+          ItemGastoModel(
+            descripcion: 'Patilla (E)',
+            cantidad: 2.0,
+            precioUnitario: 500,
+            total: 1000,
+            categoria: 'Alimentación',
+          ),
+          ItemGastoModel(
+            descripcion: 'Bolsas de basura (G)',
+            cantidad: 1.0,
+            precioUnitario: 1000,
+            total: 1000,
+            categoria: 'Hogar',
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<GastoProvider>.value(value: gastoProvider),
+            ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+            ChangeNotifierProvider<ScanQueueProvider>.value(value: scanQueueProvider),
+          ],
+          child: MaterialApp(
+            home: ReviewExpenseScreen(extractedData: extractedWithTwoItems),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // 1. Numeración presente: badges '1' y '2'
+      expect(find.text('1'), findsWidgets);
+      expect(find.text('2'), findsWidgets);
+
+      // 2. Tarjetas con color cardLighter y sin borde
+      final cardFinders = find.byType(Card);
+      expect(cardFinders, findsWidgets);
+      final firstCard = tester.widget<Card>(cardFinders.first);
+      expect(firstCard.color, equals(AppColors.cardLighter));
+
+      // 3. Pastilla de categoría con DropdownButton
+      expect(find.byType(DropdownButton<String>), findsNWidgets(2));
+
+      // 4. Eliminar el primer ítem
+      final deleteButtons = find.byIcon(Icons.delete_outline);
+      expect(deleteButtons, findsNWidgets(2));
+      await tester.tap(deleteButtons.first);
+      await tester.pump(); // Inicia animación del SnackBar
+
+      // Verificar que el SnackBar aparece con 'Artículo eliminado' y 'Deshacer'
+      expect(find.text('Artículo eliminado'), findsOneWidget);
+      expect(find.text('Deshacer'), findsOneWidget);
+
+      // Ahora solo queda 1 ítem en pantalla
+      expect(find.text('Patilla (E)'), findsNothing);
+      expect(find.text('Bolsas de basura (G)'), findsOneWidget);
+
+      // 5. Tocar 'Deshacer'
+      await tester.tap(find.text('Deshacer'));
+      await tester.pumpAndSettle();
+
+      // El ítem eliminado se restauró
+      expect(find.text('Patilla (E)'), findsOneWidget);
+      expect(find.text('Bolsas de basura (G)'), findsOneWidget);
     });
   });
 }
