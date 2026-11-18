@@ -1,5 +1,8 @@
 # Documento Técnico: Rediseño de Ítems en Revisión de Factura (Variante 1-B)
 
+> **Estado:** Implementada en `main` · CI en verde (build 711, commit `0d52bb5`, run `44330777911`).
+> **Tarea:** `UX-20` · Pendiente de validación en dispositivo físico 🧪.
+
 ## 1. Contexto y Problema
 En `ReviewExpenseScreen`, la lista de artículos extraídos o ingresados presentaba problemas de fatiga visual y falta de diferenciación:
 1. **Tres planos blancos idénticos:** El contenedor de sección (`AppColors.card` `#FFFFFF`), la tarjeta de cada ítem (`AppColors.surface` `#FFFFFF`) y los campos de texto (`AppColors.surface` `#FFFFFF`) compartían el mismo fondo y borde `#E5E7EB`, anulando el contraste figura-fondo.
