@@ -2814,6 +2814,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                       child: DropdownButtonHideUnderline(
                                         child: DropdownButton<String>(
                                           isDense: true,
+                                          menuWidth: 190,
                                           value: AppConstants.categorias.contains(item.categoria) ? item.categoria : 'Otros',
                                           icon: const Icon(Icons.arrow_drop_down, size: 18, color: Color(0xFF4B5563)),
                                           dropdownColor: AppColors.surface,
@@ -2849,7 +2850,6 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                             return DropdownMenuItem<String>(
                                               value: cat,
                                               child: Row(
-                                                mainAxisSize: MainAxisSize.min,
                                                 children: [
                                                   Container(
                                                     width: 20,
@@ -2861,13 +2861,15 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                                     child: Icon(catIcon, size: 12, color: catColor),
                                                   ),
                                                   const SizedBox(width: 6),
-                                                  Text(
-                                                    cat,
-                                                    overflow: TextOverflow.ellipsis,
-                                                    style: const TextStyle(
-                                                      fontSize: 12,
-                                                      fontWeight: FontWeight.w500,
-                                                      color: AppColors.textPrimary,
+                                                  Expanded(
+                                                    child: Text(
+                                                      cat,
+                                                      overflow: TextOverflow.ellipsis,
+                                                      style: const TextStyle(
+                                                        fontSize: 12,
+                                                        fontWeight: FontWeight.w500,
+                                                        color: AppColors.textPrimary,
+                                                      ),
                                                     ),
                                                   ),
                                                 ],
