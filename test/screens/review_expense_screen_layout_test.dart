@@ -1650,6 +1650,7 @@ void main() {
       expect(deleteButtons, findsNWidgets(2));
       await tester.tap(deleteButtons.first);
       await tester.pump(); // Inicia animación del SnackBar
+      await tester.pump(const Duration(milliseconds: 350)); // Completa animación de entrada del SnackBar
 
       // Verificar que el SnackBar aparece con 'Artículo eliminado' y 'Deshacer'
       expect(find.text('Artículo eliminado'), findsOneWidget);

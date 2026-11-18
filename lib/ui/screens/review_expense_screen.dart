@@ -2769,7 +2769,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                       decoration: InputDecoration(
                                         filled: true,
                                         fillColor: AppColors.surface,
-                                        labelText: 'Precio unit.',
+                                        labelText: 'Precio',
                                         labelStyle: const TextStyle(fontSize: 12, color: Color(0xFF4B5563)),
                                         prefixText: '${_symbolForMoneda(_selectedMoneda)} ',
                                         prefixStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF4B5563)),
@@ -2805,7 +2805,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                   Flexible(
                                     child: Container(
                                       height: 34,
-                                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                                      padding: const EdgeInsets.symmetric(horizontal: 8),
                                       decoration: BoxDecoration(
                                         color: AppColors.surface,
                                         borderRadius: BorderRadius.circular(17),
@@ -2818,6 +2818,31 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                           icon: const Icon(Icons.arrow_drop_down, size: 18, color: Color(0xFF4B5563)),
                                           dropdownColor: AppColors.surface,
                                           borderRadius: BorderRadius.circular(12),
+                                          selectedItemBuilder: (context) {
+                                            return AppConstants.categorias.map((cat) {
+                                              final catColor = AppColors.categoryColors[cat] ?? AppColors.textSecondary;
+                                              final catIcon = _getCategoryIcon(cat);
+                                              return Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(catIcon, size: 14, color: catColor),
+                                                  const SizedBox(width: 4),
+                                                  ConstrainedBox(
+                                                    constraints: const BoxConstraints(maxWidth: 85),
+                                                    child: Text(
+                                                      cat,
+                                                      overflow: TextOverflow.ellipsis,
+                                                      style: const TextStyle(
+                                                        fontSize: 12,
+                                                        fontWeight: FontWeight.w500,
+                                                        color: AppColors.textPrimary,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              );
+                                            }).toList();
+                                          },
                                           items: AppConstants.categorias.map((cat) {
                                             final catColor = AppColors.categoryColors[cat] ?? AppColors.textSecondary;
                                             final catIcon = _getCategoryIcon(cat);
