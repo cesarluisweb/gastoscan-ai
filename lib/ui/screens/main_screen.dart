@@ -363,143 +363,235 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
           child: Material(
             key: const Key('sheet_surface_add_menu'),
             color: AppColors.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             clipBehavior: Clip.antiAlias,
             child: SafeArea(
               top: false,
-              child: SizedBox(
-                width: double.infinity,
-                child: Wrap(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  'Selecciona una opción',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-              ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: AppColors.primary,
-                  child: const Icon(Icons.edit_note, color: AppColors.textPrimary),
-                ),
-                title: const Text('Registrar gasto', style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: const Text('Escribe los datos de tu compra'),
-                onTap: () {
-                  final settings = Provider.of<SettingsProvider>(context, listen: false);
-                  Navigator.pop(ctx);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ReviewExpenseScreen(
-                        extractedData: GeminiExtractionResult(
-                          comercio: '',
-                          fecha: DateTime.now().toIso8601String().substring(0, 10),
-                          moneda: settings.monedaPrincipal,
-                          totalOriginal: 0.0,
-                          tasaCambioDetectada: null,
-                          impuestoIva: 0.0,
-                          items: [
-                            ItemGastoModel(
-                              descripcion: '',
-                              cantidad: 1.0,
-                              precioUnitario: 0,
-                              total: 0,
-                              categoria: 'Otros',
-                            ),
-                          ],
+                    Center(
+                      child: Container(
+                        key: const Key('add_menu_drag_handle'),
+                        margin: const EdgeInsets.only(top: 10, bottom: 14),
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: AppColors.border,
+                          borderRadius: BorderRadius.circular(2),
                         ),
                       ),
                     ),
-                  );
-                },
-              ),
-              const Divider(),
-              ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: AppColors.primaryLight,
-                  child: const Icon(Icons.camera_alt, color: AppColors.textPrimary),
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(20, 0, 20, 10),
+                      child: Text(
+                        '¿Cómo quieres registrar el gasto?',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                          height: 1.25,
+                        ),
+                      ),
+                    ),
+                    _buildAddMenuOption(
+                      key: const Key('add_menu_option_manual'),
+                      icon: Icons.edit_outlined,
+                      title: 'Escribir gasto',
+                      subtitle: 'Ingresa los datos de tu compra',
+                      onTap: () {
+                        final settings = Provider.of<SettingsProvider>(context, listen: false);
+                        Navigator.pop(ctx);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ReviewExpenseScreen(
+                              extractedData: GeminiExtractionResult(
+                                comercio: '',
+                                fecha: DateTime.now().toIso8601String().substring(0, 10),
+                                moneda: settings.monedaPrincipal,
+                                totalOriginal: 0.0,
+                                tasaCambioDetectada: null,
+                                impuestoIva: 0.0,
+                                items: [
+                                  ItemGastoModel(
+                                    descripcion: '',
+                                    cantidad: 1.0,
+                                    precioUnitario: 0,
+                                    total: 0,
+                                    categoria: 'Otros',
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    _buildAddMenuDivider(),
+                    _buildAddMenuOption(
+                      key: const Key('add_menu_option_camera'),
+                      icon: Icons.camera_alt_outlined,
+                      title: 'Tomar foto de factura',
+                      subtitle: 'Extrae los productos y precios',
+                      onTap: () async {
+                        Navigator.pop(ctx);
+                        try {
+                          final scanner = DocumentScannerService();
+                          final scannedPaths = await scanner.scanDocuments();
+                          if (scannedPaths.isNotEmpty && context.mounted) {
+                            final scanQueue = Provider.of<ScanQueueProvider>(context, listen: false);
+                            if (scannedPaths.length == 1) {
+                              await scanQueue.enqueue(scannedPaths.first);
+                            } else {
+                              await scanQueue.enqueueMultiple(scannedPaths);
+                            }
+                            HapticFeedback.mediumImpact();
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).clearSnackBars();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('No se pudo abrir la cámara. Intenta de nuevo.'),
+                                backgroundColor: AppColors.error,
+                              ),
+                            );
+                          }
+                        }
+                      },
+                    ),
+                    _buildAddMenuDivider(),
+                    _buildAddMenuOption(
+                      key: const Key('add_menu_option_gallery'),
+                      icon: Icons.image_outlined,
+                      title: 'Elegir imagen',
+                      subtitle: 'Usa una foto o captura de tu galería',
+                      onTap: () async {
+                        Navigator.pop(ctx);
+                        try {
+                          final picker = ImagePicker();
+                          final pickedFiles = await picker.pickMultiImage(imageQuality: 90);
+                          if (pickedFiles.isNotEmpty && context.mounted) {
+                            final scanQueue = Provider.of<ScanQueueProvider>(context, listen: false);
+                            final paths = pickedFiles.map((f) => f.path).toList();
+                            await scanQueue.enqueueMultiple(paths);
+                            HapticFeedback.mediumImpact();
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).clearSnackBars();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('No se pudieron seleccionar las imágenes. Intenta de nuevo.'),
+                                backgroundColor: AppColors.error,
+                              ),
+                            );
+                          }
+                        }
+                      },
+                    ),
+                    _buildAddMenuDivider(),
+                    _buildAddMenuOption(
+                      key: const Key('add_menu_option_voice'),
+                      icon: Icons.mic_none_outlined,
+                      title: 'Dictar gasto',
+                      subtitle: 'Describe tu compra con tu voz',
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        VoiceExpenseSheet.show(context);
+                      },
+                    ),
+                    const SizedBox(height: 14),
+                  ],
                 ),
-                title: const Text('Escanear factura (IA)', style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: const Text('La IA extrae los datos de la foto'),
-                onTap: () async {
-                  Navigator.pop(ctx);
-                  try {
-                    final scanner = DocumentScannerService();
-                    final scannedPaths = await scanner.scanDocuments();
-                    if (scannedPaths.isNotEmpty && context.mounted) {
-                      final scanQueue = Provider.of<ScanQueueProvider>(context, listen: false);
-                      if (scannedPaths.length == 1) {
-                        await scanQueue.enqueue(scannedPaths.first);
-                      } else {
-                        await scanQueue.enqueueMultiple(scannedPaths);
-                      }
-                      HapticFeedback.mediumImpact();
-                    }
-                  } catch (e) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).clearSnackBars();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('No se pudo abrir la cámara. Intenta de nuevo.'), backgroundColor: AppColors.error),
-                      );
-                    }
-                  }
-                },
               ),
-              const Divider(),
-              ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: AppColors.primaryLight,
-                  child: const Icon(Icons.image, color: AppColors.textPrimary),
-                ),
-                title: const Text('Subir comprobante (IA)', style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: const Text('Sube una foto o captura de tu recibo'),
-                onTap: () async {
-                  Navigator.pop(ctx);
-                  try {
-                    final picker = ImagePicker();
-                    final pickedFiles = await picker.pickMultiImage(imageQuality: 90);
-                    if (pickedFiles.isNotEmpty && context.mounted) {
-                      final scanQueue = Provider.of<ScanQueueProvider>(context, listen: false);
-                      final paths = pickedFiles.map((f) => f.path).toList();
-                      await scanQueue.enqueueMultiple(paths);
-                      HapticFeedback.mediumImpact();
-                    }
-                  } catch (e) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).clearSnackBars();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('No se pudieron seleccionar las imágenes. Intenta de nuevo.'), backgroundColor: AppColors.error),
-                      );
-                    }
-                  }
-                },
-              ),
-              const Divider(),
-              ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: AppColors.primaryLight,
-                  child: const Icon(Icons.mic, color: AppColors.textPrimary),
-                ),
-                title: const Text('Dictar gasto (Voz)', style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: const Text('Habla y la IA organizará tu compra'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  VoiceExpenseSheet.show(context);
-                },
-              ),
-              const SizedBox(height: 16),
-            ],
+            ),
           ),
+        );
+      },
+    );
+  }
+
+  static Widget _buildAddMenuDivider() {
+    return Divider(
+      height: 1,
+      thickness: 1,
+      indent: 20,
+      endIndent: 20,
+      color: AppColors.border.withValues(alpha: 0.8),
+    );
+  }
+
+  static Widget _buildAddMenuOption({
+    required Key key,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      key: key,
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.primaryDark,
+                  width: 1,
+                ),
+              ),
+              child: Icon(icon, color: AppColors.textPrimary, size: 20),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                      height: 1.25,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                      height: 1.3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: AppColors.textMuted,
+              size: 20,
+            ),
+          ],
         ),
       ),
-    ),
-  );
-      },
     );
   }
 

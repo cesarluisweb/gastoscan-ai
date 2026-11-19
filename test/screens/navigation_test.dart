@@ -102,18 +102,39 @@ void main() {
       expect(find.text('Asistente IA'), findsWidgets);
     });
 
-    testWidgets('tapping center FAB opens bottom sheet with 4 add options', (tester) async {
+    testWidgets('tapping center FAB opens bottom sheet with 4 redesigned add options', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
       await tester.tap(find.byType(FloatingActionButton));
       await tester.pumpAndSettle();
 
-      expect(find.text('Selecciona una opción'), findsOneWidget);
-      expect(find.text('Registrar gasto'), findsOneWidget);
-      expect(find.text('Escanear factura (IA)'), findsOneWidget);
-      expect(find.text('Subir comprobante (IA)'), findsOneWidget);
-      expect(find.text('Dictar gasto (Voz)'), findsOneWidget);
+      final sheet = find.byKey(const Key('sheet_surface_add_menu'));
+      expect(sheet, findsOneWidget);
+      expect(find.byKey(const Key('add_menu_drag_handle')), findsOneWidget);
+
+      expect(find.text('¿Cómo quieres registrar el gasto?'), findsOneWidget);
+      expect(find.text('Escribir gasto'), findsOneWidget);
+      expect(find.text('Ingresa los datos de tu compra'), findsOneWidget);
+      expect(find.text('Tomar foto de factura'), findsOneWidget);
+      expect(find.text('Extrae los productos y precios'), findsOneWidget);
+      expect(find.text('Elegir imagen'), findsOneWidget);
+      expect(find.text('Usa una foto o captura de tu galería'), findsOneWidget);
+      expect(find.text('Dictar gasto'), findsOneWidget);
+      expect(find.text('Describe tu compra con tu voz'), findsOneWidget);
+
+      expect(
+        find.descendant(of: sheet, matching: find.byIcon(Icons.chevron_right_rounded)),
+        findsNWidgets(4),
+      );
+      expect(
+        find.descendant(of: sheet, matching: find.byIcon(Icons.close)),
+        findsNothing,
+      );
+      expect(
+        find.descendant(of: sheet, matching: find.textContaining('IA')),
+        findsNothing,
+      );
     });
 
     testWidgets('tapping AI chat button on Inicio navigates to Chat keeping bottom navigation and back returns to Inicio', (tester) async {
