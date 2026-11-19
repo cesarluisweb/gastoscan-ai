@@ -172,7 +172,12 @@ Row(
 )
 ```
 
-### 3.6 Diálogos de Confirmación (`AlertDialog`)
+### 3.6 Resaltado de Coincidencias de Búsqueda (Search Highlighting)
+Al buscar dentro de listas densas de ítems o desgloses de compras:
+1. **Fragmento de texto coincidente:** Usar `TextSpan` con `backgroundColor: AppColors.primaryLight`, `color: AppColors.textPrimary` (negro explícito), `fontWeight: FontWeight.bold` y subrayado `TextDecoration.underline` con `decorationColor: AppColors.textPrimary` (grosor 2.0px). Prohibido texto blanco o amarillo sobre fondo claro.
+2. **Contenedor de la fila coincidente:** Envolver la fila en un contenedor con fondo suave (`AppColors.primaryLight.withValues(alpha: 0.35)`), radio de 8px y borde amarillo definido (`AppColors.primaryDark.withValues(alpha: 0.65)`, 1px).
+
+### 3.7 Diálogos de Confirmación (`AlertDialog`)
 En cualquier modal de decisión o confirmación sobre fondo blanco/claro:
 - **Acción Neutral / Cancelar ("Cancelar", "Volver", "Más tarde"):** Texto gris obligatorio (`AppColors.textSecondary`). Prohibido usar amarillo o dejarlo sin estilo.
 - **Acción Destructiva ("Eliminar", "Descartar"):** Texto rojo explícito (`AppColors.error`).
