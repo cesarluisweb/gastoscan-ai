@@ -228,6 +228,11 @@ AlertDialog(
 8. **Orientación de Pantalla Exclusivamente Vertical (`portraitUp`):**
    - La app móvil bloquea su orientación en vertical (`DeviceOrientation.portraitUp`) en `main()`.
    - **Justificación de diseño:** Rinde Más está concebida para uso rápido a una mano en comercios y cajas. El modo apaisado reduce la altura visible a menos de 300 dp con el teclado activo, quebrando modales, selectores y el flujo de captura OCR de comprobantes.
+9. **Tarjetas de Ítems en Formularios de Gastos (`ReviewExpenseScreen`):**
+   - **Figura-Fondo y Proximidad 1:2:** Cada ítem se envuelve en `Card` con fondo `AppColors.cardLighter` (`#F3F4F6`) sin borde exterior (`side: BorderSide.none`) y separación vertical de `16 dp` (`margin: vertical 8`). Los campos internos conservan fondo blanco (`AppColors.surface`), borde `AppColors.border`, radio `10 dp` y separación interna de `8 dp`.
+   - **Contraste sobre Gris:** Las etiquetas de campo y rótulos secundarios sobre `#F3F4F6` deben usar `#4B5563` (en lugar de `#6B7280`) para mantener contraste WCAG AA (`>= 4.5:1`).
+   - **Consistencia Geométrica:** Todos los campos editables del ítem (`Concepto`, `Cant.`, `Precio`, `Categoría`) comparten el mismo borde `OutlineInputBorder` de `10 dp` y etiqueta flotante. Prohibido mezclar selectores en forma de pastilla (`borderRadius >= 16`) junto a cajas rectangulares dentro del mismo ítem.
+   - **Jerarquía y Seguridad:** Concepto en `15 sp` `FontWeight.w600`, monto total del ítem en `17 sp` negrita con `FontFeature.tabularFigures()`, y eliminación siempre protegida con `SnackBar` de `Deshacer` (5 s, sin `SnackBarAction`, conforme a §3.2).
 
 ---
 

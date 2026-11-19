@@ -8,13 +8,15 @@
 - **Mapa de código:** `docs/CODE_MAP.md` se regenera con `node scripts/gen_code_map.js`; el hook de pre-commit lo actualiza.
 
 ## Tareas en Curso
-- **UX-20 (ítems en ReviewExpenseScreen):** 🧪 Iteración 2 en build 712 (`18ae858`, CI verde). César rechazó el número `[N]` (se confunde con cantidad), el lápiz y la pastilla redondeada. Pendiente: término para "artículos" y posible compactar altura de campos.
 - **AI-09 (detección fotos y facturas duplicadas):** Planificada en `ROADMAP.md` y documentada en `docs/DOC_PLAN_DETECCION_DUPLICADOS.md`. Pendiente definición de esquema SQLite (v20 vs v19).
 - **E0-05b (diagnóstico Q01..Q20):** ✅ Completada (build 707, `4dafbf9`, run `43499866405`). Fase 0 cerrada.
 - **B1 (reglas Firestore):** ✅ Completada (`4f2bff6`, emulador `43499032804` en verde, auditada y validada en producción).
 - **Pendientes de cierre administrativo:** firma P0 (rotar upload key tras aprobar Producción) y solicitud de Producción en Google Play.
 
 ## Completadas
+- **UX-20 (ítems en ReviewExpenseScreen):** ✅ Validada en dispositivo por César (build 712, `18ae858`, CI verde). Regla graduada a `DESIGN.md` §4.9. Idea pendiente: evaluar término "conceptos" vs "artículos".
+- **UX Calculadora Cambiaria (`CurrencyCalculatorScreen`):** ✅ build 714 (`0cc94bd`, run `44539128258`). Autofocus y teclado al abrir/limpiar/swap/tasa personalizada, prefijo `Bs.` fijo, placeholder `22px` negrita y `onDrag`.
+- **Rediseño desplegable central (`MainScreen.showAddMenu`):** ✅ build 713 (`8092209`, run `44522447802`). Barrita superior, sin `X`, cajas amarillas `40×40` *outlined*, textos sin IA y flechas derechas.
 - **Resaltado de búsqueda en ExpenseCard:** ✅ build 708 (`0a37f8d`, run `43606952757`). Subraya y enmarca ítems y comercios coincidentes.
 - **Validadas en dispositivo por César (13/11/2026):** ✅ `UX-14` (build 704, `873367e`), Selector de Mes en AppBar (build 649), Fase 5 Web (build 20), Comparador de Precios v2 (build 700), MoreScreen `UI-02` (build 703) y Arquitectura de Arranque Local-First.
 - **Limpieza de ROADMAP.md:** ✅ Hitos completados movidos a `docs/archive/2026-Q4/ROADMAP_HISTORICO.md`.
@@ -28,6 +30,7 @@
 - **Prueba cerrada:** 14 días completados (20/10 a 03/11) con 12 evaluadores; cero crashes y cero ANR.
 
 ## Decisiones Técnicas
+- Resaltado en búsquedas: `AppColors.primaryLight` + subrayado negro en fragmento; contenedor suave en fila del ítem; prefijo de cantidad aislado para evitar falsos positivos numéricos.
 - `versionCode = BASE_BUILD + github.run_number`; nunca recrear `build_apk.yml`.
 - Sin JDK local: toda firma se genera en GitHub Actions.
 - Rotación de la clave de subida diferida hasta aprobar producción.

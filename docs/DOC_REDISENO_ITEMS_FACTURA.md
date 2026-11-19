@@ -1,7 +1,7 @@
 # Documento Técnico: Rediseño de Ítems en Revisión de Factura (UX-20)
 
-> **Estado:** Iteración 2 · CI en verde (build 712, commit `18ae858`, run `44435761350`). Iteración 1: build 711 (`0d52bb5`).
-> **Tarea:** `UX-20` · Pendiente de validación en dispositivo físico 🧪.
+> **Estado:** Iteración 2 · Validada en dispositivo ✅ (build 712, commit `18ae858`, run `44435761350`). Iteración 1: build 711 (`0d52bb5`).
+> **Tarea:** `UX-20` · Completada ✅. Reglas graduadas a `DESIGN.md` §4.9.
 
 ## 1. Problema
 En `ReviewExpenseScreen` los artículos se veían iguales y costaba recorrerlos con la vista:
