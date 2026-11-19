@@ -277,24 +277,92 @@ void main() {
       expect(find.textContaining('www.bcv.org.ve'), findsOneWidget);
     });
 
-    testWidgets('tapping clear icon clears divisa input field', (tester) async {
+    testWidgets('opening calculator autofocuses top divisa field with keyboard open and shows permanent Bs. prefix and 22px bold hint', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
+      final divisaField = tester.widget<TextField>(find.byKey(const Key('calc_divisa_input')));
+      final vesField = tester.widget<TextField>(find.byKey(const Key('calc_ves_input')));
+
+      // Autofocus on top divisa field + keyboard visible
+      expect(divisaField.focusNode?.hasFocus, isTrue);
+      expect(vesField.focusNode?.hasFocus, isFalse);
+      expect(tester.testTextInput.isVisible, isTrue);
+
+      // Permanent Bs. prefix visible even when VES field is empty and unfocused
+      expect(find.byKey(const Key('calc_ves_prefix_bs')), findsOneWidget);
+      expect(vesField.decoration?.prefixText, isNull);
+
+      // Placeholder 0.00 matches typed number size (22px bold)
+      expect(divisaField.decoration?.hintStyle?.fontSize, divisaField.style?.fontSize);
+      expect(divisaField.decoration?.hintStyle?.fontWeight, divisaField.style?.fontWeight);
+      expect(vesField.decoration?.hintStyle?.fontSize, vesField.style?.fontSize);
+      expect(vesField.decoration?.hintStyle?.fontWeight, vesField.style?.fontWeight);
+
+      // ListView dismisses keyboard on drag
+      final listView = tester.widget<ListView>(find.byType(ListView));
+      expect(listView.keyboardDismissBehavior, ScrollViewKeyboardDismissBehavior.onDrag);
+    });
+
+    testWidgets('tapping clear icon on either field clears amounts, focuses that field, and keeps keyboard open', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      // Type in divisa -> both fields have text, focus is on divisa
       await tester.enterText(find.byKey(const Key('calc_divisa_input')), '25');
       await tester.pumpAndSettle();
 
-      final clearIconFinder = find.byIcon(Icons.clear);
-      expect(clearIconFinder, findsWidgets);
-
-      await tester.tap(clearIconFinder.first);
+      // Tap clear button on VES field (which was NOT focused)
+      await tester.tap(find.byKey(const Key('calc_ves_clear_button')));
       await tester.pumpAndSettle();
 
-      final divisaField = tester.widget<TextField>(find.byKey(const Key('calc_divisa_input')));
-      expect(divisaField.controller?.text, isEmpty);
+      final divisaFieldAfterVesClear = tester.widget<TextField>(find.byKey(const Key('calc_divisa_input')));
+      final vesFieldAfterVesClear = tester.widget<TextField>(find.byKey(const Key('calc_ves_input')));
+      expect(divisaFieldAfterVesClear.controller?.text, isEmpty);
+      expect(vesFieldAfterVesClear.controller?.text, isEmpty);
+      expect(vesFieldAfterVesClear.focusNode?.hasFocus, isTrue);
+      expect(tester.testTextInput.isVisible, isTrue);
+
+      // Type in VES -> focus is on VES; tap clear button on divisa field
+      await tester.enterText(find.byKey(const Key('calc_ves_input')), '90');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('calc_divisa_clear_button')));
+      await tester.pumpAndSettle();
+
+      final divisaFieldAfterDivisaClear = tester.widget<TextField>(find.byKey(const Key('calc_divisa_input')));
+      final vesFieldAfterDivisaClear = tester.widget<TextField>(find.byKey(const Key('calc_ves_input')));
+      expect(divisaFieldAfterDivisaClear.controller?.text, isEmpty);
+      expect(vesFieldAfterDivisaClear.controller?.text, isEmpty);
+      expect(divisaFieldAfterDivisaClear.focusNode?.hasFocus, isTrue);
+      expect(tester.testTextInput.isVisible, isTrue);
     });
 
-    testWidgets('tapping swap button preserves EditableTextState focus on divisa TextField', (tester) async {
+    testWidgets('selecting custom rate chip autofocuses custom input when empty, shows permanent Bs. prefix, and clear button refocuses it', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('calc_chip_custom')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('calc_custom_rate_prefix_bs')), findsOneWidget);
+      final customField = tester.widget<TextField>(find.byKey(const Key('calc_custom_rate_input')));
+      expect(customField.focusNode?.hasFocus, isTrue);
+      expect(tester.testTextInput.isVisible, isTrue);
+
+      await tester.enterText(find.byKey(const Key('calc_custom_rate_input')), '55');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('calc_custom_rate_clear_button')));
+      await tester.pumpAndSettle();
+
+      final customFieldAfterClear = tester.widget<TextField>(find.byKey(const Key('calc_custom_rate_input')));
+      expect(customFieldAfterClear.controller?.text, isEmpty);
+      expect(customFieldAfterClear.focusNode?.hasFocus, isTrue);
+      expect(tester.testTextInput.isVisible, isTrue);
+    });
+
+    testWidgets('tapping swap button preserves EditableTextState and moves focus to new top field with keyboard open', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
@@ -319,6 +387,9 @@ void main() {
         ),
       );
       expect(identical(editableBefore, editableAfter), isTrue);
+
+      final vesField = tester.widget<TextField>(find.byKey(const Key('calc_ves_input')));
+      expect(vesField.focusNode?.hasFocus, isTrue);
       expect(tester.testTextInput.isVisible, isTrue);
     });
 

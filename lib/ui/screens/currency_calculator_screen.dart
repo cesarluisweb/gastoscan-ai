@@ -33,6 +33,7 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
   late TextEditingController _customRateCtrl;
   late FocusNode _divisaFocusNode;
   late FocusNode _vesFocusNode;
+  late FocusNode _customRateFocusNode;
 
   String _selectedCurrency = 'USD';
   TipoTasaCalculadora _selectedTipoTasa = TipoTasaCalculadora.dolarBcv;
@@ -48,6 +49,7 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
     _customRateCtrl = TextEditingController();
     _divisaFocusNode = FocusNode();
     _vesFocusNode = FocusNode();
+    _customRateFocusNode = FocusNode();
 
     _divisaFocusNode.addListener(() {
       if (_divisaFocusNode.hasFocus && _divisaCtrl.text.isNotEmpty) {
@@ -61,9 +63,19 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
       }
     });
 
+    _customRateFocusNode.addListener(() {
+      if (_customRateFocusNode.hasFocus && _customRateCtrl.text.isNotEmpty) {
+        _customRateCtrl.selection = TextSelection(
+          baseOffset: 0,
+          extentOffset: _customRateCtrl.text.length,
+        );
+      }
+    });
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _recalcularDesdeDivisa();
+      _focusAndShowKeyboard(_isVesOnTop ? _vesFocusNode : _divisaFocusNode);
     });
   }
 
@@ -74,7 +86,21 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
     _customRateCtrl.dispose();
     _divisaFocusNode.dispose();
     _vesFocusNode.dispose();
+    _customRateFocusNode.dispose();
     super.dispose();
+  }
+
+  void _focusAndShowKeyboard(FocusNode focusNode) {
+    if (!mounted) return;
+    if (focusNode.hasFocus) {
+      SystemChannels.textInput.invokeMethod<void>('TextInput.show');
+      return;
+    }
+    FocusScope.of(context).requestFocus(focusNode);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !focusNode.hasFocus) return;
+      SystemChannels.textInput.invokeMethod<void>('TextInput.show');
+    });
   }
 
   double _obtenerTasaActiva(SettingsProvider settings) {
@@ -137,6 +163,15 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
       _recalcularDesdeVes();
     } else {
       _recalcularDesdeDivisa();
+    }
+    if (tipo == TipoTasaCalculadora.personalizada &&
+        _customRateCtrl.text.trim().isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || _selectedTipoTasa != TipoTasaCalculadora.personalizada) {
+          return;
+        }
+        _focusAndShowKeyboard(_customRateFocusNode);
+      });
     }
   }
 
@@ -278,6 +313,7 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
             ? IconButton(
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () {
+                  FocusScope.of(context).unfocus();
                   if (widget.onBack != null) {
                     widget.onBack!();
                   } else {
@@ -291,6 +327,7 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
           child: ListView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
           // Selector de Chips de Tasa Rápida
@@ -359,13 +396,53 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
                   TextField(
                     key: const Key('calc_custom_rate_input'),
                     controller: _customRateCtrl,
+                    focusNode: _customRateFocusNode,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(
-                      prefixText: 'Bs. ',
-                      hintText: '0.00',
-                      isDense: true,
-                      border: OutlineInputBorder(),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
                     ),
+                    decoration: InputDecoration(
+                      prefixIcon: _buildBsPrefixIcon(
+                        key: const Key('calc_custom_rate_prefix_bs'),
+                        fontSize: 15,
+                      ),
+                      suffixIcon: _customRateCtrl.text.isNotEmpty
+                          ? IconButton(
+                              key: const Key('calc_custom_rate_clear_button'),
+                              icon: const Icon(Icons.clear, size: 18, color: AppColors.textSecondary),
+                              onPressed: () {
+                                _customRateCtrl.clear();
+                                setState(() {
+                                  _customRate = 0.0;
+                                });
+                                if (_isVesOnTop) {
+                                  _recalcularDesdeVes();
+                                } else {
+                                  _recalcularDesdeDivisa();
+                                }
+                                _focusAndShowKeyboard(_customRateFocusNode);
+                              },
+                            )
+                          : null,
+                      hintText: '0.00',
+                      hintStyle: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textMuted,
+                      ),
+                      isDense: true,
+                      border: const OutlineInputBorder(),
+                    ),
+                    onTap: () {
+                      if (_customRateCtrl.text.isNotEmpty) {
+                        _customRateCtrl.selection = TextSelection(
+                          baseOffset: 0,
+                          extentOffset: _customRateCtrl.text.length,
+                        );
+                      }
+                    },
                     onChanged: (val) {
                       final parsed = tryParseAmount(val, isPrice: false);
                       setState(() {
@@ -613,6 +690,24 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
     );
   }
 
+  Widget _buildBsPrefixIcon({Key? key, double fontSize = 18}) {
+    return SizedBox(
+      width: 48,
+      child: Center(
+        heightFactor: 1.0,
+        child: Text(
+          'Bs.',
+          key: key,
+          style: TextStyle(
+            fontSize: fontSize,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildDivisaField(double tasaActiva) {
     return Column(
       key: const Key('calc_divisa_field_column'),
@@ -646,15 +741,22 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
             ),
             suffixIcon: _divisaCtrl.text.isNotEmpty
                 ? IconButton(
+                    key: const Key('calc_divisa_clear_button'),
                     icon: const Icon(Icons.clear, size: 18, color: AppColors.textSecondary),
                     onPressed: () {
                       _divisaCtrl.clear();
                       _recalcularDesdeDivisa();
                       setState(() {});
+                      _focusAndShowKeyboard(_divisaFocusNode);
                     },
                   )
                 : null,
             hintText: '0.00',
+            hintStyle: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textMuted,
+            ),
             filled: true,
             fillColor: AppColors.surface,
             border: OutlineInputBorder(
@@ -702,23 +804,28 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
             color: AppColors.textPrimary,
           ),
           decoration: InputDecoration(
-            prefixText: 'Bs. ',
-            prefixStyle: const TextStyle(
+            prefixIcon: _buildBsPrefixIcon(
+              key: const Key('calc_ves_prefix_bs'),
               fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
             ),
             suffixIcon: _vesCtrl.text.isNotEmpty
                 ? IconButton(
+                    key: const Key('calc_ves_clear_button'),
                     icon: const Icon(Icons.clear, size: 18, color: AppColors.textSecondary),
                     onPressed: () {
                       _vesCtrl.clear();
                       _recalcularDesdeVes();
                       setState(() {});
+                      _focusAndShowKeyboard(_vesFocusNode);
                     },
                   )
                 : null,
             hintText: '0.00',
+            hintStyle: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textMuted,
+            ),
             filled: true,
             fillColor: AppColors.surface,
             border: OutlineInputBorder(
@@ -747,6 +854,12 @@ class _CurrencyCalculatorScreenState extends State<CurrencyCalculatorScreen> {
       onTap: () {
         setState(() {
           _isVesOnTop = !_isVesOnTop;
+        });
+        final FocusNode targetFocus =
+            _isVesOnTop ? _vesFocusNode : _divisaFocusNode;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          _focusAndShowKeyboard(targetFocus);
         });
       },
       borderRadius: BorderRadius.circular(20),
