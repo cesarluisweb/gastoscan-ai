@@ -2623,28 +2623,10 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Fila 1: [N] + Concepto (w600) + Papelera
+                              // Fila 1: Concepto (w600) + Papelera
                               Row(
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  Container(
-                                    width: 24,
-                                    height: 24,
-                                    alignment: Alignment.center,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFE5E7EB),
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Text(
-                                      '${idx + 1}',
-                                      style: const TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w700,
-                                        color: Color(0xFF4B5563),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
                                   Expanded(
                                     child: TextFormField(
                                       initialValue: item.descripcion,
@@ -2658,15 +2640,12 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                       decoration: InputDecoration(
                                         filled: true,
                                         fillColor: AppColors.surface,
-                                        hintText: 'Nombre del artículo',
+                                        labelText: 'Concepto',
+                                        labelStyle: const TextStyle(fontSize: 12, color: Color(0xFF4B5563)),
+                                        hintText: 'Ej. Harina PAN, Taxi...',
                                         hintStyle: const TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.normal,
-                                          color: AppColors.textMuted,
-                                        ),
-                                        suffixIcon: const Icon(
-                                          Icons.edit_outlined,
-                                          size: 16,
                                           color: AppColors.textMuted,
                                         ),
                                         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -2798,126 +2777,104 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                 ],
                               ),
                               const SizedBox(height: 8),
-                              // Fila 3: Categoría (Pastilla) y Total (cifras tabulares)
+                              // Fila 3: Categoría (65%, misma caja que los demás campos) y Total (35%)
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Flexible(
-                                    child: Container(
-                                      height: 34,
-                                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.surface,
-                                        borderRadius: BorderRadius.circular(17),
-                                        border: Border.all(color: AppColors.border),
-                                      ),
-                                      child: DropdownButtonHideUnderline(
-                                        child: DropdownButton<String>(
-                                          isDense: true,
-                                          menuWidth: 190,
-                                          value: AppConstants.categorias.contains(item.categoria) ? item.categoria : 'Otros',
-                                          icon: const Icon(Icons.arrow_drop_down, size: 18, color: Color(0xFF4B5563)),
-                                          dropdownColor: AppColors.surface,
-                                          borderRadius: BorderRadius.circular(12),
-                                          selectedItemBuilder: (context) {
-                                            return AppConstants.categorias.map((cat) {
-                                              final catColor = AppColors.categoryColors[cat] ?? AppColors.textSecondary;
-                                              final catIcon = _getCategoryIcon(cat);
-                                              return Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Icon(catIcon, size: 14, color: catColor),
-                                                  const SizedBox(width: 4),
-                                                  ConstrainedBox(
-                                                    constraints: const BoxConstraints(maxWidth: 85),
-                                                    child: Text(
-                                                      cat,
-                                                      overflow: TextOverflow.ellipsis,
-                                                      style: const TextStyle(
-                                                        fontSize: 12,
-                                                        fontWeight: FontWeight.w500,
-                                                        color: AppColors.textPrimary,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              );
-                                            }).toList();
-                                          },
-                                          items: AppConstants.categorias.map((cat) {
-                                            final catColor = AppColors.categoryColors[cat] ?? AppColors.textSecondary;
-                                            final catIcon = _getCategoryIcon(cat);
-                                            return DropdownMenuItem<String>(
-                                              value: cat,
-                                              child: Row(
-                                                children: [
-                                                  Container(
-                                                    width: 20,
-                                                    height: 20,
-                                                    decoration: BoxDecoration(
-                                                      color: catColor.withValues(alpha: 0.15),
-                                                      shape: BoxShape.circle,
-                                                    ),
-                                                    child: Icon(catIcon, size: 12, color: catColor),
-                                                  ),
-                                                  const SizedBox(width: 6),
-                                                  Expanded(
-                                                    child: Text(
-                                                      cat,
-                                                      overflow: TextOverflow.ellipsis,
-                                                      style: const TextStyle(
-                                                        fontSize: 12,
-                                                        fontWeight: FontWeight.w500,
-                                                        color: AppColors.textPrimary,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            );
-                                          }).toList(),
-                                          onChanged: (val) {
-                                            if (val != null) {
-                                              setState(() {
-                                                _items[idx] = _items[idx].copyWith(
-                                                  categoria: val,
-                                                  origenCategoria: OrigenCategoria.manual,
-                                                );
-                                                _sincronizarCategoriaImpuestos();
-                                              });
-                                            }
-                                          },
+                                  Expanded(
+                                    flex: 65,
+                                    child: DropdownButtonFormField<String>(
+                                      isExpanded: true,
+                                      value: AppConstants.categorias.contains(item.categoria) ? item.categoria : 'Otros',
+                                      icon: const Icon(Icons.arrow_drop_down, size: 20, color: Color(0xFF4B5563)),
+                                      dropdownColor: AppColors.surface,
+                                      borderRadius: BorderRadius.circular(12),
+                                      decoration: InputDecoration(
+                                        filled: true,
+                                        fillColor: AppColors.surface,
+                                        labelText: 'Categoría',
+                                        labelStyle: const TextStyle(fontSize: 12, color: Color(0xFF4B5563)),
+                                        isDense: true,
+                                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                          borderSide: const BorderSide(color: AppColors.border),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                          borderSide: const BorderSide(color: AppColors.primaryDark, width: 2),
                                         ),
                                       ),
+                                      items: AppConstants.categorias.map((cat) {
+                                        final catColor = AppColors.categoryColors[cat] ?? AppColors.textSecondary;
+                                        final catIcon = _getCategoryIcon(cat);
+                                        return DropdownMenuItem<String>(
+                                          value: cat,
+                                          child: Row(
+                                            children: [
+                                              Container(
+                                                width: 22,
+                                                height: 22,
+                                                decoration: BoxDecoration(
+                                                  color: catColor.withValues(alpha: 0.15),
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: Icon(catIcon, size: 13, color: catColor),
+                                              ),
+                                              const SizedBox(width: 6),
+                                              Expanded(
+                                                child: Text(
+                                                  cat,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      }).toList(),
+                                      onChanged: (val) {
+                                        if (val != null) {
+                                          setState(() {
+                                            _items[idx] = _items[idx].copyWith(
+                                              categoria: val,
+                                              origenCategoria: OrigenCategoria.manual,
+                                            );
+                                            _sincronizarCategoriaImpuestos();
+                                          });
+                                        }
+                                      },
                                     ),
                                   ),
                                   const SizedBox(width: 8),
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      const Text(
-                                        'Total',
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w500,
-                                          color: Color(0xFF4B5563),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        child: Text(
-                                          '${_symbolForMoneda(_selectedMoneda)} ${_formatDisplayMonto(_items[idx].totalDisplay)}',
-                                          style: const TextStyle(
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.bold,
-                                            color: AppColors.textPrimary,
-                                            fontFeatures: [FontFeature.tabularFigures()],
+                                  Expanded(
+                                    flex: 35,
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        const Text(
+                                          'Total',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w500,
+                                            color: Color(0xFF4B5563),
                                           ),
                                         ),
-                                      ),
-                                    ],
+                                        const SizedBox(height: 2),
+                                        FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          child: Text(
+                                            '${_symbolForMoneda(_selectedMoneda)} ${_formatDisplayMonto(_items[idx].totalDisplay)}',
+                                            style: const TextStyle(
+                                              fontSize: 17,
+                                              fontWeight: FontWeight.bold,
+                                              color: AppColors.textPrimary,
+                                              fontFeatures: [FontFeature.tabularFigures()],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),

@@ -8,7 +8,7 @@
 - **Mapa de código:** `docs/CODE_MAP.md` se regenera con `node scripts/gen_code_map.js`; el hook de pre-commit lo actualiza.
 
 ## Tareas en Curso
-- **UX-20 (rediseño de ítems en ReviewExpenseScreen - Variante 1-B):** 🧪 Pendiente de validación en dispositivo (build 711, `0d52bb5`, run `44330777911` en verde). Tarjetas en cardLighter, badge [N], concepto en w600, pastilla de categoría y deshacer al eliminar.
+- **UX-20 (ítems en ReviewExpenseScreen):** Iteración 2 en CI. César rechazó el número `[N]` (se confunde con cantidad), el lápiz y la pastilla redondeada. Pendiente decidir término para "artículos" (servicios no son artículos).
 - **AI-09 (detección fotos y facturas duplicadas):** Planificada en `ROADMAP.md` y documentada en `docs/DOC_PLAN_DETECCION_DUPLICADOS.md`. Pendiente definición de esquema SQLite (v20 vs v19).
 - **E0-05b (diagnóstico Q01..Q20):** ✅ Completada (build 707, `4dafbf9`, run `43499866405`). Fase 0 cerrada.
 - **B1 (reglas Firestore):** ✅ Completada (`4f2bff6`, emulador `43499032804` en verde, auditada y validada en producción).

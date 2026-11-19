@@ -77,7 +77,7 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 - `UX-17` **Botón y Flujo de Referidos Simple ("Compartir Rinde Más por WhatsApp"):** `Pendiente` Botón en `MoreScreen` con `Share.share` y enlace directo a Google Play.
 - `UX-18` **Evolución Mensual en Gráfica Única (Pantalla Análisis):** `Pendiente` Gráfica consolidada de los últimos 6 a 12 meses en una sola vista.
 - `UX-19` **(Idea en evaluación) Simplificación del Registro Manual:** `Pendiente` Evaluar agilización de gastos sueltos sin lista de ítems detallados, preservando el método de liquidación (`MetodoLiquidacion`) y chips frecuentes (`UX-15`).
-- `UX-20` **Rediseño de Ítems en Revisión de Factura (Variante 1-B):** `Pendiente de validación 🧪` Jerarquía visual en artículos (tarjetas en `cardLighter`, badge `[N]`, concepto en `w600`, pastilla compacta de categoría, cifras tabulares y deshacer al eliminar). Ver [`docs/DOC_REDISENO_ITEMS_FACTURA.md`](docs/DOC_REDISENO_ITEMS_FACTURA.md).
+- `UX-20` **Rediseño de Ítems en Revisión de Factura:** `Implementada 🔧` Iteración 2: fondo gris por ítem, etiqueta "Concepto" en negrita, categoría en caja alineada, total más grande y deshacer al eliminar. Ver [`docs/DOC_REDISENO_ITEMS_FACTURA.md`](docs/DOC_REDISENO_ITEMS_FACTURA.md).
 
 ### Bloque C: Percepción con IA
 - `AI-06` **Imputación de IVA en Precios de Anaquel y Algoritmo del Centavo Residual:** `Pendiente` Imputar 16% de IVA a productos gravados `(G)` preservando exentos `(E)`, ajustando $\pm 0,01$ en el ítem de mayor valor y mostrando base fiscal en `ReviewExpenseScreen`.

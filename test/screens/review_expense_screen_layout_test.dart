@@ -184,7 +184,7 @@ void main() {
     expect(find.text('¿Cuándo gastaste?'), findsOneWidget);
     expect(find.text('¿En qué moneda están los precios?'), findsOneWidget);
     expect(find.text('¿En qué gastaste?'), findsOneWidget);
-    expect(find.text('Nombre del artículo'), findsOneWidget);
+    expect(find.text('Concepto'), findsOneWidget);
     expect(find.text('Monto total'), findsOneWidget);
     expect(find.text('\$ 0,00'), findsWidgets);
 
@@ -195,7 +195,7 @@ void main() {
     expect(storeField.textCapitalization, TextCapitalization.words);
 
     final conceptField = tester.widget<TextField>(
-      find.byWidgetPredicate((w) => w is TextField && w.decoration?.hintText == 'Nombre del artículo'),
+      find.byWidgetPredicate((w) => w is TextField && w.decoration?.labelText == 'Concepto'),
     );
     expect(conceptField.textCapitalization, TextCapitalization.sentences);
 
@@ -1269,9 +1269,9 @@ void main() {
     await tester.pumpWidget(createWidgetUnderTest());
     await tester.pumpAndSettle();
 
-    // Localizar el campo Concepto (Nombre del artículo)
+    // Localizar el campo Concepto
     final conceptFinder = find.byWidgetPredicate(
-      (w) => w is TextField && w.decoration?.hintText == 'Nombre del artículo',
+      (w) => w is TextField && w.decoration?.labelText == 'Concepto',
     );
     expect(conceptFinder, findsOneWidget);
 
@@ -1542,7 +1542,7 @@ void main() {
       await tester.pumpAndSettle();
 
       final conceptField = find.byWidgetPredicate(
-        (w) => w is TextField && w.decoration?.hintText == 'Nombre del artículo',
+        (w) => w is TextField && w.decoration?.labelText == 'Concepto',
       );
       await tester.enterText(conceptField, 'Pan de jamón');
       await tester.pumpAndSettle();
@@ -1589,7 +1589,7 @@ void main() {
       expect(find.byKey(const Key('btn_guardar_gasto')), findsOneWidget);
     });
 
-    testWidgets('10. Variante 1-B: Tarjetas de items con numeracion, pastilla de categoria y deshacer al eliminar', (tester) async {
+    testWidgets('10. Tarjetas de items: sin numeracion, con etiqueta Concepto, categoria en caja y deshacer al eliminar', (tester) async {
       tester.view.physicalSize = const Size(1080, 4000);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
@@ -1632,9 +1632,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // 1. Numeración presente: badges '1' y '2'
-      expect(find.text('1'), findsWidgets);
-      expect(find.text('2'), findsWidgets);
+      // 1. Sin insignia numérica; cada tarjeta muestra la etiqueta 'Concepto' y no hay icono de lápiz
+      expect(find.text('Concepto'), findsNWidgets(2));
+      expect(find.byIcon(Icons.edit_outlined), findsNothing);
 
       // 2. Tarjetas con color cardLighter y sin borde
       final cardFinders = find.byType(Card);
@@ -1642,8 +1642,9 @@ void main() {
       final firstCard = tester.widget<Card>(cardFinders.first);
       expect(firstCard.color, equals(AppColors.cardLighter));
 
-      // 3. Pastilla de categoría con DropdownButton
-      expect(find.byType(DropdownButton<String>), findsNWidgets(2));
+      // 3. Categoría como caja con etiqueta, alineada con los demás campos
+      expect(find.byType(DropdownButtonFormField<String>), findsNWidgets(2));
+      expect(find.text('Categoría'), findsNWidgets(2));
 
       // 4. Eliminar el primer ítem
       final deleteButtons = find.byIcon(Icons.delete_outline);
