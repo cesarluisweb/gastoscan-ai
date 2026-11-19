@@ -1,6 +1,6 @@
 # Documento Técnico: Rediseño de Ítems en Revisión de Factura (UX-20)
 
-> **Estado:** Iteración 2 en `main` · CI pendiente. Iteración 1: build 711 (`0d52bb5`).
+> **Estado:** Iteración 2 · CI en verde (build 712, commit `18ae858`, run `44435761350`). Iteración 1: build 711 (`0d52bb5`).
 > **Tarea:** `UX-20` · Pendiente de validación en dispositivo físico 🧪.
 
 ## 1. Problema
@@ -14,7 +14,7 @@ En `ReviewExpenseScreen` los artículos se veían iguales y costaba recorrerlos 
 | Iteración | Build | Cambio | Resultado en dispositivo |
 |---|---|---|---|
 | 1 | 711 | Fondo gris por ítem, número `[N]`, lápiz, categoría en pastilla redondeada | Mejora parcial. El número se confunde con cantidad. Lápiz sobra. Pastilla descuadra. |
-| 2 | Pendiente | Se quita el número y el lápiz. Vuelve la etiqueta "Concepto". Categoría en caja igual a las demás. Total más grande. | Pendiente |
+| 2 | 712 | Se quita el número y el lápiz. Vuelve la etiqueta "Concepto". Categoría en caja igual a las demás. Total más grande. | Pendiente |
 
 ## 3. Estado actual (iteración 2)
 - **Fondo del ítem:** `AppColors.cardLighter` (`#F3F4F6`) sin borde. Campos en blanco con borde `#E5E7EB` y radio 10 dp.
