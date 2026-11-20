@@ -32,8 +32,8 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
    - *Pendiente posterior:* Rotación de la upload key tras aprobación de Producción en Google Play.
 2. **Subida a Google Play Store (Solicitud de Producción):** `Pendiente de validación 🧪`
    - Prueba cerrada de 14 días completada con 12 evaluadores (cero crashes / cero ANR). Solicitud de producción enviada el 04/11/2026 (en revisión). Doc en [`docs/DOC_CUESTIONARIO_PRODUCCION.md`](docs/DOC_CUESTIONARIO_PRODUCCION.md).
-3. **Herramientas Web Bloque 1 (Calculadora Cambiaria + Asistente IA en Panel Web):** `Implementada 🔧`
-   - Módulos puros (`expense-money.js`, `currency-calculator.js`, `ai-assistant.js`), componentes Astro (`CalculatorModal.astro`, `AiChatDrawer.astro`), 29 pruebas unitarias en CI (`deploy_web.yml`) y cola de compras múltiples. Doc en [`docs/DOC_HERRAMIENTAS_PANEL_WEB.md`](docs/DOC_HERRAMIENTAS_PANEL_WEB.md).
+3. **Herramientas Web Bloque 1 (Calculadora Cambiaria + Asistente IA en Panel Web):** `Pendiente de validación 🧪`
+   - Módulos puros (`expense-money.js`, `currency-calculator.js`, `ai-assistant.js`), componentes Astro (`CalculatorModal.astro`, `AiChatDrawer.astro`), 29 pruebas unitarias en CI (`deploy_web.yml`, build 32, run `44784979988`, `3df3104`) y cola de compras múltiples. Desplegado y validado HTTP 200 en `https://rindemas.cesarluis.com/panel`. Doc en [`docs/DOC_HERRAMIENTAS_PANEL_WEB.md`](docs/DOC_HERRAMIENTAS_PANEL_WEB.md).
 
 ---
 

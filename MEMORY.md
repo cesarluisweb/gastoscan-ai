@@ -8,7 +8,7 @@
 - **Mapa de código:** `docs/CODE_MAP.md` se regenera con `node scripts/gen_code_map.js`; el hook de pre-commit lo actualiza.
 
 ## Tareas en Curso
-- **Herramientas Panel Web Bloque 1 (Calculadora + Asistente IA):** Implementada en `landing/` (`CalculatorModal.astro`, `AiChatDrawer.astro`, `currency-calculator.js`, `ai-assistant.js`, 29 tests en CI). Pendiente push, CI `deploy_web.yml` y validación en navegador por César (`docs/DOC_HERRAMIENTAS_PANEL_WEB.md`).
+- **Herramientas Panel Web Bloque 1 (Calculadora + Asistente IA):** `Pendiente de validación 🧪` (build 32, run `44784979988`, `3df3104`, HTTP 200 en `/panel`, 29/29 tests en CI). Falta validación en navegador por César (`docs/DOC_HERRAMIENTAS_PANEL_WEB.md`).
 - **AI-09 (detección fotos y facturas duplicadas):** Planificada en `ROADMAP.md` y documentada en `docs/DOC_PLAN_DETECCION_DUPLICADOS.md`. Pendiente definición de esquema SQLite (v20 vs v19).
 - **UX-17 (compartir Rinde Más por WhatsApp):** Planificada en `docs/DOC_PLAN_UX17_COMPARTIR_WHATSAPP.md` (App, Panel Web, Landing + Open Graph); diferida hasta tener el enlace público de Google Play.
 - **E0-05b (diagnóstico Q01..Q20):** ✅ Completada (build 707, `4dafbf9`, run `43499866405`). Fase 0 cerrada.
