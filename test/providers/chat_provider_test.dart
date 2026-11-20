@@ -90,13 +90,14 @@ void main() {
       provider.addMessage({'role': 'user', 'text': 'Hola'});
       provider.addMessage({'role': 'assistant', 'text': '¿En qué te ayudo?'});
 
+      // ChatProvider arranca con 1 mensaje (initialGreeting) + 2 mensajes = 3; al anexar el insight pasa a 4
       provider.presentDetailedInsight('Detalle ampliado del consejo de Inicio.');
-      expect(provider.messages.length, 3);
+      expect(provider.messages.length, 4);
       expect(provider.messages.last['text'], 'Detalle ampliado del consejo de Inicio.');
 
       // Si se invoca de nuevo con el mismo texto consecutivo, no lo duplica
       provider.presentDetailedInsight('Detalle ampliado del consejo de Inicio.');
-      expect(provider.messages.length, 3);
+      expect(provider.messages.length, 4);
     });
   });
 }

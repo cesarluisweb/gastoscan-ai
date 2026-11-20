@@ -302,8 +302,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Verifica que muestra un solo mensaje que combina ritmo diario ($8,00/día por 20 días) + consejo Gemini
-      expect(find.textContaining('Puedes gastar hasta \$8,00/día'), findsOneWidget);
+      // Verifica que muestra un solo mensaje que combina ritmo diario ($ 8,00/día por 20 días) + consejo Gemini
+      expect(find.textContaining('Puedes gastar hasta \$ 8,00/día'), findsOneWidget);
       expect(find.textContaining('Concentraste 3 compras en Farmatodo'), findsOneWidget);
 
       // Al tocar Consultar -> debe poblar ChatProvider con el consejo detallado y abrir el chat
