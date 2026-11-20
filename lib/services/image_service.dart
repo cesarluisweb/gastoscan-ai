@@ -4,6 +4,7 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:gal/gal.dart';
+import 'profile_avatar_service.dart';
 
 class ImageService {
   /// Comprime la imagen para reducir el peso antes de enviarla a Gemini
@@ -130,6 +131,12 @@ class ImageService {
             }
           }
         } catch (_) {}
+      }
+      // 4. Defensa en profundidad: limpiar avatares de perfil cacheados
+      try {
+        await ProfileAvatarService.instance.clearAvatarCache();
+      } catch (e) {
+        debugPrint("ImageService: Error limpiando caché de avatares: $e");
       }
     } catch (e) {
       debugPrint("Error al limpiar archivos de la app: $e");

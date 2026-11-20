@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/constants/app_constants.dart';
 import '../domain/monetary/rate_market.dart';
+import 'connectivity_service.dart';
 
 class ExchangeRatesData {
   final double usd;
@@ -14,6 +15,13 @@ class ExchangeRatesData {
   /// previa (o cero si nunca hubo) y `fecha` es la última actualización
   /// real conocida, no "ahora".
   final bool esReferencia;
+  final bool? _usdEnVivo;
+  final bool? _eurEnVivo;
+  final bool? _usdtEnVivo;
+
+  bool get usdEnVivo => _usdEnVivo ?? (!esReferencia && isValidMonetaryRate(usd));
+  bool get eurEnVivo => _eurEnVivo ?? (!esReferencia && isValidMonetaryRate(eur));
+  bool get usdtEnVivo => _usdtEnVivo ?? (!esReferencia && isValidMonetaryRate(usdt));
 
   const ExchangeRatesData({
     required this.usd,
@@ -21,7 +29,12 @@ class ExchangeRatesData {
     required this.usdt,
     required this.fecha,
     this.esReferencia = false,
-  });
+    bool? usdEnVivo,
+    bool? eurEnVivo,
+    bool? usdtEnVivo,
+  })  : _usdEnVivo = usdEnVivo,
+        _eurEnVivo = eurEnVivo,
+        _usdtEnVivo = usdtEnVivo;
 
   Map<String, dynamic> toJson() => {
     'usd': usd,
@@ -109,10 +122,10 @@ class ExchangeRateService {
   static Future<ExchangeRatesData> getAllTodayRates({
     http.Client? client,
     SharedPreferences? prefsInstance,
+    ConnectivityService? connectivityService,
   }) async {
     final prefs = prefsInstance ?? await SharedPreferences.getInstance();
     final purgeResult = await ensureCacheHistoricaPurgada(prefsInstance: prefs);
-    final httpClient = client ?? http.Client();
 
     // Semillas: solo caché real válida según el predicado canónico (D-08). null = "sin dato".
     // Si la purga falló (purgeResult == -1), NO consumimos semillas de SharedPreferences (fail-closed).
@@ -137,81 +150,126 @@ class ExchangeRateService {
       debugPrint('ExchangeRateService: Purga fallida (-1). Se omiten semillas en getAllTodayRates.');
     }
 
-    // 1. Intento prioritario con el Gateway Cloudflare de Rinde Más
-    try {
-      final gwResp = await httpClient.get(
-        Uri.parse(_gatewayTasas),
-        headers: {'User-Agent': 'RindeMas/1.0 (Android; Linux)'},
-      ).timeout(const Duration(seconds: 4));
-      if (gwResp.statusCode == 200) {
-        final gwData = jsonDecode(gwResp.body);
-        final rawGwUsd = gwData['usd'];
-        final rawGwEur = gwData['eur'];
-        final rawGwUsdt = gwData['usdt'];
-        final gUsd = isValidMonetaryRate(rawGwUsd) ? (rawGwUsd as num).toDouble() : null;
-        final gEur = isValidMonetaryRate(rawGwEur) ? (rawGwEur as num).toDouble() : null;
-        final gUsdt = isValidMonetaryRate(rawGwUsdt) ? (rawGwUsdt as num).toDouble() : null;
-        if (gUsd != null) {
-          final now = DateTime.now();
-          await safeSetDouble(prefs, 'cached_rate_usd', gUsd);
-          await safeSetDouble(prefs, 'cached_exchange_rate', gUsd);
-          if (gEur != null) {
-            await safeSetDouble(prefs, 'cached_rate_eur', gEur);
-          }
-          if (gUsdt != null) {
-            await safeSetDouble(prefs, 'cached_rate_usdt', gUsdt);
-          }
-          await safeSetString(prefs, 'cached_exchange_rates_timestamp', now.toIso8601String());
-          return ExchangeRatesData(
-            usd: gUsd,
-            eur: gEur ?? (eurRate ?? 0.0),
-            usdt: gUsdt ?? (usdtRate ?? 0.0),
-            fecha: now,
-          );
-        }
-      }
-    } catch (e) {
-      debugPrint('ExchangeRateService: Gateway no disponible, usando cascada directa: $e');
-    }
-
-    final results = await Future.wait([
-      _fetchUsdLiveRate(client: httpClient),
-      _fetchEurLiveRate(client: httpClient),
-      _fetchUsdtLiveRate(client: httpClient),
-    ]);
-
-    bool fetchedAny = false;
-
-    if (isValidMonetaryRate(results[0])) {
-      usdRate = results[0]!;
-      await safeSetDouble(prefs, 'cached_rate_usd', usdRate);
-      await safeSetDouble(prefs, 'cached_exchange_rate', usdRate);
-      fetchedAny = true;
-    }
-
-    if (isValidMonetaryRate(results[1])) {
-      eurRate = results[1]!;
-      await safeSetDouble(prefs, 'cached_rate_eur', eurRate);
-      fetchedAny = true;
-    }
-
-    if (isValidMonetaryRate(results[2])) {
-      usdtRate = results[2]!;
-      await safeSetDouble(prefs, 'cached_rate_usdt', usdtRate);
-      fetchedAny = true;
-    }
-
-    if (fetchedAny) {
-      final now = DateTime.now();
-      await safeSetString(prefs, 'cached_exchange_rates_timestamp', now.toIso8601String());
-      return ExchangeRatesData(
-        usd: isValidMonetaryRate(usdRate) ? usdRate! : 0.0,
-        eur: isValidMonetaryRate(eurRate) ? eurRate! : 0.0,
-        usdt: isValidMonetaryRate(usdtRate) ? usdtRate! : 0.0,
-        fecha: now,
+    // Fail-fast offline: evitar crear http.Client y agotar cascadas de timeouts sin conectividad.
+    final connectivity = connectivityService ?? ConnectivityService.instance;
+    final hasConnection = await connectivity.isConnected();
+    if (!hasConnection) {
+      debugPrint('ExchangeRateService: Sin conexión. Retornando última tasa registrada en caché.');
+      return _buildReferenceFallback(
+        prefs,
+        usdRate: usdRate,
+        eurRate: eurRate,
+        usdtRate: usdtRate,
       );
     }
 
+    final bool ownsClient = client == null;
+    final httpClient = client ?? http.Client();
+
+    try {
+      // 1. Intento prioritario con el Gateway Cloudflare de Rinde Más
+      try {
+        final gwResp = await httpClient.get(
+          Uri.parse(_gatewayTasas),
+          headers: {'User-Agent': 'RindeMas/1.0 (Android; Linux)'},
+        ).timeout(const Duration(seconds: 4));
+        if (gwResp.statusCode == 200) {
+          final gwData = jsonDecode(gwResp.body);
+          final rawGwUsd = gwData['usd'];
+          final rawGwEur = gwData['eur'];
+          final rawGwUsdt = gwData['usdt'];
+          final gUsd = isValidMonetaryRate(rawGwUsd) ? (rawGwUsd as num).toDouble() : null;
+          final gEur = isValidMonetaryRate(rawGwEur) ? (rawGwEur as num).toDouble() : null;
+          final gUsdt = isValidMonetaryRate(rawGwUsdt) ? (rawGwUsdt as num).toDouble() : null;
+          if (gUsd != null) {
+            final now = DateTime.now();
+            await safeSetDouble(prefs, 'cached_rate_usd', gUsd);
+            await safeSetDouble(prefs, 'cached_exchange_rate', gUsd);
+            if (gEur != null) {
+              await safeSetDouble(prefs, 'cached_rate_eur', gEur);
+            }
+            if (gUsdt != null) {
+              await safeSetDouble(prefs, 'cached_rate_usdt', gUsdt);
+            }
+            await safeSetString(prefs, 'cached_exchange_rates_timestamp', now.toIso8601String());
+            return ExchangeRatesData(
+              usd: gUsd,
+              eur: gEur ?? (eurRate ?? 0.0),
+              usdt: gUsdt ?? (usdtRate ?? 0.0),
+              fecha: now,
+              usdEnVivo: true,
+              eurEnVivo: gEur != null,
+              usdtEnVivo: gUsdt != null,
+            );
+          }
+        }
+      } catch (e) {
+        debugPrint('ExchangeRateService: Gateway no disponible, usando cascada directa: $e');
+      }
+
+      final results = await Future.wait([
+        _fetchUsdLiveRate(client: httpClient),
+        _fetchEurLiveRate(client: httpClient),
+        _fetchUsdtLiveRate(client: httpClient),
+      ]);
+
+      bool fetchedAny = false;
+      final bool usdLive = isValidMonetaryRate(results[0]);
+      final bool eurLive = isValidMonetaryRate(results[1]);
+      final bool usdtLive = isValidMonetaryRate(results[2]);
+
+      if (usdLive) {
+        usdRate = results[0]!;
+        await safeSetDouble(prefs, 'cached_rate_usd', usdRate);
+        await safeSetDouble(prefs, 'cached_exchange_rate', usdRate);
+        fetchedAny = true;
+      }
+
+      if (eurLive) {
+        eurRate = results[1]!;
+        await safeSetDouble(prefs, 'cached_rate_eur', eurRate);
+        fetchedAny = true;
+      }
+
+      if (usdtLive) {
+        usdtRate = results[2]!;
+        await safeSetDouble(prefs, 'cached_rate_usdt', usdtRate);
+        fetchedAny = true;
+      }
+
+      if (fetchedAny) {
+        final now = DateTime.now();
+        await safeSetString(prefs, 'cached_exchange_rates_timestamp', now.toIso8601String());
+        return ExchangeRatesData(
+          usd: isValidMonetaryRate(usdRate) ? usdRate! : 0.0,
+          eur: isValidMonetaryRate(eurRate) ? eurRate! : 0.0,
+          usdt: isValidMonetaryRate(usdtRate) ? usdtRate! : 0.0,
+          fecha: now,
+          usdEnVivo: usdLive,
+          eurEnVivo: eurLive,
+          usdtEnVivo: usdtLive,
+        );
+      }
+
+      return _buildReferenceFallback(
+        prefs,
+        usdRate: usdRate,
+        eurRate: eurRate,
+        usdtRate: usdtRate,
+      );
+    } finally {
+      if (ownsClient) {
+        httpClient.close();
+      }
+    }
+  }
+
+  static ExchangeRatesData _buildReferenceFallback(
+    SharedPreferences prefs, {
+    required double? usdRate,
+    required double? eurRate,
+    required double? usdtRate,
+  }) {
     // Sin dato en vivo: NO se escribe el timestamp. `fecha` es la última
     // actualización real conocida, no "ahora".
     // NEW-6: Comprobación segura de tipo antes de invocar tryParse

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -7,11 +8,22 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../core/constants/app_constants.dart';
 import '../domain/monetary/rate_market.dart';
+import '../services/connectivity_service.dart';
 import '../services/exchange_rate_service.dart';
 import '../services/notification_service.dart';
 
 class SettingsProvider with ChangeNotifier {
   final FlutterSecureStorage _secureStorage;
+  final ConnectivityService _connectivityService;
+  final DateTime Function() _now;
+  final Duration _reconnectDebounce;
+  final Duration _autoRefreshCooldown;
+  final http.Client? _defaultHttpClient;
+
+  StreamSubscription<bool>? _connectivitySub;
+  Timer? _reconnectDebounceTimer;
+  Future<bool>? _inFlightRateSync;
+  DateTime? _lastAutoRefreshAttemptAt;
 
   String _apiKey = '';
   int _apiKeyRevision = 0;
@@ -83,11 +95,63 @@ class SettingsProvider with ChangeNotifier {
     FlutterSecureStorage? secureStorage,
     bool autoLoad = true,
     SharedPreferences? prefsInstance,
+    ConnectivityService? connectivityService,
+    DateTime Function()? nowProvider,
+    Duration reconnectDebounce = const Duration(seconds: 2),
+    Duration autoRefreshCooldown = const Duration(minutes: 3),
+    http.Client? httpClient,
+    bool enableConnectivityListener = true,
   })  : _secureStorage = secureStorage ?? const FlutterSecureStorage(),
+        _connectivityService = connectivityService ?? ConnectivityService.instance,
+        _now = nowProvider ?? DateTime.now,
+        _reconnectDebounce = reconnectDebounce,
+        _autoRefreshCooldown = autoRefreshCooldown,
+        _defaultHttpClient = httpClient,
         _prefsInstance = prefsInstance {
+    if (enableConnectivityListener && (autoLoad || connectivityService != null)) {
+      _initConnectivityListener();
+    }
     if (autoLoad) {
       loadSettings();
     }
+  }
+
+  void _initConnectivityListener() {
+    _connectivitySub = _connectivityService.onConnectivityChanged.listen((hasConnection) {
+      if (_disposed) return;
+      _reconnectDebounceTimer?.cancel();
+      if (!hasConnection) return;
+
+      _reconnectDebounceTimer = Timer(_reconnectDebounce, () {
+        if (_disposed) return;
+        refrescarTasasSiDesactualizadas(bypassCooldown: true);
+      });
+    });
+  }
+
+  static bool _esMismoDiaLocal(DateTime a, DateTime b) {
+    final la = a.toLocal();
+    final lb = b.toLocal();
+    return la.year == lb.year && la.month == lb.month && la.day == lb.day;
+  }
+
+  /// Indica si hace falta refrescar tasas desde red (alguna inválida,
+  /// en estado referencia/sinTasa, tasa manual D-05 o fecha anterior al día local actual).
+  bool get necesitaActualizarTasas {
+    if (_esTasaManualUsd) return true;
+    if (!isValidMonetaryRate(_tasaCambioVesUsd) ||
+        !isValidMonetaryRate(_tasaCambioVesEur) ||
+        !isValidMonetaryRate(_tasaCambioVesUsdt)) {
+      return true;
+    }
+    if (_estadoTasaUsd != EstadoTasaMoneda.actualizada ||
+        _estadoTasaEur != EstadoTasaMoneda.actualizada ||
+        _estadoTasaUsdt != EstadoTasaMoneda.actualizada) {
+      return true;
+    }
+    final last = _ultimaActualizacionTasas;
+    if (last == null) return true;
+    return !_esMismoDiaLocal(last, _now());
   }
 
   SharedPreferences? _prefsInstance;
@@ -164,9 +228,8 @@ class SettingsProvider with ChangeNotifier {
       } else {
         _ultimaActualizacionTasas = null;
       }
-      final todayStr = DateTime.now().toIso8601String().substring(0, 10);
-      final rateDateStr = _ultimaActualizacionTasas?.toIso8601String().substring(0, 10);
-      final bool esHoy = rateDateStr == todayStr;
+      final lastUpdated = _ultimaActualizacionTasas;
+      final bool esHoy = lastUpdated != null && _esMismoDiaLocal(lastUpdated, _now());
 
       if (isValidMonetaryRate(_tasaCambioVesUsd)) {
         _estadoTasaUsd = (!_esTasaManualUsd && esHoy)
@@ -293,18 +356,66 @@ class SettingsProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> actualizarTasaAutomatica({http.Client? client}) async {
+  /// Refresca las tasas automáticamente solo si falta frescura en el día local actual
+  /// y existe conectividad. Aplica cooldown anti-flapping salvo [bypassCooldown].
+  Future<bool> refrescarTasasSiDesactualizadas({
+    http.Client? client,
+    bool bypassCooldown = false,
+  }) async {
+    if (_disposed || _isSyncingRate || !necesitaActualizarTasas) {
+      return false;
+    }
+    final now = _now();
+    if (!bypassCooldown && _lastAutoRefreshAttemptAt != null) {
+      if (now.difference(_lastAutoRefreshAttemptAt!) < _autoRefreshCooldown) {
+        return false;
+      }
+    }
+    final hasConnection = await _connectivityService.isConnected();
+    if (_disposed || !hasConnection) {
+      return false;
+    }
+    _lastAutoRefreshAttemptAt = now;
+    return actualizarTasaAutomatica(client: client);
+  }
+
+  Future<bool> actualizarTasaAutomatica({http.Client? client}) {
+    if (_disposed) return Future.value(false);
+    final inFlight = _inFlightRateSync;
+    if (inFlight != null) {
+      return inFlight;
+    }
+    final future = _ejecutarActualizacionTasa(client: client ?? _defaultHttpClient);
+    _inFlightRateSync = future;
+    return future.whenComplete(() {
+      if (identical(_inFlightRateSync, future)) {
+        _inFlightRateSync = null;
+      }
+    });
+  }
+
+  Future<bool> _ejecutarActualizacionTasa({http.Client? client}) async {
     _isSyncingRate = true;
     notifyListeners();
     bool exito = false;
     try {
-      final allRates = await ExchangeRateService.getAllTodayRates(client: client);
+      final allRates = await ExchangeRateService.getAllTodayRates(
+        client: client,
+        prefsInstance: _prefsInstance,
+        connectivityService: _connectivityService,
+      );
+      if (_disposed) return false;
       final prefs = _prefsInstance ?? await SharedPreferences.getInstance();
+      if (_disposed) return false;
 
       if (!allRates.esReferencia) {
         // Solo se aplica lo que llegó en vivo válido según validador canónico (D-08); el resto conserva su
         // valor previo en vez de pisarse con ceros o semillas obsoletas.
-        if (isValidMonetaryRate(allRates.usd)) {
+        final bool usdValidaEnVivo = allRates.usdEnVivo && isValidMonetaryRate(allRates.usd);
+        final bool eurValidaEnVivo = allRates.eurEnVivo && isValidMonetaryRate(allRates.eur);
+        final bool usdtValidaEnVivo = allRates.usdtEnVivo && isValidMonetaryRate(allRates.usdt);
+
+        if (usdValidaEnVivo) {
           _tasaCambioVesUsd = allRates.usd;
           await ExchangeRateService.safeSetDouble(prefs, AppConstants.prefTasaCambio, _tasaCambioVesUsd);
           await ExchangeRateService.safeSetDouble(prefs, 'cached_rate_usd', _tasaCambioVesUsd);
@@ -313,20 +424,34 @@ class SettingsProvider with ChangeNotifier {
             if (okBool) {
               _esTasaManualUsd = false;
             }
-          } catch (_) {}
+          } catch (e) {
+            debugPrint('SettingsProvider: Error limpiando pref_es_tasa_manual_usd: $e');
+          }
         }
-        if (isValidMonetaryRate(allRates.eur)) {
+        if (eurValidaEnVivo) {
           _tasaCambioVesEur = allRates.eur;
           await ExchangeRateService.safeSetDouble(prefs, 'cached_rate_eur', _tasaCambioVesEur);
+        } else if (!isValidMonetaryRate(_tasaCambioVesEur) && isValidMonetaryRate(allRates.eur)) {
+          _tasaCambioVesEur = allRates.eur;
         }
-        if (isValidMonetaryRate(allRates.usdt)) {
+        if (usdtValidaEnVivo) {
           _tasaCambioVesUsdt = allRates.usdt;
           await ExchangeRateService.safeSetDouble(prefs, 'cached_rate_usdt', _tasaCambioVesUsdt);
+        } else if (!isValidMonetaryRate(_tasaCambioVesUsdt) && isValidMonetaryRate(allRates.usdt)) {
+          _tasaCambioVesUsdt = allRates.usdt;
         }
-        _ultimaActualizacionTasas = allRates.fecha;
-        _estadoTasaUsd = _esTasaManualUsd ? EstadoTasaMoneda.referencia : EstadoTasaMoneda.actualizada;
-        _estadoTasaEur = EstadoTasaMoneda.actualizada;
-        _estadoTasaUsdt = EstadoTasaMoneda.actualizada;
+        _ultimaActualizacionTasas = _now();
+        _estadoTasaUsd = isValidMonetaryRate(_tasaCambioVesUsd)
+            ? ((_esTasaManualUsd || !usdValidaEnVivo)
+                ? EstadoTasaMoneda.referencia
+                : EstadoTasaMoneda.actualizada)
+            : EstadoTasaMoneda.sinTasa;
+        _estadoTasaEur = isValidMonetaryRate(_tasaCambioVesEur)
+            ? (eurValidaEnVivo ? EstadoTasaMoneda.actualizada : EstadoTasaMoneda.referencia)
+            : EstadoTasaMoneda.sinTasa;
+        _estadoTasaUsdt = isValidMonetaryRate(_tasaCambioVesUsdt)
+            ? (usdtValidaEnVivo ? EstadoTasaMoneda.actualizada : EstadoTasaMoneda.referencia)
+            : EstadoTasaMoneda.sinTasa;
         if (_ultimaActualizacionTasas != null) {
           await ExchangeRateService.safeSetString(
             prefs,
@@ -489,6 +614,8 @@ class SettingsProvider with ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _reconnectDebounceTimer?.cancel();
+    _connectivitySub?.cancel();
     super.dispose();
   }
 

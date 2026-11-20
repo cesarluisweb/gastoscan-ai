@@ -1,7 +1,12 @@
+import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:gastoscan_ai/data/datasources/local/database_helper.dart';
@@ -10,17 +15,20 @@ import 'package:gastoscan_ai/data/models/gemini_extraction_result.dart';
 import 'package:gastoscan_ai/providers/gasto_provider.dart';
 import 'package:gastoscan_ai/providers/scan_queue_provider.dart';
 import 'package:gastoscan_ai/providers/settings_provider.dart';
+import 'package:gastoscan_ai/services/connectivity_service.dart';
 import 'package:gastoscan_ai/ui/widgets/voice_expense_sheet.dart';
 
 class FakeGeminiVoiceService extends GeminiService {
   String? parsedText;
   int parseCount = 0;
   List<GeminiExtractionResult>? customResults;
+  Exception? errorToThrow;
 
   @override
   Future<List<GeminiExtractionResult>> parseVoiceExpense(String spokenText, {String monedaPrincipal = 'USD'}) async {
     parseCount++;
     parsedText = spokenText;
+    if (errorToThrow != null) throw errorToThrow!;
     if (customResults != null) return customResults!;
     return [
       GeminiExtractionResult(
@@ -89,11 +97,24 @@ class FakeSpeechRecognitionResult extends Fake implements SpeechRecognitionResul
   FakeSpeechRecognitionResult(this.recognizedWords, {this.finalResult = false});
 }
 
+class FakeSpeechRecognitionError extends Fake implements SpeechRecognitionError {
+  @override
+  final String errorMsg;
+
+  @override
+  final bool permanent;
+
+  FakeSpeechRecognitionError(this.errorMsg, {this.permanent = false});
+}
+
 class FakeSpeechToText extends Fake implements stt.SpeechToText {
   void Function(SpeechRecognitionResult)? onResultCallback;
   void Function(String)? onStatusCallback;
+  void Function(SpeechRecognitionError)? onErrorCallback;
   bool isListeningValue = false;
+  int initializeCallCount = 0;
   int stopCallCount = 0;
+  int cancelCallCount = 0;
   int listenCallCount = 0;
 
   @override
@@ -108,6 +129,7 @@ class FakeSpeechToText extends Fake implements stt.SpeechToText {
   @override
   Future<void> cancel() async {
     stopCallCount++;
+    cancelCallCount++;
     isListeningValue = false;
   }
 
@@ -119,10 +141,16 @@ class FakeSpeechToText extends Fake implements stt.SpeechToText {
     onStatusCallback?.call(status);
   }
 
+  void emitError(String errorMsg, {bool permanent = false}) {
+    onErrorCallback?.call(FakeSpeechRecognitionError(errorMsg, permanent: permanent));
+  }
+
   @override
   dynamic noSuchMethod(Invocation invocation) {
     if (invocation.memberName == #initialize) {
+      initializeCallCount++;
       onStatusCallback = invocation.namedArguments[#onStatus] as void Function(String)?;
+      onErrorCallback = invocation.namedArguments[#onError] as void Function(SpeechRecognitionError)?;
       return Future.value(true);
     }
     if (invocation.memberName == #locales) {
@@ -573,6 +601,312 @@ void main() {
         ),
         equals('2025-10-05'),
       );
+    });
+  });
+
+  group('VoiceExpenseSheet - Resiliencia Offline y Errores de Servicio', () {
+    late FakeGeminiVoiceService fakeGeminiService;
+    late FakeDatabaseHelper fakeDb;
+    late ScanQueueProvider scanQueueProvider;
+    late FakeGastoProvider fakeGastoProvider;
+    late FakeSettingsProvider fakeSettingsProvider;
+
+    setUp(() {
+      SharedPreferences.setMockInitialValues({});
+      fakeGeminiService = FakeGeminiVoiceService();
+      fakeDb = FakeDatabaseHelper();
+      scanQueueProvider = ScanQueueProvider(dbHelper: fakeDb, autoProcess: false);
+      fakeGastoProvider = FakeGastoProvider();
+      fakeSettingsProvider = FakeSettingsProvider();
+    });
+
+    tearDown(() {
+      scanQueueProvider.dispose();
+      fakeGastoProvider.dispose();
+      fakeSettingsProvider.dispose();
+      ConnectivityService.reset();
+    });
+
+    Widget wrapWithProviders(Widget child) {
+      return MultiProvider(
+        providers: [
+          ChangeNotifierProvider<ScanQueueProvider>.value(value: scanQueueProvider),
+          ChangeNotifierProvider<GastoProvider>.value(value: fakeGastoProvider),
+          ChangeNotifierProvider<SettingsProvider>.value(value: fakeSettingsProvider),
+        ],
+        child: MaterialApp(home: child),
+      );
+    }
+
+    testWidgets('apertura offline muestra vista Sin conexion, no inicializa microfono y oculta caja de texto', (tester) async {
+      tester.view.physicalSize = const Size(360, 640);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      final fakeSpeech = FakeSpeechToText();
+      final offlineConn = ConnectivityService(testConnected: false);
+
+      await tester.pumpWidget(
+        wrapWithProviders(
+          Scaffold(
+            body: VoiceExpenseSheet(
+              geminiService: fakeGeminiService,
+              speechToText: fakeSpeech,
+              connectivityService: offlineConn,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('voice_offline_title')), findsOneWidget);
+      expect(find.text('Dictar gasto necesita internet'), findsOneWidget);
+      expect(find.byKey(const Key('voice_offline_manual_button')), findsOneWidget);
+      expect(find.byKey(const Key('voice_offline_close_button')), findsOneWidget);
+      expect(find.byKey(const Key('voice_expense_input_field')), findsNothing);
+      expect(fakeSpeech.initializeCallCount, 0);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('pulsar Escribir gasto en vista offline cierra hoja e invoca onOpenManualExpense', (tester) async {
+      tester.view.physicalSize = const Size(360, 640);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      bool manualOpened = false;
+      final offlineConn = ConnectivityService(testConnected: false);
+
+      await tester.pumpWidget(
+        wrapWithProviders(
+          Scaffold(
+            body: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () {
+                  VoiceExpenseSheet.show(
+                    context,
+                    geminiService: fakeGeminiService,
+                    speechToText: FakeSpeechToText(),
+                    connectivityService: offlineConn,
+                    onOpenManualExpense: () => manualOpened = true,
+                  );
+                },
+                child: const Text('Abrir dictado'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Abrir dictado'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('voice_offline_manual_button')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('voice_offline_manual_button')));
+      await tester.pumpAndSettle();
+
+      expect(manualOpened, isTrue);
+      expect(find.byKey(const Key('sheet_surface_voice')), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('transicion offline <-> online controla microfono e ignora resultados rezagados', (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      final connController = StreamController<bool>.broadcast();
+      addTearDown(connController.close);
+      final fakeSpeech = FakeSpeechToText();
+      final conn = ConnectivityService(
+        testController: connController,
+        testConnected: false,
+      );
+
+      await tester.pumpWidget(
+        wrapWithProviders(
+          Scaffold(
+            body: VoiceExpenseSheet(
+              geminiService: fakeGeminiService,
+              speechToText: fakeSpeech,
+              connectivityService: conn,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('voice_offline_title')), findsOneWidget);
+      expect(fakeSpeech.initializeCallCount, 0);
+
+      // Recupera conexion: entra a vista normal e inicializa microfono
+      connController.add(true);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('voice_expense_input_field')), findsOneWidget);
+      expect(fakeSpeech.initializeCallCount, 1);
+      expect(fakeSpeech.listenCallCount, 1);
+
+      // Se cae conexion: cancela microfono y paquetes tardios no reactivan escucha
+      connController.add(false);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('voice_offline_title')), findsOneWidget);
+      expect(fakeSpeech.cancelCallCount, greaterThanOrEqualTo(1));
+
+      fakeSpeech.emitStatus('listening');
+      fakeSpeech.emitResult('Texto rezagado que debe ignorarse');
+      await tester.pump();
+      expect(find.byKey(const Key('voice_offline_title')), findsOneWidget);
+    });
+
+    testWidgets('error_network del motor nativo cambia a vista offline', (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      final fakeSpeech = FakeSpeechToText();
+      await tester.pumpWidget(
+        wrapWithProviders(
+          Scaffold(
+            body: VoiceExpenseSheet(
+              geminiService: fakeGeminiService,
+              speechToText: fakeSpeech,
+              connectivityService: ConnectivityService(testConnected: true),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('voice_expense_input_field')), findsOneWidget);
+
+      fakeSpeech.emitError('error_network');
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('voice_offline_title')), findsOneWidget);
+    });
+
+    testWidgets('VoiceOfflineException muestra vista offline y VoiceServiceException 429 muestra banner sin fingir offline', (tester) async {
+      tester.view.physicalSize = const Size(360, 640);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      // Caso 1: VoiceServiceException (cuota 429) -> NO muestra vista offline
+      fakeGeminiService.errorToThrow = const VoiceServiceException(
+        'El asistente no está disponible en este momento por límites de capacidad. Intenta de nuevo más tarde.',
+      );
+
+      await tester.pumpWidget(
+        wrapWithProviders(
+          Scaffold(
+            body: VoiceExpenseSheet(
+              geminiService: fakeGeminiService,
+              speechToText: FakeSpeechToText(),
+              connectivityService: ConnectivityService(testConnected: true),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const Key('voice_expense_input_field')),
+        'Compre pan por 3 dolares',
+      );
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('voice_expense_process_button')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('voice_offline_title')), findsNothing);
+      expect(find.byKey(const Key('voice_service_error_banner')), findsOneWidget);
+      expect(find.textContaining('límites de capacidad'), findsOneWidget);
+      expect(find.byKey(const Key('voice_error_manual_button')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+
+      // Caso 2: VoiceOfflineException (corte real / 504) -> cambia a vista offline
+      fakeGeminiService.errorToThrow = const VoiceOfflineException();
+      await tester.tap(find.byKey(const Key('voice_expense_process_button')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('voice_offline_title')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('GeminiService - parseVoiceExpense con enableLocalVoiceFallback=false', () {
+    setUp(() {
+      SharedPreferences.setMockInitialValues({});
+    });
+
+    test('lanza VoiceOfflineException ante SocketException y HTTP 504', () async {
+      final socketService = GeminiService(
+        client: MockClient((_) async => throw const SocketException('No internet')),
+        enableLocalVoiceFallback: false,
+      );
+      await expectLater(
+        socketService.parseVoiceExpense('Compre pan por 2 dolares'),
+        throwsA(isA<VoiceOfflineException>()),
+      );
+
+      final gw504Service = GeminiService(
+        client: MockClient((_) async => http.Response('Gateway Timeout', 504)),
+        enableLocalVoiceFallback: false,
+      );
+      await expectLater(
+        gw504Service.parseVoiceExpense('Compre pan por 2 dolares'),
+        throwsA(isA<VoiceOfflineException>()),
+      );
+    });
+
+    test('lanza VoiceServiceException ante HTTP 429 y 401 sin fingir falta de red', () async {
+      final rateLimitService = GeminiService(
+        client: MockClient((_) async => http.Response(
+              '{"error":"Cuota diaria alcanzada","dailyLimitReached":true}',
+              429,
+            )),
+        enableLocalVoiceFallback: false,
+      );
+      await expectLater(
+        rateLimitService.parseVoiceExpense('Compre pan por 2 dolares'),
+        throwsA(
+          isA<VoiceServiceException>().having(
+            (e) => e.message,
+            'message',
+            contains('Cuota diaria alcanzada'),
+          ),
+        ),
+      );
+
+      final unauthService = GeminiService(
+        client: MockClient((_) async => http.Response('Unauthorized', 401)),
+        enableLocalVoiceFallback: false,
+      );
+      await expectLater(
+        unauthService.parseVoiceExpense('Compre pan por 2 dolares'),
+        throwsA(isA<VoiceServiceException>()),
+      );
+    });
+
+    test('conserva fallback local ante HTTP 200 sin functionCall (compra sin precio)', () async {
+      final noFnService = GeminiService(
+        client: MockClient((_) async => http.Response('{"text":"Cuanto te costo?"}', 200)),
+        enableLocalVoiceFallback: false,
+      );
+
+      final results = await noFnService.parseVoiceExpense('Compre 5 kg de queso en New Market');
+      expect(results, hasLength(1));
+      expect(results.first.comercio, equals('New Market'));
+      expect(results.first.totalOriginal, equals(0.0));
     });
   });
 }

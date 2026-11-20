@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
+import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import '../../../core/constants/app_constants.dart';
@@ -10,15 +12,48 @@ import '../../models/gemini_extraction_result.dart';
 import '../../models/item_gasto_model.dart';
 import '../../models/shopping_item_model.dart';
 
+/// Error estrictamente de conectividad o timeout de red al procesar dictado por voz.
+class VoiceOfflineException implements Exception {
+  final String message;
+  const VoiceOfflineException([
+    this.message = 'Sin conexión para procesar dictado por voz.',
+  ]);
+
+  @override
+  String toString() => message;
+}
+
+/// Error de negocio o servicio con mensaje amigable ya sanitizado (401, 429, BYOK, 502/503).
+class VoiceServiceException implements Exception {
+  final String message;
+  const VoiceServiceException(this.message);
+
+  @override
+  String toString() => message;
+}
+
 class GeminiService {
   final String _baseUrl;
   final http.Client _client;
+  final bool _ownsClient;
+  final bool enableLocalVoiceFallback;
+  final Duration voiceRequestTimeout;
 
   GeminiService({
     String? baseUrl,
     http.Client? client,
+    this.enableLocalVoiceFallback = true,
+    this.voiceRequestTimeout = const Duration(seconds: 15),
   })  : _baseUrl = (baseUrl ?? AppConstants.defaultGatewayUrl).replaceAll(RegExp(r'/+$'), ''),
-        _client = client ?? http.Client();
+        _client = client ?? http.Client(),
+        _ownsClient = client == null;
+
+  /// Libera el cliente HTTP interno si fue creado por esta instancia.
+  void close() {
+    if (_ownsClient) {
+      _client.close();
+    }
+  }
 
   /// Valida una API key directamente contra el endpoint público de Google Gemini
   static Future<bool> validateGeminiApiKey(String apiKey, {http.Client? client}) async {
@@ -215,28 +250,34 @@ class GeminiService {
         bodyMap['modo'] = modo;
       }
 
+      final requestTimeout =
+          modo == 'dictado_gasto' ? voiceRequestTimeout : const Duration(seconds: 45);
       final response = await _client.post(
         uri,
         headers: headers,
         body: jsonEncode(bodyMap),
-      ).timeout(const Duration(seconds: 45));
+      ).timeout(requestTimeout);
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body) as Map<String, dynamic>;
       } else if (response.statusCode == 401) {
-        throw Exception('No estás autenticado en Firebase.');
+        throw const VoiceServiceException('No estás autenticado en Firebase.');
       }
 
       try {
         final errorBody = jsonDecode(response.body);
         if (errorBody is Map && errorBody['isCustomKey'] == true) {
           final errText = errorBody['error']?.toString();
-          throw Exception(errText?.isNotEmpty == true
-              ? errText!
-              : 'Tu API Key de Gemini personalizada tiene un error o agotó su cuota.');
+          throw VoiceServiceException(
+            errText != null && errText.isNotEmpty
+                ? errText
+                : 'Tu API Key de Gemini personalizada tiene un error o agotó su cuota.',
+          );
         }
+      } on VoiceServiceException {
+        rethrow;
       } catch (e) {
-        if (e is Exception && !e.toString().contains('FormatException')) rethrow;
+        debugPrint('GeminiService: Respuesta de error no JSON en chatWithAnalyst: $e');
       }
 
       if (response.statusCode == 429) {
@@ -248,19 +289,28 @@ class GeminiService {
               msg = errorBody['error'].toString();
             }
           }
-        } catch (_) {}
-        throw Exception(msg);
+        } catch (e) {
+          debugPrint('GeminiService: Error leyendo cuerpo 429 en chatWithAnalyst: $e');
+        }
+        throw VoiceServiceException(msg);
       } else if (response.statusCode == 504) {
-        throw Exception('El asistente no pudo conectarse. Revisa tu conexión a internet e intenta nuevamente.');
+        throw const VoiceOfflineException(
+          'El asistente no pudo conectarse. Revisa tu conexión a internet e intenta nuevamente.',
+        );
       } else if (response.statusCode == 502 || response.statusCode == 503) {
-        throw Exception('El asistente está experimentando alta demanda. Intenta nuevamente más tarde.');
+        throw const VoiceServiceException(
+          'El asistente está experimentando alta demanda. Intenta nuevamente más tarde.',
+        );
       } else {
         try {
           final errorBody = jsonDecode(response.body);
           final message = errorBody['error'] ?? errorBody['message'] ?? 'Error al comunicarse con el asistente.';
-          throw Exception(message);
-        } catch (_) {
-          throw Exception('Error al comunicarse con el asistente (${response.statusCode}).');
+          throw VoiceServiceException(message.toString());
+        } on VoiceServiceException {
+          rethrow;
+        } catch (e) {
+          debugPrint('GeminiService: Error parseando respuesta HTTP ${response.statusCode}: $e');
+          throw VoiceServiceException('Error al comunicarse con el asistente (${response.statusCode}).');
         }
       }
     } catch (e) {
@@ -551,11 +601,32 @@ class GeminiService {
           return [_mapArgsToExtractionResult(args, cleanSpokenText, fallbackMoneda: monedaPrincipal)];
         }
       }
+    } on VoiceOfflineException catch (e) {
+      debugPrint('GeminiService: Corte de red en parseVoiceExpense: $e');
+      if (!enableLocalVoiceFallback) rethrow;
+    } on SocketException catch (e) {
+      debugPrint('GeminiService: SocketException en parseVoiceExpense: $e');
+      if (!enableLocalVoiceFallback) throw const VoiceOfflineException();
+    } on TimeoutException catch (e) {
+      debugPrint('GeminiService: TimeoutException en parseVoiceExpense: $e');
+      if (!enableLocalVoiceFallback) throw const VoiceOfflineException();
+    } on http.ClientException catch (e) {
+      debugPrint('GeminiService: ClientException en parseVoiceExpense: $e');
+      if (!enableLocalVoiceFallback) throw const VoiceOfflineException();
+    } on VoiceServiceException catch (e) {
+      debugPrint('GeminiService: Error de servicio en parseVoiceExpense: $e');
+      if (!enableLocalVoiceFallback) rethrow;
     } catch (e) {
-      // Fallback si falla la llamada de red
+      debugPrint('GeminiService: Error inesperado en parseVoiceExpense: $e');
+      if (!enableLocalVoiceFallback) {
+        throw const VoiceServiceException(
+          'No pudimos procesar tu dictado en este momento. Intenta de nuevo o regístralo manualmente.',
+        );
+      }
     }
 
-    // Fallback inteligente local si la IA no devolvió functionCall o hubo un corte de red
+    // Fallback inteligente local cuando HTTP 200 no devuelve functionCall (p. ej. compra sin precio)
+    // o cuando enableLocalVoiceFallback == true.
     return _parseVoiceExpenseLocalFallback(cleanSpokenText, fallbackMoneda: monedaPrincipal);
   }
 

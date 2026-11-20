@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -11,14 +13,35 @@ import 'package:gastoscan_ai/providers/gasto_provider.dart';
 import 'package:gastoscan_ai/providers/scan_queue_provider.dart';
 import 'package:gastoscan_ai/providers/settings_provider.dart';
 import 'package:gastoscan_ai/providers/chat_provider.dart';
+import 'package:gastoscan_ai/services/connectivity_service.dart';
+import 'package:gastoscan_ai/services/profile_avatar_service.dart';
 import 'package:gastoscan_ai/ui/screens/more_screen.dart';
 
+final Uint8List _kAvatarTestPngBytes = Uint8List.fromList(<int>[
+  0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
+  0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
+  0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+  0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, 0xC4,
+  0x89, 0x00, 0x00, 0x00, 0x0A, 0x49, 0x44, 0x41,
+  0x54, 0x78, 0x9C, 0x63, 0x00, 0x01, 0x00, 0x00,
+  0x05, 0x00, 0x01, 0x0D, 0x0A, 0x2D, 0xB4, 0x00,
+  0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE,
+  0x42, 0x60, 0x82,
+]);
+
 class FakeTestUser extends Fake implements User {
+  final String _uid;
+  final String? _photoUrl;
+
+  FakeTestUser({String uid = 'user-test-uid', String? photoUrl})
+      : _uid = uid,
+        _photoUrl = photoUrl;
+
   @override
   bool get isAnonymous => false;
 
   @override
-  String get uid => 'user-test-uid';
+  String get uid => _uid;
 
   @override
   String? get email => 'test@rindemas.com';
@@ -27,7 +50,7 @@ class FakeTestUser extends Fake implements User {
   String? get displayName => 'Usuario Test';
 
   @override
-  String? get photoURL => null;
+  String? get photoURL => _photoUrl;
 
   @override
   List<UserInfo> get providerData => [];
@@ -129,6 +152,8 @@ void main() {
       scanQueueProvider.dispose();
       settingsProvider.dispose();
       gastoProvider.dispose();
+      ConnectivityService.reset();
+      ProfileAvatarService.reset();
     });
 
     Widget createWidgetUnderTest({User? customUser}) {
@@ -602,6 +627,196 @@ void main() {
 
       expect(settingsProvider.actualizarTasaCalls, 1);
       expect(find.byType(SnackBar), findsNothing);
+    });
+
+    testWidgets('avatar cacheado en disco se muestra con FileImage incluso sin conexion', (tester) async {
+      setLargeViewport(tester);
+      final tempDir = Directory.systemTemp.createTempSync('more_avatar_offline_');
+      addTearDown(() {
+        if (tempDir.existsSync()) tempDir.deleteSync(recursive: true);
+      });
+
+      const photoUrl = 'https://lh3.googleusercontent.com/cached-offline.png';
+      await tester.runAsync(() async {
+        final seedService = ProfileAvatarService(
+          httpClient: MockClient((_) async => http.Response.bytes(
+                _kAvatarTestPngBytes,
+                200,
+                headers: {'content-type': 'image/png'},
+              )),
+          connectivityService: ConnectivityService(testConnected: true),
+          baseDirectoryProvider: () async => tempDir,
+        );
+        final saved = await seedService.ensureAvatarCached(uid: 'uid-offline', photoUrl: photoUrl);
+        expect(saved, isNotNull);
+      });
+
+      int offlineHttpCalls = 0;
+      final offlineConnectivity = ConnectivityService(testConnected: false);
+      final offlineAvatarService = ProfileAvatarService(
+        httpClient: MockClient((_) async {
+          offlineHttpCalls++;
+          return http.Response('offline', 503);
+        }),
+        connectivityService: offlineConnectivity,
+        baseDirectoryProvider: () async => tempDir,
+      );
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<GastoProvider>.value(value: gastoProvider),
+            ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+            ChangeNotifierProvider<ScanQueueProvider>.value(value: scanQueueProvider),
+            ChangeNotifierProvider<ChatProvider>(create: (_) => ChatProvider()),
+          ],
+          child: MaterialApp(
+            home: MoreScreen(
+              customUser: FakeTestUser(uid: 'uid-offline', photoUrl: photoUrl),
+              profileAvatarService: offlineAvatarService,
+              connectivityService: offlineConnectivity,
+            ),
+          ),
+        ),
+      );
+      for (int i = 0; i < 40; i++) {
+        await tester.pump();
+        final currentAvatar = tester.widget<CircleAvatar>(
+          find.byKey(const Key('more_account_avatar')),
+        );
+        if (currentAvatar.backgroundImage is FileImage) {
+          break;
+        }
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 15)),
+        );
+      }
+
+      final avatar = tester.widget<CircleAvatar>(find.byKey(const Key('more_account_avatar')));
+      expect(avatar.backgroundImage, isA<FileImage>());
+      expect(offlineHttpCalls, 0);
+    });
+
+    testWidgets('sin cache offline muestra inicial y al reconectar descarga y muestra FileImage', (tester) async {
+      setLargeViewport(tester);
+      final tempDir = Directory.systemTemp.createTempSync('more_avatar_reconnect_');
+      final connController = StreamController<bool>.broadcast();
+      addTearDown(() async {
+        await connController.close();
+        if (tempDir.existsSync()) tempDir.deleteSync(recursive: true);
+      });
+
+      const photoUrl = 'https://lh3.googleusercontent.com/reconnect-photo.png';
+      int httpCalls = 0;
+      final downloadRequested = Completer<void>();
+      final connectivity = ConnectivityService(
+        testController: connController,
+        testConnected: false,
+      );
+      final avatarService = ProfileAvatarService(
+        httpClient: MockClient((_) async {
+          httpCalls++;
+          if (!downloadRequested.isCompleted) {
+            downloadRequested.complete();
+          }
+          return http.Response.bytes(
+            _kAvatarTestPngBytes,
+            200,
+            headers: {'content-type': 'image/png'},
+          );
+        }),
+        connectivityService: connectivity,
+        baseDirectoryProvider: () async => tempDir,
+      );
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<GastoProvider>.value(value: gastoProvider),
+            ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+            ChangeNotifierProvider<ScanQueueProvider>.value(value: scanQueueProvider),
+            ChangeNotifierProvider<ChatProvider>(create: (_) => ChatProvider()),
+          ],
+          child: MaterialApp(
+            home: MoreScreen(
+              customUser: FakeTestUser(uid: 'uid-reconnect', photoUrl: photoUrl),
+              profileAvatarService: avatarService,
+              connectivityService: connectivity,
+              avatarReconnectDebounce: const Duration(milliseconds: 20),
+            ),
+          ),
+        ),
+      );
+      await tester.runAsync(() async {
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+      });
+      await tester.pump();
+
+      // Offline y sin cache previa: muestra la inicial 'U', nunca circulo vacio ni llamada HTTP
+      final avatarOffline = tester.widget<CircleAvatar>(find.byKey(const Key('more_account_avatar')));
+      expect(avatarOffline.backgroundImage, isNull);
+      expect(find.descendant(of: find.byKey(const Key('more_account_avatar')), matching: find.text('U')), findsOneWidget);
+      expect(httpCalls, 0);
+
+      // Al recuperar conexion, descarga automaticamente tras debounce y pinta FileImage
+      connController.add(true);
+      await tester.pump(const Duration(milliseconds: 30));
+      await tester.runAsync(() async {
+        await downloadRequested.future.timeout(const Duration(seconds: 3));
+      });
+      for (int i = 0; i < 40; i++) {
+        await tester.pump();
+        final currentAvatar = tester.widget<CircleAvatar>(
+          find.byKey(const Key('more_account_avatar')),
+        );
+        if (currentAvatar.backgroundImage is FileImage) {
+          break;
+        }
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 15)),
+        );
+      }
+
+      final avatarOnline = tester.widget<CircleAvatar>(find.byKey(const Key('more_account_avatar')));
+      expect(httpCalls, 1);
+      expect(avatarOnline.backgroundImage, isA<FileImage>());
+    });
+
+    testWidgets('usuario autenticado sin photoURL muestra inicial sin intentar descargas', (tester) async {
+      setLargeViewport(tester);
+      int httpCalls = 0;
+      final connectivity = ConnectivityService(testConnected: true);
+      final avatarService = ProfileAvatarService(
+        httpClient: MockClient((_) async {
+          httpCalls++;
+          return http.Response('no deberia llamarse', 500);
+        }),
+        connectivityService: connectivity,
+      );
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<GastoProvider>.value(value: gastoProvider),
+            ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+            ChangeNotifierProvider<ScanQueueProvider>.value(value: scanQueueProvider),
+            ChangeNotifierProvider<ChatProvider>(create: (_) => ChatProvider()),
+          ],
+          child: MaterialApp(
+            home: MoreScreen(
+              customUser: FakeTestUser(uid: 'uid-email-only', photoUrl: null),
+              profileAvatarService: avatarService,
+              connectivityService: connectivity,
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final avatar = tester.widget<CircleAvatar>(find.byKey(const Key('more_account_avatar')));
+      expect(avatar.backgroundImage, isNull);
+      expect(find.descendant(of: find.byKey(const Key('more_account_avatar')), matching: find.text('U')), findsOneWidget);
+      expect(httpCalls, 0);
     });
   });
 }

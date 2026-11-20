@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -11,7 +13,9 @@ import '../../providers/settings_provider.dart';
 import '../../providers/gasto_provider.dart';
 import '../../providers/chat_provider.dart';
 import '../../providers/scan_queue_provider.dart';
+import '../../services/connectivity_service.dart';
 import '../../services/export_service.dart';
+import '../../services/profile_avatar_service.dart';
 import '../../services/update_service.dart';
 import '../widgets/global_scan_queue_banner.dart';
 import '../widgets/app_bar_month_selector.dart';
@@ -34,6 +38,9 @@ class MoreScreen extends StatefulWidget {
   final VoidCallback? onNavigateToSearch;
   final User? customUser;
   final Stream<User?>? customUserStream;
+  final ProfileAvatarService? profileAvatarService;
+  final ConnectivityService? connectivityService;
+  final Duration avatarReconnectDebounce;
 
   const MoreScreen({
     Key? key,
@@ -42,6 +49,9 @@ class MoreScreen extends StatefulWidget {
     this.onNavigateToSearch,
     this.customUser,
     this.customUserStream,
+    this.profileAvatarService,
+    this.connectivityService,
+    this.avatarReconnectDebounce = const Duration(seconds: 2),
   }) : super(key: key);
 
   @override
@@ -55,11 +65,102 @@ class MoreScreenState extends State<MoreScreen> {
   String _currentAppVersion = '1.0.1';
   int _shoppingPendingCount = 0;
 
+  late final ProfileAvatarService _avatarService;
+  late final ConnectivityService _connectivityService;
+  StreamSubscription<bool>? _connectivitySub;
+  Timer? _avatarReconnectTimer;
+  File? _cachedAvatarFile;
+  String? _avatarRequestKey;
+  String? _lastAuthUid;
+  String? _lastAuthPhotoUrl;
+  bool _avatarImageFailed = false;
+  bool _avatarNeedsRetryWhenOnline = false;
+
   @override
   void initState() {
     super.initState();
+    _avatarService = widget.profileAvatarService ?? ProfileAvatarService.instance;
+    _connectivityService = widget.connectivityService ?? ConnectivityService.instance;
+    _initAvatarConnectivityListener();
     _cargarVersionActual();
     _cargarComprasPendientes();
+  }
+
+  void _initAvatarConnectivityListener() {
+    _connectivitySub = _connectivityService.onConnectivityChanged.listen((hasConnection) {
+      if (!mounted) return;
+      _avatarReconnectTimer?.cancel();
+      if (!hasConnection) return;
+
+      final uid = _lastAuthUid;
+      final photoUrl = _lastAuthPhotoUrl;
+      final reqKey = _avatarRequestKey;
+      if (uid == null || photoUrl == null || photoUrl.isEmpty || reqKey == null) return;
+      if (!_avatarNeedsRetryWhenOnline && _cachedAvatarFile != null && !_avatarImageFailed) return;
+
+      _avatarReconnectTimer = Timer(widget.avatarReconnectDebounce, () {
+        if (!mounted || _avatarRequestKey != reqKey) return;
+        _syncAvatarForUser(uid, photoUrl, requestKey: reqKey);
+      });
+    });
+  }
+
+  /// Invocado por `MainScreen` al entrar a la pestaña Más para reintentar
+  /// silenciosamente la descarga del avatar si antes falló sin conexión.
+  void onTabVisible() {
+    if (!mounted) return;
+    final uid = _lastAuthUid;
+    final photoUrl = _lastAuthPhotoUrl;
+    final reqKey = _avatarRequestKey;
+    if (uid == null || photoUrl == null || photoUrl.isEmpty || reqKey == null) return;
+    if (_cachedAvatarFile != null && !_avatarImageFailed && !_avatarNeedsRetryWhenOnline) return;
+    _syncAvatarForUser(uid, photoUrl, requestKey: reqKey);
+  }
+
+  Future<void> _syncAvatarForUser(
+    String uid,
+    String photoUrl, {
+    required String requestKey,
+  }) async {
+    // 1. Lectura inmediata desde disco (<2 ms, funciona 100% offline)
+    final localFile = await _avatarService.getCachedAvatarFile(uid: uid, photoUrl: photoUrl);
+    if (!mounted || _avatarRequestKey != requestKey) return;
+
+    if (localFile != null && (_cachedAvatarFile?.path != localFile.path || _avatarImageFailed)) {
+      setState(() {
+        _cachedAvatarFile = localFile;
+        _avatarImageFailed = false;
+      });
+    }
+
+    // 2. Si ya tenemos el archivo exacto para esta URL y no falló el render, terminamos
+    final hasExact = await _avatarService.hasExactCachedAvatar(uid: uid, photoUrl: photoUrl);
+    if (!mounted || _avatarRequestKey != requestKey) return;
+    if (hasExact && !_avatarImageFailed) {
+      _avatarNeedsRetryWhenOnline = false;
+      return;
+    }
+
+    // 3. Descargar y persistir en disco si hay red disponible
+    final downloaded = await _avatarService.ensureAvatarCached(uid: uid, photoUrl: photoUrl);
+    if (!mounted || _avatarRequestKey != requestKey) return;
+
+    if (downloaded != null) {
+      setState(() {
+        _cachedAvatarFile = downloaded;
+        _avatarImageFailed = false;
+        _avatarNeedsRetryWhenOnline = false;
+      });
+    } else {
+      _avatarNeedsRetryWhenOnline = true;
+    }
+  }
+
+  @override
+  void dispose() {
+    _avatarReconnectTimer?.cancel();
+    _connectivitySub?.cancel();
+    super.dispose();
   }
 
   Future<void> _cargarComprasPendientes() async {
@@ -449,8 +550,6 @@ class MoreScreenState extends State<MoreScreen> {
   }
 
   Widget _buildAccountCard(BuildContext context, User? user) {
-    final isAnon = user == null || user.isAnonymous;
-
     String? photoUrl = user?.photoURL;
     String? email = user?.email;
     String? displayName = user?.displayName;
@@ -463,7 +562,37 @@ class MoreScreenState extends State<MoreScreen> {
       }
     }
 
-    if (!isAnon) {
+    if (user != null && !user.isAnonymous) {
+      final String? trimmedPhotoUrl =
+          (photoUrl != null && photoUrl.trim().isNotEmpty) ? photoUrl.trim() : null;
+      final String requestKey = '${user.uid}|${trimmedPhotoUrl ?? ''}';
+
+      if (trimmedPhotoUrl == null) {
+        // Cuenta autenticada sin foto (ej. correo/contraseña): mostrar inicial en 0 ms
+        _avatarReconnectTimer?.cancel();
+        _avatarRequestKey = requestKey;
+        _lastAuthUid = user.uid;
+        _lastAuthPhotoUrl = null;
+        _cachedAvatarFile = null;
+        _avatarImageFailed = false;
+        _avatarNeedsRetryWhenOnline = false;
+      } else if (_avatarRequestKey != requestKey) {
+        _avatarReconnectTimer?.cancel();
+        _avatarRequestKey = requestKey;
+        _lastAuthUid = user.uid;
+        _lastAuthPhotoUrl = trimmedPhotoUrl;
+        _cachedAvatarFile = null;
+        _avatarImageFailed = false;
+        _avatarNeedsRetryWhenOnline = false;
+        scheduleMicrotask(() {
+          if (!mounted || _avatarRequestKey != requestKey) return;
+          _syncAvatarForUser(user.uid, trimmedPhotoUrl, requestKey: requestKey);
+        });
+      }
+
+      final File? activeAvatarFile =
+          (_avatarRequestKey == requestKey && !_avatarImageFailed) ? _cachedAvatarFile : null;
+
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
@@ -474,10 +603,22 @@ class MoreScreenState extends State<MoreScreen> {
         child: Row(
           children: [
             CircleAvatar(
+              key: const Key('more_account_avatar'),
               radius: 20,
               backgroundColor: AppColors.primaryLight,
-              backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
-              child: photoUrl == null
+              backgroundImage: activeAvatarFile != null ? FileImage(activeAvatarFile) : null,
+              onBackgroundImageError: activeAvatarFile != null
+                  ? (error, stackTrace) {
+                      debugPrint('MoreScreen: Error renderizando avatar local: $error');
+                      if (mounted) {
+                        setState(() {
+                          _avatarImageFailed = true;
+                          _avatarNeedsRetryWhenOnline = true;
+                        });
+                      }
+                    }
+                  : null,
+              child: activeAvatarFile == null
                   ? Text(
                       (displayName?.isNotEmpty == true
                               ? displayName![0]
@@ -547,6 +688,13 @@ class MoreScreenState extends State<MoreScreen> {
     }
 
     // Usuario anónimo / invitado
+    _avatarReconnectTimer?.cancel();
+    _avatarRequestKey = null;
+    _lastAuthUid = null;
+    _lastAuthPhotoUrl = null;
+    _cachedAvatarFile = null;
+    _avatarImageFailed = false;
+    _avatarNeedsRetryWhenOnline = false;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(

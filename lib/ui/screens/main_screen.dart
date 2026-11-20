@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -287,6 +288,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       Provider.of<ScanQueueProvider>(context, listen: false).resumeQueueWhenOnline();
       Provider.of<GastoProvider>(context, listen: false).verificarReanudacionMesActual();
+      unawaited(Provider.of<SettingsProvider>(context, listen: false).refrescarTasasSiDesactualizadas());
       SyncCoordinator.instance.request(SyncTrigger.reanudacion);
       _drainLaunchActions();
     }
@@ -337,6 +339,49 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     setState(() {
       _currentIndex = index;
     });
+    if (index == 3) {
+      _moreScreenKey.currentState?.onTabVisible();
+      unawaited(Provider.of<SettingsProvider>(context, listen: false).refrescarTasasSiDesactualizadas());
+    }
+  }
+
+  static void _abrirFormularioManual(BuildContext rootContext) {
+    if (!rootContext.mounted) return;
+    final gastoProvider = Provider.of<GastoProvider>(rootContext, listen: false);
+    if (gastoProvider.hasPendingReplaceBlock) {
+      ScaffoldMessenger.of(rootContext).clearSnackBars();
+      ScaffoldMessenger.of(rootContext).showSnackBar(
+        const SnackBar(
+          content: Text('Descarga pendiente en curso. Completa la sincronización antes de registrar gastos.'),
+          backgroundColor: AppColors.warning,
+        ),
+      );
+      return;
+    }
+    final settings = Provider.of<SettingsProvider>(rootContext, listen: false);
+    Navigator.of(rootContext).push(
+      MaterialPageRoute(
+        builder: (context) => ReviewExpenseScreen(
+          extractedData: GeminiExtractionResult(
+            comercio: '',
+            fecha: DateTime.now().toIso8601String().substring(0, 10),
+            moneda: settings.monedaPrincipal,
+            totalOriginal: 0.0,
+            tasaCambioDetectada: null,
+            impuestoIva: 0.0,
+            items: [
+              ItemGastoModel(
+                descripcion: '',
+                cantidad: 1.0,
+                precioUnitario: 0,
+                total: 0,
+                categoria: 'Otros',
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void _showAddMenu(BuildContext context) => MainScreen.showAddMenu(context);
@@ -402,32 +447,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                       title: 'Escribir gasto',
                       subtitle: 'Ingresa los datos de tu compra',
                       onTap: () {
-                        final settings = Provider.of<SettingsProvider>(context, listen: false);
                         Navigator.pop(ctx);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ReviewExpenseScreen(
-                              extractedData: GeminiExtractionResult(
-                                comercio: '',
-                                fecha: DateTime.now().toIso8601String().substring(0, 10),
-                                moneda: settings.monedaPrincipal,
-                                totalOriginal: 0.0,
-                                tasaCambioDetectada: null,
-                                impuestoIva: 0.0,
-                                items: [
-                                  ItemGastoModel(
-                                    descripcion: '',
-                                    cantidad: 1.0,
-                                    precioUnitario: 0,
-                                    total: 0,
-                                    categoria: 'Otros',
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
+                        _abrirFormularioManual(context);
                       },
                     ),
                     _buildAddMenuDivider(),
@@ -501,7 +522,10 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                       subtitle: 'Describe tu compra con tu voz',
                       onTap: () {
                         Navigator.pop(ctx);
-                        VoiceExpenseSheet.show(context);
+                        VoiceExpenseSheet.show(
+                          context,
+                          onOpenManualExpense: () => _abrirFormularioManual(context),
+                        );
                       },
                     ),
                     const SizedBox(height: 14),

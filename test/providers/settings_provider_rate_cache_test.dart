@@ -1,10 +1,13 @@
+import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:gastoscan_ai/core/constants/app_constants.dart';
+import 'package:gastoscan_ai/domain/monetary/rate_market.dart';
 import 'package:gastoscan_ai/providers/settings_provider.dart';
+import 'package:gastoscan_ai/services/connectivity_service.dart';
 import 'package:gastoscan_ai/services/exchange_rate_service.dart';
 import '../services/exchange_rate_service_cache_purge_test.dart';
 
@@ -36,7 +39,14 @@ class FakeSecureStorage extends Fake implements FlutterSecureStorage {
 }
 
 class TestableSettingsProvider extends SettingsProvider {
-  TestableSettingsProvider({super.secureStorage}) : super(autoLoad: false);
+  TestableSettingsProvider({
+    super.secureStorage,
+    super.connectivityService,
+    super.nowProvider,
+    super.reconnectDebounce,
+    super.autoRefreshCooldown,
+    super.httpClient,
+  }) : super(autoLoad: false);
 
   bool disableAutoSyncOnLoad = true;
 
@@ -347,6 +357,225 @@ void main() {
       await provider2.setTasaCambio(75.0);
       expect(provider2.esTasaManualUsd, isFalse);
       expect(store.disk['pref_es_tasa_manual_usd'], isFalse);
+    });
+  });
+
+  group('SettingsProvider - Resiliencia Offline y Auto-actualizacion de Tasas', () {
+    late FakeSecureStorage fakeSecureStorage;
+
+    setUp(() {
+      SharedPreferences.setMockInitialValues({});
+      ExchangeRateService.resetPendingPurgeOperationsForTesting();
+      fakeSecureStorage = FakeSecureStorage();
+    });
+
+    tearDown(() {
+      ExchangeRateService.resetPendingPurgeOperationsForTesting();
+      ConnectivityService.reset();
+    });
+
+    test('fail-fast offline: actualizarTasaAutomatica no dispara HTTP sin conexion', () async {
+      int httpCalls = 0;
+      final client = MockClient((_) async {
+        httpCalls++;
+        return http.Response('{"usd": 60.0, "eur": 65.0, "usdt": 62.0}', 200);
+      });
+
+      final provider = SettingsProvider(
+        secureStorage: fakeSecureStorage,
+        autoLoad: false,
+        connectivityService: ConnectivityService(testConnected: false),
+      );
+      addTearDown(provider.dispose);
+
+      final result = await provider.actualizarTasaAutomatica(client: client);
+      expect(result, isFalse);
+      expect(httpCalls, 0);
+      expect(provider.isSyncingRate, isFalse);
+    });
+
+    test('cerrojo de concurrencia: dos llamadas simultaneas comparten una sola peticion HTTP', () async {
+      int httpCalls = 0;
+      final gate = Completer<void>();
+      final client = MockClient((_) async {
+        httpCalls++;
+        await gate.future;
+        return http.Response('{"usd": 61.0, "eur": 66.0, "usdt": 63.0}', 200);
+      });
+
+      final provider = SettingsProvider(
+        secureStorage: fakeSecureStorage,
+        autoLoad: false,
+        connectivityService: ConnectivityService(testConnected: true),
+      );
+      addTearDown(provider.dispose);
+
+      final f1 = provider.actualizarTasaAutomatica(client: client);
+      final f2 = provider.actualizarTasaAutomatica(client: client);
+
+      await Future<void>.delayed(Duration.zero);
+      gate.complete();
+
+      final results = await Future.wait([f1, f2]);
+      expect(results, equals([true, true]));
+      expect(httpCalls, 1);
+      expect(provider.tasaCambioVesUsd, equals(61.0));
+    });
+
+    test('si EUR o USDT llega nulo o 0.0 no se marca actualizada y necesitaActualizarTasas es true', () async {
+      final partialClient = MockClient((request) async {
+        if (request.url.path.contains('/tasas')) {
+          return http.Response('{"usd": 60.0, "eur": null, "usdt": 0.0}', 200);
+        }
+        return http.Response('error', 503);
+      });
+
+      final provider = SettingsProvider(
+        secureStorage: fakeSecureStorage,
+        autoLoad: false,
+        connectivityService: ConnectivityService(testConnected: true),
+      );
+      addTearDown(provider.dispose);
+
+      final ok = await provider.actualizarTasaAutomatica(client: partialClient);
+      expect(ok, isTrue);
+      expect(provider.estadoTasaUsd, equals(EstadoTasaMoneda.actualizada));
+      expect(provider.estadoTasaEur, equals(EstadoTasaMoneda.sinTasa));
+      expect(provider.estadoTasaUsdt, equals(EstadoTasaMoneda.sinTasa));
+      expect(provider.necesitaActualizarTasas, isTrue);
+    });
+
+    test('si EUR o USDT llega nulo o 0.0 con cache previa de ayer queda en referencia y necesitaActualizarTasas es true', () async {
+      final partialClient = MockClient((request) async {
+        if (request.url.path.contains('/tasas')) {
+          return http.Response('{"usd": 60.0, "eur": null, "usdt": 0.0}', 200);
+        }
+        return http.Response('error', 503);
+      });
+
+      final fakeNow = DateTime(2026, 11, 20, 10, 0);
+      final store = TestSharedPreferences({
+        ExchangeRateService.prefKeyCacheHistoricaPurgada: true,
+        'cached_rate_usd': 50.0,
+        'cached_rate_eur': 54.0,
+        'cached_rate_usdt': 52.0,
+        'cached_exchange_rates_timestamp': DateTime(2026, 11, 19, 10, 0).toIso8601String(),
+      });
+
+      final provider = SettingsProvider(
+        secureStorage: fakeSecureStorage,
+        autoLoad: false,
+        prefsInstance: store,
+        connectivityService: ConnectivityService(testConnected: true),
+        nowProvider: () => fakeNow,
+      );
+      addTearDown(provider.dispose);
+
+      final ok = await provider.actualizarTasaAutomatica(client: partialClient);
+      expect(ok, isTrue);
+      expect(provider.tasaCambioVesUsd, equals(60.0));
+      expect(provider.tasaCambioVesEur, equals(54.0));
+      expect(provider.tasaCambioVesUsdt, equals(52.0));
+      expect(provider.estadoTasaUsd, equals(EstadoTasaMoneda.actualizada));
+      expect(provider.estadoTasaEur, equals(EstadoTasaMoneda.referencia));
+      expect(provider.estadoTasaUsdt, equals(EstadoTasaMoneda.referencia));
+      expect(provider.necesitaActualizarTasas, isTrue);
+    });
+
+    test('reconexion en stream de conectividad actualiza tasas tras debounce si estaban en referencia', () async {
+      final connController = StreamController<bool>.broadcast();
+      addTearDown(connController.close);
+
+      int httpCalls = 0;
+      final syncDone = Completer<void>();
+      final liveClient = MockClient((_) async {
+        httpCalls++;
+        return http.Response('{"usd": 64.0, "eur": 69.0, "usdt": 66.0}', 200);
+      });
+
+      final fakeNow = DateTime(2026, 11, 20, 10, 0);
+      final store = TestSharedPreferences({
+        ExchangeRateService.prefKeyCacheHistoricaPurgada: true,
+        'cached_rate_usd': 50.0,
+        'cached_rate_eur': 54.0,
+        'cached_rate_usdt': 52.0,
+        'cached_exchange_rates_timestamp': DateTime(2026, 11, 19, 10, 0).toIso8601String(),
+      });
+
+      final provider = SettingsProvider(
+        secureStorage: fakeSecureStorage,
+        autoLoad: false,
+        prefsInstance: store,
+        connectivityService: ConnectivityService(
+          testController: connController,
+          testConnected: false,
+        ),
+        nowProvider: () => fakeNow,
+        reconnectDebounce: const Duration(milliseconds: 20),
+        httpClient: liveClient,
+      );
+      addTearDown(provider.dispose);
+
+      provider.addListener(() {
+        if (!provider.isSyncingRate &&
+            provider.estadoTasaUsd == EstadoTasaMoneda.actualizada &&
+            !syncDone.isCompleted) {
+          syncDone.complete();
+        }
+      });
+
+      // Arranque offline: queda en referencia sin tocar red
+      await provider.loadSettings();
+      await Future<void>.delayed(Duration.zero);
+      expect(provider.estadoTasaUsd, equals(EstadoTasaMoneda.referencia));
+      expect(httpCalls, 0);
+
+      // Recupera conexion: tras debounce actualiza automaticamente
+      connController.add(true);
+      await syncDone.future.timeout(const Duration(seconds: 3));
+
+      expect(httpCalls, 1);
+      expect(provider.estadoTasaUsd, equals(EstadoTasaMoneda.actualizada));
+      expect(provider.tasaCambioVesUsd, equals(64.0));
+      expect(provider.tasaCambioVesEur, equals(69.0));
+      expect(provider.tasaCambioVesUsdt, equals(66.0));
+      expect(provider.necesitaActualizarTasas, isFalse);
+    });
+
+    test('no dispara red si las 3 tasas estan actualizadas hoy y si dispara al cambiar dia local', () async {
+      DateTime fakeNow = DateTime(2026, 11, 20, 21, 30);
+      int httpCalls = 0;
+      final client = MockClient((_) async {
+        httpCalls++;
+        return http.Response('{"usd": 65.0, "eur": 70.0, "usdt": 67.0}', 200);
+      });
+
+      final provider = SettingsProvider(
+        secureStorage: fakeSecureStorage,
+        autoLoad: false,
+        connectivityService: ConnectivityService(testConnected: true),
+        nowProvider: () => fakeNow,
+        autoRefreshCooldown: Duration.zero,
+      );
+      addTearDown(provider.dispose);
+
+      // Primera sincronizacion el 20/11 a las 21:30 hora local
+      await provider.actualizarTasaAutomatica(client: client);
+      expect(httpCalls, 1);
+      expect(provider.necesitaActualizarTasas, isFalse);
+
+      // Mismo dia local 20/11 a las 23:45: no debe refrescar
+      fakeNow = DateTime(2026, 11, 20, 23, 45);
+      final skipped = await provider.refrescarTasasSiDesactualizadas(client: client);
+      expect(skipped, isFalse);
+      expect(httpCalls, 1);
+
+      // Cruza medianoche local al 21/11 00:05: ahora si refresca
+      fakeNow = DateTime(2026, 11, 21, 0, 5);
+      expect(provider.necesitaActualizarTasas, isTrue);
+      final refreshed = await provider.refrescarTasasSiDesactualizadas(client: client);
+      expect(refreshed, isTrue);
+      expect(httpCalls, 2);
     });
   });
 }

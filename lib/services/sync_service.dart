@@ -14,6 +14,7 @@ import '../data/models/presupuesto_remoto_model.dart';
 import '../data/repositories/gasto_repository.dart';
 import 'connectivity_service.dart';
 import 'image_service.dart';
+import 'profile_avatar_service.dart';
 import 'sync_conflict_resolver.dart';
 
 class SyncService {
@@ -513,8 +514,14 @@ class SyncService {
       try {
         final prefs = await SharedPreferences.getInstance();
         await prefs.remove(AppConstants.prefApiKey);
-      } catch (_) {
-        debugPrint("SyncService: Error al remover prefApiKey de SharedPreferences");
+      } catch (e) {
+        debugPrint("SyncService: Error al remover prefApiKey de SharedPreferences: $e");
+      }
+
+      try {
+        await ProfileAvatarService.instance.clearAvatarCache(uid: user?.uid);
+      } catch (e) {
+        debugPrint("SyncService: Error al limpiar avatar cacheado en cerrarSesion: $e");
       }
 
       await _repository.limpiarDatosLocales();
@@ -664,6 +671,13 @@ class SyncService {
         }
       } catch (_) {
         debugPrint("SyncService: Error al limpiar SharedPreferences");
+      }
+
+      // 5b. Purgar siempre el avatar cacheado de la cuenta eliminada
+      try {
+        await ProfileAvatarService.instance.clearAvatarCache(uid: user?.uid);
+      } catch (e) {
+        debugPrint("SyncService: Error al limpiar avatar cacheado en eliminarCuentaYDatos: $e");
       }
 
       // 6. Eliminar imágenes de recibos solo si el usuario lo autorizó explícitamente
