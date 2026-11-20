@@ -233,6 +233,13 @@ AlertDialog(
    - **Contraste sobre Gris:** Las etiquetas de campo y rótulos secundarios sobre `#F3F4F6` deben usar `#4B5563` (en lugar de `#6B7280`) para mantener contraste WCAG AA (`>= 4.5:1`).
    - **Consistencia Geométrica:** Todos los campos editables del ítem (`Concepto`, `Cant.`, `Precio`, `Categoría`) comparten el mismo borde `OutlineInputBorder` de `10 dp` y etiqueta flotante. Prohibido mezclar selectores en forma de pastilla (`borderRadius >= 16`) junto a cajas rectangulares dentro del mismo ítem.
    - **Jerarquía y Seguridad:** Concepto en `15 sp` `FontWeight.w600`, monto total del ítem en `17 sp` negrita con `FontFeature.tabularFigures()`, y eliminación siempre protegida con `SnackBar` de `Deshacer` (5 s, sin `SnackBarAction`, conforme a §3.2).
+10. **Contenedor de Icono de Marca (Herramientas y Menús de Acción):**
+    - Usar caja cuadrada con esquinas redondeadas sobre fondo `AppColors.primaryLight` (`#FEF08A`), borde de `1 dp` en `AppColors.primaryDark` (`#FACC15`) e icono de línea fina (*outlined*) en `AppColors.textPrimary` (`#111827`).
+    - **Escala según contexto:** `32×32` (radio `10`, icono `18`) en tarjetas compactas de grilla (`MoreToolsGrid`); `40×40` (radio `12`, icono `20`) en filas de lista vertical con título y subtítulo (`MainScreen.showAddMenu`).
+11. **Anatomía de Menús en Hoja Inferior (`showModalBottomSheet`):**
+    - Esquinas superiores redondeadas en `24 dp` y barrita superior centrada (`40×4`, `AppColors.border`, radio `2`) como indicador de cierre por arrastre.
+    - Omitir el botón `X` en menús de selección rápida para que el título respire en una sola línea en pantallas de `360 dp` (el cierre ocurre deslizando, tocando fuera o con Atrás).
+    - Separar filas con divisores finos de `1 dp` (`AppColors.border` al 80%) con sangría lateral (`indent: 20`, `endIndent: 20`) y usar flecha derecha sutil (`Icons.chevron_right_rounded`, `AppColors.textMuted`, `20 dp`).
 
 ---
 

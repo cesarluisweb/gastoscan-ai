@@ -360,3 +360,32 @@ Integración del agente de IA de Meta (Muse) con acceso a Instagram y TikTok par
 * **Colaboración Cruzada Invariable en Instagram Reels:** Toda publicación de Reels desde `@rindemas.app` invita manualmente como colaboradora a `@lili9077p`.
 * **Métricas Recientes de Referencia (Reel #2 al 09/11):** 327 visualizaciones, 33 likes (10.1% de tasa de me gusta), 54% de retención (20s promedio en video de 37s), 93.6% alcance en no-seguidores.
 * **Historias y Feed:** Stickers de enlace en el tercio medio (>3 cm del borde inferior), pie de foto (*caption*) vacío si la pieza tiene texto, formato 4:5 vertical (1080x1350) para el feed y contraste estricto (fondo amarillo con texto negro).
+
+
+---
+
+## 13. Insight Clave de Posicionamiento: La Ceguera del Pago Móvil y Bancos (14 de Noviembre de 2026)
+
+* **El Problema en Venezuela:** Aunque un usuario guarde religiosamente los comprobantes de Pago Móvil o revise el estado de cuenta bancario, esa información está "ciega": solo muestra montos fríos, cédulas, números de teléfono o razones sociales genéricas (*«Inversiones 2024 C.A.»*, *«Pago Móvil C.I. 15.420.100»*).
+* **La Falla:** El banco te dice **a quién** le transferiste y **cuánto** salió de la cuenta, pero **nunca en qué te lo gastaste**. Al cabo de 15 días, el usuario no sabe si esos Bs 1.200 fueron mercado, medicinas, delivery o gastos hormiga.
+* **El Valor Diferencial de Rinde Más:** 
+  1. No es una libreta pasiva ni un agregador de saldos bancarios.
+  2. Con una foto a la factura o un dictado por voz de 3 segundos, Rinde Más desglosa ítem por ítem, asigna categorías de gasto reales y calcula la equivalencia bimonetaria oficial.
+  3. Convierte comprobantes muertos en visibilidad real de consumo familiar.
+* **Aplicación en Copy y Gancho de Video:**
+  - *Hook:* «Tu banco te dice a quién le transferiste, pero no en qué se te fue la plata».
+  - *Contraste visual:* Captura de Pago Móvil con nombres raros frente al desglose limpio por categorías en Rinde Más.
+
+
+---
+
+## 14. Insight de Utilidad Real: Memoria Histórica y Búsqueda Inteligente (14 de Noviembre de 2026)
+
+* **El Problema del Ticket Térmico y la Inflación:** En Venezuela los tickets de papel se borran en semanas y los precios en bolívares cambian constantemente. Cuando alguien necesita recordar cuánto pagó por un examen médico, consulta, repuesto del carro o arreglo de la casa hace 4 o 6 meses, no hay forma de saberlo en los bancos ni en papeles viejos.
+* **El Valor de Rinde Más (Buscador + Asistente IA):**
+  1. Permite buscar directamente en el buscador de la app o preguntarle al asistente integrado: *«¿Cuánto me costó el perfil 20 en mayo?»* o *«¿Cuánto pagué por la batería del carro?»*.
+  2. La app rescata el monto exacto, la fecha y la equivalencia en bolívares y dólares del momento.
+  3. No solo sirve para controlar el mes actual, sino como **historial médico y de mantenimiento familiar** que nunca se borra ni se pierde.
+* **Aplicación en Video:**
+  - *Hook:* «¿Cuánto te costó ese examen médico o el repuesto del carro hace 5 meses? Seguro el papel ya se borró».
+  - *Demostración:* Escribir o dictar la búsqueda en la app y mostrar el registro exacto al instante.

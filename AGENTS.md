@@ -23,6 +23,7 @@
 - **Idioma:** interfaz y respuestas en español neutro/venezolano.
 - **Estilo técnico ASD-STE100 (en prueba):** máximo 20 palabras por frase en instrucciones; 25 en descripciones. Voz activa, una idea por frase, un término por concepto. Prefiere tablas o Mermaid.
 - **Contraste:** fondo amarillo → texto negro. Fondo claro → texto negro o gris, nunca amarillo (ver `DESIGN.md`).
+- **Vista previa UI pre-CI:** ante rediseños o componentes visuales nuevos, muestra primero una maqueta HTML interactiva (`360/390 dp`, ver `preview-ui-html`) antes de editar Dart y compilar en CI.
 - **Memoria:** lee `MEMORY.md` al iniciar y actualízalo al terminar.
 - **Auditoría de reglas:** tras editar `AGENTS.md`, `.agents/rules/` o `.agents/skills/`, ejecuta `scripts/check_rules.ps1` sin errores.
 - **Iteración rápida:** máximo 2 lecturas por bloque de código antes de editar o probar.
@@ -85,6 +86,7 @@
 - **Código Dart, widgets, importaciones:** [`.agents/rules/flutter-desarrollo.md`](./.agents/rules/flutter-desarrollo.md).
 - **Pruebas, fakes y mocks:** [`.agents/rules/flutter-testing.md`](./.agents/rules/flutter-testing.md).
 - **Auditoría adversarial pre-push:** [`.agents/skills/revisor-adversarial/SKILL.md`](./.agents/skills/revisor-adversarial/SKILL.md).
+- **Vista previa UI en HTML (pre-CI):** [`.agents/skills/preview-ui-html/SKILL.md`](./.agents/skills/preview-ui-html/SKILL.md).
 - **Landing, panel, Astro o `firebase.json`:** [`.agents/rules/web.md`](./.agents/rules/web.md).
 - **Compilar y publicar web:** [`.agents/skills/desplegar-landing/SKILL.md`](./.agents/skills/desplegar-landing/SKILL.md).
 - **CI/CD, inyección Android y artefactos:** [`.agents/rules/ci-distribucion.md`](./.agents/rules/ci-distribucion.md).

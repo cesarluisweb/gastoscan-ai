@@ -82,6 +82,20 @@ Esta habilidad guía la creación de contenidos orgánicos de alto impacto (vide
 * **Desarrollo:** Mostrar cómo Rinde Más te fija presupuestos por categorías y calcula la equivalencia inmediata a tasa BCV diaria para saber exactamente cuánto poder de compra te queda sin tener que comprar divisas a ciegas.
 * **CTA:** *"Aprende a cuidar tus bolívares. Enlace de descarga anticipada en el perfil"*.
 
+### Formato G: La Ceguera del Pago Móvil ("El banco te dice cuánto pagaste, no en qué lo gastaste")
+* **Objetivo:** Desarmar la falsa sensación de control de quien solo revisa su cuenta bancaria o capturas de transferencias.
+* **Hook visual (0-2s):** Captura de pantalla de cuenta bancaria o comprobante de Pago Móvil con nombres genéricos (*"Inversiones 2021 C.A."* o números de cédula).
+* **Texto en pantalla / Audio:** *"Tu banco te dice a quién le transferiste, pero no en qué se te fue la plata"*.
+* **Desarrollo:** Mostrar el contraste: el banco solo muestra montos fríos sin detalle. En Rinde Más, le tomas foto a la factura o le dictas por voz y te desglosa qué fue comida, farmacia o gusto personal con sus categorías.
+* **CTA:** *"Deja de adivinar tu quincena. Enlace del canal en el perfil"*.
+
+### Formato H: La Memoria Histórica ("¿Cuánto te costó ese examen médico hace 5 meses?")
+* **Objetivo:** Destacar la utilidad a mediano y largo plazo del buscador y el asistente frente a los tickets de papel que se borran.
+* **Hook visual (0-2s):** Ticket térmico viejo de farmacia/laboratorio completamente blanco o borrado en la mano.
+* **Texto en pantalla / Audio:** *"¿Cuánto te costó el examen médico o el repuesto del carro hace 5 meses? El papel ya se borró"*.
+* **Desarrollo:** Mostrar la búsqueda en Rinde Más o preguntarle al asistente: escribir "perfil 20" o "batería" y ver al segundo el gasto exacto, la fecha y la equivalencia en bolívares y dólares.
+* **CTA:** *"No pierdas tu historial familiar. Enlace del canal en el perfil"*.
+
 ---
 
 ## 3. Plantilla Estándar para Generar Guiones de Video
