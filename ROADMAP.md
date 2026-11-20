@@ -32,6 +32,8 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
    - *Pendiente posterior:* Rotación de la upload key tras aprobación de Producción en Google Play.
 2. **Subida a Google Play Store (Solicitud de Producción):** `Pendiente de validación 🧪`
    - Prueba cerrada de 14 días completada con 12 evaluadores (cero crashes / cero ANR). Solicitud de producción enviada el 04/11/2026 (en revisión). Doc en [`docs/DOC_CUESTIONARIO_PRODUCCION.md`](docs/DOC_CUESTIONARIO_PRODUCCION.md).
+3. **Herramientas Web Bloque 1 (Calculadora Cambiaria + Asistente IA en Panel Web):** `Implementada 🔧`
+   - Módulos puros (`expense-money.js`, `currency-calculator.js`, `ai-assistant.js`), componentes Astro (`CalculatorModal.astro`, `AiChatDrawer.astro`), 29 pruebas unitarias en CI (`deploy_web.yml`) y cola de compras múltiples. Doc en [`docs/DOC_HERRAMIENTAS_PANEL_WEB.md`](docs/DOC_HERRAMIENTAS_PANEL_WEB.md).
 
 ---
 
@@ -74,7 +76,7 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 ### Bloque B: Finanzas Bimonetarias y Flujos de Captura
 - `UX-15` **Selector y Autocompletado de Comercios Frecuentes:** `Pendiente` Desplegar chips o sugerencias rápidas de comercios frecuentes al enfocar `¿Dónde compraste?`.
 - `UX-16` **Sistema Ligero de Etiquetas (Tags) para Gastos:** `Pendiente` Etiquetas opcionales (`#tags`) en captura y filtro de historial sin alterar las categorías canónicas.
-- `UX-17` **Botón y Flujo de Referidos Simple ("Compartir Rinde Más por WhatsApp"):** `Pendiente` Botón en `MoreScreen` con `Share.share` y enlace directo a Google Play.
+- `UX-17` **Botón y Flujo de Referidos Simple ("Compartir Rinde Más por WhatsApp"):** `Pendiente` *(Diferida hasta tener el enlace público de Google Play Store)*. Planificado para App (`MoreScreen`), Panel Web y Landing + meta tags Open Graph. Ver [`docs/DOC_PLAN_UX17_COMPARTIR_WHATSAPP.md`](docs/DOC_PLAN_UX17_COMPARTIR_WHATSAPP.md).
 - `UX-18` **Evolución Mensual en Gráfica Única (Pantalla Análisis):** `Pendiente` Gráfica consolidada de los últimos 6 a 12 meses en una sola vista.
 - `UX-19` **(Idea en evaluación) Simplificación del Registro Manual:** `Pendiente` Evaluar agilización de gastos sueltos sin lista de ítems detallados, preservando el método de liquidación (`MetodoLiquidacion`) y chips frecuentes (`UX-15`).
 - `UX-20` **Rediseño de Ítems en Revisión de Factura:** `Completada ✅` Iteración 2 validada en dispositivo (build 712, `18ae858`): fondo gris por ítem, etiqueta "Concepto" en negrita, categoría en caja alineada, total más grande y deshacer al eliminar. Ver [`docs/DOC_REDISENO_ITEMS_FACTURA.md`](docs/DOC_REDISENO_ITEMS_FACTURA.md).

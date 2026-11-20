@@ -1,5 +1,7 @@
 ---
 import '../styles/global.css';
+import CalculatorModal from '../components/CalculatorModal.astro';
+import AiChatDrawer from '../components/AiChatDrawer.astro';
 ---
 <!DOCTYPE html>
 <html lang="es" class="h-full bg-[#F8FAFC]">
@@ -168,37 +170,46 @@ import '../styles/global.css';
                 </div>
 
                 <!-- Botones de Acción -->
-                <div class="flex items-center gap-2.5 w-full sm:w-auto">
-                    <button id="btn-open-budget-modal" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all">
-                        <span>✏️</span>
+                <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                    <button type="button" id="btn-open-calculator" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-2 text-xs sm:text-sm font-semibold text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all">
+                        <span aria-hidden="true">🧮</span>
+                        <span>Calculadora</span>
+                    </button>
+                    <button type="button" id="btn-open-chat" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-2 text-xs sm:text-sm font-semibold text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all">
+                        <span aria-hidden="true">✨</span>
+                        <span>Asistente IA</span>
+                    </button>
+                    <button type="button" id="btn-open-budget-modal" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-2 text-xs sm:text-sm font-semibold text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all">
+                        <span aria-hidden="true">✏️</span>
                         <span>Presupuesto</span>
                     </button>
-                    <button id="btn-open-expense-modal" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 text-xs sm:text-sm font-bold text-slate-900 bg-[#FACC15] hover:bg-[#EAB308] rounded-xl shadow-sm transition-all">
-                        <span>+</span>
+                    <button type="button" id="btn-open-expense-modal" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-bold text-slate-900 bg-[#FACC15] hover:bg-[#EAB308] rounded-xl shadow-sm transition-all">
+                        <span aria-hidden="true">+</span>
                         <span>Registrar gasto</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Barra de Tasas de Referencia del Día -->
+            <!-- Barra de Tasas de Referencia del Día (clicables hacia la Calculadora Cambiaria) -->
             <div id="live-rates-bar" class="bg-white px-4 py-2.5 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs">
-                <div class="flex items-center gap-2 text-slate-500 font-semibold">
-                    <span>📊</span>
+                <div class="flex items-center gap-2 text-slate-600 font-semibold">
+                    <span aria-hidden="true">📊</span>
                     <span>Tasas de Referencia:</span>
+                    <span class="hidden md:inline text-[11px] font-normal text-slate-500">(toca una tasa para calcular)</span>
                 </div>
                 <div class="flex flex-wrap items-center gap-2 sm:gap-3 font-mono font-bold text-slate-800">
-                    <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-50 border border-slate-100">
-                        <span class="text-slate-400 font-sans text-[11px]">BCV USD</span>
+                    <button type="button" data-open-calc-rate="dolarBcv" title="Abrir Dólar BCV en la Calculadora Cambiaria" class="rate-pill-trigger flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-50 hover:bg-[#FEF08A]/60 border border-slate-200 hover:border-[#FACC15] transition-colors cursor-pointer">
+                        <span class="text-slate-600 font-sans text-[11px] font-semibold">BCV USD</span>
                         <span id="rate-usd-val">Bs. --</span>
-                    </div>
-                    <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-50 border border-slate-100">
-                        <span class="text-slate-400 font-sans text-[11px]">BCV EUR</span>
+                    </button>
+                    <button type="button" data-open-calc-rate="euroBcv" title="Abrir Euro BCV en la Calculadora Cambiaria" class="rate-pill-trigger flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-50 hover:bg-[#FEF08A]/60 border border-slate-200 hover:border-[#FACC15] transition-colors cursor-pointer">
+                        <span class="text-slate-600 font-sans text-[11px] font-semibold">BCV EUR</span>
                         <span id="rate-eur-val">Bs. --</span>
-                    </div>
-                    <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-50 border border-slate-100">
-                        <span class="text-slate-400 font-sans text-[11px]">USDT P2P</span>
+                    </button>
+                    <button type="button" data-open-calc-rate="usdtBinance" title="Abrir USDT P2P en la Calculadora Cambiaria" class="rate-pill-trigger flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-50 hover:bg-[#FEF08A]/60 border border-slate-200 hover:border-[#FACC15] transition-colors cursor-pointer">
+                        <span class="text-slate-600 font-sans text-[11px] font-semibold">USDT P2P</span>
                         <span id="rate-usdt-val">Bs. --</span>
-                    </div>
+                    </button>
                 </div>
             </div>
 
@@ -414,8 +425,8 @@ import '../styles/global.css';
         </div>
     </div>
 
-    <!-- Modal: Registrar Gasto (Mismos campos que la app móvil) -->
-    <div id="modal-expense" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4">
+    <!-- Modal: Registrar Gasto (Mismos campos que la app móvil, z-[95] sobre Calculadora y Asistente IA) -->
+    <div id="modal-expense" role="dialog" aria-modal="true" aria-labelledby="modal-expense-title" class="fixed inset-0 z-[95] bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4" style="z-index: 95;">
         <div class="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-slate-200 max-h-[92vh] flex flex-col overflow-hidden">
             <!-- Modal Header -->
             <div class="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-white">
@@ -782,6 +793,19 @@ import '../styles/global.css';
         </div>
     </div>
 
+    <!-- Herramientas Web: Calculadora Cambiaria (z-[90]) y Asistente IA (z-[85]) -->
+    <CalculatorModal />
+    <AiChatDrawer />
+
+    <!-- Toast Global del Panel (z-[110], fondo amarillo y texto negro por DESIGN.md §2.1) -->
+    <div
+        id="panel-toast"
+        role="status"
+        aria-live="polite"
+        class="fixed bottom-5 right-5 z-[110] hidden max-w-sm px-4 py-3 rounded-2xl bg-[#FACC15] border border-[#EAB308] text-slate-900 text-xs sm:text-sm font-bold shadow-xl transition-all"
+        style="z-index: 110;"
+    ></div>
+
     <!-- Client Script: Firebase + Dashboard Logic -->
     <script>
         import { initializeApp } from 'firebase/app';
@@ -805,9 +829,34 @@ import '../styles/global.css';
             updateDoc, 
             enableIndexedDbPersistence 
         } from 'firebase/firestore';
-        import { computeExpenseTotals, computeItemCents } from '../lib/expense-money.js';
+        import { computeExpenseTotals, computeItemCents, computeMonthTotals, calculateSavingsHealth } from '../lib/expense-money.js';
         import { clasificarCategoria, sincronizarCategoriaImpuestos, isTaxDescription, normalizar as normalizarTexto } from '../lib/category-classifier.js';
         import { normalizeProductText, findPriceHistoryFromGastos, evaluatePriceComparison } from '../lib/price-comparator.js';
+        import {
+            RATE_TYPES,
+            parsePositiveAmount,
+            resolveActiveCalculatorRate,
+            convertFromDivisa,
+            convertFromVes,
+            buildSimultaneousComparison,
+            buildCalculatorExpensePrefill,
+        } from '../lib/currency-calculator.js';
+        import {
+            DEFAULT_GATEWAY_URL,
+            INITIAL_CHAT_GREETING,
+            SHOPPING_LIST_WEB_NOTICE,
+            DEFAULT_CHAT_SUGGESTIONS,
+            getVenezuelaTodayIso,
+            getDefaultExpenseDateForMonth,
+            buildSemanticChatContext,
+            isShoppingListQuery,
+            prepareChatExtractions,
+            createExtractionQueue,
+            transitionExtractionItem,
+            sliceRecentChatMessages,
+            formatAssistantMessageHtml,
+            mapChatHttpError,
+        } from '../lib/ai-assistant.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyA5HMxpemkmCC-uKwMIyP9TP3Cxf8MDq8o",
@@ -920,6 +969,22 @@ import '../styles/global.css';
             timestamp: null
         };
 
+        // Toast Global del Panel (z-[110], fondo amarillo y texto negro por DESIGN.md §2.1)
+        let panelToastTimer = null;
+        const showPanelToast = (message, durationMs = 3000) => {
+            const toastEl = document.getElementById('panel-toast');
+            if (!toastEl || !message) return;
+            toastEl.textContent = String(message);
+            toastEl.classList.remove('hidden');
+            if (panelToastTimer) clearTimeout(panelToastTimer);
+            panelToastTimer = setTimeout(() => {
+                toastEl.classList.add('hidden');
+            }, durationMs);
+        };
+
+        // Referencia opcional para refrescar la calculadora cuando llegan tasas en vivo
+        let syncCalculatorRatesUI = null;
+
         const updateRatesTicker = () => {
             const elUsd = document.getElementById('rate-usd-val');
             const elEur = document.getElementById('rate-eur-val');
@@ -927,6 +992,7 @@ import '../styles/global.css';
             if (elUsd) elUsd.textContent = liveRates.usd > 0 ? `Bs. ${liveRates.usd.toFixed(2)}` : 'Bs. --';
             if (elEur) elEur.textContent = liveRates.eur > 0 ? `Bs. ${liveRates.eur.toFixed(2)}` : 'Bs. --';
             if (elUsdt) elUsdt.textContent = liveRates.usdt > 0 ? `Bs. ${liveRates.usdt.toFixed(2)}` : 'Bs. --';
+            if (typeof syncCalculatorRatesUI === 'function') syncCalculatorRatesUI();
         };
 
         const updateLensSelectorUI = () => {
@@ -1351,7 +1417,12 @@ import '../styles/global.css';
 
         // Selector de Mes
         const updateMonthDisplay = () => {
-            currentMonthDisplay.textContent = `${MONTH_NAMES[selectedMonth - 1]} ${selectedYear}`;
+            const label = `${MONTH_NAMES[selectedMonth - 1]} ${selectedYear}`;
+            currentMonthDisplay.textContent = label;
+            const chatSub = document.getElementById('chat-active-month-subtitle');
+            if (chatSub) {
+                chatSub.textContent = `Analizando ${label}`;
+            }
         };
 
         btnPrevMonth?.addEventListener('click', async () => {
@@ -1377,9 +1448,9 @@ import '../styles/global.css';
         });
 
         btnTodayMonth?.addEventListener('click', async () => {
-            const today = new Date();
-            selectedYear = today.getFullYear();
-            selectedMonth = today.getMonth() + 1;
+            const [vetY, vetM] = getVenezuelaTodayIso().split('-').map(Number);
+            selectedYear = vetY;
+            selectedMonth = vetM;
             updateMonthDisplay();
             await loadDashboardData();
         });
@@ -1494,54 +1565,6 @@ import '../styles/global.css';
             }
         };
 
-        // Calculadora de Salud Financiera y Ahorro (Paridad exacta con app móvil)
-        const calculateSavingsHealth = ({
-            presupuestoGeneral,
-            metaAhorro,
-            gastoAcumulado,
-            diaActual,
-            diasTotalesMes,
-            diasGracia = 3
-        }) => {
-            const gen = Math.max(0, Number(presupuestoGeneral) || 0);
-            const metaClamped = Math.max(0, Math.min(Number(metaAhorro) || 0, gen));
-            const limite = Math.max(0, gen - metaClamped);
-            const gasto = Math.max(0, Number(gastoAcumulado) || 0);
-            const disponible = Math.max(0, limite - gasto);
-
-            const totalDias = diasTotalesMes > 0 ? diasTotalesMes : 30;
-            const diasValidos = Math.max(1, Math.min(diaActual, totalDias));
-
-            const gastoDiario = diasValidos > 0 ? (gasto / diasValidos) : 0;
-            const gastoProyectado = gastoDiario * totalDias;
-
-            let status = 'sinMeta';
-            if (metaClamped <= 0) {
-                status = 'sinMeta';
-            } else if (gasto > limite) {
-                status = 'comprometida';
-            } else if (diasValidos <= diasGracia) {
-                status = 'protegida';
-            } else if (gastoProyectado > limite) {
-                status = 'enRiesgo';
-            } else {
-                status = 'protegida';
-            }
-
-            return {
-                presupuestoGeneral: gen,
-                metaAhorro: metaClamped,
-                limiteParaGastar: limite,
-                gastoAcumulado: gasto,
-                disponibleParaGastar: disponible,
-                diasTranscurridos: diasValidos,
-                diasTotalesMes: totalDias,
-                gastoDiarioPromedio: gastoDiario,
-                gastoProyectadoFinDeMes: gastoProyectado,
-                status
-            };
-        };
-
         // Conversión determinista de presupuestos al lente activo (Paridad con SummaryCard y AnalysisScreen)
         const convertBudgetToLens = (amount, fromCurrency, toCurrency) => {
             if (!amount || amount <= 0) return 0;
@@ -1573,48 +1596,7 @@ import '../styles/global.css';
 
         // Renderizado de Métricas Clave (Paridad exacta con DatabaseHelper y SummaryCard)
         const renderMetrics = () => {
-            let sumUsd = 0;
-            let sumVes = 0;
-            let sumUsdt = 0;
-            let sumEur = 0;
-
-            currentGastos.forEach(g => {
-                const totalUsd = (Number(g.total_usd || 0)) / 100.0;
-                const totalOrig = (Number(g.total_original || 0)) / 100.0;
-                const tasa = Number(g.tasa_cambio || 0) > 0 ? Number(g.tasa_cambio) : (liveRates.usd || 1.0);
-
-                sumUsd += totalUsd;
-
-                let totalUsdt = 0;
-                if (g.total_usdt !== undefined && g.total_usdt !== null) {
-                    totalUsdt = (Number(g.total_usdt || 0)) / 100.0;
-                } else if (g.moneda === 'USD') {
-                    totalUsdt = totalUsd;
-                } else {
-                    const tUsdt = Number(g.tasa_usdt || 0) > 0 ? Number(g.tasa_usdt) : (Number(liveRates.usdt || 0) > 0 ? Number(liveRates.usdt) : 0);
-                    totalUsdt = tUsdt > 0 ? (totalOrig / tUsdt) : 0;
-                }
-                sumUsdt += totalUsdt;
-
-                let totalEur = 0;
-                if (g.total_eur !== undefined && g.total_eur !== null) {
-                    totalEur = (Number(g.total_eur || 0)) / 100.0;
-                } else if (g.moneda === 'EUR') {
-                    totalEur = totalOrig;
-                } else {
-                    const tEur = Number(g.tasa_eur || 0) > 0 ? Number(g.tasa_eur) : (Number(liveRates.eur || 0) > 0 ? Number(liveRates.eur) : 0);
-                    totalEur = tEur > 0 ? (g.moneda === 'VES' ? totalOrig / tEur : (totalUsd * (tasa > 0 ? tasa : 1.0)) / tEur) : 0;
-                }
-                sumEur += totalEur;
-
-                if (g.moneda === 'VES') {
-                    // Inmutabilidad del bolívar: los gastos en VES suman su monto original
-                    sumVes += totalOrig;
-                } else {
-                    // Gastos en divisas (USD, EUR, USDT) se convierten determinísticamente con su tasa
-                    sumVes += (totalUsd * (tasa > 0 ? tasa : 1.0));
-                }
-            });
+            const { sumUsd, sumVes, sumUsdt, sumEur } = computeMonthTotals(currentGastos, liveRates);
 
             const budgetCurrency = currentPresupuesto.moneda || 'USD';
             const displayCurrency = activeLens || budgetCurrency;
@@ -1631,12 +1613,12 @@ import '../styles/global.css';
 
             updateLensSelectorUI();
 
-            // Fechas y Días
-            const today = new Date();
-            const isCurrentMonth = (today.getFullYear() === selectedYear && (today.getMonth() + 1) === selectedMonth);
-            const diasTotalesMes = new Date(selectedYear, selectedMonth, 0).getDate();
-            const diaActual = isCurrentMonth ? today.getDate() : diasTotalesMes;
-            const diasRestantes = isCurrentMonth ? Math.max(0, diasTotalesMes - today.getDate()) : 0;
+            // Fechas y Días (calendario VET America/Caracas, Criterio 18)
+            const [vetYear, vetMonth, vetDay] = getVenezuelaTodayIso().split('-').map(Number);
+            const isCurrentMonth = (vetYear === selectedYear && vetMonth === selectedMonth);
+            const diasTotalesMes = new Date(Date.UTC(selectedYear, selectedMonth, 0)).getUTCDate();
+            const diaActual = isCurrentMonth ? vetDay : diasTotalesMes;
+            const diasRestantes = isCurrentMonth ? Math.max(0, diasTotalesMes - vetDay) : 0;
 
             const effectiveGeneralBudget = convertBudgetToLens(currentPresupuesto.general, budgetCurrency, displayCurrency);
             const effectiveMetaAhorro = convertBudgetToLens(currentPresupuesto.meta_ahorro || 0, budgetCurrency, displayCurrency);
@@ -3001,13 +2983,12 @@ import '../styles/global.css';
             updateCurrencyDisplay();
         });
 
-        // Selector de Fecha e Histórico DolarAPI con guarda de carrera
-        modalExpFecha?.addEventListener('change', async () => {
-            const f = modalExpFecha.value;
+        // Helper extraído para consultar tasas históricas de una fecha conservando UI y race guard (Criterio 6 / I3)
+        const loadHistoricalRatesForExpenseDate = async (f, { resetManualOverrides = false } = {}) => {
             if (!f) return;
 
             const myReqId = ++dateRateRequestId;
-            const todayStr = new Date().toISOString().substring(0, 10);
+            const todayStr = getVenezuelaTodayIso();
             const isToday = (f === todayStr);
 
             if (isToday) {
@@ -3019,8 +3000,10 @@ import '../styles/global.css';
                 officialRates = { ...activeRates };
 
                 if (modalExpFechaInfo) modalExpFechaInfo.classList.add('hidden');
-                tasaModificadaManualmente = false;
-                bolivaresAjustadosManualmente = false;
+                if (resetManualOverrides) {
+                    tasaModificadaManualmente = false;
+                    bolivaresAjustadosManualmente = false;
+                }
                 updateCurrencyDisplay();
                 return;
             }
@@ -3047,8 +3030,10 @@ import '../styles/global.css';
                 if (modalExpFechaInfoText) {
                     modalExpFechaInfoText.textContent = `Se usará la tasa oficial del ${refDate}`;
                 }
-                tasaModificadaManualmente = false;
-                bolivaresAjustadosManualmente = false;
+                if (resetManualOverrides) {
+                    tasaModificadaManualmente = false;
+                    bolivaresAjustadosManualmente = false;
+                }
                 updateCurrencyDisplay();
             } else {
                 if (!editingGastoId) {
@@ -3058,6 +3043,11 @@ import '../styles/global.css';
                     }
                 }
             }
+        };
+
+        // Selector de Fecha e Histórico DolarAPI con guarda de carrera
+        modalExpFecha?.addEventListener('change', async () => {
+            await loadHistoricalRatesForExpenseDate(modalExpFecha.value, { resetManualOverrides: true });
         });
 
         btnAddItem?.addEventListener('click', () => {
@@ -3072,10 +3062,24 @@ import '../styles/global.css';
             renderExpenseItems();
         });
 
-        const openExpenseModal = () => {
+        // Hooks de sincronización con la cola de compras del Asistente IA (Criterios 2 y 17)
+        let activeQueueItemId = null;
+        let onChatQueueExpenseSaved = null;
+        let onChatQueueModalClosedWithoutSave = null;
+
+        const openExpenseModal = (prefill = null) => {
+            const isValidPrefill = Boolean(
+                prefill &&
+                typeof prefill === 'object' &&
+                !(typeof Event !== 'undefined' && prefill instanceof Event) &&
+                prefill.__isExpensePrefill === true
+            );
+
             editingGastoId = null;
+            activeQueueItemId = isValidPrefill && prefill.queueItemId ? String(prefill.queueItemId) : null;
+
             const modalTitle = document.getElementById('modal-expense-title');
-            if (modalTitle) modalTitle.textContent = "Registrar gasto";
+            if (modalTitle) modalTitle.textContent = isValidPrefill ? "Revisar y guardar gasto" : "Registrar gasto";
             if (btnSaveExpenseModal) {
                 const sp = btnSaveExpenseModal.querySelector('span');
                 if (sp) sp.textContent = "Guardar Gasto";
@@ -3100,31 +3104,103 @@ import '../styles/global.css';
             };
             officialRates = { ...activeRates };
 
-            // Cálculo seguro de fecha (evita desbordamientos tipo 31 de febrero)
-            const today = new Date();
-            const isCurrentMonth = (today.getFullYear() === selectedYear && (today.getMonth() + 1) === selectedMonth);
-            let dayVal;
-            if (isCurrentMonth) {
-                dayVal = today.getDate();
+            const todayCaracasIso = getVenezuelaTodayIso();
+            const defaultFecha = getDefaultExpenseDateForMonth({
+                selectedYear,
+                selectedMonth,
+                todayCaracasIso,
+            });
+            let targetFecha = defaultFecha;
+
+            if (isValidPrefill) {
+                if (modalExpComercio && prefill.comercio) {
+                    modalExpComercio.value = String(prefill.comercio);
+                }
+
+                expMoneda = ['USD', 'VES', 'USDT', 'EUR'].includes(prefill.moneda) ? prefill.moneda : 'USD';
+                if (expMoneda === 'USD' || expMoneda === 'EUR') {
+                    let liq = prefill.metodoLiquidacion || 'DIVISA';
+                    if (expMoneda === 'EUR' && liq === 'BS_USDT') liq = 'BS_BCV';
+                    selectedLiq = ['DIVISA', 'BS_BCV', 'BS_USDT'].includes(liq) ? liq : 'DIVISA';
+                } else {
+                    selectedLiq = 'DIVISA';
+                }
+
+                const totalStr = prefill.totalOriginalFixed
+                    ? String(prefill.totalOriginalFixed)
+                    : (Number(prefill.totalOriginal) > 0 ? Number(prefill.totalOriginal).toFixed(2) : '');
+                if (modalExpTotal) modalExpTotal.value = totalStr;
+
+                // Criterio 15 (I4): preservar total extraído/calculado para que tryAutoSumItems no lo borre
+                totalEditadoManualmente = true;
+
+                // Criterio 14 (B4): Personalizada aplica rateOverride en activeRates sin tocar officialRates
+                if (prefill.rateOverride && Number(prefill.rateOverride.rate) > 1.0) {
+                    const overrideRate = Number(prefill.rateOverride.rate);
+                    const overrideCur = prefill.rateOverride.currency;
+                    if (overrideCur === 'EUR') {
+                        activeRates.eur = overrideRate;
+                    } else if (overrideCur === 'USDT') {
+                        activeRates.usd = overrideRate;
+                        activeRates.usdt = overrideRate;
+                    } else {
+                        activeRates.usd = overrideRate;
+                    }
+                    activeRates.dateLabel = `Personalizada (Bs. ${overrideRate.toFixed(2)})`;
+                    tasaModificadaManualmente = true;
+                    if (modalExpTasa) modalExpTasa.value = overrideRate.toFixed(2);
+                }
+
+                if (prefill.fecha && /^\d{4}-\d{2}-\d{2}$/.test(prefill.fecha)) {
+                    targetFecha = prefill.fecha > todayCaracasIso ? todayCaracasIso : prefill.fecha;
+                }
+
+                if (Array.isArray(prefill.items) && prefill.items.length > 0) {
+                    modalExpenseItems = prefill.items.map((it) => {
+                        const cant = Number(it.cantidad) > 0 ? Number(it.cantidad) : 1;
+                        const totNum = Number(it.total);
+                        const prNum = Number(it.precio);
+                        const safeTot = Number.isFinite(totNum) && totNum >= 0
+                            ? totNum
+                            : (Number.isFinite(prNum) && prNum >= 0 ? prNum * cant : 0);
+                        const safePr = Number.isFinite(prNum) && prNum >= 0
+                            ? prNum
+                            : (cant > 0 ? safeTot / cant : safeTot);
+                        return {
+                            descripcion: String(it.descripcion || ''),
+                            cantidad: cant,
+                            precio: safePr.toFixed(2),
+                            total: safeTot.toFixed(2),
+                            categoria: normalizarCategoria(it.categoria || 'Otros'),
+                            categoriaManual: Boolean(it.categoriaManual),
+                        };
+                    });
+                } else {
+                    modalExpenseItems = [
+                        { descripcion: '', cantidad: 1, precio: '', total: '', categoria: 'Otros', categoriaManual: false }
+                    ];
+                }
             } else {
-                const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
-                dayVal = Math.min(today.getDate(), daysInMonth);
+                // Iniciar con 1 ítem vacío
+                modalExpenseItems = [
+                    { descripcion: '', cantidad: 1, precio: '', total: '', categoria: 'Otros', categoriaManual: false }
+                ];
             }
-            const monthStr = String(selectedMonth).padStart(2, '0');
-            const dayStr = String(dayVal).padStart(2, '0');
+
             if (modalExpFecha) {
-                modalExpFecha.value = `${selectedYear}-${monthStr}-${dayStr}`;
-                modalExpFecha.max = today.toISOString().substring(0, 10);
+                modalExpFecha.value = targetFecha;
+                modalExpFecha.max = todayCaracasIso;
             }
             if (modalExpFechaInfo) modalExpFechaInfo.classList.add('hidden');
 
-            // Iniciar con 1 ítem vacío
-            modalExpenseItems = [
-                { descripcion: '', cantidad: 1, precio: '', total: '', categoria: 'Otros', categoriaManual: false }
-            ];
-
             renderExpenseItems();
             updateCurrencyDisplay();
+            checkDiscrepancy();
+
+            // Si la fecha del prefill es pasada y no tiene tasa personalizada bloqueada, consultar tasa histórica oficial
+            if (isValidPrefill && targetFecha !== todayCaracasIso && !prefill.customRateLocked) {
+                loadHistoricalRatesForExpenseDate(targetFecha, { resetManualOverrides: false });
+            }
 
             if (modalExpense) {
                 modalExpense.classList.remove('hidden');
@@ -3135,6 +3211,8 @@ import '../styles/global.css';
         const openEditExpenseModal = (gasto) => {
             if (!gasto) return;
             editingGastoId = gasto.id;
+            // Criterio 17 (I6): limpiar cola del chat al abrir edición manual
+            activeQueueItemId = null;
 
             const modalTitle = document.getElementById('modal-expense-title');
             if (modalTitle) modalTitle.textContent = "Editar gasto";
@@ -3146,7 +3224,7 @@ import '../styles/global.css';
             if (modalExpComercio) modalExpComercio.value = gasto.comercio || '';
             if (modalExpFecha) {
                 modalExpFecha.value = gasto.fecha || '';
-                modalExpFecha.max = new Date().toISOString().substring(0, 10);
+                modalExpFecha.max = getVenezuelaTodayIso();
             }
             if (modalExpFechaInfo) modalExpFechaInfo.classList.add('hidden');
 
@@ -3252,15 +3330,54 @@ import '../styles/global.css';
             }
         };
 
-        const closeExpenseModal = () => {
+        const closeExpenseModal = ({ reason = 'user' } = {}) => {
             if (modalExpense) {
                 modalExpense.classList.add('hidden');
                 modalExpense.classList.remove('flex');
             }
+            // Criterio 2 (B2): solo revertir a 'pending' si el cierre fue sin guardar
+            if (reason !== 'saved' && activeQueueItemId) {
+                const closedId = activeQueueItemId;
+                activeQueueItemId = null;
+                if (typeof onChatQueueModalClosedWithoutSave === 'function') {
+                    onChatQueueModalClosedWithoutSave(closedId);
+                }
+            }
         };
 
-        btnOpenExpenseModal?.addEventListener('click', openExpenseModal);
-        btnCloseExpenseModal?.addEventListener('click', closeExpenseModal);
+        // Helper unificado para ambas salidas exitosas de executeSaveExpense (metadatos + guardado completo)
+        const finalizeExpenseSaveAndClose = async (gastoId, fecha) => {
+            const savedQueueId = activeQueueItemId;
+            activeQueueItemId = null;
+            if (savedQueueId && typeof onChatQueueExpenseSaved === 'function') {
+                onChatQueueExpenseSaved(savedQueueId, gastoId);
+            }
+
+            closeExpenseModal({ reason: 'saved' });
+
+            // Si la fecha guardada pertenece a otro mes, navegar ANTES de loadDashboardData()
+            let switchedMonthLabel = null;
+            const mMatch = /^(\d{4})-(\d{2})-\d{2}$/.exec(String(fecha || ''));
+            if (mMatch) {
+                const targetY = Number(mMatch[1]);
+                const targetM = Number(mMatch[2]);
+                if (targetY !== selectedYear || targetM !== selectedMonth) {
+                    selectedYear = targetY;
+                    selectedMonth = targetM;
+                    updateMonthDisplay();
+                    switchedMonthLabel = `${MONTH_NAMES[targetM - 1]} ${targetY}`;
+                }
+            }
+
+            await loadDashboardData();
+
+            if (switchedMonthLabel) {
+                showPanelToast(`Gasto guardado en ${switchedMonthLabel}`);
+            }
+        };
+
+        btnOpenExpenseModal?.addEventListener('click', () => openExpenseModal());
+        btnCloseExpenseModal?.addEventListener('click', () => closeExpenseModal({ reason: 'user' }));
 
         // Procedimiento de guardado definitivo con paridad matemática al céntimo
         const executeSaveExpense = async () => {
@@ -3367,8 +3484,7 @@ import '../styles/global.css';
                             actualizado_en: new Date().toISOString(),
                         };
                         await updateDoc(docRef, metadataPayload);
-                        closeExpenseModal();
-                        await loadDashboardData();
+                        await finalizeExpenseSaveAndClose(gastoId, fecha);
                         return;
                     } catch (err) {
                         console.error("Error al actualizar metadatos del gasto:", err);
@@ -3416,8 +3532,7 @@ import '../styles/global.css';
 
                 await setDoc(docRef, payload, { merge: true });
 
-                closeExpenseModal();
-                await loadDashboardData();
+                await finalizeExpenseSaveAndClose(gastoId, fecha);
             } catch (err) {
                 console.error("Error al registrar o actualizar gasto:", err);
                 alert("No se pudo guardar el gasto.");
@@ -3479,6 +3594,858 @@ import '../styles/global.css';
             }
 
             await executeSaveExpense();
+        });
+
+        // =========================================================================
+        // ENTREGA 2: CONTROLADOR DE LA CALCULADORA CAMBIARIA WEB
+        // =========================================================================
+        const modalCalculator = document.getElementById('modal-calculator');
+        const btnOpenCalculator = document.getElementById('btn-open-calculator');
+        const btnCloseCalculator = document.getElementById('btn-close-calculator');
+        const calcRateChips = document.querySelectorAll('.calc-rate-chip');
+        const calcCustomRateBox = document.getElementById('calc-custom-rate-box');
+        const calcCustomRateInput = document.getElementById('calc-custom-rate-input');
+        const btnCalcClearCustom = document.getElementById('btn-calc-clear-custom');
+        const calcDivisaBlock = document.getElementById('calc-divisa-block');
+        const calcVesBlock = document.getElementById('calc-ves-block');
+        const calcDivisaLabel = document.getElementById('calc-divisa-label');
+        const calcDivisaPrefix = document.getElementById('calc-divisa-prefix');
+        const calcDivisaInput = document.getElementById('calc-divisa-input');
+        const btnCalcClearDivisa = document.getElementById('btn-calc-clear-divisa');
+        const calcVesInput = document.getElementById('calc-ves-input');
+        const btnCalcClearVes = document.getElementById('btn-calc-clear-ves');
+        const btnCalcSwap = document.getElementById('btn-calc-swap');
+        const calcSwapRateLabel = document.getElementById('calc-swap-rate-label');
+        const btnCalcCopy = document.getElementById('btn-calc-copy');
+        const btnCalcCopyLabel = document.getElementById('btn-calc-copy-label');
+        const btnCalcRegisterExpense = document.getElementById('btn-calc-register-expense');
+        const calcCompBaseLabel = document.getElementById('calc-comp-base-label');
+        const calcCompRows = document.getElementById('calc-comp-rows');
+        const calcBrechaText = document.getElementById('calc-brecha-text');
+
+        let calcTipoTasa = RATE_TYPES.DOLAR_BCV;
+        let calcSelectedCurrency = 'USD';
+        let calcIsVesOnTop = false;
+        let calcIsSyncing = false;
+
+        const formatVesLocale = (num) => {
+            if (!Number.isFinite(num)) return '—';
+            return num.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        };
+
+        const getCalcActiveRate = () => resolveActiveCalculatorRate({
+            tipoTasa: calcTipoTasa,
+            selectedCurrency: calcSelectedCurrency,
+            rates: liveRates,
+            customRate: calcCustomRateInput?.value || '',
+        });
+
+        const updateCalcClearButtons = () => {
+            const toggleClear = (btn, val) => {
+                if (!btn) return;
+                if (String(val || '').length > 0) {
+                    btn.classList.remove('hidden');
+                    btn.classList.add('flex');
+                } else {
+                    btn.classList.add('hidden');
+                    btn.classList.remove('flex');
+                }
+            };
+            toggleClear(btnCalcClearDivisa, calcDivisaInput?.value);
+            toggleClear(btnCalcClearVes, calcVesInput?.value);
+            toggleClear(btnCalcClearCustom, calcCustomRateInput?.value);
+        };
+
+        const renderCalcComparison = () => {
+            const comp = buildSimultaneousComparison({
+                rawDivisa: calcDivisaInput?.value || '',
+                rates: liveRates,
+                selectedTipoTasa: calcTipoTasa,
+            });
+
+            if (calcCompBaseLabel) {
+                const baseFormatted = comp.montoBase.toLocaleString('es-VE', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                });
+                calcCompBaseLabel.textContent = `Para ${baseFormatted} unidades en cada tasa`;
+            }
+
+            if (calcCompRows) {
+                calcCompRows.replaceChildren();
+                for (const row of comp.rows) {
+                    const rowEl = document.createElement('div');
+                    rowEl.className = `flex items-center justify-between gap-2 py-2 px-2.5 rounded-xl ${row.isHighlighted ? 'bg-slate-100' : ''}`;
+
+                    const left = document.createElement('div');
+                    left.className = 'min-w-0';
+
+                    const titleEl = document.createElement('div');
+                    titleEl.className = `text-xs sm:text-sm ${row.isHighlighted ? 'font-bold' : 'font-medium'} text-slate-900 truncate`;
+                    titleEl.textContent = row.title;
+
+                    const rateEl = document.createElement('div');
+                    rateEl.className = 'text-[11px] font-mono text-slate-500';
+                    rateEl.textContent = row.rate > 1.0 ? `Bs. ${row.rate.toFixed(2)}` : '—';
+
+                    left.appendChild(titleEl);
+                    left.appendChild(rateEl);
+
+                    const totalEl = document.createElement('div');
+                    totalEl.className = 'text-xs sm:text-sm font-bold font-mono text-slate-900 shrink-0 tabular-nums';
+                    totalEl.textContent = row.totalBs !== null ? `Bs. ${formatVesLocale(row.totalBs)}` : '—';
+
+                    rowEl.appendChild(left);
+                    rowEl.appendChild(totalEl);
+                    calcCompRows.appendChild(rowEl);
+                }
+            }
+
+            if (calcBrechaText) {
+                if (comp.brechaUsdtBcv !== null) {
+                    const sign = comp.brechaUsdtBcv >= 0 ? '+' : '';
+                    calcBrechaText.textContent = `Brecha USDT vs Dólar BCV: ${sign}${comp.brechaUsdtBcv.toFixed(1)}%`;
+                } else {
+                    calcBrechaText.textContent = 'Brecha USDT vs Dólar BCV: —';
+                }
+            }
+        };
+
+        const renderCalculatorUI = () => {
+            const { rate, currency } = getCalcActiveRate();
+            calcSelectedCurrency = currency;
+
+            // Subtítulos de los 4 chips
+            const subUsd = document.getElementById('calc-chip-sub-usd');
+            const subEur = document.getElementById('calc-chip-sub-eur');
+            const subUsdt = document.getElementById('calc-chip-sub-usdt');
+            const subCustom = document.getElementById('calc-chip-sub-custom');
+            const customVal = parsePositiveAmount(calcCustomRateInput?.value || '');
+            if (subUsd) subUsd.textContent = liveRates.usd > 1.0 ? `Bs. ${liveRates.usd.toFixed(2)}` : '—';
+            if (subEur) subEur.textContent = liveRates.eur > 1.0 ? `Bs. ${liveRates.eur.toFixed(2)}` : '—';
+            if (subUsdt) subUsdt.textContent = liveRates.usdt > 1.0 ? `Bs. ${liveRates.usdt.toFixed(2)}` : '—';
+            if (subCustom) subCustom.textContent = customVal && customVal > 1.0 ? `Bs. ${customVal.toFixed(2)}` : 'Manual';
+
+            // Estilos de chips (amarillo + texto negro por DESIGN.md §2.1)
+            calcRateChips.forEach((chip) => {
+                const isSelected = chip.getAttribute('data-calc-rate') === calcTipoTasa;
+                chip.setAttribute('aria-checked', String(isSelected));
+                chip.className = isSelected
+                    ? 'calc-rate-chip text-left px-3 py-2 rounded-xl border transition-all bg-[#FBF18F] border-[#FACC15] text-slate-900 shadow-sm'
+                    : 'calc-rate-chip text-left px-3 py-2 rounded-xl border transition-all bg-white border-slate-200 text-slate-800 hover:border-slate-300';
+            });
+
+            // Mostrar/ocultar input de tasa personalizada
+            if (calcCustomRateBox) {
+                calcCustomRateBox.classList.toggle('hidden', calcTipoTasa !== RATE_TYPES.CUSTOM);
+            }
+
+            // Etiquetas y prefijos de divisa
+            if (calcDivisaLabel) calcDivisaLabel.textContent = `Monto en ${currency}`;
+            if (calcDivisaPrefix) {
+                calcDivisaPrefix.textContent = currency === 'EUR' ? '€' : (currency === 'USDT' ? '₮' : '$');
+            }
+            if (calcSwapRateLabel) {
+                calcSwapRateLabel.textContent = rate > 1.0
+                    ? `1 ${currency} = Bs. ${rate.toFixed(2)}`
+                    : `1 ${currency} = —`;
+            }
+
+            // Orden visual (Divisa arriba vs Bolívares arriba)
+            if (calcDivisaBlock && calcVesBlock) {
+                calcDivisaBlock.classList.toggle('order-1', !calcIsVesOnTop);
+                calcDivisaBlock.classList.toggle('order-3', calcIsVesOnTop);
+                calcVesBlock.classList.toggle('order-3', !calcIsVesOnTop);
+                calcVesBlock.classList.toggle('order-1', calcIsVesOnTop);
+            }
+
+            if (btnCalcCopyLabel) {
+                btnCalcCopyLabel.textContent = calcIsVesOnTop ? `Copiar ${currency}` : 'Copiar Bs.';
+            }
+
+            updateCalcClearButtons();
+            renderCalcComparison();
+        };
+
+        const recalcCalcFromDivisa = () => {
+            if (calcIsSyncing) return;
+            calcIsSyncing = true;
+            const { rate } = getCalcActiveRate();
+            if (calcVesInput) {
+                calcVesInput.value = convertFromDivisa(calcDivisaInput?.value || '', rate);
+            }
+            calcIsSyncing = false;
+            renderCalculatorUI();
+        };
+
+        const recalcCalcFromVes = () => {
+            if (calcIsSyncing) return;
+            calcIsSyncing = true;
+            const { rate } = getCalcActiveRate();
+            if (calcDivisaInput) {
+                calcDivisaInput.value = convertFromVes(calcVesInput?.value || '', rate);
+            }
+            calcIsSyncing = false;
+            renderCalculatorUI();
+        };
+
+        syncCalculatorRatesUI = () => {
+            if (modalCalculator && !modalCalculator.classList.contains('hidden')) {
+                if (calcIsVesOnTop) recalcCalcFromVes();
+                else recalcCalcFromDivisa();
+            }
+        };
+
+        const openCalculatorModal = (initialRateType = null) => {
+            if (initialRateType && Object.values(RATE_TYPES).includes(initialRateType)) {
+                calcTipoTasa = initialRateType;
+                if (initialRateType === RATE_TYPES.EURO_BCV) calcSelectedCurrency = 'EUR';
+                else if (initialRateType === RATE_TYPES.USDT_P2P) calcSelectedCurrency = 'USDT';
+                else if (initialRateType === RATE_TYPES.DOLAR_BCV) calcSelectedCurrency = 'USD';
+            }
+
+            if (calcIsVesOnTop) recalcCalcFromVes();
+            else recalcCalcFromDivisa();
+
+            if (modalCalculator) {
+                modalCalculator.classList.remove('hidden');
+                modalCalculator.classList.add('flex');
+                const focusTarget = calcTipoTasa === RATE_TYPES.CUSTOM && !calcCustomRateInput?.value
+                    ? calcCustomRateInput
+                    : (calcIsVesOnTop ? calcVesInput : calcDivisaInput);
+                setTimeout(() => {
+                    focusTarget?.focus();
+                    if (focusTarget?.value) focusTarget.select();
+                }, 30);
+            }
+        };
+
+        const closeCalculatorModal = () => {
+            if (modalCalculator) {
+                modalCalculator.classList.add('hidden');
+                modalCalculator.classList.remove('flex');
+            }
+        };
+
+        btnOpenCalculator?.addEventListener('click', () => openCalculatorModal());
+        btnCloseCalculator?.addEventListener('click', closeCalculatorModal);
+        modalCalculator?.addEventListener('click', (e) => {
+            if (e.target === modalCalculator) closeCalculatorModal();
+        });
+
+        // Pastillas interactivas en la barra de Tasas de Referencia
+        document.querySelectorAll('.rate-pill-trigger').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const rateType = btn.getAttribute('data-open-calc-rate');
+                openCalculatorModal(rateType);
+            });
+        });
+
+        calcRateChips.forEach((chip) => {
+            chip.addEventListener('click', () => {
+                const nextType = chip.getAttribute('data-calc-rate');
+                if (!nextType) return;
+                calcTipoTasa = nextType;
+                if (nextType === RATE_TYPES.EURO_BCV) calcSelectedCurrency = 'EUR';
+                else if (nextType === RATE_TYPES.USDT_P2P) calcSelectedCurrency = 'USDT';
+                else if (nextType === RATE_TYPES.DOLAR_BCV) calcSelectedCurrency = 'USD';
+
+                if (calcIsVesOnTop) recalcCalcFromVes();
+                else recalcCalcFromDivisa();
+
+                if (nextType === RATE_TYPES.CUSTOM && !calcCustomRateInput?.value.trim()) {
+                    setTimeout(() => calcCustomRateInput?.focus(), 20);
+                }
+            });
+        });
+
+        calcDivisaInput?.addEventListener('input', recalcCalcFromDivisa);
+        calcVesInput?.addEventListener('input', recalcCalcFromVes);
+        calcCustomRateInput?.addEventListener('input', () => {
+            if (calcIsVesOnTop) recalcCalcFromVes();
+            else recalcCalcFromDivisa();
+        });
+
+        [calcDivisaInput, calcVesInput, calcCustomRateInput].forEach((inp) => {
+            inp?.addEventListener('focus', () => {
+                if (inp.value) inp.select();
+            });
+        });
+
+        btnCalcClearDivisa?.addEventListener('click', () => {
+            if (calcDivisaInput) calcDivisaInput.value = '';
+            recalcCalcFromDivisa();
+            calcDivisaInput?.focus();
+        });
+
+        btnCalcClearVes?.addEventListener('click', () => {
+            if (calcVesInput) calcVesInput.value = '';
+            recalcCalcFromVes();
+            calcVesInput?.focus();
+        });
+
+        btnCalcClearCustom?.addEventListener('click', () => {
+            if (calcCustomRateInput) calcCustomRateInput.value = '';
+            if (calcIsVesOnTop) recalcCalcFromVes();
+            else recalcCalcFromDivisa();
+            calcCustomRateInput?.focus();
+        });
+
+        btnCalcSwap?.addEventListener('click', () => {
+            calcIsVesOnTop = !calcIsVesOnTop;
+            renderCalculatorUI();
+            const target = calcIsVesOnTop ? calcVesInput : calcDivisaInput;
+            setTimeout(() => {
+                target?.focus();
+                if (target?.value) target.select();
+            }, 20);
+        });
+
+        btnCalcCopy?.addEventListener('click', async () => {
+            const { currency } = getCalcActiveRate();
+            const rawTarget = calcIsVesOnTop ? calcDivisaInput?.value : calcVesInput?.value;
+            const parsed = parsePositiveAmount(rawTarget || '');
+            if (parsed === null) {
+                showPanelToast('Ingresa un monto válido para copiar.');
+                return;
+            }
+            const textToCopy = parsed.toFixed(2);
+            try {
+                await navigator.clipboard.writeText(textToCopy);
+                const msg = calcIsVesOnTop
+                    ? `Monto en ${currency} copiado: ${currency} ${textToCopy}`
+                    : `Monto en Bs. copiado: Bs. ${formatVesLocale(parsed)}`;
+                showPanelToast(msg);
+            } catch {
+                showPanelToast(`Valor listo: ${textToCopy}`);
+            }
+        });
+
+        btnCalcRegisterExpense?.addEventListener('click', () => {
+            const todayCaracasIso = getVenezuelaTodayIso();
+            const defaultFechaIso = getDefaultExpenseDateForMonth({
+                selectedYear,
+                selectedMonth,
+                todayCaracasIso,
+            });
+            const res = buildCalculatorExpensePrefill({
+                isVesOnTop: calcIsVesOnTop,
+                rawDivisa: calcDivisaInput?.value || '',
+                rawVes: calcVesInput?.value || '',
+                tipoTasa: calcTipoTasa,
+                selectedCurrency: calcSelectedCurrency,
+                rates: liveRates,
+                customRate: calcCustomRateInput?.value || '',
+                defaultFechaIso,
+            });
+
+            if (!res.ok || !res.prefill) {
+                showPanelToast(res.error || 'Ingresa un monto válido para registrar el gasto.');
+                return;
+            }
+
+            closeCalculatorModal();
+            openExpenseModal(res.prefill);
+        });
+
+        // =========================================================================
+        // ENTREGA 3: CONTROLADOR DEL ASISTENTE IA FINANCIERO Y COLA DE COMPRAS
+        // =========================================================================
+        const drawerAiChat = document.getElementById('drawer-ai-chat');
+        const drawerAiChatBackdrop = document.getElementById('drawer-ai-chat-backdrop');
+        const btnOpenChat = document.getElementById('btn-open-chat');
+        const btnCloseChat = document.getElementById('btn-close-chat');
+        const btnChatReset = document.getElementById('btn-chat-reset');
+        const chatMessagesList = document.getElementById('chat-messages-list');
+        const chatLoadingIndicator = document.getElementById('chat-loading-indicator');
+        const chatSuggestionsBar = document.getElementById('chat-suggestions-bar');
+        const formChatInput = document.getElementById('form-chat-input');
+        const chatInputTextarea = document.getElementById('chat-input-textarea');
+        const btnChatSend = document.getElementById('btn-chat-send');
+
+        const modalChatResetConfirm = document.getElementById('modal-chat-reset-confirm');
+        const btnChatResetCancel = document.getElementById('btn-chat-reset-cancel');
+        const btnChatResetConfirm = document.getElementById('btn-chat-reset-confirm');
+        const modalChatReportConfirm = document.getElementById('modal-chat-report-confirm');
+        const btnChatReportCancel = document.getElementById('btn-chat-report-cancel');
+        const btnChatReportConfirm = document.getElementById('btn-chat-report-confirm');
+
+        let chatMessages = [
+            { id: 'greeting_0', role: 'assistant', text: INITIAL_CHAT_GREETING, queue: null }
+        ];
+        let chatIsLoading = false;
+        let chatBatchCounter = 0;
+
+        const scrollChatToBottom = () => {
+            if (chatMessagesList) {
+                chatMessagesList.scrollTop = chatMessagesList.scrollHeight;
+            }
+        };
+
+        const setChatLoading = (loading) => {
+            chatIsLoading = loading;
+            if (chatLoadingIndicator) {
+                chatLoadingIndicator.classList.toggle('hidden', !loading);
+            }
+            if (btnChatSend) btnChatSend.disabled = loading;
+            if (chatInputTextarea) chatInputTextarea.disabled = loading;
+            chatSuggestionsBar?.querySelectorAll('button').forEach((b) => {
+                b.disabled = loading;
+            });
+            if (loading) scrollChatToBottom();
+        };
+
+        const findQueueOwnerMessage = (itemId) => {
+            for (const msg of chatMessages) {
+                if (Array.isArray(msg.queue) && msg.queue.some((q) => q.id === itemId)) {
+                    return msg;
+                }
+            }
+            return null;
+        };
+
+        const renderChatMessages = () => {
+            if (!chatMessagesList) return;
+            chatMessagesList.replaceChildren();
+
+            for (const msg of chatMessages) {
+                const isUser = msg.role === 'user';
+                const row = document.createElement('div');
+                row.className = `flex ${isUser ? 'justify-end' : 'justify-start'}`;
+
+                const bubble = document.createElement('div');
+                bubble.className = isUser
+                    ? 'max-w-[85%] rounded-2xl rounded-tr-sm px-4 py-2.5 bg-[#FBF18F] border border-[#FACC15] text-slate-900 text-sm leading-relaxed shadow-xs'
+                    : 'max-w-[90%] rounded-2xl rounded-tl-sm px-4 py-3 bg-white border border-slate-200 text-slate-900 text-sm leading-relaxed shadow-xs space-y-2.5';
+
+                const textDiv = document.createElement('div');
+                if (isUser) {
+                    textDiv.textContent = msg.text;
+                    textDiv.className = 'whitespace-pre-wrap break-words';
+                } else {
+                    // formatAssistantMessageHtml aplica escapeHtml estricto antes de formatear **negrita**
+                    textDiv.innerHTML = formatAssistantMessageHtml(msg.text);
+                    textDiv.className = 'break-words';
+                }
+                bubble.appendChild(textDiv);
+
+                // Tarjetas seguras de cola de compras múltiples (1..N) construidas con textContent (cero innerHTML)
+                if (!isUser && Array.isArray(msg.queue) && msg.queue.length > 0) {
+                    const cardsWrap = document.createElement('div');
+                    cardsWrap.className = 'space-y-2 pt-1';
+
+                    for (const qItem of msg.queue) {
+                        const prefill = qItem.prefill;
+                        const card = document.createElement('div');
+                        card.className = 'p-3 rounded-xl bg-[#FFFDF5] border border-[#FEF08A] space-y-2';
+
+                        const topLine = document.createElement('div');
+                        topLine.className = 'flex items-start justify-between gap-2';
+
+                        const infoCol = document.createElement('div');
+                        infoCol.className = 'min-w-0';
+
+                        const commerceEl = document.createElement('div');
+                        commerceEl.className = 'text-xs font-bold text-slate-900 truncate';
+                        commerceEl.textContent = `${qItem.total > 1 ? `(${qItem.index}/${qItem.total}) ` : ''}${prefill.comercio || 'Compra general'}`;
+
+                        const metaEl = document.createElement('div');
+                        metaEl.className = 'text-[11px] text-slate-600 mt-0.5';
+                        metaEl.textContent = `${prefill.fecha} · ${formatMoney(prefill.totalOriginal, prefill.moneda)}`;
+
+                        infoCol.appendChild(commerceEl);
+                        infoCol.appendChild(metaEl);
+
+                        const badge = document.createElement('span');
+                        if (qItem.status === 'saved') {
+                            badge.className = 'shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800';
+                            badge.textContent = 'Guardada ✓';
+                        } else if (qItem.status === 'discarded') {
+                            badge.className = 'shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-600';
+                            badge.textContent = 'Descartada';
+                        } else if (qItem.status === 'opened') {
+                            badge.className = 'shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FEF08A] text-slate-900';
+                            badge.textContent = 'En revisión...';
+                        } else {
+                            badge.className = 'shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900';
+                            badge.textContent = 'Pendiente';
+                        }
+
+                        topLine.appendChild(infoCol);
+                        topLine.appendChild(badge);
+                        card.appendChild(topLine);
+
+                        // Preview seguro de hasta 3 ítems
+                        if (Array.isArray(prefill.items) && prefill.items.length > 0) {
+                            const itemsLine = document.createElement('div');
+                            itemsLine.className = 'text-[11px] text-slate-600 truncate';
+                            const previewNames = prefill.items
+                                .slice(0, 3)
+                                .map((it) => `${it.cantidad}x ${it.descripcion}`)
+                                .join(', ');
+                            itemsLine.textContent = prefill.items.length > 3 ? `${previewNames}…` : previewNames;
+                            card.appendChild(itemsLine);
+                        }
+
+                        if (qItem.status === 'pending' || qItem.status === 'opened') {
+                            const actionsRow = document.createElement('div');
+                            actionsRow.className = 'flex items-center gap-2 pt-0.5';
+
+                            const btnReview = document.createElement('button');
+                            btnReview.type = 'button';
+                            btnReview.className = 'flex-1 px-3 py-1.5 rounded-lg bg-[#FACC15] hover:bg-[#EAB308] text-slate-900 text-xs font-bold transition-colors';
+                            btnReview.textContent = qItem.total > 1
+                                ? `Revisar compra ${qItem.index} de ${qItem.total}`
+                                : 'Revisar y Guardar compra';
+                            btnReview.addEventListener('click', () => {
+                                const owner = findQueueOwnerMessage(qItem.id);
+                                if (owner) {
+                                    const res = transitionExtractionItem(owner.queue, qItem.id, 'open');
+                                    owner.queue = res.queue;
+                                    renderChatMessages();
+                                }
+                                openExpenseModal(qItem.prefill);
+                            });
+
+                            const btnDiscard = document.createElement('button');
+                            btnDiscard.type = 'button';
+                            btnDiscard.className = 'px-2.5 py-1.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 text-xs font-semibold transition-colors';
+                            btnDiscard.textContent = 'Descartar';
+                            btnDiscard.addEventListener('click', () => {
+                                const owner = findQueueOwnerMessage(qItem.id);
+                                if (owner) {
+                                    const res = transitionExtractionItem(owner.queue, qItem.id, 'discard');
+                                    owner.queue = res.queue;
+                                    renderChatMessages();
+                                }
+                            });
+
+                            actionsRow.appendChild(btnReview);
+                            actionsRow.appendChild(btnDiscard);
+                            card.appendChild(actionsRow);
+                        }
+
+                        cardsWrap.appendChild(card);
+                    }
+
+                    bubble.appendChild(cardsWrap);
+                }
+
+                // Enlace discreto "Reportar respuesta" (local, paridad chat_screen.dart:1117-1140)
+                if (!isUser && msg.id !== 'greeting_0') {
+                    const footer = document.createElement('div');
+                    footer.className = 'flex justify-end pt-0.5';
+                    const reportBtn = document.createElement('button');
+                    reportBtn.type = 'button';
+                    reportBtn.className = 'text-[11px] font-medium text-slate-500 hover:text-slate-900 inline-flex items-center gap-1 transition-colors';
+                    reportBtn.textContent = '🏳️ Reportar respuesta';
+                    reportBtn.addEventListener('click', () => {
+                        if (modalChatReportConfirm) {
+                            modalChatReportConfirm.classList.remove('hidden');
+                            modalChatReportConfirm.classList.add('flex');
+                        }
+                    });
+                    footer.appendChild(reportBtn);
+                    bubble.appendChild(footer);
+                }
+
+                row.appendChild(bubble);
+                chatMessagesList.appendChild(row);
+            }
+
+            scrollChatToBottom();
+        };
+
+        // Conectar hooks de guardado y cierre de #modal-expense con la máquina de estados (Criterios 2 y 17)
+        onChatQueueExpenseSaved = (itemId, gastoId) => {
+            const owner = findQueueOwnerMessage(itemId);
+            if (!owner) return;
+            const res = transitionExtractionItem(owner.queue, itemId, 'save', { gastoId });
+            owner.queue = res.queue;
+            renderChatMessages();
+            if (res.nextPendingItem) {
+                showPanelToast(`Compra guardada. Te queda "${res.nextPendingItem.prefill.comercio}" pendiente en el asistente.`);
+            }
+        };
+
+        onChatQueueModalClosedWithoutSave = (itemId) => {
+            const owner = findQueueOwnerMessage(itemId);
+            if (!owner) return;
+            const res = transitionExtractionItem(owner.queue, itemId, 'close_without_save');
+            owner.queue = res.queue;
+            renderChatMessages();
+        };
+
+        const renderChatSuggestions = () => {
+            if (!chatSuggestionsBar) return;
+            chatSuggestionsBar.replaceChildren();
+            for (const suggestion of DEFAULT_CHAT_SUGGESTIONS) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 hover:bg-[#FEF08A]/70 border border-slate-200 hover:border-[#FACC15] text-xs font-medium text-slate-800 transition-colors disabled:opacity-50';
+                btn.textContent = `${suggestion.icon} ${suggestion.label}`;
+                btn.addEventListener('click', () => sendChatMessage(suggestion.label));
+                chatSuggestionsBar.appendChild(btn);
+            }
+        };
+
+        const openChatDrawer = () => {
+            updateMonthDisplay();
+            renderChatSuggestions();
+            renderChatMessages();
+            if (drawerAiChat) {
+                drawerAiChat.classList.remove('hidden');
+                setTimeout(() => chatInputTextarea?.focus(), 40);
+            }
+        };
+
+        const closeChatDrawer = () => {
+            if (drawerAiChat) {
+                drawerAiChat.classList.add('hidden');
+            }
+        };
+
+        const sendChatMessage = async (overrideText = null) => {
+            if (chatIsLoading) return;
+            const text = String(overrideText ?? chatInputTextarea?.value ?? '').trim();
+            if (!text) return;
+
+            if (!currentUser) {
+                showPanelToast('Inicia sesión para usar el Asistente IA.');
+                return;
+            }
+
+            if (overrideText === null && chatInputTextarea) {
+                chatInputTextarea.value = '';
+                chatInputTextarea.style.height = 'auto';
+            }
+
+            chatMessages.push({
+                id: `u_${Date.now()}`,
+                role: 'user',
+                text,
+                queue: null,
+            });
+            renderChatMessages();
+
+            // Aviso amigable si pregunta por Lista de Compras (Bloque 1)
+            if (isShoppingListQuery(text)) {
+                chatMessages.push({
+                    id: `a_${Date.now()}`,
+                    role: 'assistant',
+                    text: SHOPPING_LIST_WEB_NOTICE,
+                    queue: null,
+                });
+                renderChatMessages();
+                return;
+            }
+
+            setChatLoading(true);
+            const abortCtrl = new AbortController();
+            const timeoutId = setTimeout(() => abortCtrl.abort(), 45000);
+
+            try {
+                const idToken = await currentUser.getIdToken();
+                const todayCaracasIso = getVenezuelaTodayIso();
+                const contextData = buildSemanticChatContext({
+                    gastos: currentGastos,
+                    presupuesto: currentPresupuesto,
+                    liveRates,
+                    selectedYear,
+                    selectedMonth,
+                    todayCaracasIso,
+                });
+                const payloadMessages = sliceRecentChatMessages(chatMessages, 5);
+
+                const response = await fetch(`${DEFAULT_GATEWAY_URL}/chat-analyst`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${idToken}`,
+                    },
+                    body: JSON.stringify({
+                        messages: payloadMessages,
+                        contextData,
+                    }),
+                    signal: abortCtrl.signal,
+                });
+
+                clearTimeout(timeoutId);
+
+                let data = null;
+                try {
+                    data = await response.json();
+                } catch {
+                    data = null;
+                }
+
+                if (!response.ok) {
+                    const errMsg = mapChatHttpError(response.status, data);
+                    chatMessages.push({
+                        id: `a_err_${Date.now()}`,
+                        role: 'assistant',
+                        text: errMsg,
+                        queue: null,
+                    });
+                    renderChatMessages();
+                    return;
+                }
+
+                if (data && data.functionCall) {
+                    const callName = data.functionCall.name || '';
+                    const callArgs = data.functionCall.args || {};
+
+                    if (isShoppingListQuery('', callName)) {
+                        chatMessages.push({
+                            id: `a_sl_${Date.now()}`,
+                            role: 'assistant',
+                            text: SHOPPING_LIST_WEB_NOTICE,
+                            queue: null,
+                        });
+                    } else if (callName === 'registrar_gasto') {
+                        const extracted = prepareChatExtractions({
+                            callArgs,
+                            rawUserText: text,
+                            liveRates,
+                            todayCaracasIso,
+                        });
+
+                        if (extracted.type === 'clarification') {
+                            chatMessages.push({
+                                id: `a_clar_${Date.now()}`,
+                                role: 'assistant',
+                                text: extracted.clarificationText,
+                                queue: null,
+                            });
+                        } else if (extracted.prefills.length > 0) {
+                            const batchId = `batch_${++chatBatchCounter}`;
+                            const queue = createExtractionQueue(extracted.prefills, batchId);
+                            const count = queue.length;
+                            const summaryText = count > 1
+                                ? `He preparado **${count} compras** para tu revisión: ${queue.map((q) => `"${q.prefill.comercio}" (${formatMoney(q.prefill.totalOriginal, q.prefill.moneda)})`).join(', ')}. Revísalas y confírmalas a continuación.`
+                                : `He preparado tu compra en **"${queue[0].prefill.comercio}"** por **${formatMoney(queue[0].prefill.totalOriginal, queue[0].prefill.moneda)}**. Revísala y confírmala para guardarla.`;
+
+                            chatMessages.push({
+                                id: `a_ext_${Date.now()}`,
+                                role: 'assistant',
+                                text: summaryText,
+                                queue,
+                            });
+                        } else {
+                            chatMessages.push({
+                                id: `a_empty_${Date.now()}`,
+                                role: 'assistant',
+                                text: 'No pude extraer los datos del gasto. Intenta indicando el monto y el comercio.',
+                                queue: null,
+                            });
+                        }
+                    } else {
+                        chatMessages.push({
+                            id: `a_unk_${Date.now()}`,
+                            role: 'assistant',
+                            text: 'No pude ejecutar esa acción desde el panel web. Puedes consultar tus gastos o registrar compras indicando monto y comercio.',
+                            queue: null,
+                        });
+                    }
+                } else {
+                    const replyText = (data && typeof data.text === 'string' && data.text.trim())
+                        ? data.text.trim()
+                        : 'No recibí una respuesta clara del asistente. Intenta formular tu pregunta de nuevo.';
+                    chatMessages.push({
+                        id: `a_${Date.now()}`,
+                        role: 'assistant',
+                        text: replyText,
+                        queue: null,
+                    });
+                }
+
+                renderChatMessages();
+            } catch (err) {
+                clearTimeout(timeoutId);
+                const isAbort = err && err.name === 'AbortError';
+                chatMessages.push({
+                    id: `a_catch_${Date.now()}`,
+                    role: 'assistant',
+                    text: mapChatHttpError(0, null, { isAbort }),
+                    queue: null,
+                });
+                renderChatMessages();
+            } finally {
+                setChatLoading(false);
+            }
+        };
+
+        btnOpenChat?.addEventListener('click', openChatDrawer);
+        btnCloseChat?.addEventListener('click', closeChatDrawer);
+        drawerAiChatBackdrop?.addEventListener('click', closeChatDrawer);
+
+        formChatInput?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            sendChatMessage();
+        });
+
+        chatInputTextarea?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendChatMessage();
+            }
+        });
+
+        chatInputTextarea?.addEventListener('input', () => {
+            chatInputTextarea.style.height = 'auto';
+            chatInputTextarea.style.height = `${Math.min(chatInputTextarea.scrollHeight, 112)}px`;
+        });
+
+        // Diálogo propio de reinicio de conversación (z-[100])
+        btnChatReset?.addEventListener('click', () => {
+            if (modalChatResetConfirm) {
+                modalChatResetConfirm.classList.remove('hidden');
+                modalChatResetConfirm.classList.add('flex');
+            }
+        });
+
+        const closeResetConfirm = () => {
+            if (modalChatResetConfirm) {
+                modalChatResetConfirm.classList.add('hidden');
+                modalChatResetConfirm.classList.remove('flex');
+            }
+        };
+        btnChatResetCancel?.addEventListener('click', closeResetConfirm);
+        btnChatResetConfirm?.addEventListener('click', () => {
+            closeResetConfirm();
+            chatMessages = [{ id: 'greeting_0', role: 'assistant', text: INITIAL_CHAT_GREETING, queue: null }];
+            activeQueueItemId = null;
+            renderChatMessages();
+            showPanelToast('Conversación reiniciada.');
+        });
+
+        // Diálogo propio de reporte local (z-[100])
+        const closeReportConfirm = () => {
+            if (modalChatReportConfirm) {
+                modalChatReportConfirm.classList.add('hidden');
+                modalChatReportConfirm.classList.remove('flex');
+            }
+        };
+        btnChatReportCancel?.addEventListener('click', closeReportConfirm);
+        btnChatReportConfirm?.addEventListener('click', () => {
+            closeReportConfirm();
+            showPanelToast('Gracias por tu reporte. Lo tendremos en cuenta para futuras mejoras.');
+        });
+
+        // Atajo Escape respetando jerarquía de capas (z-[100] -> z-[95] -> z-[90] -> z-[85])
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape') return;
+            if (modalChatResetConfirm && !modalChatResetConfirm.classList.contains('hidden')) {
+                closeResetConfirm();
+            } else if (modalChatReportConfirm && !modalChatReportConfirm.classList.contains('hidden')) {
+                closeReportConfirm();
+            } else if (modalExpense && !modalExpense.classList.contains('hidden')) {
+                closeExpenseModal({ reason: 'user' });
+            } else if (modalCalculator && !modalCalculator.classList.contains('hidden')) {
+                closeCalculatorModal();
+            } else if (drawerAiChat && !drawerAiChat.classList.contains('hidden')) {
+                closeChatDrawer();
+            }
         });
 
     </script>

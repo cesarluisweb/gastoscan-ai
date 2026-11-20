@@ -1,5 +1,6 @@
 // Servicio determinista y local para clasificar descripciones en las 10 categorías oficiales de Rinde Más.
 // Port 100% fiel de lib/services/category_classifier_service.dart
+import { isTaxItem } from './price-comparator.js';
 
 export const CATEGORIAS_OFICIALES = [
     'Alimentación',
@@ -269,12 +270,7 @@ export function clasificarCategoria(concepto) {
 }
 
 export function isTaxDescription(desc) {
-    const clean = normalizar(desc || '');
-    return clean === 'impuesto iva' ||
-        clean.startsWith('impuesto iva ') ||
-        clean === 'iva 16' ||
-        clean === 'iva' ||
-        clean === 'iva 16 porciento';
+    return isTaxItem(desc);
 }
 
 export function sincronizarCategoriaImpuestos(items) {

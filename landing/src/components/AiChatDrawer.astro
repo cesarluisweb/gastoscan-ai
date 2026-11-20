@@ -1,0 +1,158 @@
+<!-- Drawer Lateral Derecho: Asistente IA Financiero (Paridad con ChatScreen) -->
+<div
+    id="drawer-ai-chat"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="drawer-ai-chat-title"
+    class="fixed inset-0 z-[85] hidden"
+    style="z-index: 85;"
+>
+    <!-- Backdrop -->
+    <div id="drawer-ai-chat-backdrop" class="absolute inset-0 bg-slate-900/35 backdrop-blur-[1px]"></div>
+
+    <!-- Panel Derecho -->
+    <div class="absolute inset-y-0 right-0 w-full sm:w-[430px] max-w-full bg-[#F9FAFB] shadow-2xl border-l border-slate-200 flex flex-col">
+        <!-- Header -->
+        <div class="flex items-center justify-between px-4 sm:px-5 py-3.5 bg-white border-b border-slate-200 shrink-0">
+            <div class="flex items-center gap-2.5 min-w-0">
+                <span class="w-9 h-9 rounded-xl bg-[#FEF08A] border border-[#FACC15] flex items-center justify-center text-base text-slate-900 shrink-0">✨</span>
+                <div class="min-w-0">
+                    <h3 id="drawer-ai-chat-title" class="font-bold text-base text-slate-900 leading-tight truncate">Asistente IA</h3>
+                    <p id="chat-active-month-subtitle" class="text-[11px] font-medium text-slate-500 truncate">Analizando tus gastos del mes</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+                <button
+                    type="button"
+                    id="btn-chat-reset"
+                    title="Reiniciar conversación"
+                    aria-label="Reiniciar conversación"
+                    class="w-8 h-8 rounded-full flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors text-base font-bold"
+                >↻</button>
+                <button
+                    type="button"
+                    id="btn-close-chat"
+                    title="Cerrar asistente"
+                    aria-label="Cerrar asistente IA"
+                    class="w-8 h-8 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors text-lg font-bold"
+                >✕</button>
+            </div>
+        </div>
+
+        <!-- Lista de Mensajes -->
+        <div
+            id="chat-messages-list"
+            aria-live="polite"
+            class="flex-1 overflow-y-auto p-4 space-y-3"
+        >
+            <!-- Renderizado dinámicamente desde panel.astro -->
+        </div>
+
+        <!-- Indicador de Carga -->
+        <div id="chat-loading-indicator" class="hidden px-4 py-2 bg-[#F9FAFB] border-t border-slate-100 shrink-0">
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 text-xs font-medium text-slate-600 shadow-xs">
+                <span class="w-3.5 h-3.5 border-2 border-slate-200 border-t-[#FACC15] rounded-full animate-spin"></span>
+                <span>Analizando tus gastos...</span>
+            </div>
+        </div>
+
+        <!-- Chips de Sugerencias Rápidas -->
+        <div class="px-3 pt-2 pb-1.5 bg-white border-t border-slate-200 shrink-0">
+            <div id="chat-suggestions-bar" class="flex items-center gap-2 overflow-x-auto pb-1">
+                <!-- Botones generados desde DEFAULT_CHAT_SUGGESTIONS -->
+            </div>
+        </div>
+
+        <!-- Aviso Discreto de Privacidad (privacidad-seguridad.md §2 y §4) -->
+        <div class="px-4 py-1.5 bg-slate-50 border-t border-slate-100 text-[11px] text-slate-600 leading-snug shrink-0">
+            🔒 Tus consultas y el resumen del mes se procesan vía Cloudflare y Google Gemini (retención hasta 55 días).
+            <a href="/privacidad" target="_blank" rel="noopener noreferrer" class="font-semibold text-slate-900 underline hover:text-slate-700">Privacidad</a>
+        </div>
+
+        <!-- Barra de Entrada -->
+        <div class="p-3 bg-white border-t border-slate-200 shrink-0">
+            <form id="form-chat-input" class="flex items-end gap-2">
+                <label for="chat-input-textarea" class="sr-only">Escribe tu pregunta o compra</label>
+                <textarea
+                    id="chat-input-textarea"
+                    rows="1"
+                    maxlength="2000"
+                    placeholder="Pregunta o dime un gasto (ej. Gasté 10$ en farmacia)..."
+                    class="flex-1 resize-none max-h-28 px-3.5 py-2.5 text-sm text-slate-900 caret-slate-900 placeholder:text-slate-400 bg-slate-50 focus:bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#FACC15] focus:border-[#FACC15]"
+                ></textarea>
+                <button
+                    type="submit"
+                    id="btn-chat-send"
+                    aria-label="Enviar mensaje"
+                    class="px-4 py-2.5 text-sm font-bold text-slate-900 bg-[#FACC15] hover:bg-[#EAB308] disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl shadow-sm transition-colors shrink-0"
+                >
+                    Enviar
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Propio: Confirmar Reinicio de Conversación (z-[100]) -->
+<div
+    id="modal-chat-reset-confirm"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="modal-chat-reset-title"
+    class="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center p-4"
+    style="z-index: 100;"
+>
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-slate-200 space-y-4">
+        <div class="flex items-center gap-2.5">
+            <span class="text-lg text-slate-900" aria-hidden="true">↻</span>
+            <h4 id="modal-chat-reset-title" class="font-bold text-base text-slate-900">¿Reiniciar conversación?</h4>
+        </div>
+        <p class="text-sm text-slate-600 leading-relaxed">
+            Se borrará el historial actual del chat en esta sesión y empezarás desde cero.
+        </p>
+        <div class="flex justify-end gap-2 pt-1">
+            <button
+                type="button"
+                id="btn-chat-reset-cancel"
+                class="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors"
+            >Cancelar</button>
+            <button
+                type="button"
+                id="btn-chat-reset-confirm"
+                class="px-4 py-2 text-sm font-bold text-slate-900 bg-[#FACC15] hover:bg-[#EAB308] rounded-xl transition-colors"
+            >Reiniciar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Propio: Reportar Respuesta IA (local, paridad chat_screen.dart:862-904, z-[100]) -->
+<div
+    id="modal-chat-report-confirm"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="modal-chat-report-title"
+    class="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center p-4"
+    style="z-index: 100;"
+>
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-slate-200 space-y-4">
+        <div class="flex items-center gap-2.5">
+            <span class="text-lg text-slate-900" aria-hidden="true">🏳️</span>
+            <h4 id="modal-chat-report-title" class="font-bold text-base text-slate-900">Reportar respuesta</h4>
+        </div>
+        <p class="text-sm text-slate-600 leading-relaxed">
+            ¿Consideras que esta respuesta generada por la IA es inexacta, inapropiada o contiene información errónea? Tu reporte nos ayuda a mejorar la precisión del asistente.
+        </p>
+        <div class="flex justify-end gap-2 pt-1">
+            <button
+                type="button"
+                id="btn-chat-report-cancel"
+                class="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors"
+            >Cancelar</button>
+            <button
+                type="button"
+                id="btn-chat-report-confirm"
+                class="px-4 py-2 text-sm font-bold text-slate-900 bg-[#FACC15] hover:bg-[#EAB308] rounded-xl transition-colors"
+            >Reportar</button>
+        </div>
+    </div>
+</div>

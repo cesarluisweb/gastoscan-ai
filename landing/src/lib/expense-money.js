@@ -194,3 +194,117 @@ export function computeItemCents(item, ratioConversion = 1.0) {
         total: finalTotal,
     };
 }
+
+/**
+ * Acumula los totales mensuales en las 4 divisas (USD BCV, VES, USDT P2P, EUR BCV)
+ * respetando la inmutabilidad del bolívar en gastos VES y los fallbacks de tasas.
+ * Fuente única compartida entre renderMetrics (panel.astro) y buildSemanticChatContext (ai-assistant.js).
+ *
+ * @param {Array<Object>} gastos - Lista de documentos de gasto activos del mes
+ * @param {Object} liveRates - Tasas de referencia vigentes { usd, eur, usdt }
+ * @returns {{ sumUsd: number, sumVes: number, sumUsdt: number, sumEur: number }}
+ */
+export function computeMonthTotals(gastos = [], liveRates = {}) {
+    let sumUsd = 0;
+    let sumVes = 0;
+    let sumUsdt = 0;
+    let sumEur = 0;
+
+    const list = Array.isArray(gastos) ? gastos : [];
+    const liveUsd = Number(liveRates?.usd || 0);
+    const liveEur = Number(liveRates?.eur || 0);
+    const liveUsdt = Number(liveRates?.usdt || 0);
+
+    for (const g of list) {
+        if (!g) continue;
+        const totalUsd = Number(g.total_usd || 0) / 100.0;
+        const totalOrig = Number(g.total_original || 0) / 100.0;
+        const tasa = Number(g.tasa_cambio || 0) > 0 ? Number(g.tasa_cambio) : (liveUsd || 1.0);
+
+        sumUsd += totalUsd;
+
+        let totalUsdt = 0;
+        if (g.total_usdt !== undefined && g.total_usdt !== null) {
+            totalUsdt = Number(g.total_usdt || 0) / 100.0;
+        } else if (g.moneda === 'USD') {
+            totalUsdt = totalUsd;
+        } else {
+            const tUsdt = Number(g.tasa_usdt || 0) > 0 ? Number(g.tasa_usdt) : (liveUsdt > 0 ? liveUsdt : 0);
+            totalUsdt = tUsdt > 0 ? (totalOrig / tUsdt) : 0;
+        }
+        sumUsdt += totalUsdt;
+
+        let totalEur = 0;
+        if (g.total_eur !== undefined && g.total_eur !== null) {
+            totalEur = Number(g.total_eur || 0) / 100.0;
+        } else if (g.moneda === 'EUR') {
+            totalEur = totalOrig;
+        } else {
+            const tEur = Number(g.tasa_eur || 0) > 0 ? Number(g.tasa_eur) : (liveEur > 0 ? liveEur : 0);
+            totalEur = tEur > 0
+                ? (g.moneda === 'VES' ? totalOrig / tEur : (totalUsd * (tasa > 0 ? tasa : 1.0)) / tEur)
+                : 0;
+        }
+        sumEur += totalEur;
+
+        if (g.moneda === 'VES') {
+            // Inmutabilidad del bolívar: los gastos en VES suman su monto original
+            sumVes += totalOrig;
+        } else {
+            // Gastos en divisas (USD, EUR, USDT) se convierten determinísticamente con su tasa
+            sumVes += totalUsd * (tasa > 0 ? tasa : 1.0);
+        }
+    }
+
+    return { sumUsd, sumVes, sumUsdt, sumEur };
+}
+
+/**
+ * Calculadora de Salud Financiera y Ahorro (Paridad exacta con SavingsHealthCalculator en Flutter).
+ */
+export function calculateSavingsHealth({
+    presupuestoGeneral,
+    metaAhorro,
+    gastoAcumulado,
+    diaActual,
+    diasTotalesMes,
+    diasGracia = 3,
+}) {
+    const gen = Math.max(0, Number(presupuestoGeneral) || 0);
+    const metaClamped = Math.max(0, Math.min(Number(metaAhorro) || 0, gen));
+    const limite = Math.max(0, gen - metaClamped);
+    const gasto = Math.max(0, Number(gastoAcumulado) || 0);
+    const disponible = Math.max(0, limite - gasto);
+
+    const totalDias = diasTotalesMes > 0 ? diasTotalesMes : 30;
+    const diasValidos = Math.max(1, Math.min(diaActual, totalDias));
+
+    const gastoDiario = diasValidos > 0 ? (gasto / diasValidos) : 0;
+    const gastoProyectado = gastoDiario * totalDias;
+
+    let status = 'sinMeta';
+    if (metaClamped <= 0) {
+        status = 'sinMeta';
+    } else if (gasto > limite) {
+        status = 'comprometida';
+    } else if (diasValidos <= diasGracia) {
+        status = 'protegida';
+    } else if (gastoProyectado > limite) {
+        status = 'enRiesgo';
+    } else {
+        status = 'protegida';
+    }
+
+    return {
+        presupuestoGeneral: gen,
+        metaAhorro: metaClamped,
+        limiteParaGastar: limite,
+        gastoAcumulado: gasto,
+        disponibleParaGastar: disponible,
+        diasTranscurridos: diasValidos,
+        diasTotalesMes: totalDias,
+        gastoDiarioPromedio: gastoDiario,
+        gastoProyectadoFinDeMes: gastoProyectado,
+        status,
+    };
+}

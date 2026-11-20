@@ -6,7 +6,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "test": "node --test test/category-classifier.test.js test/expense-money.test.js test/price-comparator.test.js test/currency-calculator.test.js test/ai-assistant.test.js"
   },
   "dependencies": {
     "@astrojs/tailwind": "^5.1.4",

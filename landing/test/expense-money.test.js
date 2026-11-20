@@ -1,6 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { computeExpenseTotals, computeItemCents } from '../src/lib/expense-money.js';
+import {
+    computeExpenseTotals,
+    computeItemCents,
+    computeMonthTotals,
+    calculateSavingsHealth,
+} from '../src/lib/expense-money.js';
 
 // Tasas canónicas de referencia para las pruebas
 const RATES = {
@@ -127,4 +132,126 @@ test('C6: Preservación estricta de centavos en ítems sin modificar', () => {
     const centsModificado = computeItemCents(itemModificado, 36.521);
     assert.equal(centsModificado.precio_unitario, Math.round(5.00 * 36.521 * 100)); // 18261
     assert.equal(centsModificado.total, Math.round(3 * 5.00 * 36.521 * 100));       // 54782
+});
+
+test('Entrega 0: computeMonthTotals paridad exacta contra lógica inline de renderMetrics (10 gastos sintéticos mixtos)', () => {
+    const liveRates = { usd: 50.0, eur: 54.0, usdt: 58.0 };
+
+    // 10 gastos sintéticos cubriendo VES, USD directo, USD BCV, USD USDT, EUR directo, EUR BCV, USDT directo y docs legacy sin total_usdt/total_eur
+    const gastos = [
+        // 1. VES directo con todos los campos
+        { moneda: 'VES', total_original: 50000, total_usd: 1000, total_usdt: 862, total_eur: 926, tasa_cambio: 50.0, tasa_usdt: 58.0, tasa_eur: 54.0 },
+        // 2. USD directo con todos los campos
+        { moneda: 'USD', total_original: 2500, total_usd: 2500, total_usdt: 2500, total_eur: 2315, tasa_cambio: 50.0, tasa_usdt: 58.0, tasa_eur: 54.0 },
+        // 3. USD pagado en Bs a tasa BCV (moneda VES)
+        { moneda: 'VES', total_original: 102000, total_usd: 2000, total_usdt: 1759, total_eur: 1889, tasa_cambio: 51.0, tasa_usdt: 58.0, tasa_eur: 54.0 },
+        // 4. USD pagado en Bs a tasa P2P (moneda VES)
+        { moneda: 'VES', total_original: 87000, total_usd: 1740, total_usdt: 1500, total_eur: 1611, tasa_cambio: 50.0, tasa_usdt: 58.0, tasa_eur: 54.0 },
+        // 5. EUR directo
+        { moneda: 'EUR', total_original: 1500, total_usd: 1620, total_usdt: 1620, total_eur: 1500, tasa_cambio: 50.0, tasa_eur: 54.0, tasa_usdt: 58.0 },
+        // 6. USDT directo
+        { moneda: 'USDT', total_original: 3000, total_usd: 3000, total_usdt: 3000, total_eur: 2778, tasa_cambio: 50.0, tasa_usdt: 58.0, tasa_eur: 54.0 },
+        // 7. Legacy VES sin total_usdt ni total_eur (usa tasa_usdt/tasa_eur del doc)
+        { moneda: 'VES', total_original: 116000, total_usd: 2320, tasa_cambio: 50.0, tasa_usdt: 58.0, tasa_eur: 54.0 },
+        // 8. Legacy USD sin total_usdt ni total_eur (totalUsdt cae a totalUsd, totalEur cae a liveRates.eur)
+        { moneda: 'USD', total_original: 1080, total_usd: 1080, tasa_cambio: 50.0 },
+        // 9. Legacy EUR sin total_eur (cae a totalOrig) y sin total_usdt (usa liveRates.usdt)
+        { moneda: 'EUR', total_original: 2000, total_usd: 2160, tasa_cambio: 50.0 },
+        // 10. Legacy VES sin tasa_cambio propia (usa liveRates.usd)
+        { moneda: 'VES', total_original: 25000, total_usd: 500, total_usdt: 431, total_eur: 463 },
+    ];
+
+    // Función de referencia literal del bloque inline original de panel.astro:1576-1617
+    const legacyInlineTotals = (list, rates) => {
+        let sumUsd = 0, sumVes = 0, sumUsdt = 0, sumEur = 0;
+        list.forEach(g => {
+            const totalUsd = (Number(g.total_usd || 0)) / 100.0;
+            const totalOrig = (Number(g.total_original || 0)) / 100.0;
+            const tasa = Number(g.tasa_cambio || 0) > 0 ? Number(g.tasa_cambio) : (rates.usd || 1.0);
+            sumUsd += totalUsd;
+            let totalUsdt = 0;
+            if (g.total_usdt !== undefined && g.total_usdt !== null) {
+                totalUsdt = (Number(g.total_usdt || 0)) / 100.0;
+            } else if (g.moneda === 'USD') {
+                totalUsdt = totalUsd;
+            } else {
+                const tUsdt = Number(g.tasa_usdt || 0) > 0 ? Number(g.tasa_usdt) : (Number(rates.usdt || 0) > 0 ? Number(rates.usdt) : 0);
+                totalUsdt = tUsdt > 0 ? (totalOrig / tUsdt) : 0;
+            }
+            sumUsdt += totalUsdt;
+            let totalEur = 0;
+            if (g.total_eur !== undefined && g.total_eur !== null) {
+                totalEur = (Number(g.total_eur || 0)) / 100.0;
+            } else if (g.moneda === 'EUR') {
+                totalEur = totalOrig;
+            } else {
+                const tEur = Number(g.tasa_eur || 0) > 0 ? Number(g.tasa_eur) : (Number(rates.eur || 0) > 0 ? Number(rates.eur) : 0);
+                totalEur = tEur > 0 ? (g.moneda === 'VES' ? totalOrig / tEur : (totalUsd * (tasa > 0 ? tasa : 1.0)) / tEur) : 0;
+            }
+            sumEur += totalEur;
+            if (g.moneda === 'VES') {
+                sumVes += totalOrig;
+            } else {
+                sumVes += (totalUsd * (tasa > 0 ? tasa : 1.0));
+            }
+        });
+        return { sumUsd, sumVes, sumUsdt, sumEur };
+    };
+
+    const actual = computeMonthTotals(gastos, liveRates);
+    const expected = legacyInlineTotals(gastos, liveRates);
+
+    assert.equal(actual.sumUsd, expected.sumUsd);
+    assert.equal(actual.sumVes, expected.sumVes);
+    assert.equal(actual.sumUsdt, expected.sumUsdt);
+    assert.equal(actual.sumEur, expected.sumEur);
+
+    // Verificación directa calculada a mano:
+    // sumUsd = 10 + 25 + 20 + 17.40 + 16.20 + 30 + 23.20 + 10.80 + 21.60 + 5 = 179.20
+    assert.ok(Math.abs(actual.sumUsd - 179.20) < 0.0001);
+    // sumVes = (500 + 1020 + 870 + 1160 + 250) + (25 + 16.20 + 30 + 10.80 + 21.60)*50 = 3800 + 5180 = 8980.00
+    assert.ok(Math.abs(actual.sumVes - 8980.00) < 0.0001);
+});
+
+test('Entrega 0: calculateSavingsHealth estados sinMeta, protegida, enRiesgo y comprometida', () => {
+    const sinMeta = calculateSavingsHealth({
+        presupuestoGeneral: 500,
+        metaAhorro: 0,
+        gastoAcumulado: 200,
+        diaActual: 15,
+        diasTotalesMes: 30,
+    });
+    assert.equal(sinMeta.status, 'sinMeta');
+    assert.equal(sinMeta.limiteParaGastar, 500);
+
+    const protegida = calculateSavingsHealth({
+        presupuestoGeneral: 500,
+        metaAhorro: 100,
+        gastoAcumulado: 150,
+        diaActual: 15,
+        diasTotalesMes: 30,
+    });
+    assert.equal(protegida.status, 'protegida');
+    assert.equal(protegida.limiteParaGastar, 400);
+    assert.equal(protegida.gastoProyectadoFinDeMes, 300);
+
+    const enRiesgo = calculateSavingsHealth({
+        presupuestoGeneral: 500,
+        metaAhorro: 100,
+        gastoAcumulado: 250,
+        diaActual: 15,
+        diasTotalesMes: 30,
+    });
+    assert.equal(enRiesgo.status, 'enRiesgo');
+    assert.ok(Math.abs(enRiesgo.gastoProyectadoFinDeMes - 500) < 0.0001);
+
+    const comprometida = calculateSavingsHealth({
+        presupuestoGeneral: 500,
+        metaAhorro: 100,
+        gastoAcumulado: 420,
+        diaActual: 15,
+        diasTotalesMes: 30,
+    });
+    assert.equal(comprometida.status, 'comprometida');
+    assert.equal(comprometida.disponibleParaGastar, 0);
 });

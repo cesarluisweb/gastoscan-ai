@@ -85,17 +85,26 @@ test('Términos ambiguos aislados no fuerzan categoría errónea', () => {
     assert.equal(clasificarCategoria('Agua'), null);
 });
 
-test('Detección y sincronización de Impuesto IVA con categoría dominante', () => {
+test('Detección y sincronización de Impuesto IVA con categoría dominante (paridad DatabaseHelper.isTaxItem)', () => {
     assert.equal(isTaxDescription('Impuesto IVA'), true);
     assert.equal(isTaxDescription('IVA 16%'), true);
+    assert.equal(isTaxDescription('IVA 8%'), true);
+    assert.equal(isTaxDescription('IVA G'), true);
+    assert.equal(isTaxDescription('IVA R'), true);
+    assert.equal(isTaxDescription('Impuesto'), true);
+    assert.equal(isTaxDescription('Tax'), true);
     assert.equal(isTaxDescription('Harina'), false);
 
     const items = [
         { descripcion: 'Harina PAN', categoria: 'Alimentación', total: 100 },
         { descripcion: 'Carne molida', categoria: 'Alimentación', total: 200 },
         { descripcion: 'Impuesto IVA', categoria: 'Otros', total: 48, origenCategoria: 'auto' },
+        { descripcion: 'IVA 8%', categoria: 'Otros', total: 16, origenCategoria: 'auto' },
+        { descripcion: 'Tax', categoria: 'Otros', total: 10, origenCategoria: 'auto' },
     ];
 
     const synced = sincronizarCategoriaImpuestos(items);
     assert.equal(synced[2].categoria, 'Alimentación');
+    assert.equal(synced[3].categoria, 'Alimentación');
+    assert.equal(synced[4].categoria, 'Alimentación');
 });
