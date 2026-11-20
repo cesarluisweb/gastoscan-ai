@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
-import '../../core/utils/currency_formatter.dart';
-import '../../core/utils/date_formatter.dart';
 import '../../data/models/gasto_model.dart';
-import '../../domain/finance/savings_health_models.dart';
-import '../../domain/finance/savings_health_calculator.dart';
+import '../../providers/chat_provider.dart';
+import '../../services/ai_insight_service.dart';
 import '../screens/chat_screen.dart';
 
 class AiInsightCard extends StatelessWidget {
@@ -12,6 +11,7 @@ class AiInsightCard extends StatelessWidget {
   final double presupuestoGeneral;
   final double metaAhorro;
   final Map<String, double> totalesPorCategoria;
+  final Map<String, double> presupuestosPorCategoria;
   final double totalGastadoMes;
   final String monedaPresupuesto;
   final double tasaCambio;
@@ -19,6 +19,9 @@ class AiInsightCard extends StatelessWidget {
   final int? anio;
   final VoidCallback? onChatTap;
   final DateTime? currentDate;
+  final String? cachedGeminiShort;
+  final String? cachedGeminiDetailed;
+  final ValueChanged<AiDashboardInsight>? onConsultInsight;
 
   const AiInsightCard({
     Key? key,
@@ -26,6 +29,7 @@ class AiInsightCard extends StatelessWidget {
     required this.presupuestoGeneral,
     this.metaAhorro = 0.0,
     required this.totalesPorCategoria,
+    this.presupuestosPorCategoria = const {},
     required this.totalGastadoMes,
     this.monedaPresupuesto = 'USD',
     this.tasaCambio = 1.0,
@@ -33,117 +37,55 @@ class AiInsightCard extends StatelessWidget {
     this.anio,
     this.onChatTap,
     this.currentDate,
+    this.cachedGeminiShort,
+    this.cachedGeminiDetailed,
+    this.onConsultInsight,
   }) : super(key: key);
 
-  String _generarMensaje() {
-    final now = currentDate ?? DateTime.now();
-    final targetYear = anio ?? now.year;
-    final targetMonth = mes ?? now.month;
-    final diasEnMes = DateTime(targetYear, targetMonth + 1, 0).day;
-    final isPastMonth = targetYear < now.year ||
-        (targetYear == now.year && targetMonth < now.month);
-    final isCurrentMonth = targetYear == now.year && targetMonth == now.month;
-    final diasRestantes = isCurrentMonth
-        ? (diasEnMes - now.day).clamp(1, diasEnMes)
-        : 1;
-    final mesActualNombre = DateFormatter.getMonthName(targetMonth);
-
-    if (gastos.isEmpty) {
-      if (now.day <= 5 && presupuestoGeneral > 0 && isCurrentMonth) {
-        return '¡Nuevo mes! Tu presupuesto de $mesActualNombre ya está listo. Hoy es un buen día para determinarte a aplicar lo aprendido el mes pasado.';
-      }
-      return 'Registra tu primera compra con el botón + para activar estadísticas y recomendaciones automáticas.';
-    }
-
-    if (presupuestoGeneral <= 0) {
-      return 'Define un presupuesto mensual y te diré cuánto puedes gastar cada día sin descuidar tu ahorro.';
-    }
-
-    final hasSavingsGoal = metaAhorro > 0;
-    final limiteParaGastar = hasSavingsGoal
-        ? (presupuestoGeneral - metaAhorro).clamp(0.0, double.infinity)
-        : presupuestoGeneral;
-
-    final formattedMeta = CurrencyFormatter.formatAmount(
-      metaAhorro,
-      monedaPresupuesto,
+  AiDashboardInsight resolveDashboardInsight() {
+    return AiInsightService.resolveInsight(
+      gastos: gastos,
+      presupuestoGeneral: presupuestoGeneral,
+      metaAhorro: metaAhorro,
+      totalesPorCategoria: totalesPorCategoria,
+      presupuestosPorCategoria: presupuestosPorCategoria,
+      totalGastadoMes: totalGastadoMes,
+      monedaPresupuesto: monedaPresupuesto,
+      tasaCambio: tasaCambio,
+      mes: mes,
+      anio: anio,
+      currentDate: currentDate,
+      cachedGeminiShort: cachedGeminiShort,
+      cachedGeminiDetailed: cachedGeminiDetailed,
     );
+  }
 
-    // Caso: Mes pasado cerrado
-    if (isPastMonth) {
-      if (totalGastadoMes > limiteParaGastar) {
-        final exceso = totalGastadoMes - limiteParaGastar;
-        final formattedExceso = CurrencyFormatter.formatAmount(
-          exceso,
-          monedaPresupuesto,
-        );
-        return 'En $mesActualNombre superaste tu ${hasSavingsGoal ? "límite" : "presupuesto"} por $formattedExceso.';
-      } else {
-        final rem = limiteParaGastar - totalGastadoMes;
-        final formattedRem = CurrencyFormatter.formatAmount(
-          rem,
-          monedaPresupuesto,
-        );
-        return '¡Mes cerrado con éxito! Te sobraron $formattedRem de tu ${hasSavingsGoal ? "límite" : "presupuesto"}.';
-      }
-    }
+  void _handleConsultTap(BuildContext context, AiDashboardInsight insight) {
+    onConsultInsight?.call(insight);
 
-    // Caso: Excedido en el mes actual
-    if (totalGastadoMes > limiteParaGastar) {
-      final exceso = totalGastadoMes - limiteParaGastar;
-      final formattedExceso = CurrencyFormatter.formatAmount(
-        exceso,
-        monedaPresupuesto,
-      );
-      if (hasSavingsGoal) {
-        return 'Superaste tu límite por $formattedExceso. Tu meta de ahorro de $formattedMeta está comprometida; te sugiero pausar gastos no esenciales.';
-      } else {
-        return 'Superaste tu presupuesto por $formattedExceso. Te sugiero pausar gastos no esenciales esta semana.';
-      }
-    }
+    final providerFromTree = Provider.of<ChatProvider?>(context, listen: false);
+    providerFromTree?.presentDetailedInsight(insight.detailedText);
 
-    // Caso: En riesgo por ritmo proyectado (con meta de ahorro)
-    if (hasSavingsGoal) {
-      final savingsSnapshot = SavingsHealthCalculator.calculate(
-        presupuestoGeneral: presupuestoGeneral,
-        metaAhorro: metaAhorro,
-        gastoAcumulado: totalGastadoMes,
-        diaActual: now.day,
-        diasTotalesMes: diasEnMes,
-        moneda: monedaPresupuesto,
-      );
-
-      if (savingsSnapshot.status == SavingsGoalStatus.enRiesgo) {
-        final proy = savingsSnapshot.gastoProyectadoFinDeMes;
-        final formattedProy = CurrencyFormatter.formatAmount(
-          proy,
-          monedaPresupuesto,
-        );
-        return 'Atención: a tu ritmo actual proyectas gastar $formattedProy. Modera tus consumos para proteger tu meta de ahorro de $formattedMeta.';
-      }
-    }
-
-    // Caso: Ritmo saludable con presupuesto
-    final disponible = limiteParaGastar - totalGastadoMes;
-    final ritmoDiario = disponible / diasRestantes;
-    final formattedRitmo = CurrencyFormatter.formatAmount(
-      ritmoDiario,
-      monedaPresupuesto,
-    );
-    final diasTexto = diasRestantes == 1
-        ? 'el día restante'
-        : 'los $diasRestantes días restantes';
-
-    if (hasSavingsGoal) {
-      return '¡Excelente administración! Puedes gastar hasta $formattedRitmo/día durante $diasTexto sin tocar tu meta de $formattedMeta protegida.';
+    if (onChatTap != null) {
+      onChatTap!();
     } else {
-      return '¡Excelente administración! Puedes gastar hasta $formattedRitmo/día durante $diasTexto sin exceder tu presupuesto.';
+      final fallbackProvider = providerFromTree ??
+          (ChatProvider()..presentDetailedInsight(insight.detailedText));
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ChatScreen(
+            showBackButton: true,
+            chatProvider: fallbackProvider,
+          ),
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final mensaje = _generarMensaje();
+    final insight = resolveDashboardInsight();
 
     return Container(
       key: const Key('ai_insight_card'),
@@ -183,15 +125,7 @@ class AiInsightCard extends StatelessWidget {
               const Spacer(),
               InkWell(
                 key: const Key('ai_insight_card_consultar_btn'),
-                onTap: onChatTap ??
-                    () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ChatScreen(showBackButton: true),
-                        ),
-                      );
-                    },
+                onTap: () => _handleConsultTap(context, insight),
                 borderRadius: BorderRadius.circular(14),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -219,7 +153,7 @@ class AiInsightCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          // Cuerpo Horizontal: Avatar Asistente + Mensaje
+          // Cuerpo Horizontal: Avatar Asistente + Mensaje único
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -242,7 +176,7 @@ class AiInsightCard extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  mensaje,
+                  insight.shortText,
                   style: const TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 13,

@@ -869,6 +869,7 @@ async function handleChatAnalyst(request, geminiKey, isCustomKey = false) {
     const data = await readJsonBodyWithLimit(request, MAX_CHAT_BODY_BYTES);
     const { messages, contextData, modo } = data;
     const isDictadoGasto = modo === "dictado_gasto";
+    const isInsightInicio = modo === "insight_inicio";
     const defaultMoneda = (contextData && contextData.moneda_principal) ? contextData.moneda_principal : "USD";
     const fechaReferenciaHoy = (contextData && typeof contextData.fecha_hoy === "string" && contextData.fecha_hoy.trim())
       ? contextData.fecha_hoy.trim()
@@ -891,7 +892,19 @@ async function handleChatAnalyst(request, geminiKey, isCustomKey = false) {
     let modelIndex = 0;
 
     let systemPrompt;
-    if (isDictadoGasto) {
+    if (isInsightInicio) {
+      systemPrompt = `Eres el analista financiero de Rinde Más en Venezuela.
+Analiza el resumen de gastos mensuales del usuario y genera UN SOLO consejo práctico, directo y personalizado basado en sus cifras reales (categoría principal, comercios frecuentes, productos repetidos o margen de presupuesto).
+REGLAS ESTRICTAS:
+1. Sin saludos ("¡Hola!"). Ve directo al hallazgo.
+2. NUNCA menciones ni sugieras recortar el IVA (16%) ni impuestos fiscales obligatorios.
+3. No recalcules el ritmo diario si ya viene en el contexto; enfócate en patrones de compra, categorías o comercios.
+4. Devuelve estrictamente un JSON con:
+   - "resumen": Una sola oración corta y accionable (máximo 135 caracteres) para la tarjeta de Inicio.
+   - "detalle": Explicación ampliada del mismo consejo en 2 o 3 viñetas cortas con cifras reales en **negrita** y una pregunta final abierta para continuar conversando en el chat.
+Datos del usuario:
+${JSON.stringify(contextData)}`;
+    } else if (isDictadoGasto) {
       systemPrompt = `Eres un extractor experto de gastos estructurados para la app Rinde Más en Venezuela.
 Tu ÚNICA tarea es extraer con total fidelidad los datos de las compras o gastos dictados por el usuario y llamar obligatoriamente a la función "registrar_gasto".
 
@@ -1078,76 +1091,78 @@ Nota de análisis cambiario: La diferencia entre total_usd_bcv y total_usdt_p2p 
 
     const payload = {
       contents: geminiMessages,
-      tools: [
-        {
-          functionDeclarations: isDictadoGasto
-            ? [registrarGastoDeclaration]
-            : [
-                registrarGastoDeclaration,
-                {
-                  name: "agregar_items_lista_compras",
-                  description: "Agrega uno o varios productos a la lista de compras del usuario.",
-                  parameters: {
-                    type: "object",
-                    properties: {
-                      nombres: {
-                        type: "array",
-                        description: "Lista de nombres de los productos a agregar a la lista de compras.",
-                        items: { type: "string" }
-                      }
-                    },
-                    required: ["nombres"]
-                  }
-                },
-                {
-                  name: "modificar_item_lista_compras",
-                  description: "Modifica o renombra un producto en la lista de compras del usuario.",
-                  parameters: {
-                    type: "object",
-                    properties: {
-                      nombre_actual: { type: "string", description: "Nombre del producto actual a modificar." },
-                      nuevo_nombre: { type: "string", description: "Nuevo nombre para el producto." }
-                    },
-                    required: ["nombre_actual", "nuevo_nombre"]
-                  }
-                },
-                {
-                  name: "eliminar_items_lista_compras",
-                  description: "Elimina uno o varios productos de la lista de compras del usuario.",
-                  parameters: {
-                    type: "object",
-                    properties: {
-                      nombres: {
-                        type: "array",
-                        description: "Lista de nombres de los productos a eliminar.",
-                        items: { type: "string" }
-                      }
-                    },
-                    required: ["nombres"]
-                  }
-                },
-                {
-                  name: "marcar_items_lista_compras",
-                  description: "Marca productos de la lista de compras como comprados o pendientes.",
-                  parameters: {
-                    type: "object",
-                    properties: {
-                      nombres: {
-                        type: "array",
-                        description: "Lista de nombres de los productos a marcar.",
-                        items: { type: "string" }
+      ...(isInsightInicio ? {} : {
+        tools: [
+          {
+            functionDeclarations: isDictadoGasto
+              ? [registrarGastoDeclaration]
+              : [
+                  registrarGastoDeclaration,
+                  {
+                    name: "agregar_items_lista_compras",
+                    description: "Agrega uno o varios productos a la lista de compras del usuario.",
+                    parameters: {
+                      type: "object",
+                      properties: {
+                        nombres: {
+                          type: "array",
+                          description: "Lista de nombres de los productos a agregar a la lista de compras.",
+                          items: { type: "string" }
+                        }
                       },
-                      comprado: {
-                        type: "boolean",
-                        description: "true si fue comprado, false si está pendiente."
-                      }
-                    },
-                    required: ["nombres", "comprado"]
+                      required: ["nombres"]
+                    }
+                  },
+                  {
+                    name: "modificar_item_lista_compras",
+                    description: "Modifica o renombra un producto en la lista de compras del usuario.",
+                    parameters: {
+                      type: "object",
+                      properties: {
+                        nombre_actual: { type: "string", description: "Nombre del producto actual a modificar." },
+                        nuevo_nombre: { type: "string", description: "Nuevo nombre para el producto." }
+                      },
+                      required: ["nombre_actual", "nuevo_nombre"]
+                    }
+                  },
+                  {
+                    name: "eliminar_items_lista_compras",
+                    description: "Elimina uno o varios productos de la lista de compras del usuario.",
+                    parameters: {
+                      type: "object",
+                      properties: {
+                        nombres: {
+                          type: "array",
+                          description: "Lista de nombres de los productos a eliminar.",
+                          items: { type: "string" }
+                        }
+                      },
+                      required: ["nombres"]
+                    }
+                  },
+                  {
+                    name: "marcar_items_lista_compras",
+                    description: "Marca productos de la lista de compras como comprados o pendientes.",
+                    parameters: {
+                      type: "object",
+                      properties: {
+                        nombres: {
+                          type: "array",
+                          description: "Lista de nombres de los productos a marcar.",
+                          items: { type: "string" }
+                        },
+                        comprado: {
+                          type: "boolean",
+                          description: "true si fue comprado, false si está pendiente."
+                        }
+                      },
+                      required: ["nombres", "comprado"]
+                    }
                   }
-                }
-              ]
-        }
-      ],
+                ]
+          }
+        ]
+      }),
       ...(isDictadoGasto ? {
         toolConfig: {
           functionCallingConfig: {
@@ -1156,10 +1171,30 @@ Nota de análisis cambiario: La diferencia entre total_usd_bcv y total_usdt_p2p 
           }
         }
       } : {}),
-      generationConfig: {
-        temperature: isDictadoGasto ? 0.1 : 0.5,
-        maxOutputTokens: 8192,
-      },
+      generationConfig: isInsightInicio
+        ? {
+            temperature: 0.3,
+            maxOutputTokens: 512,
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: "object",
+              properties: {
+                resumen: {
+                  type: "string",
+                  description: "Consejo corto y directo (máximo 135 caracteres, sin saludos) para la tarjeta de Inicio."
+                },
+                detalle: {
+                  type: "string",
+                  description: "Explicación detallada del mismo consejo con cifras reales y una pregunta final para seguir conversando en el chat."
+                }
+              },
+              required: ["resumen", "detalle"]
+            }
+          }
+        : {
+            temperature: isDictadoGasto ? 0.1 : 0.5,
+            maxOutputTokens: 8192,
+          },
     };
 
     let response;

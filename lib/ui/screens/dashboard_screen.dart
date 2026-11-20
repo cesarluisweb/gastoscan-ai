@@ -10,6 +10,7 @@ import '../../providers/scan_queue_provider.dart';
 import 'dart:io';
 import 'dart:convert';
 import '../../services/notification_service.dart';
+import '../../services/ai_insight_service.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/category_chart.dart';
 import '../widgets/expense_card.dart';
@@ -42,6 +43,10 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  String? _cachedGeminiShort;
+  String? _cachedGeminiDetailed;
+  String? _lastEvaluatedInsightSignature;
+
   static double _convertBudgetToLens(
     double amount,
     String fromMoneda,
@@ -80,6 +85,53 @@ class _DashboardScreenState extends State<DashboardScreen> {
     NotificationService.instance.recordActivityAndReschedule();
   }
 
+  Future<void> _syncDynamicAiInsight(
+    GastoProvider gastoProvider,
+    SettingsProvider settings,
+  ) async {
+    final signature = AiInsightService.buildExpenseSignature(
+      year: gastoProvider.selectedYear,
+      month: gastoProvider.selectedMonth,
+      gastos: gastoProvider.gastos,
+      totalMesUsd: gastoProvider.totalMesUsd,
+    );
+    if (_lastEvaluatedInsightSignature == signature) return;
+    _lastEvaluatedInsightSignature = signature;
+
+    final budgetUsd = _convertBudgetToLens(
+      gastoProvider.presupuestoGeneral,
+      gastoProvider.monedaPresupuesto,
+      'USD',
+      settings,
+    );
+    final metaUsd = _convertBudgetToLens(
+      gastoProvider.metaAhorro,
+      gastoProvider.monedaPresupuesto,
+      'USD',
+      settings,
+    );
+
+    final result = await AiInsightService.refreshBackgroundInsightIfNeeded(
+      gastos: gastoProvider.gastos,
+      selectedYear: gastoProvider.selectedYear,
+      selectedMonth: gastoProvider.selectedMonth,
+      totalMesUsd: gastoProvider.totalMesUsd,
+      presupuestoUsd: budgetUsd,
+      metaAhorroUsd: metaUsd,
+      monedaLente: settings.monedaPrincipal,
+    );
+
+    if (!mounted) return;
+    final newShort = result?['resumen'];
+    final newDetailed = result?['detalle'];
+    if (newShort != _cachedGeminiShort || newDetailed != _cachedGeminiDetailed) {
+      setState(() {
+        _cachedGeminiShort = newShort;
+        _cachedGeminiDetailed = newDetailed;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final gastoProvider = Provider.of<GastoProvider>(context);
@@ -87,6 +139,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final settings = Provider.of<SettingsProvider>(context);
     final mesNombre = DateFormatter.getMonthName(gastoProvider.selectedMonth);
     final anio = gastoProvider.selectedYear;
+
+    if (!gastoProvider.isLoading) {
+      _syncDynamicAiInsight(gastoProvider, settings);
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -336,12 +392,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   presupuestoGeneral: budgetGeneral,
                   metaAhorro: metaAhorroInLens,
                   totalesPorCategoria: categoryTotals,
+                  presupuestosPorCategoria: categoryBudgets,
                   totalGastadoMes: totalMes,
                   monedaPresupuesto: activeMoneda,
                   tasaCambio: settings.tasaCambioVesUsd,
                   mes: gastoProvider.selectedMonth,
                   anio: gastoProvider.selectedYear,
                   onChatTap: widget.onNavigateToChat,
+                  cachedGeminiShort: _cachedGeminiShort,
+                  cachedGeminiDetailed: _cachedGeminiDetailed,
                 ),
                 const SizedBox(height: 16),
                 if (gastoProvider.totalesPorCategoria.isNotEmpty ||

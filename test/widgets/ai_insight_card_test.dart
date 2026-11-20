@@ -1,19 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
 import 'package:gastoscan_ai/data/models/gasto_model.dart';
+import 'package:gastoscan_ai/providers/chat_provider.dart';
 import 'package:gastoscan_ai/ui/widgets/ai_insight_card.dart';
 
 void main() {
   group('AiInsightCard Tests', () {
     testWidgets('displays welcome prompt when expenses are empty', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
           home: Scaffold(
             body: AiInsightCard(
-              gastos: [],
+              gastos: const [],
               presupuestoGeneral: 0.0,
-              totalesPorCategoria: {},
+              totalesPorCategoria: const {},
               totalGastadoMes: 0.0,
+              currentDate: DateTime(2026, 9, 15),
+              mes: 9,
+              anio: 2026,
             ),
           ),
         ),
@@ -46,6 +51,9 @@ void main() {
               presupuestoGeneral: 100.0,
               totalesPorCategoria: const {'Alimentación': 120.0},
               totalGastadoMes: 120.0,
+              currentDate: DateTime(2026, 9, 15),
+              mes: 9,
+              anio: 2026,
             ),
           ),
         ),
@@ -76,6 +84,9 @@ void main() {
               presupuestoGeneral: 100.0,
               totalesPorCategoria: const {'Alimentación': 50.0},
               totalGastadoMes: 50.0,
+              currentDate: DateTime(2026, 9, 15),
+              mes: 9,
+              anio: 2026,
             ),
           ),
         ),
@@ -107,6 +118,9 @@ void main() {
               presupuestoGeneral: 0.0,
               totalesPorCategoria: const {},
               totalGastadoMes: 30.0,
+              currentDate: DateTime(2026, 9, 15),
+              mes: 9,
+              anio: 2026,
             ),
           ),
         ),
@@ -126,6 +140,8 @@ void main() {
               totalesPorCategoria: const {},
               totalGastadoMes: 0.0,
               currentDate: DateTime(2026, 10, 3),
+              mes: 10,
+              anio: 2026,
             ),
           ),
         ),
@@ -159,6 +175,9 @@ void main() {
               metaAhorro: 100.0,
               totalesPorCategoria: const {'Alimentación': 450.0},
               totalGastadoMes: 450.0,
+              currentDate: DateTime(2026, 9, 15),
+              mes: 9,
+              anio: 2026,
             ),
           ),
         ),
@@ -228,6 +247,9 @@ void main() {
               totalGastadoMes: 4500.0,
               monedaPresupuesto: 'VES',
               tasaCambio: 400.0,
+              currentDate: DateTime(2026, 10, 15),
+              mes: 10,
+              anio: 2026,
             ),
           ),
         ),
@@ -237,6 +259,96 @@ void main() {
       // Exceso es 500 Bs y meta es 1.000 Bs (NO 200.000 Bs ni 400.000 Bs)
       expect(find.textContaining('Bs. 500,00'), findsOneWidget);
       expect(find.textContaining('Bs. 1.000,00'), findsOneWidget);
+    });
+
+    testWidgets('combines daily pace with cached Gemini insight and injects detailed insight into ChatProvider on Consultar tap (AI-08)', (tester) async {
+      final chatProvider = ChatProvider();
+      bool navigatedToChat = false;
+
+      final gasto = GastoModel(
+        id: 1,
+        uuid: 'uuid-ai08',
+        fecha: '2026-11-10',
+        comercio: 'Farmatodo',
+        moneda: 'USD',
+        totalOriginal: 4000,
+        totalUsd: 4000,
+        categoria: 'Salud',
+        creadoEn: '2026-11-10T10:00:00',
+      );
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider<ChatProvider>.value(
+          value: chatProvider,
+          child: MaterialApp(
+            home: Scaffold(
+              body: AiInsightCard(
+                gastos: [gasto],
+                presupuestoGeneral: 200.0,
+                totalesPorCategoria: const {'Salud': 40.0},
+                totalGastadoMes: 40.0,
+                currentDate: DateTime(2026, 11, 10),
+                mes: 11,
+                anio: 2026,
+                cachedGeminiShort: 'Concentraste 3 compras en Farmatodo esta semana; comparar precios por unidad te ayudará a ahorrar.',
+                cachedGeminiDetailed: '• **Hallazgo en Salud:** Hiciste 3 compras en **Farmatodo** por **\$40,00**.\n• ¿Quieres revisar qué medicamentos te salieron más económicos?',
+                onChatTap: () {
+                  navigatedToChat = true;
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Verifica que muestra un solo mensaje que combina ritmo diario ($8,00/día por 20 días) + consejo Gemini
+      expect(find.textContaining('Puedes gastar hasta \$8,00/día'), findsOneWidget);
+      expect(find.textContaining('Concentraste 3 compras en Farmatodo'), findsOneWidget);
+
+      // Al tocar Consultar -> debe poblar ChatProvider con el consejo detallado y abrir el chat
+      await tester.tap(find.byKey(const Key('ai_insight_card_consultar_btn')));
+      await tester.pumpAndSettle();
+
+      expect(navigatedToChat, isTrue);
+      expect(chatProvider.messages.length, 1);
+      expect(chatProvider.messages.first['role'], 'assistant');
+      expect(chatProvider.messages.first['text'], contains('Ritmo diario disponible:'));
+      expect(chatProvider.messages.first['text'], contains('Hallazgo en Salud:'));
+    });
+
+    testWidgets('displays category budget warning heuristic when a category reaches >= 80% of its budget (AI-08)', (tester) async {
+      final gasto = GastoModel(
+        id: 1,
+        uuid: 'uuid-cat',
+        fecha: '2026-11-12',
+        comercio: 'Unicasa',
+        moneda: 'USD',
+        totalOriginal: 8500,
+        totalUsd: 8500,
+        categoria: 'Alimentación',
+        creadoEn: '2026-11-12T10:00:00',
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AiInsightCard(
+              gastos: [gasto],
+              presupuestoGeneral: 300.0,
+              totalesPorCategoria: const {'Alimentación': 85.0},
+              presupuestosPorCategoria: const {'Alimentación': 100.0},
+              totalGastadoMes: 85.0,
+              currentDate: DateTime(2026, 11, 12),
+              mes: 11,
+              anio: 2026,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Atención en Alimentación: ya utilizaste el 85%'), findsOneWidget);
     });
   });
 }

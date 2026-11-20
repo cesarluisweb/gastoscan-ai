@@ -34,6 +34,34 @@ class ChatProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Presenta en el chat la versión detallada del consejo mostrado en la tarjeta de Inicio.
+  /// Si la conversación aún no tiene mensajes del usuario (solo el saludo inicial),
+  /// reemplaza el saludo genérico por el consejo detallado; si ya hay conversación activa,
+  /// lo añade al final sin duplicarlo.
+  void presentDetailedInsight(String detailedInsight) {
+    final clean = detailedInsight.trim();
+    if (clean.isEmpty) return;
+
+    if (_messages.isNotEmpty && _messages.last['text'] == clean) {
+      return;
+    }
+
+    if (!hasUserMessages &&
+        _messages.length == 1 &&
+        _messages.first['text'] == initialGreeting) {
+      _messages[0] = {
+        'role': 'assistant',
+        'text': clean,
+      };
+    } else {
+      _messages.add({
+        'role': 'assistant',
+        'text': clean,
+      });
+    }
+    notifyListeners();
+  }
+
   void setLoading(bool loading) {
     if (_isLoading != loading) {
       _isLoading = loading;

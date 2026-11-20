@@ -74,5 +74,29 @@ void main() {
       expect(provider.hasUserMessages, isFalse);
       expect(notifyCount, 1);
     });
+
+    test('presentDetailedInsight replaces initial greeting when no user messages exist', () {
+      final provider = ChatProvider();
+      provider.presentDetailedInsight('Consejo detallado sobre tus compras de Alimentación.');
+
+      expect(provider.messages.length, 1);
+      expect(provider.messages.first['role'], 'assistant');
+      expect(provider.messages.first['text'], 'Consejo detallado sobre tus compras de Alimentación.');
+      expect(provider.hasUserMessages, isFalse);
+    });
+
+    test('presentDetailedInsight appends to existing conversation and avoids duplicates', () {
+      final provider = ChatProvider();
+      provider.addMessage({'role': 'user', 'text': 'Hola'});
+      provider.addMessage({'role': 'assistant', 'text': '¿En qué te ayudo?'});
+
+      provider.presentDetailedInsight('Detalle ampliado del consejo de Inicio.');
+      expect(provider.messages.length, 3);
+      expect(provider.messages.last['text'], 'Detalle ampliado del consejo de Inicio.');
+
+      // Si se invoca de nuevo con el mismo texto consecutivo, no lo duplica
+      provider.presentDetailedInsight('Detalle ampliado del consejo de Inicio.');
+      expect(provider.messages.length, 3);
+    });
   });
 }
