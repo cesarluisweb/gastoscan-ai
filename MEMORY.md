@@ -8,7 +8,7 @@
 - **Mapa de código:** `docs/CODE_MAP.md` se regenera con `node scripts/gen_code_map.js`; el hook de pre-commit lo actualiza.
 
 ## Tareas en Curso
-- **Herramientas Panel Web Bloque 1 (Calculadora + Asistente IA):** `Pendiente de validación 🧪` (build 32, run `44784979988`, `3df3104`, HTTP 200 en `/panel`, 29/29 tests en CI). Falta validación en navegador por César (`docs/DOC_HERRAMIENTAS_PANEL_WEB.md`).
+- **AI-08 (consejos dinámicos en Inicio):** 🔧 Implementada en `AiInsightService`, `AiInsightCard`, `ChatProvider` y Worker (`modo: "insight_inicio"`). Consejo único combinado con ritmo diario, caché 24h ($\ge 3$ gastos) y detalle ampliado en el chat al pulsar `Consultar`.
 - **AI-09 (detección fotos y facturas duplicadas):** Planificada en `ROADMAP.md` y documentada en `docs/DOC_PLAN_DETECCION_DUPLICADOS.md`. Pendiente definición de esquema SQLite (v20 vs v19).
 - **UX-17 (compartir Rinde Más por WhatsApp):** Planificada en `docs/DOC_PLAN_UX17_COMPARTIR_WHATSAPP.md` (App, Panel Web, Landing + Open Graph); diferida hasta tener el enlace público de Google Play.
 - **E0-05b (diagnóstico Q01..Q20):** ✅ Completada (build 707, `4dafbf9`, run `43499866405`). Fase 0 cerrada.
@@ -16,6 +16,7 @@
 - **Pendientes de cierre administrativo:** firma P0 (rotar upload key tras aprobar Producción) y solicitud de Producción en Google Play.
 
 ## Completadas
+- **Herramientas Panel Web Bloque 1 (Calculadora + Asistente IA):** ✅ Aprobada por César (20/11/2026, build 32, run `44784979988`, `3df3104`, 29/29 tests en CI). Lecciones graduadas a `.agents/rules/web.md` §5 y `.agents/skills/sincronizar-panel-web/SKILL.md`.
 - **UX-20 (ítems en ReviewExpenseScreen):** ✅ Validada en dispositivo por César (build 712, `18ae858`, CI verde). Regla graduada a `DESIGN.md` §4.9. Idea pendiente: evaluar término "conceptos" vs "artículos".
 - **UX Calculadora Cambiaria (`CurrencyCalculatorScreen`):** ✅ build 714 (`0cc94bd`, run `44539128258`). Autofocus y teclado al abrir/limpiar/swap/tasa personalizada, prefijo `Bs.` fijo, placeholder `22px` negrita y `onDrag`.
 - **Rediseño desplegable central (`MainScreen.showAddMenu`):** ✅ build 713 (`8092209`, run `44522447802`). Barrita superior, sin `X`, cajas amarillas `40×40` *outlined*, textos sin IA y flechas derechas.

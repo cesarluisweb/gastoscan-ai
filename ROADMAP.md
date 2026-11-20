@@ -32,8 +32,8 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
    - *Pendiente posterior:* Rotación de la upload key tras aprobación de Producción en Google Play.
 2. **Subida a Google Play Store (Solicitud de Producción):** `Pendiente de validación 🧪`
    - Prueba cerrada de 14 días completada con 12 evaluadores (cero crashes / cero ANR). Solicitud de producción enviada el 04/11/2026 (en revisión). Doc en [`docs/DOC_CUESTIONARIO_PRODUCCION.md`](docs/DOC_CUESTIONARIO_PRODUCCION.md).
-3. **Herramientas Web Bloque 1 (Calculadora Cambiaria + Asistente IA en Panel Web):** `Pendiente de validación 🧪`
-   - Módulos puros (`expense-money.js`, `currency-calculator.js`, `ai-assistant.js`), componentes Astro (`CalculatorModal.astro`, `AiChatDrawer.astro`), 29 pruebas unitarias en CI (`deploy_web.yml`, build 32, run `44784979988`, `3df3104`) y cola de compras múltiples. Desplegado y validado HTTP 200 en `https://rindemas.cesarluis.com/panel`. Doc en [`docs/DOC_HERRAMIENTAS_PANEL_WEB.md`](docs/DOC_HERRAMIENTAS_PANEL_WEB.md).
+3. **Herramientas Web Bloque 1 (Calculadora Cambiaria + Asistente IA en Panel Web):** `Completada ✅`
+   - Módulos puros (`expense-money.js`, `currency-calculator.js`, `ai-assistant.js`), componentes Astro (`CalculatorModal.astro`, `AiChatDrawer.astro`), 29 pruebas unitarias en CI (`deploy_web.yml`, build 32, run `44784979988`, `3df3104`) y cola de compras múltiples. Desplegado, verificado HTTP 200 en `https://rindemas.cesarluis.com/panel` y aprobado por César (20/11/2026). Doc en [`docs/DOC_HERRAMIENTAS_PANEL_WEB.md`](docs/DOC_HERRAMIENTAS_PANEL_WEB.md).
 
 ---
 
@@ -84,7 +84,7 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 ### Bloque C: Percepción con IA
 - `AI-06` **Imputación de IVA en Precios de Anaquel y Algoritmo del Centavo Residual:** `Pendiente` Imputar 16% de IVA a productos gravados `(G)` preservando exentos `(E)`, ajustando $\pm 0,01$ en el ítem de mayor valor y mostrando base fiscal en `ReviewExpenseScreen`.
 - `AI-07` **Refinamiento de UX en Chat del Asistente (Sugerencias Verticales y Botón Dinámico):** `Pendiente` Sugerencias apiladas verticalmente (2 a 3 opciones) y botón dinámico micrófono/enviar estilo WhatsApp.
-- `AI-08` **Consejos Dinámicos en Tarjeta Asistente IA (Inicio):** `Pendiente` Rotación de consejos de valor real (ej. *"Comprar en el sitio correcto te ayuda a estirar el presupuesto. Rinde Más recuerda tus compras y te avisa dónde te salió más barato cada producto"*) combinados con cálculo de ritmo diario y generación periódica con Gemini en segundo plano según gastos reales.
+- `AI-08` **Consejos Dinámicos en Tarjeta Asistente IA (Inicio):** `Implementada 🔧` Consejo único combinado con el cálculo de ritmo diario, heurísticas locales, banco de valor real y generación periódica con Gemini en segundo plano (`modo: "insight_inicio"` sin `tools`, máx. 1 vez cada 24h con $\ge 3$ gastos); al pulsar `Consultar ->` abre el chat con la versión ampliada y detallada del consejo para seguir interactuando.
 - `AI-09` **Detección Preventiva de Fotos y Facturas Duplicadas:** `Pendiente` Control en dos capas para evitar duplicados en la cola de escaneo (por hash SHA-256) y alertas semánticas en revisión/guardado (mismo comercio, fecha y monto) con opción de descarte inmediato. Ver [`docs/DOC_PLAN_DETECCION_DUPLICADOS.md`](docs/DOC_PLAN_DETECCION_DUPLICADOS.md).
 
 ### Bloque D: Nuevas Herramientas Financieras

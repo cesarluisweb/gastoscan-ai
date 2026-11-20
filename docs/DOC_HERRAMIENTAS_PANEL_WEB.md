@@ -1,6 +1,6 @@
 # Herramientas del Panel Web: Calculadora Cambiaria y Asistente IA (Bloque 1)
 
-> **Estado:** `Pendiente de validación 🧪` (CI en verde: run `44784979988`, build `32`, SHA `3df3104`; verificado HTTP 200 en `https://rindemas.cesarluis.com/panel`).
+> **Estado:** `Completada ✅` (CI en verde: run `44784979988`, build `32`, SHA `3df3104`; validada en navegador por César el 20/11/2026).
 > **Alcance:** Panel Web Astro (`landing/`). Cero cambios en Flutter, SQLite o `firestore.rules`.
 
 ---

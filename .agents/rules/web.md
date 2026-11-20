@@ -44,3 +44,20 @@ description: "Estándares de desarrollo web, enrutamiento en Astro, cabeceras de
 - **Botón Principal Exclusivo:** El color amarillo oficial (`#FACC15`) queda reservado para la acción de conversión primaria (canal oficial de WhatsApp o Google Play en producción abierta). Queda descontinuada la descarga directa de archivos APK en la web.
 - **Botón Secundario (Canales / Lista de Espera):** Debe diseñarse con estilo contorno/blanco (`bg-white hover:bg-slate-50 border border-slate-300 text-slate-800`), limitando los colores de terceros (ej. verde WhatsApp `#25D366`) estrictamente al icono vectorizado para no saturar ni competir con el botón principal.
 - **Microtexto Inferior:** Debe ser minimalista (ej. `🚀 Próximamente en Google Play`), evitando repetir información ya comunicada por los botones superiores.
+
+## 5. Invariantes de Arquitectura y Resiliencia del Panel Web
+- **Jerarquía Fija de Capas (`z-index`):** Todos los drawers, modales y toasts del panel deben declarar clase arbitraria de Tailwind junto con `style="z-index: N;"` siguiendo esta escala estricta:
+  - Drawers laterales (ej. `#drawer-ai-chat`): `z-[85]`
+  - Modales de herramientas (ej. `#modal-calculator`): `z-[90]`
+  - Formulario de gasto (`#modal-expense`): `z-[95]` (siempre por encima de drawers y herramientas)
+  - Diálogos de decisión o confirmación (`#modal-discrepancy-decision`, `#modal-chat-*`): `z-[100]`
+  - Toasts flotantes (`#panel-toast`, fondo `#FACC15` y texto `#111827`): `z-[110]`
+- **Componentes Astro de Marcado Puro:** Los modales y drawers extraídos en `landing/src/components/*.astro` no deben incluir etiquetas `<script>` propias; todo el estado compartido y los listeners residen en el `<script>` coordinador de `panel.astro`, importando la lógica pura desde `landing/src/lib/`.
+- **Calendario en Hora de Venezuela (VET / UTC-4):** Prohibido usar `new Date().toISOString().substring(0, 10)` o `new Date().getDate()` del navegador para fechas de gastos, atributos `.max` o cálculo de días del mes en `panel.astro`. Usar siempre `getVenezuelaTodayIso()` y `getDefaultExpenseDateForMonth()` de `landing/src/lib/ai-assistant.js`.
+- **Coma Decimal vs. `type="number"` y Prefills Seguros:**
+  - Prohibido aplicar `parseAmount` con coma venezolana sobre `<input type="number">` (Chrome rechaza la coma y devuelve `""`). Los inputs que acepten formato venezolano (`1.234,56`) deben usar `type="text" inputmode="decimal"`; los prefills hacia `#modal-expense` (`type="number"`) deben inyectar strings numéricos con punto decimal (`.toFixed(2)`).
+  - Todo listener de apertura con parámetro opcional (`openExpenseModal(prefill = null)`) debe envolverse en arrow (`() => openExpenseModal()`) y validar un marcador explícito (`prefill.__isExpensePrefill === true`) para evitar leer un `PointerEvent` como datos.
+- **Fuente Única Fiscal y Contratos Seguros:**
+  - Usar un único predicado de impuestos en toda la web: `isTaxItem` (`price-comparator.js`), en el cual delega `isTaxDescription` (`category-classifier.js`).
+  - Las peticiones a `/chat-analyst` deben enviar `messages` con el contrato exacto `{ role: 'user' | 'assistant', text: string }` (nunca `content` ni `model`).
+  - Renderizar campos provenientes de IA o Firestore (como `comercio` e `items[].descripcion` en tarjetas) mediante nodos DOM seguros (`textContent`) o `escapeHtml` estricto.
