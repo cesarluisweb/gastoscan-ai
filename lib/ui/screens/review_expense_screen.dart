@@ -2177,9 +2177,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Material(
-                        color: tasaAnterior == opt.rate
-                            ? AppColors.surface
-                            : AppColors.cardLighter,
+                        color: AppColors.surface,
                         borderRadius: BorderRadius.circular(10),
                         child: InkWell(
                           key: Key('opt_iva_item_${opt.rate}'),
@@ -2191,7 +2189,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
                                 color: tasaAnterior == opt.rate
-                                    ? AppColors.textPrimary
+                                    ? AppColors.primaryDark
                                     : AppColors.border,
                                 width: tasaAnterior == opt.rate ? 1.5 : 1.0,
                               ),
@@ -2541,7 +2539,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     return Container(
       key: const Key('fiscal_summary_footer'),
       width: double.infinity,
-      margin: const EdgeInsets.only(top: 10),
+      margin: const EdgeInsets.only(top: 6),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.cardLighter,
@@ -3537,7 +3535,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                         if (idx > 0)
                           Divider(
                             key: ValueKey('item_divider_${item.clientKey}'),
-                            height: 1,
+                            height: 12,
                             thickness: 1,
                             color: AppColors.border,
                           ),
@@ -3914,11 +3912,26 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                       ),
                     ];
                   }),
+                  if (_fiscalReviewMode && _estadoFiscal != null && _items.isNotEmpty)
+                    const Divider(
+                      key: Key('fiscal_section_divider'),
+                      height: 16,
+                      thickness: 1,
+                      color: AppColors.border,
+                    ),
                   if (_fiscalReviewMode && _estadoFiscal?.sugerenciaUnica != null)
                     _buildFiscalSuggestionBanner(_estadoFiscal!.sugerenciaUnica!),
                   if (_fiscalReviewMode && _estadoFiscal != null)
                     _buildFiscalSummaryFooter(_estadoFiscal!),
-                  const SizedBox(height: 12),
+                  if (_items.isNotEmpty)
+                    const Divider(
+                      key: Key('add_item_section_divider'),
+                      height: 24,
+                      thickness: 1,
+                      color: AppColors.border,
+                    )
+                  else
+                    const SizedBox(height: 12),
                   OutlinedButton.icon(
                     key: const Key('review_expense_add_item_btn'),
                     onPressed: _addItem,
@@ -3933,7 +3946,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     ),
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size.fromHeight(44),
-                      side: const BorderSide(color: AppColors.textPrimary, width: 1.2),
+                      side: const BorderSide(color: AppColors.primaryDark, width: 1.5),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       backgroundColor: AppColors.surface,
                     ),
