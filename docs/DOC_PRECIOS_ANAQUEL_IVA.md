@@ -1,6 +1,6 @@
 # Especificación Técnica: Precios de Anaquel e Imputación de IVA en Compras (AI-06 · B-2)
 
-> **Estado:** `Pendiente de validación 🧪` (APK build 725, run `44918813456`, SHA `4800076`; Web build 33, run `44859265979`, HTTP 200 en `/panel`; Firestore build 5, run `44859266019`).
+> **Estado:** `Pendiente de validación 🧪` (APK build 728, run `44923332876`, SHA `f629b6e`; Web build 33, run `44859265979`, HTTP 200 en `/panel`; Firestore build 5, run `44859266019`).
 > **Tarea:** `AI-06` · Fase 6.2, Bloque C en `ROADMAP.md`.
 
 Este documento define la regla de negocio vigente (**variante B-2**), el motor de reconciliación fiscal, el algoritmo de reparto por Mayor Resto, el comparador de precios (móvil + web) y la guía de pruebas en dispositivo para **Rinde Más**.
@@ -99,8 +99,8 @@ Tanto `DatabaseHelper.findPriceHistory` como `landing/src/lib/price-comparator.j
 
 ## 7. Guía de Pruebas en Dispositivo Físico
 
-> **Commit / Build:** SHA `4800076` · APK Build `725` (run `44918813456`) · Web Build `33` (run `44859265979`).
-> **Controles reales en código:** `lib/ui/screens/review_expense_screen.dart` (`_recalcularTotal` L869, diálogo fallback L1129, selector rápido `¿Este artículo paga IVA?` L2113, franja `Con IVA` + badge `G · 16% ▾` / `Exento ▾` L2308, banner sugerencia L2395, pie fiscal L2509, hoja `Ajustar IVA` L2639, pausa de `_PriceComparisonLine` L3867).
+> **Commit / Build:** SHA `f629b6e` · APK Build `728` (run `44923332876`) · Web Build `33` (run `44859265979`).
+> **Controles reales en código:** `lib/ui/screens/review_expense_screen.dart` (`_recalcularTotal` L869, diálogo fallback L1129, selector rápido `¿Este artículo paga IVA?` L2113, franja `Con IVA` + mini-selector `G · 16% ▾` / `Exento ▾` con fondo blanco y borde gris L2309, banner sugerencia L2394, pie fiscal L2508, hoja `Ajustar IVA` L2638, separadores `item_divider_*` L3537, pausa de `_PriceComparisonLine` L3876, borde negro en `review_expense_add_item_btn` L3923).
 
 **Ruta alcanzable:** `Inicio` → botón central `+` (`MainScreen`) → `Tomar foto de factura` / galería (`ScanScreen`) → banner `Factura lista para revisar` (`GlobalScanQueueBanner`) → `ReviewExpenseScreen`.
 
