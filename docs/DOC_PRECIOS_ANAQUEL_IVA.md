@@ -1,6 +1,6 @@
 # Especificación Técnica: Precios de Anaquel e Imputación de IVA en Compras (AI-06 · B-2)
 
-> **Estado:** `Pendiente de validación 🧪` (APK build 724, run `44910561506`, SHA `9ff3d87`; Web build 33, run `44859265979`, HTTP 200 en `/panel`; Firestore build 5, run `44859266019`).
+> **Estado:** `Pendiente de validación 🧪` (APK build 725, run `44918813456`, SHA `4800076`; Web build 33, run `44859265979`, HTTP 200 en `/panel`; Firestore build 5, run `44859266019`).
 > **Tarea:** `AI-06` · Fase 6.2, Bloque C en `ROADMAP.md`.
 
 Este documento define la regla de negocio vigente (**variante B-2**), el motor de reconciliación fiscal, el algoritmo de reparto por Mayor Resto, el comparador de precios (móvil + web) y la guía de pruebas en dispositivo para **Rinde Más**.
@@ -90,7 +90,7 @@ Tanto `DatabaseHelper.findPriceHistory` como `landing/src/lib/price-comparator.j
 | Modelo y sufijos | `lib/data/models/item_gasto_model.dart` (`baseImponibleOriginal`, `baseTotalOriginal`, `tasaIvaPct`, `OrigenAlicuota`, `withFiscalSuffix`, `toMap` intacto en 7 columnas) |
 | Pipeline fiscal y Mayor Resto | `lib/data/models/gemini_extraction_result.dart` (`IvaModo`, `repartirIvaMayorResto`, `fiscalRateToleranceCents`, `guardToleranceCents`, `fromJson`, `fromQueueMap`, `toMap`) |
 | Motor puro B-2 y detector | `lib/domain/finance/fiscal_reconciliation_helper.dart` (`prepararSesionFiscal`, `reconciliar`, `buscarCandidatosCorreccion`, `sugerirCorreccionUnica`, `construirItemsFallback`) |
-| Revisión UI B-2 | `lib/ui/screens/review_expense_screen.dart` (`_recalcularTotal`: L865, `_confirmarGuardadoFallbackFiscal`: L1125, `_buildFiscalGrossStrip`: L2109, `_buildFiscalSuggestionBanner`: L2180, `_buildFiscalSummaryFooter`: L2294, `_abrirHojaAjustarIva`: L2424) |
+| Revisión UI B-2 | `lib/ui/screens/review_expense_screen.dart` (`_recalcularTotal`: L869, `_confirmarGuardadoFallbackFiscal`: L1129, `_abrirSelectorIvaItem`: L2113, `_buildFiscalGrossStrip`: L2308, `_buildFiscalSuggestionBanner`: L2395, `_buildFiscalSummaryFooter`: L2509, `_abrirHojaAjustarIva`: L2639, pausa comparador: L3867) |
 | Comparador SQLite y Web | `lib/data/datasources/local/database_helper.dart`, `landing/src/lib/price-comparator.js`, `landing/src/pages/panel.astro` |
 | Pruebas unitarias, propiedad y widget | `test/domain/finance/fiscal_reconciliation_helper_test.dart`, `test/models/gemini_extraction_result_test.dart`, `test/screens/review_expense_screen_layout_test.dart` |
 | Worker IA (alícuota `'R'`) | `workers/src/index.js` (pendiente `wrangler deploy` aparte) |
@@ -99,8 +99,8 @@ Tanto `DatabaseHelper.findPriceHistory` como `landing/src/lib/price-comparator.j
 
 ## 7. Guía de Pruebas en Dispositivo Físico
 
-> **Commit / Build:** SHA `9ff3d87` · APK Build `724` (run `44910561506`) · Web Build `33` (run `44859265979`).
-> **Controles reales en código:** `lib/ui/screens/review_expense_screen.dart` (`_recalcularTotal` L865, diálogo fallback L1125, franja `Con IVA` + badge `G · 16%` L2109, banner sugerencia L2180, pie fiscal L2294, hoja `Ajustar IVA` L2424).
+> **Commit / Build:** SHA `4800076` · APK Build `725` (run `44918813456`) · Web Build `33` (run `44859265979`).
+> **Controles reales en código:** `lib/ui/screens/review_expense_screen.dart` (`_recalcularTotal` L869, diálogo fallback L1129, selector rápido `¿Este artículo paga IVA?` L2113, franja `Con IVA` + badge `G · 16% ▾` / `Exento ▾` L2308, banner sugerencia L2395, pie fiscal L2509, hoja `Ajustar IVA` L2639, pausa de `_PriceComparisonLine` L3867).
 
 **Ruta alcanzable:** `Inicio` → botón central `+` (`MainScreen`) → `Tomar foto de factura` / galería (`ScanScreen`) → banner `Factura lista para revisar` (`GlobalScanQueueBanner`) → `ReviewExpenseScreen`.
 
@@ -108,7 +108,7 @@ Tanto `DatabaseHelper.findPriceHistory` como `landing/src/lib/price-comparator.j
 |---|---|---|
 | **CP-01** | Escanear una factura mixta de mercado (varios `(E)` + algunos `(G)` + `IVA 16%`). | En `ReviewExpenseScreen`: las filas exentas no muestran pastilla ni franja extra; las gravadas muestran `Precio (sin IVA)`, `Total sin IVA`, badge `G · 16%` y debajo `Con IVA 16%: Bs. X` (sin `≈`). El pie muestra `Subtotal sin IVA`, `IVA de la factura`, `✓ Cuadra con la factura` y `Ajustar IVA · N gravados`. |
 | **CP-02** | Escanear una factura homogénea (100% gravada, ej. farmacia). | No aparecen badges `G · 16%` repetidos en las tarjetas, pero sí `Con IVA 16%` debajo de cada producto y `Ajustar IVA · N gravados` al pie. |
-| **CP-03** | Tocar el badge `G · 16%` de un artículo gravado. | Pasa directo a Exento (nunca a 8%), `Monto total` no cambia, el pie marca descuadre y aparece el banner `¿"<Artículo>" lleva IVA 16% (G)?` con botón `Corregir`. Al tocar `Corregir`, vuelve a cuadrar al centavo. |
+| **CP-03** | Tocar el botón `G · 16% ▾` de un artículo gravado y elegir `Exento (E)`. | Se abre primero `¿Este artículo paga IVA?` (evita cambios por toque accidental). Al elegir `Exento (E)`: aparece `Marcado como Exento · Deshacer`, queda un chip sutil `Exento ▾` + `Sin IVA` en esa misma tarjeta (nunca desaparece el control), se oculta el comparador de precios (no salta un falso `-14% más económico`), `Monto total` no cambia y aparece el banner `¿"<Artículo>" lleva IVA 16% (G)?` con `Corregir`. Al tocar `Deshacer` o `Corregir`, vuelve a cuadrar y reaparece el comparador. |
 | **CP-04** | Tocar `Ajustar IVA · N gravados` al pie y alternar un artículo entre `Exento`, `16%` y `8%`. | La hoja actualiza el cálculo de IVA en vivo y al pulsar `Listo` refleja los cambios en las tarjetas y el pie. |
 | **CP-05** | Editar `Monto total` a mano en una factura fiscal. | El pie cambia de `IVA de la factura` a `IVA calculado` y deja de mostrar `Cuadra con la factura`. Si hay descuadre al pulsar `Guardar Gasto`, aparece el diálogo con `Corregir` / `Guardar así`. Al elegir `Guardar así`, guarda bases con `(G)`/`(E)` + renglón `Impuesto IVA` en la categoría dominante. |
 | **CP-06** | Guardar una factura cuadrada y revisar `Inicio`, `Gastos`, `Análisis` y `Editar gasto`. | Cada artículo tiene un único precio final (con IVA incluido) en su propia categoría y sin renglón `Impuesto IVA`. |
