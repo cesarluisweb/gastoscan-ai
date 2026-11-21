@@ -610,10 +610,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       'total_usdt': double.parse(((g.totalUsdt ?? g.totalUsd) / 100.0).toStringAsFixed(2)),
     }).toList();
 
-    final brechaCapturada = double.parse(
-      (gastoProvider.totalMesUsd - gastoProvider.totalMesUsdt).toStringAsFixed(2),
-    );
-
     final double totalEurBcv = (settings.tasaCambioVesEur > 0 && gastoProvider.totalMesVes > 0)
         ? double.parse((gastoProvider.totalMesVes / settings.tasaCambioVesEur).toStringAsFixed(2))
         : (settings.tasaCambioVesEur > 0
@@ -633,7 +629,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       'total_usdt_p2p': gastoProvider.totalMesUsdt,
       'total_eur_bcv': totalEurBcv,
       'total_ves': gastoProvider.totalMesVes,
-      'brecha_capturada': brechaCapturada,
       'presupuesto_general': gastoProvider.presupuestoGeneral,
       'meta_ahorro': gastoProvider.metaAhorro,
       'limite_para_gastar': savingsSnapshot.limiteParaGastar,

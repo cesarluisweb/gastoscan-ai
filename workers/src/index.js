@@ -1012,7 +1012,7 @@ Contexto de Lentes Financieros del usuario:
 - 'total_usdt_p2p': Total gastado del mes evaluado al costo de reposición a tasa USDT P2P (Binance).
 - 'total_eur_bcv': Total gastado en euros evaluado a tasa oficial BCV.
 - 'total_ves': Total acumulado en bolívares.
-Nota de análisis cambiario: La diferencia entre total_usd_bcv y total_usdt_p2p en pagos en bolívares refleja cuánto rindió el dinero del usuario pagando a tasa oficial BCV en comparación con la tasa P2P. Explícalo con naturalidad si el usuario consulta sobre comparativas o ahorro entre divisas.
+Nota de análisis cambiario (ESTRICTO): Los valores 'total_usd_bcv' y 'total_usdt_p2p' son solo dos lentes de visualización del mismo gasto mensual. NUNCA afirmes ni recomiendes por iniciativa propia que el usuario "ahorró dinero pagando en bolívares a tasa BCV en lugar de USDT" ni sugieras "aprovechar la brecha cambiaria". Solo explica la diferencia entre el lente USD BCV y el lente USDT P2P si el usuario te pregunta explícitamente por esa comparativa.
 `;
     }
 

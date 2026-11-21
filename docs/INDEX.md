@@ -26,6 +26,7 @@
 | `dinero-datos.md` | model_decision | Montos, monedas, tasas, categorías |
 | `ia-ocr-voz.md` | model_decision | Gemini, OCR, voz, desambiguación |
 | `privacidad-seguridad.md` | model_decision | Auth, Firestore, SQLite, Data Safety |
+| `resiliencia-offline.md` | model_decision | Conectividad offline, caché de avatar, fail-fast HTTP, reconexión |
 | `marca-terminologia.md` | model_decision | Microcopy, modales, notificaciones |
 | `comunicacion-marketing.md` | model_decision | Soporte, foros, bitácora de marketing |
 
@@ -52,7 +53,7 @@
 | Dinero y tasas | `docs/DOC_TASAS_EQUIVALENCIAS_MULTIMONEDA.md`, `docs/DOC_PRECIOS_ANAQUEL_IVA.md` |
 | Sincronización | `docs/DOC_E0_04_SYNC_CAS_TOMBSTONES.md`, `docs/DOC_SINCRONIZACION_OFFLINE.md`, `docs/DOC_SINCRONIZACION_PRESUPUESTO.md`, `docs/DOC_RESILIENCIA_OFFLINE.md` |
 | Arranque y auth | `docs/DOC_ARRANQUE_LOCAL_FIRST.md`, `docs/DOC_AUTENTICACION_MODAL.md`, `docs/DOC_CONFIGURACION_GOOGLE_SIGNIN.md` |
-| IA y OCR | `docs/DOC_BYOK_GEMINI.md`, `docs/GATEWAY.md`, `docs/DOC_GUIA_PRUEBAS_SEGURIDAD_IA.md`, `docs/DOC_PLAN_DETECCION_DUPLICADOS.md` |
+| IA y OCR | `docs/DOC_BYOK_GEMINI.md`, `docs/GATEWAY.md`, `docs/DOC_GUIA_PRUEBAS_SEGURIDAD_IA.md`, `docs/DOC_PLAN_DETECCION_DUPLICADOS.md`, `docs/DOC_CONSEJOS_DINAMICOS_INICIO.md` |
 | Gastos y UX | `docs/DOC_COMPARADOR_PRECIOS.md`, `docs/DOC_COMPROBANTES_Y_GALERIA.md`, `docs/DOC_ASISTENTE_LISTA_COMPRAS_Y_UX.md`, `docs/DOC_DICTADO_VOZ_CONTINUO.md`, `docs/DOC_MAS_REDISENO.md`, `docs/DOC_REDISENO_ITEMS_FACTURA.md`, `docs/DOC_PLAN_UX17_COMPARTIR_WHATSAPP.md` |
 | Panel web | `docs/DOC_SINCRONIZACION_PANEL_WEB.md`, `docs/DOC_MODERNIZACION_PANEL_WEB.md`, `docs/DOC_HERRAMIENTAS_PANEL_WEB.md` |
 | Categorías | `docs/DOC_AUTOCATEGORIZACION_LOCAL.md` |
