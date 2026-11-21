@@ -45,6 +45,7 @@ El subagente revisor debe auditar implacablemente los siguientes 6 vectores sobr
   - Si un hijo aparece o desaparece dinámicamente (p. ej. `if (!isKeyboardOpen) Container(...)`, `if (isLoading) Padding(...)`), ¿tienen `Key` explícita y única tanto el widget condicional como los hermanos adyacentes del mismo `runtimeType` (`Container`, `Padding`, `SizedBox`)?
   - *Peligro crítico:* Sin `Key`, `MultiChildRenderObjectElement.updateChildren` evalúa `Widget.canUpdate(oldWidget, newWidget) == true` por coincidencia de `runtimeType`, reutiliza el primer `Element` y desmonta el último al final de la lista. Si el último contiene un `TextField` / `EditableTextState` activo, su `deactivate()` ejecuta `_closeInputConnectionIfNeeded()` (`TextInput.hide`) y cierra el teclado de Android en milisegundos.
 - **Unicidad de `Key`:** Verificar que ningún widget condicional duplique una `Key` que ya exista en otra parte activa del mismo árbol visual (`bottomNavigationBar` vs cuerpo scrollable).
+- **Ciclo de vida de `SnackBar` con `Deshacer`:** Capturar `final messenger = ScaffoldMessenger.of(context);` antes de `showSnackBar`, proteger `onTap` con bandera `bool undoHandled = false;` contra doble toque y verificar `if (!mounted) return;` antes de mutar estado (`setState`), pues el `SnackBar` vive en el `ScaffoldMessenger` raíz tras cerrar la pantalla.
 
 ### Vector 2: `Scaffold` Anidados e Insets del Teclado Virtual (`viewInsets.bottom`)
 - **Consumo de `MediaQuery` por `Scaffold` padre:**
@@ -60,10 +61,19 @@ El subagente revisor debe auditar implacablemente los siguientes 6 vectores sobr
 - **Promoción de nulos en Dart:** Si una variable anulable ya fue validada en una condición previa, prohibido usar `!` o `!= null` redundantes dentro del bloque (`unnecessary_non_null_assertion` / `unnecessary_null_comparison`).
 - **Firmas en Fakes de prueba:** Si se tocó un método en un `Provider`, `Repository` o `DatabaseHelper`, verificar con búsqueda global en `test/` que todos los `Fake` mantengan la firma idéntica (`invalid_override` o `UnimplementedError`).
 - **Identificadores ASCII:** Cero tildes o `ñ` en nombres de variables, funciones o clases.
+- **Trampas de Dart 3.13 (`--fatal-warnings`):**
+  - *Promoción de nulos en booleanos intermedios:* `final isAuth = user != null && !user.isAnonymous; if (isAuth) user.uid` **NO promueve** `user` y falla compilación; exigir `if (user != null && !user.isAnonymous)` directo.
+  - *Campos privados `final`:* Dart >= 3.2 promueve campos privados `final` tras `!= null`; prohibido usar `_campo!()` (`unnecessary_non_null_assertion`).
+  - *Imports redundantes por re-exportación:* `package:flutter/material.dart` ya re-exporta `package:flutter/foundation.dart`, y `foundation.dart` ya re-exporta `dart:typed_data`. Prohibido importarlos juntos (`unnecessary_import`).
+  - *Fugas de `http.Client`:* Verificar que todo `http.Client()` creado localmente se cierre en `finally` o vía `close()` en `dispose()`.
+  - *`use_build_context_synchronously` tras `await` de I/O o red:* Verificar que cualquier `await` nuevo dentro de un `State` (incluyendo I/O local como `File.exists()`/`delete()` o `SharedPreferences`) esté seguido de `if (!mounted) return;` antes de volver a leer `context` (`Provider.of`, `ScaffoldMessenger`, `Navigator`).
+  - *Parámetros opcionales privados sin uso (`unused_element_parameter`):* En clases privadas (`_MyScreenState`), si un método privado declara un parámetro opcional que ninguna llamada pasa jamás, Dart 3.13 emite warning y rompe `--fatal-warnings`.
 
 ### Vector 4: Resiliencia Visual en `360 dp` y Reglas de `DESIGN.md`
 - **Contraste:** Fondo amarillo (`AppColors.primary` / `primaryLight` / `primaryDark`) $\rightarrow$ texto e icono SIEMPRE negros (`Colors.black` o `AppColors.textPrimary`). Prohibido texto o icono amarillo sobre fondo blanco.
-- **Desbordes `RenderFlex`:** En filas (`Row`) con textos y montos en bolívares (`Bs. 15.850.420,00`), exigir `Expanded`/`Flexible` en etiquetas y `FittedBox(fit: BoxFit.scaleDown)` en montos. En botones con icono/spinner dentro de diálogos, envolver el texto en `Flexible`.
+- **Paleta oficial:** Rechazar tonos marrones/vinotinto ad-hoc (`#78350F`, `#92400E`) fuera de `AppColors`; usar `AppColors.textPrimary` sobre fondos claros/amarillos.
+- **Desbordes `RenderFlex` y alineación etiqueta-monto en `Row`:** En filas (`Row`) con textos y montos en bolívares (`Bs. 15.850.420,00`), prohibido usar `Row(children: [Expanded(label), Flexible(amount)])` (reparte 50/50 y deja el monto flotando hacia el centro). Usar `Expanded(label)` + `SizedBox(width: 8)` + `ConstrainedBox(constraints: const BoxConstraints(maxWidth: 140), child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerRight, child: Text(...)))`. En botones con icono/spinner dentro de diálogos, envolver el texto en `Flexible`.
+- **Altura de `showModalBottomSheet`:** Exigir `isScrollControlled: true` + `ConstrainedBox(maxHeight: 0.78)` + `SingleChildScrollView` en hojas con 3 o más opciones (sin ello, el tope `9/16` desborda en `360×640` con texto `1.3x`).
 
 ### Vector 5: Robustez Real de las Pruebas en `test/`
 - **Pruebas que realmente fallan ante el bug:**
@@ -78,6 +88,9 @@ El subagente revisor debe auditar implacablemente los siguientes 6 vectores sobr
     ```
   - Si la pantalla vive dentro de `MainScreen`, montar el test envolviendo la pantalla en un `Scaffold` padre para reproducir el `removeViewInsets` real de producción.
 - **Limpieza de ciclo de vida en `tearDown`:** Verificar `autoLoad: false`, `autoProcess: false`, `SharedPreferences.setMockInitialValues({})` y `tester.view.reset`.
+- **Pruebas deterministas de conectividad e I/O real en `testWidgets`:**
+  - Al instanciar `ConnectivityService(testController: controller)` para probar arranque offline, exigir `testConnected: false` en el constructor (un `controller.add(false)` previo a `pumpWidget` se entrega en microtask posterior a `initState` y pierde la carrera).
+  - En `testWidgets` con I/O real de disco + `setState` (p. ej. `FileImage`), prohibido salir de la espera apenas `file.exists()` o usar `Future.delayed` fijo: esperar en bucle acotado (`pump()` + `runAsync(15ms)`) hasta verificar el estado renderizado en el árbol de widgets.
 
 ### Vector 6: Seguridad de Árbol Git
 - Antes de ejecutar `git add`, verificar `git status -s` para no incluir archivos retenidos o de otras tareas que no correspondan al commit actual (prohibido `git add .` o `git add -A` a ciegas).

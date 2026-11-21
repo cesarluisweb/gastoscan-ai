@@ -233,6 +233,9 @@ AlertDialog(
    - **Contraste sobre Gris:** Las etiquetas de campo y rótulos secundarios sobre `#F3F4F6` deben usar `#4B5563` (en lugar de `#6B7280`) para mantener contraste WCAG AA (`>= 4.5:1`).
    - **Consistencia Geométrica:** Todos los campos editables del ítem (`Concepto`, `Cant.`, `Precio`, `Categoría`) comparten el mismo borde `OutlineInputBorder` de `10 dp` y etiqueta flotante. Prohibido mezclar selectores en forma de pastilla (`borderRadius >= 16`) junto a cajas rectangulares dentro del mismo ítem.
    - **Jerarquía y Seguridad:** Concepto en `15 sp` `FontWeight.w600`, monto total del ítem en `17 sp` negrita con `FontFeature.tabularFigures()`, y eliminación siempre protegida con `SnackBar` de `Deshacer` (5 s, sin `SnackBarAction`, conforme a §3.2).
+   - **Mini-selectores secundarios dentro del ítem (ej. alícuota fiscal `G · 16% ▾`):** Replican el lenguaje de los campos del formulario: fondo blanco (`AppColors.surface`), borde gris (`AppColors.border`, `1 dp`), `BorderRadius.circular(10)`, texto negro (`AppColors.textPrimary`) e indicador `▾` de interactividad. Prohibido usar `StadiumBorder` o tonos marrones/vinotinto fuera de `AppColors` (`#78350F`, `#92400E`).
+   - **Controles reversibles sin desaparecer:** Si el usuario cambia a mano un estado secundario en una tarjeta (p. ej. pasar un artículo gravado a `Exento`), nunca ocultar el control bajo su dedo: conservar un indicador discreto (`Exento ▾`) solo en los ítems modificados manualmente y ofrecer `SnackBar` con `Deshacer` (4 s).
+   - **Separadores y botón de agregar:** Separar tarjetas de artículos con `Divider(height: 12, thickness: 1, color: AppColors.border)`, el bloque de resumen fiscal con `Divider(height: 16)` y el botón `Agregar otro artículo` con `Divider(height: 24)`. El botón `Agregar otro artículo` usa fondo blanco (`AppColors.surface`), borde amarillo (`AppColors.primaryDark`, `1.5 dp`), texto negro e ícono `+` amarillo (`AppColors.primaryDark`).
 10. **Contenedor de Icono de Marca (Herramientas y Menús de Acción):**
     - Usar caja cuadrada con esquinas redondeadas sobre fondo `AppColors.primaryLight` (`#FEF08A`), borde de `1 dp` en `AppColors.primaryDark` (`#FACC15`) e icono de línea fina (*outlined*) en `AppColors.textPrimary` (`#111827`).
     - **Escala según contexto:** `32×32` (radio `10`, icono `18`) en tarjetas compactas de grilla (`MoreToolsGrid`); `40×40` (radio `12`, icono `20`) en filas de lista vertical con título y subtítulo (`MainScreen.showAddMenu`).
@@ -240,6 +243,8 @@ AlertDialog(
     - Esquinas superiores redondeadas en `24 dp` y barrita superior centrada (`40×4`, `AppColors.border`, radio `2`) como indicador de cierre por arrastre.
     - Omitir el botón `X` en menús de selección rápida para que el título respire en una sola línea en pantallas de `360 dp` (el cierre ocurre deslizando, tocando fuera o con Atrás).
     - Separar filas con divisores finos de `1 dp` (`AppColors.border` al 80%) con sangría lateral (`indent: 20`, `endIndent: 20`) y usar flecha derecha sutil (`Icons.chevron_right_rounded`, `AppColors.textMuted`, `20 dp`).
+    - **Tarjetas de opción seleccionable (ej. `¿Este artículo paga IVA?`):** Todas las opciones mantienen fondo blanco (`AppColors.surface`) y `BorderRadius.circular(10)`. La opción seleccionada destaca con borde amarillo (`AppColors.primaryDark`, `1.5 dp`) e ícono de verificación negro (`AppColors.textPrimary`); las no seleccionadas usan borde gris (`AppColors.border`, `1 dp`).
+    - **Resiliencia en pantallas pequeñas (`360×640` / fuente `1.3x`):** Toda hoja inferior con 3 o más opciones debe usar `isScrollControlled: true` y envolver su contenido en `ConstrainedBox(maxHeight: height * 0.78)` + `SingleChildScrollView` para evitar `RenderFlex overflowed`.
 
 ---
 
