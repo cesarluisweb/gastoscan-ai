@@ -61,9 +61,135 @@ export function normalizeProductText(text) {
 }
 
 /**
- * Determina si una descripción corresponde a un renglón de impuesto (IVA).
+ * Determina si una descripción corresponde estrictamente a un renglón de IVA
+ * (excluyendo IGTF y evitando falsos positivos como "Aceite de oliva" o "Leche Nativa").
+ */
+export function isIvaOnlyDescription(descripcion) {
+    const clean = String(descripcion || '').trim().toLowerCase().replace(/\s+/g, ' ');
+    if (!clean || clean.includes('igtf')) return false;
+    if (
+        clean === 'impuesto iva' ||
+        clean === 'iva' ||
+        clean === 'i.v.a' ||
+        clean === 'i.v.a.' ||
+        clean === 'impuesto' ||
+        clean === 'impuestos'
+    ) {
+        return true;
+    }
+    return (
+        /^(?:(?:total|monto|impuestos?(?:\s+(?:al|de|del))?)\s+)?\(?i\.?v\.?a\.?\)?(?:[\s:/\-(\d%]|$)/i.test(clean) ||
+        /^(?:total\s+)?impuesto\s+al\s+valor\s+agregado(?:\s|[:(\d%]|$)/i.test(clean)
+    );
+}
+
+export function hasGravadoSuffix(descripcion) {
+    return /\(G\)\s*$/i.test(String(descripcion || '').trim());
+}
+
+export function hasReducidoSuffix(descripcion) {
+    return /\(R\)\s*$/i.test(String(descripcion || '').trim());
+}
+
+/**
+ * Paridad 1:1 con DatabaseHelper.shelfPriceTaxFactor:
+ * Calcula el factor de ajuste a precio de anaquel (1.16, 1.08 o 1.0) para ítems
+ * pertenecientes a facturas con renglón separado de IVA (Opción A / fallback).
+ * Retorna `null` si el ítem tiene sufijo fiscal y el gasto tiene renglón de IVA
+ * pero el monto no cuadra con 16% ni 8% (muestra ambigua -> omitir).
+ */
+export function shelfPriceTaxFactor({
+    descripcion,
+    taxCents,
+    gravadoBaseCents,
+    gravadoItemCount,
+    reducidoBaseCents = 0,
+    reducidoItemCount = 0,
+}) {
+    const isG = hasGravadoSuffix(descripcion);
+    const isR = hasReducidoSuffix(descripcion);
+    if (!isG && !isR) return 1.0;
+    if (!(taxCents > 0)) return 1.0;
+
+    const totalTaxedCount = gravadoItemCount + reducidoItemCount;
+    const tol = Math.ceil((totalTaxedCount > 0 ? totalTaxedCount : 1) / 2.0) + 1;
+
+    if (gravadoBaseCents > 0 || reducidoBaseCents > 0) {
+        const expectedMixed = Math.floor((gravadoBaseCents * 16 + reducidoBaseCents * 8 + 50) / 100);
+        if (Math.abs(taxCents - expectedMixed) <= tol) {
+            return isR ? 1.08 : 1.16;
+        }
+        if (isG && reducidoBaseCents === 0 && gravadoBaseCents > 0) {
+            const expected8 = Math.floor((gravadoBaseCents * 8 + 50) / 100);
+            if (Math.abs(taxCents - expected8) <= tol) {
+                return 1.08;
+            }
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Calcula los acumulados fiscales de una lista de ítems (en centavos) para aplicar
+ * `shelfPriceTaxFactor` tanto en histórico como en el gasto actual en revisión/edición.
+ */
+export function summarizeExpenseTaxContext(items, { totalsInCents = true } = {}) {
+    let taxCents = 0;
+    let gravadoBaseCents = 0;
+    let gravadoItemCount = 0;
+    let reducidoBaseCents = 0;
+    let reducidoItemCount = 0;
+
+    for (const it of items || []) {
+        const desc = String(it?.descripcion || '');
+        const hasTotalVal =
+            it?.total !== '' &&
+            it?.total !== null &&
+            it?.total !== undefined &&
+            Number.isFinite(Number(it.total));
+        let totalCents;
+        if (hasTotalVal) {
+            const parsedTotal = Number(it.total);
+            totalCents = totalsInCents ? Math.round(parsedTotal) : Math.round(parsedTotal * 100);
+        } else {
+            const cant = Number(it?.cantidad) > 0 ? Number(it.cantidad) : 1;
+            const hasPrecio =
+                it?.precio !== '' &&
+                it?.precio !== null &&
+                it?.precio !== undefined &&
+                Number.isFinite(Number(it.precio));
+            const unit = hasPrecio
+                ? Number(it.precio)
+                : (Number(it?.precio_unitario) || 0) / 100;
+            totalCents = Math.round(cant * unit * 100);
+        }
+        if (isIvaOnlyDescription(desc)) {
+            taxCents += totalCents;
+        } else if (hasGravadoSuffix(desc)) {
+            gravadoBaseCents += totalCents;
+            gravadoItemCount += 1;
+        } else if (hasReducidoSuffix(desc)) {
+            reducidoBaseCents += totalCents;
+            reducidoItemCount += 1;
+        }
+    }
+
+    return {
+        taxCents,
+        gravadoBaseCents,
+        gravadoItemCount,
+        reducidoBaseCents,
+        reducidoItemCount,
+    };
+}
+
+/**
+ * Determina si una descripción corresponde a un renglón de impuesto (IVA / IGTF).
  */
 export function isTaxItem(descripcion) {
+    if (isIvaOnlyDescription(descripcion)) return true;
+    if (/\bigtf\b/i.test(String(descripcion || ''))) return true;
     const clean = normalizeProductText(descripcion);
     if (!clean) return false;
     return TAX_KEYWORDS.some(
@@ -273,6 +399,7 @@ export function findPriceHistoryFromGastos(
         if (ageDays === null || ageDays > diasVentana) continue;
 
         const items = Array.isArray(g.items) ? g.items : [];
+        const taxCtx = summarizeExpenseTaxContext(items);
         for (const it of items) {
             if (inspectedItems >= 600) break;
             const prevDesc = String(it?.descripcion || '');
@@ -283,8 +410,15 @@ export function findPriceHistoryFromGastos(
                 : normalizeProductText(prevDesc);
             if (!validDescs.has(normDesc)) continue;
 
-            const prevUsd = computeItemUnitPriceUsd(it, g);
-            if (!(prevUsd > 0)) continue;
+            const rawPrevUsd = computeItemUnitPriceUsd(it, g);
+            if (!(rawPrevUsd > 0)) continue;
+
+            const taxFactor = shelfPriceTaxFactor({
+                descripcion: prevDesc,
+                ...taxCtx,
+            });
+            if (taxFactor === null) continue;
+            const prevUsd = rawPrevUsd * taxFactor;
 
             inspectedItems += 1;
             const rawComercio = g.comercio || 'Otro comercio';

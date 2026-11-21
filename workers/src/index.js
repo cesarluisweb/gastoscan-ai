@@ -577,8 +577,8 @@ const RECEIPT_RESPONSE_SCHEMA = {
                 },
                 alicuota_fiscal: {
                   type: "string",
-                  enum: ["E", "G"],
-                  description: "Alícuota fiscal del ítem: 'E' exento o 'G' gravado.",
+                  enum: ["E", "G", "R"],
+                  description: "Alícuota fiscal del ítem: 'E' exento (0%), 'G' gravado general (16%) o 'R' alícuota reducida (8%).",
                   nullable: true
                 }
               },
@@ -636,7 +636,7 @@ Reglas estrictas para los productos de cada factura:
 2. Decimales y Céntimos: Extrae con exactitud los montos numéricos usando SIEMPRE el PUNTO (.) como separador decimal. NUNCA devuelvas precios en céntimos enteros sin punto decimal (ej. si la factura fiscal o impresora térmica imprime 1250, 12,50, 1156 o 11,56, DEBES interpretarlo y extraerlo como 12.50 u 11.56, NO como 1250 u 1156). Todo precio debe tener sus decimales correspondientes. Extrae "total_original" leyendo con fidelidad el TOTAL impreso al pie de la factura (no inventes el total sumando ítems a ciegas). Si un ítem se leyó sin punto decimal haciendo que la suma supere al TOTAL impreso, corrige los decimales de ese ítem para que cuadre con el total.
 3. Moneda Unificada: Todos los precios extraídos (ítems y total_original) DEBEN estar estrictamente en la misma moneda. Si los ítems están detallados en Bolívares (VES), extrae el total_original en Bolívares (ignorando el total Ref en USD) y coloca "moneda": "VES".
 4. "categoria": Asigna a cada ítem individual una de las categorías válidas ("Alimentación", "Salud", "Higiene", "Educación", "Hogar", "Servicios", "Transporte", "Ropa", "Entretenimiento", "Otros") según el tipo de producto.
-5. "impuesto_iva" y marcadores fiscales: En facturas fiscales venezolanas, los ítems suelen marcarse al final como (E) Exento o (G) Gravado al 16% (o alícuotas reducidas). En cada ítem, extrae "alicuota_fiscal": "E" para exento, o "G" para gravado. En el campo general "impuesto_iva", extrae el monto total del IVA liquidado (suele decir "Total IVA", "IVA 16%", "Impuesto"). Si toda la factura es exenta o no tiene IVA desglosado, coloca 0.00.
+5. "impuesto_iva" y marcadores fiscales: En facturas fiscales venezolanas, los ítems suelen marcarse al final como (E) Exento (0%), (G) Gravado general (16%) o (R) Alícuota reducida (8%). En cada ítem, extrae "alicuota_fiscal": "E" para exento, "G" para gravado al 16%, o "R" para alícuota reducida del 8% (si no está impreso o no es legible, coloca null). En el campo general "impuesto_iva", extrae el monto total del IVA liquidado (suele decir "Total IVA", "IVA 16%", "Impuesto"). Si toda la factura es exenta o no tiene IVA desglosado, coloca 0.00. No incluyas líneas de SUBTOTAL o BASE IMPONIBLE dentro de "items".
 6. Formato de Fecha: En facturas y recibos de Venezuela y Latinoamérica (con montos en VES, RIF o comercios locales), las fechas numéricas siguen estrictamente el formato DÍA/MES/AÑO (DD/MM/YYYY, DD-MM-YYYY o DD.MM.YYYY). Por ejemplo, si la factura dice '03/11/2026' o '03-11-2026', el día es 03 y el mes es 11 (noviembre), por lo que DEBES extraerla como "2026-11-03" en formato ISO YYYY-MM-DD (NUNCA como 11 de marzo "2026-03-11"). Si la fecha incluye el nombre del mes (ej. 'Nov', 'Noviembre') o viene en formato ISO (YYYY-MM-DD), respeta ese orden. Si el año tiene 2 dígitos (ej. '03/11/26'), completa al siglo 2000 ("2026-11-03"). Convierte siempre la fecha leída al formato ISO "YYYY-MM-DD".
 
 Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago Móvil o transferencia bancaria, coloca en "comercio" el beneficiario y en "items" una sola línea con el concepto.`;

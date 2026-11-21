@@ -38,6 +38,26 @@ enum TipoLineaExtraccion {
   subtotal,
 }
 
+class _RawParsedItem {
+  final ItemGastoModel item;
+  final String? alicuota; // 'E', 'G', 'R' o null
+
+  const _RawParsedItem({
+    required this.item,
+    required this.alicuota,
+  });
+}
+
+class _DecimalReconcileResult {
+  final List<ItemGastoModel> items;
+  final double targetTotal;
+
+  const _DecimalReconcileResult({
+    required this.items,
+    required this.targetTotal,
+  });
+}
+
 class GeminiExtractionResult {
   static const int currentSchemaVersion = 2;
 
@@ -71,6 +91,239 @@ class GeminiExtractionResult {
 
   static const double _maxMontoIA = 1000000000.0; // techo de cordura: mil millones
   static const double _maxCantidadIA = 10000.0;
+
+  /// Reparte los centavos exactos del IVA documental (`ivaCents`) entre las líneas
+  /// mediante el algoritmo de Mayor Resto (Hamilton / Largest Remainder Method).
+  ///
+  /// Usa [BigInt] internamente para evitar desbordamiento de enteros de 64 bits ante
+  /// montos altos en bolívares (`ivaCents * base * tasa`). Garantiza que
+  /// `sum(resultado) == ivaCents` de forma determinista y sin error acumulado.
+  static List<int> repartirIvaMayorResto(
+    List<int> bases,
+    List<int> tasaPct,
+    int ivaCents,
+  ) {
+    if (bases.isEmpty || ivaCents <= 0) {
+      return List<int>.filled(bases.length, 0);
+    }
+    final weights = List<BigInt>.generate(
+      bases.length,
+      (i) => bases[i] > 0 && tasaPct[i] > 0
+          ? BigInt.from(bases[i]) * BigInt.from(tasaPct[i])
+          : BigInt.zero,
+    );
+    final BigInt totalWeight = weights.fold<BigInt>(BigInt.zero, (a, b) => a + b);
+    if (totalWeight <= BigInt.zero) {
+      return List<int>.filled(bases.length, 0);
+    }
+
+    final BigInt ivaBig = BigInt.from(ivaCents);
+    final shares = List<int>.filled(bases.length, 0);
+    final remainders = List<BigInt>.filled(bases.length, BigInt.zero);
+    int assigned = 0;
+
+    for (int i = 0; i < weights.length; i++) {
+      final w = weights[i];
+      if (w <= BigInt.zero) continue;
+      final BigInt numerator = ivaBig * w;
+      shares[i] = (numerator ~/ totalWeight).toInt();
+      remainders[i] = numerator % totalWeight;
+      assigned += shares[i];
+    }
+
+    final int remaining = ivaCents - assigned;
+    if (remaining > 0) {
+      final order = List<int>.generate(weights.length, (i) => i)
+        ..sort((a, b) {
+          final cmpRem = remainders[b].compareTo(remainders[a]);
+          if (cmpRem != 0) return cmpRem;
+          final cmpWeight = weights[b].compareTo(weights[a]);
+          if (cmpWeight != 0) return cmpWeight;
+          return a.compareTo(b);
+        });
+      for (int k = 0; k < remaining && k < order.length; k++) {
+        if (weights[order[k]] > BigInt.zero) {
+          shares[order[k]] += 1;
+        }
+      }
+    }
+
+    return shares;
+  }
+
+  /// Calcula la tolerancia en centavos para la guardia `|sum - target|` teniendo en
+  /// cuenta que `total = round(cant * precio_unitario)` acumula hasta 0.5 centavos
+  /// por unidad cuando el precio unitario viene redondeado a 2 decimales.
+  static int _guardToleranceCents(List<ItemGastoModel> items) {
+    if (items.isEmpty) return 2;
+    double sumQty = 0.0;
+    for (final it in items) {
+      sumQty += it.cantidad > 0 ? it.cantidad : 1.0;
+    }
+    final int byQty = 1 + (sumQty / 2.0).ceil();
+    final int byLines = 1 + (items.length / 2.0).ceil();
+    final int raw = byQty > byLines ? byQty : byLines;
+    return raw.clamp(2, 25);
+  }
+
+  /// Tolerancia fiscal estricta en centavos para validar que el IVA impreso en la
+  /// factura corresponde exactamente al 16% (o 8%) de las bases gravadas identificadas.
+  static int _fiscalRateToleranceCents(int numTaxedItems) {
+    if (numTaxedItems <= 0) return 1;
+    return ((numTaxedItems / 2.0).ceil() + 1).clamp(2, 10);
+  }
+
+  /// Ejecuta de forma pura los 4 bloques de reconciliación de decimales omitidos
+  /// contra un [targetTotal] explícito, sin mutar la lista de entrada.
+  static _DecimalReconcileResult _reconcileDecimals(
+    List<ItemGastoModel> sourceItems,
+    double targetTotal, {
+    bool allowScaleTargetTotal = true,
+  }) {
+    final itemsList = List<ItemGastoModel>.from(sourceItems);
+    double resolvedTarget = targetTotal;
+
+    if (itemsList.isEmpty) {
+      return _DecimalReconcileResult(items: itemsList, targetTotal: resolvedTarget);
+    }
+
+    // 1. Ítem individual que supera el total objetivo pero /100 cabe dentro
+    if (resolvedTarget > 0) {
+      for (int i = 0; i < itemsList.length; i++) {
+        final it = itemsList[i];
+        if (it.totalDisplay > resolvedTarget * 1.05 &&
+            (it.totalDisplay / 100.0) <= resolvedTarget * 1.05) {
+          itemsList[i] = it.copyWith(
+            precioUnitario: (it.precioUnitario / 100).round(),
+            total: (it.total / 100).round(),
+          );
+        }
+      }
+    }
+
+    // 2. Residual Match: si la suma supera el objetivo, probar dividir /100 un ítem >= 10.00
+    if (resolvedTarget > 0) {
+      int currentSumCents = itemsList.fold(0, (sum, item) => sum + item.total);
+      double currentSum = currentSumCents / 100.0;
+      if (currentSum > resolvedTarget * 1.05) {
+        for (int i = 0; i < itemsList.length; i++) {
+          final it = itemsList[i];
+          if (it.total >= 1000) {
+            final candidateTotalCents = (it.total / 100).round();
+            final simulatedSumCents = currentSumCents - it.total + candidateTotalCents;
+            final simulatedSum = simulatedSumCents / 100.0;
+            final diff = (simulatedSum - resolvedTarget).abs();
+            final maxAllowedDiff = (resolvedTarget * 0.05).clamp(0.05, 1.0);
+            if (diff <= maxAllowedDiff) {
+              itemsList[i] = it.copyWith(
+                precioUnitario: (it.precioUnitario / 100).round(),
+                total: candidateTotalCents,
+              );
+              currentSumCents = simulatedSumCents;
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    // 3. Consenso de Decimales y Outlier de Escala
+    if (itemsList.length >= 2) {
+      final decimalItems = itemsList.where((it) => (it.precioUnitario % 100) != 0).toList();
+      if (decimalItems.isNotEmpty && decimalItems.length >= (itemsList.length / 2).floor()) {
+        final sortedPrices = decimalItems.map((it) => it.precioUnitarioDisplay).toList()..sort();
+        final medianPrice = sortedPrices[sortedPrices.length ~/ 2];
+
+        if (medianPrice > 0) {
+          for (int i = 0; i < itemsList.length; i++) {
+            final it = itemsList[i];
+            if ((it.precioUnitario % 100) == 0 && it.precioUnitarioDisplay >= 10.0) {
+              final ratio = it.precioUnitarioDisplay / medianPrice;
+              final candidatePrice = it.precioUnitarioDisplay / 100.0;
+              final candidateRatio = candidatePrice / medianPrice;
+
+              if (ratio >= 10.0 && candidateRatio >= 0.05 && candidateRatio <= 10.0) {
+                final intUnitInt = it.precioUnitarioDisplay.round();
+                final endsInNonZeroDigits = (intUnitInt % 100) != 0;
+                if (endsInNonZeroDigits || ratio >= 20.0) {
+                  final oldTotalCents = it.total;
+                  final nuevoPrecioInt = (it.precioUnitario / 100).round();
+                  final nuevoTotalInt = (it.total / 100).round();
+                  itemsList[i] = it.copyWith(
+                    precioUnitario: nuevoPrecioInt,
+                    total: nuevoTotalInt,
+                  );
+
+                  if (allowScaleTargetTotal && resolvedTarget > 0) {
+                    final excess = (oldTotalCents - nuevoTotalInt) / 100.0;
+                    if ((resolvedTarget - (oldTotalCents / 100.0)).abs() < resolvedTarget * 0.5) {
+                      resolvedTarget = (resolvedTarget - excess).clamp(0.0, double.infinity);
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // 4. Validación general de ratios 90..110 (total x100 o todos los ítems x100)
+    final int sumItemsCentavos = itemsList.fold(0, (sum, item) => sum + item.total);
+    final double sumItems = sumItemsCentavos / 100.0;
+
+    if (sumItems > 0 && resolvedTarget > 0) {
+      final ratioTotalToSum = resolvedTarget / sumItems;
+      final ratioSumToTotal = sumItems / resolvedTarget;
+
+      if (allowScaleTargetTotal && ratioTotalToSum >= 90.0 && ratioTotalToSum <= 110.0) {
+        resolvedTarget = resolvedTarget / 100.0;
+      } else if (ratioSumToTotal >= 90.0 && ratioSumToTotal <= 110.0) {
+        for (int i = 0; i < itemsList.length; i++) {
+          final old = itemsList[i];
+          itemsList[i] = old.copyWith(
+            precioUnitario: (old.precioUnitario / 100).round(),
+            total: (old.total / 100).round(),
+          );
+        }
+      }
+    }
+
+    return _DecimalReconcileResult(items: itemsList, targetTotal: resolvedTarget);
+  }
+
+  static String? _extractAlicuota(String? rawAlicuota, String descripcion) {
+    final norm = rawAlicuota?.trim().toUpperCase();
+    if (norm == 'E' || norm == 'G' || norm == 'R') return norm;
+    if (RegExp(r'\(G\)\s*$', caseSensitive: false).hasMatch(descripcion)) return 'G';
+    if (RegExp(r'\(E\)\s*$', caseSensitive: false).hasMatch(descripcion)) return 'E';
+    if (RegExp(r'\(R\)\s*$', caseSensitive: false).hasMatch(descripcion)) return 'R';
+    return null;
+  }
+
+  /// Evalúa si un vector de alícuotas `[0, 8, 16]` explica el `ivaCents` documental
+  /// dentro de la tolerancia fiscal estricta. Retorna el error en centavos si calza,
+  /// o `null` si no cumple el chequeo.
+  static int? _matchWeightedVatError(
+    List<ItemGastoModel> items,
+    List<int> ratesPct,
+    int ivaCents,
+  ) {
+    int taxedCount = 0;
+    int weightedBaseSum = 0;
+    for (int i = 0; i < items.length; i++) {
+      final rate = ratesPct[i];
+      if (rate > 0 && items[i].total > 0) {
+        taxedCount++;
+        weightedBaseSum += items[i].total * rate;
+      }
+    }
+    if (taxedCount == 0 || weightedBaseSum <= 0) return null;
+    final int expectedIvaCents = (weightedBaseSum + 50) ~/ 100;
+    final int diff = (expectedIvaCents - ivaCents).abs();
+    final int tol = _fiscalRateToleranceCents(taxedCount);
+    return diff <= tol ? diff : null;
+  }
 
   static double _parseAmount(dynamic value, {bool isPrice = false}) {
     // Defensa contra datos de la IA: nada negativo, infinito ni fuera de rango.
@@ -276,6 +529,14 @@ class GeminiExtractionResult {
 
           final rawId = itemMap['id'];
           final rawGastoId = itemMap['gasto_id'];
+          final rawBaseCents = itemMap['base_imponible_original_cents'];
+          final int? baseImponibleOriginal = rawBaseCents is num
+              ? rawBaseCents.toInt().clamp(0, maxMontoCentavos)
+              : null;
+          final rawTasaIva = itemMap['tasa_iva_pct'];
+          final int tasaIvaPct = rawTasaIva is num
+              ? rawTasaIva.toInt().clamp(0, 100)
+              : (baseImponibleOriginal != null ? 16 : 0);
 
           itemsList.add(ItemGastoModel(
             id: rawId is num ? rawId.toInt() : null,
@@ -286,6 +547,8 @@ class GeminiExtractionResult {
             total: totalCentavos,
             categoria: catItem,
             origenCategoria: catItem != 'Otros' ? OrigenCategoria.ia : OrigenCategoria.predeterminada,
+            baseImponibleOriginal: baseImponibleOriginal,
+            tasaIvaPct: tasaIvaPct,
           ));
         }
       }
@@ -359,7 +622,7 @@ class GeminiExtractionResult {
     double impuestoIva = _parseAmount(json['impuesto_iva']);
 
     // Paso 0: Clasificación estricta de líneas crudas (antes de cualquier clamp o normalización)
-    final itemsList = <ItemGastoModel>[];
+    final rawProducts = <_RawParsedItem>[];
     const validCategorias = AppConstants.categorias;
     final ivaLinesFromJson = <ItemGastoModel>[];
     bool hasSpecialLines = false;
@@ -390,12 +653,18 @@ class GeminiExtractionResult {
             hasSpecialLines = true;
           }
 
-          final alicuota = itemMap['alicuota_fiscal']?.toString().trim().toUpperCase();
+          final alicuota = lineType == TipoLineaExtraccion.producto
+              ? _extractAlicuota(itemMap['alicuota_fiscal']?.toString(), desc)
+              : null;
+
+          // Conservamos sufijos temporalmente; si se imputa IVA en Paso 3, los limpiamos.
           if (lineType == TipoLineaExtraccion.producto) {
             if (alicuota == 'E' && !desc.toUpperCase().contains('(E)')) {
               desc = '$desc (E)';
             } else if (alicuota == 'G' && !desc.toUpperCase().contains('(G)')) {
               desc = '$desc (G)';
+            } else if (alicuota == 'R' && !desc.toUpperCase().contains('(R)')) {
+              desc = '$desc (R)';
             }
           }
 
@@ -424,18 +693,13 @@ class GeminiExtractionResult {
           if (lineType == TipoLineaExtraccion.iva) {
             ivaLinesFromJson.add(parsedItem);
           } else {
-            itemsList.add(parsedItem);
+            rawProducts.add(_RawParsedItem(item: parsedItem, alicuota: alicuota));
           }
         }
       }
     }
 
-    // Categoría dominante de la factura para asignar al renglón de IVA (evitando inflar 'Otros')
-    final String dominantCat = ItemGastoModel.calcularCategoriaDominante(itemsList);
-
-    // Consolidar renglones de IVA explícitos de `items` con el campo `impuesto_iva`
-    // garantizando que el IVA se contabilice una sola vez y nunca se confunda con
-    // productos como "Aceite de oliva" o "Leche Nativa".
+    // Consolidar IVA documental (cabecera vs renglones explícitos en `items`)
     bool hasMultipleConflictingIvaLines = false;
     if (ivaLinesFromJson.isNotEmpty) {
       final int sumIvaLinesCents = ivaLinesFromJson.fold(0, (acc, it) => acc + it.total);
@@ -450,33 +714,89 @@ class GeminiExtractionResult {
       if (impuestoIva <= 0 && sumIvaLinesCents > 0) {
         impuestoIva = sumIvaLinesCents / 100.0;
       }
-
-      for (final ivaItem in ivaLinesFromJson) {
-        final normalizedIvaItem = ivaItem.categoria == 'Otros'
-            ? ivaItem.copyWith(categoria: dominantCat)
-            : ivaItem;
-        itemsList.add(normalizedIvaItem);
-      }
-    } else if (impuestoIva > 0) {
-      itemsList.add(ItemGastoModel(
-        descripcion: 'Impuesto IVA',
-        cantidad: 1.0,
-        precioUnitario: (impuestoIva * 100).round(),
-        total: (impuestoIva * 100).round(),
-        categoria: dominantCat,
-        origenCategoria: dominantCat != 'Otros' ? OrigenCategoria.ia : OrigenCategoria.predeterminada,
-      ));
-    }
-
-    // Si la IA devolvió otro ítem fiscal (ej. IGTF) con categoría 'Otros', asignarle la dominante
-    for (int i = 0; i < itemsList.length; i++) {
-      if (ItemGastoModel.isTaxDescription(itemsList[i].descripcion) && itemsList[i].categoria == 'Otros') {
-        itemsList[i] = itemsList[i].copyWith(categoria: dominantCat);
-      }
     }
 
     // Si no detectó items pero hay monto total, agrega al menos una línea
-    if (itemsList.isEmpty && totalOriginal > 0) {
+    List<ItemGastoModel> productItems = rawProducts.map((e) => e.item).toList();
+    List<String?> productAlicuotas = rawProducts.map((e) => e.alicuota).toList();
+
+    // Paso 1: Reconciliación pura de decimales omitidos por candidatos [T - iva, T]
+    if (productItems.isNotEmpty) {
+      if (impuestoIva > 0 && totalOriginal > 0 && !hasMultipleConflictingIvaLines) {
+        final int totalCents = (totalOriginal * 100).round();
+        final int ivaCents = (impuestoIva * 100).round();
+        final int tol = _guardToleranceCents(productItems);
+        final int rawSumCents = productItems.fold(0, (s, it) => s + it.total);
+
+        final bool alreadyFitsBase = (rawSumCents + ivaCents - totalCents).abs() <= tol;
+        final bool alreadyFitsIncluded = (rawSumCents - totalCents).abs() <= tol;
+
+        if (!alreadyFitsBase && !alreadyFitsIncluded) {
+          // Comprobar primero si total_original omitió el separador decimal (x100) respecto a (bases + IVA)
+          final double sumWithIva = (rawSumCents + ivaCents) / 100.0;
+          final double? scaledTotalFromBase = (sumWithIva > 0 &&
+                  (totalOriginal / sumWithIva) >= 90.0 &&
+                  (totalOriginal / sumWithIva) <= 110.0)
+              ? (totalOriginal / 100.0)
+              : null;
+
+          final double baseAnchorTotal = scaledTotalFromBase ?? totalOriginal;
+          final int baseAnchorTotalCents = (baseAnchorTotal * 100).round();
+          final double targetBase = (baseAnchorTotal - impuestoIva) > 0
+              ? (baseAnchorTotal - impuestoIva)
+              : baseAnchorTotal;
+          final candBase = _reconcileDecimals(
+            productItems,
+            targetBase,
+            allowScaleTargetTotal: false,
+          );
+          final int sumCandBase = candBase.items.fold(0, (s, it) => s + it.total);
+          final int diffCandBase = (sumCandBase + ivaCents - baseAnchorTotalCents).abs();
+
+          final candIncluded = _reconcileDecimals(
+            productItems,
+            totalOriginal,
+            allowScaleTargetTotal: true,
+          );
+          final int sumCandInc = candIncluded.items.fold(0, (s, it) => s + it.total);
+          final int candIncTotalCents = (candIncluded.targetTotal * 100).round();
+          final int diffCandInc = (sumCandInc - candIncTotalCents).abs();
+
+          if (diffCandBase <= tol) {
+            productItems = candBase.items;
+            if (scaledTotalFromBase != null) {
+              totalOriginal = scaledTotalFromBase;
+            }
+          } else if (diffCandInc <= tol) {
+            productItems = candIncluded.items;
+            totalOriginal = candIncluded.targetTotal;
+          } else if (diffCandBase <= diffCandInc) {
+            productItems = candBase.items;
+            if (scaledTotalFromBase != null) {
+              totalOriginal = scaledTotalFromBase;
+            }
+          } else {
+            productItems = candIncluded.items;
+            totalOriginal = candIncluded.targetTotal;
+          }
+        }
+      } else if (totalOriginal > 0) {
+        final rec = _reconcileDecimals(productItems, totalOriginal, allowScaleTargetTotal: true);
+        productItems = rec.items;
+        totalOriginal = rec.targetTotal;
+      } else {
+        // Sin totalOriginal: aplicar solo consenso de decimales y derivar total
+        final rec = _reconcileDecimals(productItems, 0.0, allowScaleTargetTotal: false);
+        productItems = rec.items;
+      }
+    }
+
+    // Paso 2 & 3: Guardia absoluta, chequeo estricto de tasa ponderada e imputación por Mayor Resto
+    final List<ItemGastoModel> itemsList = [];
+    final IvaModo ivaModo;
+    final String dominantCat = ItemGastoModel.calcularCategoriaDominante(productItems);
+
+    if (productItems.isEmpty && ivaLinesFromJson.isEmpty && totalOriginal > 0) {
       itemsList.add(ItemGastoModel(
         descripcion: 'Consumo general / Pago',
         cantidad: 1.0,
@@ -484,146 +804,171 @@ class GeminiExtractionResult {
         total: (totalOriginal * 100).round(),
         origenCategoria: OrigenCategoria.predeterminada,
       ));
-    }
-
-    // Validación cruzada matemática entre la suma de ítems y el Total Original
-    if (itemsList.isNotEmpty) {
-      // 1. Corregir ítems individuales que evidentemente omitieron separador decimal
-      // Si un ítem individual supera el total general de la factura, pero dividido entre 100
-      // cabe dentro del total, con alta certeza omitió la coma o punto decimal en OCR.
-      if (totalOriginal > 0) {
-        for (int i = 0; i < itemsList.length; i++) {
-          final it = itemsList[i];
-          if (it.totalDisplay > totalOriginal * 1.05 && (it.totalDisplay / 100.0) <= totalOriginal * 1.05) {
-            final nuevoPrecioInt = (it.precioUnitario / 100).round();
-            final nuevoTotalInt = (it.total / 100).round();
-            itemsList[i] = it.copyWith(
-              precioUnitario: nuevoPrecioInt,
-              total: nuevoTotalInt,
-            );
-          }
-        }
+      ivaModo = hasDeclaredIvaField && impuestoIva == 0.0
+          ? IvaModo.sinIvaDeclarado
+          : IvaModo.noInformado;
+    } else if (hasMultipleConflictingIvaLines) {
+      // Conflicto entre líneas de IVA y cabecera -> mantener renglones y marcar requiereRevision
+      itemsList.addAll(productItems);
+      for (final ivaItem in ivaLinesFromJson) {
+        itemsList.add(
+          ivaItem.categoria == 'Otros' ? ivaItem.copyWith(categoria: dominantCat) : ivaItem,
+        );
       }
-
-      // 2. Calce por diferencia contra el Total Impreso (Residual Match)
-      // Si la suma de los ítems supera al totalOriginal impreso (incluso cuando el ítem individual
-      // no superaba el total general), probar si al dividir un ítem de >= 3 cifras entre 100
-      // la suma total calza con el totalOriginal dentro de un margen estrecho.
-      if (totalOriginal > 0) {
-        int currentSumCents = itemsList.fold(0, (sum, item) => sum + item.total);
-        double currentSum = currentSumCents / 100.0;
-        if (currentSum > totalOriginal * 1.05) {
-          for (int i = 0; i < itemsList.length; i++) {
-            final it = itemsList[i];
-            // Evaluar ítems de al menos 10.00 en escala actual (>= 1000 centavos)
-            if (it.total >= 1000) {
-              final candidateTotalCents = (it.total / 100).round();
-              final simulatedSumCents = currentSumCents - it.total + candidateTotalCents;
-              final simulatedSum = simulatedSumCents / 100.0;
-              final diff = (simulatedSum - totalOriginal).abs();
-              final maxAllowedDiff = (totalOriginal * 0.05).clamp(0.05, 1.0);
-              if (diff <= maxAllowedDiff) {
-                final nuevoPrecioInt = (it.precioUnitario / 100).round();
-                itemsList[i] = it.copyWith(
-                  precioUnitario: nuevoPrecioInt,
-                  total: candidateTotalCents,
-                );
-                currentSumCents = simulatedSumCents;
-                break;
-              }
-            }
-          }
-        }
-      }
-
-      // 3. Consenso de Decimales y Detección de Outlier de Escala
-      // Si la mayoría de los ítems tienen decimales explícitos (ej. .25, .50) y un ítem aparece
-      // sin decimales (entero) con una magnitud desproporcionada (ej. 1156 vs ítems de 3 a 15),
-      // o la IA infló total_original con esa misma suma errónea.
-      if (itemsList.length >= 2) {
-        final decimalItems = itemsList.where((it) => (it.precioUnitario % 100) != 0).toList();
-        if (decimalItems.isNotEmpty && decimalItems.length >= (itemsList.length / 2).floor()) {
-          final sortedPrices = decimalItems.map((it) => it.precioUnitarioDisplay).toList()..sort();
-          final medianPrice = sortedPrices[sortedPrices.length ~/ 2];
-
-          if (medianPrice > 0) {
-            for (int i = 0; i < itemsList.length; i++) {
-              final it = itemsList[i];
-              // El ítem es un entero sin decimales (precioUnitario % 100 == 0) y con valor >= 10.0
-              if ((it.precioUnitario % 100) == 0 && it.precioUnitarioDisplay >= 10.0) {
-                final ratio = it.precioUnitarioDisplay / medianPrice;
-                final candidatePrice = it.precioUnitarioDisplay / 100.0;
-                final candidateRatio = candidatePrice / medianPrice;
-
-                // Es outlier: ratio >= 10x respecto a la mediana de los decimales,
-                // y al dividirlo entre 100 queda dentro de una escala razonable (0.05x a 10x de la mediana)
-                if (ratio >= 10.0 && candidateRatio >= 0.05 && candidateRatio <= 10.0) {
-                  final intUnitInt = it.precioUnitarioDisplay.round();
-                  final endsInNonZeroDigits = (intUnitInt % 100) != 0; // ej. 1156 termina en 56, no en 00
-                  if (endsInNonZeroDigits || ratio >= 20.0) {
-                    final oldTotalCents = it.total;
-                    final nuevoPrecioInt = (it.precioUnitario / 100).round();
-                    final nuevoTotalInt = (it.total / 100).round();
-                    itemsList[i] = it.copyWith(
-                      precioUnitario: nuevoPrecioInt,
-                      total: nuevoTotalInt,
-                    );
-
-                    // Si totalOriginal estaba inflado por la suma de la IA, reajustarlo
-                    if (totalOriginal > 0) {
-                      final excess = (oldTotalCents - nuevoTotalInt) / 100.0;
-                      if ((totalOriginal - (oldTotalCents / 100.0)).abs() < totalOriginal * 0.5) {
-                        totalOriginal = (totalOriginal - excess).clamp(0.0, double.infinity);
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-
-      // 4. Validación general de ratios 90..110 (Caso A: total x100, Caso B: todos los ítems x100)
-      final int sumItemsCentavos = itemsList.fold(0, (sum, item) => sum + item.total);
-      final double sumItems = sumItemsCentavos / 100.0;
-
-      if (sumItems > 0 && totalOriginal > 0) {
-        final ratioTotalToSum = totalOriginal / sumItems;
-        final ratioSumToTotal = sumItems / totalOriginal;
-
-        if (ratioTotalToSum >= 90.0 && ratioTotalToSum <= 110.0) {
-          // Caso A: El totalOriginal omitió los decimales (ej. 5612 extraído vs 56.12 real en ítems).
-          totalOriginal = (totalOriginal / 100.0);
-        } else if (ratioSumToTotal >= 90.0 && ratioSumToTotal <= 110.0) {
-          // Caso B: Los ítems omitieron los decimales (ej. ítems sumaban 5612 vs 56.12 real en total).
-          for (int i = 0; i < itemsList.length; i++) {
-            final old = itemsList[i];
-            final nuevoPrecioInt = (old.precioUnitario / 100).round();
-            final nuevoTotalInt = (old.total / 100).round();
-            itemsList[i] = old.copyWith(
-              precioUnitario: nuevoPrecioInt,
-              total: nuevoTotalInt,
-            );
-          }
-        }
-      } else if (itemsList.isNotEmpty && totalOriginal == 0) {
-        final int sumCentavos = itemsList.fold(0, (sum, item) => sum + item.total);
-        totalOriginal = sumCentavos / 100.0;
-      }
-    }
-
-    // Determinar IvaModo explícito de esta extracción
-    final bool hasIvaItemInList = itemsList.any((it) => ItemGastoModel.isIvaOnlyDescription(it.descripcion));
-    final IvaModo ivaModo;
-    if (hasMultipleConflictingIvaLines) {
       ivaModo = IvaModo.requiereRevision;
-    } else if (hasIvaItemInList) {
-      ivaModo = IvaModo.renglonSeparado;
-    } else if (hasDeclaredIvaField && impuestoIva == 0.0) {
-      ivaModo = IvaModo.sinIvaDeclarado;
+    } else if (impuestoIva <= 0) {
+      itemsList.addAll(productItems);
+      ivaModo = hasDeclaredIvaField ? IvaModo.sinIvaDeclarado : IvaModo.noInformado;
     } else {
-      ivaModo = IvaModo.noInformado;
+      final int ivaCents = (impuestoIva * 100).round();
+      final int totalCents = (totalOriginal * 100).round();
+      final int sumProductsCents = productItems.fold(0, (s, it) => s + it.total);
+      final int guardTol = _guardToleranceCents(productItems);
+
+      final bool linesAlreadyIncludeVat =
+          !hasSpecialLines &&
+          ivaLinesFromJson.isEmpty &&
+          totalCents > 0 &&
+          (sumProductsCents - totalCents).abs() <= guardTol &&
+          (sumProductsCents + ivaCents - totalCents).abs() > guardTol;
+
+      final bool linesAreBases =
+          !hasSpecialLines &&
+          totalCents > 0 &&
+          (sumProductsCents + ivaCents - totalCents).abs() <= guardTol;
+
+      if (linesAlreadyIncludeVat) {
+        // Los ítems impresos ya contienen el IVA: no sumar nada ni agregar renglón Impuesto IVA
+        // y limpiar sufijos fiscales (no generar baseImponibleOriginal).
+        for (final it in productItems) {
+          final cleanDesc = ItemGastoModel.stripFiscalSuffix(it.descripcion);
+          itemsList.add(it.copyWith(
+            descripcion: cleanDesc.isNotEmpty ? cleanDesc : it.descripcion,
+          ));
+        }
+        ivaModo = IvaModo.yaIncluido;
+      } else if (linesAreBases && productItems.isNotEmpty) {
+        // Intentar determinar alícuotas exactas (G=16%, R=8%, E=0%) y probar hipótesis para `null`
+        final bool hasAnyNull = productAlicuotas.any((a) => a == null);
+        List<int>? winningRates;
+
+        if (!hasAnyNull) {
+          final rates = productAlicuotas.map((a) {
+            if (a == 'G') return 16;
+            if (a == 'R') return 8;
+            return 0;
+          }).toList();
+          if (_matchWeightedVatError(productItems, rates, ivaCents) != null) {
+            winningRates = rates;
+          }
+        } else {
+          // Hipótesis 1: todos los `null` son exentos (0%)
+          final ratesNullExempt = productAlicuotas.map((a) {
+            if (a == 'G') return 16;
+            if (a == 'R') return 8;
+            return 0;
+          }).toList();
+          // Hipótesis 2: todos los `null` son gravados al 16%
+          final ratesNullGravado = productAlicuotas.map((a) {
+            if (a == 'E') return 0;
+            if (a == 'R') return 8;
+            return 16;
+          }).toList();
+
+          final int? errExempt = _matchWeightedVatError(productItems, ratesNullExempt, ivaCents);
+          final int? errGravado = _matchWeightedVatError(productItems, ratesNullGravado, ivaCents);
+
+          if (errExempt != null && errGravado == null) {
+            winningRates = ratesNullExempt;
+          } else if (errGravado != null && errExempt == null) {
+            winningRates = ratesNullGravado;
+          } else if (errExempt != null && errGravado != null) {
+            // Ambas hipótesis cuadran -> ambiguo: no adivinar, caer a fallback seguro (Rama 3)
+            winningRates = null;
+          }
+        }
+
+        if (winningRates != null) {
+          final bases = productItems.map((it) => it.total).toList();
+          final shares = repartirIvaMayorResto(bases, winningRates, ivaCents);
+
+          for (int i = 0; i < productItems.length; i++) {
+            final it = productItems[i];
+            final rate = winningRates[i];
+            final cleanDesc = ItemGastoModel.stripFiscalSuffix(it.descripcion);
+            final finalDesc = cleanDesc.isNotEmpty ? cleanDesc : it.descripcion;
+
+            if (rate > 0 && it.total > 0) {
+              final int baseUnitCents = it.precioUnitario;
+              final int unitWithVatCents = (baseUnitCents * (100 + rate) + 50) ~/ 100;
+              final int totalWithVatCents = it.total + shares[i];
+              itemsList.add(it.copyWith(
+                descripcion: finalDesc,
+                precioUnitario: unitWithVatCents,
+                total: totalWithVatCents,
+                baseImponibleOriginal: baseUnitCents,
+                tasaIvaPct: rate,
+              ));
+            } else {
+              itemsList.add(it.copyWith(
+                descripcion: finalDesc,
+                clearBaseImponibleOriginal: true,
+              ));
+            }
+          }
+          ivaModo = IvaModo.imputado;
+        } else {
+          // Rama 3 (Fallback conservador a Opción A): preservar precios base y sufijos + 1 renglón IVA
+          itemsList.addAll(productItems);
+          if (ivaLinesFromJson.isNotEmpty) {
+            final ivaItem = ivaLinesFromJson.first;
+            itemsList.add(
+              ivaItem.categoria == 'Otros' ? ivaItem.copyWith(categoria: dominantCat) : ivaItem,
+            );
+          } else {
+            itemsList.add(ItemGastoModel(
+              descripcion: 'Impuesto IVA',
+              cantidad: 1.0,
+              precioUnitario: ivaCents,
+              total: ivaCents,
+              categoria: dominantCat,
+              origenCategoria: dominantCat != 'Otros' ? OrigenCategoria.ia : OrigenCategoria.predeterminada,
+            ));
+          }
+          ivaModo = IvaModo.renglonSeparado;
+        }
+      } else {
+        // Fallback conservador (hay líneas especiales, o la suma no calza con totalOriginal)
+        itemsList.addAll(productItems);
+        if (ivaLinesFromJson.isNotEmpty) {
+          final ivaItem = ivaLinesFromJson.first;
+          itemsList.add(
+            ivaItem.categoria == 'Otros' ? ivaItem.copyWith(categoria: dominantCat) : ivaItem,
+          );
+        } else {
+          itemsList.add(ItemGastoModel(
+            descripcion: 'Impuesto IVA',
+            cantidad: 1.0,
+            precioUnitario: ivaCents,
+            total: ivaCents,
+            categoria: dominantCat,
+            origenCategoria: dominantCat != 'Otros' ? OrigenCategoria.ia : OrigenCategoria.predeterminada,
+          ));
+        }
+        ivaModo = IvaModo.renglonSeparado;
+      }
+    }
+
+    // Si quedó otro ítem fiscal (ej. IGTF) con categoría 'Otros', asignarle la categoría dominante
+    for (int i = 0; i < itemsList.length; i++) {
+      if (ItemGastoModel.isTaxDescription(itemsList[i].descripcion) && itemsList[i].categoria == 'Otros') {
+        itemsList[i] = itemsList[i].copyWith(categoria: dominantCat);
+      }
+    }
+
+    if (itemsList.isNotEmpty && totalOriginal == 0) {
+      final int sumCentavos = itemsList.fold(0, (sum, item) => sum + item.total);
+      totalOriginal = sumCentavos / 100.0;
     }
 
     // Tasa de cambio detectada (si está impresa en la factura)
@@ -683,6 +1028,9 @@ class GeminiExtractionResult {
         'total': i.totalDisplay,
         'total_cents': i.total,
         'categoria': i.categoria,
+        if (i.baseImponibleOriginal != null)
+          'base_imponible_original_cents': i.baseImponibleOriginal,
+        if (i.tasaIvaPct > 0) 'tasa_iva_pct': i.tasaIvaPct,
       }).toList(),
       'items_comprados_ids': matchedShoppingItemIds,
       'metodo_liquidacion': metodoLiquidacion,

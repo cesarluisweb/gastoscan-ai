@@ -232,5 +232,70 @@ void main() {
 
       expect(res, isEmpty);
     });
+
+    test('7. Retrocompatibilidad AI-06: factura historica mixta (E)+(G)+IVA ajusta solo (G) x1.16 y deja (E) intacto', () async {
+      // Factura vieja Opción A: Harina (E) $10.00 + Detergente (G) $10.00 + Impuesto IVA $1.60 = $21.60
+      await harness.insertGastoFixture(
+        uuid: 'legacy-mixta',
+        fecha: '2026-11-05',
+        comercio: 'Farmatodo',
+        moneda: 'USD',
+        totalOriginal: 2160,
+        totalUsd: 2160,
+        items: [
+          ItemGastoModel(descripcion: 'Harina PAN 1kg (E)', cantidad: 1, precioUnitario: 1000, total: 1000),
+          ItemGastoModel(descripcion: 'Detergente Liquido (G)', cantidad: 1, precioUnitario: 1000, total: 1000),
+          ItemGastoModel(descripcion: 'Impuesto IVA', cantidad: 1, precioUnitario: 160, total: 160),
+        ],
+      );
+
+      final res = await DatabaseHelper.instance.findPriceHistory(
+        ['Harina PAN 1kg', 'Detergente Liquido'],
+        comercioActual: 'Farmatodo',
+        referenceDate: refDate,
+      );
+
+      // Harina (E) permanece en $10.00 exacto (NO se multiplica por 1.16)
+      expect(res['harina pan 1kg']!.mismoComercio!.precioUsd, closeTo(10.00, 0.001));
+      // Detergente (G) con IVA comprobado al 16% -> se eleva a precio de anaquel $11.60
+      expect(res['detergente liquido']!.mismoComercio!.precioUsd, closeTo(11.60, 0.001));
+    });
+
+    test('8. Retrocompatibilidad AI-06: (G) sin renglon IVA NO inventa 16%, y tasa ambigua se omite', () async {
+      // Gasto 1: usuario borró el renglón Impuesto IVA -> NO se multiplica por 1.16
+      await harness.insertGastoFixture(
+        uuid: 'legacy-sin-iva',
+        fecha: '2026-11-06',
+        comercio: 'Abasto A',
+        moneda: 'USD',
+        totalOriginal: 500,
+        totalUsd: 500,
+        items: [
+          ItemGastoModel(descripcion: 'Jabon Azul (G)', cantidad: 1, precioUnitario: 500, total: 500),
+        ],
+      );
+
+      // Gasto 2: IVA incoherente (12% sobre G -> ni 16% ni 8%) -> muestra ambigua omitida
+      await harness.insertGastoFixture(
+        uuid: 'legacy-ambiguo',
+        fecha: '2026-11-07',
+        comercio: 'Abasto B',
+        moneda: 'USD',
+        totalOriginal: 1120,
+        totalUsd: 1120,
+        items: [
+          ItemGastoModel(descripcion: 'Cloro 1L (G)', cantidad: 1, precioUnitario: 1000, total: 1000),
+          ItemGastoModel(descripcion: 'Impuesto IVA', cantidad: 1, precioUnitario: 120, total: 120),
+        ],
+      );
+
+      final res = await DatabaseHelper.instance.findPriceHistory(
+        ['Jabon Azul', 'Cloro 1L'],
+        referenceDate: refDate,
+      );
+
+      expect(res['jabon azul']!.mejorPrecio!.precioUsd, closeTo(5.00, 0.001));
+      expect(res.containsKey('cloro 1l'), isFalse);
+    });
   });
 }

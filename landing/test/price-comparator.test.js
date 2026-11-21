@@ -8,6 +8,8 @@ import {
     formatRelativePriceDate,
     findPriceHistoryFromGastos,
     evaluatePriceComparison,
+    summarizeExpenseTaxContext,
+    shelfPriceTaxFactor,
 } from '../src/lib/price-comparator.js';
 
 const REF_DATE = '2026-11-13';
@@ -142,4 +144,78 @@ test('Prioridad de comercio vs mejor precio del mercado y ventana 30/31/60/61 d�
         text: 'Referencia: $3.50/ud en Unicasa (hace 1 mes)',
         tone: 'muted',
     });
+});
+
+test('Retrocompatibilidad AI-06: factura histórica mixta (E)+(G)+IVA ajusta solo (G) x1.16 en paridad con Flutter', () => {
+    const gastos = [
+        {
+            id: 'legacy-mixta',
+            fecha: '2026-11-05',
+            comercio: 'Farmatodo',
+            moneda: 'USD',
+            total_original: 2160,
+            total_usd: 2160,
+            tasa_cambio: 50,
+            items: [
+                { descripcion: 'Harina PAN 1kg (E)', cantidad: 1, precio_unitario: 1000, total: 1000 },
+                { descripcion: 'Detergente Liquido (G)', cantidad: 1, precio_unitario: 1000, total: 1000 },
+                { descripcion: 'Impuesto IVA', cantidad: 1, precio_unitario: 160, total: 160 },
+            ],
+        },
+        {
+            id: 'legacy-sin-iva',
+            fecha: '2026-11-06',
+            comercio: 'Abasto A',
+            moneda: 'USD',
+            total_original: 500,
+            total_usd: 500,
+            tasa_cambio: 50,
+            items: [
+                { descripcion: 'Jabon Azul (G)', cantidad: 1, precio_unitario: 500, total: 500 },
+            ],
+        },
+        {
+            id: 'legacy-ambiguo',
+            fecha: '2026-11-07',
+            comercio: 'Abasto B',
+            moneda: 'USD',
+            total_original: 1120,
+            total_usd: 1120,
+            tasa_cambio: 50,
+            items: [
+                { descripcion: 'Cloro 1L (G)', cantidad: 1, precio_unitario: 1000, total: 1000 },
+                { descripcion: 'Impuesto IVA', cantidad: 1, precio_unitario: 120, total: 120 },
+            ],
+        },
+    ];
+
+    const historyMap = findPriceHistoryFromGastos(
+        gastos,
+        ['Harina PAN 1kg', 'Detergente Liquido', 'Jabon Azul', 'Cloro 1L'],
+        { comercioActual: 'Farmatodo', referenceDate: REF_DATE }
+    );
+
+    // Exento no se toca ($10.00), Gravado con IVA comprobado al 16% -> $11.60
+    assert.ok(Math.abs(historyMap['harina pan 1kg'].mismoComercio.precioUsd - 10.0) < 0.001);
+    assert.ok(Math.abs(historyMap['detergente liquido'].mismoComercio.precioUsd - 11.6) < 0.001);
+    // Sin renglón IVA -> no inventa 16%
+    assert.ok(Math.abs(historyMap['jabon azul'].mejorPrecio.precioUsd - 5.0) < 0.001);
+    // Tasa ambigua (12%) -> excluido de la comparación
+    assert.equal(historyMap['cloro 1l'], undefined);
+
+    // Aceite de oliva no se confunde con renglón de impuesto
+    assert.equal(isTaxItem('Aceite de oliva'), false);
+    assert.equal(isTaxItem('Leche Nativa'), false);
+
+    // Paridad panel.astro: modalExpenseItems con `precio` y `total` como strings (totalsInCents: false)
+    const modalItemsString = [
+        { descripcion: 'Detergente (G)', cantidad: '3', precio: '1.08', total: '3.24' },
+        { descripcion: 'Harina (E)', cantidad: '1', precio: '10.00', total: '10.00' },
+        { descripcion: 'Impuesto IVA', cantidad: '1', precio: '', total: '0.52' },
+    ];
+    const modalCtx = summarizeExpenseTaxContext(modalItemsString, { totalsInCents: false });
+    assert.equal(modalCtx.gravadoBaseCents, 324);
+    assert.equal(modalCtx.taxCents, 52);
+    assert.equal(shelfPriceTaxFactor({ descripcion: 'Detergente (G)', ...modalCtx }), 1.16);
+    assert.equal(shelfPriceTaxFactor({ descripcion: 'Harina (E)', ...modalCtx }), 1.0);
 });

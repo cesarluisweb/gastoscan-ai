@@ -1855,6 +1855,12 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
           break;
       }
 
+      final bool hasImputedItems = itemsToSave.any((it) => it.baseImponibleOriginal != null);
+      final bool hasIvaLine = itemsToSave.any((it) => ItemGastoModel.isIvaOnlyDescription(it.descripcion));
+      final IvaModo draftIvaModo = hasImputedItems
+          ? IvaModo.imputado
+          : (hasIvaLine ? IvaModo.renglonSeparado : IvaModo.noInformado);
+
       final draftResult = GeminiExtractionResult(
         comercio: comercioFinal,
         fecha: _selectedFecha,
@@ -1864,6 +1870,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         tasaCambioDetectada: tasaDetectada,
         items: itemsToSave,
         metodoLiquidacion: metodoLiqStr,
+        ivaModo: draftIvaModo,
       );
 
       final String jsonStr = jsonEncode(draftResult.toMap());
@@ -2586,16 +2593,21 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                       if (item.totalDisplay > 0) {
                         unitPrice = item.totalDisplay / cant;
                       }
+                      final double shelfTaxFactor = DatabaseHelper.shelfPriceFactorForCurrentItems(
+                        targetItem: item,
+                        allItems: _items,
+                      );
+                      final double effectiveShelfUnitPrice = unitPrice * shelfTaxFactor;
 
-                      double currentUsd = unitPrice;
+                      double currentUsd = effectiveShelfUnitPrice;
                       final tasa = tryParseAmount(_tasaCambioCtrl.text, isPrice: false) ?? 1.0;
                       if (_selectedMoneda == 'VES') {
-                        if (tasa > 0) currentUsd = unitPrice / tasa;
+                        if (tasa > 0) currentUsd = effectiveShelfUnitPrice / tasa;
                       } else {
                         final sumItems = _items.fold(0.0, (prev, it) => prev + it.totalDisplay);
                         final totalOrig = tryParseAmount(_totalOriginalCtrl.text, isPrice: false) ?? 0.0;
                         if (totalOrig > 0 && sumItems > totalOrig * 5 && tasa > 0) {
-                          currentUsd = unitPrice / tasa;
+                          currentUsd = effectiveShelfUnitPrice / tasa;
                         }
                       }
 
@@ -2721,9 +2733,14 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                       onChanged: (v) {
                                         final cant = tryParseAmount(v, isPrice: false) ?? 1.0;
                                         setState(() {
-                                          _items[idx] = _items[idx].copyWith(
+                                          final currentIt = _items[idx];
+                                          final int? baseCents = currentIt.baseImponibleOriginal;
+                                          final int nuevoTotal = (baseCents != null && currentIt.tasaIvaPct > 0)
+                                              ? (cant * baseCents * (100 + currentIt.tasaIvaPct) / 100.0).round()
+                                              : (cant * currentIt.precioUnitarioDisplay * 100).round();
+                                          _items[idx] = currentIt.copyWith(
                                             cantidad: cant,
-                                            total: (cant * _items[idx].precioUnitarioDisplay * 100).round(),
+                                            total: nuevoTotal,
                                           );
                                         });
                                         _recalcularTotal();
@@ -2740,7 +2757,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                       decoration: InputDecoration(
                                         filled: true,
                                         fillColor: AppColors.surface,
-                                        labelText: 'Precio',
+                                        labelText: item.baseImponibleOriginal != null
+                                            ? 'Precio (con IVA)'
+                                            : 'Precio',
                                         labelStyle: const TextStyle(fontSize: 12, color: Color(0xFF4B5563)),
                                         prefixText: '${_symbolForMoneda(_selectedMoneda)} ',
                                         prefixStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF4B5563)),
@@ -2760,6 +2779,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                           _items[idx] = _items[idx].copyWith(
                                             precioUnitario: (prec * 100).round(),
                                             total: (_items[idx].cantidad * prec * 100).round(),
+                                            clearBaseImponibleOriginal: true,
                                           );
                                         });
                                         _recalcularTotal();
@@ -2870,6 +2890,28 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                   ),
                                 ],
                               ),
+                              if (item.baseImponibleOriginal != null)
+                                Container(
+                                  key: ValueKey('item_tax_base_${item.clientKey}'),
+                                  width: double.infinity,
+                                  margin: const EdgeInsets.only(top: 8),
+                                  padding: const EdgeInsets.only(top: 6, left: 4),
+                                  decoration: const BoxDecoration(
+                                    border: Border(
+                                      top: BorderSide(color: AppColors.border, width: 1),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'Base impresa: ${_symbolForMoneda(_selectedMoneda)} ${_formatDisplayMonto(item.baseImponibleOriginal! / 100.0)} (+${item.tasaIvaPct > 0 ? item.tasaIvaPct : 16}% IVA)',
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w500,
+                                      color: Color(0xFF4B5563),
+                                    ),
+                                  ),
+                                ),
                               if (itemHistory != null)
                                 _PriceComparisonLine(
                                   key: ValueKey('price_comparison_${item.clientKey}'),

@@ -1669,5 +1669,105 @@ void main() {
       expect(find.text('Patilla (E)'), findsOneWidget);
       expect(find.text('Bolsas de basura (G)'), findsOneWidget);
     });
+
+    testWidgets('AI-06: muestra nota Base impresa al pie, recalcula desde base al editar Cantidad y oculta nota al editar Precio', (tester) async {
+      tester.view.physicalSize = const Size(360, 1800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      final extractedImputado = GeminiExtractionResult.fromJson({
+        'comercio': 'Automercado Plaza',
+        'fecha': '2026-11-20',
+        'moneda': 'VES',
+        'total_original': 410.00,
+        'impuesto_iva': 41.38,
+        'items': [
+          {
+            'descripcion': 'Detergente Líquido',
+            'cantidad': 1,
+            'precio_unitario': 258.62,
+            'categoria': 'Hogar',
+            'alicuota_fiscal': 'G',
+          },
+          {
+            'descripcion': 'Harina PAN 1kg',
+            'cantidad': 1,
+            'precio_unitario': 110.00,
+            'categoria': 'Alimentación',
+            'alicuota_fiscal': 'E',
+          },
+        ],
+      });
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<GastoProvider>.value(value: gastoProvider),
+            ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+            ChangeNotifierProvider<ScanQueueProvider>.value(value: scanQueueProvider),
+          ],
+          child: MaterialApp(
+            home: ReviewExpenseScreen(extractedData: extractedImputado),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // 1. Nombres limpios sin (G)/(E) y campo Precio etiquetado 'Precio (con IVA)' solo en el ítem gravado
+      expect(find.text('Detergente Líquido'), findsOneWidget);
+      expect(find.text('Harina PAN 1kg'), findsOneWidget);
+      expect(find.text('Precio (con IVA)'), findsOneWidget);
+      expect(find.text('Precio'), findsOneWidget);
+
+      // 2. Nota al pie visible solo en el artículo gravado con base impresa en moneda activa
+      final firstKey = extractedImputado.items.first.clientKey;
+      final noteFinder = find.byKey(ValueKey('item_tax_base_$firstKey'));
+      expect(noteFinder, findsOneWidget);
+      expect(find.textContaining('Base impresa:'), findsOneWidget);
+      expect(find.textContaining('+16% IVA'), findsOneWidget);
+
+      // 3. Editar Cantidad a 3: conserva la nota y recalcula desde base (3 * 258.62 * 1.16 = 900)
+      final cardFinder = find.byKey(ValueKey('item_card_$firstKey'));
+      final cantField = find.descendant(
+        of: cardFinder,
+        matching: find.widgetWithText(TextFormField, '1'),
+      ).first;
+      await tester.enterText(cantField, '3');
+      await tester.pumpAndSettle();
+      expect(noteFinder, findsOneWidget);
+      expect(
+        find.descendant(of: cardFinder, matching: find.text('Bs. 900')),
+        findsOneWidget,
+      );
+
+      // 4. Editar Precio manualmente: limpia baseImponibleOriginal, oculta la nota y conserva foco/teclado
+      // _formatDouble(300.0) formatea enteros como '300' (sin '.00')
+      final precioField = find.descendant(
+        of: cardFinder,
+        matching: find.widgetWithText(TextFormField, '300'),
+      );
+      expect(precioField, findsOneWidget);
+      await tester.tap(precioField);
+      await tester.pump();
+      final editableBefore = tester.state<EditableTextState>(
+        find.descendant(of: precioField, matching: find.byType(EditableText)),
+      );
+      expect(tester.testTextInput.isVisible, isTrue);
+
+      await tester.enterText(precioField, '320');
+      await tester.pumpAndSettle();
+      expect(noteFinder, findsNothing);
+      expect(find.text('Precio (con IVA)'), findsNothing);
+      final precioFieldAfter = find.descendant(
+        of: cardFinder,
+        matching: find.widgetWithText(TextFormField, '320'),
+      );
+      expect(precioFieldAfter, findsOneWidget);
+      final editableAfter = tester.state<EditableTextState>(
+        find.descendant(of: precioFieldAfter, matching: find.byType(EditableText)),
+      );
+      expect(identical(editableBefore, editableAfter), isTrue);
+      expect(tester.testTextInput.isVisible, isTrue);
+    });
   });
 }

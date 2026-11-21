@@ -831,7 +831,13 @@ import AiChatDrawer from '../components/AiChatDrawer.astro';
         } from 'firebase/firestore';
         import { computeExpenseTotals, computeItemCents, computeMonthTotals, calculateSavingsHealth } from '../lib/expense-money.js';
         import { clasificarCategoria, sincronizarCategoriaImpuestos, isTaxDescription, normalizar as normalizarTexto } from '../lib/category-classifier.js';
-        import { normalizeProductText, findPriceHistoryFromGastos, evaluatePriceComparison } from '../lib/price-comparator.js';
+        import {
+            normalizeProductText,
+            findPriceHistoryFromGastos,
+            evaluatePriceComparison,
+            summarizeExpenseTaxContext,
+            shelfPriceTaxFactor,
+        } from '../lib/price-comparator.js';
         import {
             RATE_TYPES,
             parsePositiveAmount,
@@ -2592,8 +2598,14 @@ import AiChatDrawer from '../components/AiChatDrawer.astro';
                     }
                     const cant = Number(item.cantidad) > 0 ? Number(item.cantidad) : 1;
                     const unitPrice = Number(item.precio) || 0;
+                    const currentTaxCtx = summarizeExpenseTaxContext(modalExpenseItems, { totalsInCents: false });
+                    const currentTaxFactor = shelfPriceTaxFactor({
+                        descripcion: item.descripcion || '',
+                        ...currentTaxCtx,
+                    }) ?? 1.0;
+                    const effectiveUnitPrice = unitPrice * currentTaxFactor;
                     const tasaUsd = activeRates.usd > 0 ? activeRates.usd : 1.0;
-                    const currentUnitUsd = expMoneda === 'VES' ? (unitPrice / tasaUsd) : unitPrice;
+                    const currentUnitUsd = expMoneda === 'VES' ? (effectiveUnitPrice / tasaUsd) : effectiveUnitPrice;
                     const comercioActual = modalExpComercio?.value || '';
 
                     const historyMap = findPriceHistoryFromGastos(allUserGastos, [norm], {

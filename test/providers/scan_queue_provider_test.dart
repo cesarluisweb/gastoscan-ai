@@ -444,8 +444,44 @@ void main() {
       expect(results[1].moneda, equals('VES'));
     });
 
-    test('parses fiscal markers (E) and (G) into item descriptions', () {
-      final json = {
+    test('parses fiscal markers (E) and (G): imputa IVA 16% si cuadra o preserva marcadores en fallback', () {
+      // Caso 1: Factura mixta donde IVA 16% cuadra exacto (100 exento + 100 gravado + 16 IVA = 216) -> limpia sufijos e imputa
+      final jsonImputable = {
+        'comercio': 'Automercado Plaza',
+        'fecha': '2026-09-25',
+        'moneda': 'VES',
+        'total_original': 216.00,
+        'impuesto_iva': 16.00,
+        'items': [
+          {
+            'descripcion': 'Harina de Maiz',
+            'cantidad': 2,
+            'precio_unitario': 50.00,
+            'total': 100.00,
+            'alicuota_fiscal': 'E'
+          },
+          {
+            'descripcion': 'Detergente Liquido',
+            'cantidad': 1,
+            'precio_unitario': 100.00,
+            'total': 100.00,
+            'alicuota_fiscal': 'G'
+          }
+        ]
+      };
+
+      final resultsImputados = GeminiExtractionResult.listFromJson(jsonImputable);
+      expect(resultsImputados.length, equals(1));
+      expect(resultsImputados.first.ivaModo, equals(IvaModo.imputado));
+      expect(resultsImputados.first.items.length, equals(2));
+      expect(resultsImputados.first.items[0].descripcion, equals('Harina de Maiz'));
+      expect(resultsImputados.first.items[0].total, equals(10000));
+      expect(resultsImputados.first.items[1].descripcion, equals('Detergente Liquido'));
+      expect(resultsImputados.first.items[1].total, equals(11600));
+      expect(resultsImputados.first.items[1].baseImponibleOriginal, equals(10000));
+
+      // Caso 2: Factura donde el IVA declarado (32.00) no cuadra con 16% de los G -> fallback preserva (E) y (G)
+      final jsonFallback = {
         'comercio': 'Automercado Plaza',
         'fecha': '2026-09-25',
         'moneda': 'VES',
@@ -469,8 +505,9 @@ void main() {
         ]
       };
 
-      final results = GeminiExtractionResult.listFromJson(json);
+      final results = GeminiExtractionResult.listFromJson(jsonFallback);
       expect(results.length, equals(1));
+      expect(results.first.ivaModo, equals(IvaModo.renglonSeparado));
       final items = results.first.items;
       expect(items.any((it) => it.descripcion.contains('Harina de Maiz (E)')), isTrue);
       expect(items.any((it) => it.descripcion.contains('Detergente Liquido (G)')), isTrue);

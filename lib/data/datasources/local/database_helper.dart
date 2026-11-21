@@ -1066,10 +1066,92 @@ class DatabaseHelper {
   }
 
   static bool isTaxItem(String descripcion) {
+    if (ItemGastoModel.isTaxDescription(descripcion)) return true;
     final clean = normalizeProductText(descripcion);
     if (clean.isEmpty) return false;
     final taxKeywords = ['iva', 'iva 16', 'iva 8', 'iva g', 'iva r', 'impuesto', 'tax'];
     return taxKeywords.any((kw) => clean == kw || clean.startsWith('$kw ') || clean.contains('iva 16') || clean.contains('iva 8'));
+  }
+
+  /// Calcula el factor de ajuste a precio de anaquel (`1.16`, `1.08` o `1.0`) para un
+  /// ítem perteneciente a una factura con renglón separado de IVA (Opción A histórica
+  /// o fallback `renglonSeparado`).
+  ///
+  /// Solo aplica el factor si el ítem conserva marcador fiscal explícito `(G)` o `(R)`
+  /// **y** el impuesto registrado en ese `gasto_id` cuadra de forma estricta (en centavos)
+  /// con el 16% o el 8% de la base gravada acumulada del mismo gasto.
+  ///
+  /// Retorna `null` si el ítem está marcado `(G)`/`(R)` pero la proporción fiscal del gasto
+  /// es ambigua o inconsistente (ej. tasas mixtas no separables), para que el comparador
+  /// omita la muestra en lugar de inventar un precio erróneo.
+  static double? shelfPriceTaxFactor({
+    required String descripcion,
+    required int taxCents,
+    required int gravadoBaseCents,
+    required int gravadoItemCount,
+    int reducidoBaseCents = 0,
+    int reducidoItemCount = 0,
+  }) {
+    final bool isG = ItemGastoModel.hasGravadoSuffix(descripcion);
+    final bool isR = ItemGastoModel.hasReducidoSuffix(descripcion);
+    if (!isG && !isR) return 1.0;
+    if (taxCents <= 0) return 1.0;
+
+    final int totalTaxedCount = gravadoItemCount + reducidoItemCount;
+    final int tol = ((totalTaxedCount > 0 ? totalTaxedCount : 1) / 2.0).ceil() + 1;
+
+    // Caso 1: Factura con G (16%) y/o R (8%) comprobable al centavo
+    if (gravadoBaseCents > 0 || reducidoBaseCents > 0) {
+      final int expectedMixed = (gravadoBaseCents * 16 + reducidoBaseCents * 8 + 50) ~/ 100;
+      if ((taxCents - expectedMixed).abs() <= tol) {
+        return isR ? 1.08 : 1.16;
+      }
+      // Caso 2: Factura histórica donde un producto al 8% vino marcado como (G)
+      if (isG && reducidoBaseCents == 0 && gravadoBaseCents > 0) {
+        final int expected8 = (gravadoBaseCents * 8 + 50) ~/ 100;
+        if ((taxCents - expected8).abs() <= tol) {
+          return 1.08;
+        }
+      }
+    }
+
+    // Hay marcador fiscal y renglón de IVA en el gasto, pero el monto no cuadra con 16% ni 8%:
+    // muestra ambigua -> excluir de la comparación en vez de distorsionar el historial.
+    return null;
+  }
+
+  /// Calcula el factor de ajuste a precio de anaquel para el ítem actual en revisión o
+  /// edición, aplicando exactamente la misma lógica simétrica que el comparador histórico.
+  static double shelfPriceFactorForCurrentItems({
+    required ItemGastoModel targetItem,
+    required List<ItemGastoModel> allItems,
+  }) {
+    if (targetItem.baseImponibleOriginal != null) return 1.0;
+    int taxCents = 0;
+    int gBaseCents = 0;
+    int gCount = 0;
+    int rBaseCents = 0;
+    int rCount = 0;
+    for (final it in allItems) {
+      if (ItemGastoModel.isIvaOnlyDescription(it.descripcion)) {
+        taxCents += it.total;
+      } else if (ItemGastoModel.hasGravadoSuffix(it.descripcion)) {
+        gBaseCents += it.total;
+        gCount++;
+      } else if (ItemGastoModel.hasReducidoSuffix(it.descripcion)) {
+        rBaseCents += it.total;
+        rCount++;
+      }
+    }
+    final factor = shelfPriceTaxFactor(
+      descripcion: targetItem.descripcion,
+      taxCents: taxCents,
+      gravadoBaseCents: gBaseCents,
+      gravadoItemCount: gCount,
+      reducidoBaseCents: rBaseCents,
+      reducidoItemCount: rCount,
+    );
+    return factor ?? 1.0;
   }
 
   /// Extrae el precio unitario equivalente en USD para una fila de `items_gasto` unida con `gastos`.
@@ -1153,7 +1235,48 @@ class DatabaseHelper {
 
     final result = await db.rawQuery('''
       SELECT i.precio_unitario, i.cantidad, i.total, i.descripcion, i.descripcion_norm,
-             g.id as gasto_id, g.fecha, g.moneda, g.total_original, g.total_usd, g.comercio, g.tasa_cambio
+             g.id as gasto_id, g.fecha, g.moneda, g.total_original, g.total_usd, g.comercio, g.tasa_cambio,
+             (SELECT COALESCE(SUM(t.total), 0)
+                FROM items_gasto t
+               WHERE t.gasto_id = g.id
+                 AND (t.descripcion_norm = 'iva'
+                      OR t.descripcion_norm = 'impuesto'
+                      OR t.descripcion_norm = 'impuestos'
+                      OR t.descripcion_norm LIKE 'impuesto iva%'
+                      OR t.descripcion_norm LIKE 'iva %')
+                 AND t.descripcion_norm NOT LIKE '%igtf%') AS tax_cents,
+             (SELECT COALESCE(SUM(t.total), 0)
+                FROM items_gasto t
+               WHERE t.gasto_id = g.id
+                 AND UPPER(TRIM(t.descripcion)) LIKE '%(G)'
+                 AND t.descripcion_norm != 'iva'
+                 AND t.descripcion_norm != 'impuesto'
+                 AND t.descripcion_norm NOT LIKE 'impuesto iva%'
+                 AND t.descripcion_norm NOT LIKE 'iva %') AS g_cents,
+             (SELECT COUNT(1)
+                FROM items_gasto t
+               WHERE t.gasto_id = g.id
+                 AND UPPER(TRIM(t.descripcion)) LIKE '%(G)'
+                 AND t.descripcion_norm != 'iva'
+                 AND t.descripcion_norm != 'impuesto'
+                 AND t.descripcion_norm NOT LIKE 'impuesto iva%'
+                 AND t.descripcion_norm NOT LIKE 'iva %') AS g_count,
+             (SELECT COALESCE(SUM(t.total), 0)
+                FROM items_gasto t
+               WHERE t.gasto_id = g.id
+                 AND UPPER(TRIM(t.descripcion)) LIKE '%(R)'
+                 AND t.descripcion_norm != 'iva'
+                 AND t.descripcion_norm != 'impuesto'
+                 AND t.descripcion_norm NOT LIKE 'impuesto iva%'
+                 AND t.descripcion_norm NOT LIKE 'iva %') AS r_cents,
+             (SELECT COUNT(1)
+                FROM items_gasto t
+               WHERE t.gasto_id = g.id
+                 AND UPPER(TRIM(t.descripcion)) LIKE '%(R)'
+                 AND t.descripcion_norm != 'iva'
+                 AND t.descripcion_norm != 'impuesto'
+                 AND t.descripcion_norm NOT LIKE 'impuesto iva%'
+                 AND t.descripcion_norm NOT LIKE 'iva %') AS r_count
       FROM items_gasto i
       JOIN gastos g ON i.gasto_id = g.id
       WHERE i.descripcion_norm IN ($placeholders)
@@ -1178,8 +1301,25 @@ class DatabaseHelper {
       final ageDays = daysBetweenIsoAndReference(fechaStr, referenceDate: refUtc);
       if (ageDays == null || ageDays > diasVentana) continue;
 
-      final prevUsd = _unitPriceUsd(row);
-      if (prevUsd <= 0) continue;
+      final rawPrevUsd = _unitPriceUsd(row);
+      if (rawPrevUsd <= 0) continue;
+
+      final int taxCents = (row['tax_cents'] as num?)?.toInt() ?? 0;
+      final int gCents = (row['g_cents'] as num?)?.toInt() ?? 0;
+      final int gCount = (row['g_count'] as num?)?.toInt() ?? 0;
+      final int rCents = (row['r_cents'] as num?)?.toInt() ?? 0;
+      final int rCount = (row['r_count'] as num?)?.toInt() ?? 0;
+
+      final double? taxFactor = shelfPriceTaxFactor(
+        descripcion: prevDesc,
+        taxCents: taxCents,
+        gravadoBaseCents: gCents,
+        gravadoItemCount: gCount,
+        reducidoBaseCents: rCents,
+        reducidoItemCount: rCount,
+      );
+      if (taxFactor == null) continue;
+      final prevUsd = rawPrevUsd * taxFactor;
 
       final cant = (row['cantidad'] as num?)?.toDouble() ?? 1.0;
       final rawComercio = (row['comercio'] as String?) ?? 'Otro comercio';

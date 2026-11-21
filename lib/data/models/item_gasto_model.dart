@@ -15,6 +15,15 @@ class ItemGastoModel {
   final OrigenCategoria origenCategoria;
   final String clientKey;
 
+  /// Base imponible unitaria original en centavos (sin IVA), conservada solo en
+  /// memoria y en el JSON temporal de `scan_queue` mientras el usuario revisa una
+  /// factura con IVA imputado (`IvaModo.imputado`). Nunca se persiste en SQLite `items_gasto`.
+  final int? baseImponibleOriginal;
+
+  /// Porcentaje entero de alícuota aplicada al imputar IVA (`16`, `8` o `0`).
+  /// Solo en memoria y en `scan_queue`; nunca se persiste en SQLite `items_gasto`.
+  final int tasaIvaPct;
+
   ItemGastoModel({
     this.id,
     this.gastoId,
@@ -25,6 +34,8 @@ class ItemGastoModel {
     this.categoria = 'Otros',
     this.origenCategoria = OrigenCategoria.predeterminada,
     String? clientKey,
+    this.baseImponibleOriginal,
+    this.tasaIvaPct = 0,
   }) : clientKey = clientKey ?? 'it_${++_clientKeySeq}';
 
   Map<String, dynamic> toMap() {
@@ -62,6 +73,9 @@ class ItemGastoModel {
     String? categoria,
     OrigenCategoria? origenCategoria,
     String? clientKey,
+    int? baseImponibleOriginal,
+    bool clearBaseImponibleOriginal = false,
+    int? tasaIvaPct,
   }) {
     return ItemGastoModel(
       id: id ?? this.id,
@@ -73,11 +87,38 @@ class ItemGastoModel {
       categoria: categoria ?? this.categoria,
       origenCategoria: origenCategoria ?? this.origenCategoria,
       clientKey: clientKey ?? this.clientKey,
+      baseImponibleOriginal: clearBaseImponibleOriginal
+          ? null
+          : (baseImponibleOriginal ?? this.baseImponibleOriginal),
+      tasaIvaPct: clearBaseImponibleOriginal
+          ? 0
+          : (tasaIvaPct ?? this.tasaIvaPct),
     );
   }
 
   double get precioUnitarioDisplay => precioUnitario / 100.0;
   double get totalDisplay => total / 100.0;
+  double? get baseImponibleOriginalDisplay =>
+      baseImponibleOriginal != null ? baseImponibleOriginal! / 100.0 : null;
+
+  /// Elimina los sufijos fiscales `(G)`, `(E)`, `(R)` al final de la descripción
+  /// cuando el precio ya se presenta limpio como precio de anaquel con IVA imputado.
+  static String stripFiscalSuffix(String descripcion) {
+    return descripcion
+        .replaceAll(RegExp(r'\s*\([GERger]\)\s*$'), '')
+        .trim();
+  }
+
+  /// Determina si una descripción conservó el marcador fiscal `(G)` de producto gravado
+  /// (usado en registros históricos o fallback `renglonSeparado`).
+  static bool hasGravadoSuffix(String descripcion) {
+    return RegExp(r'\(G\)\s*$', caseSensitive: false).hasMatch(descripcion.trim());
+  }
+
+  /// Determina si una descripción conservó el marcador fiscal `(R)` de alícuota reducida (8%).
+  static bool hasReducidoSuffix(String descripcion) {
+    return RegExp(r'\(R\)\s*$', caseSensitive: false).hasMatch(descripcion.trim());
+  }
 
   /// Determina si la descripción de un ítem corresponde estrictamente a un renglón
   /// fiscal de impuesto (IVA / IGTF), evitando falsos positivos como "Aceite de oliva"
