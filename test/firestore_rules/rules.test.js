@@ -7,7 +7,7 @@ import {
   assertSucceeds,
   assertFails,
 } from '@firebase/rules-unit-testing';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { gastoFlutterValido, gastoPanelValido, presupuestoValido } from './fixtures.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -36,7 +36,7 @@ beforeEach(async () => {
   await testEnv.clearFirestore();
 });
 
-describe('B1: Reglas de Firestore (RT-01..RT-24)', () => {
+describe('B1: Reglas de Firestore (RT-01..RT-29)', () => {
   it('RT-01: Dueño crea un gasto válido -> permitido', async () => {
     const db = testEnv.authenticatedContext('user-1').firestore();
     await assertSucceeds(setDoc(doc(db, 'users/user-1/gastos/g1'), gastoFlutterValido('g1')));
@@ -267,5 +267,60 @@ describe('B1: Reglas de Firestore (RT-01..RT-24)', () => {
         tasa_cambio: 1.0,
       }),
     );
+  });
+
+  const aiReportValido = (uid, extra = {}) => ({
+    uid,
+    texto_respuesta: 'Respuesta de prueba del asistente.',
+    motivo: 'Inexacta',
+    comentario: '',
+    origen: 'app',
+    creado_en: serverTimestamp(),
+    ...extra,
+  });
+
+  it('RT-25: Dueño crea un reporte de IA válido -> permitido', async () => {
+    const db = testEnv.authenticatedContext('user-1').firestore();
+    await assertSucceeds(
+      setDoc(doc(db, 'ai_reports/r1'), aiReportValido('user-1')),
+    );
+  });
+
+  it('RT-26: Reporte con uid ajeno -> denegado', async () => {
+    const db = testEnv.authenticatedContext('user-1').firestore();
+    await assertFails(
+      setDoc(doc(db, 'ai_reports/r2'), aiReportValido('user-2')),
+    );
+  });
+
+  it('RT-27: Modificar un reporte existente -> denegado', async () => {
+    const db = testEnv.authenticatedContext('user-1').firestore();
+    const ref = doc(db, 'ai_reports/r3');
+    await assertSucceeds(setDoc(ref, aiReportValido('user-1')));
+    await assertFails(updateDoc(ref, { motivo: 'Otro' }));
+  });
+
+  it('RT-28: Comentario mayor a 500 caracteres -> denegado', async () => {
+    const db = testEnv.authenticatedContext('user-1').firestore();
+    await assertFails(
+      setDoc(
+        doc(db, 'ai_reports/r4'),
+        aiReportValido('user-1', { comentario: 'x'.repeat(501) }),
+      ),
+    );
+  });
+
+  it('RT-29: El dueño lee y borra su reporte; otro uid no puede leerlo', async () => {
+    const dbDueno = testEnv.authenticatedContext('user-1').firestore();
+    await assertSucceeds(
+      setDoc(doc(dbDueno, 'ai_reports/r5'), aiReportValido('user-1')),
+    );
+    await assertSucceeds(getDoc(doc(dbDueno, 'ai_reports/r5')));
+
+    const dbAjeno = testEnv.authenticatedContext('user-2').firestore();
+    await assertFails(getDoc(doc(dbAjeno, 'ai_reports/r5')));
+    await assertFails(deleteDoc(doc(dbAjeno, 'ai_reports/r5')));
+
+    await assertSucceeds(deleteDoc(doc(dbDueno, 'ai_reports/r5')));
   });
 });

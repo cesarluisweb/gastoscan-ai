@@ -16,6 +16,7 @@ import '../../data/models/gemini_extraction_result.dart';
 import '../../providers/scan_queue_provider.dart';
 import '../../providers/chat_provider.dart';
 import '../../services/ai_insight_service.dart';
+import '../../services/ai_report_service.dart';
 import '../widgets/voice_expense_sheet.dart';
 import 'review_expense_screen.dart';
 
@@ -55,6 +56,7 @@ class ChatScreen extends StatefulWidget {
   final DatabaseHelper? dbHelper;
   final stt.SpeechToText? speechToText;
   final ChatProvider? chatProvider;
+  final AiReportService? aiReportService;
 
   const ChatScreen({
     Key? key,
@@ -64,6 +66,7 @@ class ChatScreen extends StatefulWidget {
     this.dbHelper,
     this.speechToText,
     this.chatProvider,
+    this.aiReportService,
   }) : super(key: key);
 
   @override
@@ -78,6 +81,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   late final GeminiService _geminiService;
   late final DatabaseHelper _dbHelper;
   late final stt.SpeechToText _speech;
+  late final AiReportService _aiReportService;
   bool _isListening = false;
   bool _speechAvailable = false;
   String? _spanishLocaleId;
@@ -105,6 +109,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _geminiService = widget.geminiService ?? GeminiService();
     _dbHelper = widget.dbHelper ?? DatabaseHelper.instance;
     _speech = widget.speechToText ?? stt.SpeechToText();
+    _aiReportService = widget.aiReportService ?? AiReportService();
     _focusNode.addListener(_onFocusChange);
     _initSpeech();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -998,46 +1003,144 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
-  void _mostrarDialogoReporteIA(BuildContext context) {
-    showDialog(
+  Future<void> _mostrarDialogoReporteIA(BuildContext context, String textoRespuesta) async {
+    String motivo = AiReportService.motivos.first;
+    final comentarioCtrl = TextEditingController();
+    bool enviando = false;
+    String? error;
+
+    await showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(Icons.flag_outlined, color: AppColors.textPrimary, size: 22),
-            SizedBox(width: 8),
-            Text('Reportar respuesta', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          ],
-        ),
-        content: const Text(
-          '¿Consideras que esta respuesta generada por la IA es inexacta, inapropiada o contiene información errónea? Tu reporte nos ayuda a mejorar la precisión y calidad del asistente.',
-          style: TextStyle(fontSize: 14, color: AppColors.textPrimary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Gracias por tu reporte. Lo tendremos en cuenta para futuras mejoras.', style: TextStyle(color: Colors.black)),
-                  backgroundColor: AppColors.primary,
-                  duration: Duration(seconds: 3),
+      barrierDismissible: false,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: const Row(
+              children: [
+                Icon(Icons.flag_outlined, color: AppColors.textPrimary, size: 22),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Reportar respuesta',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                 ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.textPrimary,
-              elevation: 0,
+              ],
             ),
-            child: const Text('Reportar'),
-          ),
-        ],
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '¿Qué tiene de malo esta respuesta? Tu reporte nos ayuda a mejorar el asistente.',
+                    style: TextStyle(fontSize: 14, color: AppColors.textPrimary),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: AiReportService.motivos.map((opcion) {
+                      return ChoiceChip(
+                        key: Key('chat_report_reason_$opcion'),
+                        label: Text(opcion, style: const TextStyle(fontSize: 12)),
+                        selected: motivo == opcion,
+                        onSelected: enviando
+                            ? null
+                            : (_) => setDialogState(() => motivo = opcion),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    key: const Key('chat_report_comment_field'),
+                    controller: comentarioCtrl,
+                    enabled: !enviando,
+                    maxLength: 300,
+                    maxLines: 3,
+                    decoration: const InputDecoration(
+                      hintText: 'Comentario (opcional)',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                  if (error != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      error!,
+                      key: const Key('chat_report_error_text'),
+                      style: const TextStyle(fontSize: 13, color: AppColors.error),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: enviando ? null : () => Navigator.pop(ctx),
+                child: const Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
+              ),
+              ElevatedButton(
+                key: const Key('chat_report_submit_button'),
+                onPressed: enviando
+                    ? null
+                    : () async {
+                        setDialogState(() {
+                          enviando = true;
+                          error = null;
+                        });
+                        try {
+                          await _aiReportService.enviar(
+                            textoRespuesta: textoRespuesta,
+                            motivo: motivo,
+                            comentario: comentarioCtrl.text.trim(),
+                          );
+                          if (!ctx.mounted) return;
+                          Navigator.pop(ctx);
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Gracias por tu reporte. Lo revisaremos para mejorar el asistente.',
+                                style: TextStyle(color: Colors.black),
+                              ),
+                              backgroundColor: AppColors.primary,
+                              duration: Duration(seconds: 3),
+                            ),
+                          );
+                        } on AiReportException catch (e) {
+                          if (!ctx.mounted) return;
+                          setDialogState(() {
+                            enviando = false;
+                            error = e.message;
+                          });
+                        } catch (e) {
+                          debugPrint('ChatScreen: error inesperado al reportar respuesta');
+                          if (!ctx.mounted) return;
+                          setDialogState(() {
+                            enviando = false;
+                            error = 'No pudimos enviar tu reporte. Intenta de nuevo.';
+                          });
+                        }
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.textPrimary,
+                  elevation: 0,
+                ),
+                child: enviando
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Enviar reporte'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -1164,6 +1267,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                       itemBuilder: (context, index) {
                         final msg = messages[index];
                     final isUser = msg['role'] == 'user';
+                    final esSaludoInicial = index == 0 &&
+                        (msg['text'] ?? '') == ChatProvider.initialGreeting;
                     return Align(
                       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
                       child: Container(
@@ -1283,24 +1388,29 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                                         ),
                                       ),
                                     ),
-                                    InkWell(
-                                      onTap: () => _mostrarDialogoReporteIA(context),
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: const Padding(
-                                        padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(Icons.outlined_flag, size: 12, color: AppColors.textSecondary),
-                                            SizedBox(width: 4),
-                                            Text(
-                                              'Reportar respuesta',
-                                              style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
-                                            ),
-                                          ],
+                                    if (!esSaludoInicial)
+                                      InkWell(
+                                        key: Key('chat_report_button_$index'),
+                                        onTap: () => _mostrarDialogoReporteIA(
+                                          context,
+                                          (msg['text'] ?? '').toString(),
+                                        ),
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: const Padding(
+                                          padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(Icons.outlined_flag, size: 12, color: AppColors.textSecondary),
+                                              SizedBox(width: 4),
+                                              Text(
+                                                'Reportar respuesta',
+                                                style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
-                                    ),
                                   ],
                                 ),
                               ),

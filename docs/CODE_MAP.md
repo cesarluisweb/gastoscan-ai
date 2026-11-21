@@ -12,10 +12,10 @@
 | `data/` | 12 | 5273 |
 | `domain/` | 11 | 2355 |
 | `providers/` | 4 | 2161 |
-| `services/` | 15 | 5903 |
-| `ui/` | 31 | 21345 |
+| `services/` | 16 | 6040 |
+| `ui/` | 31 | 21455 |
 | `(raiz)/` | 2 | 106 |
-| **Total** | **83** | **38075** |
+| **Total** | **84** | **38322** |
 
 ## core/
 
@@ -77,6 +77,7 @@
 | Archivo | Líneas | Símbolos | Pruebas |
 |---|---|---|---|
 | `lib/services/ai_insight_service.dart` | 968 | `AiHiddenSignals`, `AiDashboardInsight`, `AiInsightService` | `ai_insight_service_test.dart`, `ai_insight_card_test.dart` |
+| `lib/services/ai_report_service.dart` | 129 | `AiReportException`, `AiReportService` | `chat_screen_test.dart`, `ai_report_service_test.dart` |
 | `lib/services/category_classifier_service.dart` | 283 | `CategoryClassifierService` | `category_classifier_service_test.dart` |
 | `lib/services/connectivity_service.dart` | 86 | `ConnectivityService` | `scan_queue_provider_test.dart`, `settings_provider_rate_cache_test.dart`, `main_screen_launch_action_test.dart`, +5 |
 | `lib/services/document_scanner_service.dart` | 66 | `DocumentScannerService` | - |
@@ -89,7 +90,7 @@
 | `lib/services/semantic_validator.dart` | 94 | `SemanticValidator`, `SemanticValidationResult` | `semantic_validator_test.dart` |
 | `lib/services/sync_conflict_resolver.dart` | 132 | `AccionReconciliacion`, `ConflictoTombstoneRemoto`, `ConflictoEdicionConcurrente` | `sync_conflict_resolver_test.dart`, `sync_orchestration_test.dart` |
 | `lib/services/sync_coordinator.dart` | 265 | `SyncTrigger`, `SyncStatus`, `SyncState`, `SyncCoordinator` | `main_screen_launch_action_test.dart`, `sync_coordinator_test.dart` |
-| `lib/services/sync_service.dart` | 1056 | `SyncService` | `main_screen_launch_action_test.dart`, `reparar_tasas_dry_run_test.dart`, `sync_coordinator_test.dart`, +3 |
+| `lib/services/sync_service.dart` | 1064 | `SyncService` | `main_screen_launch_action_test.dart`, `reparar_tasas_dry_run_test.dart`, `sync_coordinator_test.dart`, +3 |
 | `lib/services/update_service.dart` | 159 | `UpdateInfo`, `UpdateService` | `update_service_test.dart` |
 
 ## ui/
@@ -97,7 +98,7 @@
 | Archivo | Líneas | Símbolos | Pruebas |
 |---|---|---|---|
 | `lib/ui/screens/analysis_screen.dart` | 871 | `AnalysisScreen` | `analysis_screen_redesign_test.dart`, `dashboard_category_budget_test.dart`, `lote_4_ui_resilience_and_performance_test.dart` |
-| `lib/ui/screens/chat_screen.dart` | 1431 | `ChatSuggestion`, `ChatScreen` | `chat_screen_test.dart` |
+| `lib/ui/screens/chat_screen.dart` | 1541 | `ChatSuggestion`, `ChatScreen` | `chat_screen_test.dart` |
 | `lib/ui/screens/currency_calculator_screen.dart` | 970 | `TipoTasaCalculadora`, `CurrencyCalculatorScreen` | `currency_calculator_screen_test.dart` |
 | `lib/ui/screens/dashboard_screen.dart` | 841 | `DashboardScreen` | `dashboard_screen_test.dart`, `smart_empty_state_and_lifecycle_test.dart` |
 | `lib/ui/screens/expense_history_screen.dart` | 823 | `ExpenseHistoryScreen`, `ExpenseHistoryScreenState` | `dashboard_search_test.dart`, `expense_history_screen_test.dart`, `lote_4_ui_resilience_and_performance_test.dart`, +1 |

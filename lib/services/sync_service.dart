@@ -571,6 +571,14 @@ class SyncService {
             for (final doc in presupuestosSnap.docs) {
               await doc.reference.delete();
             }
+
+            final reportesSnap = await _firestore!
+                .collection('ai_reports')
+                .where('uid', isEqualTo: uid)
+                .get();
+            for (final doc in reportesSnap.docs) {
+              await doc.reference.delete();
+            }
           }
         } on FirebaseException catch (e) {
           debugPrint("SyncService: Error al purgar Firestore durante eliminación de cuenta");

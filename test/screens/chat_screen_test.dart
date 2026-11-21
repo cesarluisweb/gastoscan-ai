@@ -9,6 +9,7 @@ import 'package:gastoscan_ai/data/models/item_gasto_model.dart';
 import 'package:gastoscan_ai/providers/gasto_provider.dart';
 import 'package:gastoscan_ai/providers/settings_provider.dart';
 import 'package:gastoscan_ai/providers/chat_provider.dart';
+import 'package:gastoscan_ai/services/ai_report_service.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:gastoscan_ai/ui/screens/chat_screen.dart';
 
@@ -118,6 +119,29 @@ class FakeGeminiService extends GeminiService {
   }
 }
 
+class FakeAiReportService extends AiReportService {
+  int callCount = 0;
+  bool shouldFail = false;
+  String? lastTexto;
+  String? lastMotivo;
+  String? lastComentario;
+
+  @override
+  Future<void> enviar({
+    required String textoRespuesta,
+    required String motivo,
+    String comentario = '',
+  }) async {
+    callCount++;
+    lastTexto = textoRespuesta;
+    lastMotivo = motivo;
+    lastComentario = comentario;
+    if (shouldFail) {
+      throw const AiReportException('No pudimos enviar tu reporte. Intenta de nuevo.');
+    }
+  }
+}
+
 void main() {
   group('ChatScreen Predefined Suggestions Tests', () {
     late FakeDatabaseHelper fakeDb;
@@ -125,6 +149,7 @@ void main() {
     late FakeSettingsProvider fakeSettingsProvider;
     late FakeGeminiService fakeGeminiService;
     late FakeSpeechToText fakeSpeech;
+    late FakeAiReportService fakeAiReportService;
 
     setUp(() {
       final TestWidgetsFlutterBinding binding = TestWidgetsFlutterBinding.ensureInitialized();
@@ -135,6 +160,7 @@ void main() {
       fakeSettingsProvider = FakeSettingsProvider();
       fakeGeminiService = FakeGeminiService();
       fakeSpeech = FakeSpeechToText();
+      fakeAiReportService = FakeAiReportService();
     });
 
     tearDown(() {
@@ -159,6 +185,7 @@ void main() {
             dbHelper: fakeDb,
             speechToText: fakeSpeech,
             chatProvider: chatProvider,
+            aiReportService: fakeAiReportService,
           ),
         ),
       );
@@ -744,6 +771,69 @@ void main() {
       await tester.pump();
       expect(find.text('Mensaje copiado al portapapeles'), findsOneWidget);
       await tester.pumpAndSettle();
+    });
+
+    testWidgets('oculta Reportar respuesta en el saludo inicial', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Reportar respuesta', skipOffstage: false), findsNothing);
+    });
+
+    testWidgets('envía el reporte con motivo y comentario', (tester) async {
+      final chatProvider = ChatProvider(initialMessages: [
+        {'role': 'user', 'text': '¿Cuánto gasté este mes?'},
+        {'role': 'assistant', 'text': 'Gastaste más de lo presupuestado.'},
+      ]);
+
+      await tester.pumpWidget(createWidgetUnderTest(chatProvider: chatProvider));
+      await tester.pumpAndSettle();
+
+      final reportButton = find.text('Reportar respuesta', skipOffstage: false);
+      expect(reportButton, findsOneWidget);
+
+      await tester.tap(reportButton);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('chat_report_reason_Ofensiva')));
+      await tester.pump();
+
+      await tester.enterText(
+        find.byKey(const Key('chat_report_comment_field')),
+        'El monto está mal',
+      );
+
+      await tester.tap(find.byKey(const Key('chat_report_submit_button')));
+      await tester.pumpAndSettle();
+
+      expect(fakeAiReportService.callCount, 1);
+      expect(fakeAiReportService.lastTexto, 'Gastaste más de lo presupuestado.');
+      expect(fakeAiReportService.lastMotivo, 'Ofensiva');
+      expect(fakeAiReportService.lastComentario, 'El monto está mal');
+      expect(
+        find.text('Gracias por tu reporte. Lo revisaremos para mejorar el asistente.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('mantiene el diálogo y muestra error si el envío falla', (tester) async {
+      fakeAiReportService.shouldFail = true;
+      final chatProvider = ChatProvider(initialMessages: [
+        {'role': 'user', 'text': 'Hola'},
+        {'role': 'assistant', 'text': 'Respuesta de prueba.'},
+      ]);
+
+      await tester.pumpWidget(createWidgetUnderTest(chatProvider: chatProvider));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Reportar respuesta', skipOffstage: false));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('chat_report_submit_button')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('chat_report_error_text')), findsOneWidget);
+      expect(find.text('Enviar reporte'), findsOneWidget);
     });
   });
 }
