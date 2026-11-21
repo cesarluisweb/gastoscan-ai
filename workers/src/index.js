@@ -902,13 +902,13 @@ REGLAS ESTRICTAS:
    - Diferencias o subidas de precios de productos entre comercios (diferencias_precios).
    - Gastos hormiga acumulados menores a $10 (gastos_hormiga).
    - Variación importante frente al mes pasado a esta misma fecha (comparativa_mes_anterior).
-   - Rendimiento a favor por pagar en bolívares a tasa BCV frente a USDT (rendimiento_cambiario).
-   - Concentración notable en comercios o categorías específicas.
-3. Felicitaciones ganadas: Solo felicita cuando exista un logro real y medible en los datos (ej. bajó el gasto en una categoría vs. el mes pasado o aprovechó bien la brecha BCV). Si el hallazgo es una fuga o subida de precio, sé directo y práctico sin adulaciones vacías.
-4. Sin saludos ("¡Hola!"), sin etiquetas ("Consejo:", "Consejo corto:"). Ve directo al grano en español venezolano natural.
-5. NUNCA menciones ni sugieras recortar el IVA (16%) ni impuestos fiscales obligatorios.
-6. Negritas selectivas: Usa **negrita** (doble asterisco) únicamente para precios, montos, cantidades, porcentajes, productos o comercios que valga la pena resaltar (ej. **$ 4,50**, **25%**, **7 compras**, **Farmatodo**). No uses cursivas con asterisco simple.
-7. Devuelve estrictamente un JSON con el campo único "consejo".
+   - Concentración notable en comercios o productos repetidos (top_comercios, top_productos_sin_iva).
+3. PROHIBIDO inventar ahorros cambiarios: NUNCA digas que el usuario "ahorró dinero pagando en bolívares a tasa BCV en lugar de USDT".
+4. Felicitaciones ganadas: Solo felicita cuando exista un logro real y medible en sus compras (ej. bajó el gasto en una categoría frente al mes pasado a la misma fecha). Si el hallazgo es una fuga o subida de precio, sé directo y práctico sin adulaciones vacías.
+5. Sin saludos ("¡Hola!"), sin etiquetas ("Consejo:", "Consejo corto:"). Ve directo al grano en español venezolano natural.
+6. NUNCA menciones ni sugieras recortar el IVA (16%) ni impuestos fiscales obligatorios.
+7. Negritas selectivas: Usa **negrita** (doble asterisco) únicamente para precios, montos, cantidades, porcentajes, productos o comercios que valga la pena resaltar (ej. **$ 4,50**, **25%**, **7 compras**, **Farmatodo**). No uses cursivas con asterisco simple.
+8. Devuelve estrictamente un JSON con el campo único "consejo".
 
 Señales y datos precalculados del usuario:
 ${JSON.stringify(contextData)}`;

@@ -737,6 +737,13 @@ void main() {
       expect(chatProvider.messages.last['text'], contains('Aquí tienes el detalle en vivo'));
       expect(find.textContaining('Aquí tienes el detalle en vivo'), findsOneWidget);
       expect(find.textContaining('**'), findsNothing);
+      expect(find.byKey(const Key('chat_copy_message_btn_1')), findsOneWidget);
+
+      // Tocar Copiar en la respuesta del asistente muestra confirmación en SnackBar
+      await tester.tap(find.byKey(const Key('chat_copy_message_btn_1')));
+      await tester.pump();
+      expect(find.text('Mensaje copiado al portapapeles'), findsOneWidget);
+      await tester.pumpAndSettle();
     });
   });
 }

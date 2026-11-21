@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../data/models/gasto_model.dart';
@@ -57,6 +58,24 @@ class AiInsightCard extends StatelessWidget {
       currentDate: currentDate,
       cachedGeminiText: cachedGeminiText,
       hiddenSignals: hiddenSignals,
+    );
+  }
+
+  void _copyInsightToClipboard(BuildContext context, String rawText) {
+    final cleanText = AiInsightService.stripMarkdownForCopy(rawText);
+    if (cleanText.isEmpty) return;
+    Clipboard.setData(ClipboardData(text: cleanText));
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    messenger?.hideCurrentSnackBar();
+    messenger?.showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Consejo copiado al portapapeles',
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500),
+        ),
+        backgroundColor: AppColors.primary,
+        duration: Duration(seconds: 2),
+      ),
     );
   }
 
@@ -165,7 +184,7 @@ class AiInsightCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Cabecera: Icono Destello + "Asistente IA" y botón "Consultar ->"
+          // Cabecera: Icono Destello + "Asistente IA", botón Copiar y botón "Consultar ->"
           Row(
             children: [
               const Icon(
@@ -186,7 +205,21 @@ class AiInsightCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 4),
+              InkWell(
+                key: const Key('ai_insight_card_copy_btn'),
+                onTap: () => _copyInsightToClipboard(context, insight.text),
+                borderRadius: BorderRadius.circular(12),
+                child: const Padding(
+                  padding: EdgeInsets.all(6),
+                  child: Icon(
+                    Icons.copy_outlined,
+                    size: 15,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
               InkWell(
                 key: const Key('ai_insight_card_consultar_btn'),
                 onTap: () => _handleConsultTap(context, insight),
@@ -217,10 +250,13 @@ class AiInsightCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          // Cuerpo limpio a ancho completo (2 a 4 líneas útiles con negritas reales)
-          SizedBox(
-            width: double.infinity,
-            child: buildFormattedText(insight.text),
+          // Cuerpo limpio a ancho completo (también permite copiar manteniendo presionado)
+          GestureDetector(
+            onLongPress: () => _copyInsightToClipboard(context, insight.text),
+            child: SizedBox(
+              width: double.infinity,
+              child: buildFormattedText(insight.text),
+            ),
           ),
         ],
       ),

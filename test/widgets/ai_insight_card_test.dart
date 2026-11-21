@@ -323,6 +323,12 @@ void main() {
       // Muestra el consejo de Gemini con negritas reales, sin asteriscos literales ni repetir SummaryCard
       expect(find.textContaining('Concentraste 3 compras en Farmatodo por \$ 40,00'), findsOneWidget);
       expect(find.textContaining('**'), findsNothing);
+      expect(find.byKey(const Key('ai_insight_card_copy_btn')), findsOneWidget);
+
+      // Tocar el botón Copiar muestra confirmación en SnackBar
+      await tester.tap(find.byKey(const Key('ai_insight_card_copy_btn')));
+      await tester.pump();
+      expect(find.text('Consejo copiado al portapapeles'), findsOneWidget);
 
       // Al tocar Consultar -> debe poner la burbuja del Asistente y dejar listo el deep-dive en vivo
       await tester.tap(find.byKey(const Key('ai_insight_card_consultar_btn')));

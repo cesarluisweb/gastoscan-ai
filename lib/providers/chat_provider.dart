@@ -9,6 +9,7 @@ class ChatProvider with ChangeNotifier {
   final List<Map<String, dynamic>> _messages = [];
   bool _isLoading = false;
   String? _pendingInsightDeepDive;
+  String? _lastDeepDivedInsight;
 
   ChatProvider({List<Map<String, dynamic>>? initialMessages}) {
     if (initialMessages != null && initialMessages.isNotEmpty) {
@@ -22,6 +23,7 @@ class ChatProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get hasUserMessages => _messages.any((m) => m['role'] == 'user');
   String? get pendingInsightDeepDive => _pendingInsightDeepDive;
+  String? get lastDeepDivedInsight => _lastDeepDivedInsight;
 
   void _resetToInitialGreeting() {
     _messages.clear();
@@ -61,17 +63,22 @@ class ChatProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Inicia una profundización en vivo desde el botón `Consultar ->` de Inicio:
-  /// muestra primero el consejo de Inicio como burbuja del Asistente (sin burbuja
-  /// artificial del usuario) y marca `_pendingInsightDeepDive` para que `ChatScreen`
-  /// consulte a Gemini en vivo con todo el contexto financiero.
+  /// Inicia una profundización en vivo desde el botón `Consultar ->` de Inicio.
+  /// Es idempotente para el mismo consejo: si el usuario ya abrió `Consultar ->` para
+  /// este consejo, regresó a Inicio sin interactuar y vuelve a tocar `Consultar ->`,
+  /// NO vuelve a agregar burbujas ni vuelve a disparar la petición a Gemini.
   void startInsightDeepDive(String insightText) {
     final clean = insightText.trim();
     if (clean.isEmpty) return;
 
     final introBubble = 'Sobre el análisis de hoy:\n\n$clean';
-    final alreadyShownLast = _messages.isNotEmpty && _messages.last['text'] == introBubble;
-    if (!alreadyShownLast) {
+    final alreadyHasIntro = _messages.any((m) => m['text'] == introBubble);
+
+    if (_lastDeepDivedInsight == clean && alreadyHasIntro) {
+      return;
+    }
+
+    if (!alreadyHasIntro) {
       if (!hasUserMessages &&
           _messages.length == 1 &&
           _messages.first['text'] == initialGreeting) {
@@ -87,6 +94,7 @@ class ChatProvider with ChangeNotifier {
       }
     }
 
+    _lastDeepDivedInsight = clean;
     _pendingInsightDeepDive = clean;
     notifyListeners();
   }
@@ -109,6 +117,7 @@ class ChatProvider with ChangeNotifier {
     _resetToInitialGreeting();
     _isLoading = false;
     _pendingInsightDeepDive = null;
+    _lastDeepDivedInsight = null;
     notifyListeners();
   }
 }

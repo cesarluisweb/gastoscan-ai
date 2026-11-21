@@ -113,6 +113,19 @@ void main() {
       final consumed = provider.consumePendingInsightDeepDive();
       expect(consumed, 'Pagaste **\$ 4,50** por **Café** en **Farmatodo**.');
       expect(provider.pendingInsightDeepDive, isNull);
+
+      // Simula que llegó la respuesta en vivo del asistente en ChatScreen
+      provider.addMessage({
+        'role': 'assistant',
+        'text': 'Aquí tienes el desglose detallado de tu compra de Café en Farmatodo.',
+      });
+      expect(provider.messages.length, 2);
+
+      // Si el usuario vuelve a Inicio sin haber interactuado y toca Consultar -> sobre el MISMO consejo,
+      // NO debe volver a agregar la burbuja ni volver a activar pendingInsightDeepDive
+      provider.startInsightDeepDive('Pagaste **\$ 4,50** por **Café** en **Farmatodo**.');
+      expect(provider.messages.length, 2);
+      expect(provider.pendingInsightDeepDive, isNull);
     });
   });
 }

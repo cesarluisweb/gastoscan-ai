@@ -109,14 +109,24 @@ void main() {
       );
       expect(plainTextRejected, isNull);
 
-      // Rechaza incluso si viniera en JSON pero con prefijo "Consejo corto:"
+      // Rechaza incluso si viniera en JSON pero con prefijo "Consejo corto:" o consejo confuso de ahorro BCV vs USDT
       final badPrefixRejected = AiInsightService.parseStrictDashboardInsight(
         '{"consejo": "Consejo corto: Tienes un presupuesto de \$600 y has gastado \$306.51."}',
       );
       expect(badPrefixRejected, isNull);
+
+      final fxSavingRejected = AiInsightService.parseStrictDashboardInsight(
+        '{"consejo": "Has ahorrado **\$ 52,00** este mes pagando en bolívares a tasa BCV en lugar de USDT."}',
+      );
+      expect(fxSavingRejected, isNull);
+
+      expect(
+        AiInsightService.stripMarkdownForCopy('Pagaste **\$ 4,50** en *Farmatodo*'),
+        'Pagaste \$ 4,50 en Farmatodo',
+      );
     });
 
-    test('computeHiddenSignals extracts all 4 hidden signals (price diff, ant expenses, prev month and FX benefit)', () async {
+    test('computeHiddenSignals extracts hidden signals (price diff, ant expenses and prev month)', () async {
       final fakeDb = FakeDbForSignals()
         ..prevMonthGastos = [
           GastoModel(
@@ -184,9 +194,6 @@ void main() {
 
       expect(signals.prevMonthComparison, isNotNull);
       expect(signals.prevMonthComparison!['categoria_con_ahorro']['categoria'], 'Alimentación');
-
-      expect(signals.exchangeBenefit, isNotNull);
-      expect(signals.exchangeBenefit!['ahorro_brecha_usd'], 8.0);
     });
 
     test('buildCompactContextForGemini excludes IVA items and includes hidden signals without repeating SummaryCard totals', () {

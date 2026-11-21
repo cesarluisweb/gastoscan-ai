@@ -16,20 +16,17 @@ class AiHiddenSignals {
   final Map<String, dynamic>? prevMonthComparison;
   final List<Map<String, dynamic>> priceFindings;
   final Map<String, dynamic>? antExpenses;
-  final Map<String, dynamic>? exchangeBenefit;
 
   const AiHiddenSignals({
     this.prevMonthComparison,
     this.priceFindings = const [],
     this.antExpenses,
-    this.exchangeBenefit,
   });
 
   bool get hasAnySignal =>
       prevMonthComparison != null ||
       priceFindings.isNotEmpty ||
-      antExpenses != null ||
-      exchangeBenefit != null;
+      antExpenses != null;
 
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{};
@@ -41,9 +38,6 @@ class AiHiddenSignals {
     }
     if (antExpenses != null) {
       map['gastos_hormiga'] = antExpenses;
-    }
-    if (exchangeBenefit != null) {
-      map['rendimiento_cambiario'] = exchangeBenefit;
     }
     return map;
   }
@@ -67,18 +61,22 @@ class AiDashboardInsight {
 ///    personalizado con Gemini en formato JSON estricto (`{"consejo": "..."}`).
 /// 3. Proveer un respaldo local inteligente cuando no hay conexión o aún no hay caché IA.
 class AiInsightService {
-  // Claves vigentes v2 (purgan la caché v1 donde un Worker viejo pudo guardar texto plano)
-  static const String prefTextKey = 'ai_insight_cached_text_v2';
-  static const String prefLastFetchDateKey = 'ai_insight_last_fetch_date_v2';
-  static const String prefSignatureKey = 'ai_insight_signature_v2';
-  static const String prefYearMonthKey = 'ai_insight_year_month_v2';
+  // Claves vigentes v3 (purgan cachés previas v1 y v2)
+  static const String prefTextKey = 'ai_insight_cached_text_v3';
+  static const String prefLastFetchDateKey = 'ai_insight_last_fetch_date_v3';
+  static const String prefSignatureKey = 'ai_insight_signature_v3';
+  static const String prefYearMonthKey = 'ai_insight_year_month_v3';
 
-  static const List<String> _legacyV1Keys = [
+  static const List<String> _legacyKeys = [
     'ai_insight_cached_short_v1',
     'ai_insight_cached_detailed_v1',
     'ai_insight_last_fetch_date_v1',
     'ai_insight_signature_v1',
     'ai_insight_year_month_v1',
+    'ai_insight_cached_text_v2',
+    'ai_insight_last_fetch_date_v2',
+    'ai_insight_signature_v2',
+    'ai_insight_year_month_v2',
   ];
 
   /// Mínimo de gastos en el mes actual para disparar generación en segundo plano con Gemini.
@@ -214,25 +212,9 @@ class AiInsightService {
       }
     }
 
-    // 2. Señal en memoria: Rendimiento cambiario real BCV vs USDT P2P
-    Map<String, dynamic>? exchangeBenefit;
-    if (totalMesUsd > 0 && totalMesUsdt > 0) {
-      final diffUsd = totalMesUsd - totalMesUsdt;
-      final diffPct = ((diffUsd / totalMesUsd) * 100).round();
-      if (diffUsd >= 5.0 && diffPct >= 5) {
-        exchangeBenefit = {
-          'total_usd_bcv': double.parse(totalMesUsd.toStringAsFixed(2)),
-          'total_usdt_p2p': double.parse(totalMesUsdt.toStringAsFixed(2)),
-          'ahorro_brecha_usd': double.parse(diffUsd.toStringAsFixed(2)),
-          'ahorro_brecha_pct': diffPct,
-        };
-      }
-    }
-
     if (!isCurrentMonth) {
       return AiHiddenSignals(
         antExpenses: antExpenses,
-        exchangeBenefit: exchangeBenefit,
       );
     }
 
@@ -413,7 +395,6 @@ class AiInsightService {
       prevMonthComparison: prevMonthComparison,
       priceFindings: priceFindings.take(3).toList(),
       antExpenses: antExpenses,
-      exchangeBenefit: exchangeBenefit,
     );
   }
 
@@ -547,18 +528,6 @@ class AiInsightService {
               'A esta altura del mes tu ritmo de gasto va un **$totalDelta%** más acelerado que en $prevName. Revisa en el chat qué categorías están impulsando esa diferencia.',
         );
       }
-    }
-
-    // 5. Rendimiento por brecha cambiaria BCV vs USDT
-    if (signals?.exchangeBenefit != null) {
-      final fx = signals!.exchangeBenefit!;
-      final ahorroStr = CurrencyFormatter.formatUsd((fx['ahorro_brecha_usd'] as num).toDouble());
-      final pct = fx['ahorro_brecha_pct'];
-      return AiDashboardInsight(
-        source: 'exchange_benefit',
-        text:
-            'Pagar en bolívares a tasa oficial jugó a tu favor: al medir tus compras en **USDT P2P** el costo real bajó **$ahorroStr** (**$pct%**). Elegir bien cómo liquidar cada compra está estirando tu presupuesto.',
-      );
     }
 
     return null;
@@ -805,12 +774,23 @@ class AiInsightService {
     return contextMap;
   }
 
+  /// Limpia marcadores Markdown (`**negrita**` y `*cursiva*`) para copiar texto limpio al portapapeles.
+  static String stripMarkdownForCopy(String text) {
+    return text
+        .replaceAllMapped(RegExp(r'\*\*(.+?)\*\*', dotAll: true), (m) => m.group(1) ?? '')
+        .replaceAllMapped(RegExp(r'\*(?!\s)(.+?)(?<!\s)\*', dotAll: true), (m) => m.group(1) ?? '')
+        .replaceAll('**', '')
+        .trim();
+  }
+
   static bool _hasMalformedPrefix(String text) {
     final lower = text.trim().toLowerCase();
     return lower.startsWith('consejo corto:') ||
         lower.startsWith('**consejo corto') ||
         lower.startsWith('consejo:') ||
-        lower.startsWith('**consejo:');
+        lower.startsWith('**consejo:') ||
+        lower.contains('en lugar de usdt') ||
+        lower.contains('tasa bcv en lugar de');
   }
 
   /// Parsea de forma ESTRICTA la respuesta JSON `{"consejo": "..."}` de `insight_inicio`.
@@ -850,15 +830,15 @@ class AiInsightService {
     return null;
   }
 
-  static Future<void> _purgeLegacyV1Cache(SharedPreferences prefs) async {
-    for (final key in _legacyV1Keys) {
+  static Future<void> _purgeLegacyCache(SharedPreferences prefs) async {
+    for (final key in _legacyKeys) {
       if (prefs.containsKey(key)) {
         await prefs.remove(key);
       }
     }
   }
 
-  /// Lee el consejo de Gemini cacheado en `SharedPreferences` (v2) si corresponde al mes indicado.
+  /// Lee el consejo de Gemini cacheado en `SharedPreferences` (v3) si corresponde al mes indicado.
   static Future<String?> getCachedGeminiInsight({
     required int year,
     required int month,
@@ -866,7 +846,7 @@ class AiInsightService {
   }) async {
     try {
       final prefs = prefsInstance ?? await SharedPreferences.getInstance();
-      await _purgeLegacyV1Cache(prefs);
+      await _purgeLegacyCache(prefs);
 
       final cachedYm = prefs.getString(prefYearMonthKey);
       if (cachedYm != '${year}_$month') return null;
@@ -876,14 +856,14 @@ class AiInsightService {
         return text.trim();
       }
     } catch (e) {
-      debugPrint('AiInsightService: Error leyendo caché v2 de consejo IA: $e');
+      debugPrint('AiInsightService: Error leyendo caché v3 de consejo IA: $e');
     }
     return null;
   }
 
   /// Verifica si corresponde generar un nuevo consejo personalizado con Gemini en segundo plano
   /// (máximo 1 vez cada 24h, solo en el mes actual, con >= 3 gastos y solo si cambió la firma).
-  /// Retorna el texto del consejo vigente (recién generado o de caché v2), o `null` si no aplica.
+  /// Retorna el texto del consejo vigente (recién generado o de caché v3), o `null` si no aplica.
   static Future<String?> refreshBackgroundInsightIfNeeded({
     required List<GastoModel> gastos,
     required int selectedYear,
@@ -904,7 +884,7 @@ class AiInsightService {
     SharedPreferences prefs;
     try {
       prefs = prefsInstance ?? await SharedPreferences.getInstance();
-      await _purgeLegacyV1Cache(prefs);
+      await _purgeLegacyCache(prefs);
     } catch (e) {
       debugPrint('AiInsightService: SharedPreferences no disponible: $e');
       return null;

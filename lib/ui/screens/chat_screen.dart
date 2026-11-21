@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../../core/constants/app_colors.dart';
@@ -979,6 +980,24 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
+  void _copiarMensajeChat(BuildContext context, String rawText) {
+    final cleanText = AiInsightService.stripMarkdownForCopy(rawText);
+    if (cleanText.isEmpty) return;
+    Clipboard.setData(ClipboardData(text: cleanText));
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    messenger?.hideCurrentSnackBar();
+    messenger?.showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Mensaje copiado al portapapeles',
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500),
+        ),
+        backgroundColor: AppColors.primary,
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
   void _mostrarDialogoReporteIA(BuildContext context) {
     showDialog(
       context: context,
@@ -1161,9 +1180,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildFormattedMessage(
-                              msg['text'] ?? '',
-                              AppColors.textPrimary,
+                            GestureDetector(
+                              onLongPress: () => _copiarMensajeChat(context, (msg['text'] ?? '').toString()),
+                              child: _buildFormattedMessage(
+                                msg['text'] ?? '',
+                                AppColors.textPrimary,
+                              ),
                             ),
                             if (msg['extractionResult'] != null && msg['extractionResult'] is GeminiExtractionResult) ...[
                               const SizedBox(height: 8),
@@ -1235,26 +1257,51 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                               ),
                             ],
                             if (!isUser) ...[
-                              const SizedBox(height: 4),
+                              const SizedBox(height: 6),
                               Align(
                                 alignment: Alignment.centerRight,
-                                child: InkWell(
-                                  onTap: () => _mostrarDialogoReporteIA(context),
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: const Padding(
-                                    padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(Icons.outlined_flag, size: 12, color: AppColors.textSecondary),
-                                        SizedBox(width: 4),
-                                        Text(
-                                          'Reportar respuesta',
-                                          style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                                child: Wrap(
+                                  spacing: 12,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  children: [
+                                    InkWell(
+                                      key: Key('chat_copy_message_btn_$index'),
+                                      onTap: () => _copiarMensajeChat(context, (msg['text'] ?? '').toString()),
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: const Padding(
+                                        padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(Icons.copy_outlined, size: 12, color: AppColors.textSecondary),
+                                            SizedBox(width: 4),
+                                            Text(
+                                              'Copiar',
+                                              style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                                            ),
+                                          ],
                                         ),
-                                      ],
+                                      ),
                                     ),
-                                  ),
+                                    InkWell(
+                                      onTap: () => _mostrarDialogoReporteIA(context),
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: const Padding(
+                                        padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(Icons.outlined_flag, size: 12, color: AppColors.textSecondary),
+                                            SizedBox(width: 4),
+                                            Text(
+                                              'Reportar respuesta',
+                                              style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
