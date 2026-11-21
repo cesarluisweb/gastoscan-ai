@@ -2178,21 +2178,22 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Material(
                         color: tasaAnterior == opt.rate
-                            ? const Color(0xFFFEF3C7)
+                            ? AppColors.surface
                             : AppColors.cardLighter,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                         child: InkWell(
                           key: Key('opt_iva_item_${opt.rate}'),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(10),
                           onTap: () => Navigator.pop(sheetCtx, opt.rate),
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(10),
                               border: Border.all(
                                 color: tasaAnterior == opt.rate
-                                    ? const Color(0xFFF59E0B)
+                                    ? AppColors.textPrimary
                                     : AppColors.border,
+                                width: tasaAnterior == opt.rate ? 1.5 : 1.0,
                               ),
                             ),
                             child: Row(
@@ -2227,7 +2228,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                       : Icons.radio_button_unchecked_rounded,
                                   size: 20,
                                   color: tasaAnterior == opt.rate
-                                      ? const Color(0xFF78350F)
+                                      ? AppColors.textPrimary
                                       : const Color(0xFF9CA3AF),
                                 ),
                               ],
@@ -2328,9 +2329,6 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     final String badgeLabel = item.tasaIvaPct == 16
         ? 'G · 16% ▾'
         : (item.tasaIvaPct == 8 ? 'R · 8% ▾' : 'Exento ▾');
-    final Color badgeBg = isTaxed ? const Color(0xFFFEF3C7) : AppColors.surface;
-    final Color badgeBorder = isTaxed ? const Color(0xFFF59E0B) : AppColors.border;
-    final Color badgeTextColor = isTaxed ? const Color(0xFF78350F) : const Color(0xFF4B5563);
 
     return Container(
       key: ValueKey('item_tax_gross_${item.clientKey}'),
@@ -2349,22 +2347,23 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
             Tooltip(
               message: 'Toca para cambiar el IVA de este artículo',
               child: Material(
-                color: badgeBg,
-                shape: StadiumBorder(
-                  side: BorderSide(color: badgeBorder, width: 1),
+                color: AppColors.surface,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: const BorderSide(color: AppColors.border, width: 1),
                 ),
                 child: InkWell(
                   key: ValueKey('item_tax_badge_${item.clientKey}'),
-                  customBorder: const StadiumBorder(),
+                  borderRadius: BorderRadius.circular(10),
                   onTap: () => _abrirSelectorIvaItem(idx),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     child: Text(
                       badgeLabel,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: badgeTextColor,
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ),
@@ -2421,7 +2420,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
             children: [
               const Padding(
                 padding: EdgeInsets.only(top: 1),
-                child: Icon(Icons.auto_fix_high_rounded, size: 16, color: Color(0xFF92400E)),
+                child: Icon(Icons.auto_fix_high_rounded, size: 16, color: AppColors.textPrimary),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -2521,12 +2520,12 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     } else if (estado.anclaFiscalActiva && !estado.ivaCuadra) {
       final diffIva = (estado.ivaCalculadoCents - estado.ivaDocumentalCents).abs();
       statusIcon = Icons.warning_amber_rounded;
-      statusColor = const Color(0xFF92400E);
+      statusColor = AppColors.textPrimary;
       statusText = 'IVA no cuadra (dif. $sym ${_formatDisplayMonto(diffIva / 100.0)})';
     } else if (estado.anclaFiscalActiva && !estado.totalCuadra) {
       final diffTot = ((estado.subtotalBaseCents + estado.ivaDocumentalCents) - estado.montoTotalCents).abs();
       statusIcon = Icons.warning_amber_rounded;
-      statusColor = const Color(0xFF92400E);
+      statusColor = AppColors.textPrimary;
       statusText = 'Total no coincide (dif. $sym ${_formatDisplayMonto(diffTot / 100.0)})';
     } else if (estado.totalCuadra) {
       statusIcon = Icons.info_outline_rounded;
@@ -2535,7 +2534,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     } else {
       final diffTot = (estado.sumBrutoCents - estado.montoTotalCents).abs();
       statusIcon = Icons.warning_amber_rounded;
-      statusColor = const Color(0xFF92400E);
+      statusColor = AppColors.textPrimary;
       statusText = 'Total difiere en $sym ${_formatDisplayMonto(diffTot / 100.0)}';
     }
 
@@ -2566,7 +2565,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
             _buildFiscalFooterRow(
               'IVA calculado',
               '$sym ${_formatDisplayMonto(estado.ivaCalculadoCents / 100.0)}',
-              textColor: const Color(0xFF92400E),
+              textColor: AppColors.textPrimary,
             ),
           ],
           const SizedBox(height: 6),
@@ -2686,7 +2685,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                               fontWeight: FontWeight.bold,
                               color: estado.cuadraConFactura
                                   ? const Color(0xFF15803D)
-                                  : const Color(0xFF92400E),
+                                  : AppColors.textPrimary,
                               fontFeatures: const [FontFeature.tabularFigures()],
                             ),
                           ),
@@ -3235,6 +3234,13 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
               tooltip: 'Guardar borrador',
               onPressed: _isSaving ? null : _guardarComoBorrador,
             ),
+          if (widget.existingGasto != null)
+            IconButton(
+              key: const Key('btn_eliminar_gasto_appbar'),
+              icon: const Icon(Icons.delete_outline, color: AppColors.error),
+              tooltip: 'Eliminar gasto',
+              onPressed: _isSaving ? null : _confirmarYEliminarGastoExistente,
+            ),
           if (widget.queueItemId != null)
             IconButton(
               icon: const Icon(Icons.delete_outline, color: AppColors.error),
@@ -3498,7 +3504,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                       child: Text('Sin artículos detallados.', style: TextStyle(color: AppColors.textMuted)),
                     )
                   else
-                    ..._items.asMap().entries.map((entry) {
+                    ..._items.asMap().entries.expand((entry) {
                       final idx = entry.key;
                       final item = entry.value;
 
@@ -3527,8 +3533,16 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
 
                       final itemHistory = _priceComparisons[item.clientKey];
 
-                      return Card(
-                        key: ValueKey('item_card_${item.clientKey}'),
+                      return <Widget>[
+                        if (idx > 0)
+                          Divider(
+                            key: ValueKey('item_divider_${item.clientKey}'),
+                            height: 1,
+                            thickness: 1,
+                            color: AppColors.border,
+                          ),
+                        Card(
+                          key: ValueKey('item_card_${item.clientKey}'),
                         margin: const EdgeInsets.symmetric(vertical: 8),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -3897,8 +3911,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                             ],
                           ),
                         ),
-                      );
-                    }).toList(),
+                      ),
+                    ];
+                  }),
                   if (_fiscalReviewMode && _estadoFiscal?.sugerenciaUnica != null)
                     _buildFiscalSuggestionBanner(_estadoFiscal!.sugerenciaUnica!),
                   if (_fiscalReviewMode && _estadoFiscal != null)
@@ -3907,7 +3922,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                   OutlinedButton.icon(
                     key: const Key('review_expense_add_item_btn'),
                     onPressed: _addItem,
-                    icon: const Icon(Icons.add, size: 18, color: AppColors.primaryDark),
+                    icon: const Icon(Icons.add, size: 18, color: AppColors.textPrimary),
                     label: Text(
                       _items.isEmpty ? 'Agregar artículo' : 'Agregar otro artículo',
                       style: const TextStyle(
@@ -3918,9 +3933,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     ),
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size.fromHeight(44),
-                      side: const BorderSide(color: AppColors.border, width: 1.5),
+                      side: const BorderSide(color: AppColors.textPrimary, width: 1.2),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      backgroundColor: AppColors.cardLighter,
+                      backgroundColor: AppColors.surface,
                     ),
                   ),
                 ],
@@ -4619,7 +4634,13 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    Image.file(fileToShow, fit: BoxFit.cover),
+                    Image.file(
+                      fileToShow,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => const Center(
+                        child: Icon(Icons.broken_image_outlined, color: Colors.white54, size: 36),
+                      ),
+                    ),
                     Positioned(
                       right: 12,
                       bottom: 12,
@@ -4660,12 +4681,8 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                 label: const Text('Cambiar comprobante', style: TextStyle(color: AppColors.textPrimary)),
               ),
               TextButton.icon(
-                onPressed: () {
-                  setState(() {
-                    _imageDeleted = true;
-                    _pickedImage = null;
-                  });
-                },
+                key: const Key('btn_eliminar_comprobante'),
+                onPressed: _confirmarEliminarComprobante,
                 icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.error),
                 label: const Text('Eliminar comprobante', style: TextStyle(color: AppColors.error)),
               ),
@@ -4674,6 +4691,107 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _confirmarEliminarComprobante() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.card,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          '¿Eliminar comprobante?',
+          style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+        ),
+        content: const Text(
+          'Se quitará la imagen adjunta de este gasto. Los montos y detalles del formulario se conservarán.',
+          style: TextStyle(color: AppColors.textSecondary, height: 1.4),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          TextButton(
+            key: const Key('btn_confirmar_eliminar_comprobante'),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text(
+              'Eliminar',
+              style: TextStyle(color: AppColors.error, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      setState(() {
+        _imageDeleted = true;
+        _pickedImage = null;
+      });
+    }
+  }
+
+  Future<void> _confirmarYEliminarGastoExistente() async {
+    final existing = widget.existingGasto;
+    if (existing == null) return;
+    final comercioNombre = _comercioCtrl.text.trim().isNotEmpty
+        ? _comercioCtrl.text.trim()
+        : existing.comercio;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.card,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          '¿Eliminar gasto?',
+          style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          '¿Deseas eliminar el gasto de "$comercioNombre"?',
+          style: const TextStyle(color: AppColors.textSecondary, height: 1.4),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar', style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          TextButton(
+            key: const Key('btn_confirmar_eliminar_gasto'),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text(
+              'Eliminar',
+              style: TextStyle(color: AppColors.error, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      if (existing.id != null) {
+        final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
+        final ok = await gastoProvider.eliminarGasto(existing.id!);
+        if (!mounted) return;
+        if (!ok) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(gastoProvider.errorMessage ?? 'No se pudo eliminar el gasto.'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+          return;
+        }
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Gasto eliminado', style: TextStyle(color: Colors.black)),
+          backgroundColor: AppColors.primaryDark,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      Navigator.pop(context);
+    }
   }
 
   void _showImagePickerOptions() {

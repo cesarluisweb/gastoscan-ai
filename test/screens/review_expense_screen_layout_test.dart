@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -109,6 +110,16 @@ class FakeGastoProvider extends GastoProvider {
   Future<bool> agregarGasto(GastoModel gasto, List<ItemGastoModel> items, {List<int>? shoppingItemIds}) async {
     ultimoGastoGuardado = gasto;
     ultimosItemsGuardados = items;
+    return true;
+  }
+
+  bool eliminarGastoLlamado = false;
+  int? ultimoGastoEliminadoId;
+
+  @override
+  Future<bool> eliminarGasto(int id) async {
+    eliminarGastoLlamado = true;
+    ultimoGastoEliminadoId = id;
     return true;
   }
 }
@@ -1116,8 +1127,144 @@ void main() {
     expect(find.text('Editar gasto'), findsOneWidget);
     expect(find.text('Registrar gasto'), findsNothing);
     expect(find.widgetWithText(ElevatedButton, 'Guardar Gasto'), findsOneWidget);
-    // Boton de borrador debe estar oculto para gasto ya existente
+    // Boton de borrador debe estar oculto para gasto ya existente y el de eliminar visible
     expect(find.byKey(const Key('btn_guardar_borrador_appbar')), findsNothing);
+    expect(find.byKey(const Key('btn_eliminar_gasto_appbar')), findsOneWidget);
+  });
+
+  testWidgets('ReviewExpenseScreen al editar existingGasto permite eliminar el gasto desde el AppBar previa confirmacion', (tester) async {
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    final existing = GastoModel(
+      id: 77,
+      uuid: 'uuid-existing-del-77',
+      fecha: '2026-10-25',
+      comercio: 'Farmatodo',
+      moneda: 'USD',
+      totalOriginal: 1500,
+      totalUsd: 1500,
+      tasaCambio: 880.0,
+      categoria: 'Salud',
+      creadoEn: '2026-10-25T10:00:00',
+    );
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<GastoProvider>.value(value: gastoProvider),
+          ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+          ChangeNotifierProvider<ScanQueueProvider>.value(value: scanQueueProvider),
+        ],
+        child: MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (ctx) => ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    ctx,
+                    MaterialPageRoute(
+                      builder: (_) => ReviewExpenseScreen(existingGasto: existing),
+                    ),
+                  );
+                },
+                child: const Text('Ir a Editar'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Ir a Editar'));
+    await tester.pumpAndSettle();
+
+    // Tocar el boton de eliminar en el AppBar
+    await tester.tap(find.byKey(const Key('btn_eliminar_gasto_appbar')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('¿Eliminar gasto?'), findsOneWidget);
+    expect(find.text('¿Deseas eliminar el gasto de "Farmatodo"?'), findsOneWidget);
+
+    // Si cancela, no elimina ni sale de la pantalla
+    await tester.tap(find.widgetWithText(TextButton, 'Cancelar'));
+    await tester.pumpAndSettle();
+    expect(gastoProvider.eliminarGastoLlamado, isFalse);
+    expect(find.text('Editar gasto'), findsOneWidget);
+
+    // Tocar de nuevo y confirmar eliminacion
+    await tester.tap(find.byKey(const Key('btn_eliminar_gasto_appbar')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('btn_confirmar_eliminar_gasto')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+
+    expect(gastoProvider.eliminarGastoLlamado, isTrue);
+    expect(gastoProvider.ultimoGastoEliminadoId, 77);
+    expect(find.text('Gasto eliminado'), findsOneWidget);
+
+    await tester.pumpAndSettle();
+    expect(find.text('Ir a Editar'), findsOneWidget);
+  });
+
+  testWidgets('ReviewExpenseScreen al presionar Eliminar comprobante pide confirmacion antes de quitar la imagen', (tester) async {
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    final tempDir = Directory.systemTemp.createTempSync('review_receipt_test_');
+    final tempFile = File('${tempDir.path}/comprobante_test.jpg')..writeAsBytesSync([1, 2, 3]);
+    addTearDown(() {
+      try {
+        tempDir.deleteSync(recursive: true);
+      } catch (_) {}
+    });
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<GastoProvider>.value(value: gastoProvider),
+          ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+          ChangeNotifierProvider<ScanQueueProvider>.value(value: scanQueueProvider),
+        ],
+        child: MaterialApp(
+          home: ReviewExpenseScreen(imageFile: tempFile),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('btn_eliminar_comprobante')), findsOneWidget);
+    expect(find.text('Adjuntar comprobante (Opcional)'), findsNothing);
+
+    // Tocar Eliminar comprobante -> abre dialogo de confirmacion
+    await tester.tap(find.byKey(const Key('btn_eliminar_comprobante')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('¿Eliminar comprobante?'), findsOneWidget);
+
+    // Si cancela, el comprobante se mantiene
+    await tester.tap(find.widgetWithText(TextButton, 'Cancelar'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('btn_eliminar_comprobante')), findsOneWidget);
+    expect(find.text('Adjuntar comprobante (Opcional)'), findsNothing);
+
+    // Tocar de nuevo y confirmar eliminacion
+    await tester.tap(find.byKey(const Key('btn_eliminar_comprobante')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('btn_confirmar_eliminar_comprobante')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('btn_eliminar_comprobante')), findsNothing);
+    expect(find.text('Adjuntar comprobante (Opcional)'), findsOneWidget);
   });
 
   testWidgets('ReviewExpenseScreen al editar existingGasto y presionar Atrás muestra diálogo "¿Guardar modificaciones?" y permite guardar', (tester) async {
@@ -1722,13 +1869,15 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // 1. Nombres limpios sin (G)/(E); gravado muestra Precio (sin IVA), Total sin IVA, badge G · 16% ▾ y franja Con IVA 16%
+      // 1. Nombres limpios sin (G)/(E); gravado muestra Precio (sin IVA), Total sin IVA, badge G · 16% ▾ (fondo blanco, borde gris, radio 10) y franja Con IVA 16%
       expect(find.text('Detergente Líquido'), findsOneWidget);
       expect(find.text('Harina PAN 1kg'), findsOneWidget);
       expect(find.text('Precio (sin IVA)'), findsOneWidget);
       expect(find.text('Total sin IVA'), findsOneWidget);
       expect(find.text('G · 16% ▾'), findsOneWidget);
       expect(find.textContaining('Con IVA 16%: Bs. 300'), findsOneWidget);
+      final secondKey = extractedImputado.items[1].clientKey;
+      expect(find.byKey(ValueKey('item_divider_$secondKey')), findsOneWidget);
       // Sin símbolo de aproximación ni textos repetidos por fila ni pastilla en el artículo exento sin editar
       expect(find.textContaining('≈'), findsNothing);
       expect(find.textContaining('sin cuadrar con ticket'), findsNothing);
