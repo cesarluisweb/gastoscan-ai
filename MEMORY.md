@@ -8,7 +8,7 @@
 - **Mapa de código:** `docs/CODE_MAP.md` se regenera con `node scripts/gen_code_map.js`; el hook de pre-commit lo actualiza.
 
 ## Tareas en Curso
-- **AI-06 (imputación IVA en precios de anaquel):** 🔧 Implementada completa (Push 1 en build 721 `2f15981`, + Push 2 y 3 integrados: Mayor Resto con `BigInt`, decimales por candidatos, nota `Base impresa` en `ReviewExpenseScreen`, comparador simétrico móvil+web y soporte `'R'` en Worker — pendiente CI verde, validación en dispositivo y `wrangler deploy` aparte).
+- **AI-06 (imputación IVA en precios de anaquel):** `Pendiente de validación 🧪` (APK build 722, run `44859265998`; Web build 33, run `44859265979`, HTTP 200; Firestore build 5; SHA `bacfe13`). Falta validación en dispositivo físico por César (`docs/DOC_PRECIOS_ANAQUEL_IVA.md`) y `wrangler deploy` aparte para activar `'R'` (8%) en Worker.
 - **AI-08 (consejos dinámicos en Inicio):** 🔧 Implementada en `AiInsightService`, `AiInsightCard`, `ChatProvider` y Worker (`modo: "insight_inicio"`). Consejo único combinado con ritmo diario, caché 24h ($\ge 3$ gastos) y detalle ampliado en el chat al pulsar `Consultar`.
 - **AI-09 (detección fotos y facturas duplicadas):** Planificada en `ROADMAP.md` y documentada en `docs/DOC_PLAN_DETECCION_DUPLICADOS.md`. Pendiente definición de esquema SQLite (v20 vs v19).
 - **UX-17 (compartir Rinde Más por WhatsApp):** Planificada en `docs/DOC_PLAN_UX17_COMPARTIR_WHATSAPP.md` (App, Panel Web, Landing + Open Graph); diferida hasta tener el enlace público de Google Play.

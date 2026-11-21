@@ -1,6 +1,6 @@
 # Especificación Técnica: Precios de Anaquel e Imputación de IVA en Compras (AI-06)
 
-> **Estado:** Implementada 🔧 (pendiente CI verde y validación en dispositivo físico por César).
+> **Estado:** `Pendiente de validación 🧪` (APK build 722, run `44859265998`; Web build 33, run `44859265979`, HTTP 200 en `/panel`; Firestore build 5, run `44859266019`; SHA `bacfe13`).
 > **Tarea:** `AI-06` · Fase 6.2, Bloque C en `ROADMAP.md`.
 
 Este documento define la regla de negocio vigente, el algoritmo determinista de reparto de IVA por Mayor Resto, el tratamiento del comparador de precios (móvil + panel web) y la guía de pruebas en dispositivo para **Rinde Más**.
@@ -101,7 +101,7 @@ Para evitar falsos saltos de `+16%` o `-14%` al comparar gastos nuevos (con IVA 
 
 ## 7. Guía de Pruebas en Dispositivo Físico
 
-> **Commit / Build:** Actualizar tras CI en verde del commit de AI-06.
+> **Commit / Build:** SHA `bacfe13` · APK Build `722` (run `44859265998`) · Web Build `33` (run `44859265979`).
 
 **Ruta alcanzable:** `Inicio` → botón central `+` (`MainScreen`) → `Tomar foto de factura` / galería (`ScanScreen`) → banner `Factura lista para revisar` (`GlobalScanQueueBanner`) → `ReviewExpenseScreen`.
 
