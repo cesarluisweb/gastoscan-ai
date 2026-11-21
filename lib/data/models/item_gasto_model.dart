@@ -79,17 +79,79 @@ class ItemGastoModel {
   double get precioUnitarioDisplay => precioUnitario / 100.0;
   double get totalDisplay => total / 100.0;
 
-  /// Determina si la descripción de un ítem corresponde a un renglón fiscal de impuesto (IVA / IGTF).
+  /// Determina si la descripción de un ítem corresponde estrictamente a un renglón
+  /// fiscal de impuesto (IVA / IGTF), evitando falsos positivos como "Aceite de oliva"
+  /// o "Leche Nativa".
   static bool isTaxDescription(String descripcion) {
+    return isIvaOnlyDescription(descripcion) || isIgtfDescription(descripcion);
+  }
+
+  /// Determina si la descripción corresponde únicamente a un renglón de IVA
+  /// (excluyendo IGTF u otros tributos distintos al IVA, y sin atrapar productos
+  /// compuestos como "Combo con IVA 16%" o palabras como "Aceite de oliva").
+  static bool isIvaOnlyDescription(String descripcion) {
     final lower = descripcion.trim().toLowerCase();
-    return lower == 'impuesto iva' ||
-        lower == 'iva' ||
-        lower.startsWith('iva ') ||
-        lower.startsWith('iva(') ||
-        lower.contains('impuesto iva') ||
-        lower.contains('iva 16%') ||
-        lower == 'igtf' ||
-        lower.startsWith('igtf ');
+    if (lower.isEmpty) return false;
+    final clean = lower.replaceAll(RegExp(r'\s+'), ' ');
+    if (clean.contains('igtf')) return false;
+    if (clean == 'impuesto iva' ||
+        clean == 'iva' ||
+        clean == 'i.v.a' ||
+        clean == 'i.v.a.' ||
+        clean == 'impuesto' ||
+        clean == 'impuestos') {
+      return true;
+    }
+    return RegExp(
+      r'^(?:(?:total|monto|impuestos?(?:\s+(?:al|de|del))?)\s+)?\(?i\.?v\.?a\.?\)?(?:[\s:/\-(\d%]|$)',
+      caseSensitive: false,
+    ).hasMatch(clean) ||
+        RegExp(
+          r'^(?:total\s+)?impuesto\s+al\s+valor\s+agregado(?:\s|[:(\d%]|$)',
+          caseSensitive: false,
+        ).hasMatch(clean);
+  }
+
+  /// Determina si la descripción corresponde a un renglón de IGTF (3%).
+  static bool isIgtfDescription(String descripcion) {
+    final lower = descripcion.trim().toLowerCase();
+    if (lower.isEmpty) return false;
+    return RegExp(r'\bigtf\b', caseSensitive: false).hasMatch(lower);
+  }
+
+  /// Determina si la descripción corresponde a un subtotal o línea resumen
+  /// que el LLM haya colado erróneamente como ítem (ej. "SUBTOTAL", "BASE IMPONIBLE").
+  static bool isSummaryLineDescription(String descripcion) {
+    final clean = descripcion.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+    if (clean.isEmpty) return false;
+    return RegExp(
+      r'^(?:sub\s*-?\s*total|base\s+imponible|bi\s+[gr]|total\s+exento|exento|monto\s+exento|total\s+general|total\s+a\s+pagar|total\s+factura)(?:\s|:|$)',
+      caseSensitive: false,
+    ).hasMatch(clean);
+  }
+
+  /// Determina si la descripción corresponde explícitamente a una línea de descuento,
+  /// rebaja o bonificación (sin atrapar productos reales como "Pack Ahorro Pañales"
+  /// o "Combo Promo 2x1").
+  static bool isDiscountDescription(String descripcion) {
+    final clean = descripcion.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+    if (clean.isEmpty) return false;
+    return RegExp(
+      r'^(?:descuento|desct?o?\.?|dto\.?|bonificaci[oó]n|bonif\.?|rebaja|cup[oó]n(?:\s+de\s+descuento)?)(?:[\s:\-/%(\d]|$)',
+      caseSensitive: false,
+    ).hasMatch(clean);
+  }
+
+  /// Determina si la descripción corresponde a servicio de restaurante o propina
+  /// (sin atrapar conceptos como "Servicio técnico", "Servicio de internet",
+  /// "Cubierto de plástico" o "Tip Top Galletas").
+  static bool isServiceOrTipDescription(String descripcion) {
+    final clean = descripcion.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+    if (clean.isEmpty) return false;
+    return RegExp(
+      r'^(?:servicio(?:\s*[:\-]?\s*\(?\d{1,2}\s*%\)?|\s+de\s+mesa)?|\d{1,2}\s*%\s*servicio|cargo\s+por\s+servicio(?:\s*[:\-]?\s*\(?\d{1,2}\s*%\)?)?|propina(?:\s*[:\-]?\s*\(?\d{1,2}\s*%\)?|\s+sugerida)?|tip(?:\s*[:\-]?\s*\(?\d{1,2}\s*%\)?)?|cubiertos?(?:\s*[:\-]?\s*\d+|\s+de\s+mesa)?)$',
+      caseSensitive: false,
+    ).hasMatch(clean);
   }
 
   /// Calcula la categoría dominante de una factura sumando `precio * cantidad` (`total`)

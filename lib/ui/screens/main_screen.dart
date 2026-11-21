@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -215,9 +214,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         if (scanQueue.readyItems.isNotEmpty) {
           final item = scanQueue.readyItems.first;
           try {
-            final data = jsonDecode(item['extracted_data']);
-            final result = GeminiExtractionResult.fromJson(data);
-            final file = File(item['image_path']);
+            final result = GeminiExtractionResult.fromQueueJson(item['extracted_data']);
+            final file = File((item['image_path'] as String?) ?? '');
 
             if (action != null) {
               NotificationService.instance.markActionHandled(action.id);

@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -59,9 +58,8 @@ class GlobalScanQueueBanner extends StatelessWidget {
             child: InkWell(
               onTap: () {
                 final item = scanQueue.readyItems.first;
-                final data = jsonDecode(item['extracted_data']);
-                final result = GeminiExtractionResult.fromJson(data);
-                final file = File(item['image_path']);
+                final result = GeminiExtractionResult.fromQueueJson(item['extracted_data']);
+                final file = File((item['image_path'] as String?) ?? '');
 
                 Navigator.push(
                   context,

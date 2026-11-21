@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
@@ -154,11 +153,7 @@ class ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
         continue;
       }
 
-      Map<String, dynamic> data = {};
-      if (item['extracted_data'] != null) {
-        data = Map<String, dynamic>.from(jsonDecode(item['extracted_data']));
-      }
-      final result = GeminiExtractionResult.fromJson(data);
+      final result = GeminiExtractionResult.fromQueueJson(item['extracted_data']);
       readyItemResults[queueId] = result;
       if (imagePath != null && imagePath.isNotEmpty) {
         final f = File(imagePath);

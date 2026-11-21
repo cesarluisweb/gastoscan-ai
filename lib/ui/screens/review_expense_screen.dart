@@ -1518,12 +1518,8 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       // Si el usuario eligió revisar la siguiente y hay más facturas en la cola
       if (revisarSiguiente && queueProvider.readyItems.isNotEmpty) {
         final nextItem = queueProvider.readyItems.first;
-        Map<String, dynamic> data = {};
-        if (nextItem['extracted_data'] != null) {
-          data = Map<String, dynamic>.from(jsonDecode(nextItem['extracted_data']));
-        }
-        final result = GeminiExtractionResult.fromJson(data);
-        final file = File(nextItem['image_path']);
+        final result = GeminiExtractionResult.fromQueueJson(nextItem['extracted_data']);
+        final file = File((nextItem['image_path'] as String?) ?? '');
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -2348,12 +2344,8 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
 
                   if (qProvider.readyItems.isNotEmpty) {
                     final nextItem = qProvider.readyItems.first;
-                    Map<String, dynamic> data = {};
-                    if (nextItem['extracted_data'] != null) {
-                      data = Map<String, dynamic>.from(jsonDecode(nextItem['extracted_data']));
-                    }
-                    final result = GeminiExtractionResult.fromJson(data);
-                    final file = File(nextItem['image_path']);
+                    final result = GeminiExtractionResult.fromQueueJson(nextItem['extracted_data']);
+                    final file = File((nextItem['image_path'] as String?) ?? '');
 
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(

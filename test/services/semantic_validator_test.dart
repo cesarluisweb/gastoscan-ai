@@ -134,5 +134,131 @@ void main() {
       final result = validator.validate([factura]);
       expect(result.isValid, isTrue);
     });
+
+    test('no suma impuestoIva dos veces cuando ivaModo es imputado (fallaría si se reintroduce el bug)', () {
+      // Con tolerancia 5% (maxAllowedDiff = 5.80 < 16.0), sumar impuestoIva dos veces daría 132 vs 116 -> inválido.
+      const strictValidator = SemanticValidator(tolerancePercentage: 0.05);
+      final factura = GeminiExtractionResult(
+        comercio: 'Farmatodo',
+        fecha: '2026-11-20',
+        moneda: 'VES',
+        totalOriginal: 116.0,
+        impuestoIva: 16.0,
+        ivaModo: IvaModo.imputado,
+        items: [
+          ItemGastoModel(
+            descripcion: 'Detergente',
+            cantidad: 1.0,
+            precioUnitario: 11600,
+            total: 11600,
+            categoria: 'Hogar',
+          ),
+        ],
+      );
+
+      final result = strictValidator.validate([factura]);
+      expect(result.isValid, isTrue);
+
+      // Negativo: en modo imputado, si itemsSum=100 vs total=116, NO debe sumar impuestoIva para enmascararlo.
+      final facturaIncompleta = GeminiExtractionResult(
+        comercio: 'Farmatodo',
+        fecha: '2026-11-20',
+        moneda: 'VES',
+        totalOriginal: 116.0,
+        impuestoIva: 16.0,
+        ivaModo: IvaModo.imputado,
+        items: [
+          ItemGastoModel(
+            descripcion: 'Detergente',
+            cantidad: 1.0,
+            precioUnitario: 10000,
+            total: 10000,
+            categoria: 'Hogar',
+          ),
+        ],
+      );
+      expect(strictValidator.validate([facturaIncompleta]).isValid, isFalse);
+    });
+
+    test('no suma impuestoIva dos veces cuando ivaModo es yaIncluido', () {
+      const strictValidator = SemanticValidator(tolerancePercentage: 0.05);
+      final factura = GeminiExtractionResult(
+        comercio: 'Bodegon',
+        fecha: '2026-11-20',
+        moneda: 'VES',
+        totalOriginal: 116.0,
+        impuestoIva: 16.0,
+        ivaModo: IvaModo.yaIncluido,
+        items: [
+          ItemGastoModel(
+            descripcion: 'Aceite de oliva',
+            cantidad: 1.0,
+            precioUnitario: 11600,
+            total: 11600,
+            categoria: 'Alimentación',
+          ),
+        ],
+      );
+
+      final result = strictValidator.validate([factura]);
+      expect(result.isValid, isTrue);
+    });
+
+    test('Aceite de oliva con ivaModo noInformado e impuestoIva > 0 NO se confunde con renglón de IVA', () {
+      // Con tolerancia 5% (maxAllowedDiff = 5.80 < 16.0), si "Aceite de oliva" disparara contains('iva'),
+      // no sumaría los 16.0 de impuestoIva (itemsSum=100 vs total=116 -> diff=16 > 5.80 -> FALLARÍA).
+      const strictValidator = SemanticValidator(tolerancePercentage: 0.05);
+      final factura = GeminiExtractionResult(
+        comercio: 'Automercado Plaza',
+        fecha: '2026-11-20',
+        moneda: 'VES',
+        totalOriginal: 116.0,
+        impuestoIva: 16.0,
+        ivaModo: IvaModo.noInformado,
+        items: [
+          ItemGastoModel(
+            descripcion: 'Aceite de oliva',
+            cantidad: 1.0,
+            precioUnitario: 10000,
+            total: 10000,
+            categoria: 'Alimentación',
+          ),
+        ],
+      );
+
+      final result = strictValidator.validate([factura]);
+      expect(result.isValid, isTrue);
+    });
+
+    test('IGTF en items sin renglón IVA no impide contabilizar impuestoIva en modo noInformado', () {
+      const strictValidator = SemanticValidator(tolerancePercentage: 0.05);
+      final factura = GeminiExtractionResult(
+        comercio: 'Restaurante',
+        fecha: '2026-11-20',
+        moneda: 'USD',
+        totalOriginal: 119.48,
+        impuestoIva: 16.0,
+        ivaModo: IvaModo.noInformado,
+        items: [
+          ItemGastoModel(
+            descripcion: 'Almuerzo',
+            cantidad: 1.0,
+            precioUnitario: 10000,
+            total: 10000,
+            categoria: 'Alimentación',
+          ),
+          ItemGastoModel(
+            descripcion: 'IGTF 3%',
+            cantidad: 1.0,
+            precioUnitario: 348,
+            total: 348,
+            categoria: 'Alimentación',
+          ),
+        ],
+      );
+
+      final result = strictValidator.validate([factura]);
+      expect(result.isValid, isTrue);
+    });
   });
 }

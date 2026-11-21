@@ -1,4 +1,5 @@
 import '../data/models/gemini_extraction_result.dart';
+import '../data/models/item_gasto_model.dart';
 
 /// Validador semántico multicriterio para comprobar si la extracción
 /// estructurada devuelta por Gemini Texto es plausible y coherente
@@ -43,11 +44,23 @@ class SemanticValidator {
           itemsSum += (item.total / 100.0);
         }
 
-        // Si hay impuesto desglosado, sumarlo únicamente si no fue incluido ya como ítem independiente
-        final hasTaxItem = factura.items.any((it) =>
-            it.descripcion.toLowerCase().contains('iva') ||
-            it.descripcion.toLowerCase().contains('impuesto'));
-        final totalWithTax = hasTaxItem ? itemsSum : (itemsSum + factura.impuestoIva);
+        // Contabilizar el IVA exactamente una vez según IvaModo explícito
+        // y detección estricta de renglón de IVA (evita falsos positivos con "Aceite de oliva").
+        final hasIvaItem = factura.items.any((it) => ItemGastoModel.isIvaOnlyDescription(it.descripcion));
+        final bool ivaAlreadyAccounted;
+        switch (factura.ivaModo) {
+          case IvaModo.imputado:
+          case IvaModo.yaIncluido:
+          case IvaModo.renglonSeparado:
+            ivaAlreadyAccounted = true;
+            break;
+          case IvaModo.sinIvaDeclarado:
+          case IvaModo.noInformado:
+          case IvaModo.requiereRevision:
+            ivaAlreadyAccounted = hasIvaItem;
+            break;
+        }
+        final totalWithTax = ivaAlreadyAccounted ? itemsSum : (itemsSum + factura.impuestoIva);
 
         if (factura.totalOriginal > 0 && totalWithTax > 0) {
           final diff = (factura.totalOriginal - totalWithTax).abs();

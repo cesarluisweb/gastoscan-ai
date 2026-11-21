@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gastoscan_ai/data/models/gemini_extraction_result.dart';
+import 'package:gastoscan_ai/data/models/item_gasto_model.dart';
 
 void main() {
   group('GeminiExtractionResult - Corrección matemática de decimales', () {
@@ -426,6 +427,411 @@ void main() {
       final results = GeminiExtractionResult.listFromJson(json);
       expect(results.first.items.first.precioUnitario, equals(0));
       expect(results.first.items.first.total, equals(0));
+    });
+  });
+
+  group('AI-06 Push 1 - Clasificación estricta, IvaModo, schema_v y fromQueueMap', () {
+    test('ItemGastoModel.toMap conserva exactamente las 7 columnas de SQLite items_gasto', () {
+      final item = ItemGastoModel(
+        id: 1,
+        gastoId: 10,
+        descripcion: 'Harina PAN',
+        cantidad: 2.0,
+        precioUnitario: 150,
+        total: 300,
+        categoria: 'Alimentación',
+      );
+      final map = item.toMap();
+      expect(
+        map.keys.toSet(),
+        equals({'id', 'gasto_id', 'descripcion', 'cantidad', 'precio_unitario', 'total', 'categoria'}),
+      );
+    });
+
+    test('Regresión Aceite de oliva / Leche Nativa / Crema Activa NO suprimen el renglón de IVA', () {
+      final json = {
+        'comercio': 'Automercado Plaza',
+        'fecha': '2026-11-20',
+        'moneda': 'VES',
+        'total_original': 464.00,
+        'impuesto_iva': 64.00,
+        'items': [
+          {'descripcion': 'Aceite de oliva 500ml', 'cantidad': 1, 'precio_unitario': 200.00, 'categoria': 'Alimentación', 'alicuota_fiscal': 'G'},
+          {'descripcion': 'Leche Nativa 1L', 'cantidad': 1, 'precio_unitario': 100.00, 'categoria': 'Alimentación', 'alicuota_fiscal': 'G'},
+          {'descripcion': 'Crema Activa Corporal', 'cantidad': 1, 'precio_unitario': 100.00, 'categoria': 'Higiene', 'alicuota_fiscal': 'G'},
+        ],
+      };
+
+      final result = GeminiExtractionResult.fromJson(json);
+
+      expect(ItemGastoModel.isTaxDescription('Aceite de oliva 500ml'), isFalse);
+      expect(ItemGastoModel.isTaxDescription('Leche Nativa 1L'), isFalse);
+      expect(ItemGastoModel.isTaxDescription('Crema Activa Corporal'), isFalse);
+      expect(result.ivaModo, equals(IvaModo.renglonSeparado));
+      expect(result.items.length, equals(4));
+      expect(result.items.last.descripcion, equals('Impuesto IVA'));
+      expect(result.items.last.total, equals(6400));
+      // Categoría dominante: Alimentación (300 > 100)
+      expect(result.items.last.categoria, equals('Alimentación'));
+    });
+
+    test('IVA explícito dentro de items más impuesto_iva en cabecera NO duplica el impuesto', () {
+      final json = {
+        'comercio': 'Farmatodo',
+        'fecha': '2026-11-20',
+        'moneda': 'VES',
+        'total_original': 300.00,
+        'impuesto_iva': 41.38,
+        'items': [
+          {'descripcion': 'Detergente', 'cantidad': 1, 'precio_unitario': 258.62, 'categoria': 'Hogar', 'alicuota_fiscal': 'G'},
+          {'descripcion': 'IVA 16%', 'cantidad': 1, 'precio_unitario': 41.38, 'categoria': 'Otros'},
+        ],
+      };
+
+      final result = GeminiExtractionResult.fromJson(json);
+
+      expect(result.ivaModo, equals(IvaModo.renglonSeparado));
+      expect(result.items.length, equals(2));
+      expect(result.items.where((it) => ItemGastoModel.isIvaOnlyDescription(it.descripcion)).length, equals(1));
+      expect(result.items[1].categoria, equals('Hogar'));
+      expect(result.items[1].total, equals(4138));
+    });
+
+    test('IVA explícito dentro de items que discrepa del header impuesto_iva marca requiereRevision', () {
+      final json = {
+        'comercio': 'Farmatodo',
+        'fecha': '2026-11-20',
+        'moneda': 'VES',
+        'total_original': 300.00,
+        'impuesto_iva': 50.00,
+        'items': [
+          {'descripcion': 'Detergente', 'cantidad': 1, 'precio_unitario': 258.62, 'categoria': 'Hogar'},
+          {'descripcion': 'IVA 16%', 'cantidad': 1, 'precio_unitario': 41.38, 'categoria': 'Otros'},
+        ],
+      };
+
+      final result = GeminiExtractionResult.fromJson(json);
+      expect(result.ivaModo, equals(IvaModo.requiereRevision));
+    });
+
+    test('Líneas resumen (SUBTOTAL, BASE IMPONIBLE, EXENTO) coladas por el LLM se descartan', () {
+      final json = {
+        'comercio': 'Supermercado',
+        'fecha': '2026-11-20',
+        'moneda': 'VES',
+        'total_original': 116.00,
+        'impuesto_iva': 16.00,
+        'items': [
+          {'descripcion': 'Shampoo', 'cantidad': 1, 'precio_unitario': 100.00, 'categoria': 'Higiene', 'alicuota_fiscal': 'G'},
+          {'descripcion': 'SUBTOTAL', 'cantidad': 1, 'precio_unitario': 100.00, 'categoria': 'Otros'},
+          {'descripcion': 'BASE IMPONIBLE', 'cantidad': 1, 'precio_unitario': 100.00, 'categoria': 'Otros'},
+        ],
+      };
+
+      final result = GeminiExtractionResult.fromJson(json);
+
+      expect(result.items.length, equals(2));
+      expect(result.items[0].descripcion, equals('Shampoo (G)'));
+      expect(result.items[1].descripcion, equals('Impuesto IVA'));
+    });
+
+    test('Detecta descuentos negativos, descuentos por texto, IGTF y servicio como hasSpecialLines', () {
+      expect(
+        GeminiExtractionResult.classifyRawLine(
+          descripcion: 'Descuento promocional',
+          rawUnitPrice: -5.0,
+          rawTotal: -5.0,
+        ),
+        equals(TipoLineaExtraccion.descuento),
+      );
+      expect(
+        GeminiExtractionResult.classifyRawLine(
+          descripcion: 'BONIFICACION CLIENTE',
+          rawUnitPrice: 5.0,
+          rawTotal: 5.0,
+        ),
+        equals(TipoLineaExtraccion.descuento),
+      );
+      expect(
+        GeminiExtractionResult.classifyRawLine(
+          descripcion: 'IGTF 3%',
+          rawUnitPrice: 0.90,
+          rawTotal: 0.90,
+        ),
+        equals(TipoLineaExtraccion.igtf),
+      );
+      expect(
+        GeminiExtractionResult.classifyRawLine(
+          descripcion: 'Servicio 10%',
+          rawUnitPrice: 10.0,
+          rawTotal: 10.0,
+        ),
+        equals(TipoLineaExtraccion.servicio),
+      );
+
+      final jsonConDescuento = {
+        'comercio': 'Tienda',
+        'fecha': '2026-11-20',
+        'moneda': 'USD',
+        'total_original': 20.00,
+        'impuesto_iva': 0.0,
+        'items': [
+          {'descripcion': 'Camisa', 'cantidad': 1, 'precio_unitario': 25.00, 'categoria': 'Ropa'},
+          {'descripcion': 'Descuento', 'cantidad': 1, 'precio_unitario': -5.00, 'categoria': 'Ropa'},
+        ],
+      };
+
+      final result = GeminiExtractionResult.fromJson(jsonConDescuento);
+      expect(result.hasSpecialLines, isTrue);
+      expect(result.ivaModo, equals(IvaModo.sinIvaDeclarado));
+    });
+
+    test('Diferencia sinIvaDeclarado (impuesto_iva: 0) de noInformado (campo ausente)', () {
+      final sinIva = GeminiExtractionResult.fromJson({
+        'comercio': 'Abasto',
+        'fecha': '2026-11-20',
+        'moneda': 'VES',
+        'total_original': 50.0,
+        'impuesto_iva': 0.0,
+        'items': [
+          {'descripcion': 'Harina PAN', 'cantidad': 1, 'precio_unitario': 50.0},
+        ],
+      });
+      final noInformado = GeminiExtractionResult.fromJson({
+        'comercio': 'Abasto',
+        'fecha': '2026-11-20',
+        'moneda': 'VES',
+        'total_original': 50.0,
+        'items': [
+          {'descripcion': 'Harina PAN', 'cantidad': 1, 'precio_unitario': 50.0},
+        ],
+      });
+
+      expect(sinIva.ivaModo, equals(IvaModo.sinIvaDeclarado));
+      expect(noInformado.ivaModo, equals(IvaModo.noInformado));
+    });
+
+    test('IGTF en items NO suprime la creación de Impuesto IVA cuando impuesto_iva > 0', () {
+      final json = {
+        'comercio': 'Restaurante',
+        'fecha': '2026-11-20',
+        'moneda': 'USD',
+        'total_original': 119.48,
+        'impuesto_iva': 16.00,
+        'items': [
+          {'descripcion': 'Almuerzo', 'cantidad': 1, 'precio_unitario': 100.00, 'categoria': 'Alimentación'},
+          {'descripcion': 'IGTF 3%', 'cantidad': 1, 'precio_unitario': 3.48, 'categoria': 'Otros'},
+        ],
+      };
+
+      final result = GeminiExtractionResult.fromJson(json);
+      expect(result.hasSpecialLines, isTrue);
+      expect(result.ivaModo, equals(IvaModo.renglonSeparado));
+      expect(result.items.any((it) => it.descripcion == 'Impuesto IVA' && it.total == 1600), isTrue);
+      expect(result.items.any((it) => it.descripcion == 'IGTF 3%' && it.categoria == 'Alimentación'), isTrue);
+    });
+
+    test('Round-trip idempotente toMap -> fromQueueMap preserva schema_v: 2, iva_modo y centavos exactos', () {
+      final initial = GeminiExtractionResult.fromJson({
+        'comercio': 'Farmatodo',
+        'fecha': '2026-11-20',
+        'moneda': 'VES',
+        'total_original': 300.00,
+        'impuesto_iva': 41.38,
+        'items': [
+          {'descripcion': 'Detergente', 'cantidad': 1, 'precio_unitario': 258.62, 'categoria': 'Hogar', 'alicuota_fiscal': 'G'},
+        ],
+      });
+
+      final serialized1 = initial.toMap();
+      expect(serialized1['schema_v'], equals(2));
+      expect(serialized1['iva_modo'], equals('renglonSeparado'));
+      expect((serialized1['items'] as List).first['precio_unitario_cents'], equals(25862));
+      expect((serialized1['items'] as List).first['total_cents'], equals(25862));
+
+      final restored = GeminiExtractionResult.fromQueueMap(serialized1);
+      final serialized2 = restored.toMap();
+
+      expect(serialized2, equals(serialized1));
+      expect(restored.ivaModo, equals(IvaModo.renglonSeparado));
+      expect(restored.items.length, equals(2));
+      expect(restored.items[0].descripcion, equals('Detergente (G)'));
+      expect(restored.items[1].descripcion, equals('Impuesto IVA'));
+    });
+
+    test('Fixture legado de scan_queue (sin schema_v ni iva_modo) se restaura intacto sin re-ejecutar heurísticas', () {
+      // JSON real equivalente al formato producido antes de AI-06 (schema_v ausente)
+      final legacyQueueMap = <String, dynamic>{
+        'comercio': 'Automercado Plaza',
+        'fecha': '2026-11-18',
+        'moneda': 'VES',
+        'total_original': 300.0,
+        'impuesto_iva': 41.38,
+        'tasa_cambio': 45.2,
+        'items': [
+          {
+            'descripcion': 'Detergente Liquido (G)',
+            'cantidad': 1.0,
+            'precio_unitario': 258.62,
+            'total': 258.62,
+            'categoria': 'Hogar',
+          },
+          {
+            'descripcion': 'Impuesto IVA',
+            'cantidad': 1.0,
+            'precio_unitario': 41.38,
+            'total': 41.38,
+            'categoria': 'Hogar',
+          },
+        ],
+        'items_comprados_ids': <int>[],
+        'metodo_liquidacion': null,
+      };
+
+      final restored = GeminiExtractionResult.fromQueueMap(legacyQueueMap);
+
+      expect(restored.schemaVersion, equals(1));
+      expect(restored.ivaModo, equals(IvaModo.renglonSeparado));
+      expect(restored.items.length, equals(2));
+      expect(restored.items[0].descripcion, equals('Detergente Liquido (G)'));
+      expect(restored.items[0].precioUnitario, equals(25862));
+      expect(restored.items[1].descripcion, equals('Impuesto IVA'));
+      expect(restored.items[1].total, equals(4138));
+    });
+
+    test('fromQueueMap con registro legado donde total != suma NO altera decimales ni inyecta IVA extra', () {
+      final legacyNoIvaLine = <String, dynamic>{
+        'comercio': 'Bodega',
+        'fecha': '2026-11-18',
+        'moneda': 'USD',
+        'total_original': 15.0,
+        'impuesto_iva': 2.0,
+        'items': [
+          {
+            'descripcion': 'Aceite de oliva',
+            'cantidad': 1.0,
+            'precio_unitario': 15.0,
+            'total': 15.0,
+            'categoria': 'Alimentación',
+          },
+        ],
+      };
+
+      final restored = GeminiExtractionResult.fromQueueMap(legacyNoIvaLine);
+
+      expect(restored.schemaVersion, equals(1));
+      expect(restored.ivaModo, equals(IvaModo.yaIncluido));
+      expect(restored.items.length, equals(1));
+      expect(restored.items[0].descripcion, equals('Aceite de oliva'));
+      expect(restored.items[0].total, equals(1500));
+    });
+
+    test('listFromJson procesa múltiples facturas en una misma foto preservando IvaModo por factura', () {
+      final multiJson = {
+        'facturas': [
+          {
+            'comercio': 'Farmatodo',
+            'fecha': '2026-11-20',
+            'moneda': 'VES',
+            'total_original': 116.00,
+            'impuesto_iva': 16.00,
+            'items': [
+              {'descripcion': 'Aceite de oliva', 'cantidad': 1, 'precio_unitario': 100.00, 'categoria': 'Alimentación', 'alicuota_fiscal': 'G'},
+            ],
+          },
+          {
+            'comercio': 'Panadería',
+            'fecha': '2026-11-20',
+            'moneda': 'VES',
+            'total_original': 50.00,
+            'impuesto_iva': 0.00,
+            'items': [
+              {'descripcion': 'Pan Canilla', 'cantidad': 2, 'precio_unitario': 25.00, 'categoria': 'Alimentación', 'alicuota_fiscal': 'E'},
+            ],
+          },
+        ],
+      };
+
+      final results = GeminiExtractionResult.listFromJson(multiJson);
+      expect(results.length, equals(2));
+      expect(results[0].ivaModo, equals(IvaModo.renglonSeparado));
+      expect(results[0].items.length, equals(2));
+      expect(results[1].ivaModo, equals(IvaModo.sinIvaDeclarado));
+      expect(results[1].items.length, equals(1));
+    });
+
+    test('Clasificadores de ItemGastoModel evitan falsos positivos y negativos en facturas reales VE', () {
+      // Variantes reales de IVA e IGTF -> true
+      expect(ItemGastoModel.isIvaOnlyDescription('IVA-16%'), isTrue);
+      expect(ItemGastoModel.isIvaOnlyDescription('IVA/16%'), isTrue);
+      expect(ItemGastoModel.isIvaOnlyDescription('Impuesto (IVA)'), isTrue);
+      expect(ItemGastoModel.isIvaOnlyDescription('Impuesto al IVA'), isTrue);
+      expect(ItemGastoModel.isIvaOnlyDescription('Monto IVA'), isTrue);
+      expect(ItemGastoModel.isTaxDescription('IGTF-3%'), isTrue);
+      expect(ItemGastoModel.isTaxDescription('Cargo IGTF 3%'), isTrue);
+      expect(ItemGastoModel.isTaxDescription('3% IGTF'), isTrue);
+
+      // Productos compuestos y marcas -> NO son impuestos ni descuentos ni servicio
+      expect(ItemGastoModel.isTaxDescription('Combo con IVA 16%'), isFalse);
+      expect(ItemGastoModel.isTaxDescription('Envío + IVA 16%'), isFalse);
+      expect(ItemGastoModel.isServiceOrTipDescription('Servicio técnico'), isFalse);
+      expect(ItemGastoModel.isServiceOrTipDescription('Servicio de internet'), isFalse);
+      expect(ItemGastoModel.isServiceOrTipDescription('Cubierto de plástico'), isFalse);
+      expect(ItemGastoModel.isServiceOrTipDescription('Tip Top Galletas'), isFalse);
+      expect(ItemGastoModel.isDiscountDescription('Pack Ahorro Pañales'), isFalse);
+      expect(ItemGastoModel.isDiscountDescription('Combo Promo 2x1'), isFalse);
+      expect(ItemGastoModel.isDiscountDescription('Shampoo Promoción'), isFalse);
+
+      // Servicio y propina reales -> true
+      expect(ItemGastoModel.isServiceOrTipDescription('Servicio 10%'), isTrue);
+      expect(ItemGastoModel.isServiceOrTipDescription('10% Servicio'), isTrue);
+      expect(ItemGastoModel.isServiceOrTipDescription('Cargo por servicio'), isTrue);
+      expect(ItemGastoModel.isServiceOrTipDescription('Propina'), isTrue);
+      expect(ItemGastoModel.isServiceOrTipDescription('Cubiertos'), isTrue);
+    });
+
+    test('fromQueueJson degrada limpiamente ante null, cadena vacía, JSON corrupto o no-Map', () {
+      expect(GeminiExtractionResult.fromQueueJson(null).comercio, equals('Comercio no especificado'));
+      expect(GeminiExtractionResult.fromQueueJson('').comercio, equals('Comercio no especificado'));
+      expect(GeminiExtractionResult.fromQueueJson('{corrupto').comercio, equals('Comercio no especificado'));
+      expect(GeminiExtractionResult.fromQueueJson('[]').comercio, equals('Comercio no especificado'));
+      expect(GeminiExtractionResult.fromQueueJson('null').comercio, equals('Comercio no especificado'));
+      expect(GeminiExtractionResult.fromQueueJson(12345).comercio, equals('Comercio no especificado'));
+
+      // También tolera id/gasto_id como String y cents negativos corruptos sin lanzar TypeError
+      final corruptedMap = GeminiExtractionResult.fromQueueJson({
+        'comercio': 'Bodega',
+        'total_original': 10.0,
+        'items': [
+          {
+            'id': 'no_es_num',
+            'gasto_id': 'tampoco',
+            'descripcion': 'Agua',
+            'cantidad': 1,
+            'precio_unitario_cents': -500,
+            'total_cents': -500,
+          },
+        ],
+      });
+      expect(corruptedMap.items.first.id, isNull);
+      expect(corruptedMap.items.first.gastoId, isNull);
+      expect(corruptedMap.items.first.precioUnitario, equals(0));
+      expect(corruptedMap.items.first.total, equals(0));
+    });
+
+    test('Renglón IVA 16% con monto 0 cuando header impuesto_iva > 0 marca requiereRevision', () {
+      final result = GeminiExtractionResult.fromJson({
+        'comercio': 'Farmatodo',
+        'fecha': '2026-11-20',
+        'moneda': 'VES',
+        'total_original': 116.00,
+        'impuesto_iva': 16.00,
+        'items': [
+          {'descripcion': 'Jabón', 'cantidad': 1, 'precio_unitario': 100.00, 'categoria': 'Higiene'},
+          {'descripcion': 'IVA 16%', 'cantidad': 1, 'precio_unitario': 0.00, 'categoria': 'Otros'},
+        ],
+      });
+      expect(result.ivaModo, equals(IvaModo.requiereRevision));
     });
   });
 }

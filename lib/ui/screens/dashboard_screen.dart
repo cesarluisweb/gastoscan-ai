@@ -8,7 +8,6 @@ import '../../providers/gasto_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/scan_queue_provider.dart';
 import 'dart:io';
-import 'dart:convert';
 import '../../services/notification_service.dart';
 import '../../services/ai_insight_service.dart';
 import '../widgets/summary_card.dart';
@@ -487,12 +486,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               final List<Widget> cards = [];
 
               for (final item in scanQueue.readyItems) {
-                Map<String, dynamic> data = {};
-                if (item['extracted_data'] != null) {
-                  data = Map<String, dynamic>.from(jsonDecode(item['extracted_data']));
-                }
-                final result = GeminiExtractionResult.fromJson(data);
-                final file = File(item['image_path']);
+                final result = GeminiExtractionResult.fromQueueJson(item['extracted_data']);
+                final file = File((item['image_path'] as String?) ?? '');
                 
                 final double totalOrig = result.totalOriginal;
                 final double tasa = (result.moneda == 'VES' && result.tasaCambioDetectada != null && result.tasaCambioDetectada! > 0)
