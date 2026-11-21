@@ -1,6 +1,6 @@
 # Especificación Técnica: Precios de Anaquel e Imputación de IVA en Compras (AI-06 · B-2)
 
-> **Estado:** `Pendiente de validación 🧪` (APK build 728, run `44923332876`, SHA `f629b6e`; Web build 33, run `44859265979`, HTTP 200 en `/panel`; Firestore build 5, run `44859266019`).
+> **Estado:** `Pendiente de validación 🧪` (APK build 732, run `44928418260`, SHA `d25af1d`; Web build 33, run `44859265979`, HTTP 200 en `/panel`; Firestore build 5, run `44859266019`).
 > **Tarea:** `AI-06` · Fase 6.2, Bloque C en `ROADMAP.md`.
 
 Este documento define la regla de negocio vigente (**variante B-2**), el motor de reconciliación fiscal, el algoritmo de reparto por Mayor Resto, el comparador de precios (móvil + web) y la guía de pruebas en dispositivo para **Rinde Más**.
@@ -99,8 +99,8 @@ Tanto `DatabaseHelper.findPriceHistory` como `landing/src/lib/price-comparator.j
 
 ## 7. Guía de Pruebas en Dispositivo Físico
 
-> **Commit / Build:** SHA `f629b6e` · APK Build `728` (run `44923332876`) · Web Build `33` (run `44859265979`).
-> **Controles reales en código:** `lib/ui/screens/review_expense_screen.dart` (`_recalcularTotal` L869, diálogo fallback L1129, selector rápido `¿Este artículo paga IVA?` L2113, franja `Con IVA` + mini-selector `G · 16% ▾` / `Exento ▾` con fondo blanco y borde gris L2309, banner sugerencia L2394, pie fiscal L2508, hoja `Ajustar IVA` L2638, separadores `item_divider_*` L3537, pausa de `_PriceComparisonLine` L3876, borde negro en `review_expense_add_item_btn` L3923).
+> **Commit / Build:** SHA `d25af1d` · APK Build `732` (run `44928418260`) · Web Build `33` (run `44859265979`).
+> **Controles reales en código:** `lib/ui/screens/review_expense_screen.dart` (`_recalcularTotal` L869, diálogo fallback L1129, selector rápido `¿Este artículo paga IVA?` con fondo blanco y borde amarillo activo L2113, franja `Con IVA` + mini-selector `G · 16% ▾` / `Exento ▾` L2309, banner sugerencia L2394, pie fiscal L2508, hoja `Ajustar IVA` L2638, separadores `item_divider_*` L3537 / `fiscal_section_divider` L3916 / `add_item_section_divider` L3927, pausa de `_PriceComparisonLine` L3876, borde amarillo en `review_expense_add_item_btn` L3949).
 
 **Ruta alcanzable:** `Inicio` → botón central `+` (`MainScreen`) → `Tomar foto de factura` / galería (`ScanScreen`) → banner `Factura lista para revisar` (`GlobalScanQueueBanner`) → `ReviewExpenseScreen`.
 
