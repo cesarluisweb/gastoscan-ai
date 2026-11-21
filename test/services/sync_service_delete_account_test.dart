@@ -139,6 +139,12 @@ class FakeGastoRepository extends Fake implements GastoRepository {
     obtenerRutasCalled = true;
     return fakeRutasArchivos;
   }
+
+  @override
+  Future<List<GastoModel>> obtenerGastos() async => [];
+
+  @override
+  Future<int> actualizarRutaFotoLocal(int gastoId, String rutaFotoLocal) async => 1;
 }
 
 void main() {

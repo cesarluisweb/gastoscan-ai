@@ -70,6 +70,21 @@ class FakeGastoRepository extends Fake implements GastoRepository {
   }
 
   @override
+  Future<List<GastoModel>> obtenerGastos() async {
+    return localGastos.where((g) => g.eliminadoEn == null).toList();
+  }
+
+  @override
+  Future<int> actualizarRutaFotoLocal(int gastoId, String rutaFotoLocal) async {
+    final idx = localGastos.indexWhere((g) => g.id == gastoId);
+    if (idx != -1) {
+      localGastos[idx] = localGastos[idx].copyWith(rutaFotoLocal: rutaFotoLocal);
+      return 1;
+    }
+    return 0;
+  }
+
+  @override
   Future<void> marcarComoPendiente(int id) async {
     markedPendingIds.add(id);
     final idx = localGastos.indexWhere((g) => g.id == id);

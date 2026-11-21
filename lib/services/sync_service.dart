@@ -15,6 +15,7 @@ import '../data/repositories/gasto_repository.dart';
 import 'connectivity_service.dart';
 import 'image_service.dart';
 import 'profile_avatar_service.dart';
+import 'receipt_photo_registry.dart';
 import 'sync_conflict_resolver.dart';
 
 class SyncService {
@@ -354,6 +355,8 @@ class SyncService {
           break;
       }
     }
+
+    await ReceiptPhotoRegistry.reconcileMissingPhotos(repository: _repository);
   }
 
   Future<void> syncPresupuestosToFirestore(User user) async {
@@ -522,6 +525,21 @@ class SyncService {
         await ProfileAvatarService.instance.clearAvatarCache(uid: user?.uid);
       } catch (e) {
         debugPrint("SyncService: Error al limpiar avatar cacheado en cerrarSesion: $e");
+      }
+
+      try {
+        final gastosActuales = await _repository.obtenerGastos();
+        final mapaFotos = <String, String>{};
+        for (final g in gastosActuales) {
+          if (g.rutaFotoLocal != null && g.rutaFotoLocal!.isNotEmpty) {
+            mapaFotos[g.uuid] = g.rutaFotoLocal!;
+          }
+        }
+        if (mapaFotos.isNotEmpty) {
+          await ReceiptPhotoRegistry.registerBatch(mapaFotos);
+        }
+      } catch (e) {
+        debugPrint("SyncService: Error respaldando mapa de comprobantes en cerrarSesion: $e");
       }
 
       await _repository.limpiarDatosLocales();
@@ -693,8 +711,9 @@ class SyncService {
         try {
           final rutasApp = await _repository.obtenerRutasArchivosApp();
           await ImageService.limpiarArchivosApp(rutasConocidas: rutasApp);
-        } catch (_) {
-          debugPrint("SyncService: Error al limpiar imágenes y temporales de la app");
+          await ReceiptPhotoRegistry.clearAll();
+        } catch (e) {
+          debugPrint("SyncService: Error al limpiar imágenes y temporales de la app: $e");
         }
       }
 
@@ -737,6 +756,8 @@ class SyncService {
         gastos: gastos,
         presupuestos: presupuestos,
       );
+
+      await ReceiptPhotoRegistry.reconcileMissingPhotos(repository: _repository);
 
       await _clearPendingReplaceFlag(uid);
       return true;

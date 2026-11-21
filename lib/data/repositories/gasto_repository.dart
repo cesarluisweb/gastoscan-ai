@@ -49,6 +49,10 @@ class GastoRepository {
     return _dbHelper.clearRutaFotoLocal(gastoId);
   }
 
+  Future<int> actualizarRutaFotoLocal(int gastoId, String rutaFotoLocal) {
+    return _dbHelper.updateRutaFotoLocal(gastoId, rutaFotoLocal);
+  }
+
   Future<int> eliminarRutasFotosLocales(List<int> gastoIds) {
     return _dbHelper.clearRutasFotosLocales(gastoIds);
   }

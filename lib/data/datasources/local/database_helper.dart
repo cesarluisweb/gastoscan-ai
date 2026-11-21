@@ -644,6 +644,19 @@ class DatabaseHelper {
     );
   }
 
+  /// Actualiza únicamente `ruta_foto_local` de un gasto sin alterar `synced` ni `actualizado_en`.
+  Future<int> updateRutaFotoLocal(int gastoId, String rutaFotoLocal) async {
+    final db = await instance.database;
+    return await db.update(
+      'gastos',
+      {
+        'ruta_foto_local': rutaFotoLocal,
+      },
+      where: 'id = ?',
+      whereArgs: [gastoId],
+    );
+  }
+
   /// Desvincula en lote las rutas de fotos locales de una lista de IDs de gastos.
   Future<int> clearRutasFotosLocales(List<int> gastoIds) async {
     if (gastoIds.isEmpty) return 0;
@@ -2295,6 +2308,18 @@ class DatabaseHelper {
   }) async {
     final db = await instance.database;
     await db.transaction((txn) async {
+      // 0. Preservar rutas locales de comprobantes existentes por uuid antes de limpiar
+      final existingPhotos = await txn.query(
+        'gastos',
+        columns: ['uuid', 'ruta_foto_local'],
+        where: "ruta_foto_local IS NOT NULL AND ruta_foto_local != ''",
+      );
+      final Map<String, String> photoByUuid = {
+        for (final row in existingPhotos)
+          if (row['uuid'] is String && row['ruta_foto_local'] is String)
+            row['uuid'] as String: row['ruta_foto_local'] as String,
+      };
+
       // 1. Limpieza total de tablas locales
       await txn.delete('items_gasto');
       await txn.delete('gastos');
@@ -2318,6 +2343,12 @@ class DatabaseHelper {
         if (gasto.eliminadoEn != null) continue;
 
         final gMap = gasto.toMap()..remove('id');
+        if (gMap['ruta_foto_local'] == null || (gMap['ruta_foto_local'] as String).isEmpty) {
+          final preservedPhoto = photoByUuid[gasto.uuid];
+          if (preservedPhoto != null && preservedPhoto.isNotEmpty) {
+            gMap['ruta_foto_local'] = preservedPhoto;
+          }
+        }
         final gId = await txn.insert('gastos', gMap);
 
         for (final item in gasto.items) {

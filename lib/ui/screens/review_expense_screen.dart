@@ -1686,6 +1686,22 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     setState(() => _isSaving = false);
 
     if (success) {
+      if (widget.existingGasto != null &&
+          (_imageDeleted || _pickedImage != null) &&
+          widget.existingGasto!.rutaFotoLocal != null &&
+          widget.existingGasto!.rutaFotoLocal!.isNotEmpty &&
+          widget.existingGasto!.rutaFotoLocal != rutaFotoFinal) {
+        try {
+          final oldFile = File(widget.existingGasto!.rutaFotoLocal!);
+          if (await oldFile.exists()) {
+            await oldFile.delete();
+          }
+        } catch (e) {
+          debugPrint('Error al eliminar archivo anterior del comprobante: $e');
+        }
+        if (!mounted) return;
+      }
+
       final queueProvider = Provider.of<ScanQueueProvider>(context, listen: false);
       if (widget.queueItemId != null) {
         await queueProvider.removeItem(widget.queueItemId!);

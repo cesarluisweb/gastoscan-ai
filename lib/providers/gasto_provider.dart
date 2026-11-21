@@ -9,6 +9,7 @@ import '../data/datasources/local/database_helper.dart';
 import '../domain/finance/savings_health_models.dart';
 import '../domain/finance/savings_health_calculator.dart';
 import '../services/notification_service.dart';
+import '../services/receipt_photo_registry.dart';
 import '../services/sync_service.dart';
 import '../services/sync_coordinator.dart';
 import '../services/exchange_rate_service.dart';
@@ -22,6 +23,7 @@ class GastoProvider with ChangeNotifier {
 
   List<GastoModel> _gastos = [];
   bool _isLoading = false;
+  bool _didInitialReceiptRecovery = false;
   String? _errorMessage;
 
   int _selectedYear = DateTime.now().year;
@@ -237,6 +239,10 @@ class GastoProvider with ChangeNotifier {
       }
 
       await checkPendingReplaceBlock();
+      if (!_didInitialReceiptRecovery) {
+        _didInitialReceiptRecovery = true;
+        await ReceiptPhotoRegistry.reconcileMissingPhotos(repository: _repository);
+      }
       _gastos = await _repository.obtenerGastosPorMes(_selectedYear, _selectedMonth);
       _ultimoMesConGastos = await _repository.obtenerUltimoMesConGastos();
       
@@ -349,6 +355,9 @@ class GastoProvider with ChangeNotifier {
     try {
       await _consolidarPresupuestoAdoptadoSiAplica();
       final newId = await _repository.guardarGasto(gasto, items);
+      if (gasto.rutaFotoLocal != null && gasto.rutaFotoLocal!.isNotEmpty) {
+        await ReceiptPhotoRegistry.register(gasto.uuid, gasto.rutaFotoLocal!);
+      }
       
       if (shoppingItemIds != null && shoppingItemIds.isNotEmpty) {
         final dbHelper = DatabaseHelper.instance;
@@ -393,6 +402,7 @@ class GastoProvider with ChangeNotifier {
       if (gasto.id != null) {
         await _repository.eliminarRutaFotoLocal(gasto.id!);
       }
+      await ReceiptPhotoRegistry.unregister(gasto.uuid);
       await cargarDatos();
       return true;
     } catch (e) {
@@ -426,6 +436,7 @@ class GastoProvider with ChangeNotifier {
     if (idsToUpdate.isNotEmpty) {
       await _repository.eliminarRutasFotosLocales(idsToUpdate);
     }
+    await ReceiptPhotoRegistry.unregisterBatch(gastos.map((g) => g.uuid));
     await cargarDatos();
     return deletedCount;
   }
@@ -438,6 +449,11 @@ class GastoProvider with ChangeNotifier {
         synced: 0
       ); 
       await _repository.actualizarGasto(gastoAActualizar, items);
+      if (gastoAActualizar.rutaFotoLocal != null && gastoAActualizar.rutaFotoLocal!.isNotEmpty) {
+        await ReceiptPhotoRegistry.register(gastoAActualizar.uuid, gastoAActualizar.rutaFotoLocal!);
+      } else {
+        await ReceiptPhotoRegistry.unregister(gastoAActualizar.uuid);
+      }
       await cargarDatos();
       _syncCoordinator.notifyLocalChange();
       NotificationService.instance.recordActivityAndReschedule();

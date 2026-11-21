@@ -17,6 +17,12 @@ class FakeGastoRepositoryForProvider extends Fake implements GastoRepository {
   }
 
   @override
+  Future<List<GastoModel>> obtenerGastos() async => [];
+
+  @override
+  Future<int> actualizarRutaFotoLocal(int gastoId, String rutaFotoLocal) async => 1;
+
+  @override
   Future<Map<String, double>> obtenerTotalesMes(int anio, int mes) async => {
     'USD': 100.0,
     'VES': 4000.0,
