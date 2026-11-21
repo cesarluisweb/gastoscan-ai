@@ -11,11 +11,11 @@
 | `core/` | 8 | 932 |
 | `data/` | 12 | 5273 |
 | `domain/` | 11 | 2355 |
-| `providers/` | 4 | 2115 |
-| `services/` | 15 | 5692 |
-| `ui/` | 31 | 20810 |
+| `providers/` | 4 | 2152 |
+| `services/` | 15 | 5923 |
+| `ui/` | 31 | 21144 |
 | `(raiz)/` | 2 | 106 |
-| **Total** | **83** | **37283** |
+| **Total** | **83** | **37885** |
 
 ## core/
 
@@ -34,7 +34,7 @@
 
 | Archivo | Líneas | Símbolos | Pruebas |
 |---|---|---|---|
-| `lib/data/datasources/local/database_helper.dart` | 2369 | `UnitPriceRef`, `PriceHistory`, `DatabaseHelper` | `database_helper_batch_and_async_test.dart`, `database_helper_category_test.dart`, `database_helper_fts_test.dart`, +33 |
+| `lib/data/datasources/local/database_helper.dart` | 2369 | `UnitPriceRef`, `PriceHistory`, `DatabaseHelper` | `database_helper_batch_and_async_test.dart`, `database_helper_category_test.dart`, `database_helper_fts_test.dart`, +34 |
 | `lib/data/datasources/remote/firestore_gastos_remote_data_source.dart` | 72 | `FirestoreGastosRemoteDataSource` | - |
 | `lib/data/datasources/remote/gastos_remote_data_source.dart` | 26 | `RemoteGasto`, `RemotePresupuesto`, `GastosRemoteDataSource` | `reparar_tasas_dry_run_test.dart`, `sync_orchestration_test.dart` |
 | `lib/data/datasources/remote/gemini_service.dart` | 746 | `VoiceOfflineException`, `VoiceServiceException`, `GeminiService` | `database_helper_batch_and_async_test.dart`, `chat_screen_test.dart`, `ai_insight_service_test.dart`, +3 |
@@ -67,7 +67,7 @@
 
 | Archivo | Líneas | Símbolos | Pruebas |
 |---|---|---|---|
-| `lib/providers/chat_provider.dart` | 78 | `ChatProvider` | `chat_provider_test.dart`, `chat_screen_test.dart`, `more_screen_test.dart`, +2 |
+| `lib/providers/chat_provider.dart` | 115 | `ChatProvider` | `chat_provider_test.dart`, `chat_screen_test.dart`, `more_screen_test.dart`, +2 |
 | `lib/providers/gasto_provider.dart` | 788 | `GastoProvider` | `database_helper_batch_and_async_test.dart`, `gasto_provider_budget_test.dart`, `gasto_provider_monetary_summary_test.dart`, +27 |
 | `lib/providers/scan_queue_provider.dart` | 620 | `ScanQueueProvider` | `scan_queue_provider_test.dart`, `analysis_screen_redesign_test.dart`, `currency_calculator_screen_test.dart`, +19 |
 | `lib/providers/settings_provider.dart` | 629 | `SettingsProvider` | `settings_provider_notifications_test.dart`, `settings_provider_rate_cache_test.dart`, `settings_provider_security_test.dart`, +24 |
@@ -76,7 +76,7 @@
 
 | Archivo | Líneas | Símbolos | Pruebas |
 |---|---|---|---|
-| `lib/services/ai_insight_service.dart` | 757 | `AiDashboardInsight`, `AiInsightService` | `ai_insight_service_test.dart` |
+| `lib/services/ai_insight_service.dart` | 988 | `AiHiddenSignals`, `AiDashboardInsight`, `AiInsightService` | `ai_insight_service_test.dart`, `ai_insight_card_test.dart` |
 | `lib/services/category_classifier_service.dart` | 283 | `CategoryClassifierService` | `category_classifier_service_test.dart` |
 | `lib/services/connectivity_service.dart` | 86 | `ConnectivityService` | `scan_queue_provider_test.dart`, `settings_provider_rate_cache_test.dart`, `main_screen_launch_action_test.dart`, +5 |
 | `lib/services/document_scanner_service.dart` | 66 | `DocumentScannerService` | - |
@@ -97,14 +97,14 @@
 | Archivo | Líneas | Símbolos | Pruebas |
 |---|---|---|---|
 | `lib/ui/screens/analysis_screen.dart` | 871 | `AnalysisScreen` | `analysis_screen_redesign_test.dart`, `dashboard_category_budget_test.dart`, `lote_4_ui_resilience_and_performance_test.dart` |
-| `lib/ui/screens/chat_screen.dart` | 1283 | `ChatSuggestion`, `ChatScreen` | `chat_screen_test.dart` |
+| `lib/ui/screens/chat_screen.dart` | 1384 | `ChatSuggestion`, `ChatScreen` | `chat_screen_test.dart` |
 | `lib/ui/screens/currency_calculator_screen.dart` | 970 | `TipoTasaCalculadora`, `CurrencyCalculatorScreen` | `currency_calculator_screen_test.dart` |
-| `lib/ui/screens/dashboard_screen.dart` | 829 | `DashboardScreen` | `dashboard_screen_test.dart`, `smart_empty_state_and_lifecycle_test.dart` |
+| `lib/ui/screens/dashboard_screen.dart` | 841 | `DashboardScreen` | `dashboard_screen_test.dart`, `smart_empty_state_and_lifecycle_test.dart` |
 | `lib/ui/screens/expense_history_screen.dart` | 823 | `ExpenseHistoryScreen`, `ExpenseHistoryScreenState` | `dashboard_search_test.dart`, `expense_history_screen_test.dart`, `lote_4_ui_resilience_and_performance_test.dart`, +1 |
 | `lib/ui/screens/main_screen.dart` | 820 | `MainScreen` | `main_screen_launch_action_test.dart`, `main_screen_no_auto_repair_test.dart`, `navigation_test.dart`, +1 |
 | `lib/ui/screens/more_screen.dart` | 1754 | `MoreSubView`, `MoreScreen`, `MoreScreenState` | `more_screen_test.dart`, `more_screen_copy_and_dialogs_test.dart` |
 | `lib/ui/screens/receipt_gallery_screen.dart` | 532 | `ReceiptGalleryScreen` | `receipt_gallery_screen_test.dart` |
-| `lib/ui/screens/review_expense_screen.dart` | 4615 | `MetodoLiquidacionUsd`, `ReviewExpenseScreen` | `review_expense_price_history_test.dart`, `review_expense_screen_layout_test.dart`, `review_expense_token_test.dart`, +1 |
+| `lib/ui/screens/review_expense_screen.dart` | 4836 | `MetodoLiquidacionUsd`, `ReviewExpenseScreen` | `review_expense_price_history_test.dart`, `review_expense_screen_layout_test.dart`, `review_expense_token_test.dart`, +1 |
 | `lib/ui/screens/scan_screen.dart` | 292 | `ScanScreen` | `scan_screen_test.dart` |
 | `lib/ui/screens/shopping_list_screen.dart` | 231 | `ShoppingListScreen` | `shopping_list_screen_test.dart` |
 | `lib/ui/widgets/ai_insight_card.dart` | 230 | `AiInsightCard` | `ai_insight_card_test.dart` |

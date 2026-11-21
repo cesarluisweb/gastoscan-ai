@@ -60,8 +60,9 @@ Los centavos exactos del IVA distribuido (`ivaCents`) se reparten proporcionalme
 1. **Tarjetas de artículos (cotejo directo contra el ticket impreso):**
    - Cada artículo gravado etiqueta sus campos como **`Precio (sin IVA)`** y **`Total sin IVA`**, mostrando exactamente los montos del papel.
    - Debajo de cada artículo gravado (`ValueKey('item_tax_gross_${item.clientKey}')`) se muestra su costo final real: `Con IVA 16%: Bs. 300` (o con detalle unitario solo cuando `cant × unitarioBruto == totalBruto`, sin símbolo `≈` y sin avisos repetidos por fila).
-   - **Badges limpios para tickets largos:** Solo los artículos gravados de facturas mixtas muestran el badge tocable **`G · 16%`** / **`R · 8%`** (`ValueKey('item_tax_badge_${item.clientKey}')`). Las filas exentas nunca muestran pastilla y las facturas homogéneas (100% gravadas, p. ej. farmacia) ocultan los badges en tarjetas para evitar ruido visual.
-   - Un toque sobre el badge alterna directo **`gravado → Exento`** (nunca cae accidentalmente en `8%`) y registra `OrigenAlicuota.manual`.
+   - **Badges interactivos limpios para tickets largos:** Solo los artículos gravados de facturas mixtas muestran el botón compacto **`G · 16% ▾`** / **`R · 8% ▾`** (`ValueKey('item_tax_badge_${item.clientKey}')`). Las filas exentas sin editar nunca muestran pastilla y las facturas homogéneas (100% gravadas, p. ej. farmacia) ocultan los badges en tarjetas para evitar ruido visual.
+   - Tocar el badge abre la hoja rápida **`¿Este artículo paga IVA?`** (`Paga IVA 16% (G)`, `Exento (E)`, `Paga IVA 8% (R)`), evitando descuadres accidentales por un toque exploratorio. Si el usuario cambia la alícuota, registra `OrigenAlicuota.manual`, muestra un aviso breve con **`Deshacer`** y, si pasó a exento, conserva un chip sutil **`Exento ▾`** en esa misma tarjeta para revertirlo sin buscar al pie.
+   - **Pausa del comparador ante descuadre:** Mientras el ancla fiscal esté activa y el pie indique `IVA no cuadra` (`!ivaCuadra`), `_PriceComparisonLine` se oculta temporalmente para no mostrar falsos descuentos (`-14% más económico`); reaparece automáticamente al cuadrar.
 2. **Pie fiscal con 3 verificaciones y ancla invalidable (`Key('fiscal_summary_footer')`):**
    - Muestra `Subtotal sin IVA`, `IVA de la factura`, estado en una sola línea, `Total con IVA` y el botón **`Ajustar IVA · N gravados`** (`Key('btn_ajustar_iva_footer')`) que abre la hoja modal (`Exento` | `16%` | `8%` por artículo).
    - **3 verificaciones simultáneas:** Solo muestra **`Cuadra con la factura`** cuando (a) `|IVA calculado − IVA factura| <= fiscalRateToleranceCents(n)`, (b) `|(Subtotal + IVA factura) − Monto total| <= guardToleranceCents`, y (c) la suma bruta cuadra dentro de tolerancia.
@@ -115,5 +116,6 @@ Tanto `DatabaseHelper.findPriceHistory` como `landing/src/lib/price-comparator.j
 
 ---
 
-## 8. Segmentación Futura (Fase 9: Rinde Más Pro)
-- Selector de modo contable (*Modo Anaquel* vs *Modo Fiscal/Contable Pro*) y exportación contable con columnas separadas de Base Exenta, Base Imponible 16% y Débito Fiscal IVA.
+## 8. Segmentación Futura (Migración SQLite `v20` y Fase 9: Rinde Más Pro)
+- **Candidato opcional para agrupar con `v20` (`AI-09`):** Si en el uso real hace falta consultar el equivalente sin IVA dentro de **Editar gasto** (sin reabrir edición B-2), se contempla persistir únicamente `tasa_iva_pct INTEGER NULL` en `items_gasto` (`NULL` = desconocido/manual/voz/histórico/fallback sin IVA incluido; `0` = exento confirmado; `8` / `16` = gravado imputado). Nunca se debe asignar `16` u `8` a ítems en fallback cuyo precio guardado sigue en base. Requerirá migración `v20` (revisando `onDowngrade` / respaldo-restauración), persistencia en `GastoFirestoreMapper`, preservación en `landing/src/pages/panel.astro:3439-3446`, rótulo `"Base calculada"` / `"Equivalente sin IVA"` (para reflejar posibles `±0,01` por Mayor Resto) y opción para limpiar la marca si el usuario sustituye el artículo.
+- **Fase 9 (Rinde Más Pro):** Selector de modo contable (*Modo Anaquel* vs *Modo Fiscal/Contable Pro*) y exportación contable con columnas separadas de Base Exenta, Base Imponible 16% y Débito Fiscal IVA.

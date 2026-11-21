@@ -66,6 +66,7 @@ class FakeGastoProvider extends GastoProvider {
   bool actualizarGastoLlamado = false;
   GastoModel? ultimoGastoGuardado;
   List<ItemGastoModel>? ultimosItemsGuardados;
+  Map<String, PriceHistory> mockPriceHistories = const {};
 
   @override
   List<GastoModel> get gastos => _gastos;
@@ -83,7 +84,15 @@ class FakeGastoProvider extends GastoProvider {
     String? comercioActual,
     int diasVentana = 60,
     DateTime? referenceDate,
-  }) async => const {};
+  }) async {
+    if (mockPriceHistories.isEmpty) return const {};
+    final out = <String, PriceHistory>{};
+    for (final d in descripcionesNormalizadas) {
+      final h = mockPriceHistories[d];
+      if (h != null) out[d] = h;
+    }
+    return out;
+  }
 
   @override
   Future<Map<String, dynamic>?> buscarPrecioAnterior(String descripcion, {int? excludeGastoId}) async => null;
@@ -1713,17 +1722,17 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // 1. Nombres limpios sin (G)/(E); gravado muestra Precio (sin IVA), Total sin IVA, badge G · 16% y franja Con IVA 16%
+      // 1. Nombres limpios sin (G)/(E); gravado muestra Precio (sin IVA), Total sin IVA, badge G · 16% ▾ y franja Con IVA 16%
       expect(find.text('Detergente Líquido'), findsOneWidget);
       expect(find.text('Harina PAN 1kg'), findsOneWidget);
       expect(find.text('Precio (sin IVA)'), findsOneWidget);
       expect(find.text('Total sin IVA'), findsOneWidget);
-      expect(find.text('G · 16%'), findsOneWidget);
+      expect(find.text('G · 16% ▾'), findsOneWidget);
       expect(find.textContaining('Con IVA 16%: Bs. 300'), findsOneWidget);
-      // Sin símbolo de aproximación ni textos repetidos por fila ni pastilla en el artículo exento
+      // Sin símbolo de aproximación ni textos repetidos por fila ni pastilla en el artículo exento sin editar
       expect(find.textContaining('≈'), findsNothing);
       expect(find.textContaining('sin cuadrar con ticket'), findsNothing);
-      expect(find.text('Exento (E)'), findsNothing);
+      expect(find.text('Exento ▾'), findsNothing);
 
       // 2. Pie fiscal muestra Subtotal sin IVA, IVA de la factura, Cuadra con la factura y botón Ajustar IVA · 1 gravado
       expect(find.byKey(const Key('fiscal_summary_footer')), findsOneWidget);
@@ -1732,7 +1741,7 @@ void main() {
       expect(find.text('Cuadra con la factura'), findsOneWidget);
       expect(find.text('Ajustar IVA · 1 gravado'), findsOneWidget);
 
-      // 3. Editar Precio (sin IVA) del artículo gravado conserva foco/teclado, mantiene G · 16% y NO sobrescribe Monto total (410)
+      // 3. Editar Precio (sin IVA) del artículo gravado conserva foco/teclado, mantiene G · 16% ▾ y NO sobrescribe Monto total (410)
       final firstKey = extractedImputado.items.first.clientKey;
       final cardFinder = find.byKey(ValueKey('item_card_$firstKey'));
       final precioField = find.descendant(
@@ -1750,7 +1759,7 @@ void main() {
       await tester.enterText(precioField, '200');
       await tester.pumpAndSettle();
 
-      // Conserva foco, conserva badge G · 16% y Monto total permanece intacto en 410
+      // Conserva foco, conserva badge G · 16% ▾ y Monto total permanece intacto en 410
       final precioFieldAfter = find.descendant(
         of: cardFinder,
         matching: find.widgetWithText(TextFormField, '200'),
@@ -1760,7 +1769,7 @@ void main() {
         find.descendant(of: precioFieldAfter, matching: find.byType(EditableText)),
       );
       expect(identical(editableBefore, editableAfter), isTrue);
-      expect(find.text('G · 16%'), findsOneWidget);
+      expect(find.text('G · 16% ▾'), findsOneWidget);
       final totalCtrlText = tester
           .widget<TextFormField>(find.byKey(const Key('input_monto_total')))
           .controller
@@ -1801,16 +1810,38 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('G · 16%'), findsNothing);
+      expect(find.text('G · 16% ▾'), findsNothing);
       expect(find.textContaining('Con IVA 16%:'), findsNWidgets(2));
       expect(find.text('Ajustar IVA · 2 gravados'), findsOneWidget);
       expect(find.text('Cuadra con la factura'), findsOneWidget);
     });
 
-    testWidgets('AI-06 B-2: tocar badge G -> Exento dispara detector de 1 culpable y Corregir restaura el cuadre sin tocar Monto total', (tester) async {
+    testWidgets('AI-06 B-2: tocar badge G · 16% ▾ abre hojita de 3 opciones, conserva chip Exento ▾, pausa comparador y permite Deshacer o Corregir', (tester) async {
       tester.view.physicalSize = const Size(360, 2200);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
+
+      // Historial previo del detergente a ~Bs. 300 ($0.34018 a tasa 881.88) para validar pausa del comparador
+      gastoProvider.mockPriceHistories = {
+        DatabaseHelper.normalizeProductText('Detergente Líquido'): const PriceHistory(
+          descripcionNorm: 'detergente liquido',
+          registros: 2,
+          mismoComercio: UnitPriceRef(
+            precioUsd: 0.34018,
+            fecha: '2026-11-10',
+            comercio: 'Automercado Plaza',
+            comercioNorm: 'automercado plaza',
+            cantidad: 1.0,
+          ),
+          mejorPrecio: UnitPriceRef(
+            precioUsd: 0.34018,
+            fecha: '2026-11-10',
+            comercio: 'Automercado Plaza',
+            comercioNorm: 'automercado plaza',
+            cantidad: 1.0,
+          ),
+        ),
+      };
 
       final extracted = GeminiExtractionResult.fromJson({
         'comercio': 'Automercado Plaza',
@@ -1832,7 +1863,10 @@ void main() {
             ChangeNotifierProvider<ScanQueueProvider>.value(value: scanQueueProvider),
           ],
           child: MaterialApp(
-            home: ReviewExpenseScreen(extractedData: extracted),
+            home: ReviewExpenseScreen(
+              extractedData: extracted,
+              currentDate: DateTime(2026, 11, 20),
+            ),
           ),
         ),
       );
@@ -1840,17 +1874,31 @@ void main() {
 
       final firstKey = extracted.items.first.clientKey;
       final badgeFinder = find.byKey(ValueKey('item_tax_badge_$firstKey'));
+      final priceComparisonFinder = find.byKey(ValueKey('price_comparison_$firstKey'));
       expect(badgeFinder, findsOneWidget);
+      // Con el IVA cuadrado, la línea de comparación de precios es visible
+      expect(priceComparisonFinder, findsOneWidget);
 
-      // 1 toque en el badge pasa directo de G · 16% a Exento (nunca a 8%)
+      // 1. Tocar G · 16% ▾ abre la hojita '¿Este artículo paga IVA?' sin alterar todavía la factura
       await tester.tap(badgeFinder);
       await tester.pumpAndSettle();
+      expect(find.byKey(const Key('sheet_selector_iva_item')), findsOneWidget);
+      expect(find.text('¿Este artículo paga IVA?'), findsOneWidget);
 
-      expect(find.text('G · 16%'), findsNothing);
-      expect(find.text('R · 8%'), findsNothing);
+      // 2. Elegir Exento (E): conserva chip sutil 'Exento ▾' en esa tarjeta, oculta comparador y muestra Deshacer
+      await tester.tap(find.byKey(const Key('opt_iva_item_0')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.text('G · 16% ▾'), findsNothing);
+      expect(find.text('Exento ▾'), findsOneWidget);
+      expect(find.text('Sin IVA'), findsOneWidget);
       expect(find.text('Ajustar IVA · 0 gravados'), findsOneWidget);
+      // El comparador se oculta mientras el pie marca 'IVA no cuadra' (evita falso '14% más económico')
+      expect(priceComparisonFinder, findsNothing);
+      expect(find.textContaining('más económico'), findsNothing);
       expect(find.byKey(const Key('fiscal_suggestion_banner')), findsOneWidget);
-      expect(find.textContaining('Detergente Líquido'), findsWidgets);
+      expect(find.byKey(const Key('btn_deshacer_cambio_iva')), findsOneWidget);
 
       // Monto total nunca se sobrescribió
       final totalCtrlText = tester
@@ -1859,15 +1907,31 @@ void main() {
           ?.text;
       expect(totalCtrlText, equals('410'));
 
-      // Tocar Corregir en el banner restaura el cuadre exacto en 1 toque
+      // 3. Tocar 'Deshacer' en el SnackBar revierte a G · 16% ▾ y reaparece el comparador
+      await tester.tap(find.byKey(const Key('btn_deshacer_cambio_iva')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('G · 16% ▾'), findsOneWidget);
+      expect(find.text('Exento ▾'), findsNothing);
+      expect(find.text('Cuadra con la factura'), findsOneWidget);
+      expect(priceComparisonFinder, findsOneWidget);
+
+      // 4. Volver a pasarlo a Exento y usar 'Corregir' del banner también restaura el cuadre
+      await tester.tap(badgeFinder);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('opt_iva_item_0')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('fiscal_suggestion_banner')), findsOneWidget);
+
       await tester.ensureVisible(find.byKey(const Key('btn_aplicar_sugerencia_fiscal')));
       await tester.tap(find.byKey(const Key('btn_aplicar_sugerencia_fiscal')));
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('fiscal_suggestion_banner')), findsNothing);
       expect(find.text('Cuadra con la factura'), findsOneWidget);
-      expect(find.text('G · 16%'), findsOneWidget);
+      expect(find.text('G · 16% ▾'), findsOneWidget);
       expect(find.text('Ajustar IVA · 1 gravado'), findsOneWidget);
+      expect(priceComparisonFinder, findsOneWidget);
     });
 
     testWidgets('AI-06 B-2: editar Monto total invalida el ancla y Guardar con descuadre exige confirmación antes del fallback con IVA aparte', (tester) async {
@@ -2038,9 +2102,10 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Solo 2 badges G · 16% y 1 badge R · 8%; las 9 filas exentas no muestran ninguna pastilla ni franja Con IVA
-      expect(find.text('G · 16%'), findsNWidgets(2));
-      expect(find.text('R · 8%'), findsOneWidget);
+      // Solo 2 badges G · 16% ▾ y 1 badge R · 8% ▾; las 9 filas exentas no muestran ninguna pastilla ni franja Con IVA
+      expect(find.text('G · 16% ▾'), findsNWidgets(2));
+      expect(find.text('R · 8% ▾'), findsOneWidget);
+      expect(find.text('Exento ▾'), findsNothing);
       expect(find.textContaining('Con IVA 16%:'), findsNWidgets(2));
       expect(find.textContaining('Con IVA 8%:'), findsOneWidget);
       expect(find.text('Ajustar IVA · 3 gravados'), findsOneWidget);

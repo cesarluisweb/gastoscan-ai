@@ -836,7 +836,11 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     _items = List<ItemGastoModel>.from(estado.itemsRecalculados);
   }
 
-  void _cambiarTasaFiscalItem(int index, int nuevaTasaPct) {
+  void _cambiarTasaFiscalItem(
+    int index,
+    int nuevaTasaPct, {
+    OrigenAlicuota origen = OrigenAlicuota.manual,
+  }) {
     if (!_fiscalReviewMode || index < 0 || index >= _items.length) return;
     setState(() {
       final current = _items[index];
@@ -847,14 +851,14 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
           baseImponibleOriginal: baseUnit,
           baseTotalOriginal: baseTotal,
           tasaIvaPct: nuevaTasaPct,
-          origenAlicuota: OrigenAlicuota.manual,
+          origenAlicuota: origen,
         );
       } else {
         _items[index] = current.copyWith(
           precioUnitario: baseUnit,
           total: baseTotal,
           clearBaseImponibleOriginal: true,
-          origenAlicuota: OrigenAlicuota.manual,
+          origenAlicuota: origen,
         );
       }
       _recalcularFiscalGlobal();
@@ -2106,16 +2110,227 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     }
   }
 
+  Future<void> _abrirSelectorIvaItem(int idx) async {
+    if (!_fiscalReviewMode || idx < 0 || idx >= _items.length) return;
+    final item = _items[idx];
+    final int tasaAnterior = item.tasaIvaPct;
+    final OrigenAlicuota origenAnterior = item.origenAlicuota;
+    final String itemClientKey = item.clientKey;
+    final String itemLabel = item.descripcion.trim().isEmpty
+        ? 'Artículo ${idx + 1}'
+        : item.descripcion.trim();
+
+    final int? nuevaTasa = await showModalBottomSheet<int>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (sheetCtx) {
+        return SafeArea(
+          key: const Key('sheet_selector_iva_item'),
+          top: false,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(sheetCtx).size.height * 0.78,
+            ),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '¿Este artículo paga IVA?',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    itemLabel,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 12.5, color: Color(0xFF4B5563)),
+                  ),
+                  const SizedBox(height: 12),
+                  for (final opt in const [
+                    (
+                      rate: 16,
+                      title: 'Paga IVA 16% (G)',
+                      subtitle: 'Tasa general de factura fiscal',
+                    ),
+                    (
+                      rate: 0,
+                      title: 'Exento (E)',
+                      subtitle: 'Sin impuesto (alimentos básicos, etc.)',
+                    ),
+                    (
+                      rate: 8,
+                      title: 'Paga IVA 8% (R)',
+                      subtitle: 'Tasa reducida',
+                    ),
+                  ])
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Material(
+                        color: tasaAnterior == opt.rate
+                            ? const Color(0xFFFEF3C7)
+                            : AppColors.cardLighter,
+                        borderRadius: BorderRadius.circular(12),
+                        child: InkWell(
+                          key: Key('opt_iva_item_${opt.rate}'),
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () => Navigator.pop(sheetCtx, opt.rate),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: tasaAnterior == opt.rate
+                                    ? const Color(0xFFF59E0B)
+                                    : AppColors.border,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        opt.title,
+                                        style: const TextStyle(
+                                          fontSize: 13.5,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.textPrimary,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        opt.subtitle,
+                                        style: const TextStyle(
+                                          fontSize: 11.5,
+                                          color: Color(0xFF4B5563),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Icon(
+                                  tasaAnterior == opt.rate
+                                      ? Icons.check_circle_rounded
+                                      : Icons.radio_button_unchecked_rounded,
+                                  size: 20,
+                                  color: tasaAnterior == opt.rate
+                                      ? const Color(0xFF78350F)
+                                      : const Color(0xFF9CA3AF),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    if (!mounted || nuevaTasa == null || nuevaTasa == tasaAnterior) return;
+    final currentIdx = _items.indexWhere((it) => it.clientKey == itemClientKey);
+    if (currentIdx == -1) return;
+
+    _cambiarTasaFiscalItem(currentIdx, nuevaTasa);
+
+    final String msg = nuevaTasa == 0
+        ? 'Marcado como Exento'
+        : 'Marcado con IVA $nuevaTasa%';
+    bool undoHandled = false;
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 4),
+        backgroundColor: AppColors.primaryDark,
+        content: Row(
+          children: [
+            Expanded(
+              child: Text(
+                msg,
+                style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w500),
+              ),
+            ),
+            InkWell(
+              key: const Key('btn_deshacer_cambio_iva'),
+              onTap: () {
+                if (undoHandled) return;
+                undoHandled = true;
+                messenger.hideCurrentSnackBar();
+                if (!mounted) return;
+                final undoIdx = _items.indexWhere((it) => it.clientKey == itemClientKey);
+                if (undoIdx != -1) {
+                  _cambiarTasaFiscalItem(undoIdx, tasaAnterior, origen: origenAnterior);
+                }
+              },
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.undo_rounded, size: 15, color: Colors.black87),
+                    SizedBox(width: 4),
+                    Text(
+                      'Deshacer',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildFiscalGrossStrip(int idx, ItemGastoModel item) {
     final sym = _symbolForMoneda(_selectedMoneda);
-    final bool showExactUnit = item.cantidad != 1.0 &&
-        item.cantidad > 0 &&
-        item.total > 0 &&
-        (item.precioUnitario * item.cantidad).round() == item.total;
-    final String grossText = showExactUnit
-        ? 'Con IVA ${item.tasaIvaPct}%: $sym ${_formatDisplayMonto(item.totalDisplay)} (${_formatDouble(item.cantidad)} × $sym ${_formatDisplayMonto(item.precioUnitarioDisplay)})'
-        : 'Con IVA ${item.tasaIvaPct}%: $sym ${_formatDisplayMonto(item.totalDisplay)}';
-    final String badgeLabel = item.tasaIvaPct == 8 ? 'R · 8%' : 'G · 16%';
+    final bool isTaxed = item.tasaIvaPct > 0;
+    final bool showBadge = isTaxed
+        ? (_mostrarBadgesEnTarjetas || item.origenAlicuota == OrigenAlicuota.manual)
+        : (item.origenAlicuota == OrigenAlicuota.manual);
+
+    final String rightText;
+    if (isTaxed) {
+      final bool showExactUnit = item.cantidad != 1.0 &&
+          item.cantidad > 0 &&
+          item.total > 0 &&
+          (item.precioUnitario * item.cantidad).round() == item.total;
+      rightText = showExactUnit
+          ? 'Con IVA ${item.tasaIvaPct}%: $sym ${_formatDisplayMonto(item.totalDisplay)} (${_formatDouble(item.cantidad)} × $sym ${_formatDisplayMonto(item.precioUnitarioDisplay)})'
+          : 'Con IVA ${item.tasaIvaPct}%: $sym ${_formatDisplayMonto(item.totalDisplay)}';
+    } else {
+      rightText = 'Sin IVA';
+    }
+
+    final String badgeLabel = item.tasaIvaPct == 16
+        ? 'G · 16% ▾'
+        : (item.tasaIvaPct == 8 ? 'R · 8% ▾' : 'Exento ▾');
+    final Color badgeBg = isTaxed ? const Color(0xFFFEF3C7) : AppColors.surface;
+    final Color badgeBorder = isTaxed ? const Color(0xFFF59E0B) : AppColors.border;
+    final Color badgeTextColor = isTaxed ? const Color(0xFF78350F) : const Color(0xFF4B5563);
 
     return Container(
       key: ValueKey('item_tax_gross_${item.clientKey}'),
@@ -2130,26 +2345,26 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          if (_mostrarBadgesEnTarjetas) ...[
+          if (showBadge) ...[
             Tooltip(
-              message: 'Toca para marcar como Exento',
+              message: 'Toca para cambiar el IVA de este artículo',
               child: Material(
-                color: const Color(0xFFFEF3C7),
-                shape: const StadiumBorder(
-                  side: BorderSide(color: Color(0xFFF59E0B), width: 1),
+                color: badgeBg,
+                shape: StadiumBorder(
+                  side: BorderSide(color: badgeBorder, width: 1),
                 ),
                 child: InkWell(
                   key: ValueKey('item_tax_badge_${item.clientKey}'),
                   customBorder: const StadiumBorder(),
-                  onTap: () => _cambiarTasaFiscalItem(idx, 0),
+                  onTap: () => _abrirSelectorIvaItem(idx),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     child: Text(
                       badgeLabel,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF78350F),
+                        color: badgeTextColor,
                       ),
                     ),
                   ),
@@ -2160,15 +2375,15 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
           ],
           Expanded(
             child: Text(
-              grossText,
-              textAlign: _mostrarBadgesEnTarjetas ? TextAlign.right : TextAlign.left,
+              rightText,
+              textAlign: showBadge ? TextAlign.right : TextAlign.left,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-                fontFeatures: [FontFeature.tabularFigures()],
+              style: TextStyle(
+                fontSize: isTaxed ? 12 : 11.5,
+                fontWeight: isTaxed ? FontWeight.w600 : FontWeight.w500,
+                color: isTaxed ? AppColors.textPrimary : const Color(0xFF4B5563),
+                fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
           ),
@@ -3640,7 +3855,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                   ),
                                 ],
                               ),
-                              if (_fiscalReviewMode && item.tasaIvaPct > 0)
+                              if (_fiscalReviewMode &&
+                                  (item.tasaIvaPct > 0 ||
+                                      item.origenAlicuota == OrigenAlicuota.manual))
                                 _buildFiscalGrossStrip(idx, item),
                               if (!_fiscalReviewMode && item.baseImponibleOriginal != null)
                                 Container(
@@ -3664,7 +3881,11 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                     ),
                                   ),
                                 ),
-                              if (itemHistory != null)
+                              if (itemHistory != null &&
+                                  !(_fiscalReviewMode &&
+                                      _estadoFiscal != null &&
+                                      _estadoFiscal!.anclaFiscalActiva &&
+                                      !_estadoFiscal!.ivaCuadra))
                                 _PriceComparisonLine(
                                   key: ValueKey('price_comparison_${item.clientKey}'),
                                   clientKey: item.clientKey,
