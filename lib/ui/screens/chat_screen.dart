@@ -1040,12 +1040,32 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
-                    runSpacing: 4,
+                    runSpacing: 8,
                     children: AiReportService.motivos.map((opcion) {
+                      final selected = motivo == opcion;
                       return ChoiceChip(
                         key: Key('chat_report_reason_$opcion'),
-                        label: Text(opcion, style: const TextStyle(fontSize: 12)),
-                        selected: motivo == opcion,
+                        label: Text(
+                          opcion,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        selected: selected,
+                        showCheckmark: false,
+                        backgroundColor: AppColors.surface,
+                        selectedColor: AppColors.surface,
+                        disabledColor: AppColors.cardLighter,
+                        surfaceTintColor: Colors.transparent,
+                        side: BorderSide(
+                          color: selected ? AppColors.primaryDark : AppColors.border,
+                          width: selected ? 2.0 : 1.0,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                         onSelected: enviando
                             ? null
                             : (_) => setDialogState(() => motivo = opcion),
@@ -1134,7 +1154,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     ? const SizedBox(
                         width: 18,
                         height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.textPrimary,
+                        ),
                       )
                     : const Text('Enviar reporte'),
               ),

@@ -8,22 +8,22 @@
 
 | Capa | Archivos | Líneas |
 |---|---|---|
-| `core/` | 8 | 932 |
+| `core/` | 8 | 949 |
 | `data/` | 12 | 5273 |
 | `domain/` | 11 | 2355 |
 | `providers/` | 4 | 2161 |
 | `services/` | 16 | 6040 |
-| `ui/` | 31 | 21455 |
+| `ui/` | 31 | 21478 |
 | `(raiz)/` | 2 | 106 |
-| **Total** | **84** | **38322** |
+| **Total** | **84** | **38362** |
 
 ## core/
 
 | Archivo | Líneas | Símbolos | Pruebas |
 |---|---|---|---|
-| `lib/core/constants/app_colors.dart` | 69 | `AppColors` | `app_colors_budget_progress_test.dart`, `dashboard_category_budget_test.dart`, `more_screen_test.dart`, +6 |
+| `lib/core/constants/app_colors.dart` | 69 | `AppColors` | `app_colors_budget_progress_test.dart`, `chat_screen_test.dart`, `dashboard_category_budget_test.dart`, +7 |
 | `lib/core/constants/app_constants.dart` | 261 | `AppConstants` | `categoria_model_test.dart`, `gasto_provider_rate_cache_test.dart`, `settings_provider_notifications_test.dart`, +10 |
-| `lib/core/theme/app_theme.dart` | 151 | `AppTheme` | - |
+| `lib/core/theme/app_theme.dart` | 168 | `AppTheme` | - |
 | `lib/core/utils/amount_parser.dart` | 98 | - | `amount_parser_test.dart` |
 | `lib/core/utils/currency_formatter.dart` | 182 | `CurrencyFormatter` | `analysis_screen_redesign_test.dart`, `dashboard_category_budget_test.dart`, `category_chart_test.dart`, +1 |
 | `lib/core/utils/date_formatter.dart` | 35 | `DateFormatter` | `analysis_screen_redesign_test.dart`, `smart_empty_state_and_lifecycle_test.dart` |
@@ -98,7 +98,7 @@
 | Archivo | Líneas | Símbolos | Pruebas |
 |---|---|---|---|
 | `lib/ui/screens/analysis_screen.dart` | 871 | `AnalysisScreen` | `analysis_screen_redesign_test.dart`, `dashboard_category_budget_test.dart`, `lote_4_ui_resilience_and_performance_test.dart` |
-| `lib/ui/screens/chat_screen.dart` | 1541 | `ChatSuggestion`, `ChatScreen` | `chat_screen_test.dart` |
+| `lib/ui/screens/chat_screen.dart` | 1564 | `ChatSuggestion`, `ChatScreen` | `chat_screen_test.dart` |
 | `lib/ui/screens/currency_calculator_screen.dart` | 970 | `TipoTasaCalculadora`, `CurrencyCalculatorScreen` | `currency_calculator_screen_test.dart` |
 | `lib/ui/screens/dashboard_screen.dart` | 841 | `DashboardScreen` | `dashboard_screen_test.dart`, `smart_empty_state_and_lifecycle_test.dart` |
 | `lib/ui/screens/expense_history_screen.dart` | 823 | `ExpenseHistoryScreen`, `ExpenseHistoryScreenState` | `dashboard_search_test.dart`, `expense_history_screen_test.dart`, `lote_4_ui_resilience_and_performance_test.dart`, +1 |

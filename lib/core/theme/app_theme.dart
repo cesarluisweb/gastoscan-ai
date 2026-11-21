@@ -101,6 +101,23 @@ class AppTheme {
         color: AppColors.border,
         thickness: 1,
       ),
+      chipTheme: ChipThemeData(
+        backgroundColor: AppColors.surface,
+        selectedColor: AppColors.surface,
+        disabledColor: AppColors.cardLighter,
+        surfaceTintColor: Colors.transparent,
+        checkmarkColor: AppColors.textPrimary,
+        labelStyle: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
+        secondaryLabelStyle: const TextStyle(
+          color: AppColors.textPrimary,
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+        ),
+        side: const BorderSide(color: AppColors.border, width: 1),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
       datePickerTheme: DatePickerThemeData(
         backgroundColor: AppColors.card,
         headerBackgroundColor: AppColors.surface,

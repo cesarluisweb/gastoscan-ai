@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:gastoscan_ai/core/constants/app_colors.dart';
 import 'package:gastoscan_ai/data/datasources/local/database_helper.dart';
 import 'package:gastoscan_ai/data/datasources/remote/gemini_service.dart';
 import 'package:gastoscan_ai/data/models/shopping_item_model.dart';
@@ -797,6 +798,19 @@ void main() {
 
       await tester.tap(find.byKey(const Key('chat_report_reason_Ofensiva')));
       await tester.pump();
+
+      final selectedChip = tester.widget<ChoiceChip>(
+        find.byKey(const Key('chat_report_reason_Ofensiva')),
+      );
+      final unselectedChip = tester.widget<ChoiceChip>(
+        find.byKey(const Key('chat_report_reason_Inexacta')),
+      );
+      expect(selectedChip.selected, isTrue);
+      expect(selectedChip.selectedColor, AppColors.surface);
+      expect(selectedChip.side?.color, AppColors.primaryDark);
+      expect(unselectedChip.selected, isFalse);
+      expect(unselectedChip.backgroundColor, AppColors.surface);
+      expect(unselectedChip.side?.color, AppColors.border);
 
       await tester.enterText(
         find.byKey(const Key('chat_report_comment_field')),
