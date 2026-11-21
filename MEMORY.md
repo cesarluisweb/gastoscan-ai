@@ -8,12 +8,11 @@
 - **Mapa de código:** `docs/CODE_MAP.md` se regenera con `node scripts/gen_code_map.js`; el hook de pre-commit lo actualiza.
 
 ## Tareas en Curso
-- **AI-06 (imputación IVA en precios de anaquel):** `Pendiente de validación 🧪` (APK build 722, run `44859265998`; Web build 33, run `44859265979`, HTTP 200; Firestore build 5; SHA `bacfe13`). Falta validación en dispositivo físico por César (`docs/DOC_PRECIOS_ANAQUEL_IVA.md`) y `wrangler deploy` aparte para activar `'R'` (8%) en Worker.
-- **AI-08 (consejos dinámicos en Inicio):** `Pendiente de validación 🧪` (APK build 723, run `44903430734`, SHA `16b4178`). Sin icono robot, una sola idea por tarjeta, negritas reales (`Text.rich`), caché Gemini 24h ($\ge 3$ gastos) y detalle ampliado al pulsar `Consultar`. Pendiente `wrangler deploy` para `modo: "insight_inicio"`.
+- **Resiliencia Offline (avatar caché, tasas auto-refresco y Dictar gasto offline):** `Implementada 🔧` en `af9d076` (`docs/DOC_RESILIENCIA_OFFLINE.md`); `wait_ci.ps1` reportó `SIN RUN`, pendiente verificar CI y validar en dispositivo. Reglas graduadas a `.agents/rules/resiliencia-offline.md`, `ia-ocr-voz.md`, `dinero-datos.md` y `revisor-adversarial/SKILL.md`.
+- **AI-06 (imputación IVA en precios de anaquel — B-2):** `Pendiente de validación 🧪` (APK build 725, run `44918813456`, SHA `4800076`; Web build 33, HTTP 200; Firestore build 5). Revisión B-2 al papel + `Con IVA` debajo, badges interactivos `G · 16% ▾` con selector de 3 opciones + `Deshacer` + chip `Exento ▾` manual, pausa del comparador ante `IVA no cuadra`, hoja `Ajustar IVA`, pie en 3 verificaciones con ancla invalidable, detector de 1 culpable + test de propiedades, y guardado seguro. Falta validación física (`docs/DOC_PRECIOS_ANAQUEL_IVA.md`) y `wrangler deploy` para `'R'` (8%).
+- **AI-08 (consejos dinámicos en Inicio v2):** `Pendiente de validación 🧪` (APK build 726, run `44919016424`, SHA `65512c2`; Worker `rindemas-gateway` desplegado `dd580be0`). 4 señales ocultas SQLite (precios entre comercios 60d, gastos hormiga $<\$10$, comparativa vs mes pasado y brecha BCV/USDT), caché JSON estricta `v2` (purga `v1`), negritas reales (`Text.rich`) y profundización en vivo en `ChatScreen` al pulsar `Consultar ->`.
 - **AI-09 (detección fotos y facturas duplicadas):** Planificada en `ROADMAP.md` y documentada en `docs/DOC_PLAN_DETECCION_DUPLICADOS.md`. Pendiente definición de esquema SQLite (v20 vs v19).
 - **UX-17 (compartir Rinde Más por WhatsApp):** Planificada en `docs/DOC_PLAN_UX17_COMPARTIR_WHATSAPP.md` (App, Panel Web, Landing + Open Graph); diferida hasta tener el enlace público de Google Play.
-- **E0-05b (diagnóstico Q01..Q20):** ✅ Completada (build 707, `4dafbf9`, run `43499866405`). Fase 0 cerrada.
-- **B1 (reglas Firestore):** ✅ Completada (`4f2bff6`, emulador `43499032804` en verde, auditada y validada en producción).
 - **Pendientes de cierre administrativo:** firma P0 (rotar upload key tras aprobar Producción) y solicitud de Producción en Google Play.
 
 ## Completadas
