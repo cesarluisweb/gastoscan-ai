@@ -240,7 +240,7 @@ class GeminiExtractionResult {
 
     final int maxMontoCentavos = (_maxMontoIA * 100).round();
     final itemsList = <ItemGastoModel>[];
-    final validCategorias = AppConstants.categorias;
+    const validCategorias = AppConstants.categorias;
 
     if (json['items'] is List) {
       for (final rawItem in (json['items'] as List)) {
@@ -360,7 +360,7 @@ class GeminiExtractionResult {
 
     // Paso 0: Clasificación estricta de líneas crudas (antes de cualquier clamp o normalización)
     final itemsList = <ItemGastoModel>[];
-    final validCategorias = AppConstants.categorias;
+    const validCategorias = AppConstants.categorias;
     final ivaLinesFromJson = <ItemGastoModel>[];
     bool hasSpecialLines = false;
 
