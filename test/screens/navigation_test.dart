@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:gastoscan_ai/data/datasources/local/database_helper.dart';
 import 'package:gastoscan_ai/providers/gasto_provider.dart';
@@ -26,8 +27,20 @@ class FakeGastoProvider extends GastoProvider {
 }
 
 class FakeSettingsProvider extends SettingsProvider {
+  FakeSettingsProvider() : super(autoLoad: false);
+
   @override
   Future<void> loadSettings() async {}
+
+  @override
+  Future<bool> refrescarTasasSiDesactualizadas({
+    http.Client? client,
+    bool bypassCooldown = false,
+  }) async =>
+      false;
+
+  @override
+  Future<bool> actualizarTasaAutomatica({http.Client? client}) async => false;
 }
 
 void main() {

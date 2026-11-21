@@ -749,6 +749,10 @@ void main() {
         ),
       );
       await tester.runAsync(() async {
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      });
+      await tester.pump();
+      await tester.runAsync(() async {
         await Future<void>.delayed(const Duration(milliseconds: 20));
       });
       await tester.pump();
@@ -761,8 +765,10 @@ void main() {
 
       // Al recuperar conexion, descarga automaticamente tras debounce y pinta FileImage
       connController.add(true);
-      await tester.pump(const Duration(milliseconds: 30));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
       await tester.runAsync(() async {
+        await Future<void>.delayed(const Duration(milliseconds: 30));
         await downloadRequested.future.timeout(const Duration(seconds: 3));
       });
       for (int i = 0; i < 40; i++) {
