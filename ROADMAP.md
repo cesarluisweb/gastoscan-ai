@@ -34,8 +34,8 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
    - Prueba cerrada de 14 días completada con 12 evaluadores (cero crashes / cero ANR). Solicitud de producción enviada el 04/11/2026 (en revisión). Doc en [`docs/DOC_CUESTIONARIO_PRODUCCION.md`](docs/DOC_CUESTIONARIO_PRODUCCION.md).
 3. **Herramientas Web Bloque 1 (Calculadora Cambiaria + Asistente IA en Panel Web):** `Completada ✅`
    - Módulos puros (`expense-money.js`, `currency-calculator.js`, `ai-assistant.js`), componentes Astro (`CalculatorModal.astro`, `AiChatDrawer.astro`), 29 pruebas unitarias en CI (`deploy_web.yml`, build 32, run `44784979988`, `3df3104`) y cola de compras múltiples. Desplegado, verificado HTTP 200 en `https://rindemas.cesarluis.com/panel` y aprobado por César (20/11/2026). Doc en [`docs/DOC_HERRAMIENTAS_PANEL_WEB.md`](docs/DOC_HERRAMIENTAS_PANEL_WEB.md).
-4. **AI-10 (Reporte funcional de respuestas de IA):** `Implementada 🔧`
-   - Botón "Reportar respuesta" con motivo y comentario opcional; escribe en la colección Firestore `ai_reports` con reglas propias y purga en el borrado de cuenta. Cumple la política "Contenido generado por IA" de Google Play. Doc en [`docs/DOC_REPORTE_RESPUESTAS_IA.md`](docs/DOC_REPORTE_RESPUESTAS_IA.md). Pendiente: CI, despliegue manual de reglas y prueba en dispositivo.
+4. **AI-10 (Reporte funcional de respuestas de IA):** `Pendiente de validación 🧪`
+   - Botón "Reportar respuesta" con motivo y comentario opcional; escribe en la colección Firestore `ai_reports` con reglas propias y purga en el borrado de cuenta (APK build 730, run `44925424000`, SHA `467a45e`; reglas build 6; web build 34, HTTP 200). Cumple la política "Contenido generado por IA" de Google Play. Doc en [`docs/DOC_REPORTE_RESPUESTAS_IA.md`](docs/DOC_REPORTE_RESPUESTAS_IA.md). Pendiente: despliegue manual de `deploy_rules.yml` (`DEPLOY`) y prueba en dispositivo.
 
 ---
 

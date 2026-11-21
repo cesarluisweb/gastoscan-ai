@@ -48,7 +48,10 @@ Sin este paso, los reportes fallan con `PERMISSION_DENIED`.
 
 ## 5. Guía de pruebas en dispositivo
 
-> Estado: pendiente de asignar build y SHA tras la primera ejecución de CI.
+- **SHA:** `467a45e`
+- **APK build:** `730` (run `44925424000`)
+- **Reglas Firestore:** emulador en verde (build `6`, run `44925423926`) — **requiere `deploy_rules.yml` manual con `DEPLOY` antes de probar**
+- **Web:** build `34` (run `44925423898`, `/privacidad` y `/eliminar-cuenta` HTTP 200)
 
 1. Abrir la app → pestaña **Más** → **Asistente IA**.
 2. Enviar un mensaje, por ejemplo: *"¿En qué gasté más este mes?"*.
