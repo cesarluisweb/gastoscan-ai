@@ -70,4 +70,4 @@ La tarea **`AI-08`** reemplaza los mensajes estáticos de la tarjeta **Asistente
 - **Build CI:** `733` | **Run:** `44928504292` | **Commit SHA:** `1ab66fa`
 - **Cloudflare Worker (`rindemas-gateway`):** Desplegado en producción (`Version ID: a3975df5-bf8c-4399-b183-9b9b90259531`) con `modo: "insight_inicio"` y la nota cambiaria corregida en el Chat normal.
 - **Pruebas automatizadas:** Cubiertas en `test/services/ai_insight_service_test.dart`, `test/widgets/ai_insight_card_test.dart`, `test/providers/chat_provider_test.dart` y `test/screens/chat_screen_test.dart`.
-- **Estado:** `Pendiente de validación 🧪` (espera aprobación final de César tras pruebas en dispositivo físico).
+- **Estado:** `Completada ✅` (validada en dispositivo físico por César el 21/11/2026).

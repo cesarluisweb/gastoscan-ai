@@ -120,6 +120,7 @@ description: "Convenciones para pruebas unitarias y de widgets, configuración d
   await tester.pumpAndSettle();
   ```
 - **Cero Advertencias en Archivos de Test:** El pipeline de CI corre con `--fatal-warnings`. Prohibido dejar importaciones huérfanas (`unused_import`) o advertencias en los archivos dentro de `test/`.
+- **Copia al Portapapeles (`Clipboard.setData`) y `SnackBar` en `testWidgets`:** En `TestWidgetsFlutterBinding` (`FakeAsync`), `await Clipboard.setData(...)` puede quedarse pendiente al no existir handler por defecto en `SystemChannels.platform`. Al copiar texto desde la UI (`AiInsightCard`, `ChatScreen`), disparar `Clipboard.setData(...)` sin `await` bloqueante antes de mostrar el `SnackBar` de confirmación, evitando colgar widget tests y eliminando usos de `BuildContext` tras gaps asíncronos.
 
 ## 6. Validación de Guías de Pruebas Manuales en Dispositivo Físico
 - **Inspección Previa en `lib/ui/` Obligatoria:** Antes de redactar cualquier guía de pruebas paso a paso en dispositivo físico, el asistente debe inspeccionar el código fuente de los widgets en `lib/ui/` y aportar evidencia archivo:línea de que cada menú, ruta y campo descrito existe físicamente en la build que se va a instalar. Queda prohibido presuponer controles visuales a partir de métodos de servicios, proveedores o modelos.
