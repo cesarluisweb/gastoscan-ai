@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:gastoscan_ai/data/datasources/local/database_helper.dart';
 import 'package:gastoscan_ai/data/datasources/remote/gemini_service.dart';
 import 'package:gastoscan_ai/data/models/gasto_model.dart';
 import 'package:gastoscan_ai/data/models/item_gasto_model.dart';
@@ -28,7 +29,30 @@ class FakeGeminiServiceForInsight extends GeminiService {
   }
 }
 
-List<GastoModel> _buildSampleGastos(int count) {
+class FakeDbForSignals extends DatabaseHelper {
+  List<GastoModel> prevMonthGastos = const [];
+  Map<String, PriceHistory> mockPriceHistory = const {};
+
+  FakeDbForSignals() : super.test();
+
+  @override
+  Future<List<GastoModel>> getGastosByMonth(int year, int month) async {
+    return prevMonthGastos;
+  }
+
+  @override
+  Future<Map<String, PriceHistory>> findPriceHistory(
+    List<String> descripcionesNormalizadas, {
+    int? excludeGastoId,
+    String? comercioActual,
+    int diasVentana = 60,
+    DateTime? referenceDate,
+  }) async {
+    return mockPriceHistory;
+  }
+}
+
+List<GastoModel> _buildSampleGastos(int count, {int totalUsdCents = 2000}) {
   return List.generate(count, (i) {
     return GastoModel(
       id: i + 1,
@@ -36,16 +60,16 @@ List<GastoModel> _buildSampleGastos(int count) {
       fecha: '2026-11-${(i + 1).toString().padLeft(2, '0')}',
       comercio: i.isEven ? 'Farmatodo' : 'Unicasa',
       moneda: 'USD',
-      totalOriginal: 2000,
-      totalUsd: 2000,
+      totalOriginal: totalUsdCents,
+      totalUsd: totalUsdCents,
       categoria: 'Alimentación',
       creadoEn: '2026-11-10T10:00:00',
       items: [
         ItemGastoModel(
           descripcion: 'Café Molido 500g',
           cantidad: 1,
-          precioUnitario: 1800,
-          total: 1800,
+          precioUnitario: totalUsdCents - 200,
+          total: totalUsdCents - 200,
           categoria: 'Alimentación',
         ),
         ItemGastoModel(
@@ -61,36 +85,115 @@ List<GastoModel> _buildSampleGastos(int count) {
 }
 
 void main() {
-  group('AiInsightService & GeminiService Insight Tests (AI-08)', () {
+  group('AiInsightService v2 Tests (AI-08)', () {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
     });
 
-    test('parseDashboardInsightResponse parses clean JSON, markdown JSON and plain text fallback', () {
-      final jsonRes = AiInsightService.parseDashboardInsightResponse(
-        '{"resumen": "Ahorra comparando precios en tus 3 comercios frecuentes.", "detalle": "• **Detalle 1:** Gastaste \$60 en 3 compras."}',
+    test('parseStrictDashboardInsight accepts valid JSON and strictly rejects plain text or malformed prefixes', () {
+      final validJson = AiInsightService.parseStrictDashboardInsight(
+        '{"consejo": "Pagaste **\$ 4,50** por **Café Molido** en **Farmatodo**, un **25%** más que en **Unicasa**."}',
       );
-      expect(jsonRes, isNotNull);
-      expect(jsonRes!['resumen'], 'Ahorra comparando precios en tus 3 comercios frecuentes.');
-      expect(jsonRes['detalle'], contains('Detalle 1:'));
+      expect(validJson, isNotNull);
+      expect(validJson, contains('Farmatodo'));
 
-      final mdRes = AiInsightService.parseDashboardInsightResponse(
-        '```json\n{"resumen": "Consejo corto.", "detalle": "Consejo largo detallado."}\n```',
+      final validMdJson = AiInsightService.parseStrictDashboardInsight(
+        '```json\n{"consejo": "Llevas **6 compras pequeñas** que ya suman **\$ 38,00** este mes."}\n```',
       );
-      expect(mdRes, isNotNull);
-      expect(mdRes!['resumen'], 'Consejo corto.');
-      expect(mdRes['detalle'], 'Consejo largo detallado.');
+      expect(validMdJson, isNotNull);
+      expect(validMdJson, contains('6 compras pequeñas'));
 
-      final plainRes = AiInsightService.parseDashboardInsightResponse(
-        'Concentraste tus compras en supermercados. Revisa el comparador por unidad para ahorrar.',
+      // Rechaza texto plano de Worker viejo
+      final plainTextRejected = AiInsightService.parseStrictDashboardInsight(
+        'Consejo corto: Tienes un presupuesto de \$600 y has gastado \$306.51.',
       );
-      expect(plainRes, isNotNull);
-      expect(plainRes!['resumen'], 'Concentraste tus compras en supermercados.');
-      expect(plainRes['detalle'], contains('Revisa el comparador por unidad'));
+      expect(plainTextRejected, isNull);
+
+      // Rechaza incluso si viniera en JSON pero con prefijo "Consejo corto:"
+      final badPrefixRejected = AiInsightService.parseStrictDashboardInsight(
+        '{"consejo": "Consejo corto: Tienes un presupuesto de \$600 y has gastado \$306.51."}',
+      );
+      expect(badPrefixRejected, isNull);
     });
 
-    test('buildCompactContextForGemini strictly excludes IVA tax items from top_productos_sin_iva', () {
+    test('computeHiddenSignals extracts all 4 hidden signals (price diff, ant expenses, prev month and FX benefit)', () async {
+      final fakeDb = FakeDbForSignals()
+        ..prevMonthGastos = [
+          GastoModel(
+            id: 99,
+            uuid: 'prev-1',
+            fecha: '2026-10-05',
+            comercio: 'Unicasa',
+            moneda: 'USD',
+            totalOriginal: 10000,
+            totalUsd: 10000,
+            categoria: 'Alimentación',
+            creadoEn: '2026-10-05T10:00:00',
+          ),
+        ]
+        ..mockPriceHistory = {
+          'cafe molido 500g': const PriceHistory(
+            descripcionNorm: 'cafe molido 500g',
+            registros: 2,
+            mejorPrecio: UnitPriceRef(
+              precioUsd: 3.60,
+              fecha: '2026-11-02',
+              comercio: 'Unicasa',
+              comercioNorm: 'unicasa',
+              cantidad: 1,
+            ),
+            entradas: [
+              UnitPriceRef(
+                precioUsd: 4.50,
+                fecha: '2026-11-10',
+                comercio: 'Farmatodo',
+                comercioNorm: 'farmatodo',
+                cantidad: 1,
+              ),
+              UnitPriceRef(
+                precioUsd: 3.60,
+                fecha: '2026-11-02',
+                comercio: 'Unicasa',
+                comercioNorm: 'unicasa',
+                cantidad: 1,
+              ),
+            ],
+          ),
+        };
+
+      // 5 compras pequeñas de $6,00 = $30,00 (ahorro vs $100 de octubre, gastos hormiga, diff precio y brecha FX)
+      final gastos = _buildSampleGastos(5, totalUsdCents: 600);
+
+      final signals = await AiInsightService.computeHiddenSignals(
+        gastos: gastos,
+        selectedYear: 2026,
+        selectedMonth: 11,
+        totalMesUsd: 30.0,
+        totalMesUsdt: 22.0,
+        currentDate: DateTime(2026, 11, 15),
+        dbHelper: fakeDb,
+      );
+
+      expect(signals.priceFindings.length, 1);
+      expect(signals.priceFindings.first['tipo'], 'otro_comercio_mas_barato');
+      expect(signals.priceFindings.first['diferencia_pct'], 25);
+
+      expect(signals.antExpenses, isNotNull);
+      expect(signals.antExpenses!['cantidad_compras'], 5);
+      expect(signals.antExpenses!['total_usd'], 30.0);
+
+      expect(signals.prevMonthComparison, isNotNull);
+      expect(signals.prevMonthComparison!['categoria_con_ahorro']['categoria'], 'Alimentación');
+
+      expect(signals.exchangeBenefit, isNotNull);
+      expect(signals.exchangeBenefit!['ahorro_brecha_usd'], 8.0);
+    });
+
+    test('buildCompactContextForGemini excludes IVA items and includes hidden signals without repeating SummaryCard totals', () {
       final gastos = _buildSampleGastos(3);
+      const signals = AiHiddenSignals(
+        antExpenses: {'cantidad_compras': 5, 'total_usd': 32.0, 'porcentaje_del_mes': 22},
+      );
       final ctx = AiInsightService.buildCompactContextForGemini(
         gastos: gastos,
         totalMesUsd: 60.0,
@@ -98,46 +201,30 @@ void main() {
         metaAhorroUsd: 20.0,
         monedaLente: 'USD',
         now: DateTime(2026, 11, 15),
+        hiddenSignals: signals,
       );
 
       final topProductos = ctx['top_productos_sin_iva'] as List;
       expect(topProductos.length, 1);
       expect(topProductos.first['producto'], 'Café Molido 500g');
-      expect(
-        topProductos.any((p) => p['producto'].toString().toUpperCase().contains('IVA')),
-        isFalse,
-      );
+      expect(ctx.containsKey('gastos_hormiga'), isTrue);
+      // Evita incitar a Gemini a repetir el presupuesto/total que ya se muestra arriba
+      expect(ctx.containsKey('presupuesto_usd'), isFalse);
+      expect(ctx.containsKey('total_mes_usd'), isFalse);
     });
 
-    test('refreshBackgroundInsightIfNeeded does not call Gemini when expenses < 3', () async {
+    test('refreshBackgroundInsightIfNeeded purges legacy v1 cache, ignores non-JSON responses, and enforces 24h quota cap', () async {
+      SharedPreferences.setMockInitialValues({
+        'ai_insight_cached_short_v1': 'Consejo corto: Tienes un presupuesto de \$600...',
+        'ai_insight_last_fetch_date_v1': '2026-11-15',
+      });
+      final prefs = await SharedPreferences.getInstance();
       final fakeGemini = FakeGeminiServiceForInsight();
-      final prefs = await SharedPreferences.getInstance();
-
-      final res = await AiInsightService.refreshBackgroundInsightIfNeeded(
-        gastos: _buildSampleGastos(2),
-        selectedYear: 2026,
-        selectedMonth: 11,
-        totalMesUsd: 40.0,
-        presupuestoUsd: 200.0,
-        metaAhorroUsd: 0.0,
-        currentDate: DateTime(2026, 11, 15),
-        geminiService: fakeGemini,
-        prefsInstance: prefs,
-      );
-
-      expect(res, isNull);
-      expect(fakeGemini.callCount, 0);
-    });
-
-    test('refreshBackgroundInsightIfNeeded calls Gemini once per day and caches for 24h / unchanged signature', () async {
-      final fakeGemini = FakeGeminiServiceForInsight()
-        ..nextRawText =
-            '{"resumen": "Agrupa tus compras de Farmatodo para estirar tu presupuesto.", "detalle": "• **Farmatodo:** 2 visitas por **\$40,00**."}';
-      final prefs = await SharedPreferences.getInstance();
       final gastos3 = _buildSampleGastos(3);
 
-      // 1. Primera llamada con 3 gastos en el mes actual -> llama a Gemini y guarda en caché
-      final first = await AiInsightService.refreshBackgroundInsightIfNeeded(
+      // 1. Si el Worker viejo devuelve texto plano sin JSON, NO lo guarda en caché v2 y purga v1
+      fakeGemini.nextRawText = 'Consejo corto: Tienes un presupuesto de \$600 y has gastado \$306.51.';
+      final rejected = await AiInsightService.refreshBackgroundInsightIfNeeded(
         gastos: gastos3,
         selectedYear: 2026,
         selectedMonth: 11,
@@ -148,14 +235,31 @@ void main() {
         geminiService: fakeGemini,
         prefsInstance: prefs,
       );
-
-      expect(first, isNotNull);
-      expect(first!['resumen'], 'Agrupa tus compras de Farmatodo para estirar tu presupuesto.');
+      expect(rejected, isNull);
+      expect(prefs.containsKey('ai_insight_cached_short_v1'), isFalse);
+      expect(prefs.containsKey(AiInsightService.prefTextKey), isFalse);
       expect(fakeGemini.callCount, 1);
+
+      // 2. Respuesta JSON válida -> se guarda en caché v2
+      fakeGemini.nextRawText =
+          '{"consejo": "El **Café Molido** te salió un **25%** más barato en **Unicasa** que en **Farmatodo** esta semana."}';
+      final valid = await AiInsightService.refreshBackgroundInsightIfNeeded(
+        gastos: gastos3,
+        selectedYear: 2026,
+        selectedMonth: 11,
+        totalMesUsd: 60.0,
+        presupuestoUsd: 200.0,
+        metaAhorroUsd: 0.0,
+        currentDate: DateTime(2026, 11, 15),
+        geminiService: fakeGemini,
+        prefsInstance: prefs,
+      );
+      expect(valid, contains('Unicasa'));
+      expect(fakeGemini.callCount, 2);
       expect(fakeGemini.lastModo, 'insight_inicio');
 
-      // 2. Segunda llamada el mismo día (incluso con 4 gastos) -> respeta tope de 1 vez por día (24h)
-      final secondSameDay = await AiInsightService.refreshBackgroundInsightIfNeeded(
+      // 3. Misma fecha (aunque suban los gastos a 4) -> respeta tope de 1 llamada por día
+      final sameDayCached = await AiInsightService.refreshBackgroundInsightIfNeeded(
         gastos: _buildSampleGastos(4),
         selectedYear: 2026,
         selectedMonth: 11,
@@ -166,30 +270,13 @@ void main() {
         geminiService: fakeGemini,
         prefsInstance: prefs,
       );
+      expect(sameDayCached, valid);
+      expect(fakeGemini.callCount, 2);
 
-      expect(secondSameDay!['resumen'], first['resumen']);
-      expect(fakeGemini.callCount, 1);
-
-      // 3. Llamada al día siguiente pero SIN cambios en los 3 gastos -> no gasta cuota
-      final nextDaySameGastos = await AiInsightService.refreshBackgroundInsightIfNeeded(
-        gastos: gastos3,
-        selectedYear: 2026,
-        selectedMonth: 11,
-        totalMesUsd: 60.0,
-        presupuestoUsd: 200.0,
-        metaAhorroUsd: 0.0,
-        currentDate: DateTime(2026, 11, 16),
-        geminiService: fakeGemini,
-        prefsInstance: prefs,
-      );
-
-      expect(nextDaySameGastos!['resumen'], first['resumen']);
-      expect(fakeGemini.callCount, 1);
-
-      // 4. Llamada al día siguiente CON un gasto nuevo (4 gastos) -> refresca el consejo
+      // 4. Día siguiente con gastos nuevos -> refresca
       fakeGemini.nextRawText =
-          '{"resumen": "Nuevo consejo del día 16 tras tu cuarta compra.", "detalle": "Detalle actualizado del día 16."}';
-      final nextDayNewGastos = await AiInsightService.refreshBackgroundInsightIfNeeded(
+          '{"consejo": "Buen control en **Alimentación**: llevas **20%** menos que el mes pasado a esta misma fecha."}';
+      final nextDayUpdated = await AiInsightService.refreshBackgroundInsightIfNeeded(
         gastos: _buildSampleGastos(4),
         selectedYear: 2026,
         selectedMonth: 11,
@@ -200,9 +287,8 @@ void main() {
         geminiService: fakeGemini,
         prefsInstance: prefs,
       );
-
-      expect(nextDayNewGastos!['resumen'], 'Nuevo consejo del día 16 tras tu cuarta compra.');
-      expect(fakeGemini.callCount, 2);
+      expect(nextDayUpdated, contains('20%'));
+      expect(fakeGemini.callCount, 3);
     });
   });
 }

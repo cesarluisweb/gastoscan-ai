@@ -42,8 +42,8 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  String? _cachedGeminiShort;
-  String? _cachedGeminiDetailed;
+  String? _cachedGeminiText;
+  AiHiddenSignals? _hiddenSignals;
   String? _lastEvaluatedInsightSignature;
 
   static double _convertBudgetToLens(
@@ -110,7 +110,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
       settings,
     );
 
-    final result = await AiInsightService.refreshBackgroundInsightIfNeeded(
+    final signals = await AiInsightService.computeHiddenSignals(
+      gastos: gastoProvider.gastos,
+      selectedYear: gastoProvider.selectedYear,
+      selectedMonth: gastoProvider.selectedMonth,
+      totalMesUsd: gastoProvider.totalMesUsd,
+      totalMesUsdt: gastoProvider.totalMesUsdt,
+    );
+
+    if (mounted) {
+      setState(() {
+        _hiddenSignals = signals;
+      });
+    }
+
+    final geminiText = await AiInsightService.refreshBackgroundInsightIfNeeded(
       gastos: gastoProvider.gastos,
       selectedYear: gastoProvider.selectedYear,
       selectedMonth: gastoProvider.selectedMonth,
@@ -118,15 +132,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       presupuestoUsd: budgetUsd,
       metaAhorroUsd: metaUsd,
       monedaLente: settings.monedaPrincipal,
+      hiddenSignals: signals,
     );
 
     if (!mounted) return;
-    final newShort = result?['resumen'];
-    final newDetailed = result?['detalle'];
-    if (newShort != _cachedGeminiShort || newDetailed != _cachedGeminiDetailed) {
+    if (geminiText != _cachedGeminiText) {
       setState(() {
-        _cachedGeminiShort = newShort;
-        _cachedGeminiDetailed = newDetailed;
+        _cachedGeminiText = geminiText;
       });
     }
   }
@@ -398,8 +410,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   mes: gastoProvider.selectedMonth,
                   anio: gastoProvider.selectedYear,
                   onChatTap: widget.onNavigateToChat,
-                  cachedGeminiShort: _cachedGeminiShort,
-                  cachedGeminiDetailed: _cachedGeminiDetailed,
+                  cachedGeminiText: _cachedGeminiText,
+                  hiddenSignals: _hiddenSignals,
                 ),
                 const SizedBox(height: 16),
                 if (gastoProvider.totalesPorCategoria.isNotEmpty ||

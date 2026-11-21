@@ -8,6 +8,7 @@ class ChatProvider with ChangeNotifier {
 
   final List<Map<String, dynamic>> _messages = [];
   bool _isLoading = false;
+  String? _pendingInsightDeepDive;
 
   ChatProvider({List<Map<String, dynamic>>? initialMessages}) {
     if (initialMessages != null && initialMessages.isNotEmpty) {
@@ -20,6 +21,7 @@ class ChatProvider with ChangeNotifier {
   List<Map<String, dynamic>> get messages => List.unmodifiable(_messages);
   bool get isLoading => _isLoading;
   bool get hasUserMessages => _messages.any((m) => m['role'] == 'user');
+  String? get pendingInsightDeepDive => _pendingInsightDeepDive;
 
   void _resetToInitialGreeting() {
     _messages.clear();
@@ -34,10 +36,7 @@ class ChatProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Presenta en el chat la versión detallada del consejo mostrado en la tarjeta de Inicio.
-  /// Si la conversación aún no tiene mensajes del usuario (solo el saludo inicial),
-  /// reemplaza el saludo genérico por el consejo detallado; si ya hay conversación activa,
-  /// lo añade al final sin duplicarlo.
+  /// Presenta en el chat un consejo como mensaje del asistente (sin disparar llamada en vivo).
   void presentDetailedInsight(String detailedInsight) {
     final clean = detailedInsight.trim();
     if (clean.isEmpty) return;
@@ -62,6 +61,43 @@ class ChatProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Inicia una profundización en vivo desde el botón `Consultar ->` de Inicio:
+  /// muestra primero el consejo de Inicio como burbuja del Asistente (sin burbuja
+  /// artificial del usuario) y marca `_pendingInsightDeepDive` para que `ChatScreen`
+  /// consulte a Gemini en vivo con todo el contexto financiero.
+  void startInsightDeepDive(String insightText) {
+    final clean = insightText.trim();
+    if (clean.isEmpty) return;
+
+    final introBubble = 'Sobre el análisis de hoy:\n\n$clean';
+    final alreadyShownLast = _messages.isNotEmpty && _messages.last['text'] == introBubble;
+    if (!alreadyShownLast) {
+      if (!hasUserMessages &&
+          _messages.length == 1 &&
+          _messages.first['text'] == initialGreeting) {
+        _messages[0] = {
+          'role': 'assistant',
+          'text': introBubble,
+        };
+      } else {
+        _messages.add({
+          'role': 'assistant',
+          'text': introBubble,
+        });
+      }
+    }
+
+    _pendingInsightDeepDive = clean;
+    notifyListeners();
+  }
+
+  /// Consume el consejo pendiente de profundización en vivo (solo se dispara una vez).
+  String? consumePendingInsightDeepDive() {
+    final pending = _pendingInsightDeepDive;
+    _pendingInsightDeepDive = null;
+    return pending;
+  }
+
   void setLoading(bool loading) {
     if (_isLoading != loading) {
       _isLoading = loading;
@@ -72,6 +108,7 @@ class ChatProvider with ChangeNotifier {
   void clearConversation() {
     _resetToInitialGreeting();
     _isLoading = false;
+    _pendingInsightDeepDive = null;
     notifyListeners();
   }
 }

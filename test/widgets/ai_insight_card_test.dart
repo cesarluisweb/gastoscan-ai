@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:gastoscan_ai/data/models/gasto_model.dart';
 import 'package:gastoscan_ai/providers/chat_provider.dart';
+import 'package:gastoscan_ai/services/ai_insight_service.dart';
 import 'package:gastoscan_ai/ui/widgets/ai_insight_card.dart';
 
 void main() {
@@ -279,7 +280,7 @@ void main() {
       expect(find.textContaining('**'), findsNothing);
     });
 
-    testWidgets('shows single cached Gemini insight with formatted bolds and opens detailed insight in ChatProvider on Consultar tap (AI-08)', (tester) async {
+    testWidgets('shows single cached Gemini insight and triggers live deep-dive in ChatProvider on Consultar tap (AI-08)', (tester) async {
       final chatProvider = ChatProvider();
       bool navigatedToChat = false;
 
@@ -308,8 +309,7 @@ void main() {
                 currentDate: DateTime(2026, 11, 10),
                 mes: 11,
                 anio: 2026,
-                cachedGeminiShort: 'Concentraste **3 compras** en **Farmatodo** por **\$ 40,00** esta semana.',
-                cachedGeminiDetailed: '• **Hallazgo en Salud:** Hiciste 3 compras en **Farmatodo** por **\$ 40,00**.\n• ¿Quieres revisar qué medicamentos te salieron más económicos?',
+                cachedGeminiText: 'Concentraste **3 compras** en **Farmatodo** por **\$ 40,00** esta semana; comparar precios por unidad te ayudará a ahorrar.',
                 onChatTap: () {
                   navigatedToChat = true;
                 },
@@ -320,20 +320,73 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Muestra UNA sola idea (el consejo de Gemini), sin pegarle el ritmo diario encima ni asteriscos literales
-      expect(find.textContaining('Concentraste 3 compras en Farmatodo por \$ 40,00 esta semana.'), findsOneWidget);
-      expect(find.textContaining('Puedes gastar hasta'), findsNothing);
+      // Muestra el consejo de Gemini con negritas reales, sin asteriscos literales ni repetir SummaryCard
+      expect(find.textContaining('Concentraste 3 compras en Farmatodo por \$ 40,00'), findsOneWidget);
       expect(find.textContaining('**'), findsNothing);
 
-      // Al tocar Consultar -> debe poblar ChatProvider con el consejo detallado (incluyendo ritmo diario) y abrir el chat
+      // Al tocar Consultar -> debe poner la burbuja del Asistente y dejar listo el deep-dive en vivo
       await tester.tap(find.byKey(const Key('ai_insight_card_consultar_btn')));
       await tester.pumpAndSettle();
 
       expect(navigatedToChat, isTrue);
       expect(chatProvider.messages.length, 1);
       expect(chatProvider.messages.first['role'], 'assistant');
-      expect(chatProvider.messages.first['text'], contains('Ritmo diario disponible:'));
-      expect(chatProvider.messages.first['text'], contains('Hallazgo en Salud:'));
+      expect(chatProvider.messages.first['text'], contains('Sobre el análisis de hoy:'));
+      expect(chatProvider.hasUserMessages, isFalse);
+      expect(chatProvider.pendingInsightDeepDive, contains('Farmatodo'));
+    });
+
+    testWidgets('ignores malformed cached prefix and shows hidden price difference insight locally (AI-08)', (tester) async {
+      final gasto = GastoModel(
+        id: 1,
+        uuid: 'uuid-price',
+        fecha: '2026-11-12',
+        comercio: 'Farmatodo',
+        moneda: 'USD',
+        totalOriginal: 450,
+        totalUsd: 450,
+        categoria: 'Alimentación',
+        creadoEn: '2026-11-12T10:00:00',
+      );
+
+      const hiddenSignals = AiHiddenSignals(
+        priceFindings: [
+          {
+            'tipo': 'otro_comercio_mas_barato',
+            'producto': 'Café Molido',
+            'comercio_reciente': 'Farmatodo',
+            'precio_reciente_usd': 4.50,
+            'comercio_mas_barato': 'Unicasa',
+            'precio_mas_barato_usd': 3.60,
+            'diferencia_pct': 25,
+          },
+        ],
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AiInsightCard(
+              gastos: [gasto],
+              presupuestoGeneral: 300.0,
+              totalesPorCategoria: const {'Alimentación': 45.0},
+              totalGastadoMes: 45.0,
+              currentDate: DateTime(2026, 11, 12),
+              mes: 11,
+              anio: 2026,
+              cachedGeminiText: 'Consejo corto: Tienes un presupuesto de \$300 y has gastado \$45.',
+              hiddenSignals: hiddenSignals,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Consejo corto:'), findsNothing);
+      expect(find.textContaining('Pagaste \$ 4,50 por Café Molido en Farmatodo'), findsOneWidget);
+      expect(find.textContaining('25%'), findsOneWidget);
+      expect(find.textContaining('Unicasa'), findsOneWidget);
+      expect(find.textContaining('**'), findsNothing);
     });
 
     testWidgets('displays single curated insight on even days without mixing daily pace (AI-08)', (tester) async {

@@ -19,8 +19,8 @@ class AiInsightCard extends StatelessWidget {
   final int? anio;
   final VoidCallback? onChatTap;
   final DateTime? currentDate;
-  final String? cachedGeminiShort;
-  final String? cachedGeminiDetailed;
+  final String? cachedGeminiText;
+  final AiHiddenSignals? hiddenSignals;
   final ValueChanged<AiDashboardInsight>? onConsultInsight;
 
   const AiInsightCard({
@@ -37,8 +37,8 @@ class AiInsightCard extends StatelessWidget {
     this.anio,
     this.onChatTap,
     this.currentDate,
-    this.cachedGeminiShort,
-    this.cachedGeminiDetailed,
+    this.cachedGeminiText,
+    this.hiddenSignals,
     this.onConsultInsight,
   }) : super(key: key);
 
@@ -55,8 +55,8 @@ class AiInsightCard extends StatelessWidget {
       mes: mes,
       anio: anio,
       currentDate: currentDate,
-      cachedGeminiShort: cachedGeminiShort,
-      cachedGeminiDetailed: cachedGeminiDetailed,
+      cachedGeminiText: cachedGeminiText,
+      hiddenSignals: hiddenSignals,
     );
   }
 
@@ -64,13 +64,13 @@ class AiInsightCard extends StatelessWidget {
     onConsultInsight?.call(insight);
 
     final providerFromTree = Provider.of<ChatProvider?>(context, listen: false);
-    providerFromTree?.presentDetailedInsight(insight.detailedText);
+    providerFromTree?.startInsightDeepDive(insight.text);
 
     if (onChatTap != null) {
       onChatTap!();
     } else {
       final fallbackProvider = providerFromTree ??
-          (ChatProvider()..presentDetailedInsight(insight.detailedText));
+          (ChatProvider()..startInsightDeepDive(insight.text));
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -217,10 +217,10 @@ class AiInsightCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          // Cuerpo limpio a ancho completo con negritas reales en cifras y datos clave
+          // Cuerpo limpio a ancho completo (2 a 4 líneas útiles con negritas reales)
           SizedBox(
             width: double.infinity,
-            child: buildFormattedText(insight.shortText),
+            child: buildFormattedText(insight.text),
           ),
         ],
       ),

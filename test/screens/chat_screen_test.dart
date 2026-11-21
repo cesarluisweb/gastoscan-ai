@@ -55,6 +55,19 @@ class FakeDatabaseHelper extends DatabaseHelper {
 
   @override
   Future<List<ShoppingItemModel>> getAllShoppingItems() async => List.from(items);
+
+  @override
+  Future<List<GastoModel>> getGastosByMonth(int year, int month) async => const [];
+
+  @override
+  Future<Map<String, PriceHistory>> findPriceHistory(
+    List<String> descripcionesNormalizadas, {
+    int? excludeGastoId,
+    String? comercioActual,
+    int diasVentana = 60,
+    DateTime? referenceDate,
+  }) async =>
+      const {};
 }
 
 class FakeGastoProvider extends GastoProvider {
@@ -703,6 +716,27 @@ void main() {
       await tester.pumpAndSettle();
       final eightLinesHeight = tester.getSize(inputFinder).height;
       expect(eightLinesHeight, closeTo(fiveLinesHeight, 1.0));
+    });
+
+    testWidgets('auto-runs live deep-dive when opened from Dashboard Consultar without artificial user bubble (AI-08)', (tester) async {
+      fakeGeminiService.customResponse = {
+        'text': 'Aquí tienes el detalle en vivo: en **Unicasa** pagaste **\$ 3,60** frente a **\$ 4,50** en **Farmatodo**.',
+      };
+
+      final chatProvider = ChatProvider()
+        ..startInsightDeepDive('Pagaste **\$ 4,50** por **Café Molido** en **Farmatodo**, un **25%** más que en **Unicasa**.');
+
+      await tester.pumpWidget(createWidgetUnderTest(chatProvider: chatProvider));
+      await tester.pumpAndSettle();
+
+      expect(fakeGeminiService.callCount, 1);
+      expect(chatProvider.pendingInsightDeepDive, isNull);
+      expect(chatProvider.hasUserMessages, isFalse);
+      expect(chatProvider.messages.length, 2);
+      expect(chatProvider.messages.first['text'], contains('Sobre el análisis de hoy:'));
+      expect(chatProvider.messages.last['text'], contains('Aquí tienes el detalle en vivo'));
+      expect(find.textContaining('Aquí tienes el detalle en vivo'), findsOneWidget);
+      expect(find.textContaining('**'), findsNothing);
     });
   });
 }

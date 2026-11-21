@@ -14,6 +14,7 @@ import '../../data/models/shopping_item_model.dart';
 import '../../data/models/gemini_extraction_result.dart';
 import '../../providers/scan_queue_provider.dart';
 import '../../providers/chat_provider.dart';
+import '../../services/ai_insight_service.dart';
 import '../widgets/voice_expense_sheet.dart';
 import 'review_expense_screen.dart';
 
@@ -108,8 +109,108 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _scrollToBottom();
+        _maybeTriggerPendingInsightDeepDive();
       }
     });
+  }
+
+  void _maybeTriggerPendingInsightDeepDive() {
+    if (!mounted) return;
+    final chatProvider = _getChatProvider(context);
+    if (chatProvider.isLoading) return;
+    final pendingInsight = chatProvider.consumePendingInsightDeepDive();
+    if (pendingInsight != null && pendingInsight.isNotEmpty) {
+      _runInsightDeepDive(chatProvider, pendingInsight);
+    }
+  }
+
+  Future<void> _runInsightDeepDive(
+    ChatProvider chatProvider,
+    String insightText,
+  ) async {
+    chatProvider.setLoading(true);
+    _scrollToBottom();
+
+    try {
+      final gastoProvider = Provider.of<GastoProvider?>(context, listen: false);
+      final settings = Provider.of<SettingsProvider?>(context, listen: false);
+
+      List<ShoppingItemModel> shoppingItems = const [];
+      try {
+        shoppingItems = await _dbHelper.getAllShoppingItems();
+      } catch (e) {
+        debugPrint('ChatScreen: Lista de compras omitida en profundización: $e');
+      }
+
+      final Map<String, dynamic> contextData = (gastoProvider != null && settings != null)
+          ? _buildSemanticChatContext(
+              gastoProvider: gastoProvider,
+              settings: settings,
+              shoppingItems: shoppingItems,
+            )
+          : <String, dynamic>{
+              'fecha_hoy': DateTime.now().toIso8601String().substring(0, 10),
+            };
+
+      if (gastoProvider != null) {
+        final hiddenSignals = await AiInsightService.computeHiddenSignals(
+          gastos: gastoProvider.gastos,
+          selectedYear: gastoProvider.selectedYear,
+          selectedMonth: gastoProvider.selectedMonth,
+          totalMesUsd: gastoProvider.totalMesUsd,
+          totalMesUsdt: gastoProvider.totalMesUsdt,
+          dbHelper: _dbHelper,
+        );
+        if (hiddenSignals.hasAnySignal) {
+          contextData.addAll(hiddenSignals.toJson());
+        }
+      }
+
+      final allMsgs = chatProvider.messages;
+      final recentMessages = allMsgs.length > 4
+          ? allMsgs.sublist(allMsgs.length - 4)
+          : allMsgs;
+      final apiMessages = <Map<String, String>>[
+        ...recentMessages.map((m) => {
+              'role': m['role']?.toString() ?? 'user',
+              'text': m['text']?.toString() ?? '',
+            }),
+        {
+          'role': 'user',
+          'text':
+              'Profundiza en este análisis que acabas de mostrarme en Inicio: "$insightText". '
+              'Explica el detalle con mis cifras reales del contexto (comercios, productos, fechas o comparativas), '
+              'dame 1 o 2 recomendaciones concretas y cierra con una pregunta abierta para seguir conversando. '
+              'No repitas el texto anterior palabra por palabra ni menciones recortar el IVA. '
+              'Usa **negrita** solo en montos, porcentajes, productos o comercios clave.',
+        },
+      ];
+
+      final responseMap = await _geminiService.chatWithAnalyst(
+        messages: apiMessages,
+        contextData: contextData,
+      );
+
+      if (!mounted) return;
+
+      final String textResponse = (responseMap['text'] ?? '').toString().trim();
+      if (textResponse.isNotEmpty) {
+        chatProvider.addMessage({'role': 'assistant', 'text': textResponse});
+      }
+    } catch (e) {
+      debugPrint('ChatScreen: Error ampliando análisis en vivo: $e');
+      if (!mounted) return;
+      chatProvider.addMessage({
+        'role': 'assistant',
+        'text':
+            'No pude ampliar el análisis en vivo en este momento. Cuando tengas conexión, pregúntame lo que quieras sobre este punto.',
+      });
+    } finally {
+      chatProvider.setLoading(false);
+      if (mounted) {
+        _scrollToBottom();
+      }
+    }
   }
 
   double _effectiveBottomInset(BuildContext context) {

@@ -10,91 +10,109 @@ import '../data/models/gasto_model.dart';
 import '../domain/finance/savings_health_calculator.dart';
 import '../domain/finance/savings_health_models.dart';
 
-/// Modelo inmutable que representa el consejo mostrado en la tarjeta de Inicio
-/// (`shortText`) y su versión ampliada para iniciar o continuar en el Chat (`detailedText`).
+/// Señales financieras ocultas precalculadas desde los datos locales y SQLite
+/// que no se ven a simple vista en `SummaryCard` ni en `CategoryChart`.
+class AiHiddenSignals {
+  final Map<String, dynamic>? prevMonthComparison;
+  final List<Map<String, dynamic>> priceFindings;
+  final Map<String, dynamic>? antExpenses;
+  final Map<String, dynamic>? exchangeBenefit;
+
+  const AiHiddenSignals({
+    this.prevMonthComparison,
+    this.priceFindings = const [],
+    this.antExpenses,
+    this.exchangeBenefit,
+  });
+
+  bool get hasAnySignal =>
+      prevMonthComparison != null ||
+      priceFindings.isNotEmpty ||
+      antExpenses != null ||
+      exchangeBenefit != null;
+
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{};
+    if (prevMonthComparison != null) {
+      map['comparativa_mes_anterior'] = prevMonthComparison;
+    }
+    if (priceFindings.isNotEmpty) {
+      map['diferencias_precios'] = priceFindings;
+    }
+    if (antExpenses != null) {
+      map['gastos_hormiga'] = antExpenses;
+    }
+    if (exchangeBenefit != null) {
+      map['rendimiento_cambiario'] = exchangeBenefit;
+    }
+    return map;
+  }
+}
+
+/// Modelo inmutable que representa el consejo único mostrado en la tarjeta de Inicio.
 class AiDashboardInsight {
-  final String shortText;
-  final String detailedText;
+  final String text;
   final String source;
 
   const AiDashboardInsight({
-    required this.shortText,
-    required this.detailedText,
+    required this.text,
     this.source = 'curated',
   });
 }
 
-/// Servicio encargado de resolver el consejo único de `AiInsightCard` (combinando
-/// ritmo diario determinista, heurísticas locales, banco de valor y generación
-/// periódica en segundo plano con Gemini protegida por caché de 24 horas).
+/// Servicio encargado de:
+/// 1. Precalcular señales ocultas de alto valor (comparativa vs. mes pasado,
+///    diferencias de precios entre comercios, gastos hormiga y brecha BCV/USDT).
+/// 2. Generar en segundo plano (máx. 1 vez cada 24 h con >= 3 gastos) un consejo
+///    personalizado con Gemini en formato JSON estricto (`{"consejo": "..."}`).
+/// 3. Proveer un respaldo local inteligente cuando no hay conexión o aún no hay caché IA.
 class AiInsightService {
-  static const String prefShortTextKey = 'ai_insight_cached_short_v1';
-  static const String prefDetailedTextKey = 'ai_insight_cached_detailed_v1';
-  static const String prefLastFetchDateKey = 'ai_insight_last_fetch_date_v1';
-  static const String prefSignatureKey = 'ai_insight_signature_v1';
-  static const String prefYearMonthKey = 'ai_insight_year_month_v1';
+  // Claves vigentes v2 (purgan la caché v1 donde un Worker viejo pudo guardar texto plano)
+  static const String prefTextKey = 'ai_insight_cached_text_v2';
+  static const String prefLastFetchDateKey = 'ai_insight_last_fetch_date_v2';
+  static const String prefSignatureKey = 'ai_insight_signature_v2';
+  static const String prefYearMonthKey = 'ai_insight_year_month_v2';
+
+  static const List<String> _legacyV1Keys = [
+    'ai_insight_cached_short_v1',
+    'ai_insight_cached_detailed_v1',
+    'ai_insight_last_fetch_date_v1',
+    'ai_insight_signature_v1',
+    'ai_insight_year_month_v1',
+  ];
 
   /// Mínimo de gastos en el mes actual para disparar generación en segundo plano con Gemini.
   static const int minExpensesForBackgroundGemini = 3;
 
   static bool _isFetchingBackground = false;
 
-  /// Banco curado de consejos de valor real sobre las capacidades de Rinde Más.
+  /// Banco curado de consejos sustanciosos (3 líneas) para usuarios con poco historial
+  /// o cuando aún no existen señales ocultas suficientes en SQLite.
   static const List<AiDashboardInsight> kCuratedValueInsights = [
     AiDashboardInsight(
       source: 'curated',
-      shortText:
-          'Comprar en el sitio correcto estira tu presupuesto: Rinde Más recuerda tus compras y te avisa **dónde te salió más barato** cada producto.',
-      detailedText:
-          '**Comprar en el sitio correcto te ayuda a estirar el presupuesto.**\n\n'
-          'Cada vez que registras una compra con sus artículos en **Rinde Más**, guardo el precio unitario y el comercio:\n'
-          '• **Comparador en vivo:** Cuando vuelvas a comprar ese mismo producto en los próximos **60 días**, verás debajo del artículo si subió o bajó de precio y en qué local te salió más económico.\n'
-          '• **Consulta histórica:** También puedes preguntarme aquí en el chat dónde compraste más barato cualquier producto de tus facturas.\n\n'
-          '¿Qué producto compras con frecuencia para revisar su último precio registrado?',
+      text:
+          'Comprar en el sitio correcto estira tu presupuesto sin sacrificar calidad. Cada factura que registras alimenta tu **comparador de precios** para avisarte **dónde te salió más barato** cada producto en los últimos **60 días**.',
     ),
     AiDashboardInsight(
       source: 'curated',
-      shortText:
-          'Indicar cómo pagaste (**Bs. a BCV**, **USDT** o **Efectivo**) te muestra cuánto rindió tu dinero frente a la **brecha cambiaria**.',
-      detailedText:
-          '**Aprovecha el método de liquidación a tu favor.**\n\n'
-          'En Venezuela no cuesta igual pagar un precio en dólares con **Bolívares a tasa BCV** que con **divisas en efectivo**:\n'
-          '• Al seleccionar **Bs. a BCV**, **Bs. a USDT** o **Efectivo** cuando guardas un gasto, Rinde Más calcula en la pestaña **Análisis** tu radiografía cambiaria exacta.\n'
-          '• Así puedes ver cuántos dólares reales te costó el mes a tasa de reposición.\n\n'
-          '¿Quieres que revisemos cómo se dividen tus gastos de este mes según la moneda y forma de pago?',
+      text:
+          'En Venezuela no cuesta igual pagar en efectivo que en bolívares a tasa oficial. Al marcar **Bs. a BCV**, **USDT** o **Efectivo** en cada compra, podrás ver cuánto te rindió realmente el mes frente a la **brecha cambiaria**.',
     ),
     AiDashboardInsight(
       source: 'curated',
-      shortText:
-          'El papel térmico se borra en pocos días. Tómale una foto rápida a tus facturas y Rinde Más extraerá **cada producto por ti**.',
-      detailedText:
-          '**Que no se te borren las facturas de papel térmico.**\n\n'
-          'La tinta de las facturas fiscales se desvanece rápido con el calor de la cartera o el bolsillo:\n'
-          '• Con el botón **+ > Escanear factura**, puedes fotografiar tus comprobantes al instante aunque no tengas internet en el local.\n'
-          '• La cola inteligente los procesa en segundo plano y desglosa cada producto por categoría para alimentar tu comparador de precios.\n\n'
-          '¿Tienes alguna compra de hoy que quieras dictarme o registrar de una vez por aquí?',
+      text:
+          'La tinta de las facturas térmicas se borra en pocos días y pierdes la referencia de precios. Tómales una foto rápida al salir del local, incluso sin internet, para guardar el detalle de **cada producto** y detectar subidas a tiempo.',
     ),
     AiDashboardInsight(
       source: 'curated',
-      shortText:
-          'Los gastos pequeños del día a día suman rápido. Dictarlos **por voz en 5 segundos** te revela a dónde se va tu efectivo.',
-      detailedText:
-          '**Detecta los gastos hormiga antes de fin de mes.**\n\n'
-          'Un café, un snack, un pasaje o un pago móvil rápido parecen montos menores por separado, pero juntos pueden superar el **15%** de tu presupuesto mensual:\n'
-          '• Puedes dictarme compras rápidas tocando el micrófono (por ejemplo: *«Gasté 150 bolívares en panadería»*) sin llenar formularios.\n'
-          '• Cuando acumules varios registros, pregúntame qué gastos pequeños están sumando más de lo que parece.\n\n'
-          '¿Quieres que analicemos tus compras pequeñas y frecuentes de este mes?',
+      text:
+          'Los pagos pequeños del día a día suelen pasar desapercibidos hasta que suman más del **15%** del mes. Dictarlos **por voz en 5 segundos** te permite descubrir qué compras frecuentes están fugando tu efectivo.',
     ),
     AiDashboardInsight(
       source: 'curated',
-      shortText:
-          'Arma tu **lista de compras** antes de salir y los productos se marcarán como comprados automáticamente al registrar tu factura.',
-      detailedText:
-          '**Planifica tu mercado y evita compras impulsivas.**\n\n'
-          'Ir al supermercado o a la farmacia con una lista clara evita olvidos y gastos fuera de presupuesto:\n'
-          '• Puedes pedirme aquí mismo en el chat: *«Anota café, harina y queso en la lista de compras»*.\n'
-          '• Al escanear o guardar tu factura, Rinde Más tachará automáticamente de tu lista los productos que coincidan.\n\n'
-          '¿Qué productos quieres que anote en tu lista de compras para tu próxima salida?',
+      text:
+          'Salir al mercado con tu **lista de compras** evita gastos impulsivos y viajes extra. Puedes dictármela en el chat y Rinde Más tachará automáticamente cada artículo cuando escanees o registres la factura.',
     ),
   ];
 
@@ -105,7 +123,7 @@ class AiInsightService {
     return normalizedUtc.difference(startOfYearUtc).inDays.abs();
   }
 
-  /// Selecciona de forma determinista el consejo curado del día (sin cambiar durante el mismo día).
+  /// Selecciona de forma determinista el consejo curado del día.
   static AiDashboardInsight getCuratedInsightForDate(DateTime date) {
     final dayOfYear = _dayOfYearUtc(date);
     final index = dayOfYear % kCuratedValueInsights.length;
@@ -124,38 +142,318 @@ class AiInsightService {
     return '${year}_${month}_${gastos.length}_${totalCents}_$latestUuid';
   }
 
-  /// Construye un resumen compacto de las categorías principales del mes en el lente activo.
-  static String _buildTopCategoriesSummary(
-    Map<String, double> totalesPorCategoria,
-    double totalGastadoMes,
-    String moneda,
-  ) {
-    if (totalesPorCategoria.isEmpty || totalGastadoMes <= 0) return '';
-    final entries = totalesPorCategoria.entries.where((e) => e.value > 0).toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-    if (entries.isEmpty) return '';
-
-    final topEntries = entries.take(3).map((e) {
-      final pct = ((e.value / totalGastadoMes) * 100).round().clamp(1, 100);
-      final formatted = CurrencyFormatter.formatAmount(e.value, moneda);
-      return '• **${e.key}:** $formatted ($pct%)';
-    }).join('\n');
-
-    return '\n\n**Distribución principal de tus gastos:**\n$topEntries';
+  /// Extrae el día del mes de una fecha ISO (`YYYY-MM-DD...`).
+  static int _extractDay(String fecha) {
+    if (fecha.length >= 10) {
+      final parsed = int.tryParse(fecha.substring(8, 10));
+      if (parsed != null && parsed >= 1 && parsed <= 31) return parsed;
+    }
+    return 1;
   }
 
-  /// Evalúa si existe un hallazgo local importante sobre los datos del mes
-  /// (categoría con presupuesto propio >= 80% o categoría que concentra >= 50% en >= 3 compras).
-  static AiDashboardInsight? _resolveLocalDataHeuristic({
+  /// Calcula las 4 señales financieras ocultas a partir de los gastos del mes actual
+  /// y consultas ligeras a SQLite (con tolerancia total a entornos de test sin DB).
+  static Future<AiHiddenSignals> computeHiddenSignals({
     required List<GastoModel> gastos,
+    required int selectedYear,
+    required int selectedMonth,
+    required double totalMesUsd,
+    required double totalMesUsdt,
+    DateTime? currentDate,
+    DatabaseHelper? dbHelper,
+  }) async {
+    final now = currentDate ?? DateTime.now();
+    final isCurrentMonth = selectedYear == now.year && selectedMonth == now.month;
+    if (gastos.isEmpty) {
+      return const AiHiddenSignals();
+    }
+
+    // 1. Señal en memoria: Gastos hormiga (compras individuales < $10 USD)
+    Map<String, dynamic>? antExpenses;
+    {
+      int smallCount = 0;
+      double smallTotalUsd = 0.0;
+      final Map<String, int> smallCommerceCounts = {};
+
+      for (final g in gastos) {
+        final usd = g.totalUsd / 100.0;
+        if (usd <= 0 || usd >= 10.0) continue;
+
+        // Ignorar si todos los ítems del gasto fuesen estrictamente impuestos
+        final hasNonTaxItem = g.items.isEmpty ||
+            g.items.any((it) => !DatabaseHelper.isTaxItem(it.descripcion));
+        if (!hasNonTaxItem) continue;
+
+        smallCount++;
+        smallTotalUsd += usd;
+        final com = DatabaseHelper.formatCommerceDisplay(g.comercio);
+        if (com.isNotEmpty && com.toLowerCase() != 'varios') {
+          smallCommerceCounts[com] = (smallCommerceCounts[com] ?? 0) + 1;
+        }
+      }
+
+      if (smallCount >= 4 && totalMesUsd > 0) {
+        final pct = ((smallTotalUsd / totalMesUsd) * 100).round().clamp(1, 100);
+        if (pct >= 12 || smallTotalUsd >= 20.0) {
+          String? topSmallCommerce;
+          int topSmallVisits = 0;
+          for (final entry in smallCommerceCounts.entries) {
+            if (entry.value > topSmallVisits) {
+              topSmallVisits = entry.value;
+              topSmallCommerce = entry.key;
+            }
+          }
+          antExpenses = {
+            'cantidad_compras': smallCount,
+            'total_usd': double.parse(smallTotalUsd.toStringAsFixed(2)),
+            'porcentaje_del_mes': pct,
+            if (topSmallCommerce != null && topSmallVisits >= 2)
+              'comercio_mas_repetido': topSmallCommerce,
+          };
+        }
+      }
+    }
+
+    // 2. Señal en memoria: Rendimiento cambiario real BCV vs USDT P2P
+    Map<String, dynamic>? exchangeBenefit;
+    if (totalMesUsd > 0 && totalMesUsdt > 0) {
+      final diffUsd = totalMesUsd - totalMesUsdt;
+      final diffPct = ((diffUsd / totalMesUsd) * 100).round();
+      if (diffUsd >= 5.0 && diffPct >= 5) {
+        exchangeBenefit = {
+          'total_usd_bcv': double.parse(totalMesUsd.toStringAsFixed(2)),
+          'total_usdt_p2p': double.parse(totalMesUsdt.toStringAsFixed(2)),
+          'ahorro_brecha_usd': double.parse(diffUsd.toStringAsFixed(2)),
+          'ahorro_brecha_pct': diffPct,
+        };
+      }
+    }
+
+    if (!isCurrentMonth) {
+      return AiHiddenSignals(
+        antExpenses: antExpenses,
+        exchangeBenefit: exchangeBenefit,
+      );
+    }
+
+    final db = dbHelper ?? DatabaseHelper.instance;
+
+    // 3. Señal SQLite: Comparativa vs. mes anterior a la misma altura del mes (días 1..hoy)
+    Map<String, dynamic>? prevMonthComparison;
+    try {
+      final prevYear = selectedMonth == 1 ? selectedYear - 1 : selectedYear;
+      final prevMonth = selectedMonth == 1 ? 12 : selectedMonth - 1;
+      final prevGastosAll = await db.getGastosByMonth(prevYear, prevMonth);
+
+      final prevGastosToDate = prevGastosAll
+          .where((g) => _extractDay(g.fecha) <= now.day)
+          .toList();
+
+      if (prevGastosToDate.isNotEmpty) {
+        final double prevTotalUsd = prevGastosToDate.fold(
+          0.0,
+          (sum, g) => sum + (g.totalUsd / 100.0),
+        );
+
+        final Map<String, double> curByCat = {};
+        for (final g in gastos) {
+          curByCat[g.categoria] = (curByCat[g.categoria] ?? 0.0) + (g.totalUsd / 100.0);
+        }
+        final Map<String, double> prevByCat = {};
+        for (final g in prevGastosToDate) {
+          prevByCat[g.categoria] = (prevByCat[g.categoria] ?? 0.0) + (g.totalUsd / 100.0);
+        }
+
+        Map<String, dynamic>? biggestSpike;
+        int biggestSpikePct = 0;
+        Map<String, dynamic>? biggestSaving;
+        int biggestSavingPct = 0;
+
+        final allCats = <String>{...curByCat.keys, ...prevByCat.keys};
+        for (final cat in allCats) {
+          final curVal = curByCat[cat] ?? 0.0;
+          final prevVal = prevByCat[cat] ?? 0.0;
+          if (prevVal < 10.0) continue;
+
+          final deltaUsd = curVal - prevVal;
+          final deltaPct = ((deltaUsd / prevVal) * 100).round();
+
+          if (deltaPct >= 20 && deltaUsd >= 10.0 && deltaPct > biggestSpikePct) {
+            biggestSpikePct = deltaPct;
+            biggestSpike = {
+              'categoria': cat,
+              'actual_usd': double.parse(curVal.toStringAsFixed(2)),
+              'mes_anterior_usd': double.parse(prevVal.toStringAsFixed(2)),
+              'variacion_pct': deltaPct,
+            };
+          } else if (deltaPct <= -15 && (-deltaUsd) >= 10.0 && (-deltaPct) > biggestSavingPct) {
+            biggestSavingPct = -deltaPct;
+            biggestSaving = {
+              'categoria': cat,
+              'actual_usd': double.parse(curVal.toStringAsFixed(2)),
+              'mes_anterior_usd': double.parse(prevVal.toStringAsFixed(2)),
+              'ahorro_pct': -deltaPct,
+            };
+          }
+        }
+
+        final int? totalDeltaPct = prevTotalUsd >= 15.0
+            ? (((totalMesUsd - prevTotalUsd) / prevTotalUsd) * 100).round()
+            : null;
+
+        if (biggestSpike != null ||
+            biggestSaving != null ||
+            (totalDeltaPct != null && totalDeltaPct.abs() >= 15)) {
+          prevMonthComparison = {
+            'mes_anterior': DateFormatter.getMonthName(prevMonth),
+            'dia_corte': now.day,
+            'actual_a_la_fecha_usd': double.parse(totalMesUsd.toStringAsFixed(2)),
+            'anterior_a_la_fecha_usd': double.parse(prevTotalUsd.toStringAsFixed(2)),
+            if (totalDeltaPct != null) 'variacion_total_pct': totalDeltaPct,
+            if (biggestSpike != null) 'categoria_en_alza': biggestSpike,
+            if (biggestSaving != null) 'categoria_con_ahorro': biggestSaving,
+          };
+        }
+      }
+    } catch (e) {
+      debugPrint('AiInsightService: Comparativa mes anterior omitida: $e');
+    }
+
+    // 4. Señal SQLite: Diferencias de precios entre comercios o subidas en los últimos 60 días
+    final List<Map<String, dynamic>> priceFindings = [];
+    try {
+      final Map<String, String> normToDisplayName = {};
+      for (final g in gastos) {
+        for (final item in g.items) {
+          final clean = item.descripcion.trim();
+          if (clean.length <= 2 || DatabaseHelper.isTaxItem(clean)) continue;
+          final norm = DatabaseHelper.normalizeProductText(clean);
+          if (norm.length > 2 && !normToDisplayName.containsKey(norm)) {
+            normToDisplayName[norm] = clean;
+          }
+        }
+      }
+
+      if (normToDisplayName.isNotEmpty) {
+        final historyMap = await db.findPriceHistory(
+          normToDisplayName.keys.take(40).toList(),
+          diasVentana: 60,
+          referenceDate: now,
+        );
+
+        for (final entry in historyMap.entries) {
+          final history = entry.value;
+          if (history.entradas.length < 2) continue;
+
+          // Entradas vienen ordenadas por fecha DESC desde SQLite
+          final latest = history.entradas.first;
+          final best = history.mejorPrecio;
+          final displayName = normToDisplayName[entry.key] ?? entry.key;
+
+          if (best != null &&
+              best.precioUsd > 0 &&
+              latest.precioUsd > best.precioUsd &&
+              best.comercioNorm.isNotEmpty &&
+              latest.comercioNorm.isNotEmpty &&
+              best.comercioNorm != latest.comercioNorm) {
+            final diffUsd = latest.precioUsd - best.precioUsd;
+            final diffPct = ((diffUsd / best.precioUsd) * 100).round();
+            if (diffPct >= 10 && diffUsd >= 0.30) {
+              priceFindings.add({
+                'tipo': 'otro_comercio_mas_barato',
+                'producto': displayName,
+                'comercio_reciente': DatabaseHelper.formatCommerceDisplay(latest.comercio),
+                'precio_reciente_usd': double.parse(latest.precioUsd.toStringAsFixed(2)),
+                'comercio_mas_barato': DatabaseHelper.formatCommerceDisplay(best.comercio),
+                'precio_mas_barato_usd': double.parse(best.precioUsd.toStringAsFixed(2)),
+                'diferencia_pct': diffPct,
+              });
+              continue;
+            }
+          }
+
+          // Fallback: subida notable en el mismo comercio
+          final prevSame = history.entradas.skip(1).firstWhere(
+            (e) => e.comercioNorm == latest.comercioNorm && e.precioUsd > 0,
+            orElse: () => const UnitPriceRef(
+              precioUsd: 0,
+              fecha: '',
+              comercio: '',
+              comercioNorm: '',
+              cantidad: 0,
+            ),
+          );
+          if (prevSame.precioUsd > 0 && latest.precioUsd > prevSame.precioUsd) {
+            final diffUsd = latest.precioUsd - prevSame.precioUsd;
+            final diffPct = ((diffUsd / prevSame.precioUsd) * 100).round();
+            if (diffPct >= 12 && diffUsd >= 0.30) {
+              priceFindings.add({
+                'tipo': 'subida_mismo_comercio',
+                'producto': displayName,
+                'comercio': DatabaseHelper.formatCommerceDisplay(latest.comercio),
+                'precio_reciente_usd': double.parse(latest.precioUsd.toStringAsFixed(2)),
+                'precio_anterior_usd': double.parse(prevSame.precioUsd.toStringAsFixed(2)),
+                'variacion_pct': diffPct,
+              });
+            }
+          }
+        }
+
+        priceFindings.sort((a, b) {
+          final pctA = (a['diferencia_pct'] ?? a['variacion_pct'] ?? 0) as int;
+          final pctB = (b['diferencia_pct'] ?? b['variacion_pct'] ?? 0) as int;
+          return pctB.compareTo(pctA);
+        });
+      }
+    } catch (e) {
+      debugPrint('AiInsightService: Historial de precios omitido: $e');
+    }
+
+    return AiHiddenSignals(
+      prevMonthComparison: prevMonthComparison,
+      priceFindings: priceFindings.take(3).toList(),
+      antExpenses: antExpenses,
+      exchangeBenefit: exchangeBenefit,
+    );
+  }
+
+  /// Construye un consejo local de alto valor (2 a 4 líneas) a partir de las señales
+  /// ocultas precalculadas, en orden de mayor impacto real (nunca repite `SummaryCard`).
+  static AiDashboardInsight? _buildLocalSmartInsight({
+    required AiHiddenSignals? signals,
     required Map<String, double> totalesPorCategoria,
     required Map<String, double> presupuestosPorCategoria,
-    required double totalGastadoMes,
-    required String moneda,
+    required String monedaPresupuesto,
   }) {
-    if (gastos.isEmpty || totalGastadoMes <= 0) return null;
+    // 1. Diferencia de precios entre comercios o subida fuerte de un producto
+    if (signals != null && signals.priceFindings.isNotEmpty) {
+      final top = signals.priceFindings.first;
+      final prod = top['producto']?.toString() ?? 'un producto';
+      if (top['tipo'] == 'otro_comercio_mas_barato') {
+        final comCaro = top['comercio_reciente']?.toString() ?? 'tu última compra';
+        final pCaro = CurrencyFormatter.formatUsd((top['precio_reciente_usd'] as num).toDouble());
+        final comBarato = top['comercio_mas_barato']?.toString() ?? 'otro comercio';
+        final pBarato = CurrencyFormatter.formatUsd((top['precio_mas_barato_usd'] as num).toDouble());
+        final pct = top['diferencia_pct'];
+        return AiDashboardInsight(
+          source: 'price_diff',
+          text:
+              'Pagaste **$pCaro** por **$prod** en **$comCaro**, un **$pct%** más que los **$pBarato** que te costó en **$comBarato**. Si lo repones allí la próxima vez, estiras el mes sin sacrificar calidad.',
+        );
+      } else {
+        final com = top['comercio']?.toString() ?? 'el mismo local';
+        final pActual = CurrencyFormatter.formatUsd((top['precio_reciente_usd'] as num).toDouble());
+        final pPrev = CurrencyFormatter.formatUsd((top['precio_anterior_usd'] as num).toDouble());
+        final pct = top['variacion_pct'];
+        return AiDashboardInsight(
+          source: 'price_diff',
+          text:
+              '**$prod** subió un **$pct%** en **$com** (pasó de **$pPrev** a **$pActual**). Vale la pena comparar su precio en otro comercio antes de tu próxima compra.',
+        );
+      }
+    }
 
-    // 1. Alerta de presupuesto específico de categoría al >= 80%
+    // 2. Presupuesto específico de categoría al >= 80%
     if (presupuestosPorCategoria.isNotEmpty) {
       String? alertCat;
       double highestRatio = 0.0;
@@ -177,29 +475,96 @@ class AiInsightService {
 
       if (alertCat != null) {
         final pct = (highestRatio * 100).round();
-        final fSpent = CurrencyFormatter.formatAmount(catSpent, moneda);
-        final fBudget = CurrencyFormatter.formatAmount(catBudget, moneda);
-        final shortMsg = highestRatio > 1.0
-            ? 'En **$alertCat** superaste el tope asignado (**$fSpent** de **$fBudget**).'
-            : 'Atención en **$alertCat**: ya usaste el **$pct%** de su presupuesto (**$fSpent** de **$fBudget**).';
-        final detailMsg =
-            '**Seguimiento de tu categoría $alertCat:**\n\n'
-            '• **Gastado en $alertCat:** **$fSpent** de un presupuesto asignado de **$fBudget** (**$pct%**).\n'
-            '• ${highestRatio > 1.0 ? "Ya superaste el límite previsto para esta categoría este mes." : "Te queda un margen de **${CurrencyFormatter.formatAmount((catBudget - catSpent).clamp(0.0, double.infinity), moneda)}** en esta categoría para el resto del mes."}\n\n'
-            '¿Quieres que revisemos qué compras específicas impulsaron el gasto en **$alertCat**?';
+        final fSpent = CurrencyFormatter.formatAmount(catSpent, monedaPresupuesto);
+        final fBudget = CurrencyFormatter.formatAmount(catBudget, monedaPresupuesto);
+        final msg = highestRatio > 1.0
+            ? 'En **$alertCat** superaste el tope que asignaste (**$fSpent** de **$fBudget**). Revisa si puedes compensar ese desfase moderando otra categoría esta semana.'
+            : 'Atención en **$alertCat**: ya usaste el **$pct%** de su presupuesto asignado (**$fSpent** de **$fBudget**). Aún estás a tiempo de ajustar el ritmo antes de cerrar el mes.';
         return AiDashboardInsight(
-          shortText: shortMsg,
-          detailedText: detailMsg,
-          source: 'local_heuristic',
+          source: 'category_budget',
+          text: msg,
         );
       }
+    }
+
+    // 3. Gastos hormiga acumulados (< $10)
+    if (signals?.antExpenses != null) {
+      final ant = signals!.antExpenses!;
+      final cant = ant['cantidad_compras'];
+      final totalStr = CurrencyFormatter.formatUsd((ant['total_usd'] as num).toDouble());
+      final pct = ant['porcentaje_del_mes'];
+      final com = ant['comercio_mas_repetido']?.toString();
+      final comExtra = com != null ? ', con varias visitas en **$com**' : '';
+      return AiDashboardInsight(
+        source: 'ant_expenses',
+        text:
+            'Llevas **$cant compras pequeñas** menores a **\$ 10,00** que ya suman **$totalStr** (**$pct%** de tu gasto mensual)$comExtra. Agrupar esas compras puntuales suele evitar fugas invisibles.',
+      );
+    }
+
+    // 4. Comparativa vs. mes pasado a la misma fecha (alza o felicitación ganada por ahorro real)
+    if (signals?.prevMonthComparison != null) {
+      final cmp = signals!.prevMonthComparison!;
+      final prevName = cmp['mes_anterior']?.toString() ?? 'el mes pasado';
+
+      if (cmp['categoria_con_ahorro'] is Map) {
+        final sav = cmp['categoria_con_ahorro'] as Map;
+        final cat = sav['categoria']?.toString() ?? 'tus compras';
+        final pct = sav['ahorro_pct'];
+        final curStr = CurrencyFormatter.formatUsd((sav['actual_usd'] as num).toDouble());
+        final prevStr = CurrencyFormatter.formatUsd((sav['mes_anterior_usd'] as num).toDouble());
+        return AiDashboardInsight(
+          source: 'prev_month',
+          text:
+              '¡Buen ritmo en **$cat**! A esta altura del mes llevas un **$pct%** menos que en $prevName (**$curStr** frente a **$prevStr**). Mantener ese control te dejará un margen extra real.',
+        );
+      }
+
+      if (cmp['categoria_en_alza'] is Map) {
+        final spike = cmp['categoria_en_alza'] as Map;
+        final cat = spike['categoria']?.toString() ?? 'una categoría';
+        final pct = spike['variacion_pct'];
+        final curStr = CurrencyFormatter.formatUsd((spike['actual_usd'] as num).toDouble());
+        final prevStr = CurrencyFormatter.formatUsd((spike['mes_anterior_usd'] as num).toDouble());
+        return AiDashboardInsight(
+          source: 'prev_month',
+          text:
+              'Tu gasto en **$cat** va un **$pct%** por encima de $prevName a esta misma fecha (**$curStr** frente a **$prevStr**). Vale la pena revisar si se debe a subidas de precios o compras adelantadas.',
+        );
+      }
+
+      final totalDelta = cmp['variacion_total_pct'] as int?;
+      if (totalDelta != null && totalDelta <= -15) {
+        return AiDashboardInsight(
+          source: 'prev_month',
+          text:
+              '¡Buen desempeño este mes! A esta fecha llevas un **${totalDelta.abs()}%** menos gastado que en $prevName. Ese margen a favor te ayuda a cerrar con mayor tranquilidad.',
+        );
+      } else if (totalDelta != null && totalDelta >= 20) {
+        return AiDashboardInsight(
+          source: 'prev_month',
+          text:
+              'A esta altura del mes tu ritmo de gasto va un **$totalDelta%** más acelerado que en $prevName. Revisa en el chat qué categorías están impulsando esa diferencia.',
+        );
+      }
+    }
+
+    // 5. Rendimiento por brecha cambiaria BCV vs USDT
+    if (signals?.exchangeBenefit != null) {
+      final fx = signals!.exchangeBenefit!;
+      final ahorroStr = CurrencyFormatter.formatUsd((fx['ahorro_brecha_usd'] as num).toDouble());
+      final pct = fx['ahorro_brecha_pct'];
+      return AiDashboardInsight(
+        source: 'exchange_benefit',
+        text:
+            'Pagar en bolívares a tasa oficial jugó a tu favor: al medir tus compras en **USDT P2P** el costo real bajó **$ahorroStr** (**$pct%**). Elegir bien cómo liquidar cada compra está estirando tu presupuesto.',
+      );
     }
 
     return null;
   }
 
-  /// Resuelve de forma síncrona e instantánea el consejo único a mostrar en `AiInsightCard`
-  /// y su contraparte detallada para cuando el usuario pulse "Consultar ->".
+  /// Resuelve de forma síncrona el consejo único a mostrar en `AiInsightCard`.
   static AiDashboardInsight resolveInsight({
     required List<GastoModel> gastos,
     required double presupuestoGeneral,
@@ -212,8 +577,8 @@ class AiInsightService {
     int? mes,
     int? anio,
     DateTime? currentDate,
-    String? cachedGeminiShort,
-    String? cachedGeminiDetailed,
+    String? cachedGeminiText,
+    AiHiddenSignals? hiddenSignals,
   }) {
     final now = currentDate ?? DateTime.now();
     final targetYear = anio ?? now.year;
@@ -228,186 +593,76 @@ class AiInsightService {
     final mesActualNombre = DateFormatter.getMonthName(targetMonth);
     final curatedTip = getCuratedInsightForDate(now);
 
-    final hasCleanGeminiTip = isCurrentMonth &&
-        cachedGeminiShort != null &&
-        cachedGeminiShort.trim().isNotEmpty;
+    final hasValidGeminiTip = isCurrentMonth &&
+        cachedGeminiText != null &&
+        cachedGeminiText.trim().isNotEmpty &&
+        !_hasMalformedPrefix(cachedGeminiText);
 
-    final AiDashboardInsight? geminiTip = hasCleanGeminiTip
-        ? AiDashboardInsight(
-            shortText: cachedGeminiShort.trim(),
-            detailedText: (cachedGeminiDetailed != null && cachedGeminiDetailed.trim().isNotEmpty)
-                ? cachedGeminiDetailed.trim()
-                : cachedGeminiShort.trim(),
-            source: 'gemini',
-          )
-        : null;
-
-    final AiDashboardInsight? localHeuristicTip = _resolveLocalDataHeuristic(
-      gastos: gastos,
-      totalesPorCategoria: totalesPorCategoria,
-      presupuestosPorCategoria: presupuestosPorCategoria,
-      totalGastadoMes: totalGastadoMes,
-      moneda: monedaPresupuesto,
-    );
-
-    // 1. Caso: Sin gastos registrados en el mes (una sola idea directa)
+    // 1. Caso: Sin gastos registrados en el mes
     if (gastos.isEmpty) {
       if (now.day <= 5 && presupuestoGeneral > 0 && isCurrentMonth) {
-        final fBudget = CurrencyFormatter.formatAmount(presupuestoGeneral, monedaPresupuesto);
-        final shortMsg =
-            '¡Nuevo mes! Tu presupuesto de **$mesActualNombre** ya está listo para aplicar lo aprendido el mes pasado.';
-        final detailedMsg =
-            '**¡Bienvenido a $mesActualNombre!**\n\n'
-            'Tu presupuesto mensual de **$fBudget** ya está activo.\n\n'
-            '${curatedTip.detailedText}';
         return AiDashboardInsight(
-          shortText: shortMsg,
-          detailedText: detailedMsg,
           source: 'welcome',
+          text:
+              '¡Nuevo mes! Tu presupuesto de **$mesActualNombre** ya está listo para aplicar lo aprendido el mes pasado.',
         );
       }
 
-      const shortMsg =
-          'Registra tu primera compra con el botón **+** para activar estadísticas y consejos automáticos.';
-      return AiDashboardInsight(
-        shortText: shortMsg,
-        detailedText: curatedTip.detailedText,
+      return const AiDashboardInsight(
         source: 'welcome',
+        text:
+            'Registra tu primera compra con el botón **+** para activar tu comparador de precios, análisis por categoría y consejos personalizados.',
       );
     }
 
-    // 2. Caso: Con gastos pero sin presupuesto mensual definido (una sola idea)
-    if (presupuestoGeneral <= 0) {
-      final fTotal = CurrencyFormatter.formatAmount(totalGastadoMes, monedaPresupuesto);
-      final catSummary = _buildTopCategoriesSummary(totalesPorCategoria, totalGastadoMes, monedaPresupuesto);
-
-      if (geminiTip != null || localHeuristicTip != null) {
-        final active = geminiTip ?? localHeuristicTip!;
-        final detailedMsg =
-            '**Resumen de $mesActualNombre:** Llevas **$fTotal** registrados en **${gastos.length} ${gastos.length == 1 ? "compra" : "compras"}**.$catSummary\n\n'
-            '${active.detailedText}';
-        return AiDashboardInsight(
-          shortText: active.shortText,
-          detailedText: detailedMsg,
-          source: active.source,
-        );
-      }
-
-      const shortMsg =
-          'Define un **presupuesto mensual** y te diré cuánto puedes gastar cada día sin descuidar tu ahorro.';
-      final detailedMsg =
-          '**Resumen de $mesActualNombre:** Llevas **$fTotal** registrados en **${gastos.length} ${gastos.length == 1 ? "compra" : "compras"}**.$catSummary\n\n'
-          'Si defines un **presupuesto mensual** en tu tarjeta de resumen, calcularé automáticamente cuánto puedes gastar por día.\n\n'
-          '${curatedTip.detailedText}';
-      return AiDashboardInsight(
-        shortText: shortMsg,
-        detailedText: detailedMsg,
-        source: 'budget_prompt',
-      );
-    }
-
+    // 2. Caso: Mes pasado cerrado (solo si tiene presupuesto)
     final hasSavingsGoal = metaAhorro > 0;
     final limiteParaGastar = hasSavingsGoal
         ? (presupuestoGeneral - metaAhorro).clamp(0.0, double.infinity)
         : presupuestoGeneral;
 
-    final formattedMeta = CurrencyFormatter.formatAmount(
-      metaAhorro,
-      monedaPresupuesto,
-    );
-    final formattedTotal = CurrencyFormatter.formatAmount(
-      totalGastadoMes,
-      monedaPresupuesto,
-    );
-    final formattedLimite = CurrencyFormatter.formatAmount(
-      limiteParaGastar,
-      monedaPresupuesto,
-    );
-    final catSummary = _buildTopCategoriesSummary(
-      totalesPorCategoria,
-      totalGastadoMes,
-      monedaPresupuesto,
-    );
-
-    // 3. Caso: Mes pasado cerrado
-    if (isPastMonth) {
+    if (presupuestoGeneral > 0 && isPastMonth) {
       if (totalGastadoMes > limiteParaGastar) {
         final exceso = totalGastadoMes - limiteParaGastar;
-        final formattedExceso = CurrencyFormatter.formatAmount(
-          exceso,
-          monedaPresupuesto,
-        );
-        final shortMsg =
-            'En $mesActualNombre superaste tu ${hasSavingsGoal ? "límite" : "presupuesto"} por **$formattedExceso**.';
-        final detailedMsg =
-            '**Cierre de $mesActualNombre:**\n\n'
-            '• **Total gastado:** **$formattedTotal** frente a tu ${hasSavingsGoal ? "límite disponible" : "presupuesto"} de **$formattedLimite**.\n'
-            '• **Desfase:** Superaste el tope por **$formattedExceso**.$catSummary\n\n'
-            '¿Quieres que revisemos en qué comercios o productos de $mesActualNombre se concentró ese exceso?';
+        final formattedExceso = CurrencyFormatter.formatAmount(exceso, monedaPresupuesto);
         return AiDashboardInsight(
-          shortText: shortMsg,
-          detailedText: detailedMsg,
           source: 'alert',
+          text:
+              'En $mesActualNombre superaste tu ${hasSavingsGoal ? "límite" : "presupuesto"} por **$formattedExceso**. Toca **Consultar** si quieres revisar qué compras impulsaron ese desfase.',
         );
       } else {
         final rem = limiteParaGastar - totalGastadoMes;
-        final formattedRem = CurrencyFormatter.formatAmount(
-          rem,
-          monedaPresupuesto,
-        );
-        final shortMsg =
-            '¡Mes cerrado con éxito! Te sobraron **$formattedRem** de tu ${hasSavingsGoal ? "límite" : "presupuesto"}.';
-        final detailedMsg =
-            '**¡Excelente cierre en $mesActualNombre!**\n\n'
-            '• **Total gastado:** **$formattedTotal** de **$formattedLimite** disponibles.\n'
-            '• **Margen a favor:** Ahorraste **$formattedRem** adicionales${hasSavingsGoal ? " además de tu meta de **$formattedMeta**" : ""}.$catSummary\n\n'
-            '¿Te gustaría comparar este resultado con tus gastos del mes actual?';
+        final formattedRem = CurrencyFormatter.formatAmount(rem, monedaPresupuesto);
         return AiDashboardInsight(
-          shortText: shortMsg,
-          detailedText: detailedMsg,
           source: 'alert',
+          text:
+              '¡Mes cerrado con éxito! En $mesActualNombre te sobraron **$formattedRem** de tu ${hasSavingsGoal ? "límite" : "presupuesto"}.',
         );
       }
     }
 
-    // 4. Caso: Excedido en el mes actual
-    if (totalGastadoMes > limiteParaGastar) {
+    // 3. Caso: Excedido en el mes actual (alerta crítica prioritaria)
+    if (presupuestoGeneral > 0 && totalGastadoMes > limiteParaGastar) {
       final exceso = totalGastadoMes - limiteParaGastar;
-      final formattedExceso = CurrencyFormatter.formatAmount(
-        exceso,
-        monedaPresupuesto,
-      );
+      final formattedExceso = CurrencyFormatter.formatAmount(exceso, monedaPresupuesto);
       if (hasSavingsGoal) {
-        final shortMsg =
-            'Superaste tu límite por **$formattedExceso**. Tu meta de ahorro de **$formattedMeta** está comprometida; pausa gastos no esenciales.';
-        final detailedMsg =
-            '**Alerta de presupuesto y meta de ahorro en $mesActualNombre:**\n\n'
-            '• **Total acumulado:** **$formattedTotal** (tu límite de gasto era **$formattedLimite** para proteger **$formattedMeta** de ahorro).\n'
-            '• **Exceso actual:** **$formattedExceso** por encima del límite.$catSummary\n\n'
-            'Te sugiero posponer compras no urgentes durante los próximos días. ¿Quieres que identifiquemos juntos qué gastos discrecionales puedes recortar esta semana?';
+        final formattedMeta = CurrencyFormatter.formatAmount(metaAhorro, monedaPresupuesto);
         return AiDashboardInsight(
-          shortText: shortMsg,
-          detailedText: detailedMsg,
           source: 'alert',
+          text:
+              'Superaste tu límite por **$formattedExceso**. Tu meta de ahorro de **$formattedMeta** está comprometida; pausa compras no esenciales o consulta en el chat dónde recortar.',
         );
       } else {
-        final shortMsg =
-            'Superaste tu presupuesto por **$formattedExceso**. Pausa gastos no esenciales esta semana.';
-        final detailedMsg =
-            '**Alerta de presupuesto en $mesActualNombre:**\n\n'
-            '• **Total acumulado:** **$formattedTotal** frente a tu presupuesto de **$formattedLimite**.\n'
-            '• **Exceso actual:** **$formattedExceso**.$catSummary\n\n'
-            '¿Quieres que revisemos cuáles fueron las compras más altas del mes o cómo ajustar tus presupuestos por categoría?';
         return AiDashboardInsight(
-          shortText: shortMsg,
-          detailedText: detailedMsg,
           source: 'alert',
+          text:
+              'Superaste tu presupuesto por **$formattedExceso**. Te sugiero pausar gastos no esenciales esta semana y revisar en el chat tus categorías con mayor desvío.',
         );
       }
     }
 
-    // 5. Caso: En riesgo por ritmo proyectado (con meta de ahorro)
-    if (hasSavingsGoal) {
+    // 4. Caso: Meta de ahorro en riesgo por ritmo proyectado
+    if (presupuestoGeneral > 0 && hasSavingsGoal) {
       final savingsSnapshot = SavingsHealthCalculator.calculate(
         presupuestoGeneral: presupuestoGeneral,
         metaAhorro: metaAhorro,
@@ -418,93 +673,67 @@ class AiInsightService {
       );
 
       if (savingsSnapshot.status == SavingsGoalStatus.enRiesgo) {
-        final proy = savingsSnapshot.gastoProyectadoFinDeMes;
         final formattedProy = CurrencyFormatter.formatAmount(
-          proy,
+          savingsSnapshot.gastoProyectadoFinDeMes,
           monedaPresupuesto,
         );
-        final disponible = (limiteParaGastar - totalGastadoMes).clamp(0.0, double.infinity);
-        final ritmoSeguro = CurrencyFormatter.formatAmount(
-          disponible / diasRestantes,
-          monedaPresupuesto,
-        );
-        final shortMsg =
-            'A tu ritmo actual proyectas gastar **$formattedProy**. Modera tus consumos para cuidar tu meta de **$formattedMeta**.';
-        final detailedMsg =
-            '**Proyección de cierre y protección de ahorro:**\n\n'
-            '• **Gasto proyectado a fin de mes:** **$formattedProy** (tu límite seguro es **$formattedLimite**).\n'
-            '• **Ritmo diario recomendado desde hoy:** Para cuidar tu meta de **$formattedMeta**, intenta no superar **$ritmoSeguro/día** durante los **$diasRestantes días restantes**.$catSummary\n\n'
-            '¿Quieres que revisemos en qué categoría puedes moderar gastos esta semana?';
+        final formattedMeta = CurrencyFormatter.formatAmount(metaAhorro, monedaPresupuesto);
         return AiDashboardInsight(
-          shortText: shortMsg,
-          detailedText: detailedMsg,
           source: 'alert',
+          text:
+              'A tu ritmo actual proyectas cerrar en **$formattedProy**, lo que comprometería tu meta de **$formattedMeta**. Modera tus compras no esenciales los próximos días.',
         );
       }
     }
 
-    // 6. Caso: Ritmo saludable con presupuesto -> UNA SOLA idea clara en la tarjeta
-    final disponible = limiteParaGastar - totalGastadoMes;
-    final ritmoDiario = disponible / diasRestantes;
-    final formattedRitmo = CurrencyFormatter.formatAmount(
-      ritmoDiario,
-      monedaPresupuesto,
-    );
-    final formattedDisponible = CurrencyFormatter.formatAmount(
-      disponible,
-      monedaPresupuesto,
-    );
-    final diasTexto = diasRestantes == 1
-        ? 'el **día restante**'
-        : 'los **$diasRestantes días** restantes';
-
-    final String budgetDetailHeader =
-        '**Estado de tu presupuesto en $mesActualNombre:**\n'
-        '• **Ritmo diario disponible:** Puedes gastar hasta **$formattedRitmo/día** durante $diasTexto (**$formattedDisponible** disponibles de **$formattedLimite**).';
-
-    // Prioridad A: Consejo personalizado de Gemini sobre gastos reales (solo esa idea)
-    if (geminiTip != null) {
+    // 5. Prioridad principal en operación normal: Consejo de Gemini en caché (basado en las 4 señales ocultas)
+    if (hasValidGeminiTip) {
       return AiDashboardInsight(
-        shortText: geminiTip.shortText,
-        detailedText: '$budgetDetailHeader\n\n${geminiTip.detailedText}',
         source: 'gemini',
+        text: cachedGeminiText.trim(),
       );
     }
 
-    // Prioridad B: Alerta local de categoría al >= 80% de su presupuesto (solo esa idea)
-    if (localHeuristicTip != null) {
-      return AiDashboardInsight(
-        shortText: localHeuristicTip.shortText,
-        detailedText: '$budgetDetailHeader\n\n${localHeuristicTip.detailedText}',
-        source: 'local_heuristic',
+    // 6. Respaldo inteligente local: hallazgo real calculado desde las 4 señales ocultas o presupuesto de categoría
+    final localSmart = _buildLocalSmartInsight(
+      signals: hiddenSignals,
+      totalesPorCategoria: totalesPorCategoria,
+      presupuestosPorCategoria: presupuestosPorCategoria,
+      monedaPresupuesto: monedaPresupuesto,
+    );
+    if (localSmart != null) {
+      return localSmart;
+    }
+
+    // 7. Sin presupuesto mensual definido (y sin hallazgo oculto aún)
+    if (presupuestoGeneral <= 0) {
+      return const AiDashboardInsight(
+        source: 'budget_prompt',
+        text:
+            'Define un **presupuesto mensual** y podré calcular tu ritmo diario ideal y alertarte antes de que alguna categoría se desvíe.',
       );
     }
 
-    // Prioridad C: Alternancia diaria limpia entre ritmo diario conciso y un consejo de valor
+    // 8. Usuario con presupuesto saludable y poco historial aún: alterna ritmo diario limpio y consejos de valor
     final dayOfYear = _dayOfYearUtc(now);
-    final showDailyPaceToday = dayOfYear.isOdd;
-
-    if (showDailyPaceToday) {
-      final shortMsg =
-          'Puedes gastar hasta **$formattedRitmo/día** durante $diasTexto sin salirte de tu presupuesto.';
-      final detailedMsg =
-          '$budgetDetailHeader$catSummary\n\n'
-          '¿Quieres que revisemos tus gastos más frecuentes o cómo estirar mejor este margen?';
+    if (dayOfYear.isOdd) {
+      final disponible = limiteParaGastar - totalGastadoMes;
+      final ritmoDiario = disponible / diasRestantes;
+      final formattedRitmo = CurrencyFormatter.formatAmount(ritmoDiario, monedaPresupuesto);
+      final diasTexto = diasRestantes == 1
+          ? 'el **día restante**'
+          : 'los **$diasRestantes días** restantes';
       return AiDashboardInsight(
-        shortText: shortMsg,
-        detailedText: detailedMsg,
         source: 'daily_pace',
-      );
-    } else {
-      return AiDashboardInsight(
-        shortText: curatedTip.shortText,
-        detailedText: '$budgetDetailHeader\n\n${curatedTip.detailedText}',
-        source: 'curated',
+        text:
+            'Puedes gastar hasta **$formattedRitmo/día** durante $diasTexto sin salirte de tu plan mensual.',
       );
     }
+
+    return curatedTip;
   }
 
-  /// Construye el contexto compacto y libre de IVA que se envía a Gemini en segundo plano.
+  /// Construye el contexto compacto y rico en señales ocultas (sin IVA) que se envía a Gemini.
   static Map<String, dynamic> buildCompactContextForGemini({
     required List<GastoModel> gastos,
     required double totalMesUsd,
@@ -512,6 +741,7 @@ class AiInsightService {
     required double metaAhorroUsd,
     required String monedaLente,
     required DateTime now,
+    AiHiddenSignals? hiddenSignals,
   }) {
     final Map<String, double> totalesCat = {};
     final Map<String, Map<String, dynamic>> comerciosMap = {};
@@ -521,7 +751,7 @@ class AiInsightService {
       final usd = g.totalUsd / 100.0;
       totalesCat[g.categoria] = (totalesCat[g.categoria] ?? 0.0) + usd;
 
-      final comName = g.comercio.trim();
+      final comName = DatabaseHelper.formatCommerceDisplay(g.comercio);
       if (comName.isNotEmpty && comName.toLowerCase() != 'varios') {
         final key = comName.toLowerCase();
         final entry = comerciosMap[key] ?? {'comercio': comName, 'visitas': 0, 'total_usd': 0.0};
@@ -549,13 +779,10 @@ class AiInsightService {
     final topProductos = productosMap.values.toList()
       ..sort((a, b) => (b['total_usd'] as double).compareTo(a['total_usd'] as double));
 
-    return {
+    final contextMap = <String, dynamic>{
       'fecha_hoy': now.toIso8601String().substring(0, 10),
       'moneda_principal': monedaLente,
       'cantidad_compras_mes': gastos.length,
-      'total_mes_usd': double.parse(totalMesUsd.toStringAsFixed(2)),
-      'presupuesto_usd': double.parse(presupuestoUsd.toStringAsFixed(2)),
-      'meta_ahorro_usd': double.parse(metaAhorroUsd.toStringAsFixed(2)),
       'totales_categoria_usd': totalesCat.map(
         (k, v) => MapEntry(k, double.parse(v.toStringAsFixed(2))),
       ),
@@ -570,37 +797,26 @@ class AiInsightService {
         'total_usd': double.parse((p['total_usd'] as double).toStringAsFixed(2)),
       }).toList(),
     };
-  }
 
-  /// Lee el consejo de Gemini cacheado en `SharedPreferences` si corresponde al mes indicado.
-  static Future<Map<String, String>?> getCachedGeminiInsight({
-    required int year,
-    required int month,
-    SharedPreferences? prefsInstance,
-  }) async {
-    try {
-      final prefs = prefsInstance ?? await SharedPreferences.getInstance();
-      final cachedYm = prefs.getString(prefYearMonthKey);
-      if (cachedYm != '${year}_$month') return null;
-
-      final shortText = prefs.getString(prefShortTextKey);
-      final detailedText = prefs.getString(prefDetailedTextKey);
-      if (shortText != null && shortText.trim().isNotEmpty) {
-        return {
-          'resumen': shortText.trim(),
-          'detalle': (detailedText != null && detailedText.trim().isNotEmpty)
-              ? detailedText.trim()
-              : shortText.trim(),
-        };
-      }
-    } catch (e) {
-      debugPrint('AiInsightService: Error leyendo caché de consejo IA: $e');
+    if (hiddenSignals != null && hiddenSignals.hasAnySignal) {
+      contextMap.addAll(hiddenSignals.toJson());
     }
-    return null;
+
+    return contextMap;
   }
 
-  /// Parsea de forma resiliente la respuesta de `insight_inicio` (JSON o texto plano).
-  static Map<String, String>? parseDashboardInsightResponse(String rawText) {
+  static bool _hasMalformedPrefix(String text) {
+    final lower = text.trim().toLowerCase();
+    return lower.startsWith('consejo corto:') ||
+        lower.startsWith('**consejo corto') ||
+        lower.startsWith('consejo:') ||
+        lower.startsWith('**consejo:');
+  }
+
+  /// Parsea de forma ESTRICTA la respuesta JSON `{"consejo": "..."}` de `insight_inicio`.
+  /// Si el Worker devolvió texto plano sin JSON válido o con etiquetas basura (`Consejo corto:`),
+  /// retorna `null` para evitar guardar respuestas degradadas en la caché local.
+  static String? parseStrictDashboardInsight(String rawText) {
     final trimmedRaw = rawText.trim();
     if (trimmedRaw.isEmpty) return null;
 
@@ -611,42 +827,64 @@ class AiInsightService {
 
     final firstBrace = cleaned.indexOf('{');
     final lastBrace = cleaned.lastIndexOf('}');
-    if (firstBrace != -1 && lastBrace != -1 && lastBrace > firstBrace) {
-      final candidateJson = cleaned.substring(firstBrace, lastBrace + 1);
-      try {
-        final decoded = jsonDecode(candidateJson);
-        if (decoded is Map) {
-          final resumen = (decoded['resumen'] ?? '').toString().replaceAll(RegExp(r'\s+'), ' ').trim();
-          final detalle = (decoded['detalle'] ?? '').toString().trim();
-          if (resumen.isNotEmpty) {
-            return {
-              'resumen': resumen,
-              'detalle': detalle.isNotEmpty ? detalle : resumen,
-            };
-          }
-        }
-      } catch (e) {
-        debugPrint('AiInsightService: JSON no válido en insight_inicio, usando fallback texto: $e');
-      }
+    if (firstBrace == -1 || lastBrace == -1 || lastBrace <= firstBrace) {
+      debugPrint('AiInsightService: Respuesta descartada por no ser JSON estructurado.');
+      return null;
     }
 
-    final singleLine = cleaned.replaceAll(RegExp(r'\s+'), ' ').trim();
-    if (singleLine.isEmpty) return null;
-    final sentences = singleLine.split(RegExp(r'(?<=[.!?])\s+'));
-    final firstSentence = sentences.first.trim();
-    final shortSummary = firstSentence.length <= 160
-        ? firstSentence
-        : '${firstSentence.substring(0, 157).trimRight()}...';
-    return {
-      'resumen': shortSummary,
-      'detalle': cleaned,
-    };
+    final candidateJson = cleaned.substring(firstBrace, lastBrace + 1);
+    try {
+      final decoded = jsonDecode(candidateJson);
+      if (decoded is Map) {
+        final rawConsejo = (decoded['consejo'] ?? decoded['resumen'] ?? '').toString();
+        final normalized = rawConsejo.replaceAll(RegExp(r'\s+'), ' ').trim();
+        if (normalized.length < 20 || _hasMalformedPrefix(normalized)) {
+          debugPrint('AiInsightService: Consejo JSON descartado por prefijo inválido o demasiado corto.');
+          return null;
+        }
+        return normalized;
+      }
+    } catch (e) {
+      debugPrint('AiInsightService: JSON inválido en insight_inicio, respuesta descartada: $e');
+    }
+    return null;
+  }
+
+  static Future<void> _purgeLegacyV1Cache(SharedPreferences prefs) async {
+    for (final key in _legacyV1Keys) {
+      if (prefs.containsKey(key)) {
+        await prefs.remove(key);
+      }
+    }
+  }
+
+  /// Lee el consejo de Gemini cacheado en `SharedPreferences` (v2) si corresponde al mes indicado.
+  static Future<String?> getCachedGeminiInsight({
+    required int year,
+    required int month,
+    SharedPreferences? prefsInstance,
+  }) async {
+    try {
+      final prefs = prefsInstance ?? await SharedPreferences.getInstance();
+      await _purgeLegacyV1Cache(prefs);
+
+      final cachedYm = prefs.getString(prefYearMonthKey);
+      if (cachedYm != '${year}_$month') return null;
+
+      final text = prefs.getString(prefTextKey);
+      if (text != null && text.trim().isNotEmpty && !_hasMalformedPrefix(text)) {
+        return text.trim();
+      }
+    } catch (e) {
+      debugPrint('AiInsightService: Error leyendo caché v2 de consejo IA: $e');
+    }
+    return null;
   }
 
   /// Verifica si corresponde generar un nuevo consejo personalizado con Gemini en segundo plano
-  /// (máximo 1 vez cada 24h, solo en el mes actual, con >= 3 gastos y solo si cambió la firma de gastos).
-  /// Retorna el par `{'resumen', 'detalle'}` vigente (recién generado o de caché).
-  static Future<Map<String, String>?> refreshBackgroundInsightIfNeeded({
+  /// (máximo 1 vez cada 24h, solo en el mes actual, con >= 3 gastos y solo si cambió la firma).
+  /// Retorna el texto del consejo vigente (recién generado o de caché v2), o `null` si no aplica.
+  static Future<String?> refreshBackgroundInsightIfNeeded({
     required List<GastoModel> gastos,
     required int selectedYear,
     required int selectedMonth,
@@ -654,6 +892,7 @@ class AiInsightService {
     required double presupuestoUsd,
     required double metaAhorroUsd,
     String monedaLente = 'USD',
+    AiHiddenSignals? hiddenSignals,
     DateTime? currentDate,
     GeminiService? geminiService,
     SharedPreferences? prefsInstance,
@@ -665,6 +904,7 @@ class AiInsightService {
     SharedPreferences prefs;
     try {
       prefs = prefsInstance ?? await SharedPreferences.getInstance();
+      await _purgeLegacyV1Cache(prefs);
     } catch (e) {
       debugPrint('AiInsightService: SharedPreferences no disponible: $e');
       return null;
@@ -713,37 +953,28 @@ class AiInsightService {
         metaAhorroUsd: metaAhorroUsd,
         monedaLente: monedaLente,
         now: now,
+        hiddenSignals: hiddenSignals,
       );
 
       final responseMap = await service.chatWithAnalyst(
         messages: const [
           {
             'role': 'user',
-            'text': 'Genera un consejo financiero corto y su versión detallada según mis gastos actuales.',
+            'text': 'Genera el análisis financiero más útil de hoy en formato JSON según mis señales ocultas.',
           },
         ],
         contextData: contextData,
         modo: 'insight_inicio',
       );
       final rawText = (responseMap['text'] ?? '').toString().trim();
-      final generated = parseDashboardInsightResponse(rawText);
+      final consejo = parseStrictDashboardInsight(rawText);
 
-      if (generated != null &&
-          generated['resumen'] != null &&
-          generated['resumen']!.trim().isNotEmpty) {
-        final cleanShort = generated['resumen']!.trim();
-        final cleanDetailed = (generated['detalle'] ?? cleanShort).trim();
-
-        await prefs.setString(prefShortTextKey, cleanShort);
-        await prefs.setString(prefDetailedTextKey, cleanDetailed);
+      if (consejo != null && consejo.isNotEmpty) {
+        await prefs.setString(prefTextKey, consejo);
         await prefs.setString(prefLastFetchDateKey, todayIso);
         await prefs.setString(prefSignatureKey, currentSignature);
         await prefs.setString(prefYearMonthKey, '${selectedYear}_$selectedMonth');
-
-        return {
-          'resumen': cleanShort,
-          'detalle': cleanDetailed,
-        };
+        return consejo;
       }
     } catch (e) {
       debugPrint('AiInsightService: Generación en 2.º plano omitida: $e');

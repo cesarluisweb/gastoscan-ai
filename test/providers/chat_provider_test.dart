@@ -99,5 +99,20 @@ void main() {
       provider.presentDetailedInsight('Detalle ampliado del consejo de Inicio.');
       expect(provider.messages.length, 4);
     });
+
+    test('startInsightDeepDive posts assistant insight without artificial user bubble and sets pending prompt', () {
+      final provider = ChatProvider();
+      provider.startInsightDeepDive('Pagaste **\$ 4,50** por **Café** en **Farmatodo**.');
+
+      expect(provider.messages.length, 1);
+      expect(provider.messages.first['role'], 'assistant');
+      expect(provider.messages.first['text'], contains('Sobre el análisis de hoy:'));
+      expect(provider.hasUserMessages, isFalse);
+      expect(provider.pendingInsightDeepDive, 'Pagaste **\$ 4,50** por **Café** en **Farmatodo**.');
+
+      final consumed = provider.consumePendingInsightDeepDive();
+      expect(consumed, 'Pagaste **\$ 4,50** por **Café** en **Farmatodo**.');
+      expect(provider.pendingInsightDeepDive, isNull);
+    });
   });
 }

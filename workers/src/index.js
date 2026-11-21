@@ -893,17 +893,24 @@ async function handleChatAnalyst(request, geminiKey, isCustomKey = false) {
 
     let systemPrompt;
     if (isInsightInicio) {
-      systemPrompt = `Eres el analista financiero de Rinde Más en Venezuela.
-Analiza el resumen de gastos mensuales del usuario y genera UNA SOLA idea o consejo práctico, directo y personalizado basado en sus cifras reales (categoría principal, comercios frecuentes o productos repetidos).
+      systemPrompt = `Eres el analista financiero inteligente de Rinde Más en Venezuela.
+Tu tarea es descubrir UN SOLO hallazgo de alto valor que el usuario NO ve a simple vista en su pantalla de Inicio y redactar un consejo práctico de 2 a 4 líneas (entre 160 y 300 caracteres).
+
 REGLAS ESTRICTAS:
-1. Sin saludos ("¡Hola!") ni felicitaciones vacías. Ve directo a un único hallazgo.
-2. NUNCA menciones ni sugieras recortar el IVA (16%) ni impuestos fiscales obligatorios.
-3. No mezcles varias ideas (no combines ritmo diario + felicitación + consejo). Entrega UNA sola idea clara.
-4. Usa **negrita** (doble asterisco) únicamente para precios, montos, cantidades, porcentajes o el dato clave que valga la pena resaltar (ej. **$ 45,00**, **4 compras**, **65%**). No uses cursivas con asterisco simple.
-5. Devuelve estrictamente un JSON con:
-   - "resumen": Una sola oración corta y accionable (máximo 130 caracteres) para la tarjeta de Inicio.
-   - "detalle": Explicación ampliada del mismo consejo en 2 o 3 viñetas cortas con cifras reales en **negrita** y una pregunta final abierta para continuar conversando en el chat.
-Datos del usuario:
+1. PROHIBIDO repetir datos obvios de la tarjeta superior: NUNCA digas "tienes un presupuesto de X y has gastado Y" ni repitas el total general del mes como idea principal.
+2. Elige ÚNICAMENTE la señal de mayor impacto real entre los datos proporcionados:
+   - Diferencias o subidas de precios de productos entre comercios (diferencias_precios).
+   - Gastos hormiga acumulados menores a $10 (gastos_hormiga).
+   - Variación importante frente al mes pasado a esta misma fecha (comparativa_mes_anterior).
+   - Rendimiento a favor por pagar en bolívares a tasa BCV frente a USDT (rendimiento_cambiario).
+   - Concentración notable en comercios o categorías específicas.
+3. Felicitaciones ganadas: Solo felicita cuando exista un logro real y medible en los datos (ej. bajó el gasto en una categoría vs. el mes pasado o aprovechó bien la brecha BCV). Si el hallazgo es una fuga o subida de precio, sé directo y práctico sin adulaciones vacías.
+4. Sin saludos ("¡Hola!"), sin etiquetas ("Consejo:", "Consejo corto:"). Ve directo al grano en español venezolano natural.
+5. NUNCA menciones ni sugieras recortar el IVA (16%) ni impuestos fiscales obligatorios.
+6. Negritas selectivas: Usa **negrita** (doble asterisco) únicamente para precios, montos, cantidades, porcentajes, productos o comercios que valga la pena resaltar (ej. **$ 4,50**, **25%**, **7 compras**, **Farmatodo**). No uses cursivas con asterisco simple.
+7. Devuelve estrictamente un JSON con el campo único "consejo".
+
+Señales y datos precalculados del usuario:
 ${JSON.stringify(contextData)}`;
     } else if (isDictadoGasto) {
       systemPrompt = `Eres un extractor experto de gastos estructurados para la app Rinde Más en Venezuela.
@@ -1174,22 +1181,18 @@ Nota de análisis cambiario: La diferencia entre total_usd_bcv y total_usdt_p2p 
       } : {}),
       generationConfig: isInsightInicio
         ? {
-            temperature: 0.3,
-            maxOutputTokens: 512,
+            temperature: 0.35,
+            maxOutputTokens: 260,
             responseMimeType: "application/json",
             responseSchema: {
               type: "object",
               properties: {
-                resumen: {
+                consejo: {
                   type: "string",
-                  description: "Consejo corto y directo (máximo 135 caracteres, sin saludos) para la tarjeta de Inicio."
-                },
-                detalle: {
-                  type: "string",
-                  description: "Explicación detallada del mismo consejo con cifras reales y una pregunta final para seguir conversando en el chat."
+                  description: "Consejo único de alto valor (2 a 4 líneas, 160-300 caracteres, sin saludos ni etiquetas, con **negrita** solo en montos, porcentajes, cantidades, productos o comercios clave)."
                 }
               },
-              required: ["resumen", "detalle"]
+              required: ["consejo"]
             }
           }
         : {
