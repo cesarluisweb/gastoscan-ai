@@ -1670,8 +1670,8 @@ void main() {
       expect(find.text('Bolsas de basura (G)'), findsOneWidget);
     });
 
-    testWidgets('AI-06: muestra nota Base impresa al pie, recalcula desde base al editar Cantidad y oculta nota al editar Precio', (tester) async {
-      tester.view.physicalSize = const Size(360, 1800);
+    testWidgets('AI-06 B-2: muestra precio sin IVA y Con IVA debajo, oculta badges en exentos y no sobrescribe Monto total al editar', (tester) async {
+      tester.view.physicalSize = const Size(360, 2200);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
 
@@ -1713,38 +1713,31 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // 1. Nombres limpios sin (G)/(E) y campo Precio etiquetado 'Precio (con IVA)' solo en el ítem gravado
+      // 1. Nombres limpios sin (G)/(E); gravado muestra Precio (sin IVA), Total sin IVA, badge G · 16% y franja Con IVA 16%
       expect(find.text('Detergente Líquido'), findsOneWidget);
       expect(find.text('Harina PAN 1kg'), findsOneWidget);
-      expect(find.text('Precio (con IVA)'), findsOneWidget);
-      expect(find.text('Precio'), findsOneWidget);
+      expect(find.text('Precio (sin IVA)'), findsOneWidget);
+      expect(find.text('Total sin IVA'), findsOneWidget);
+      expect(find.text('G · 16%'), findsOneWidget);
+      expect(find.textContaining('Con IVA 16%: Bs. 300'), findsOneWidget);
+      // Sin símbolo de aproximación ni textos repetidos por fila ni pastilla en el artículo exento
+      expect(find.textContaining('≈'), findsNothing);
+      expect(find.textContaining('sin cuadrar con ticket'), findsNothing);
+      expect(find.text('Exento (E)'), findsNothing);
 
-      // 2. Nota al pie visible solo en el artículo gravado con base impresa en moneda activa
+      // 2. Pie fiscal muestra Subtotal sin IVA, IVA de la factura, Cuadra con la factura y botón Ajustar IVA · 1 gravado
+      expect(find.byKey(const Key('fiscal_summary_footer')), findsOneWidget);
+      expect(find.text('Subtotal sin IVA'), findsOneWidget);
+      expect(find.text('IVA de la factura'), findsOneWidget);
+      expect(find.text('Cuadra con la factura'), findsOneWidget);
+      expect(find.text('Ajustar IVA · 1 gravado'), findsOneWidget);
+
+      // 3. Editar Precio (sin IVA) del artículo gravado conserva foco/teclado, mantiene G · 16% y NO sobrescribe Monto total (410)
       final firstKey = extractedImputado.items.first.clientKey;
-      final noteFinder = find.byKey(ValueKey('item_tax_base_$firstKey'));
-      expect(noteFinder, findsOneWidget);
-      expect(find.textContaining('Base impresa:'), findsOneWidget);
-      expect(find.textContaining('+16% IVA'), findsOneWidget);
-
-      // 3. Editar Cantidad a 3: conserva la nota y recalcula desde base (3 * 258.62 * 1.16 = 900)
       final cardFinder = find.byKey(ValueKey('item_card_$firstKey'));
-      final cantField = find.descendant(
-        of: cardFinder,
-        matching: find.widgetWithText(TextFormField, '1'),
-      ).first;
-      await tester.enterText(cantField, '3');
-      await tester.pumpAndSettle();
-      expect(noteFinder, findsOneWidget);
-      expect(
-        find.descendant(of: cardFinder, matching: find.text('Bs. 900')),
-        findsOneWidget,
-      );
-
-      // 4. Editar Precio manualmente: limpia baseImponibleOriginal, oculta la nota y conserva foco/teclado
-      // _formatDouble(300.0) formatea enteros como '300' (sin '.00')
       final precioField = find.descendant(
         of: cardFinder,
-        matching: find.widgetWithText(TextFormField, '300'),
+        matching: find.widgetWithText(TextFormField, '258.62'),
       );
       expect(precioField, findsOneWidget);
       await tester.tap(precioField);
@@ -1754,20 +1747,322 @@ void main() {
       );
       expect(tester.testTextInput.isVisible, isTrue);
 
-      await tester.enterText(precioField, '320');
+      await tester.enterText(precioField, '200');
       await tester.pumpAndSettle();
-      expect(noteFinder, findsNothing);
-      expect(find.text('Precio (con IVA)'), findsNothing);
+
+      // Conserva foco, conserva badge G · 16% y Monto total permanece intacto en 410
       final precioFieldAfter = find.descendant(
         of: cardFinder,
-        matching: find.widgetWithText(TextFormField, '320'),
+        matching: find.widgetWithText(TextFormField, '200'),
       );
       expect(precioFieldAfter, findsOneWidget);
       final editableAfter = tester.state<EditableTextState>(
         find.descendant(of: precioFieldAfter, matching: find.byType(EditableText)),
       );
       expect(identical(editableBefore, editableAfter), isTrue);
-      expect(tester.testTextInput.isVisible, isTrue);
+      expect(find.text('G · 16%'), findsOneWidget);
+      final totalCtrlText = tester
+          .widget<TextFormField>(find.byKey(const Key('input_monto_total')))
+          .controller
+          ?.text;
+      expect(totalCtrlText, equals('410'));
+      expect(find.text('Cuadra con la factura'), findsNothing);
+      expect(find.textContaining('IVA no cuadra'), findsOneWidget);
+    });
+
+    testWidgets('AI-06 B-2: factura homogénea 100% gravada oculta badges en tarjetas y conserva Ajustar IVA', (tester) async {
+      tester.view.physicalSize = const Size(360, 2200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      final homogenea = GeminiExtractionResult.fromJson({
+        'comercio': 'Farmatodo',
+        'fecha': '2026-11-20',
+        'moneda': 'VES',
+        'total_original': 348.00,
+        'impuesto_iva': 48.00,
+        'items': [
+          {'descripcion': 'Shampoo', 'cantidad': 1, 'precio_unitario': 180.00, 'categoria': 'Cuidado Personal', 'alicuota_fiscal': 'G'},
+          {'descripcion': 'Desodorante', 'cantidad': 1, 'precio_unitario': 120.00, 'categoria': 'Cuidado Personal', 'alicuota_fiscal': 'G'},
+        ],
+      });
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<GastoProvider>.value(value: gastoProvider),
+            ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+            ChangeNotifierProvider<ScanQueueProvider>.value(value: scanQueueProvider),
+          ],
+          child: MaterialApp(
+            home: ReviewExpenseScreen(extractedData: homogenea),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('G · 16%'), findsNothing);
+      expect(find.textContaining('Con IVA 16%:'), findsNWidgets(2));
+      expect(find.text('Ajustar IVA · 2 gravados'), findsOneWidget);
+      expect(find.text('Cuadra con la factura'), findsOneWidget);
+    });
+
+    testWidgets('AI-06 B-2: tocar badge G -> Exento dispara detector de 1 culpable y Corregir restaura el cuadre sin tocar Monto total', (tester) async {
+      tester.view.physicalSize = const Size(360, 2200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      final extracted = GeminiExtractionResult.fromJson({
+        'comercio': 'Automercado Plaza',
+        'fecha': '2026-11-20',
+        'moneda': 'VES',
+        'total_original': 410.00,
+        'impuesto_iva': 41.38,
+        'items': [
+          {'descripcion': 'Detergente Líquido', 'cantidad': 1, 'precio_unitario': 258.62, 'categoria': 'Hogar', 'alicuota_fiscal': 'G'},
+          {'descripcion': 'Harina PAN 1kg', 'cantidad': 1, 'precio_unitario': 110.00, 'categoria': 'Alimentación', 'alicuota_fiscal': 'E'},
+        ],
+      });
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<GastoProvider>.value(value: gastoProvider),
+            ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+            ChangeNotifierProvider<ScanQueueProvider>.value(value: scanQueueProvider),
+          ],
+          child: MaterialApp(
+            home: ReviewExpenseScreen(extractedData: extracted),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final firstKey = extracted.items.first.clientKey;
+      final badgeFinder = find.byKey(ValueKey('item_tax_badge_$firstKey'));
+      expect(badgeFinder, findsOneWidget);
+
+      // 1 toque en el badge pasa directo de G · 16% a Exento (nunca a 8%)
+      await tester.tap(badgeFinder);
+      await tester.pumpAndSettle();
+
+      expect(find.text('G · 16%'), findsNothing);
+      expect(find.text('R · 8%'), findsNothing);
+      expect(find.text('Ajustar IVA · 0 gravados'), findsOneWidget);
+      expect(find.byKey(const Key('fiscal_suggestion_banner')), findsOneWidget);
+      expect(find.textContaining('Detergente Líquido'), findsWidgets);
+
+      // Monto total nunca se sobrescribió
+      final totalCtrlText = tester
+          .widget<TextFormField>(find.byKey(const Key('input_monto_total')))
+          .controller
+          ?.text;
+      expect(totalCtrlText, equals('410'));
+
+      // Tocar Corregir en el banner restaura el cuadre exacto en 1 toque
+      await tester.ensureVisible(find.byKey(const Key('btn_aplicar_sugerencia_fiscal')));
+      await tester.tap(find.byKey(const Key('btn_aplicar_sugerencia_fiscal')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('fiscal_suggestion_banner')), findsNothing);
+      expect(find.text('Cuadra con la factura'), findsOneWidget);
+      expect(find.text('G · 16%'), findsOneWidget);
+      expect(find.text('Ajustar IVA · 1 gravado'), findsOneWidget);
+    });
+
+    testWidgets('AI-06 B-2: editar Monto total invalida el ancla y Guardar con descuadre exige confirmación antes del fallback con IVA aparte', (tester) async {
+      tester.view.physicalSize = const Size(360, 2600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      final extracted = GeminiExtractionResult.fromJson({
+        'comercio': 'Automercado Plaza',
+        'fecha': '2026-11-20',
+        'moneda': 'VES',
+        'total_original': 410.00,
+        'impuesto_iva': 41.38,
+        'items': [
+          {'descripcion': 'Detergente Líquido', 'cantidad': 1, 'precio_unitario': 258.62, 'categoria': 'Hogar', 'alicuota_fiscal': 'G'},
+          {'descripcion': 'Harina PAN 1kg', 'cantidad': 1, 'precio_unitario': 110.00, 'categoria': 'Alimentación', 'alicuota_fiscal': 'E'},
+        ],
+      });
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<GastoProvider>.value(value: gastoProvider),
+            ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+            ChangeNotifierProvider<ScanQueueProvider>.value(value: scanQueueProvider),
+          ],
+          child: MaterialApp(
+            home: ReviewExpenseScreen(extractedData: extracted),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // 1. Editar Monto total invalida el ancla del ticket
+      await tester.enterText(find.byKey(const Key('input_monto_total')), '450');
+      await tester.pumpAndSettle();
+
+      expect(find.text('IVA de la factura'), findsNothing);
+      expect(find.text('IVA calculado'), findsOneWidget);
+      expect(find.text('Cuadra con la factura'), findsNothing);
+
+      // 2. Pulsar Guardar con descuadre abre confirmación (nunca guarda imputado en rojo)
+      await tester.tap(find.byKey(const Key('btn_guardar_gasto')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('dialog_fiscal_fallback_confirm')), findsOneWidget);
+
+      // 3. Pulsar Corregir cancela el guardado
+      await tester.tap(find.byKey(const Key('btn_fallback_corregir')));
+      await tester.pumpAndSettle();
+      expect(gastoProvider.ultimoGastoGuardado, isNull);
+
+      // 4. Pulsar Guardar y confirmar 'Guardar así' guarda en fallback seguro con (G)/(E) + Impuesto IVA en categoría dominante
+      await tester.tap(find.byKey(const Key('btn_guardar_gasto')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('btn_fallback_guardar_asi')));
+      await tester.pumpAndSettle();
+
+      expect(gastoProvider.ultimoGastoGuardado, isNotNull);
+      final savedItems = gastoProvider.ultimosItemsGuardados!;
+      expect(savedItems.length, equals(3));
+      expect(savedItems[0].descripcion, equals('Detergente Líquido (G)'));
+      expect(savedItems[0].total, equals(25862));
+      expect(savedItems[1].descripcion, equals('Harina PAN 1kg (E)'));
+      expect(savedItems[1].total, equals(11000));
+      expect(savedItems[2].descripcion, equals('Impuesto IVA'));
+      expect(savedItems[2].total, equals(4138));
+      expect(savedItems[2].categoria, equals('Hogar'));
+    });
+
+    testWidgets('AI-06 B-2: recupera error OCR real (renglonSeparado), corrige en 1 toque y guarda imputado con nombres limpios', (tester) async {
+      tester.view.physicalSize = const Size(360, 2600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      // Factura donde Gemini marcó por error Detergente como E en lugar de G -> fromJson cae a renglonSeparado
+      final extractedConErrorOcr = GeminiExtractionResult.fromJson({
+        'comercio': 'Automercado Plaza',
+        'fecha': '2026-11-20',
+        'moneda': 'VES',
+        'total_original': 410.00,
+        'impuesto_iva': 41.38,
+        'items': [
+          {'descripcion': 'Detergente Líquido', 'cantidad': 1, 'precio_unitario': 258.62, 'categoria': 'Hogar', 'alicuota_fiscal': 'E'},
+          {'descripcion': 'Harina PAN 1kg', 'cantidad': 1, 'precio_unitario': 110.00, 'categoria': 'Alimentación', 'alicuota_fiscal': 'E'},
+        ],
+      });
+      expect(extractedConErrorOcr.ivaModo, equals(IvaModo.renglonSeparado));
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<GastoProvider>.value(value: gastoProvider),
+            ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+            ChangeNotifierProvider<ScanQueueProvider>.value(value: scanQueueProvider),
+          ],
+          child: MaterialApp(
+            home: ReviewExpenseScreen(extractedData: extractedConErrorOcr),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Aparece inmediatamente el banner de sugerencia única
+      expect(find.byKey(const Key('fiscal_suggestion_banner')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('btn_aplicar_sugerencia_fiscal')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Cuadra con la factura'), findsOneWidget);
+
+      // Guardar persiste precios brutos con IVA en cada categoría, nombres limpios y sin renglón Impuesto IVA
+      await tester.tap(find.byKey(const Key('btn_guardar_gasto')));
+      await tester.pumpAndSettle();
+
+      expect(gastoProvider.ultimoGastoGuardado, isNotNull);
+      final savedItems = gastoProvider.ultimosItemsGuardados!;
+      expect(savedItems.length, equals(2));
+      expect(savedItems[0].descripcion, equals('Detergente Líquido'));
+      expect(savedItems[0].total, equals(30000));
+      expect(savedItems[0].categoria, equals('Hogar'));
+      expect(savedItems[1].descripcion, equals('Harina PAN 1kg'));
+      expect(savedItems[1].total, equals(11000));
+      expect(savedItems[1].categoria, equals('Alimentación'));
+    });
+
+    testWidgets('AI-06 B-2: ticket largo de 12 artículos (9 exentos, 3 gravados con decimal y 8%) y hoja Ajustar IVA a 360 dp', (tester) async {
+      tester.view.physicalSize = const Size(360, 4800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      // 9 exentos (base 974.00) + 2 al 16% (80.17 + 200.00 = 280.17) + 1 al 8% (210.63)
+      // IVA exacto = round((28017 * 16 + 21063 * 8) / 100) = round(616776 / 100) = 6168 cents (Bs. 61.68)
+      // Total = 974.00 + 280.17 + 210.63 + 61.68 = 1526.48
+      final ticket12 = GeminiExtractionResult.fromJson({
+        'comercio': 'Automercado 12',
+        'fecha': '2026-11-20',
+        'moneda': 'VES',
+        'total_original': 1526.48,
+        'impuesto_iva': 61.68,
+        'items': [
+          {'descripcion': 'Harina PAN 1kg', 'cantidad': 2, 'precio_unitario': 110.00, 'categoria': 'Alimentación', 'alicuota_fiscal': 'E'},
+          {'descripcion': 'Arroz Mary 1kg', 'cantidad': 1, 'precio_unitario': 95.00, 'categoria': 'Alimentación', 'alicuota_fiscal': 'E'},
+          {'descripcion': 'Pasta Primor 500g', 'cantidad': 2, 'precio_unitario': 72.00, 'categoria': 'Alimentación', 'alicuota_fiscal': 'E'},
+          {'descripcion': 'Pollo entero', 'cantidad': 1.45, 'precio_unitario': 120.00, 'categoria': 'Alimentación', 'alicuota_fiscal': 'E'},
+          {'descripcion': 'Queso blanco', 'cantidad': 0.5, 'precio_unitario': 180.00, 'categoria': 'Alimentación', 'alicuota_fiscal': 'E'},
+          {'descripcion': 'Plátanos maduros', 'cantidad': 1, 'precio_unitario': 65.00, 'categoria': 'Alimentación', 'alicuota_fiscal': 'E'},
+          {'descripcion': 'Tomates', 'cantidad': 0.8, 'precio_unitario': 70.00, 'categoria': 'Alimentación', 'alicuota_fiscal': 'E'},
+          {'descripcion': 'Cebolla blanca', 'cantidad': 0.5, 'precio_unitario': 60.00, 'categoria': 'Alimentación', 'alicuota_fiscal': 'E'},
+          {'descripcion': 'Huevos cartón 15u', 'cantidad': 1, 'precio_unitario': 100.00, 'categoria': 'Alimentación', 'alicuota_fiscal': 'E'},
+          {'descripcion': 'Detergente a granel', 'cantidad': 0.31, 'precio_unitario': 258.62, 'categoria': 'Hogar', 'alicuota_fiscal': 'G'},
+          {'descripcion': 'Refresco 2L', 'cantidad': 1, 'precio_unitario': 200.00, 'categoria': 'Alimentación', 'alicuota_fiscal': 'G'},
+          {'descripcion': 'Panadería especial', 'cantidad': 1, 'precio_unitario': 210.63, 'categoria': 'Alimentación', 'alicuota_fiscal': 'R'},
+        ],
+      });
+      expect(ticket12.ivaModo, equals(IvaModo.imputado));
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<GastoProvider>.value(value: gastoProvider),
+            ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+            ChangeNotifierProvider<ScanQueueProvider>.value(value: scanQueueProvider),
+          ],
+          child: MaterialApp(
+            home: ReviewExpenseScreen(extractedData: ticket12),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Solo 2 badges G · 16% y 1 badge R · 8%; las 9 filas exentas no muestran ninguna pastilla ni franja Con IVA
+      expect(find.text('G · 16%'), findsNWidgets(2));
+      expect(find.text('R · 8%'), findsOneWidget);
+      expect(find.textContaining('Con IVA 16%:'), findsNWidgets(2));
+      expect(find.textContaining('Con IVA 8%:'), findsOneWidget);
+      expect(find.text('Ajustar IVA · 3 gravados'), findsOneWidget);
+      expect(find.text('Cuadra con la factura'), findsOneWidget);
+
+      // Abrir hoja Ajustar IVA y alternar Harina PAN (exento) a 16% y de vuelta a Exento
+      await tester.tap(find.byKey(const Key('btn_ajustar_iva_footer')));
+      await tester.pumpAndSettle();
+      expect(find.text('Ajustar IVA por artículo'), findsOneWidget);
+
+      final harinaKey = ticket12.items.first.clientKey;
+      await tester.tap(find.byKey(ValueKey('sheet_iva_${harinaKey}_16')));
+      await tester.pumpAndSettle();
+      expect(find.text('Ajustar IVA · 4 gravados'), findsOneWidget);
+
+      await tester.tap(find.byKey(ValueKey('sheet_iva_${harinaKey}_0')));
+      await tester.pumpAndSettle();
+      expect(find.text('Ajustar IVA · 3 gravados'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('btn_cerrar_hoja_ajustar_iva')));
+      await tester.pumpAndSettle();
+      expect(find.text('Cuadra con la factura'), findsOneWidget);
     });
   });
 }

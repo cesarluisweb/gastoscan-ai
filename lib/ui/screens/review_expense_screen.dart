@@ -14,6 +14,7 @@ import '../../data/datasources/local/database_helper.dart';
 import '../../data/models/gasto_model.dart';
 import '../../data/models/gemini_extraction_result.dart';
 import '../../data/models/item_gasto_model.dart';
+import '../../domain/finance/fiscal_reconciliation_helper.dart';
 import '../../domain/monetary/rate_market.dart';
 import '../../providers/gasto_provider.dart';
 import '../../providers/settings_provider.dart';
@@ -173,6 +174,11 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         .trim();
   }
   late List<ItemGastoModel> _items;
+  bool _fiscalReviewMode = false;
+  bool _anclaFiscalActiva = false;
+  int _ivaDocumentalCents = 0;
+  bool _mostrarBadgesEnTarjetas = false;
+  EstadoReconciliacionFiscal? _estadoFiscal;
   String _fuenteTasa = 'Tasa oficial BCV automática';
   bool _isSaving = false;
   double? _tasaUsdFecha;
@@ -211,7 +217,10 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
             a.cantidad != b.cantidad ||
             a.precioUnitario != b.precioUnitario ||
             a.total != b.total ||
-            a.categoria != b.categoria) return true;
+            a.categoria != b.categoria ||
+            a.tasaIvaPct != b.tasaIvaPct ||
+            a.baseImponibleOriginal != b.baseImponibleOriginal ||
+            a.baseTotalOriginal != b.baseTotalOriginal) return true;
       }
     } else {
       if (_items.isNotEmpty) return true;
@@ -440,7 +449,16 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       }
       _monedaItems = _selectedMoneda;
 
-      _items = List.from(data?.items ?? []);
+      final sesionFiscal = FiscalReconciliationHelper.prepararSesionFiscal(data);
+      if (sesionFiscal.activa) {
+        _fiscalReviewMode = true;
+        _anclaFiscalActiva = true;
+        _ivaDocumentalCents = sesionFiscal.ivaDocumentalCents;
+        _mostrarBadgesEnTarjetas = sesionFiscal.mostrarBadgesEnTarjetas;
+        _items = List<ItemGastoModel>.from(sesionFiscal.items);
+      } else {
+        _items = List.from(data?.items ?? []);
+      }
       _totalBsManualCtrl = TextEditingController();
 
       if (data?.metodoLiquidacion != null) {
@@ -478,6 +496,10 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
 
       final double totalOriginalVal = data?.totalOriginal ?? 0.0;
       _totalOriginalCtrl = TextEditingController(text: totalOriginalVal > 0 ? _formatDouble(totalOriginalVal) : '');
+      if (_fiscalReviewMode) {
+        _estadoFiscal = _calcularEstadoFiscalSinSetState();
+        _items = List<ItemGastoModel>.from(_estadoFiscal!.itemsRecalculados);
+      }
 
       double tasaInicial = data?.tasaCambioDetectada ??
           (_selectedMoneda == 'EUR'
@@ -793,7 +815,60 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     setState(() {});
   }
 
+  int _montoTotalActualCents() {
+    final total = tryParseAmount(_totalOriginalCtrl.text, isPrice: false) ?? 0.0;
+    return total > 0 ? (total * 100).round() : 0;
+  }
+
+  EstadoReconciliacionFiscal _calcularEstadoFiscalSinSetState() {
+    return FiscalReconciliationHelper.reconciliar(
+      items: _items,
+      ivaDocumentalCents: _ivaDocumentalCents,
+      montoTotalCents: _montoTotalActualCents(),
+      anclaFiscalActiva: _anclaFiscalActiva,
+    );
+  }
+
+  void _recalcularFiscalGlobal() {
+    if (!_fiscalReviewMode) return;
+    final estado = _calcularEstadoFiscalSinSetState();
+    _estadoFiscal = estado;
+    _items = List<ItemGastoModel>.from(estado.itemsRecalculados);
+  }
+
+  void _cambiarTasaFiscalItem(int index, int nuevaTasaPct) {
+    if (!_fiscalReviewMode || index < 0 || index >= _items.length) return;
+    setState(() {
+      final current = _items[index];
+      final int baseUnit = current.baseUnitCents;
+      final int baseTotal = current.baseTotalCents;
+      if (nuevaTasaPct > 0) {
+        _items[index] = current.copyWith(
+          baseImponibleOriginal: baseUnit,
+          baseTotalOriginal: baseTotal,
+          tasaIvaPct: nuevaTasaPct,
+          origenAlicuota: OrigenAlicuota.manual,
+        );
+      } else {
+        _items[index] = current.copyWith(
+          precioUnitario: baseUnit,
+          total: baseTotal,
+          clearBaseImponibleOriginal: true,
+          origenAlicuota: OrigenAlicuota.manual,
+        );
+      }
+      _recalcularFiscalGlobal();
+    });
+    _schedulePriceComparisonCheck();
+  }
+
   void _recalcularTotal() {
+    // En modo revisión fiscal B-2 no sobrescribimos Monto total para preservar
+    // lo realmente pagado en la factura (y las ediciones manuales del total).
+    if (_fiscalReviewMode) {
+      return;
+    }
+
     final int sumCentavos = _items.fold(0, (acc, item) => acc + item.total);
     final double sum = sumCentavos / 100.0;
     final currentTotal = tryParseAmount(_totalOriginalCtrl.text, isPrice: false) ?? 0.0;
@@ -972,6 +1047,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         origenCategoria: OrigenCategoria.predeterminada,
       ));
       _sincronizarCategoriaImpuestos();
+      if (_fiscalReviewMode) {
+        _recalcularFiscalGlobal();
+      }
     });
   }
 
@@ -985,6 +1063,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       _items.removeAt(index);
       _priceComparisons.remove(removedKey);
       _sincronizarCategoriaImpuestos();
+      if (_fiscalReviewMode) {
+        _recalcularFiscalGlobal();
+      }
     });
 
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -1010,6 +1091,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     _priceComparisons[removedItem.clientKey] = removedHistory;
                   }
                   _sincronizarCategoriaImpuestos();
+                  if (_fiscalReviewMode) {
+                    _recalcularFiscalGlobal();
+                  }
                   _recalcularTotal();
                 });
               },
@@ -1038,8 +1122,82 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     );
   }
 
+  Future<bool?> _confirmarGuardadoFallbackFiscal(
+    EstadoReconciliacionFiscal estado,
+    int ivaFallbackCents,
+  ) {
+    final sym = _symbolForMoneda(_selectedMoneda);
+    final String detalleIva = ivaFallbackCents > 0
+        ? 'Se guardarán los artículos sin IVA y un renglón «Impuesto IVA» aparte ($sym ${_formatDisplayMonto(ivaFallbackCents / 100.0)}).'
+        : 'Se guardarán los artículos sin IVA y sin renglón de impuesto.';
+    final String mensaje = estado.anclaFiscalActiva
+        ? 'No pudimos distribuir el IVA con exactitud. $detalleIva'
+        : 'La suma con IVA ($sym ${_formatDisplayMonto(estado.sumBrutoCents / 100.0)}) no coincide con el monto total ($sym ${_formatDisplayMonto(estado.montoTotalCents / 100.0)}). $detalleIva';
+
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        key: const Key('dialog_fiscal_fallback_confirm'),
+        backgroundColor: AppColors.card,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'El IVA no cuadra con la factura',
+          style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary, fontSize: 16),
+        ),
+        content: Text(
+          mensaje,
+          style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
+        ),
+        actions: [
+          ElevatedButton(
+            key: const Key('btn_fallback_corregir'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.black,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Corregir', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+          TextButton(
+            key: const Key('btn_fallback_guardar_asi'),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text(
+              'Guardar así',
+              style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _guardarGasto({bool revisarSiguiente = false}) async {
+    if (_isSaving) return;
     if (!_formKey.currentState!.validate()) return;
+
+    bool usarFallbackIvaSeparado = false;
+    int ivaFallbackCents = 0;
+    EstadoReconciliacionFiscal? estadoFiscalAlGuardar;
+    if (_fiscalReviewMode) {
+      estadoFiscalAlGuardar = _calcularEstadoFiscalSinSetState();
+      if (!estadoFiscalAlGuardar.puedeGuardarImputado) {
+        ivaFallbackCents = estadoFiscalAlGuardar.anclaFiscalActiva && _ivaDocumentalCents > 0
+            ? _ivaDocumentalCents
+            : estadoFiscalAlGuardar.ivaCalculadoCents;
+        final bool? confirmarFallback = await _confirmarGuardadoFallbackFiscal(
+          estadoFiscalAlGuardar,
+          ivaFallbackCents,
+        );
+        if (confirmarFallback != true) {
+          return;
+        }
+        if (!mounted) return;
+        usarFallbackIvaSeparado = true;
+      }
+    }
 
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     final bool hayImagenPorGuardar = !_imageDeleted && (_pickedImage != null || widget.imageFile != null);
@@ -1111,7 +1269,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
 
     // Si solo hay 1 artículo y el usuario colocó el monto total pero dejó el artículo en 0,
     // o al revés (colocó el precio del artículo y dejó el monto total en 0):
-    if (_items.length == 1) {
+    if (!_fiscalReviewMode && _items.length == 1) {
       final singleItemTotal = _items[0].totalDisplay;
       if (totalOrig > 0 && singleItemTotal <= 0) {
         _items[0] = _items[0].copyWith(
@@ -1149,7 +1307,12 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
     // Alerta de discrepancia entre Monto Total y Suma de Ítems
     final bool sameCurrency = (_monedaItems == _selectedMoneda);
     final double sumItems = _items.fold(0.0, (acc, it) => acc + it.totalDisplay);
-    if (sameCurrency && _items.isNotEmpty && sumItems > 0 && (sumItems - totalOrig).abs() > 0.05) {
+    if (!usarFallbackIvaSeparado &&
+        !_fiscalReviewMode &&
+        sameCurrency &&
+        _items.isNotEmpty &&
+        sumItems > 0 &&
+        (sumItems - totalOrig).abs() > 0.05) {
       final action = await showDialog<String>(
         context: context,
         barrierDismissible: false,
@@ -1372,10 +1535,19 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         ? (totalVesCalculado / totalOrig)
         : 1.0;
 
+    final List<ItemGastoModel> sourceItems = usarFallbackIvaSeparado
+        ? FiscalReconciliationHelper.construirItemsFallback(
+            items: _items,
+            ivaCents: ivaFallbackCents,
+          )
+        : (_fiscalReviewMode && estadoFiscalAlGuardar != null
+            ? estadoFiscalAlGuardar.itemsRecalculados
+            : _items);
+
     int unnamedCounter = 1;
     final itemsFinal = <ItemGastoModel>[];
-    for (int idx = 0; idx < _items.length; idx++) {
-      final it = _items[idx];
+    for (int idx = 0; idx < sourceItems.length; idx++) {
+      final it = sourceItems[idx];
       final desc = it.descripcion.trim().isEmpty ? 'Artículo ${unnamedCounter++}' : it.descripcion.trim();
       if (ratioConversionItems != 1.0) {
         final bool canPreserveOriginalBsCents = widget.existingGasto != null &&
@@ -1855,20 +2027,48 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
           break;
       }
 
-      final bool hasImputedItems = itemsToSave.any((it) => it.baseImponibleOriginal != null);
-      final bool hasIvaLine = itemsToSave.any((it) => ItemGastoModel.isIvaOnlyDescription(it.descripcion));
-      final IvaModo draftIvaModo = hasImputedItems
-          ? IvaModo.imputado
-          : (hasIvaLine ? IvaModo.renglonSeparado : IvaModo.noInformado);
+      final List<ItemGastoModel> draftItems;
+      final IvaModo draftIvaModo;
+      final double draftImpuestoIva;
+      if (_fiscalReviewMode) {
+        final estadoDraft = _calcularEstadoFiscalSinSetState();
+        final int ivaDraftCents = _anclaFiscalActiva && _ivaDocumentalCents > 0
+            ? _ivaDocumentalCents
+            : estadoDraft.ivaCalculadoCents;
+        draftImpuestoIva = ivaDraftCents / 100.0;
+        if (estadoDraft.puedeGuardarImputado) {
+          draftIvaModo = IvaModo.imputado;
+          draftItems = estadoDraft.itemsRecalculados.where((it) {
+            final hasDesc = it.descripcion.trim().isNotEmpty;
+            final hasVal = it.precioUnitario > 0 || it.total > 0 || it.baseUnitCents > 0;
+            return hasDesc || hasVal;
+          }).toList();
+        } else {
+          draftIvaModo = IvaModo.renglonSeparado;
+          draftItems = FiscalReconciliationHelper.construirItemsFallback(
+            items: itemsToSave,
+            ivaCents: ivaDraftCents,
+            fillEmptyNames: false,
+          );
+        }
+      } else {
+        final bool hasImputedItems = itemsToSave.any((it) => it.baseImponibleOriginal != null);
+        final bool hasIvaLine = itemsToSave.any((it) => ItemGastoModel.isIvaOnlyDescription(it.descripcion));
+        draftIvaModo = hasImputedItems
+            ? IvaModo.imputado
+            : (hasIvaLine ? IvaModo.renglonSeparado : IvaModo.noInformado);
+        draftImpuestoIva = 0.0;
+        draftItems = itemsToSave;
+      }
 
       final draftResult = GeminiExtractionResult(
         comercio: comercioFinal,
         fecha: _selectedFecha,
         moneda: _selectedMoneda,
         totalOriginal: totalParsed,
-        impuestoIva: 0.0,
+        impuestoIva: draftImpuestoIva,
         tasaCambioDetectada: tasaDetectada,
-        items: itemsToSave,
+        items: draftItems,
         metodoLiquidacion: metodoLiqStr,
         ivaModo: draftIvaModo,
       );
@@ -1904,6 +2104,505 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         setState(() => _isSaving = false);
       }
     }
+  }
+
+  Widget _buildFiscalGrossStrip(int idx, ItemGastoModel item) {
+    final sym = _symbolForMoneda(_selectedMoneda);
+    final bool showExactUnit = item.cantidad != 1.0 &&
+        item.cantidad > 0 &&
+        item.total > 0 &&
+        (item.precioUnitario * item.cantidad).round() == item.total;
+    final String grossText = showExactUnit
+        ? 'Con IVA ${item.tasaIvaPct}%: $sym ${_formatDisplayMonto(item.totalDisplay)} (${_formatDouble(item.cantidad)} × $sym ${_formatDisplayMonto(item.precioUnitarioDisplay)})'
+        : 'Con IVA ${item.tasaIvaPct}%: $sym ${_formatDisplayMonto(item.totalDisplay)}';
+    final String badgeLabel = item.tasaIvaPct == 8 ? 'R · 8%' : 'G · 16%';
+
+    return Container(
+      key: ValueKey('item_tax_gross_${item.clientKey}'),
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.only(top: 6),
+      decoration: const BoxDecoration(
+        border: Border(
+          top: BorderSide(color: AppColors.border, width: 1),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          if (_mostrarBadgesEnTarjetas) ...[
+            Tooltip(
+              message: 'Toca para marcar como Exento',
+              child: Material(
+                color: const Color(0xFFFEF3C7),
+                shape: const StadiumBorder(
+                  side: BorderSide(color: Color(0xFFF59E0B), width: 1),
+                ),
+                child: InkWell(
+                  key: ValueKey('item_tax_badge_${item.clientKey}'),
+                  customBorder: const StadiumBorder(),
+                  onTap: () => _cambiarTasaFiscalItem(idx, 0),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    child: Text(
+                      badgeLabel,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF78350F),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
+          Expanded(
+            child: Text(
+              grossText,
+              textAlign: _mostrarBadgesEnTarjetas ? TextAlign.right : TextAlign.left,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+                fontFeatures: [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFiscalSuggestionBanner(SugerenciaCorreccionFiscal sug) {
+    final String rawDesc = (sug.itemIndex >= 0 && sug.itemIndex < _items.length)
+        ? _items[sug.itemIndex].descripcion
+        : sug.descripcion;
+    final String descLimpia = rawDesc.trim().isEmpty
+        ? 'este artículo'
+        : rawDesc.trim();
+    final String pregunta = sug.tasaSugeridaPct > 0
+        ? 'El IVA no cuadra con la factura. ¿"$descLimpia" lleva IVA ${sug.tasaSugeridaPct}% (${sug.tasaSugeridaPct == 8 ? 'R' : 'G'})?'
+        : 'El IVA no cuadra con la factura. ¿"$descLimpia" es Exento (E)?';
+
+    return Container(
+      key: const Key('fiscal_suggestion_banner'),
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFBEB),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFF59E0B), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(top: 1),
+                child: Icon(Icons.auto_fix_high_rounded, size: 16, color: Color(0xFF92400E)),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  pregunta,
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textPrimary,
+                    height: 1.35,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerRight,
+            child: ElevatedButton(
+              key: const Key('btn_aplicar_sugerencia_fiscal'),
+              onPressed: () => _cambiarTasaFiscalItem(sug.itemIndex, sug.tasaSugeridaPct),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.black,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                minimumSize: const Size(0, 32),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              child: const Text(
+                'Corregir',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFiscalFooterRow(
+    String label,
+    String amount, {
+    bool isBold = false,
+    Color? textColor,
+  }) {
+    final Color effectiveLabelColor = textColor ?? (isBold ? AppColors.textPrimary : const Color(0xFF4B5563));
+    final Color effectiveAmountColor = textColor ?? AppColors.textPrimary;
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: isBold ? 13 : 12,
+              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+              color: effectiveLabelColor,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 140),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerRight,
+            child: Text(
+              amount,
+              style: TextStyle(
+                fontSize: isBold ? 13.5 : 12,
+                fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
+                color: effectiveAmountColor,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFiscalSummaryFooter(EstadoReconciliacionFiscal estado) {
+    final sym = _symbolForMoneda(_selectedMoneda);
+    final int gravados = estado.cantidadMarcadosGravados;
+    final String gravadosLabel = gravados == 1 ? '1 gravado' : '$gravados gravados';
+
+    final IconData statusIcon;
+    final Color statusColor;
+    final String statusText;
+    if (estado.cuadraConFactura) {
+      statusIcon = Icons.check_circle_outline_rounded;
+      statusColor = const Color(0xFF15803D);
+      statusText = 'Cuadra con la factura';
+    } else if (estado.anclaFiscalActiva && !estado.ivaCuadra) {
+      final diffIva = (estado.ivaCalculadoCents - estado.ivaDocumentalCents).abs();
+      statusIcon = Icons.warning_amber_rounded;
+      statusColor = const Color(0xFF92400E);
+      statusText = 'IVA no cuadra (dif. $sym ${_formatDisplayMonto(diffIva / 100.0)})';
+    } else if (estado.anclaFiscalActiva && !estado.totalCuadra) {
+      final diffTot = ((estado.subtotalBaseCents + estado.ivaDocumentalCents) - estado.montoTotalCents).abs();
+      statusIcon = Icons.warning_amber_rounded;
+      statusColor = const Color(0xFF92400E);
+      statusText = 'Total no coincide (dif. $sym ${_formatDisplayMonto(diffTot / 100.0)})';
+    } else if (estado.totalCuadra) {
+      statusIcon = Icons.info_outline_rounded;
+      statusColor = const Color(0xFF4B5563);
+      statusText = 'IVA recalculado según tus ediciones';
+    } else {
+      final diffTot = (estado.sumBrutoCents - estado.montoTotalCents).abs();
+      statusIcon = Icons.warning_amber_rounded;
+      statusColor = const Color(0xFF92400E);
+      statusText = 'Total difiere en $sym ${_formatDisplayMonto(diffTot / 100.0)}';
+    }
+
+    return Container(
+      key: const Key('fiscal_summary_footer'),
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.cardLighter,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildFiscalFooterRow(
+            'Subtotal sin IVA',
+            '$sym ${_formatDisplayMonto(estado.subtotalBaseCents / 100.0)}',
+          ),
+          const SizedBox(height: 4),
+          _buildFiscalFooterRow(
+            estado.anclaFiscalActiva ? 'IVA de la factura' : 'IVA calculado',
+            '$sym ${_formatDisplayMonto((estado.anclaFiscalActiva ? estado.ivaDocumentalCents : estado.ivaCalculadoCents) / 100.0)}',
+          ),
+          if (estado.anclaFiscalActiva && !estado.ivaCuadra) ...[
+            const SizedBox(height: 4),
+            _buildFiscalFooterRow(
+              'IVA calculado',
+              '$sym ${_formatDisplayMonto(estado.ivaCalculadoCents / 100.0)}',
+              textColor: const Color(0xFF92400E),
+            ),
+          ],
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Icon(statusIcon, size: 15, color: statusColor),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  statusText,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                    color: statusColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 6),
+            child: Divider(height: 1, color: AppColors.border),
+          ),
+          _buildFiscalFooterRow(
+            'Total con IVA',
+            '$sym ${_formatDisplayMonto(estado.sumBrutoCents / 100.0)}',
+            isBold: true,
+          ),
+          const SizedBox(height: 8),
+          InkWell(
+            key: const Key('btn_ajustar_iva_footer'),
+            onTap: _abrirHojaAjustarIva,
+            borderRadius: BorderRadius.circular(9),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(9),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.tune_rounded, size: 16, color: Color(0xFF4B5563)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Ajustar IVA · $gravadosLabel',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right_rounded, size: 18, color: Color(0xFF4B5563)),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _abrirHojaAjustarIva() async {
+    if (!_fiscalReviewMode) return;
+    final sym = _symbolForMoneda(_selectedMoneda);
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (sheetCtx) {
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            final estado = _estadoFiscal ?? _calcularEstadoFiscalSinSetState();
+            return SafeArea(
+              top: false,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(ctx).size.height * 0.78,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Expanded(
+                            child: Text(
+                              'Ajustar IVA por artículo',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            estado.cuadraConFactura
+                                ? '✓ Cuadra'
+                                : 'Calc: $sym ${_formatDisplayMonto(estado.ivaCalculadoCents / 100.0)}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: estado.cuadraConFactura
+                                  ? const Color(0xFF15803D)
+                                  : const Color(0xFF92400E),
+                              fontFeatures: const [FontFeature.tabularFigures()],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Indica qué artículos pagan IVA en la factura.',
+                        style: TextStyle(fontSize: 12, color: Color(0xFF4B5563)),
+                      ),
+                      const SizedBox(height: 10),
+                      Flexible(
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          itemCount: _items.length,
+                          separatorBuilder: (_, __) => const Divider(height: 1, color: AppColors.border),
+                          itemBuilder: (_, idx) {
+                            final it = _items[idx];
+                            final label = it.descripcion.trim().isEmpty
+                                ? 'Artículo ${idx + 1}'
+                                : it.descripcion.trim();
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          label,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.textPrimary,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          'Base: $sym ${_formatDisplayMonto(it.baseTotalDisplay)}',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontSize: 11,
+                                            color: Color(0xFF4B5563),
+                                            fontFeatures: [FontFeature.tabularFigures()],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: AppColors.cardLighter,
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(color: AppColors.border),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        for (final opt in const [
+                                          (rate: 0, text: 'Exento'),
+                                          (rate: 16, text: '16%'),
+                                          (rate: 8, text: '8%'),
+                                        ])
+                                          InkWell(
+                                            key: ValueKey('sheet_iva_${it.clientKey}_${opt.rate}'),
+                                            borderRadius: BorderRadius.circular(7),
+                                            onTap: () {
+                                              _cambiarTasaFiscalItem(idx, opt.rate);
+                                              setSheetState(() {});
+                                            },
+                                            child: Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                              decoration: BoxDecoration(
+                                                color: it.tasaIvaPct == opt.rate
+                                                    ? AppColors.primary
+                                                    : Colors.transparent,
+                                                borderRadius: BorderRadius.circular(7),
+                                              ),
+                                              child: Text(
+                                                opt.text,
+                                                style: TextStyle(
+                                                  fontSize: 11.5,
+                                                  fontWeight: it.tasaIvaPct == opt.rate
+                                                      ? FontWeight.bold
+                                                      : FontWeight.w500,
+                                                  color: it.tasaIvaPct == opt.rate
+                                                      ? Colors.black
+                                                      : const Color(0xFF4B5563),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          key: const Key('btn_cerrar_hoja_ajustar_iva'),
+                          onPressed: () => Navigator.pop(sheetCtx),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.black,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          child: const Text('Listo', style: TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   Widget _buildLiquidacionPill({
@@ -2686,6 +3385,10 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                             });
                                           }
                                         }
+                                        if (_fiscalReviewMode &&
+                                            _estadoFiscal?.sugerenciaUnica?.itemIndex == idx) {
+                                          setState(() {});
+                                        }
                                         _schedulePriceComparisonCheck();
                                       },
                                     ),
@@ -2734,14 +3437,34 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                         final cant = tryParseAmount(v, isPrice: false) ?? 1.0;
                                         setState(() {
                                           final currentIt = _items[idx];
-                                          final int? baseCents = currentIt.baseImponibleOriginal;
-                                          final int nuevoTotal = (baseCents != null && currentIt.tasaIvaPct > 0)
-                                              ? (cant * baseCents * (100 + currentIt.tasaIvaPct) / 100.0).round()
-                                              : (cant * currentIt.precioUnitarioDisplay * 100).round();
-                                          _items[idx] = currentIt.copyWith(
-                                            cantidad: cant,
-                                            total: nuevoTotal,
-                                          );
+                                          if (_fiscalReviewMode) {
+                                            final int baseUnit = currentIt.baseUnitCents;
+                                            final int baseTotal = (cant * baseUnit).round();
+                                            if (currentIt.tasaIvaPct > 0) {
+                                              _items[idx] = currentIt.copyWith(
+                                                cantidad: cant,
+                                                baseImponibleOriginal: baseUnit,
+                                                baseTotalOriginal: baseTotal,
+                                              );
+                                            } else {
+                                              _items[idx] = currentIt.copyWith(
+                                                cantidad: cant,
+                                                precioUnitario: baseUnit,
+                                                total: baseTotal,
+                                                clearBaseImponibleOriginal: true,
+                                              );
+                                            }
+                                            _recalcularFiscalGlobal();
+                                          } else {
+                                            final int? baseCents = currentIt.baseImponibleOriginal;
+                                            final int nuevoTotal = (baseCents != null && currentIt.tasaIvaPct > 0)
+                                                ? (cant * baseCents * (100 + currentIt.tasaIvaPct) / 100.0).round()
+                                                : (cant * currentIt.precioUnitarioDisplay * 100).round();
+                                            _items[idx] = currentIt.copyWith(
+                                              cantidad: cant,
+                                              total: nuevoTotal,
+                                            );
+                                          }
                                         });
                                         _recalcularTotal();
                                       },
@@ -2751,15 +3474,19 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                   Expanded(
                                     flex: 65,
                                     child: TextFormField(
-                                      initialValue: _formatDouble(item.precioUnitarioDisplay),
+                                      initialValue: _fiscalReviewMode
+                                          ? _formatDouble(item.baseUnitDisplay)
+                                          : _formatDouble(item.precioUnitarioDisplay),
                                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                                       textInputAction: idx < _items.length - 1 ? TextInputAction.next : TextInputAction.done,
                                       decoration: InputDecoration(
                                         filled: true,
                                         fillColor: AppColors.surface,
-                                        labelText: item.baseImponibleOriginal != null
-                                            ? 'Precio (con IVA)'
-                                            : 'Precio',
+                                        labelText: _fiscalReviewMode
+                                            ? (item.tasaIvaPct > 0 ? 'Precio (sin IVA)' : 'Precio')
+                                            : (item.baseImponibleOriginal != null
+                                                ? 'Precio (con IVA)'
+                                                : 'Precio'),
                                         labelStyle: const TextStyle(fontSize: 12, color: Color(0xFF4B5563)),
                                         prefixText: '${_symbolForMoneda(_selectedMoneda)} ',
                                         prefixStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF4B5563)),
@@ -2776,11 +3503,30 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                       onChanged: (v) {
                                         final prec = tryParseAmount(v, isPrice: false) ?? 0.0;
                                         setState(() {
-                                          _items[idx] = _items[idx].copyWith(
-                                            precioUnitario: (prec * 100).round(),
-                                            total: (_items[idx].cantidad * prec * 100).round(),
-                                            clearBaseImponibleOriginal: true,
-                                          );
+                                          final currentIt = _items[idx];
+                                          if (_fiscalReviewMode) {
+                                            final int baseUnit = (prec * 100).round();
+                                            final int baseTotal = (currentIt.cantidad * baseUnit).round();
+                                            if (currentIt.tasaIvaPct > 0) {
+                                              _items[idx] = currentIt.copyWith(
+                                                baseImponibleOriginal: baseUnit,
+                                                baseTotalOriginal: baseTotal,
+                                              );
+                                            } else {
+                                              _items[idx] = currentIt.copyWith(
+                                                precioUnitario: baseUnit,
+                                                total: baseTotal,
+                                                clearBaseImponibleOriginal: true,
+                                              );
+                                            }
+                                            _recalcularFiscalGlobal();
+                                          } else {
+                                            _items[idx] = currentIt.copyWith(
+                                              precioUnitario: (prec * 100).round(),
+                                              total: (currentIt.cantidad * prec * 100).round(),
+                                              clearBaseImponibleOriginal: true,
+                                            );
+                                          }
                                         });
                                         _recalcularTotal();
                                       },
@@ -2864,9 +3610,11 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                       crossAxisAlignment: CrossAxisAlignment.end,
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
-                                        const Text(
-                                          'Total',
-                                          style: TextStyle(
+                                        Text(
+                                          _fiscalReviewMode && item.tasaIvaPct > 0
+                                              ? 'Total sin IVA'
+                                              : 'Total',
+                                          style: const TextStyle(
                                             fontSize: 10,
                                             fontWeight: FontWeight.w500,
                                             color: Color(0xFF4B5563),
@@ -2876,7 +3624,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                         FittedBox(
                                           fit: BoxFit.scaleDown,
                                           child: Text(
-                                            '${_symbolForMoneda(_selectedMoneda)} ${_formatDisplayMonto(_items[idx].totalDisplay)}',
+                                            _fiscalReviewMode
+                                                ? '${_symbolForMoneda(_selectedMoneda)} ${_formatDisplayMonto(_items[idx].baseTotalDisplay)}'
+                                                : '${_symbolForMoneda(_selectedMoneda)} ${_formatDisplayMonto(_items[idx].totalDisplay)}',
                                             style: const TextStyle(
                                               fontSize: 17,
                                               fontWeight: FontWeight.bold,
@@ -2890,7 +3640,9 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                                   ),
                                 ],
                               ),
-                              if (item.baseImponibleOriginal != null)
+                              if (_fiscalReviewMode && item.tasaIvaPct > 0)
+                                _buildFiscalGrossStrip(idx, item),
+                              if (!_fiscalReviewMode && item.baseImponibleOriginal != null)
                                 Container(
                                   key: ValueKey('item_tax_base_${item.clientKey}'),
                                   width: double.infinity,
@@ -2926,6 +3678,10 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                         ),
                       );
                     }).toList(),
+                  if (_fiscalReviewMode && _estadoFiscal?.sugerenciaUnica != null)
+                    _buildFiscalSuggestionBanner(_estadoFiscal!.sugerenciaUnica!),
+                  if (_fiscalReviewMode && _estadoFiscal != null)
+                    _buildFiscalSummaryFooter(_estadoFiscal!),
                   const SizedBox(height: 12),
                   OutlinedButton.icon(
                     key: const Key('review_expense_add_item_btn'),
@@ -2983,12 +3739,17 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
                     ),
                     onChanged: (val) {
                       _bolivaresAjustadosManualmente = false;
+                      if (_fiscalReviewMode) {
+                        _anclaFiscalActiva = false;
+                        _recalcularFiscalGlobal();
+                      }
                       _totalUsdCtrl.text = val;
                       _recalcularTotalUsd();
                     },
                     validator: (val) => validatePositiveAmount(val),
                   ),
                   Builder(builder: (context) {
+                    if (_fiscalReviewMode) return const SizedBox.shrink();
                     final totalOrig = tryParseAmount(_totalOriginalCtrl.text, isPrice: false) ?? 0.0;
                     final sumItems = _items.fold(0.0, (acc, it) => acc + it.totalDisplay);
                     final diff = (sumItems - totalOrig).abs();

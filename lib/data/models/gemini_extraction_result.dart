@@ -154,7 +154,7 @@ class GeminiExtractionResult {
   /// Calcula la tolerancia en centavos para la guardia `|sum - target|` teniendo en
   /// cuenta que `total = round(cant * precio_unitario)` acumula hasta 0.5 centavos
   /// por unidad cuando el precio unitario viene redondeado a 2 decimales.
-  static int _guardToleranceCents(List<ItemGastoModel> items) {
+  static int guardToleranceCents(List<ItemGastoModel> items) {
     if (items.isEmpty) return 2;
     double sumQty = 0.0;
     for (final it in items) {
@@ -168,7 +168,7 @@ class GeminiExtractionResult {
 
   /// Tolerancia fiscal estricta en centavos para validar que el IVA impreso en la
   /// factura corresponde exactamente al 16% (o 8%) de las bases gravadas identificadas.
-  static int _fiscalRateToleranceCents(int numTaxedItems) {
+  static int fiscalRateToleranceCents(int numTaxedItems) {
     if (numTaxedItems <= 0) return 1;
     return ((numTaxedItems / 2.0).ceil() + 1).clamp(2, 10);
   }
@@ -321,7 +321,7 @@ class GeminiExtractionResult {
     if (taxedCount == 0 || weightedBaseSum <= 0) return null;
     final int expectedIvaCents = (weightedBaseSum + 50) ~/ 100;
     final int diff = (expectedIvaCents - ivaCents).abs();
-    final int tol = _fiscalRateToleranceCents(taxedCount);
+    final int tol = fiscalRateToleranceCents(taxedCount);
     return diff <= tol ? diff : null;
   }
 
@@ -533,6 +533,10 @@ class GeminiExtractionResult {
           final int? baseImponibleOriginal = rawBaseCents is num
               ? rawBaseCents.toInt().clamp(0, maxMontoCentavos)
               : null;
+          final rawBaseTotalCents = itemMap['base_total_original_cents'];
+          final int? baseTotalOriginal = rawBaseTotalCents is num
+              ? rawBaseTotalCents.toInt().clamp(0, maxMontoCentavos)
+              : null;
           final rawTasaIva = itemMap['tasa_iva_pct'];
           final int tasaIvaPct = rawTasaIva is num
               ? rawTasaIva.toInt().clamp(0, 100)
@@ -548,6 +552,7 @@ class GeminiExtractionResult {
             categoria: catItem,
             origenCategoria: catItem != 'Otros' ? OrigenCategoria.ia : OrigenCategoria.predeterminada,
             baseImponibleOriginal: baseImponibleOriginal,
+            baseTotalOriginal: baseTotalOriginal,
             tasaIvaPct: tasaIvaPct,
           ));
         }
@@ -725,7 +730,7 @@ class GeminiExtractionResult {
       if (impuestoIva > 0 && totalOriginal > 0 && !hasMultipleConflictingIvaLines) {
         final int totalCents = (totalOriginal * 100).round();
         final int ivaCents = (impuestoIva * 100).round();
-        final int tol = _guardToleranceCents(productItems);
+        final int tol = guardToleranceCents(productItems);
         final int rawSumCents = productItems.fold(0, (s, it) => s + it.total);
 
         final bool alreadyFitsBase = (rawSumCents + ivaCents - totalCents).abs() <= tol;
@@ -823,7 +828,7 @@ class GeminiExtractionResult {
       final int ivaCents = (impuestoIva * 100).round();
       final int totalCents = (totalOriginal * 100).round();
       final int sumProductsCents = productItems.fold(0, (s, it) => s + it.total);
-      final int guardTol = _guardToleranceCents(productItems);
+      final int guardTol = guardToleranceCents(productItems);
 
       final bool linesAlreadyIncludeVat =
           !hasSpecialLines &&
@@ -907,6 +912,7 @@ class GeminiExtractionResult {
                 precioUnitario: unitWithVatCents,
                 total: totalWithVatCents,
                 baseImponibleOriginal: baseUnitCents,
+                baseTotalOriginal: it.total,
                 tasaIvaPct: rate,
               ));
             } else {
@@ -918,8 +924,16 @@ class GeminiExtractionResult {
           }
           ivaModo = IvaModo.imputado;
         } else {
-          // Rama 3 (Fallback conservador a Opción A): preservar precios base y sufijos + 1 renglón IVA
-          itemsList.addAll(productItems);
+          // Rama 3 (Fallback conservador a Opción A): preservar precios base y sufijos + 1 renglón IVA.
+          // También conservamos la tasa detectada por la IA en `tasaIvaPct` (solo en memoria/cola,
+          // con `baseImponibleOriginal: null`) para que ReviewExpenseScreen pueda asistir al usuario
+          // si hubo un error puntual de clasificación (G)/(E) en el OCR.
+          for (int i = 0; i < productItems.length; i++) {
+            final it = productItems[i];
+            final alic = i < productAlicuotas.length ? productAlicuotas[i] : null;
+            final int rate = alic == 'G' ? 16 : (alic == 'R' ? 8 : 0);
+            itemsList.add(rate > 0 ? it.copyWith(tasaIvaPct: rate) : it);
+          }
           if (ivaLinesFromJson.isNotEmpty) {
             final ivaItem = ivaLinesFromJson.first;
             itemsList.add(
@@ -1030,6 +1044,8 @@ class GeminiExtractionResult {
         'categoria': i.categoria,
         if (i.baseImponibleOriginal != null)
           'base_imponible_original_cents': i.baseImponibleOriginal,
+        if (i.baseTotalOriginal != null)
+          'base_total_original_cents': i.baseTotalOriginal,
         if (i.tasaIvaPct > 0) 'tasa_iva_pct': i.tasaIvaPct,
       }).toList(),
       'items_comprados_ids': matchedShoppingItemIds,

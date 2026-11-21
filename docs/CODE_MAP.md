@@ -9,13 +9,13 @@
 | Capa | Archivos | Líneas |
 |---|---|---|
 | `core/` | 8 | 932 |
-| `data/` | 12 | 5214 |
-| `domain/` | 10 | 1816 |
+| `data/` | 12 | 5273 |
+| `domain/` | 11 | 2355 |
 | `providers/` | 4 | 2115 |
 | `services/` | 15 | 5692 |
-| `ui/` | 31 | 20049 |
+| `ui/` | 31 | 20810 |
 | `(raiz)/` | 2 | 106 |
-| **Total** | **82** | **35924** |
+| **Total** | **83** | **37283** |
 
 ## core/
 
@@ -41,8 +41,8 @@
 | `lib/data/models/categoria_model.dart` | 69 | `CategoriaModel`, `CategoryModel` | `database_helper_category_test.dart`, `categoria_model_test.dart` |
 | `lib/data/models/gasto_firestore_mapper.dart` | 77 | `GastoFirestoreMapper` | `gasto_firestore_mapper_test.dart` |
 | `lib/data/models/gasto_model.dart` | 215 | `GastoModel` | `database_helper_batch_and_async_test.dart`, `database_helper_in_memory_harness_test.dart`, `contenido_negocio_identico_test.dart`, +31 |
-| `lib/data/models/gemini_extraction_result.dart` | 1042 | `IvaModo`, `TipoLineaExtraccion`, `GeminiExtractionResult` | `gemini_extraction_result_test.dart`, `scan_queue_provider_test.dart`, `review_expense_price_history_test.dart`, +4 |
-| `lib/data/models/item_gasto_model.dart` | 233 | `OrigenCategoria`, `ItemGastoModel` | `database_helper_in_memory_harness_test.dart`, `database_helper_price_history_test.dart`, `contenido_negocio_identico_test.dart`, +18 |
+| `lib/data/models/gemini_extraction_result.dart` | 1058 | `IvaModo`, `TipoLineaExtraccion`, `GeminiExtractionResult` | `fiscal_reconciliation_helper_test.dart`, `gemini_extraction_result_test.dart`, `scan_queue_provider_test.dart`, +5 |
+| `lib/data/models/item_gasto_model.dart` | 276 | `OrigenCategoria`, `OrigenAlicuota`, `ItemGastoModel` | `database_helper_in_memory_harness_test.dart`, `database_helper_price_history_test.dart`, `fiscal_reconciliation_helper_test.dart`, +19 |
 | `lib/data/models/presupuesto_remoto_model.dart` | 75 | `PresupuestoRemotoModel` | `presupuesto_remoto_model_test.dart`, `sync_orchestration_test.dart` |
 | `lib/data/models/shopping_item_model.dart` | 53 | `ShoppingItemModel` | `shopping_item_model_test.dart`, `scan_queue_provider_test.dart`, `chat_screen_test.dart`, +2 |
 | `lib/data/repositories/gasto_repository.dart` | 237 | `GastoRepository` | `database_helper_batch_and_async_test.dart`, `gasto_provider_monetary_summary_test.dart`, `gasto_provider_rate_cache_test.dart`, +6 |
@@ -53,6 +53,7 @@
 |---|---|---|---|
 | `lib/domain/diagnostics/rm03_copy_strategy.dart` | 108 | `Rm03DiagnosticIoException`, `Rm03CopyStrategy`, `FileRm03CopyStrategy` | `rm03_diagnostic_protocol_test.dart` |
 | `lib/domain/diagnostics/rm03_diagnostic_protocol.dart` | 710 | `Rm03DiagnosticSecurityException`, `Rm03DiagnosticSchemaException`, `Rm03QueryResult`, `Rm03DiagnosticReport`, +1 | `rm03_diagnostic_protocol_test.dart` |
+| `lib/domain/finance/fiscal_reconciliation_helper.dart` | 539 | `SesionFiscalInicial`, `SugerenciaCorreccionFiscal`, `EstadoReconciliacionFiscal`, `FiscalReconciliationHelper` | `fiscal_reconciliation_helper_test.dart` |
 | `lib/domain/finance/savings_health_calculator.dart` | 54 | `SavingsHealthCalculator` | `savings_health_calculator_test.dart` |
 | `lib/domain/finance/savings_health_models.dart` | 47 | `SavingsGoalStatus`, `SavingsHealthSnapshot` | `savings_health_calculator_test.dart` |
 | `lib/domain/monetary/expense_tuple.dart` | 347 | `ExpenseTuple`, `TupleFailureCode`, `TupleBuildResult`, `TupleBuildSuccess`, +1 | `build_new_expense_tuple_test.dart` |
@@ -103,7 +104,7 @@
 | `lib/ui/screens/main_screen.dart` | 820 | `MainScreen` | `main_screen_launch_action_test.dart`, `main_screen_no_auto_repair_test.dart`, `navigation_test.dart`, +1 |
 | `lib/ui/screens/more_screen.dart` | 1754 | `MoreSubView`, `MoreScreen`, `MoreScreenState` | `more_screen_test.dart`, `more_screen_copy_and_dialogs_test.dart` |
 | `lib/ui/screens/receipt_gallery_screen.dart` | 532 | `ReceiptGalleryScreen` | `receipt_gallery_screen_test.dart` |
-| `lib/ui/screens/review_expense_screen.dart` | 3854 | `MetodoLiquidacionUsd`, `ReviewExpenseScreen` | `review_expense_price_history_test.dart`, `review_expense_screen_layout_test.dart`, `review_expense_token_test.dart`, +1 |
+| `lib/ui/screens/review_expense_screen.dart` | 4615 | `MetodoLiquidacionUsd`, `ReviewExpenseScreen` | `review_expense_price_history_test.dart`, `review_expense_screen_layout_test.dart`, `review_expense_token_test.dart`, +1 |
 | `lib/ui/screens/scan_screen.dart` | 292 | `ScanScreen` | `scan_screen_test.dart` |
 | `lib/ui/screens/shopping_list_screen.dart` | 231 | `ShoppingListScreen` | `shopping_list_screen_test.dart` |
 | `lib/ui/widgets/ai_insight_card.dart` | 230 | `AiInsightCard` | `ai_insight_card_test.dart` |

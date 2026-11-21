@@ -1132,5 +1132,49 @@ void main() {
       expect(result.items[1].baseImponibleOriginal, isNull);
       expect(result.items[1].tasaIvaPct, equals(0));
     });
+
+    test('Round-trip toMap -> fromQueueMap preserva base_total_original_cents con cantidad decimal 0.31', () {
+      final result = GeminiExtractionResult.fromJson({
+        'comercio': 'Supermercado',
+        'fecha': '2026-11-20',
+        'moneda': 'VES',
+        'total_original': 93.00,
+        'impuesto_iva': 12.83,
+        'items': [
+          {'descripcion': 'Detergente a granel', 'cantidad': 0.31, 'precio_unitario': 258.62, 'categoria': 'Hogar', 'alicuota_fiscal': 'G'},
+        ],
+      });
+
+      expect(result.ivaModo, equals(IvaModo.imputado));
+      expect(result.items[0].baseImponibleOriginal, equals(25862));
+      expect(result.items[0].baseTotalOriginal, equals(8017));
+      expect(result.items[0].total, equals(9300));
+
+      final restored = GeminiExtractionResult.fromQueueMap(result.toMap());
+      expect(restored.items[0].baseImponibleOriginal, equals(25862));
+      expect(restored.items[0].baseTotalOriginal, equals(8017));
+      expect(restored.items[0].total, equals(9300));
+    });
+
+    test('Rama 3 (renglonSeparado por error OCR) conserva tasaIvaPct en memoria sin setear baseImponibleOriginal', () {
+      final result = GeminiExtractionResult.fromJson({
+        'comercio': 'Automercado',
+        'fecha': '2026-11-20',
+        'moneda': 'VES',
+        'total_original': 410.00,
+        'impuesto_iva': 41.38,
+        'items': [
+          {'descripcion': 'Jabón', 'cantidad': 1, 'precio_unitario': 100.00, 'categoria': 'Hogar', 'alicuota_fiscal': 'G'},
+          {'descripcion': 'Detergente', 'cantidad': 1, 'precio_unitario': 158.62, 'categoria': 'Hogar', 'alicuota_fiscal': 'E'},
+          {'descripcion': 'Harina PAN', 'cantidad': 1, 'precio_unitario': 110.00, 'categoria': 'Alimentación', 'alicuota_fiscal': 'E'},
+        ],
+      });
+
+      expect(result.ivaModo, equals(IvaModo.renglonSeparado));
+      expect(result.items[0].tasaIvaPct, equals(16));
+      expect(result.items[0].baseImponibleOriginal, isNull);
+      expect(result.items[1].tasaIvaPct, equals(0));
+      expect(result.items.last.descripcion, equals('Impuesto IVA'));
+    });
   });
 }

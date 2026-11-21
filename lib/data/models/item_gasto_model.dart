@@ -2,6 +2,10 @@ import '../../core/constants/app_constants.dart';
 
 enum OrigenCategoria { predeterminada, ia, automatica, manual }
 
+/// Origen de la clasificación fiscal (`tasaIvaPct`) durante la revisión en memoria.
+/// Nunca se persiste en SQLite `items_gasto`.
+enum OrigenAlicuota { ia, manual }
+
 class ItemGastoModel {
   static int _clientKeySeq = 0;
 
@@ -20,9 +24,18 @@ class ItemGastoModel {
   /// factura con IVA imputado (`IvaModo.imputado`). Nunca se persiste en SQLite `items_gasto`.
   final int? baseImponibleOriginal;
 
+  /// Total base de línea original en centavos (sin IVA), conservado solo en memoria
+  /// y en `scan_queue` para evitar deriva de redondeo en cantidades fraccionarias
+  /// (ej. `0.31 kg × Bs. 258.62`). Nunca se persiste en SQLite `items_gasto`.
+  final int? baseTotalOriginal;
+
   /// Porcentaje entero de alícuota aplicada al imputar IVA (`16`, `8` o `0`).
   /// Solo en memoria y en `scan_queue`; nunca se persiste en SQLite `items_gasto`.
   final int tasaIvaPct;
+
+  /// Origen de la marca fiscal durante la revisión (`ia` vs `manual`).
+  /// Solo en memoria; nunca se persiste en SQLite `items_gasto`.
+  final OrigenAlicuota origenAlicuota;
 
   ItemGastoModel({
     this.id,
@@ -35,7 +48,9 @@ class ItemGastoModel {
     this.origenCategoria = OrigenCategoria.predeterminada,
     String? clientKey,
     this.baseImponibleOriginal,
+    this.baseTotalOriginal,
     this.tasaIvaPct = 0,
+    this.origenAlicuota = OrigenAlicuota.ia,
   }) : clientKey = clientKey ?? 'it_${++_clientKeySeq}';
 
   Map<String, dynamic> toMap() {
@@ -74,8 +89,10 @@ class ItemGastoModel {
     OrigenCategoria? origenCategoria,
     String? clientKey,
     int? baseImponibleOriginal,
+    int? baseTotalOriginal,
     bool clearBaseImponibleOriginal = false,
     int? tasaIvaPct,
+    OrigenAlicuota? origenAlicuota,
   }) {
     return ItemGastoModel(
       id: id ?? this.id,
@@ -90,9 +107,13 @@ class ItemGastoModel {
       baseImponibleOriginal: clearBaseImponibleOriginal
           ? null
           : (baseImponibleOriginal ?? this.baseImponibleOriginal),
+      baseTotalOriginal: clearBaseImponibleOriginal
+          ? null
+          : (baseTotalOriginal ?? this.baseTotalOriginal),
       tasaIvaPct: clearBaseImponibleOriginal
           ? 0
           : (tasaIvaPct ?? this.tasaIvaPct),
+      origenAlicuota: origenAlicuota ?? this.origenAlicuota,
     );
   }
 
@@ -101,12 +122,34 @@ class ItemGastoModel {
   double? get baseImponibleOriginalDisplay =>
       baseImponibleOriginal != null ? baseImponibleOriginal! / 100.0 : null;
 
+  /// Precio unitario sin IVA en centavos (o `precioUnitario` si es exento/sin base).
+  int get baseUnitCents => baseImponibleOriginal ?? precioUnitario;
+
+  /// Total de línea sin IVA en centavos (exacto si existe `baseTotalOriginal`).
+  int get baseTotalCents => baseTotalOriginal ??
+      (baseImponibleOriginal != null
+          ? (baseImponibleOriginal! * cantidad).round()
+          : total);
+
+  double get baseUnitDisplay => baseUnitCents / 100.0;
+  double get baseTotalDisplay => baseTotalCents / 100.0;
+
   /// Elimina los sufijos fiscales `(G)`, `(E)`, `(R)` al final de la descripción
   /// cuando el precio ya se presenta limpio como precio de anaquel con IVA imputado.
   static String stripFiscalSuffix(String descripcion) {
     return descripcion
         .replaceAll(RegExp(r'\s*\([GERger]\)\s*$'), '')
         .trim();
+  }
+
+  /// Adjunta el sufijo fiscal `(G)`, `(R)` o `(E)` según [tasaIvaPct], usado
+  /// exclusivamente en el fallback `renglonSeparado` para preservar la normalización
+  /// del comparador histórico.
+  static String withFiscalSuffix(String descripcion, int tasaIvaPct) {
+    final clean = stripFiscalSuffix(descripcion);
+    if (clean.isEmpty) return descripcion.trim();
+    final tag = tasaIvaPct == 16 ? 'G' : (tasaIvaPct == 8 ? 'R' : 'E');
+    return '$clean ($tag)';
   }
 
   /// Determina si una descripción conservó el marcador fiscal `(G)` de producto gravado
