@@ -1,6 +1,6 @@
 # Especificación Técnica: Precios de Anaquel e Imputación de IVA en Compras (AI-06 · B-2)
 
-> **Estado:** `Implementada 🔧` (variante B-2 completa: cotejo al papel en `ReviewExpenseScreen`, `FiscalReconciliationHelper`, hoja `Ajustar IVA`, detector de candidato único y guardado seguro; pendiente CI en verde).
+> **Estado:** `Pendiente de validación 🧪` (APK build 724, run `44910561506`, SHA `9ff3d87`; Web build 33, run `44859265979`, HTTP 200 en `/panel`; Firestore build 5, run `44859266019`).
 > **Tarea:** `AI-06` · Fase 6.2, Bloque C en `ROADMAP.md`.
 
 Este documento define la regla de negocio vigente (**variante B-2**), el motor de reconciliación fiscal, el algoritmo de reparto por Mayor Resto, el comparador de precios (móvil + web) y la guía de pruebas en dispositivo para **Rinde Más**.
@@ -89,7 +89,7 @@ Tanto `DatabaseHelper.findPriceHistory` como `landing/src/lib/price-comparator.j
 | Modelo y sufijos | `lib/data/models/item_gasto_model.dart` (`baseImponibleOriginal`, `baseTotalOriginal`, `tasaIvaPct`, `OrigenAlicuota`, `withFiscalSuffix`, `toMap` intacto en 7 columnas) |
 | Pipeline fiscal y Mayor Resto | `lib/data/models/gemini_extraction_result.dart` (`IvaModo`, `repartirIvaMayorResto`, `fiscalRateToleranceCents`, `guardToleranceCents`, `fromJson`, `fromQueueMap`, `toMap`) |
 | Motor puro B-2 y detector | `lib/domain/finance/fiscal_reconciliation_helper.dart` (`prepararSesionFiscal`, `reconciliar`, `buscarCandidatosCorreccion`, `sugerirCorreccionUnica`, `construirItemsFallback`) |
-| Revisión UI B-2 | `lib/ui/screens/review_expense_screen.dart` (`_buildFiscalGrossStrip`, `_buildFiscalSuggestionBanner`, `_buildFiscalSummaryFooter`, `_abrirHojaAjustarIva`, `_confirmarGuardadoFallbackFiscal`, guarda `_recalcularTotal`) |
+| Revisión UI B-2 | `lib/ui/screens/review_expense_screen.dart` (`_recalcularTotal`: L865, `_confirmarGuardadoFallbackFiscal`: L1125, `_buildFiscalGrossStrip`: L2109, `_buildFiscalSuggestionBanner`: L2180, `_buildFiscalSummaryFooter`: L2294, `_abrirHojaAjustarIva`: L2424) |
 | Comparador SQLite y Web | `lib/data/datasources/local/database_helper.dart`, `landing/src/lib/price-comparator.js`, `landing/src/pages/panel.astro` |
 | Pruebas unitarias, propiedad y widget | `test/domain/finance/fiscal_reconciliation_helper_test.dart`, `test/models/gemini_extraction_result_test.dart`, `test/screens/review_expense_screen_layout_test.dart` |
 | Worker IA (alícuota `'R'`) | `workers/src/index.js` (pendiente `wrangler deploy` aparte) |
@@ -98,7 +98,8 @@ Tanto `DatabaseHelper.findPriceHistory` como `landing/src/lib/price-comparator.j
 
 ## 7. Guía de Pruebas en Dispositivo Físico
 
-> **Commit / Build:** Pendiente actualización tras CI en verde (se completará con SHA y build APK definitivos).
+> **Commit / Build:** SHA `9ff3d87` · APK Build `724` (run `44910561506`) · Web Build `33` (run `44859265979`).
+> **Controles reales en código:** `lib/ui/screens/review_expense_screen.dart` (`_recalcularTotal` L865, diálogo fallback L1125, franja `Con IVA` + badge `G · 16%` L2109, banner sugerencia L2180, pie fiscal L2294, hoja `Ajustar IVA` L2424).
 
 **Ruta alcanzable:** `Inicio` → botón central `+` (`MainScreen`) → `Tomar foto de factura` / galería (`ScanScreen`) → banner `Factura lista para revisar` (`GlobalScanQueueBanner`) → `ReviewExpenseScreen`.
 
