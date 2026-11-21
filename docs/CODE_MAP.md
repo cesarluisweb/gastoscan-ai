@@ -12,10 +12,10 @@
 | `data/` | 12 | 5214 |
 | `domain/` | 10 | 1816 |
 | `providers/` | 4 | 2115 |
-| `services/` | 15 | 5640 |
-| `ui/` | 31 | 19995 |
+| `services/` | 15 | 5692 |
+| `ui/` | 31 | 20049 |
 | `(raiz)/` | 2 | 106 |
-| **Total** | **82** | **35818** |
+| **Total** | **82** | **35924** |
 
 ## core/
 
@@ -75,7 +75,7 @@
 
 | Archivo | Líneas | Símbolos | Pruebas |
 |---|---|---|---|
-| `lib/services/ai_insight_service.dart` | 705 | `AiDashboardInsight`, `AiInsightService` | `ai_insight_service_test.dart` |
+| `lib/services/ai_insight_service.dart` | 757 | `AiDashboardInsight`, `AiInsightService` | `ai_insight_service_test.dart` |
 | `lib/services/category_classifier_service.dart` | 283 | `CategoryClassifierService` | `category_classifier_service_test.dart` |
 | `lib/services/connectivity_service.dart` | 86 | `ConnectivityService` | `scan_queue_provider_test.dart`, `settings_provider_rate_cache_test.dart`, `main_screen_launch_action_test.dart`, +5 |
 | `lib/services/document_scanner_service.dart` | 66 | `DocumentScannerService` | - |
@@ -96,7 +96,7 @@
 | Archivo | Líneas | Símbolos | Pruebas |
 |---|---|---|---|
 | `lib/ui/screens/analysis_screen.dart` | 871 | `AnalysisScreen` | `analysis_screen_redesign_test.dart`, `dashboard_category_budget_test.dart`, `lote_4_ui_resilience_and_performance_test.dart` |
-| `lib/ui/screens/chat_screen.dart` | 1264 | `ChatSuggestion`, `ChatScreen` | `chat_screen_test.dart` |
+| `lib/ui/screens/chat_screen.dart` | 1283 | `ChatSuggestion`, `ChatScreen` | `chat_screen_test.dart` |
 | `lib/ui/screens/currency_calculator_screen.dart` | 970 | `TipoTasaCalculadora`, `CurrencyCalculatorScreen` | `currency_calculator_screen_test.dart` |
 | `lib/ui/screens/dashboard_screen.dart` | 829 | `DashboardScreen` | `dashboard_screen_test.dart`, `smart_empty_state_and_lifecycle_test.dart` |
 | `lib/ui/screens/expense_history_screen.dart` | 823 | `ExpenseHistoryScreen`, `ExpenseHistoryScreenState` | `dashboard_search_test.dart`, `expense_history_screen_test.dart`, `lote_4_ui_resilience_and_performance_test.dart`, +1 |
@@ -106,7 +106,7 @@
 | `lib/ui/screens/review_expense_screen.dart` | 3854 | `MetodoLiquidacionUsd`, `ReviewExpenseScreen` | `review_expense_price_history_test.dart`, `review_expense_screen_layout_test.dart`, `review_expense_token_test.dart`, +1 |
 | `lib/ui/screens/scan_screen.dart` | 292 | `ScanScreen` | `scan_screen_test.dart` |
 | `lib/ui/screens/shopping_list_screen.dart` | 231 | `ShoppingListScreen` | `shopping_list_screen_test.dart` |
-| `lib/ui/widgets/ai_insight_card.dart` | 195 | `AiInsightCard` | `ai_insight_card_test.dart` |
+| `lib/ui/widgets/ai_insight_card.dart` | 230 | `AiInsightCard` | `ai_insight_card_test.dart` |
 | `lib/ui/widgets/app_bar_month_selector.dart` | 211 | `AppBarMonthSelector` | `app_bar_month_selector_test.dart` |
 | `lib/ui/widgets/auth_modal_sheet.dart` | 331 | `AuthEmailDialog` | `auth_dialog_test.dart` |
 | `lib/ui/widgets/bcv_legal_disclaimer_card.dart` | 87 | `BcvLegalDisclaimerCard` | - |

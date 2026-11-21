@@ -83,6 +83,66 @@ class AiInsightCard extends StatelessWidget {
     }
   }
 
+  /// Renderiza texto enriquecido convirtiendo `**negrita**` y `*cursiva*` en `TextSpan` reales,
+  /// limpiando cualquier marcador Markdown huérfano para que nunca se vean asteriscos literales.
+  static Widget buildFormattedText(
+    String text, {
+    TextStyle? baseStyle,
+  }) {
+    final effectiveBase = baseStyle ??
+        const TextStyle(
+          color: AppColors.textPrimary,
+          fontSize: 13.5,
+          height: 1.4,
+          fontWeight: FontWeight.w400,
+        );
+
+    final List<TextSpan> spans = [];
+    final RegExp tokenRegex = RegExp(r'\*\*(.+?)\*\*|\*(?!\s)(.+?)(?<!\s)\*', dotAll: true);
+    int lastEnd = 0;
+
+    for (final match in tokenRegex.allMatches(text)) {
+      if (match.start > lastEnd) {
+        final plain = text.substring(lastEnd, match.start).replaceAll('**', '');
+        if (plain.isNotEmpty) {
+          spans.add(TextSpan(text: plain, style: effectiveBase));
+        }
+      }
+
+      final boldGroup = match.group(1);
+      final italicGroup = match.group(2);
+      if (boldGroup != null) {
+        spans.add(
+          TextSpan(
+            text: boldGroup.replaceAll('**', ''),
+            style: effectiveBase.copyWith(fontWeight: FontWeight.w700),
+          ),
+        );
+      } else if (italicGroup != null) {
+        spans.add(
+          TextSpan(
+            text: italicGroup,
+            style: effectiveBase.copyWith(fontStyle: FontStyle.italic),
+          ),
+        );
+      }
+      lastEnd = match.end;
+    }
+
+    if (lastEnd < text.length) {
+      final tail = text.substring(lastEnd).replaceAll('**', '');
+      if (tail.isNotEmpty) {
+        spans.add(TextSpan(text: tail, style: effectiveBase));
+      }
+    }
+
+    if (spans.isEmpty) {
+      return Text(text.replaceAll('**', ''), style: effectiveBase);
+    }
+
+    return Text.rich(TextSpan(children: spans));
+  }
+
   @override
   Widget build(BuildContext context) {
     final insight = resolveDashboardInsight();
@@ -114,15 +174,19 @@ class AiInsightCard extends StatelessWidget {
                 color: AppColors.primaryDark,
               ),
               const SizedBox(width: 6),
-              const Text(
-                'Asistente IA',
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
+              const Expanded(
+                child: Text(
+                  'Asistente IA',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 8),
               InkWell(
                 key: const Key('ai_insight_card_consultar_btn'),
                 onTap: () => _handleConsultTap(context, insight),
@@ -153,39 +217,10 @@ class AiInsightCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          // Cuerpo Horizontal: Avatar Asistente + Mensaje único
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFEF9C3), // Amarillo fondo avatar
-                  shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFFFDE047), width: 1),
-                ),
-                child: const Center(
-                  child: Icon(
-                    Icons.smart_toy_outlined,
-                    size: 20,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  insight.shortText,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 13,
-                    height: 1.35,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-              ),
-            ],
+          // Cuerpo limpio a ancho completo con negritas reales en cifras y datos clave
+          SizedBox(
+            width: double.infinity,
+            child: buildFormattedText(insight.shortText),
           ),
         ],
       ),

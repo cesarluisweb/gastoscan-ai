@@ -188,7 +188,7 @@ void main() {
       expect(find.textContaining('comprometida'), findsOneWidget);
     });
 
-    testWidgets('displays pace and protected savings goal when healthy with savings goal', (tester) async {
+    testWidgets('displays concise daily pace discounting savings goal without redundant boilerplate or robot icon', (tester) async {
       final gasto = GastoModel(
         id: 1,
         uuid: 'uuid-1',
@@ -219,8 +219,25 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('protegida'), findsOneWidget);
-      expect(find.textContaining('/día'), findsOneWidget);
+      // Sin icono de robotcito
+      expect(find.byIcon(Icons.smart_toy_outlined), findsNothing);
+      // Descuenta la meta de ahorro ($500 - $100 - $150 = $250 / 15 días = $ 16,67/día) sin texto redundante
+      expect(find.textContaining('Puedes gastar hasta \$ 16,67/día'), findsOneWidget);
+      expect(find.textContaining('Excelente administración'), findsNothing);
+      expect(find.textContaining('protegida'), findsNothing);
+      // Nunca muestra asteriscos literales **
+      expect(find.textContaining('**'), findsNothing);
+
+      // Verifica que el monto está renderizado en negrita real (FontWeight.w700)
+      final richText = tester.widget<Text>(find.textContaining('\$ 16,67/día'));
+      final rootSpan = richText.textSpan as TextSpan;
+      final boldSpans = (rootSpan.children ?? [])
+          .whereType<TextSpan>()
+          .where((s) => s.style?.fontWeight == FontWeight.w700)
+          .map((s) => s.text)
+          .toList();
+      expect(boldSpans, contains('\$ 16,67/día'));
+      expect(boldSpans, contains('15 días'));
     });
 
     testWidgets('does not double-multiply VES amounts by tasaCambio ([F1-C03])', (tester) async {
@@ -259,9 +276,10 @@ void main() {
       // Exceso es 500 Bs y meta es 1.000 Bs (NO 200.000 Bs ni 400.000 Bs)
       expect(find.textContaining('Bs. 500,00'), findsOneWidget);
       expect(find.textContaining('Bs. 1.000,00'), findsOneWidget);
+      expect(find.textContaining('**'), findsNothing);
     });
 
-    testWidgets('combines daily pace with cached Gemini insight and injects detailed insight into ChatProvider on Consultar tap (AI-08)', (tester) async {
+    testWidgets('shows single cached Gemini insight with formatted bolds and opens detailed insight in ChatProvider on Consultar tap (AI-08)', (tester) async {
       final chatProvider = ChatProvider();
       bool navigatedToChat = false;
 
@@ -290,8 +308,8 @@ void main() {
                 currentDate: DateTime(2026, 11, 10),
                 mes: 11,
                 anio: 2026,
-                cachedGeminiShort: 'Concentraste 3 compras en Farmatodo esta semana; comparar precios por unidad te ayudará a ahorrar.',
-                cachedGeminiDetailed: '• **Hallazgo en Salud:** Hiciste 3 compras en **Farmatodo** por **\$40,00**.\n• ¿Quieres revisar qué medicamentos te salieron más económicos?',
+                cachedGeminiShort: 'Concentraste **3 compras** en **Farmatodo** por **\$ 40,00** esta semana.',
+                cachedGeminiDetailed: '• **Hallazgo en Salud:** Hiciste 3 compras en **Farmatodo** por **\$ 40,00**.\n• ¿Quieres revisar qué medicamentos te salieron más económicos?',
                 onChatTap: () {
                   navigatedToChat = true;
                 },
@@ -302,11 +320,12 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Verifica que muestra un solo mensaje que combina ritmo diario ($ 8,00/día por 20 días) + consejo Gemini
-      expect(find.textContaining('Puedes gastar hasta \$ 8,00/día'), findsOneWidget);
-      expect(find.textContaining('Concentraste 3 compras en Farmatodo'), findsOneWidget);
+      // Muestra UNA sola idea (el consejo de Gemini), sin pegarle el ritmo diario encima ni asteriscos literales
+      expect(find.textContaining('Concentraste 3 compras en Farmatodo por \$ 40,00 esta semana.'), findsOneWidget);
+      expect(find.textContaining('Puedes gastar hasta'), findsNothing);
+      expect(find.textContaining('**'), findsNothing);
 
-      // Al tocar Consultar -> debe poblar ChatProvider con el consejo detallado y abrir el chat
+      // Al tocar Consultar -> debe poblar ChatProvider con el consejo detallado (incluyendo ritmo diario) y abrir el chat
       await tester.tap(find.byKey(const Key('ai_insight_card_consultar_btn')));
       await tester.pumpAndSettle();
 
@@ -315,6 +334,41 @@ void main() {
       expect(chatProvider.messages.first['role'], 'assistant');
       expect(chatProvider.messages.first['text'], contains('Ritmo diario disponible:'));
       expect(chatProvider.messages.first['text'], contains('Hallazgo en Salud:'));
+    });
+
+    testWidgets('displays single curated insight on even days without mixing daily pace (AI-08)', (tester) async {
+      final gasto = GastoModel(
+        id: 1,
+        uuid: 'uuid-even',
+        fecha: '2026-09-16',
+        comercio: 'Mercado',
+        moneda: 'USD',
+        totalOriginal: 5000,
+        totalUsd: 5000,
+        categoria: 'Alimentación',
+        creadoEn: '2026-09-16T10:00:00',
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AiInsightCard(
+              gastos: [gasto],
+              presupuestoGeneral: 200.0,
+              totalesPorCategoria: const {'Alimentación': 50.0},
+              totalGastadoMes: 50.0,
+              currentDate: DateTime(2026, 9, 16), // dayOfYear = 258 (par) -> consejo curado único
+              mes: 9,
+              anio: 2026,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.smart_toy_outlined), findsNothing);
+      expect(find.textContaining('Puedes gastar hasta'), findsNothing);
+      expect(find.textContaining('**'), findsNothing);
     });
 
     testWidgets('displays category budget warning heuristic when a category reaches >= 80% of its budget (AI-08)', (tester) async {
@@ -348,7 +402,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Atención en Alimentación: ya utilizaste el 85%'), findsOneWidget);
+      expect(find.textContaining('Atención en Alimentación: ya usaste el 85%'), findsOneWidget);
+      expect(find.textContaining('Puedes gastar hasta'), findsNothing);
+      expect(find.textContaining('**'), findsNothing);
     });
   });
 }

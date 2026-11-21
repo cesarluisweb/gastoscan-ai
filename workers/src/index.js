@@ -894,13 +894,14 @@ async function handleChatAnalyst(request, geminiKey, isCustomKey = false) {
     let systemPrompt;
     if (isInsightInicio) {
       systemPrompt = `Eres el analista financiero de Rinde Más en Venezuela.
-Analiza el resumen de gastos mensuales del usuario y genera UN SOLO consejo práctico, directo y personalizado basado en sus cifras reales (categoría principal, comercios frecuentes, productos repetidos o margen de presupuesto).
+Analiza el resumen de gastos mensuales del usuario y genera UNA SOLA idea o consejo práctico, directo y personalizado basado en sus cifras reales (categoría principal, comercios frecuentes o productos repetidos).
 REGLAS ESTRICTAS:
-1. Sin saludos ("¡Hola!"). Ve directo al hallazgo.
+1. Sin saludos ("¡Hola!") ni felicitaciones vacías. Ve directo a un único hallazgo.
 2. NUNCA menciones ni sugieras recortar el IVA (16%) ni impuestos fiscales obligatorios.
-3. No recalcules el ritmo diario si ya viene en el contexto; enfócate en patrones de compra, categorías o comercios.
-4. Devuelve estrictamente un JSON con:
-   - "resumen": Una sola oración corta y accionable (máximo 135 caracteres) para la tarjeta de Inicio.
+3. No mezcles varias ideas (no combines ritmo diario + felicitación + consejo). Entrega UNA sola idea clara.
+4. Usa **negrita** (doble asterisco) únicamente para precios, montos, cantidades, porcentajes o el dato clave que valga la pena resaltar (ej. **$ 45,00**, **4 compras**, **65%**). No uses cursivas con asterisco simple.
+5. Devuelve estrictamente un JSON con:
+   - "resumen": Una sola oración corta y accionable (máximo 130 caracteres) para la tarjeta de Inicio.
    - "detalle": Explicación ampliada del mismo consejo en 2 o 3 viñetas cortas con cifras reales en **negrita** y una pregunta final abierta para continuar conversando en el chat.
 Datos del usuario:
 ${JSON.stringify(contextData)}`;

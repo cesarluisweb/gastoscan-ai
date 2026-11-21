@@ -826,32 +826,51 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Widget _buildFormattedMessage(String text, Color textColor) {
     final List<TextSpan> spans = [];
-    final RegExp regex = RegExp(r'\*\*(.*?)\*\*');
+    final RegExp regex = RegExp(r'\*\*(.+?)\*\*|\*(?!\s)(.+?)(?<!\s)\*', dotAll: true);
     int lastMatchEnd = 0;
 
     for (final Match match in regex.allMatches(text)) {
       if (match.start > lastMatchEnd) {
+        final plain = text.substring(lastMatchEnd, match.start).replaceAll('**', '');
+        if (plain.isNotEmpty) {
+          spans.add(TextSpan(
+            text: plain,
+            style: TextStyle(color: textColor, fontSize: 14),
+          ));
+        }
+      }
+      final boldText = match.group(1);
+      final italicText = match.group(2);
+      if (boldText != null) {
         spans.add(TextSpan(
-          text: text.substring(lastMatchEnd, match.start),
-          style: TextStyle(color: textColor, fontSize: 14),
+          text: boldText.replaceAll('**', ''),
+          style: TextStyle(
+            color: textColor,
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
+        ));
+      } else if (italicText != null) {
+        spans.add(TextSpan(
+          text: italicText,
+          style: TextStyle(
+            color: textColor,
+            fontStyle: FontStyle.italic,
+            fontSize: 14,
+          ),
         ));
       }
-      spans.add(TextSpan(
-        text: match.group(1),
-        style: TextStyle(
-          color: textColor,
-          fontWeight: FontWeight.bold,
-          fontSize: 14,
-        ),
-      ));
       lastMatchEnd = match.end;
     }
 
     if (lastMatchEnd < text.length) {
-      spans.add(TextSpan(
-        text: text.substring(lastMatchEnd),
-        style: TextStyle(color: textColor, fontSize: 14),
-      ));
+      final tail = text.substring(lastMatchEnd).replaceAll('**', '');
+      if (tail.isNotEmpty) {
+        spans.add(TextSpan(
+          text: tail,
+          style: TextStyle(color: textColor, fontSize: 14),
+        ));
+      }
     }
 
     return Text.rich(

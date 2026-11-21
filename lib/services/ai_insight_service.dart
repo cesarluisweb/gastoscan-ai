@@ -44,18 +44,18 @@ class AiInsightService {
     AiDashboardInsight(
       source: 'curated',
       shortText:
-          'Comprar en el sitio correcto te ayuda a estirar el presupuesto. Rinde Más recuerda tus compras y te avisa dónde te salió más barato cada producto.',
+          'Comprar en el sitio correcto estira tu presupuesto: Rinde Más recuerda tus compras y te avisa **dónde te salió más barato** cada producto.',
       detailedText:
           '**Comprar en el sitio correcto te ayuda a estirar el presupuesto.**\n\n'
           'Cada vez que registras una compra con sus artículos en **Rinde Más**, guardo el precio unitario y el comercio:\n'
-          '• **Comparador en vivo:** Cuando vuelvas a comprar ese mismo producto en los próximos 60 días, verás debajo del artículo si subió o bajó de precio y en qué local te salió más económico.\n'
+          '• **Comparador en vivo:** Cuando vuelvas a comprar ese mismo producto en los próximos **60 días**, verás debajo del artículo si subió o bajó de precio y en qué local te salió más económico.\n'
           '• **Consulta histórica:** También puedes preguntarme aquí en el chat dónde compraste más barato cualquier producto de tus facturas.\n\n'
           '¿Qué producto compras con frecuencia para revisar su último precio registrado?',
     ),
     AiDashboardInsight(
       source: 'curated',
       shortText:
-          'Indicar cómo pagaste cada compra (Bs. a BCV, USDT o Efectivo) te muestra cuánto rindió realmente tu dinero frente a la brecha cambiaria.',
+          'Indicar cómo pagaste (**Bs. a BCV**, **USDT** o **Efectivo**) te muestra cuánto rindió tu dinero frente a la **brecha cambiaria**.',
       detailedText:
           '**Aprovecha el método de liquidación a tu favor.**\n\n'
           'En Venezuela no cuesta igual pagar un precio en dólares con **Bolívares a tasa BCV** que con **divisas en efectivo**:\n'
@@ -66,10 +66,10 @@ class AiInsightService {
     AiDashboardInsight(
       source: 'curated',
       shortText:
-          'El papel térmico de las facturas se borra en pocos días. Tómales una foto rápida al salir del local y Rinde Más extraerá cada producto por ti.',
+          'El papel térmico se borra en pocos días. Tómale una foto rápida a tus facturas y Rinde Más extraerá **cada producto por ti**.',
       detailedText:
           '**Que no se te borren las facturas de papel térmico.**\n\n'
-          'La tinta de los tickets fiscales se desvanece rápido con el calor de la cartera o el bolsillo:\n'
+          'La tinta de las facturas fiscales se desvanece rápido con el calor de la cartera o el bolsillo:\n'
           '• Con el botón **+ > Escanear factura**, puedes fotografiar tus comprobantes al instante aunque no tengas internet en el local.\n'
           '• La cola inteligente los procesa en segundo plano y desglosa cada producto por categoría para alimentar tu comparador de precios.\n\n'
           '¿Tienes alguna compra de hoy que quieras dictarme o registrar de una vez por aquí?',
@@ -77,10 +77,10 @@ class AiInsightService {
     AiDashboardInsight(
       source: 'curated',
       shortText:
-          'Los gastos pequeños del día a día suelen pasar desapercibidos. Dictarlos por voz en 5 segundos te revela a dónde se va tu efectivo.',
+          'Los gastos pequeños del día a día suman rápido. Dictarlos **por voz en 5 segundos** te revela a dónde se va tu efectivo.',
       detailedText:
           '**Detecta los gastos hormiga antes de fin de mes.**\n\n'
-          'Un café, un snack, un pasaje o un pago móvil rápido parecen montos menores por separado, pero juntos pueden superar el 15% de tu presupuesto mensual:\n'
+          'Un café, un snack, un pasaje o un pago móvil rápido parecen montos menores por separado, pero juntos pueden superar el **15%** de tu presupuesto mensual:\n'
           '• Puedes dictarme compras rápidas tocando el micrófono (por ejemplo: *«Gasté 150 bolívares en panadería»*) sin llenar formularios.\n'
           '• Cuando acumules varios registros, pregúntame qué gastos pequeños están sumando más de lo que parece.\n\n'
           '¿Quieres que analicemos tus compras pequeñas y frecuentes de este mes?',
@@ -88,7 +88,7 @@ class AiInsightService {
     AiDashboardInsight(
       source: 'curated',
       shortText:
-          'Si armas tu lista de compras en Rinde Más antes de salir, los productos se marcarán como comprados automáticamente al registrar tu factura.',
+          'Arma tu **lista de compras** antes de salir y los productos se marcarán como comprados automáticamente al registrar tu factura.',
       detailedText:
           '**Planifica tu mercado y evita compras impulsivas.**\n\n'
           'Ir al supermercado o a la farmacia con una lista clara evita olvidos y gastos fuera de presupuesto:\n'
@@ -98,10 +98,16 @@ class AiInsightService {
     ),
   ];
 
+  /// Calcula el índice de día calendario del año de forma inmune a cambios de horario de verano (DST).
+  static int _dayOfYearUtc(DateTime date) {
+    final normalizedUtc = DateTime.utc(date.year, date.month, date.day);
+    final startOfYearUtc = DateTime.utc(date.year, 1, 1);
+    return normalizedUtc.difference(startOfYearUtc).inDays.abs();
+  }
+
   /// Selecciona de forma determinista el consejo curado del día (sin cambiar durante el mismo día).
   static AiDashboardInsight getCuratedInsightForDate(DateTime date) {
-    final startOfYear = DateTime(date.year, 1, 1);
-    final dayOfYear = date.difference(startOfYear).inDays.abs();
+    final dayOfYear = _dayOfYearUtc(date);
     final index = dayOfYear % kCuratedValueInsights.length;
     return kCuratedValueInsights[index];
   }
@@ -174,8 +180,8 @@ class AiInsightService {
         final fSpent = CurrencyFormatter.formatAmount(catSpent, moneda);
         final fBudget = CurrencyFormatter.formatAmount(catBudget, moneda);
         final shortMsg = highestRatio > 1.0
-            ? 'En $alertCat superaste el tope asignado a esa categoría ($fSpent de $fBudget).'
-            : 'Atención en $alertCat: ya utilizaste el $pct% del presupuesto de esa categoría ($fSpent de $fBudget).';
+            ? 'En **$alertCat** superaste el tope asignado (**$fSpent** de **$fBudget**).'
+            : 'Atención en **$alertCat**: ya usaste el **$pct%** de su presupuesto (**$fSpent** de **$fBudget**).';
         final detailMsg =
             '**Seguimiento de tu categoría $alertCat:**\n\n'
             '• **Gastado en $alertCat:** **$fSpent** de un presupuesto asignado de **$fBudget** (**$pct%**).\n'
@@ -226,7 +232,7 @@ class AiInsightService {
         cachedGeminiShort != null &&
         cachedGeminiShort.trim().isNotEmpty;
 
-    final AiDashboardInsight dynamicTip = hasCleanGeminiTip
+    final AiDashboardInsight? geminiTip = hasCleanGeminiTip
         ? AiDashboardInsight(
             shortText: cachedGeminiShort.trim(),
             detailedText: (cachedGeminiDetailed != null && cachedGeminiDetailed.trim().isNotEmpty)
@@ -234,21 +240,22 @@ class AiInsightService {
                 : cachedGeminiShort.trim(),
             source: 'gemini',
           )
-        : (_resolveLocalDataHeuristic(
-              gastos: gastos,
-              totalesPorCategoria: totalesPorCategoria,
-              presupuestosPorCategoria: presupuestosPorCategoria,
-              totalGastadoMes: totalGastadoMes,
-              moneda: monedaPresupuesto,
-            ) ??
-            curatedTip);
+        : null;
 
-    // 1. Caso: Sin gastos registrados en el mes
+    final AiDashboardInsight? localHeuristicTip = _resolveLocalDataHeuristic(
+      gastos: gastos,
+      totalesPorCategoria: totalesPorCategoria,
+      presupuestosPorCategoria: presupuestosPorCategoria,
+      totalGastadoMes: totalGastadoMes,
+      moneda: monedaPresupuesto,
+    );
+
+    // 1. Caso: Sin gastos registrados en el mes (una sola idea directa)
     if (gastos.isEmpty) {
       if (now.day <= 5 && presupuestoGeneral > 0 && isCurrentMonth) {
         final fBudget = CurrencyFormatter.formatAmount(presupuestoGeneral, monedaPresupuesto);
         final shortMsg =
-            '¡Nuevo mes! Tu presupuesto de $mesActualNombre ya está listo. Hoy es un buen día para determinarte a aplicar lo aprendido el mes pasado.';
+            '¡Nuevo mes! Tu presupuesto de **$mesActualNombre** ya está listo para aplicar lo aprendido el mes pasado.';
         final detailedMsg =
             '**¡Bienvenido a $mesActualNombre!**\n\n'
             'Tu presupuesto mensual de **$fBudget** ya está activo.\n\n'
@@ -260,8 +267,8 @@ class AiInsightService {
         );
       }
 
-      final shortMsg =
-          'Registra tu primera compra con el botón + para activar estadísticas y recomendaciones automáticas. ${curatedTip.shortText}';
+      const shortMsg =
+          'Registra tu primera compra con el botón **+** para activar estadísticas y consejos automáticos.';
       return AiDashboardInsight(
         shortText: shortMsg,
         detailedText: curatedTip.detailedText,
@@ -269,20 +276,33 @@ class AiInsightService {
       );
     }
 
-    // 2. Caso: Con gastos pero sin presupuesto mensual definido
+    // 2. Caso: Con gastos pero sin presupuesto mensual definido (una sola idea)
     if (presupuestoGeneral <= 0) {
       final fTotal = CurrencyFormatter.formatAmount(totalGastadoMes, monedaPresupuesto);
       final catSummary = _buildTopCategoriesSummary(totalesPorCategoria, totalGastadoMes, monedaPresupuesto);
-      final shortMsg =
-          'Define un presupuesto mensual y te diré cuánto puedes gastar cada día sin descuidar tu ahorro. ${dynamicTip.shortText}';
+
+      if (geminiTip != null || localHeuristicTip != null) {
+        final active = geminiTip ?? localHeuristicTip!;
+        final detailedMsg =
+            '**Resumen de $mesActualNombre:** Llevas **$fTotal** registrados en **${gastos.length} ${gastos.length == 1 ? "compra" : "compras"}**.$catSummary\n\n'
+            '${active.detailedText}';
+        return AiDashboardInsight(
+          shortText: active.shortText,
+          detailedText: detailedMsg,
+          source: active.source,
+        );
+      }
+
+      const shortMsg =
+          'Define un **presupuesto mensual** y te diré cuánto puedes gastar cada día sin descuidar tu ahorro.';
       final detailedMsg =
           '**Resumen de $mesActualNombre:** Llevas **$fTotal** registrados en **${gastos.length} ${gastos.length == 1 ? "compra" : "compras"}**.$catSummary\n\n'
-          '💡 *Si defines un presupuesto mensual en tu tarjeta de resumen, calcularé automáticamente cuánto puedes gastar por día.*\n\n'
-          '${dynamicTip.detailedText}';
+          'Si defines un **presupuesto mensual** en tu tarjeta de resumen, calcularé automáticamente cuánto puedes gastar por día.\n\n'
+          '${curatedTip.detailedText}';
       return AiDashboardInsight(
         shortText: shortMsg,
         detailedText: detailedMsg,
-        source: dynamicTip.source,
+        source: 'budget_prompt',
       );
     }
 
@@ -318,7 +338,7 @@ class AiInsightService {
           monedaPresupuesto,
         );
         final shortMsg =
-            'En $mesActualNombre superaste tu ${hasSavingsGoal ? "límite" : "presupuesto"} por $formattedExceso.';
+            'En $mesActualNombre superaste tu ${hasSavingsGoal ? "límite" : "presupuesto"} por **$formattedExceso**.';
         final detailedMsg =
             '**Cierre de $mesActualNombre:**\n\n'
             '• **Total gastado:** **$formattedTotal** frente a tu ${hasSavingsGoal ? "límite disponible" : "presupuesto"} de **$formattedLimite**.\n'
@@ -336,11 +356,11 @@ class AiInsightService {
           monedaPresupuesto,
         );
         final shortMsg =
-            '¡Mes cerrado con éxito! Te sobraron $formattedRem de tu ${hasSavingsGoal ? "límite" : "presupuesto"}.';
+            '¡Mes cerrado con éxito! Te sobraron **$formattedRem** de tu ${hasSavingsGoal ? "límite" : "presupuesto"}.';
         final detailedMsg =
             '**¡Excelente cierre en $mesActualNombre!**\n\n'
             '• **Total gastado:** **$formattedTotal** de **$formattedLimite** disponibles.\n'
-            '• **Margen a favor:** Ahorraste **$formattedRem** adicionales${hasSavingsGoal ? " además de tu meta protegida de **$formattedMeta**" : ""}.$catSummary\n\n'
+            '• **Margen a favor:** Ahorraste **$formattedRem** adicionales${hasSavingsGoal ? " además de tu meta de **$formattedMeta**" : ""}.$catSummary\n\n'
             '¿Te gustaría comparar este resultado con tus gastos del mes actual?';
         return AiDashboardInsight(
           shortText: shortMsg,
@@ -359,7 +379,7 @@ class AiInsightService {
       );
       if (hasSavingsGoal) {
         final shortMsg =
-            'Superaste tu límite por $formattedExceso. Tu meta de ahorro de $formattedMeta está comprometida; te sugiero pausar gastos no esenciales.';
+            'Superaste tu límite por **$formattedExceso**. Tu meta de ahorro de **$formattedMeta** está comprometida; pausa gastos no esenciales.';
         final detailedMsg =
             '**Alerta de presupuesto y meta de ahorro en $mesActualNombre:**\n\n'
             '• **Total acumulado:** **$formattedTotal** (tu límite de gasto era **$formattedLimite** para proteger **$formattedMeta** de ahorro).\n'
@@ -372,7 +392,7 @@ class AiInsightService {
         );
       } else {
         final shortMsg =
-            'Superaste tu presupuesto por $formattedExceso. Te sugiero pausar gastos no esenciales esta semana.';
+            'Superaste tu presupuesto por **$formattedExceso**. Pausa gastos no esenciales esta semana.';
         final detailedMsg =
             '**Alerta de presupuesto en $mesActualNombre:**\n\n'
             '• **Total acumulado:** **$formattedTotal** frente a tu presupuesto de **$formattedLimite**.\n'
@@ -409,11 +429,11 @@ class AiInsightService {
           monedaPresupuesto,
         );
         final shortMsg =
-            'Atención: a tu ritmo actual proyectas gastar $formattedProy. Modera tus consumos para proteger tu meta de ahorro de $formattedMeta.';
+            'A tu ritmo actual proyectas gastar **$formattedProy**. Modera tus consumos para cuidar tu meta de **$formattedMeta**.';
         final detailedMsg =
             '**Proyección de cierre y protección de ahorro:**\n\n'
             '• **Gasto proyectado a fin de mes:** **$formattedProy** (tu límite seguro es **$formattedLimite**).\n'
-            '• **Ritmo diario recomendado desde hoy:** Para salvar tu meta de ahorro de **$formattedMeta**, intenta no superar **$ritmoSeguro/día** durante los **$diasRestantes días restantes**.$catSummary\n\n'
+            '• **Ritmo diario recomendado desde hoy:** Para cuidar tu meta de **$formattedMeta**, intenta no superar **$ritmoSeguro/día** durante los **$diasRestantes días restantes**.$catSummary\n\n'
             '¿Quieres que revisemos en qué categoría puedes moderar gastos esta semana?';
         return AiDashboardInsight(
           shortText: shortMsg,
@@ -423,33 +443,65 @@ class AiInsightService {
       }
     }
 
-    // 6. Caso: Ritmo saludable con presupuesto + Consejo Dinámico (Gemini o Valor Real)
+    // 6. Caso: Ritmo saludable con presupuesto -> UNA SOLA idea clara en la tarjeta
     final disponible = limiteParaGastar - totalGastadoMes;
     final ritmoDiario = disponible / diasRestantes;
     final formattedRitmo = CurrencyFormatter.formatAmount(
       ritmoDiario,
       monedaPresupuesto,
     );
-    final diasTexto = diasRestantes == 1
-        ? 'el día restante'
-        : 'los $diasRestantes días restantes';
-
-    final String paceSentence = hasSavingsGoal
-        ? '¡Excelente administración! Puedes gastar hasta $formattedRitmo/día durante $diasTexto sin tocar tu meta de $formattedMeta protegida.'
-        : '¡Excelente administración! Puedes gastar hasta $formattedRitmo/día durante $diasTexto sin exceder tu presupuesto.';
-
-    final String combinedShort = '$paceSentence ${dynamicTip.shortText}';
-
-    final String combinedDetailed =
-        '**Estado de tu presupuesto en $mesActualNombre:**\n'
-        '• **Ritmo diario disponible:** Puedes gastar hasta **$formattedRitmo/día** durante $diasTexto (${CurrencyFormatter.formatAmount(disponible, monedaPresupuesto)} disponibles de $formattedLimite)${hasSavingsGoal ? ", manteniendo tu meta de **$formattedMeta** protegida" : ""}.\n\n'
-        '${dynamicTip.detailedText}';
-
-    return AiDashboardInsight(
-      shortText: combinedShort,
-      detailedText: combinedDetailed,
-      source: dynamicTip.source,
+    final formattedDisponible = CurrencyFormatter.formatAmount(
+      disponible,
+      monedaPresupuesto,
     );
+    final diasTexto = diasRestantes == 1
+        ? 'el **día restante**'
+        : 'los **$diasRestantes días** restantes';
+
+    final String budgetDetailHeader =
+        '**Estado de tu presupuesto en $mesActualNombre:**\n'
+        '• **Ritmo diario disponible:** Puedes gastar hasta **$formattedRitmo/día** durante $diasTexto (**$formattedDisponible** disponibles de **$formattedLimite**).';
+
+    // Prioridad A: Consejo personalizado de Gemini sobre gastos reales (solo esa idea)
+    if (geminiTip != null) {
+      return AiDashboardInsight(
+        shortText: geminiTip.shortText,
+        detailedText: '$budgetDetailHeader\n\n${geminiTip.detailedText}',
+        source: 'gemini',
+      );
+    }
+
+    // Prioridad B: Alerta local de categoría al >= 80% de su presupuesto (solo esa idea)
+    if (localHeuristicTip != null) {
+      return AiDashboardInsight(
+        shortText: localHeuristicTip.shortText,
+        detailedText: '$budgetDetailHeader\n\n${localHeuristicTip.detailedText}',
+        source: 'local_heuristic',
+      );
+    }
+
+    // Prioridad C: Alternancia diaria limpia entre ritmo diario conciso y un consejo de valor
+    final dayOfYear = _dayOfYearUtc(now);
+    final showDailyPaceToday = dayOfYear.isOdd;
+
+    if (showDailyPaceToday) {
+      final shortMsg =
+          'Puedes gastar hasta **$formattedRitmo/día** durante $diasTexto sin salirte de tu presupuesto.';
+      final detailedMsg =
+          '$budgetDetailHeader$catSummary\n\n'
+          '¿Quieres que revisemos tus gastos más frecuentes o cómo estirar mejor este margen?';
+      return AiDashboardInsight(
+        shortText: shortMsg,
+        detailedText: detailedMsg,
+        source: 'daily_pace',
+      );
+    } else {
+      return AiDashboardInsight(
+        shortText: curatedTip.shortText,
+        detailedText: '$budgetDetailHeader\n\n${curatedTip.detailedText}',
+        source: 'curated',
+      );
+    }
   }
 
   /// Construye el contexto compacto y libre de IVA que se envía a Gemini en segundo plano.
