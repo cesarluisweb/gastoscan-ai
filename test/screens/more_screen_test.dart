@@ -764,13 +764,19 @@ void main() {
       expect(httpCalls, 0);
 
       // Al recuperar conexion, descarga automaticamente tras debounce y pinta FileImage
+      // Nota: El Timer del debounce corre en FakeAsync, pero el IO de disco dentro de
+      // _syncAvatarForUser (exists/stat/rename) completa en la zona real (`runAsync`),
+      // por lo que debemos avanzar el reloj simulado antes de esperar IO real.
       connController.add(true);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 50));
-      await tester.runAsync(() async {
-        await Future<void>.delayed(const Duration(milliseconds: 30));
-        await downloadRequested.future.timeout(const Duration(seconds: 3));
-      });
+      for (int i = 0; i < 40 && !downloadRequested.isCompleted; i++) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)),
+        );
+        await tester.pump(const Duration(milliseconds: 20));
+      }
+      expect(downloadRequested.isCompleted, isTrue);
       for (int i = 0; i < 40; i++) {
         await tester.pump();
         final currentAvatar = tester.widget<CircleAvatar>(
