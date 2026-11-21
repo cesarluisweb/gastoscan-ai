@@ -10,11 +10,11 @@
 ## Tareas en Curso
 - **Resiliencia Offline (avatar caché, tasas auto-refresco y Dictar gasto offline):** `Implementada 🔧` en `af9d076` (`docs/DOC_RESILIENCIA_OFFLINE.md`); `wait_ci.ps1` reportó `SIN RUN`, pendiente verificar CI y validar en dispositivo. Reglas graduadas a `.agents/rules/resiliencia-offline.md`, `ia-ocr-voz.md`, `dinero-datos.md` y `revisor-adversarial/SKILL.md`.
 - **AI-09 (detección fotos y facturas duplicadas):** Planificada en `ROADMAP.md` y documentada en `docs/DOC_PLAN_DETECCION_DUPLICADOS.md`. Pendiente definición de esquema SQLite (`v20`, candidato a agrupar `tasa_iva_pct INTEGER NULL` si hace falta).
-- **AI-10 (reporte funcional de respuestas de IA):** `Pendiente de validación 🧪` (APK build 731, run `44927415737`, SHA `ca86859`; reglas build 6; web build 34, HTTP 200). Colección Firestore `ai_reports`, diálogo con motivo y comentario (chips borde gris/amarillo), purga al borrar cuenta. Doc: `docs/DOC_REPORTE_RESPUESTAS_IA.md`. Falta `deploy_rules.yml` manual (`DEPLOY`) y prueba física. Panel web sigue local.
 - **UX-17 (compartir Rinde Más por WhatsApp):** Planificada en `docs/DOC_PLAN_UX17_COMPARTIR_WHATSAPP.md` (App, Panel Web, Landing + Open Graph); diferida hasta tener el enlace público de Google Play.
 - **Pendientes de cierre administrativo:** firma P0 (rotar upload key tras aprobar Producción), solicitud de Producción en Google Play y `wrangler deploy` aparte para `'R'` (8%) en Worker.
 
 ## Completadas
+- **AI-10 (reporte funcional de respuestas de IA):** ✅ Confirmada en Firebase por César (21/11/2026, APK build 731, reglas build 6, web build 34). Colección `ai_reports`, purga al borrar cuenta. Doc: `docs/DOC_REPORTE_RESPUESTAS_IA.md`.
 - **AI-06 (imputación IVA en precios de anaquel — B-2):** ✅ Validada en dispositivo por César (21/11/2026, APK build 732, run `44928418260`, `d25af1d`; Web build 33; Firestore build 5). Revisión al papel + `Con IVA`, mini-selector `G · 16% ▾`, hoja rápida con `Deshacer`, pausa del comparador ante descuadre, detector de 1 culpable y guardado seguro. Reglas graduadas a `DESIGN.md`, `dinero-datos.md` y `revisor-adversarial/SKILL.md`.
 - **AI-08 (consejos dinámicos en Inicio):** ✅ Validada en dispositivo por César (21/11/2026, APK build 733, run `44928504292`, SHA `1ab66fa`; Worker `a3975df5`). Lecciones graduadas a `.agents/rules/ia-ocr-voz.md` y `flutter-testing.md` (`docs/DOC_CONSEJOS_DINAMICOS_INICIO.md`).
 - **Confirmación Eliminar comprobante + botón borrar en AppBar al editar (`ReviewExpenseScreen`) y recuperación local (`ReceiptPhotoRegistry`):** ✅ Validadas en dispositivo por César (21/11/2026, builds 728 `f629b6e` y 734 `a2b1504`). Reglas graduadas a `privacidad-seguridad.md`, `flutter-desarrollo.md` y `revisor-adversarial/SKILL.md`.
@@ -30,8 +30,8 @@
 - **Reproducibilidad:** ✅ Flutter `3.47.9` y `pubspec.lock` versionado.
 
 ## Producción
-- **Google Play:** acceso a producción en revisión desde 04/11/2026.
-- **Prueba cerrada:** 14 días completados (20/10 a 03/11) con 12 evaluadores; cero crashes y cero ANR.
+- **Google Play:** segunda prueba cerrada de 14 días finalizada el 20/11/2026; nueva solicitud de producción enviada el 20/11/2026 (en revisión).
+- **Prueba cerrada:** dos ciclos de 14 días completados con 12 evaluadores; cero crashes y cero ANR.
 
 ## Decisiones Técnicas
 - Resaltado en búsquedas: `AppColors.primaryLight` + subrayado negro en fragmento; contenedor suave en fila del ítem; prefijo de cantidad aislado para evitar falsos positivos numéricos.

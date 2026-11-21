@@ -31,11 +31,7 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
    - `rindemas.jks` retirado de Git y firma inyectada desde GitHub Secrets con guardas SHA-1/SHA-256 en CI (Builds 664/671).
    - *Pendiente posterior:* Rotación de la upload key tras aprobación de Producción en Google Play.
 2. **Subida a Google Play Store (Solicitud de Producción):** `Pendiente de validación 🧪`
-   - Prueba cerrada de 14 días completada con 12 evaluadores (cero crashes / cero ANR). Solicitud de producción enviada el 04/11/2026 (en revisión). Doc en [`docs/DOC_CUESTIONARIO_PRODUCCION.md`](docs/DOC_CUESTIONARIO_PRODUCCION.md).
-3. **Herramientas Web Bloque 1 (Calculadora Cambiaria + Asistente IA en Panel Web):** `Completada ✅`
-   - Módulos puros (`expense-money.js`, `currency-calculator.js`, `ai-assistant.js`), componentes Astro (`CalculatorModal.astro`, `AiChatDrawer.astro`), 29 pruebas unitarias en CI (`deploy_web.yml`, build 32, run `44784979988`, `3df3104`) y cola de compras múltiples. Desplegado, verificado HTTP 200 en `https://rindemas.cesarluis.com/panel` y aprobado por César (20/11/2026). Doc en [`docs/DOC_HERRAMIENTAS_PANEL_WEB.md`](docs/DOC_HERRAMIENTAS_PANEL_WEB.md).
-4. **AI-10 (Reporte funcional de respuestas de IA):** `Pendiente de validación 🧪`
-   - Botón "Reportar respuesta" con motivo y comentario opcional; escribe en la colección Firestore `ai_reports` con reglas propias y purga en el borrado de cuenta (APK build 731, run `44927415737`, SHA `ca86859`; reglas build 6; web build 34, HTTP 200). Cumple la política "Contenido generado por IA" de Google Play. Doc en [`docs/DOC_REPORTE_RESPUESTAS_IA.md`](docs/DOC_REPORTE_RESPUESTAS_IA.md). Pendiente: despliegue manual de `deploy_rules.yml` (`DEPLOY`) y prueba en dispositivo.
+   - Primera prueba cerrada de 14 días completada con 12 evaluadores (cero crashes / cero ANR); Google Play pidió una segunda prueba de 14 días. Segunda prueba cerrada finalizada el 20/11/2026 y nueva solicitud de producción enviada el 20/11/2026 (en revisión). Doc en [`docs/DOC_CUESTIONARIO_PRODUCCION.md`](docs/DOC_CUESTIONARIO_PRODUCCION.md).
 
 ---
 
@@ -49,12 +45,6 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 ### 🟢 Qué NO Implementar (Condicionado a métricas)
 - **Búsqueda FTS5:** No conectar a ciegas; migrar a SQL indexado únicamente si las métricas en dispositivo superan 300 ms.
 - **Prohibido refactorizar o dividir `DatabaseHelper` o `ReviewExpenseScreen`** durante la evaluación de Google Play.
-
----
-
-## Fase 0: Integridad Financiera y Multimoneda (Iniciativa RM-03 — Cierre)
-*Hitos `E0-01` a `E0-05a` completados; ver [ROADMAP_HISTORICO.md](docs/archive/2026-Q4/ROADMAP_HISTORICO.md).*
-- `E0-05b` **Protocolo de diagnóstico de datos existentes (Q01..Q20):** `Completada ✅` Consultas de solo lectura (`PRAGMA query_only = ON`, copia temporal con soporte WAL, sin PII) en `lib/domain/diagnostics/` y CLI `tool/diagnose_sqlite.dart`. Doc en [`docs/DOC_E0_05B_DIAGNOSTICO_Q01_Q20.md`](docs/DOC_E0_05B_DIAGNOSTICO_Q01_Q20.md). CI en verde (build 707, `4dafbf9`) y validada por César (13/11/2026).
 
 ---
 
@@ -81,13 +71,11 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 - `UX-17` **Botón y Flujo de Referidos Simple ("Compartir Rinde Más por WhatsApp"):** `Pendiente` *(Diferida hasta tener el enlace público de Google Play Store)*. Planificado para App (`MoreScreen`), Panel Web y Landing + meta tags Open Graph. Ver [`docs/DOC_PLAN_UX17_COMPARTIR_WHATSAPP.md`](docs/DOC_PLAN_UX17_COMPARTIR_WHATSAPP.md).
 - `UX-18` **Evolución Mensual en Gráfica Única (Pantalla Análisis):** `Pendiente` Gráfica consolidada de los últimos 6 a 12 meses en una sola vista.
 - `UX-19` **(Idea en evaluación) Simplificación del Registro Manual:** `Pendiente` Evaluar agilización de gastos sueltos sin lista de ítems detallados, preservando el método de liquidación (`MetodoLiquidacion`) y chips frecuentes (`UX-15`).
-- `UX-20` **Rediseño de Ítems en Revisión de Factura:** `Completada ✅` Iteración 2 validada en dispositivo (build 712, `18ae858`): fondo gris por ítem, etiqueta "Concepto" en negrita, categoría en caja alineada, total más grande y deshacer al eliminar. Ver [`docs/DOC_REDISENO_ITEMS_FACTURA.md`](docs/DOC_REDISENO_ITEMS_FACTURA.md).
 
 ### Bloque C: Percepción con IA
-- `AI-06` **Imputación de IVA en Precios de Anaquel y Reparto por Mayor Resto (B-2):** `Completada ✅` Validada en dispositivo físico por César (APK build 732, run `44928418260`, SHA `d25af1d`; paridad Web build 33, run `44859265979`; Firestore build 5, run `44859266019`). Variante B-2 completa: cotejo al papel sin IVA + costo real `Con IVA` debajo, mini-selector `G · 16% ▾`/`R · 8% ▾`/`Exento ▾` con fondo blanco, borde gris y texto negro (hoja de 3 opciones con borde amarillo en la activa + `Deshacer`), separadores con aire entre artículos/subtotal/agregar, borde amarillo en `Agregar otro artículo`, pausa del comparador ante `IVA no cuadra`, hoja `Ajustar IVA`, pie fiscal en 3 verificaciones con ancla invalidable, guarda en `_recalcularTotal`, detector de candidato único `sugerirCorreccionUnica` + test de propiedades, y guardado seguro con confirmación ante descuadre. Reglas graduadas a `DESIGN.md`, `.agents/rules/dinero-datos.md` y `.agents/skills/revisor-adversarial/SKILL.md`. *(Pendiente operativo aparte: `wrangler deploy` para activar `'R'` 8% en Worker).* Ver [`docs/DOC_PRECIOS_ANAQUEL_IVA.md`](docs/DOC_PRECIOS_ANAQUEL_IVA.md).
 - `AI-07` **Refinamiento de UX en Chat del Asistente (Sugerencias Verticales y Botón Dinámico):** `Pendiente` Sugerencias apiladas verticalmente (2 a 3 opciones) y botón dinámico micrófono/enviar estilo WhatsApp.
-- `AI-08` **Consejos Dinámicos en Tarjeta Asistente IA (Inicio):** `Completada ✅` Validada en dispositivo físico por César (21/11/2026, APK build 733, run `44928504292`, SHA `1ab66fa`; Worker `rindemas-gateway` `a3975df5`). Motor de señales ocultas de compra desde SQLite (diferencias de precios en 60 días, gastos hormiga $<\$10$ y comparativa día a día vs. mes pasado con felicitación solo por logro real), sin recomendación confusa de ahorro BCV vs. USDT, tarjeta limpia de 2–4 líneas sin icono robot ni repetición de `SummaryCard`, botón para copiar en Inicio y Chat, caché `v3` JSON estricta y profundización en vivo idempotente en `ChatScreen`. Lecciones graduadas a `.agents/rules/ia-ocr-voz.md` y `.agents/rules/flutter-testing.md`. Ver [`docs/DOC_CONSEJOS_DINAMICOS_INICIO.md`](docs/DOC_CONSEJOS_DINAMICOS_INICIO.md).
 - `AI-09` **Detección Preventiva de Fotos y Facturas Duplicadas:** `Pendiente` Control en dos capas para evitar duplicados en la cola de escaneo (por hash SHA-256) y alertas semánticas en revisión/guardado (mismo comercio, fecha y monto) con opción de descarte inmediato. Ver [`docs/DOC_PLAN_DETECCION_DUPLICADOS.md`](docs/DOC_PLAN_DETECCION_DUPLICADOS.md).
+- `AI-11` **Alertas Automáticas de Reportes en `ai_reports`:** `Pendiente` Notificar a César cuando llegue un nuevo reporte de respuesta de IA sin salir de Firebase Spark (Opción A: `POST` al Cloudflare Worker `rindemas-gateway` con aviso instantáneo por Telegram o Resend; Opción B: GitHub Action diario consultando `ai_reports` sin tocar la app).
 
 ### Bloque D: Nuevas Herramientas Financieras
 - `FIN-14` **Flexibilidad y Opciones de Liquidación en Gastos Registrados en USDT:** `Pendiente` Habilitar `BS_BCV`, `BS_USDT` y `DIVISA` al registrar en `USDT`, almacenando contravalor con `tasaUsdt` de la fecha.
@@ -112,10 +100,8 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 
 | Ítem / Área | Prioridad | Estado | Detalle |
 | :--- | :---: | :---: | :--- |
-| **Endurecimiento de reglas de Firestore (`B1`)** | P0 | `Completada ✅` | Reglas endurecidas con `diff()` en `firestore.rules`, suite `RT-01..RT-24` en verde (`43499032804`), auditoría read-only (`audit_firestore.yml`) y pruebas en producción aprobadas por César (13/11/2026). |
 | **Búsqueda histórica eficiente (tabla normalizada)** | P2 | `Pendiente` | Condicionado a métricas en dispositivo > 300 ms. |
 | **Crear `ShoppingListProvider` / Repository** | P2 | `Pendiente` | Desacoplar pantallas y chat de llamadas directas a `DatabaseHelper.instance`. |
-| **Actualizar `README.md` a la realidad** | P2 | `Pendiente` | Sigue listando Cloud Functions y archivos inexistentes del proyecto inicial. |
 | **Eliminar binarios locales y `fix.py`** | P3 | `Pendiente` | `app-release.apk` (57 MB), `scratch/*.apk` (~300 MB) y `fix.py` en disco. |
 
 ### Bloque B: Infraestructura y Capacidades de Producción (Bank-Grade)
