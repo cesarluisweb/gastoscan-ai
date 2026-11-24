@@ -36,6 +36,16 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Cachear dependencias de Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('android/**/*.gradle*', 'pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
       - name: Configurar Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -191,7 +201,18 @@ jobs:
           BASE_BUILD=$(grep "^version:" pubspec.yaml | sed -e 's/version:[[:space:]]*//' | cut -d '+' -f 2 | tr -d '[:space:]')
           BUILD_NUM=$(( BASE_BUILD + ${{ github.run_number }} ))
           echo "Compilando AAB para Google Play v$APP_VERSION (Build $BUILD_NUM)..."
-          flutter build appbundle --release --no-tree-shake-icons --build-name="$APP_VERSION" --build-number="$BUILD_NUM" 2>&1 | tee aab_build_log.txt
+          for attempt in 1 2; do
+            if flutter build appbundle --release --no-tree-shake-icons --build-name="$APP_VERSION" --build-number="$BUILD_NUM" 2>&1 | tee aab_build_log.txt; then
+              exit 0
+            fi
+            if [ "$attempt" -eq 1 ] && grep -qiE "status code 429|Too Many Requests|downloading artifacts from the network" aab_build_log.txt; then
+              echo "Fallo transitorio de red/Maven (429) en intento 1. Reintentando en 25s..."
+              sleep 25
+            else
+              exit 1
+            fi
+          done
+          exit 1
 
       - name: Subir Log de Error de AAB como Artefacto
         if: failure() && steps.compile_aab.outcome == 'failure'
