@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:gastoscan_ai/core/constants/app_constants.dart';
 import 'package:gastoscan_ai/data/datasources/local/database_helper.dart';
 import 'package:gastoscan_ai/providers/gasto_provider.dart';
 import 'package:gastoscan_ai/providers/scan_queue_provider.dart';
 import 'package:gastoscan_ai/providers/settings_provider.dart';
 import 'package:gastoscan_ai/providers/chat_provider.dart';
+import 'package:gastoscan_ai/services/notification_service.dart';
 import 'package:gastoscan_ai/ui/screens/more_screen.dart';
 
 class FakeTestUser extends Fake implements User {
@@ -84,6 +87,12 @@ class FakeGastoProvider extends GastoProvider {
 }
 
 class FakeSettingsProvider extends SettingsProvider {
+  FakeSettingsProvider()
+      : super(
+          autoLoad: false,
+          enableConnectivityListener: false,
+        );
+
   @override
   Future<void> loadSettings() async {}
 }
@@ -98,11 +107,21 @@ void main() {
   late ChatProvider chatProvider;
 
   setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    NotificationService.instance = NotificationService.test();
     fakeDb = FakeDatabaseHelper();
-    scanQueueProvider = ScanQueueProvider(dbHelper: fakeDb);
+    scanQueueProvider = ScanQueueProvider(dbHelper: fakeDb, autoProcess: false);
     gastoProvider = FakeGastoProvider();
     settingsProvider = FakeSettingsProvider();
     chatProvider = ChatProvider();
+  });
+
+  tearDown(() {
+    scanQueueProvider.dispose();
+    gastoProvider.dispose();
+    settingsProvider.dispose();
+    chatProvider.dispose();
+    NotificationService.instance = NotificationService.test();
   });
 
   Widget createWidgetUnderTest({User? customUser}) {
@@ -195,5 +214,45 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(gastoProvider.lastEliminarFotosPassed, isTrue);
+  });
+
+  testWidgets('Modal Notificaciones incluye switch de Tasa de cambio diaria y persiste cambios', (tester) async {
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    final user = FakeTestUser(isAnonymous: false);
+    await tester.pumpWidget(createWidgetUnderTest(customUser: user));
+    await tester.pumpAndSettle();
+
+    final btnPreferencias = find.byKey(const Key('more_group_preferences'));
+    expect(btnPreferencias, findsOneWidget);
+    await tester.tap(btnPreferencias);
+    await tester.pumpAndSettle();
+
+    final btnNotificaciones = find.byKey(const Key('more_menu_notifications'));
+    expect(btnNotificaciones, findsOneWidget);
+    await tester.tap(btnNotificaciones);
+    await tester.pumpAndSettle();
+
+    final switchFinder = find.byKey(const Key('switch_notif_tasa_diaria'));
+    expect(switchFinder, findsOneWidget);
+    expect(find.text('Tasa de cambio diaria'), findsOneWidget);
+
+    SwitchListTile tile = tester.widget<SwitchListTile>(switchFinder);
+    expect(tile.value, isTrue);
+
+    await tester.tap(switchFinder);
+    await tester.pumpAndSettle();
+
+    tile = tester.widget<SwitchListTile>(switchFinder);
+    expect(tile.value, isFalse);
+    expect(settingsProvider.tasaDiariaActiva, isFalse);
+
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getBool(AppConstants.prefTasaDiariaActiva), isFalse);
   });
 }

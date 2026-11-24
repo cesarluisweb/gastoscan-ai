@@ -24,6 +24,8 @@ class MockNotificationServiceForSettings extends NotificationService {
   int scheduleWeekendCount = 0;
   int subscribeCount = 0;
   int unsubscribeCount = 0;
+  int subscribeDailyRatesCount = 0;
+  int unsubscribeDailyRatesCount = 0;
 
   MockNotificationServiceForSettings() : super.test();
 
@@ -64,6 +66,16 @@ class MockNotificationServiceForSettings extends NotificationService {
   Future<void> unsubscribeFromBroadcastTopic() async {
     unsubscribeCount++;
   }
+
+  @override
+  Future<void> subscribeToDailyRatesTopic() async {
+    subscribeDailyRatesCount++;
+  }
+
+  @override
+  Future<void> unsubscribeFromDailyRatesTopic() async {
+    unsubscribeDailyRatesCount++;
+  }
 }
 
 class TestableSettingsProviderWithMockSync extends SettingsProvider {
@@ -88,6 +100,10 @@ void main() {
       NotificationService.instance = mockNotifications;
     });
 
+    tearDown(() {
+      NotificationService.instance = NotificationService.test();
+    });
+
     test('Default values for notification preferences are true and use defaults', () async {
       final provider = TestableSettingsProviderWithMockSync(
         secureStorage: FakeSecureStorageForNotifications(),
@@ -97,6 +113,7 @@ void main() {
       expect(provider.recordatoriosActivos, isTrue);
       expect(provider.recordatorioFinDeSemana, isTrue);
       expect(provider.anunciosActivos, isTrue);
+      expect(provider.tasaDiariaActiva, isTrue);
       expect(provider.mensajesQuincenales.length, equals(4));
       expect(provider.tituloInactividad, equals(AppConstants.defaultInactivityTitle));
       expect(provider.cuerpoInactividad, equals(AppConstants.defaultInactivityBody));
@@ -142,6 +159,28 @@ void main() {
       expect(provider.anunciosActivos, isTrue);
       expect(mockNotifications.subscribeCount, equals(1));
       expect(prefs.getBool(AppConstants.prefAnunciosActivos), isTrue);
+    });
+
+    test('setTasaDiariaActiva persists and toggles daily rates topic subscription', () async {
+      final provider = TestableSettingsProviderWithMockSync(
+        secureStorage: FakeSecureStorageForNotifications(),
+      );
+      addTearDown(provider.dispose);
+      await provider.loadSettings();
+
+      // Desactivar
+      await provider.setTasaDiariaActiva(false);
+      expect(provider.tasaDiariaActiva, isFalse);
+      expect(mockNotifications.unsubscribeDailyRatesCount, equals(1));
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getBool(AppConstants.prefTasaDiariaActiva), isFalse);
+
+      // Reactivar
+      await provider.setTasaDiariaActiva(true);
+      expect(provider.tasaDiariaActiva, isTrue);
+      expect(mockNotifications.subscribeDailyRatesCount, equals(1));
+      expect(prefs.getBool(AppConstants.prefTasaDiariaActiva), isTrue);
     });
 
     test('setRecordatoriosActivos persists and toggles inactivity schedule', () async {

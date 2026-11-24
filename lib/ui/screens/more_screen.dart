@@ -1055,7 +1055,7 @@ class MoreScreenState extends State<MoreScreen> {
                         contentPadding: EdgeInsets.zero,
                         leading: const Icon(Icons.notifications_outlined, color: AppColors.primaryDark, size: 22),
                         title: const Text('Notificaciones y avisos', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                        subtitle: const Text('Recordatorios de compras y alertas del asistente', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                        subtitle: const Text('Tasa diaria, recordatorios de compras y avisos', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
                         trailing: const Icon(Icons.chevron_right, size: 18, color: AppColors.textSecondary),
                         onTap: () {
                           Navigator.pop(ctx);
@@ -1628,117 +1628,141 @@ class MoreScreenState extends State<MoreScreen> {
           builder: (ctx, setModalState) {
             return Padding(
               padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
-              child: Material(
-                key: const Key('sheet_surface_notifications'),
-                color: AppColors.surface,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                clipBehavior: Clip.antiAlias,
-                child: SafeArea(
-                  top: false,
-                  child: SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Center(
-                            child: Container(
-                              width: 36,
-                              height: 4,
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade300,
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            children: [
-                              const Icon(Icons.notifications_active_outlined, color: AppColors.primaryDark, size: 22),
-                              const SizedBox(width: 8),
-                              const Expanded(
-                                child: Text(
-                                  'Notificaciones',
-                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(ctx).size.height * 0.78,
+                ),
+                child: Material(
+                  key: const Key('sheet_surface_notifications'),
+                  color: AppColors.surface,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                  clipBehavior: Clip.antiAlias,
+                  child: SafeArea(
+                    top: false,
+                    child: SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Center(
+                              child: Container(
+                                width: 36,
+                                height: 4,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade300,
+                                  borderRadius: BorderRadius.circular(2),
                                 ),
                               ),
-                              IconButton(
-                                icon: const Icon(Icons.close, size: 20, color: AppColors.textSecondary),
-                                onPressed: () => Navigator.pop(modalCtx),
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
+                              children: [
+                                const Icon(Icons.notifications_active_outlined, color: AppColors.primaryDark, size: 22),
+                                const SizedBox(width: 8),
+                                const Expanded(
+                                  child: Text(
+                                    'Notificaciones',
+                                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.close, size: 20, color: AppColors.textSecondary),
+                                  onPressed: () => Navigator.pop(modalCtx),
+                                ),
+                              ],
+                            ),
+                            const Text(
+                              'Personaliza cómo y cuándo Rinde Más se comunica contigo.',
+                              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                            ),
+                            const SizedBox(height: 16),
+                            SwitchListTile(
+                              key: const Key('switch_notif_tasa_diaria'),
+                              contentPadding: EdgeInsets.zero,
+                              activeThumbColor: AppColors.primaryDark,
+                              title: const Text(
+                                'Tasa de cambio diaria',
+                                style: TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w600),
                               ),
-                            ],
-                          ),
-                          const Text(
-                            'Personaliza cómo y cuándo Rinde Más se comunica contigo.',
-                            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                          ),
-                          const SizedBox(height: 16),
-                          SwitchListTile(
-                            contentPadding: EdgeInsets.zero,
-                            activeThumbColor: AppColors.primaryDark,
-                            title: const Text(
-                              'Recordatorio quincenal de compras',
-                              style: TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w600),
+                              subtitle: const Text(
+                                'Aviso de lunes a viernes a las 8:30 a. m. con USD BCV, EUR BCV y USDT P2P.',
+                                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                              ),
+                              value: settings.tasaDiariaActiva,
+                              onChanged: (val) {
+                                unawaited(settings.setTasaDiariaActiva(val));
+                                setModalState(() {});
+                              },
                             ),
-                            subtitle: const Text(
-                              'Avisos los sábados cada dos semanas para fotografiar facturas y comprobantes.',
-                              style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                            const Divider(height: 16, color: AppColors.border),
+                            SwitchListTile(
+                              contentPadding: EdgeInsets.zero,
+                              activeThumbColor: AppColors.primaryDark,
+                              title: const Text(
+                                'Recordatorio quincenal de compras',
+                                style: TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w600),
+                              ),
+                              subtitle: const Text(
+                                'Avisos los sábados cada dos semanas para fotografiar facturas y comprobantes.',
+                                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                              ),
+                              value: settings.recordatorioFinDeSemana,
+                              onChanged: (val) {
+                                setModalState(() {});
+                                settings.setRecordatorioFinDeSemana(val);
+                              },
                             ),
-                            value: settings.recordatorioFinDeSemana,
-                            onChanged: (val) {
-                              setModalState(() {});
-                              settings.setRecordatorioFinDeSemana(val);
-                            },
-                          ),
-                          const Divider(height: 16, color: AppColors.border),
-                          SwitchListTile(
-                            contentPadding: EdgeInsets.zero,
-                            activeThumbColor: AppColors.primaryDark,
-                            title: const Text(
-                              'Recordatorio de inactividad',
-                              style: TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w600),
+                            const Divider(height: 16, color: AppColors.border),
+                            SwitchListTile(
+                              contentPadding: EdgeInsets.zero,
+                              activeThumbColor: AppColors.primaryDark,
+                              title: const Text(
+                                'Recordatorio de inactividad',
+                                style: TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w600),
+                              ),
+                              subtitle: const Text(
+                                'Aviso suave si pasa un mes sin registrar gastos para mantener tu presupuesto al día.',
+                                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                              ),
+                              value: settings.recordatoriosActivos,
+                              onChanged: (val) {
+                                setModalState(() {});
+                                settings.setRecordatoriosActivos(val);
+                              },
                             ),
-                            subtitle: const Text(
-                              'Aviso suave si pasa un mes sin registrar gastos para mantener tu presupuesto al día.',
-                              style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                            const Divider(height: 16, color: AppColors.border),
+                            SwitchListTile(
+                              contentPadding: EdgeInsets.zero,
+                              activeThumbColor: AppColors.primaryDark,
+                              title: const Text(
+                                'Avisos y novedades',
+                                style: TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w600),
+                              ),
+                              subtitle: const Text(
+                                'Notificaciones sobre nuevas funciones y mejoras importantes de Rinde Más.',
+                                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                              ),
+                              value: settings.anunciosActivos,
+                              onChanged: (val) {
+                                setModalState(() {});
+                                settings.setAnunciosActivos(val);
+                              },
                             ),
-                            value: settings.recordatoriosActivos,
-                            onChanged: (val) {
-                              setModalState(() {});
-                              settings.setRecordatoriosActivos(val);
-                            },
-                          ),
-                          const Divider(height: 16, color: AppColors.border),
-                          SwitchListTile(
-                            contentPadding: EdgeInsets.zero,
-                            activeThumbColor: AppColors.primaryDark,
-                            title: const Text(
-                              'Avisos y novedades',
-                              style: TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w600),
+                            const SizedBox(height: 20),
+                            ElevatedButton(
+                              onPressed: () => Navigator.pop(modalCtx),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.black,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              child: const Text('Listo', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                             ),
-                            subtitle: const Text(
-                              'Notificaciones sobre nuevas funciones y mejoras importantes de Rinde Más.',
-                              style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
-                            ),
-                            value: settings.anunciosActivos,
-                            onChanged: (val) {
-                              setModalState(() {});
-                              settings.setAnunciosActivos(val);
-                            },
-                          ),
-                          const SizedBox(height: 20),
-                          ElevatedButton(
-                            onPressed: () => Navigator.pop(modalCtx),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: Colors.black,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
-                            child: const Text('Listo', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),

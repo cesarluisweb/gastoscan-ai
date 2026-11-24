@@ -76,9 +76,16 @@ class NotificationService {
   static const String broadcastChannelName = AppConstants.channelBroadcastName;
   static const String broadcastChannelDesc = AppConstants.channelBroadcastDesc;
 
+  // Constantes de canal e identificación para Tasa de Cambio Diaria
+  static const int dailyRatesNotificationId = AppConstants.dailyRatesNotificationId;
+  static const String dailyRatesChannelId = AppConstants.channelDailyRatesId;
+  static const String dailyRatesChannelName = AppConstants.channelDailyRatesName;
+  static const String dailyRatesChannelDesc = AppConstants.channelDailyRatesDesc;
+
   // Estado interno para observabilidad y pruebas
   bool _isInitialized = false;
   bool get isInitialized => _isInitialized;
+  bool _fcmListenersAttached = false;
 
   DateTime? _lastActivityTime;
   DateTime? get lastActivityTime => _lastActivityTime;
@@ -120,9 +127,11 @@ class NotificationService {
       receivedAt: DateTime.now(),
     );
     _pendingAction = action;
-    pendingActionNotifier.value = action;
     _initialPayload = payload;
-    selectedPayloadNotifier.value = payload;
+    pendingActionNotifier.value = action;
+    if (!action.isHandled) {
+      selectedPayloadNotifier.value = payload;
+    }
   }
 
   /// Marca una intención como atendida y la remueve de la bandeja.
@@ -214,6 +223,9 @@ class NotificationService {
       );
       initialized = result ?? false;
 
+      // Pre-crear canales FCM en Android para que los push en segundo plano usen el canal correcto
+      await _createAndroidNotificationChannels();
+
       // Soporte para Cold Start (arranque en frío con app cerrada)
       final launchDetails = await _notificationsPlugin.getNotificationAppLaunchDetails();
       if (launchDetails != null &&
@@ -248,43 +260,149 @@ class NotificationService {
 
       if (_firebaseMessaging == null) return;
 
-      // 1. Solicitar permisos de notificación en iOS y Android 13+
-      await _firebaseMessaging!.requestPermission(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
+      // 1. Registrar listeners locales y resolver cold start ANTES de llamadas de red
+      //    para que un fallo offline en subscribeToTopic nunca bloquee ni aborte el deep-link.
+      if (!_fcmListenersAttached) {
+        try {
+          FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+            debugPrint('NotificationService: FCM Foreground recibido: ${message.notification?.title}');
+            _mostrarNotificacionBroadcastLocal(message);
+          });
 
-      // 2. Suscribirse al topic general por defecto si está activo
+          FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+            debugPrint('NotificationService: App abierta desde FCM push: ${message.messageId}');
+            final payload = resolveFcmPayload(message);
+            enqueueAction(payload, 'fcm_tap');
+          });
+          _fcmListenersAttached = true;
+        } catch (e) {
+          debugPrint('NotificationService: Error registrando listeners FCM: $e');
+        }
+      }
+
+      try {
+        final initialMessage = await _firebaseMessaging!.getInitialMessage();
+        if (initialMessage != null) {
+          final payload = resolveFcmPayload(initialMessage);
+          enqueueAction(payload, 'fcm_launch');
+          debugPrint('NotificationService: Cold start desde FCM con payload: $payload');
+        }
+      } catch (e) {
+        debugPrint('NotificationService: Error leyendo getInitialMessage FCM: $e');
+      }
+
+      // 2. Solicitar permisos de notificación en iOS y Android 13+
+      try {
+        await _firebaseMessaging!.requestPermission(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+      } catch (e) {
+        debugPrint('NotificationService: Error solicitando permisos FCM: $e');
+      }
+
+      // 3. Sincronizar suscripciones a topics en bloques independientes (resiliente sin red)
       final prefs = await SharedPreferences.getInstance();
       final bool anunciosActivos = prefs.getBool(AppConstants.prefAnunciosActivos) ?? true;
       if (anunciosActivos) {
-        await _firebaseMessaging!.subscribeToTopic(AppConstants.fcmTopicGeneral);
-        debugPrint('NotificationService: Suscrito a topic FCM: ${AppConstants.fcmTopicGeneral}');
+        try {
+          await _firebaseMessaging!.subscribeToTopic(AppConstants.fcmTopicGeneral);
+          debugPrint('NotificationService: Suscrito a topic FCM: ${AppConstants.fcmTopicGeneral}');
+        } catch (e) {
+          debugPrint('NotificationService: Error suscribiendo a ${AppConstants.fcmTopicGeneral}: $e');
+        }
       }
 
-      // 3. Escuchar notificaciones cuando la app está abierta en primer plano (foreground)
-      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-        debugPrint('NotificationService: FCM Foreground recibido: ${message.notification?.title}');
-        _mostrarNotificacionBroadcastLocal(message);
-      });
-
-      // 4. Manejar apertura de la app desde notificación en segundo plano
-      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-        debugPrint('NotificationService: App abierta desde FCM push: ${message.messageId}');
-        final payload = message.data['payload'] ?? 'broadcast_opened';
-        enqueueAction(payload, 'fcm_tap');
-      });
-
-      // 5. Manejar arranque en frío desde FCM si estaba cerrada
-      final initialMessage = await _firebaseMessaging!.getInitialMessage();
-      if (initialMessage != null) {
-        final payload = initialMessage.data['payload'] ?? 'broadcast_opened';
-        enqueueAction(payload, 'fcm_launch');
-        debugPrint('NotificationService: Cold start desde FCM con payload: $payload');
+      final bool tasaDiariaActiva = prefs.getBool(AppConstants.prefTasaDiariaActiva) ?? true;
+      try {
+        if (tasaDiariaActiva) {
+          await _firebaseMessaging!.subscribeToTopic(AppConstants.fcmTopicDailyRates);
+          debugPrint('NotificationService: Suscrito a topic FCM: ${AppConstants.fcmTopicDailyRates}');
+        } else {
+          await _firebaseMessaging!.unsubscribeFromTopic(AppConstants.fcmTopicDailyRates);
+          debugPrint('NotificationService: Desuscrito de topic FCM: ${AppConstants.fcmTopicDailyRates}');
+        }
+      } catch (e) {
+        debugPrint('NotificationService: Error sincronizando topic ${AppConstants.fcmTopicDailyRates}: $e');
       }
     } catch (e) {
       debugPrint('NotificationService: Inicialización FCM omitida o falló: $e');
+    }
+  }
+
+  /// Crea canales de notificación de Android usados por FCM en segundo plano.
+  Future<void> _createAndroidNotificationChannels() async {
+    try {
+      final androidImplementation = _notificationsPlugin
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+      if (androidImplementation == null) return;
+
+      await androidImplementation.createNotificationChannel(
+        const AndroidNotificationChannel(
+          dailyRatesChannelId,
+          dailyRatesChannelName,
+          description: dailyRatesChannelDesc,
+          importance: Importance.high,
+        ),
+      );
+      await androidImplementation.createNotificationChannel(
+        const AndroidNotificationChannel(
+          broadcastChannelId,
+          broadcastChannelName,
+          description: broadcastChannelDesc,
+          importance: Importance.high,
+        ),
+      );
+    } catch (e) {
+      debugPrint('NotificationService: Error al crear canales Android: $e');
+    }
+  }
+
+  /// Resuelve el payload de navegación de un mensaje FCM entrante.
+  static String resolveFcmPayload(RemoteMessage message) {
+    final raw = message.data['payload']?.toString().trim();
+    if (raw != null && raw.isNotEmpty) return raw;
+    if (isDailyRatesMessage(message)) {
+      return AppConstants.payloadDailyRates;
+    }
+    return 'broadcast_opened';
+  }
+
+  /// Determina si un mensaje FCM corresponde al envío de tasa de cambio diaria.
+  static bool isDailyRatesMessage(RemoteMessage message) {
+    final channelId = message.data['channel_id']?.toString().trim();
+    final payload = message.data['payload']?.toString().trim();
+    final type = message.data['type']?.toString().trim();
+    return channelId == dailyRatesChannelId ||
+        payload == AppConstants.payloadDailyRates ||
+        type == AppConstants.payloadDailyRates;
+  }
+
+  /// Suscribe el dispositivo al topic de tasa de cambio diaria en Firebase.
+  Future<void> subscribeToDailyRatesTopic() async {
+    try {
+      if (_firebaseMessaging != null) {
+        await _firebaseMessaging!.subscribeToTopic(AppConstants.fcmTopicDailyRates);
+      } else if (Firebase.apps.isNotEmpty) {
+        await FirebaseMessaging.instance.subscribeToTopic(AppConstants.fcmTopicDailyRates);
+      }
+    } catch (e) {
+      debugPrint('NotificationService: Error suscribiendo a topic tasa diaria: $e');
+    }
+  }
+
+  /// Desuscribe el dispositivo del topic de tasa de cambio diaria en Firebase.
+  Future<void> unsubscribeFromDailyRatesTopic() async {
+    try {
+      if (_firebaseMessaging != null) {
+        await _firebaseMessaging!.unsubscribeFromTopic(AppConstants.fcmTopicDailyRates);
+      } else if (Firebase.apps.isNotEmpty) {
+        await FirebaseMessaging.instance.unsubscribeFromTopic(AppConstants.fcmTopicDailyRates);
+      }
+    } catch (e) {
+      debugPrint('NotificationService: Error desuscribiendo de topic tasa diaria: $e');
     }
   }
 
@@ -317,13 +435,16 @@ class NotificationService {
   /// Muestra una notificación local en Android cuando llega un push con la app en primer plano.
   Future<void> _mostrarNotificacionBroadcastLocal(RemoteMessage message) async {
     try {
-      final title = message.notification?.title ?? message.data['titulo'] ?? 'Aviso de Rinde Más';
-      final body = message.notification?.body ?? message.data['mensaje'] ?? '';
+      final bool esTasaDiaria = isDailyRatesMessage(message);
+      final title = message.notification?.title ??
+          message.data['titulo']?.toString() ??
+          (esTasaDiaria ? 'Tasa de hoy · Rinde Más' : 'Aviso de Rinde Más');
+      final body = message.notification?.body ?? message.data['mensaje']?.toString() ?? '';
 
-      const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-        broadcastChannelId,
-        broadcastChannelName,
-        channelDescription: broadcastChannelDesc,
+      final AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+        esTasaDiaria ? dailyRatesChannelId : broadcastChannelId,
+        esTasaDiaria ? dailyRatesChannelName : broadcastChannelName,
+        channelDescription: esTasaDiaria ? dailyRatesChannelDesc : broadcastChannelDesc,
         importance: Importance.high,
         priority: Priority.high,
         icon: '@mipmap/ic_launcher',
@@ -335,17 +456,17 @@ class NotificationService {
         presentSound: true,
       );
 
-      const NotificationDetails notificationDetails = NotificationDetails(
+      final NotificationDetails notificationDetails = NotificationDetails(
         android: androidDetails,
         iOS: darwinDetails,
       );
 
       await _notificationsPlugin.show(
-        broadcastNotificationId,
+        esTasaDiaria ? dailyRatesNotificationId : broadcastNotificationId,
         title,
         body,
         notificationDetails,
-        payload: message.data['payload'] ?? 'broadcast_opened',
+        payload: resolveFcmPayload(message),
       );
     } catch (e) {
       debugPrint('NotificationService: Error al mostrar banner local FCM: $e');

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:gastoscan_ai/core/constants/app_constants.dart';
@@ -311,6 +312,62 @@ void main() {
       expect(NotificationService.broadcastChannelId, equals('broadcast_announcements'));
       expect(NotificationService.broadcastChannelName, equals('Avisos y Novedades'));
       expect(AppConstants.fcmTopicGeneral, equals('anuncios_generales'));
+    });
+  });
+
+  group('NotificationService — Daily Exchange Rates Push Tests', () {
+    test('Channel, topic and payload constants are correctly defined for Daily Rates', () {
+      expect(NotificationService.dailyRatesNotificationId, equals(1005));
+      expect(NotificationService.dailyRatesChannelId, equals('daily_rates'));
+      expect(NotificationService.dailyRatesChannelName, equals('Tasa de cambio diaria'));
+      expect(AppConstants.fcmTopicDailyRates, equals('tasa_diaria'));
+      expect(AppConstants.payloadDailyRates, equals('daily_rates'));
+      expect(AppConstants.prefTasaDiariaActiva, equals('tasa_diaria_notificacion_activa'));
+    });
+
+    test('resolveFcmPayload and isDailyRatesMessage detect daily_rates messages accurately', () {
+      const dailyByPayload = RemoteMessage(data: {'payload': 'daily_rates'});
+      const dailyByType = RemoteMessage(data: {'type': 'daily_rates'});
+      const dailyByChannel = RemoteMessage(data: {'channel_id': 'daily_rates'});
+      const genericBroadcast = RemoteMessage(data: {'titulo': 'Novedad'});
+
+      expect(NotificationService.resolveFcmPayload(dailyByPayload), equals('daily_rates'));
+      expect(NotificationService.resolveFcmPayload(dailyByType), equals('daily_rates'));
+      expect(NotificationService.resolveFcmPayload(dailyByChannel), equals('daily_rates'));
+      expect(NotificationService.resolveFcmPayload(genericBroadcast), equals('broadcast_opened'));
+
+      expect(NotificationService.isDailyRatesMessage(dailyByPayload), isTrue);
+      expect(NotificationService.isDailyRatesMessage(dailyByType), isTrue);
+      expect(NotificationService.isDailyRatesMessage(dailyByChannel), isTrue);
+      expect(NotificationService.isDailyRatesMessage(genericBroadcast), isFalse);
+    });
+
+    test('enqueueAction does not re-emit selectedPayloadNotifier when consumed synchronously', () {
+      final realService = NotificationService.test();
+      int handleCalls = 0;
+
+      void listener() {
+        final action = realService.pendingAction;
+        if (action != null && action.payload == AppConstants.payloadDailyRates) {
+          handleCalls++;
+          realService.markActionHandled(action.id);
+        }
+      }
+
+      realService.pendingActionNotifier.addListener(listener);
+      realService.selectedPayloadNotifier.addListener(listener);
+      addTearDown(() {
+        realService.pendingActionNotifier.removeListener(listener);
+        realService.selectedPayloadNotifier.removeListener(listener);
+        realService.clearPendingAction();
+      });
+
+      realService.enqueueAction(AppConstants.payloadDailyRates, 'fcm_tap');
+
+      expect(handleCalls, equals(1));
+      expect(realService.pendingAction, isNull);
+      expect(realService.initialPayload, isNull);
+      expect(realService.selectedPayloadNotifier.value, isNull);
     });
   });
 

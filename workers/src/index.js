@@ -1,3 +1,5 @@
+import { sendDailyRatesPush } from "./daily_rates_push.js";
+
 /**
  * Rinde Más - Cloudflare Worker Gateway para Gemini
  * 
@@ -361,6 +363,24 @@ async function readJsonBodyWithLimit(request, maxBytes) {
 }
 
 export default {
+  async scheduled(event, env, ctx) {
+    const task = sendDailyRatesPush(env, {
+      getRates: agregarTasas,
+      now: event && event.scheduledTime ? new Date(event.scheduledTime) : new Date(),
+    }).catch((err) => {
+      console.error(JSON.stringify({
+        event: "daily_rates_push_unhandled_error",
+        error: String(err && err.message ? err.message : err),
+      }));
+    });
+
+    if (ctx && typeof ctx.waitUntil === "function") {
+      ctx.waitUntil(task);
+    } else {
+      await task;
+    }
+  },
+
   async fetch(request, env, ctx) {
     if (request.method === "OPTIONS") {
       return new Response(null, { headers: corsHeaders });

@@ -9,6 +9,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../providers/gasto_provider.dart';
 import '../../providers/scan_queue_provider.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_constants.dart';
 import '../../data/models/gemini_extraction_result.dart';
 import '../../services/notification_service.dart';
 import '../../services/document_scanner_service.dart';
@@ -260,6 +261,13 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
             ),
           );
         }
+      } else if (payload == AppConstants.payloadDailyRates) {
+        if (action != null) {
+          NotificationService.instance.markActionHandled(action.id);
+        } else {
+          NotificationService.instance.clearPayload();
+        }
+        _abrirCalculadoraDesdeNotificacion();
       } else {
         // Otros payloads (ej. broadcast_opened)
         if (action != null) {
@@ -271,6 +279,29 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     } finally {
       _isHandlingAction = false;
     }
+  }
+
+  void _abrirCalculadoraDesdeNotificacion() {
+    if (!mounted) return;
+    setState(() {
+      _showingChat = false;
+      _currentIndex = 3;
+    });
+    final moreState = _moreScreenKey.currentState;
+    if (moreState != null) {
+      moreState.onTabVisible();
+      moreState.openCurrencyCalculator();
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _moreScreenKey.currentState?.onTabVisible();
+        _moreScreenKey.currentState?.openCurrencyCalculator();
+      });
+    }
+    unawaited(
+      Provider.of<SettingsProvider>(context, listen: false)
+          .refrescarTasasSiDesactualizadas(),
+    );
   }
 
   @override

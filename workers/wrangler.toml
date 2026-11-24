@@ -14,5 +14,10 @@ binding = "DB"
 database_name = "rindemas-usage"
 database_id = "d29a43ee-3ec9-4ea8-9396-6e17220392d5"
 
-# Los secretos como GEMINI_API_KEY se configuran con:
-# npx wrangler secret put GEMINI_API_KEY
+# Envío automático de tasa de cambio diaria: lunes a viernes 8:30 AM VET (12:30 UTC)
+[triggers]
+crons = ["30 12 * * 1-5"]
+
+# Secretos configurados con wrangler secret put:
+# - GEMINI_API_KEY
+# - FIREBASE_SERVICE_ACCOUNT_JSON (JSON de cuenta de servicio con rol Firebase Cloud Messaging API Admin)

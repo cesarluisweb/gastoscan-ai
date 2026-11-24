@@ -48,6 +48,7 @@ class SettingsProvider with ChangeNotifier {
   bool _recordatoriosActivos = true; // Inactividad a 30 días
   bool _recordatorioFinDeSemana = true; // Quincenal sábados 18:30
   bool _anunciosActivos = true; // Broadcast masivo de novedades
+  bool _tasaDiariaActiva = true; // Push lunes a viernes 8:30 AM VET con tasa del día
 
   List<Map<String, String>> _mensajesQuincenales = AppConstants.defaultMensajesAsistenteQuincenal;
   String _tituloInactividad = AppConstants.defaultInactivityTitle;
@@ -87,6 +88,7 @@ class SettingsProvider with ChangeNotifier {
   bool get recordatoriosActivos => _recordatoriosActivos;
   bool get recordatorioFinDeSemana => _recordatorioFinDeSemana;
   bool get anunciosActivos => _anunciosActivos;
+  bool get tasaDiariaActiva => _tasaDiariaActiva;
   List<Map<String, String>> get mensajesQuincenales => _mensajesQuincenales;
   String get tituloInactividad => _tituloInactividad;
   String get cuerpoInactividad => _cuerpoInactividad;
@@ -271,6 +273,7 @@ class SettingsProvider with ChangeNotifier {
     _recordatoriosActivos = _safeGetBool(prefs, AppConstants.prefRecordatoriosActivos, true);
     _recordatorioFinDeSemana = _safeGetBool(prefs, AppConstants.prefRecordatorioFinDeSemana, true);
     _anunciosActivos = _safeGetBool(prefs, AppConstants.prefAnunciosActivos, true);
+    _tasaDiariaActiva = _safeGetBool(prefs, AppConstants.prefTasaDiariaActiva, true);
 
     // Cargar caché local de mensajes de recordatorios si existe
     final rawCachedQuincenal = prefs.get(AppConstants.prefCachedMensajesQuincenalesJson);
@@ -606,6 +609,21 @@ class SettingsProvider with ChangeNotifier {
       await NotificationService.instance.subscribeToBroadcastTopic();
     } else {
       await NotificationService.instance.unsubscribeFromBroadcastTopic();
+    }
+  }
+
+  Future<void> setTasaDiariaActiva(bool value) async {
+    _tasaDiariaActiva = value;
+    notifyListeners();
+
+    final prefs = _prefsInstance ?? await SharedPreferences.getInstance();
+    await prefs.setBool(AppConstants.prefTasaDiariaActiva, _tasaDiariaActiva);
+    if (_tasaDiariaActiva != value) return;
+
+    if (value) {
+      await NotificationService.instance.subscribeToDailyRatesTopic();
+    } else {
+      await NotificationService.instance.unsubscribeFromDailyRatesTopic();
     }
   }
 

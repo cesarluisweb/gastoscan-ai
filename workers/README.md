@@ -10,9 +10,10 @@ Worker de Cloudflare (`rindemas-gateway`) que actúa como proxy seguro y resilie
 - **Sanitización de Credenciales:** Claves sanitizadas con `.trim().replace(/[\r\n\t ]+/g, "")` antes de enviarse a Google.
 
 ## Estructura de Archivos
-- `src/index.js`: Código fuente principal del gateway.
-- `wrangler.toml`: Configuración de despliegue, observabilidad y variables de entorno.
-- `package.json`: Definición del proyecto y scripts de despliegue.
+- `src/index.js`: Código fuente principal del gateway (`/analyze-receipt`, `/chat-analyst`, `/tasas`, `/health` y `scheduled`).
+- `src/daily_rates_push.js`: Envío programado (lunes a viernes 8:30 AM VET / `30 12 * * 1-5`) de la tasa del día al topic FCM `tasa_diaria` con deduplicación en D1.
+- `wrangler.toml`: Configuración de despliegue, cron triggers, observabilidad y variables de entorno.
+- `package.json`: Definición del proyecto y scripts de despliegue/pruebas (`npm test`).
 
 ## Despliegue a Producción
 
@@ -26,7 +27,8 @@ O especificando la configuración desde la raíz del proyecto:
 npx wrangler deploy --config workers/wrangler.toml
 ```
 
-Para configurar la clave secreta en Cloudflare:
+Para configurar las claves secretas en Cloudflare:
 ```bash
 npx wrangler secret put GEMINI_API_KEY --config workers/wrangler.toml
+npx wrangler secret put FIREBASE_SERVICE_ACCOUNT_JSON --config workers/wrangler.toml
 ```

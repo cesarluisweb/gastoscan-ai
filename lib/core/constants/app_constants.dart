@@ -190,6 +190,7 @@ class AppConstants {
   static const int pendingReviewNotificationId = 1002;
   static const int weekendReminderNotificationId = 1003;
   static const int broadcastNotificationId = 1004;
+  static const int dailyRatesNotificationId = 1005;
 
   static const String channelInactivityId = 'inactivity_reminders';
   static const String channelInactivityName = 'Recordatorios de Inactividad';
@@ -206,11 +207,19 @@ class AppConstants {
   static const String channelBroadcastDesc =
       'Notificaciones sobre nuevas funciones y mejoras importantes de Rinde Más';
 
+  static const String channelDailyRatesId = 'daily_rates';
+  static const String channelDailyRatesName = 'Tasa de cambio diaria';
+  static const String channelDailyRatesDesc =
+      'Aviso de lunes a viernes a las 8:30 a. m. con las tasas USD BCV, EUR BCV y USDT P2P del día';
+
   static const String fcmTopicGeneral = 'anuncios_generales';
+  static const String fcmTopicDailyRates = 'tasa_diaria';
+  static const String payloadDailyRates = 'daily_rates';
 
   // Claves de SharedPreferences para Notificaciones
   static const String prefRecordatorioFinDeSemana = 'recordatorio_fin_de_semana_activo';
   static const String prefAnunciosActivos = 'anuncios_notificaciones_activos';
+  static const String prefTasaDiariaActiva = 'tasa_diaria_notificacion_activa';
   static const String prefIndiceMensajeRotativo = 'indice_mensaje_quincenal_rotativo';
   static const String prefCachedMensajesQuincenalesJson = 'cached_mensajes_quincenales_json';
   static const String prefUltimoRecordatorioFinDeSemanaTs = 'ultimo_recordatorio_fin_de_semana_ts';
