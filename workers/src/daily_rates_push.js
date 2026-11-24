@@ -54,12 +54,14 @@ export function formatVetShortDate(date = new Date()) {
 
 /**
  * Construye el payload completo para FCM HTTP v1 respetando la terminología oficial
- * (`USD BCV`, `EUR BCV`, `USDT P2P`). Retorna `null` si no hay ninguna tasa válida.
+ * (`USD BCV` y `USDT P2P`). Coloca `USD BCV` en la primera línea (título) y
+ * `USDT P2P` en la segunda línea (cuerpo) para lectura inmediata en pantalla de bloqueo.
+ * Retorna `null` si no hay ninguna de esas dos tasas válida.
  */
 export function buildDailyRatesMessage(rates, { now = new Date(), topic = DAILY_RATES_TOPIC } = {}) {
   if (!rates || typeof rates !== "object") return null;
 
-  const segments = [];
+  const entries = [];
   const data = {
     payload: DAILY_RATES_PAYLOAD,
     type: DAILY_RATES_PAYLOAD,
@@ -69,28 +71,24 @@ export function buildDailyRatesMessage(rates, { now = new Date(), topic = DAILY_
 
   const usdText = formatBsRate(rates.usd);
   if (usdText) {
-    segments.push(`USD BCV: ${usdText}`);
+    entries.push(`USD BCV ${usdText}`);
     data.usd = rates.usd.toFixed(2);
-  }
-
-  const eurText = formatBsRate(rates.eur);
-  if (eurText) {
-    segments.push(`EUR BCV: ${eurText}`);
-    data.eur = rates.eur.toFixed(2);
   }
 
   const usdtText = formatBsRate(rates.usdt);
   if (usdtText) {
-    segments.push(`USDT P2P: ${usdtText}`);
+    entries.push(`USDT P2P ${usdtText}`);
     data.usdt = rates.usdt.toFixed(2);
   }
 
-  if (segments.length === 0) {
+  if (entries.length === 0) {
     return null;
   }
 
-  const title = `Tasa de hoy · ${formatVetShortDate(now)}`;
-  const body = `${segments.join(" · ")}. Toca para calcular.`;
+  const title = `Tasa de hoy · ${entries[0]}`;
+  const body = entries.length > 1
+    ? `${entries[1]} · Toca para calcular`
+    : "Toca para abrir la calculadora.";
   const apnsExpiration = String(Math.floor(now.getTime() / 1000) + DAILY_RATES_TTL_SECONDS);
 
   return {

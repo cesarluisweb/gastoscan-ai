@@ -210,7 +210,7 @@ class AppConstants {
   static const String channelDailyRatesId = 'daily_rates';
   static const String channelDailyRatesName = 'Tasa de cambio diaria';
   static const String channelDailyRatesDesc =
-      'Aviso de lunes a viernes a las 8:30 a. m. con las tasas USD BCV, EUR BCV y USDT P2P del día';
+      'Aviso de lunes a viernes a las 8:30 a. m. con las tasas USD BCV y USDT P2P del día';
 
   static const String fcmTopicGeneral = 'anuncios_generales';
   static const String fcmTopicDailyRates = 'tasa_diaria';

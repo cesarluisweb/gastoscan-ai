@@ -4,7 +4,7 @@
 
 ## 1. Resumen Ejecutivo
 
-**Rinde Más** envía un aviso automático de **lunes a viernes a las 8:30 a. m. (hora VE, UTC-4)** con las tasas reales del día (`USD BCV`, `EUR BCV` y `USDT P2P`). Al tocar la notificación, la app abre directamente la **Calculadora de divisas** (`CurrencyCalculatorScreen`) y actualiza tasas si estaban vencidas.
+**Rinde Más** envía un aviso automático de **lunes a viernes a las 8:30 a. m. (hora VE, UTC-4)** con las tasas reales del día (`USD BCV` y `USDT P2P`). Al tocar la notificación, la app abre directamente la **Calculadora de divisas** (`CurrencyCalculatorScreen`) y actualiza tasas si estaban vencidas.
 
 El sistema cuesta **\$0** (plan gratuito de Cloudflare Workers Cron + Firebase Cloud Messaging HTTP v1 sobre Firebase Spark) y no añade dependencias nativas ni permisos nuevos a la app.
 
@@ -34,9 +34,9 @@ flowchart LR
 
 ## 4. Formato de la Notificación Enviada
 
-- **Título:** `Tasa de hoy · Mar 24 Nov` (fecha en hora oficial de Venezuela, `UTC-4`).
-- **Cuerpo:** `USD BCV: Bs. 245,30 · EUR BCV: Bs. 268,15 · USDT P2P: Bs. 279,40. Toca para calcular.`
-- **Degradación elegante:** si falta una moneda puntual, se omiten solo las monedas nulas. Si fallan todas las fuentes, el Worker no envía la notificación.
+- **Título (1.ª línea en pantalla de bloqueo):** `Tasa de hoy · USD BCV Bs. 245,30`
+- **Cuerpo (2.ª línea):** `USDT P2P Bs. 279,40 · Toca para calcular`
+- **Degradación elegante:** si falta una de las dos monedas (`USD BCV` o `USDT P2P`), muestra la disponible en la 1.ª línea y `Toca para abrir la calculadora.` en la 2.ª. Si faltan ambas, el Worker omite el envío.
 - **Protección contra tasas viejas:** `ttl: 28800s` (8 horas) y `collapse_key: daily_rates` (reemplaza cualquier aviso anterior sin apilar).
 
 ## 5. Activación en Cloudflare Workers (Paso Único de César)
@@ -58,7 +58,7 @@ El Worker omite el envío sin error si todavía no existe el secreto `FIREBASE_S
 
 ## 6. Guía de Pruebas en Dispositivo Físico
 
-> **Artefacto a probar:** completar SHA y número de build `Rinde Más Dev` (`v1.6.0`) una vez que CI termine en verde.
+> **Artefacto a probar:** commit `1106d4f` (`v1.6.0+5`, run `45442129304`, build `735`). En este run pasaron `flutter analyze`, 828/828 pruebas y `app-release-aab`, pero el runner de GitHub se desconectó en el paso #19 (`rindemas-dev-apk`). Re-ejecuta el run en GitHub Actions para descargar `rindemas-dev-apk`.
 
 ### Controles reales verificados en `lib/ui/`
 - Entrada al grupo de preferencias: pestaña **Más** → `Preferencias y datos` (`Key('more_group_preferences')`, [`lib/ui/screens/more_screen.dart:860-873`](../lib/ui/screens/more_screen.dart)).
@@ -76,8 +76,8 @@ El Worker omite el envío sin error si todavía no existe el secreto `FIREBASE_S
    - Verifica que aparece el canal **Tasa de cambio diaria**.
 3. **Prueba end-to-end del deep-link (sin esperar a las 8:30 a. m.):**
    - En **Firebase Console → Mensajería → Nueva campaña → Notificaciones de Firebase**:
-     - Título: `Tasa de hoy · Prueba`
-     - Texto: `USD BCV: Bs. 245,30 · EUR BCV: Bs. 268,15 · USDT P2P: Bs. 279,40. Toca para calcular.`
+     - Título: `Tasa de hoy · USD BCV Bs. 245,30`
+     - Texto: `USDT P2P Bs. 279,40 · Toca para calcular`
      - Segmentación → **Tema**: `tasa_diaria`
      - Opciones adicionales → **Datos personalizados**: clave `payload`, valor `daily_rates`; clave `channel_id`, valor `daily_rates`.
      - Canal de notificaciones de Android: `daily_rates`.

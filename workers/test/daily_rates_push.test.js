@@ -113,7 +113,7 @@ describe("Notificación diaria de tasa de cambio (Worker Cron + FCM HTTP v1)", (
     assert.equal(formatVetShortDate(lateNightVet), "Mar 24 Nov");
   });
 
-  test("buildDailyRatesMessage construye payload FCM v1 con nomenclatura oficial y TTL de 8h", () => {
+  test("buildDailyRatesMessage construye payload FCM v1 con USD BCV en 1.ª línea, USDT P2P en 2.ª (sin EUR) y TTL de 8h", () => {
     const now = new Date("2026-11-24T12:30:00Z");
     const msg = buildDailyRatesMessage(
       { usd: 245.3, eur: 268.15, usdt: 279.4 },
@@ -122,11 +122,14 @@ describe("Notificación diaria de tasa de cambio (Worker Cron + FCM HTTP v1)", (
 
     assert.ok(msg);
     assert.equal(msg.message.topic, DAILY_RATES_TOPIC);
-    assert.equal(msg.message.notification.title, "Tasa de hoy · Mar 24 Nov");
+    assert.equal(msg.message.notification.title, "Tasa de hoy · USD BCV Bs. 245,30");
     assert.equal(
       msg.message.notification.body,
-      "USD BCV: Bs. 245,30 · EUR BCV: Bs. 268,15 · USDT P2P: Bs. 279,40. Toca para calcular."
+      "USDT P2P Bs. 279,40 · Toca para calcular"
     );
+    assert.equal(msg.message.notification.title.includes("EUR"), false);
+    assert.equal(msg.message.notification.body.includes("EUR"), false);
+    assert.equal(msg.message.notification.title.includes("Binance"), false);
     assert.equal(msg.message.notification.body.includes("Binance"), false);
     assert.equal(msg.message.notification.body.toLowerCase().includes("paralelo"), false);
 
@@ -134,8 +137,8 @@ describe("Notificación diaria de tasa de cambio (Worker Cron + FCM HTTP v1)", (
     assert.equal(msg.message.data.channel_id, DAILY_RATES_CHANNEL_ID);
     assert.equal(msg.message.data.day, "2026-11-24");
     assert.equal(msg.message.data.usd, "245.30");
-    assert.equal(msg.message.data.eur, "268.15");
     assert.equal(msg.message.data.usdt, "279.40");
+    assert.equal(msg.message.data.eur, undefined);
 
     assert.equal(msg.message.android.ttl, "28800s");
     assert.equal(msg.message.android.collapse_key, DAILY_RATES_CHANNEL_ID);
@@ -148,15 +151,21 @@ describe("Notificación diaria de tasa de cambio (Worker Cron + FCM HTTP v1)", (
     );
   });
 
-  test("buildDailyRatesMessage tolera tasas parciales y retorna null si todas fallaron", () => {
+  test("buildDailyRatesMessage tolera tasas parciales y retorna null si faltan USD y USDT", () => {
     const now = new Date("2026-11-24T12:30:00Z");
-    const partial = buildDailyRatesMessage({ usd: 245.3, eur: null, usdt: 279.4 }, { now });
-    assert.ok(partial);
-    assert.equal(
-      partial.message.notification.body,
-      "USD BCV: Bs. 245,30 · USDT P2P: Bs. 279,40. Toca para calcular."
-    );
-    assert.equal(partial.message.data.eur, undefined);
+
+    const onlyUsd = buildDailyRatesMessage({ usd: 245.3, eur: 268.15, usdt: null }, { now });
+    assert.ok(onlyUsd);
+    assert.equal(onlyUsd.message.notification.title, "Tasa de hoy · USD BCV Bs. 245,30");
+    assert.equal(onlyUsd.message.notification.body, "Toca para abrir la calculadora.");
+
+    const onlyUsdt = buildDailyRatesMessage({ usd: null, eur: 268.15, usdt: 279.4 }, { now });
+    assert.ok(onlyUsdt);
+    assert.equal(onlyUsdt.message.notification.title, "Tasa de hoy · USDT P2P Bs. 279,40");
+    assert.equal(onlyUsdt.message.notification.body, "Toca para abrir la calculadora.");
+
+    const onlyEur = buildDailyRatesMessage({ usd: null, eur: 268.15, usdt: null }, { now });
+    assert.equal(onlyEur, null);
 
     const empty = buildDailyRatesMessage({ usd: null, eur: 0, usdt: null }, { now });
     assert.equal(empty, null);

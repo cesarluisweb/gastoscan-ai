@@ -1687,7 +1687,7 @@ class MoreScreenState extends State<MoreScreen> {
                                 style: TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w600),
                               ),
                               subtitle: const Text(
-                                'Aviso de lunes a viernes a las 8:30 a. m. con USD BCV, EUR BCV y USDT P2P.',
+                                'Aviso de lunes a viernes a las 8:30 a. m. con USD BCV y USDT P2P.',
                                 style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
                               ),
                               value: settings.tasaDiariaActiva,

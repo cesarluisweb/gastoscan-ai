@@ -36,7 +36,7 @@ Las notificaciones masivas se envían directamente desde la consola oficial de G
      ```
    * *Nota:* Todos los usuarios que tienen la app instalada quedan automáticamente suscritos de forma anónima a este tema.
 
-> **Nota sobre la tasa diaria automática:** El aviso de lunes a viernes a las 8:30 a. m. (hora VE) con `USD BCV`, `EUR BCV` y `USDT P2P` usa su propio tema independiente (`tasa_diaria`) y se envía automáticamente desde el Cloudflare Worker (`rindemas-gateway`). Ver [`docs/DOC_NOTIFICACION_TASA_DIARIA.md`](DOC_NOTIFICACION_TASA_DIARIA.md).
+> **Nota sobre la tasa diaria automática:** El aviso de lunes a viernes a las 8:30 a. m. (hora VE) con `USD BCV` y `USDT P2P` usa su propio tema independiente (`tasa_diaria`) y se envía automáticamente desde el Cloudflare Worker (`rindemas-gateway`). Ver [`docs/DOC_NOTIFICACION_TASA_DIARIA.md`](DOC_NOTIFICACION_TASA_DIARIA.md).
 
 6. **Paso 3: Programación:**
    * Selecciona **Ahora** para enviar de inmediato, o define una fecha y hora futura si deseas programarla.
