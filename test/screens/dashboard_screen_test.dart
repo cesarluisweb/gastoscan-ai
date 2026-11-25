@@ -35,7 +35,7 @@ class FakeGastoProvider extends GastoProvider {
   SyncState get syncState => fakeSyncNotifier.value;
 
   @override
-  ValueListenable<SyncState> get syncStateListenable => fakeSyncNotifier;
+  ValueNotifier<SyncState> get syncStateListenable => fakeSyncNotifier;
 
   void setTotales(Map<String, double> totales) {
     _customTotales = totales;

@@ -115,7 +115,7 @@ class FakeGastoProvider extends GastoProvider {
   SyncState get syncState => fakeSyncNotifier.value;
 
   @override
-  ValueListenable<SyncState> get syncStateListenable => fakeSyncNotifier;
+  ValueNotifier<SyncState> get syncStateListenable => fakeSyncNotifier;
 
   @override
   Future<void> cargarDatos() async {}
