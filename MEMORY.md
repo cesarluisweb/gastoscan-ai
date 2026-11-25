@@ -8,7 +8,7 @@
 - **Mapa de código:** `docs/CODE_MAP.md` se regenera con `node scripts/gen_code_map.js`; el hook de pre-commit lo actualiza.
 
 ## Tareas en Curso
-- **UX-21 + REL-04 + REL-03 (`v1.6.0`):** `Implementada 🔧` (móvil + panel web `35/35` tests + `UpdateService` caché + `portrait` en CI; `docs/DOC_UX21_DUPLICAR_GASTO.md`). `version.json` sigue en `1.0.0/1` hasta Producción abierta (`ci-distribucion.md:30`).
+- **UX-21 + REL-04 + REL-03 (`v1.6.0`):** `UX-21` en `Pendiente de validación 🧪`, `REL-03`/`REL-04` en `Completada ✅` (CI verde: móvil run `45626426264` build `738`, web build `35`, reglas build `8`, SHA `e1303bb`; `docs/DOC_UX21_DUPLICAR_GASTO.md`). `version.json` sigue en `1.0.0/1` hasta Producción abierta (`ci-distribucion.md:30`).
 - **RET-02 (Notificación diaria de tasa de cambio L–V 8:30 AM VET):** `Pendiente de validación 🧪` (CI verde: run `45450349971`, build `737`, SHA `47f661f`, `v1.6.0`; Worker `0a387358-367f-4425-91da-07cdc4a87077`, 22/22 tests; `docs/DOC_NOTIFICACION_TASA_DIARIA.md`). Pendiente `FIREBASE_SERVICE_ACCOUNT_JSON` y validar en dispositivo.
 - **Resiliencia Offline (avatar caché, tasas auto-refresco y Dictar gasto offline):** `Implementada 🔧` en `af9d076` (`docs/DOC_RESILIENCIA_OFFLINE.md`); `wait_ci.ps1` reportó `SIN RUN`, pendiente verificar CI y validar en dispositivo. Reglas graduadas a `.agents/rules/resiliencia-offline.md`, `ia-ocr-voz.md`, `dinero-datos.md` y `revisor-adversarial/SKILL.md`.
 - **AI-09 (detección fotos y facturas duplicadas):** Planificada en `ROADMAP.md` y documentada en `docs/DOC_PLAN_DETECCION_DUPLICADOS.md`. Pendiente definición de esquema SQLite (`v20`, candidato a agrupar `tasa_iva_pct INTEGER NULL` si hace falta).

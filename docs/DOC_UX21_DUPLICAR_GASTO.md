@@ -1,7 +1,9 @@
 # DOC UX-21: Duplicar Gasto (Móvil + Panel Web) y REL-04 / REL-03
 
-> **Estado:** `Implementada 🔧` (pendiente de CI en verde y validación en dispositivo por César).
+> **Estado:** `Pendiente de validación 🧪` (CI en verde; falta prueba en dispositivo físico por César).
 > **Versión:** `v1.6.0` (`pubspec.yaml:4`).
+> **CI Móvil:** Run `45626426264` · CI build `738` (`versionCode 743`) · SHA `e1303bb`.
+> **CI Web:** Run `45626426224` · Web build `35` · SHA `e1303bb`.
 
 ## 1. Resumen Técnico
 
@@ -20,7 +22,7 @@
 
 ## 2. Guía de Pruebas en Dispositivo y Web
 
-> **SHA / Build CI:** *(Completar al finalizar CI en verde)*
+> **SHA / Build CI:** SHA `e1303bb` · Móvil run `45626426264` (build `738` / `versionCode 743`) · Web run `45626426224` (build `35`) · Firestore rules run `45626426079` (build `8`).
 
 1. **Duplicar gasto indexado (`USD BS_BCV` / `BS_USDT`):**
    - Ruta: `Inicio` o `Gastos` → menú `⋮` de un gasto de días anteriores → **Duplicar**.
