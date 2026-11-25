@@ -56,16 +56,20 @@ class AiDashboardInsight {
 
 /// Servicio encargado de:
 /// 1. Precalcular señales ocultas de alto valor (comparativa vs. mes pasado,
-///    diferencias de precios entre comercios, gastos hormiga y brecha BCV/USDT).
-/// 2. Generar en segundo plano (máx. 1 vez cada 24 h con >= 3 gastos) un consejo
-///    personalizado con Gemini en formato JSON estricto (`{"consejo": "..."}`).
-/// 3. Proveer un respaldo local inteligente cuando no hay conexión o aún no hay caché IA.
+///    diferencias de precios entre comercios y gastos hormiga).
+/// 2. Generar en segundo plano (con frescura diaria, invalidación estricta por
+///    firma canónica de gastos y tope independiente de 3 llamadas/día con >= 3 gastos)
+///    un consejo personalizado con Gemini en formato JSON estricto (`{"consejo": "..."}`).
+/// 3. Proveer un respaldo local inteligente cuando no hay conexión, se alcanza el tope
+///    diario o aún no hay caché IA vigente.
 class AiInsightService {
   // Claves vigentes v3 (purgan cachés previas v1 y v2)
   static const String prefTextKey = 'ai_insight_cached_text_v3';
   static const String prefLastFetchDateKey = 'ai_insight_last_fetch_date_v3';
+  static const String prefFetchCountKey = 'ai_insight_fetch_count_v3';
   static const String prefSignatureKey = 'ai_insight_signature_v3';
   static const String prefYearMonthKey = 'ai_insight_year_month_v3';
+  static const String prefCachedDateKey = 'ai_insight_cached_date_v3';
 
   static const List<String> _legacyKeys = [
     'ai_insight_cached_short_v1',
@@ -82,7 +86,24 @@ class AiInsightService {
   /// Mínimo de gastos en el mes actual para disparar generación en segundo plano con Gemini.
   static const int minExpensesForBackgroundGemini = 3;
 
-  static bool _isFetchingBackground = false;
+  /// Máximo de regeneraciones automáticas de `insight_inicio` por día calendario.
+  static const int maxDailyBackgroundGeminiCalls = 3;
+
+  // Control de concurrencia y reserva síncrona de cuota en memoria
+  static final Map<String, Object> _inFlightTokens = <String, Object>{};
+  static int _latestFetchEpoch = 0;
+  static String? _quotaDayIso;
+  static int _completedTodayCount = 0;
+  static int _inFlightReservations = 0;
+
+  @visibleForTesting
+  static void resetInFlightStateForTesting() {
+    _inFlightTokens.clear();
+    _latestFetchEpoch = 0;
+    _quotaDayIso = null;
+    _completedTodayCount = 0;
+    _inFlightReservations = 0;
+  }
 
   /// Banco curado de consejos sustanciosos (3 líneas) para usuarios con poco historial
   /// o cuando aún no existen señales ocultas suficientes en SQLite.
@@ -128,16 +149,61 @@ class AiInsightService {
     return kCuratedValueInsights[index];
   }
 
-  /// Genera una firma ligera del estado de gastos del mes para detectar si hubo cambios reales.
+  /// Hash FNV-1a de 32 bits puro y determinista (estable entre reinicios, VM 64-bit y JS).
+  static int _fnv1a32(String input) {
+    int hash = 0x811c9dc5;
+    for (final unit in input.codeUnits) {
+      hash ^= unit;
+      hash = (hash +
+              ((hash << 1) & 0xffffffff) +
+              ((hash << 4) & 0xffffffff) +
+              ((hash << 7) & 0xffffffff) +
+              ((hash << 8) & 0xffffffff) +
+              ((hash << 24) & 0xffffffff)) &
+          0xffffffff;
+    }
+    return hash;
+  }
+
+  /// Genera una firma canónica determinista de los gastos del mes para detectar
+  /// cualquier alta, borrado o edición real (excluyendo metadatos volátiles de sync).
   static String buildExpenseSignature({
     required int year,
     required int month,
     required List<GastoModel> gastos,
     required double totalMesUsd,
   }) {
+    final List<String> encodedExpenses = gastos.map((g) {
+      final List<String> encodedItems = g.items.map((it) {
+        final qtyMillis = (it.cantidad * 1000).round();
+        return jsonEncode(<Object>[
+          it.descripcion.trim(),
+          qtyMillis,
+          it.precioUnitario,
+          it.total,
+          it.categoria.trim(),
+        ]);
+      }).toList()
+        ..sort();
+
+      final keyId = g.uuid.isNotEmpty ? g.uuid : 'id:${g.id ?? 0}';
+      return jsonEncode(<String, Object>{
+        'k': keyId,
+        'f': g.fecha,
+        'c': g.categoria.trim(),
+        'm': g.comercio.trim(),
+        'mo': g.moneda.trim().toUpperCase(),
+        'to': g.totalOriginal,
+        'tu': g.totalUsd,
+        'i': encodedItems,
+      });
+    }).toList()
+      ..sort();
+
+    final canonical = jsonEncode(encodedExpenses);
+    final digest = _fnv1a32(canonical).toRadixString(16).padLeft(8, '0');
     final totalCents = (totalMesUsd * 100).round();
-    final latestUuid = gastos.isNotEmpty ? gastos.first.uuid : 'none';
-    return '${year}_${month}_${gastos.length}_${totalCents}_$latestUuid';
+    return '${year}_${month}_${gastos.length}_${totalCents}_$digest';
   }
 
   /// Extrae el día del mes de una fecha ISO (`YYYY-MM-DD...`).
@@ -838,23 +904,77 @@ class AiInsightService {
     }
   }
 
-  /// Lee el consejo de Gemini cacheado en `SharedPreferences` (v3) si corresponde al mes indicado.
+  /// Limpia únicamente el contenido cacheado del consejo preservando los
+  /// contadores de cuota diaria (`prefLastFetchDateKey` y `prefFetchCountKey`).
+  static Future<void> _clearCachedInsightContent(SharedPreferences prefs) async {
+    if (prefs.containsKey(prefTextKey)) {
+      await prefs.remove(prefTextKey);
+    }
+    if (prefs.containsKey(prefSignatureKey)) {
+      await prefs.remove(prefSignatureKey);
+    }
+    if (prefs.containsKey(prefYearMonthKey)) {
+      await prefs.remove(prefYearMonthKey);
+    }
+    if (prefs.containsKey(prefCachedDateKey)) {
+      await prefs.remove(prefCachedDateKey);
+    }
+  }
+
+  /// Sincroniza el contador de cuota en memoria con el persistido para `todayIso`.
+  /// Migra con `?? 1` a usuarios que ya hicieron su llamada hoy antes de `prefFetchCountKey`.
+  static void _syncQuotaCountersForDay(SharedPreferences prefs, String todayIso) {
+    final sameDayPrefs = prefs.getString(prefLastFetchDateKey) == todayIso;
+    final persistedCount = sameDayPrefs ? (prefs.getInt(prefFetchCountKey) ?? 1) : 0;
+    if (_quotaDayIso != todayIso) {
+      _quotaDayIso = todayIso;
+      _completedTodayCount = persistedCount;
+      _inFlightReservations = 0;
+    } else if (persistedCount > _completedTodayCount) {
+      _completedTodayCount = persistedCount;
+    }
+  }
+
+  /// Lee el consejo de Gemini cacheado en `SharedPreferences` (v3) solo si
+  /// coincide exactamente con el mes, la firma canónica de gastos y la fecha del día.
+  /// Si existe caché obsoleta para el mes indicado, la purga preservando la cuota diaria.
   static Future<String?> getCachedGeminiInsight({
     required int year,
     required int month,
+    required String expectedSignature,
+    DateTime? currentDate,
     SharedPreferences? prefsInstance,
   }) async {
     try {
       final prefs = prefsInstance ?? await SharedPreferences.getInstance();
       await _purgeLegacyCache(prefs);
 
+      final now = currentDate ?? DateTime.now();
+      final todayIso = now.toIso8601String().substring(0, 10);
+      final tokenKey = '${todayIso}_$expectedSignature';
+      if (year == now.year &&
+          month == now.month &&
+          _inFlightTokens.isNotEmpty &&
+          !_inFlightTokens.containsKey(tokenKey)) {
+        _latestFetchEpoch++;
+      }
+
       final cachedYm = prefs.getString(prefYearMonthKey);
       if (cachedYm != '${year}_$month') return null;
+
+      final cachedSignature = prefs.getString(prefSignatureKey);
+      final cachedDate = prefs.getString(prefCachedDateKey) ?? prefs.getString(prefLastFetchDateKey);
+
+      if (cachedSignature != expectedSignature || cachedDate != todayIso) {
+        await _clearCachedInsightContent(prefs);
+        return null;
+      }
 
       final text = prefs.getString(prefTextKey);
       if (text != null && text.trim().isNotEmpty && !_hasMalformedPrefix(text)) {
         return text.trim();
       }
+      await _clearCachedInsightContent(prefs);
     } catch (e) {
       debugPrint('AiInsightService: Error leyendo caché v3 de consejo IA: $e');
     }
@@ -862,8 +982,9 @@ class AiInsightService {
   }
 
   /// Verifica si corresponde generar un nuevo consejo personalizado con Gemini en segundo plano
-  /// (máximo 1 vez cada 24h, solo en el mes actual, con >= 3 gastos y solo si cambió la firma).
-  /// Retorna el texto del consejo vigente (recién generado o de caché v3), o `null` si no aplica.
+  /// (frescura diaria por fecha local, validez estricta por firma canónica, tope independiente
+  /// de `maxDailyBackgroundGeminiCalls` llamadas/día y mínimo `minExpensesForBackgroundGemini` gastos).
+  /// Retorna el texto del consejo vigente (recién generado o de caché v3 válida), o `null` si no aplica.
   static Future<String?> refreshBackgroundInsightIfNeeded({
     required List<GastoModel> gastos,
     required int selectedYear,
@@ -890,42 +1011,60 @@ class AiInsightService {
       return null;
     }
 
-    final cached = await getCachedGeminiInsight(
-      year: selectedYear,
-      month: selectedMonth,
-      prefsInstance: prefs,
-    );
-
-    if (gastos.length < minExpensesForBackgroundGemini) {
-      return cached;
-    }
-
     final todayIso = now.toIso8601String().substring(0, 10);
-    final lastFetchDate = prefs.getString(prefLastFetchDateKey);
     final currentSignature = buildExpenseSignature(
       year: selectedYear,
       month: selectedMonth,
       gastos: gastos,
       totalMesUsd: totalMesUsd,
     );
-    final lastSignature = prefs.getString(prefSignatureKey);
 
-    // Guarda de cuota D1: máximo 1 llamada por día calendario y solo si cambiaron los gastos
-    if (cached != null && (lastFetchDate == todayIso || lastSignature == currentSignature)) {
+    if (gastos.length < minExpensesForBackgroundGemini) {
+      _latestFetchEpoch++;
+      await _clearCachedInsightContent(prefs);
+      return null;
+    }
+
+    final cached = await getCachedGeminiInsight(
+      year: selectedYear,
+      month: selectedMonth,
+      expectedSignature: currentSignature,
+      currentDate: now,
+      prefsInstance: prefs,
+    );
+
+    if (cached != null) {
       return cached;
     }
 
     // En tests de widgets donde no se inyecta un GeminiService explícito ni hay Firebase inicializado,
     // no realizar llamadas HTTP reales.
     if (geminiService == null && Firebase.apps.isEmpty) {
-      return cached;
+      return null;
     }
 
-    if (_isFetchingBackground) return cached;
-    _isFetchingBackground = true;
+    // Punto síncrono (cero awaits entre chequeo de cuota/duplicados y reserva del cupo)
+    _syncQuotaCountersForDay(prefs, todayIso);
+    final String tokenKey = '${todayIso}_$currentSignature';
+
+    if (_inFlightTokens.containsKey(tokenKey)) {
+      return null;
+    }
+
+    if (_completedTodayCount + _inFlightReservations >= maxDailyBackgroundGeminiCalls) {
+      _latestFetchEpoch++;
+      return null;
+    }
+
+    _inFlightReservations++;
+    bool reservationActive = true;
+    final Object fetchToken = Object();
+    _inFlightTokens[tokenKey] = fetchToken;
+    final int fetchEpoch = ++_latestFetchEpoch;
+    GeminiService? ownedService;
 
     try {
-      final service = geminiService ?? GeminiService();
+      final service = geminiService ?? (ownedService = GeminiService());
       final contextData = buildCompactContextForGemini(
         gastos: gastos,
         totalMesUsd: totalMesUsd,
@@ -946,22 +1085,75 @@ class AiInsightService {
         contextData: contextData,
         modo: 'insight_inicio',
       );
+
+      // Todo intento completado en el servidor consume cupo (incluido JSON inválido)
+      if (reservationActive) {
+        reservationActive = false;
+        if (_quotaDayIso == todayIso) {
+          if (_inFlightReservations > 0) _inFlightReservations--;
+          _completedTodayCount++;
+        }
+      }
+      final String? persistedDateBefore = prefs.getString(prefLastFetchDateKey);
+      final bool newerDayAlreadyPersisted =
+          persistedDateBefore != null && persistedDateBefore.compareTo(todayIso) > 0;
+      if (!newerDayAlreadyPersisted &&
+          (_quotaDayIso == todayIso || _quotaDayIso == null)) {
+        final int countToWrite = _quotaDayIso == todayIso ? _completedTodayCount : 1;
+        if (persistedDateBefore != todayIso) {
+          await prefs.setInt(prefFetchCountKey, countToWrite);
+          await prefs.setString(prefLastFetchDateKey, todayIso);
+        } else {
+          final int persistedCountNow = prefs.getInt(prefFetchCountKey) ?? 0;
+          if (countToWrite > persistedCountNow) {
+            await prefs.setInt(prefFetchCountKey, countToWrite);
+          }
+        }
+        if (_quotaDayIso == todayIso &&
+            prefs.getString(prefLastFetchDateKey) == todayIso) {
+          final int latestPersisted = prefs.getInt(prefFetchCountKey) ?? 0;
+          if (_completedTodayCount > latestPersisted) {
+            await prefs.setInt(prefFetchCountKey, _completedTodayCount);
+          }
+        }
+      }
+
       final rawText = (responseMap['text'] ?? '').toString().trim();
       final consejo = parseStrictDashboardInsight(rawText);
 
-      if (consejo != null && consejo.isNotEmpty) {
-        await prefs.setString(prefTextKey, consejo);
-        await prefs.setString(prefLastFetchDateKey, todayIso);
+      if (consejo != null && consejo.isNotEmpty && fetchEpoch == _latestFetchEpoch) {
         await prefs.setString(prefSignatureKey, currentSignature);
         await prefs.setString(prefYearMonthKey, '${selectedYear}_$selectedMonth');
+        await prefs.setString(prefCachedDateKey, todayIso);
+        if (fetchEpoch != _latestFetchEpoch) {
+          if (prefs.getString(prefSignatureKey) == currentSignature &&
+              prefs.getString(prefCachedDateKey) == todayIso) {
+            await _clearCachedInsightContent(prefs);
+          }
+          return null;
+        }
+        await prefs.setString(prefTextKey, consejo);
+        if (fetchEpoch != _latestFetchEpoch) {
+          if (prefs.getString(prefSignatureKey) == currentSignature &&
+              prefs.getString(prefCachedDateKey) == todayIso) {
+            await _clearCachedInsightContent(prefs);
+          }
+          return null;
+        }
         return consejo;
       }
     } catch (e) {
       debugPrint('AiInsightService: Generación en 2.º plano omitida: $e');
     } finally {
-      _isFetchingBackground = false;
+      ownedService?.close();
+      if (reservationActive && _quotaDayIso == todayIso && _inFlightReservations > 0) {
+        _inFlightReservations--;
+      }
+      if (identical(_inFlightTokens[tokenKey], fetchToken)) {
+        _inFlightTokens.remove(tokenKey);
+      }
     }
 
-    return cached;
+    return null;
   }
 }

@@ -1,9 +1,12 @@
+import 'dart:async';
 import '../widgets/app_bar_month_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../core/utils/currency_formatter.dart';
+import '../../data/datasources/local/database_helper.dart';
+import '../../data/datasources/remote/gemini_service.dart';
 import '../../providers/gasto_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/scan_queue_provider.dart';
@@ -29,6 +32,10 @@ class DashboardScreen extends StatefulWidget {
   final VoidCallback? onNavigateToChat;
   final VoidCallback? onNavigateToSearch;
   final VoidCallback? onAddExpense;
+  final GeminiService? geminiService;
+  final DatabaseHelper? dbHelper;
+  final DateTime? currentDate;
+  final Duration insightDebounceDuration;
 
   const DashboardScreen({
     Key? key,
@@ -37,6 +44,10 @@ class DashboardScreen extends StatefulWidget {
     this.onNavigateToChat,
     this.onNavigateToSearch,
     this.onAddExpense,
+    this.geminiService,
+    this.dbHelper,
+    this.currentDate,
+    this.insightDebounceDuration = const Duration(seconds: 3),
   }) : super(key: key);
 
   @override
@@ -45,8 +56,12 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   String? _cachedGeminiText;
+  String? _cachedGeminiKey;
   AiHiddenSignals? _hiddenSignals;
-  String? _lastEvaluatedInsightSignature;
+  String? _hiddenSignalsKey;
+  String? _lastEvaluatedInsightKey;
+  int _insightRequestId = 0;
+  Timer? _geminiDebounceTimer;
   String? _dismissedSyncKey;
 
   static double _convertBudgetToLens(
@@ -87,18 +102,70 @@ class _DashboardScreenState extends State<DashboardScreen> {
     NotificationService.instance.recordActivityAndReschedule();
   }
 
+  @override
+  void dispose() {
+    _geminiDebounceTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _fetchBackgroundGeminiInsight({
+    required int requestId,
+    required String insightKey,
+    required List<GastoModel> gastosSnapshot,
+    required int selectedYear,
+    required int selectedMonth,
+    required double totalMesUsd,
+    required double budgetUsd,
+    required double metaUsd,
+    required String monedaLente,
+    required AiHiddenSignals signals,
+    required DateTime effectiveNow,
+  }) async {
+    final geminiText = await AiInsightService.refreshBackgroundInsightIfNeeded(
+      gastos: gastosSnapshot,
+      selectedYear: selectedYear,
+      selectedMonth: selectedMonth,
+      totalMesUsd: totalMesUsd,
+      presupuestoUsd: budgetUsd,
+      metaAhorroUsd: metaUsd,
+      monedaLente: monedaLente,
+      hiddenSignals: signals,
+      currentDate: effectiveNow,
+      geminiService: widget.geminiService,
+    );
+
+    if (!mounted || requestId != _insightRequestId) return;
+    final nextKey = geminiText != null ? insightKey : null;
+    if (geminiText != _cachedGeminiText || nextKey != _cachedGeminiKey) {
+      setState(() {
+        _cachedGeminiText = geminiText;
+        _cachedGeminiKey = nextKey;
+      });
+    }
+  }
+
   Future<void> _syncDynamicAiInsight(
     GastoProvider gastoProvider,
-    SettingsProvider settings,
-  ) async {
-    final signature = AiInsightService.buildExpenseSignature(
-      year: gastoProvider.selectedYear,
-      month: gastoProvider.selectedMonth,
-      gastos: gastoProvider.gastos,
-      totalMesUsd: gastoProvider.totalMesUsd,
-    );
-    if (_lastEvaluatedInsightSignature == signature) return;
-    _lastEvaluatedInsightSignature = signature;
+    SettingsProvider settings, {
+    required String expenseSignature,
+    required String insightKey,
+    required DateTime effectiveNow,
+  }) async {
+    if (_lastEvaluatedInsightKey == insightKey) return;
+    final bool isColdStart = _lastEvaluatedInsightKey == null;
+    _lastEvaluatedInsightKey = insightKey;
+    final int requestId = ++_insightRequestId;
+
+    _geminiDebounceTimer?.cancel();
+    _geminiDebounceTimer = null;
+
+    final List<GastoModel> gastosSnapshot =
+        List<GastoModel>.from(gastoProvider.gastos);
+    final int selectedYear = gastoProvider.selectedYear;
+    final int selectedMonth = gastoProvider.selectedMonth;
+    final double totalMesUsd = gastoProvider.totalMesUsd;
+    final double totalMesUsdt = gastoProvider.totalMesUsdt;
+    final String monedaLente = settings.monedaPrincipal;
 
     final budgetUsd = _convertBudgetToLens(
       gastoProvider.presupuestoGeneral,
@@ -114,34 +181,100 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
 
     final signals = await AiInsightService.computeHiddenSignals(
-      gastos: gastoProvider.gastos,
-      selectedYear: gastoProvider.selectedYear,
-      selectedMonth: gastoProvider.selectedMonth,
-      totalMesUsd: gastoProvider.totalMesUsd,
-      totalMesUsdt: gastoProvider.totalMesUsdt,
+      gastos: gastosSnapshot,
+      selectedYear: selectedYear,
+      selectedMonth: selectedMonth,
+      totalMesUsd: totalMesUsd,
+      totalMesUsdt: totalMesUsdt,
+      currentDate: effectiveNow,
+      dbHelper: widget.dbHelper,
     );
 
-    if (mounted) {
+    if (!mounted || requestId != _insightRequestId) return;
+    setState(() {
+      _hiddenSignals = signals;
+      _hiddenSignalsKey = insightKey;
+    });
+
+    final bool isCurrentMonth =
+        selectedYear == effectiveNow.year && selectedMonth == effectiveNow.month;
+
+    if (!isCurrentMonth ||
+        gastosSnapshot.length < AiInsightService.minExpensesForBackgroundGemini) {
+      await _fetchBackgroundGeminiInsight(
+        requestId: requestId,
+        insightKey: insightKey,
+        gastosSnapshot: gastosSnapshot,
+        selectedYear: selectedYear,
+        selectedMonth: selectedMonth,
+        totalMesUsd: totalMesUsd,
+        budgetUsd: budgetUsd,
+        metaUsd: metaUsd,
+        monedaLente: monedaLente,
+        signals: signals,
+        effectiveNow: effectiveNow,
+      );
+      return;
+    }
+
+    // Validar y purgar caché obsoleta en disco de inmediato (antes del debounce)
+    final cachedValid = await AiInsightService.getCachedGeminiInsight(
+      year: selectedYear,
+      month: selectedMonth,
+      expectedSignature: expenseSignature,
+      currentDate: effectiveNow,
+    );
+
+    if (!mounted || requestId != _insightRequestId) return;
+    if (cachedValid != null) {
+      if (cachedValid != _cachedGeminiText || _cachedGeminiKey != insightKey) {
+        setState(() {
+          _cachedGeminiText = cachedValid;
+          _cachedGeminiKey = insightKey;
+        });
+      }
+      return;
+    }
+
+    if (_cachedGeminiText != null || _cachedGeminiKey != null) {
       setState(() {
-        _hiddenSignals = signals;
+        _cachedGeminiText = null;
+        _cachedGeminiKey = null;
       });
     }
 
-    final geminiText = await AiInsightService.refreshBackgroundInsightIfNeeded(
-      gastos: gastoProvider.gastos,
-      selectedYear: gastoProvider.selectedYear,
-      selectedMonth: gastoProvider.selectedMonth,
-      totalMesUsd: gastoProvider.totalMesUsd,
-      presupuestoUsd: budgetUsd,
-      metaAhorroUsd: metaUsd,
-      monedaLente: settings.monedaPrincipal,
-      hiddenSignals: signals,
-    );
-
-    if (!mounted) return;
-    if (geminiText != _cachedGeminiText) {
-      setState(() {
-        _cachedGeminiText = geminiText;
+    if (isColdStart || widget.insightDebounceDuration <= Duration.zero) {
+      await _fetchBackgroundGeminiInsight(
+        requestId: requestId,
+        insightKey: insightKey,
+        gastosSnapshot: gastosSnapshot,
+        selectedYear: selectedYear,
+        selectedMonth: selectedMonth,
+        totalMesUsd: totalMesUsd,
+        budgetUsd: budgetUsd,
+        metaUsd: metaUsd,
+        monedaLente: monedaLente,
+        signals: signals,
+        effectiveNow: effectiveNow,
+      );
+    } else {
+      _geminiDebounceTimer = Timer(widget.insightDebounceDuration, () {
+        if (!mounted || requestId != _insightRequestId) return;
+        unawaited(
+          _fetchBackgroundGeminiInsight(
+            requestId: requestId,
+            insightKey: insightKey,
+            gastosSnapshot: gastosSnapshot,
+            selectedYear: selectedYear,
+            selectedMonth: selectedMonth,
+            totalMesUsd: totalMesUsd,
+            budgetUsd: budgetUsd,
+            metaUsd: metaUsd,
+            monedaLente: monedaLente,
+            signals: signals,
+            effectiveNow: effectiveNow,
+          ),
+        );
       });
     }
   }
@@ -153,9 +286,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final settings = Provider.of<SettingsProvider>(context);
     final mesNombre = DateFormatter.getMonthName(gastoProvider.selectedMonth);
     final anio = gastoProvider.selectedYear;
+    final DateTime effectiveNow = widget.currentDate ?? DateTime.now();
+    final String todayIso = effectiveNow.toIso8601String().substring(0, 10);
+    final String currentExpenseSignature = AiInsightService.buildExpenseSignature(
+      year: gastoProvider.selectedYear,
+      month: gastoProvider.selectedMonth,
+      gastos: gastoProvider.gastos,
+      totalMesUsd: gastoProvider.totalMesUsd,
+    );
+    final String currentInsightKey = '${todayIso}_$currentExpenseSignature';
 
-    if (!gastoProvider.isLoading) {
-      _syncDynamicAiInsight(gastoProvider, settings);
+    if (gastoProvider.isLoading) {
+      _geminiDebounceTimer?.cancel();
+      _geminiDebounceTimer = null;
+    } else if (_lastEvaluatedInsightKey != currentInsightKey) {
+      _syncDynamicAiInsight(
+        gastoProvider,
+        settings,
+        expenseSignature: currentExpenseSignature,
+        insightKey: currentInsightKey,
+        effectiveNow: effectiveNow,
+      );
     }
 
     return Scaffold(
@@ -570,8 +721,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   mes: gastoProvider.selectedMonth,
                   anio: gastoProvider.selectedYear,
                   onChatTap: widget.onNavigateToChat,
-                  cachedGeminiText: _cachedGeminiText,
-                  hiddenSignals: _hiddenSignals,
+                  currentDate: widget.currentDate,
+                  cachedGeminiText: _cachedGeminiKey == currentInsightKey
+                      ? _cachedGeminiText
+                      : null,
+                  hiddenSignals: _hiddenSignalsKey == currentInsightKey
+                      ? _hiddenSignals
+                      : null,
                 ),
                 const SizedBox(height: 16),
                 if (gastoProvider.totalesPorCategoria.isNotEmpty ||

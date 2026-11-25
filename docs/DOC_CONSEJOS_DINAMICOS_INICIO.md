@@ -20,14 +20,17 @@ La tarea **`AI-08`** reemplaza los mensajes estáticos de la tarjeta **Asistente
 2. **Gastos hormiga (`< $ 10,00` USD):** Acumula compras pequeñas discrecionales del mes ($\ge 4$ compras y $\ge 12\%$ del gasto mensual o $\ge \$ 20,00$) y detecta el comercio más repetido.
 3. **Comparativa vs. mes pasado a la misma fecha (días `1..hoy`):** Consulta `DatabaseHelper.getGastosByMonth(prevYear, prevMonth)` filtrando hasta `now.day` para identificar categorías en alza ($\ge 20\%$) o con ahorro real ($\ge 15\%$, única base para felicitaciones ganadas).
 
-### 2.2 Generación en Segundo Plano y Caché Estricta `v3`
+### 2.2 Generación en Segundo Plano, Invalidación por Firma y Cuota Independiente `v3`
 - **Endpoint:** `POST /chat-analyst` con `modo: "insight_inicio"` en [`workers/src/index.js`](../workers/src/index.js).
 - **Esquema JSON estricto:** `responseMimeType: "application/json"`, `responseSchema: { consejo: string }`, sin bloque `tools` y `maxOutputTokens: 260`.
-- **Guardas de cuota D1:**
-  - Solo se dispara en el **mes actual**, con **$\ge 3$ gastos registrados**, máximo **1 vez por día calendario** y solo si cambió la firma de gastos (`buildExpenseSignature`).
-  - `parseStrictDashboardInsight` descarta cualquier respuesta no-JSON o con prefijos basura (`Consejo corto:`), evitando contaminar la caché.
-  - Purga automática de claves heredadas `_v1` y `_v2` al migrar a `_v3`.
-- **Respaldo local inteligente:** Si no hay conexión o aún no hay caché `v3` de Gemini, `_buildLocalSmartInsight` redacta localmente el hallazgo de mayor impacto directamente desde las señales de SQLite (o el consejo curado del día si aún no hay historial).
+- **Separación entre validez de caché y cuota diaria:**
+  - **Validez estricta (`getCachedGeminiInsight`):** un consejo cacheado en `SharedPreferences` (`v3`) solo se devuelve si coincide con el mes (`prefYearMonthKey`), la fecha local del día (`prefCachedDateKey == todayIso`, garantizando frescura diaria automática aunque no hayan cambiado los gastos) y la firma canónica determinista de los gastos (`buildExpenseSignature`, FNV-1a de 32 bits sobre `jsonEncode` ordenado por `uuid` e ítems, excluyendo metadatos volátiles de sync y evitando colisiones por delimitadores).
+  - **Purga inmediata preservando cuota:** ante cualquier cambio en los gastos (alta, edición o borrado) o al bajar de 3 gastos (`< minExpensesForBackgroundGemini`), se eliminan `prefTextKey`, `prefSignatureKey`, `prefYearMonthKey` y `prefCachedDateKey`, conservando intactos `prefLastFetchDateKey` y `prefFetchCountKey`.
+  - **Tope diario independiente (`3/día`):** `prefFetchCountKey` (con migración segura `?? 1` si ya existía `prefLastFetchDateKey == todayIso`) se protege con reserva síncrona en memoria (`_completedTodayCount + _inFlightReservations`) para impedir que ráfagas concurrentes superen el tope, contando todo intento completado en el servidor (incluidas respuestas no-JSON).
+  - **Concurrencia y sin parpadeo en `DashboardScreen`:** `_inFlightTokens` (por firma e identidad de token) + `_latestFetchEpoch` evitan atascos y escrituras obsoletas. En [`lib/ui/screens/dashboard_screen.dart`](../lib/ui/screens/dashboard_screen.dart), `build` filtra `cachedGeminiText` y `hiddenSignals` por clave `todayIso + firma` sin `setState` en `build`, descarta respuestas lentas por `requestId` y aplica un *debounce* de 3 s en cambios posteriores al arranque en frío (cancelado en `dispose`).
+  - **Purga de claves heredadas:** `_purgeLegacyCache` limpia claves `_v1` y `_v2` al migrar a `_v3`.
+- **Respaldo local inteligente:** si no hay conexión, se alcanzó el tope de 3/día, quedan `< 3` gastos o aún corre el *debounce* de 3 s, `_buildLocalSmartInsight` redacta al instante el hallazgo de mayor impacto desde las señales de SQLite (o el consejo curado/ritmo diario si aún no hay historial).
+- **Nota futura (`AI-11`):** rotación opcional por franjas horarias (mañana/tarde/noche) enviando `ultimo_consejo` al Worker para garantizar variedad genuina sin parafrasear el mismo hallazgo.
 
 ### 2.3 Profundización en Vivo al Pulsar `Consultar ->`
 - **`ChatProvider.startInsightDeepDive`** ([`lib/providers/chat_provider.dart`](../lib/providers/chat_provider.dart)):
