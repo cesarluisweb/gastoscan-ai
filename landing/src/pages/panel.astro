@@ -167,6 +167,17 @@ import AiChatDrawer from '../components/AiChatDrawer.astro';
                     <button id="btn-today-month" class="text-xs font-semibold text-slate-500 hover:text-slate-800 ml-2 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-all">
                         Hoy
                     </button>
+                    <button
+                        type="button"
+                        id="btn-refresh-dashboard"
+                        title="Actualizar datos desde la nube"
+                        class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-all cursor-pointer"
+                    >
+                        <svg id="icon-refresh-dashboard" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        <span class="hidden sm:inline">Actualizar</span>
+                    </button>
                 </div>
 
                 <!-- Botones de Acción -->
@@ -1471,9 +1482,37 @@ import AiChatDrawer from '../components/AiChatDrawer.astro';
             });
         });
 
+        const btnRefreshDashboard = document.getElementById('btn-refresh-dashboard');
+        const iconRefreshDashboard = document.getElementById('icon-refresh-dashboard');
+        let isDashboardLoading = false;
+        let pendingDashboardReload = false;
+        let lastDashboardLoadAt = 0;
+        const VISIBILITY_REFRESH_THROTTLE_MS = 30 * 1000;
+
+        btnRefreshDashboard?.addEventListener('click', async () => {
+            if (!currentUser || isDashboardLoading) return;
+            await loadDashboardData();
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState !== 'visible') return;
+            if (!currentUser || isDashboardLoading) return;
+            const elapsed = Date.now() - lastDashboardLoadAt;
+            if (elapsed >= VISIBILITY_REFRESH_THROTTLE_MS) {
+                loadDashboardData();
+            }
+        });
+
         // Carga de Datos desde Firestore
         const loadDashboardData = async () => {
             if (!currentUser) return;
+            if (isDashboardLoading) {
+                pendingDashboardReload = true;
+                return;
+            }
+            isDashboardLoading = true;
+            btnRefreshDashboard?.setAttribute('disabled', 'true');
+            iconRefreshDashboard?.classList.add('animate-spin');
             updateMonthDisplay();
 
             const monthPrefix = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}`;
@@ -1566,8 +1605,17 @@ import AiChatDrawer from '../components/AiChatDrawer.astro';
                 renderMetrics();
                 renderCategories();
                 renderBills();
+                lastDashboardLoadAt = Date.now();
             } catch (err) {
                 console.error("Error al cargar datos de Firestore:", err);
+            } finally {
+                isDashboardLoading = false;
+                btnRefreshDashboard?.removeAttribute('disabled');
+                iconRefreshDashboard?.classList.remove('animate-spin');
+                if (pendingDashboardReload) {
+                    pendingDashboardReload = false;
+                    loadDashboardData();
+                }
             }
         };
 

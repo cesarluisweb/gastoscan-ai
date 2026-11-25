@@ -16,6 +16,7 @@ import 'package:gastoscan_ai/providers/settings_provider.dart';
 import 'package:gastoscan_ai/providers/chat_provider.dart';
 import 'package:gastoscan_ai/services/connectivity_service.dart';
 import 'package:gastoscan_ai/services/profile_avatar_service.dart';
+import 'package:gastoscan_ai/services/sync_coordinator.dart';
 import 'package:gastoscan_ai/services/update_service.dart';
 import 'package:gastoscan_ai/ui/screens/more_screen.dart';
 
@@ -106,11 +107,23 @@ class FakeDatabaseHelper extends DatabaseHelper {
 class FakeGastoProvider extends GastoProvider {
   FakeGastoProvider() : super(autoLoad: false);
 
+  final ValueNotifier<SyncState> fakeSyncNotifier =
+      ValueNotifier<SyncState>(const SyncState.inactiva());
+  int manualSyncCalls = 0;
+
+  @override
+  SyncState get syncState => fakeSyncNotifier.value;
+
+  @override
+  ValueListenable<SyncState> get syncStateListenable => fakeSyncNotifier;
+
   @override
   Future<void> cargarDatos() async {}
 
   @override
-  Future<void> sincronizarConFirestore() async {}
+  Future<void> sincronizarConFirestore() async {
+    manualSyncCalls++;
+  }
 
   @override
   Future<String?> vincularConEmail(String email, String password, {bool descartarDatosLocales = false}) async => null;
@@ -897,6 +910,33 @@ void main() {
 
       expect(find.text('Actualización lista'), findsOneWidget);
       expect(find.text('Duplicar gasto disponible.'), findsOneWidget);
+    });
+
+    testWidgets('Cuenta vinculada muestra botón circular de sincronizar y caja de error en permission-denied', (tester) async {
+      setLargeViewport(tester);
+      await tester.pumpWidget(createWidgetUnderTest(customUser: FakeTestUser()));
+      await tester.pumpAndSettle();
+
+      final btnSync = find.byKey(const Key('btn_sincronizar_cuenta'));
+      final btnAjustes = find.byKey(const Key('btn_ajustes_cuenta'));
+      expect(btnSync, findsOneWidget);
+      expect(btnAjustes, findsOneWidget);
+      expect(find.text('Sincronización activa'), findsOneWidget);
+
+      await tester.tap(btnSync);
+      await tester.pump();
+      expect(gastoProvider.manualSyncCalls, equals(1));
+
+      gastoProvider.fakeSyncNotifier.value = const SyncState.error(
+        message: 'Actualiza Rinde Más desde Google Play para seguir respaldando tus gastos.',
+        errorCode: 'permission-denied',
+        consecutiveFailures: 1,
+      );
+      await tester.pump();
+
+      expect(find.text('Actualización requerida'), findsOneWidget);
+      expect(find.byKey(const Key('more_sync_error_box')), findsOneWidget);
+      expect(find.text('Google Play'), findsOneWidget);
     });
   });
 }

@@ -29,6 +29,7 @@ class MockSyncService extends Fake implements SyncService {
   bool pendingReplaceActive = false;
   Completer<void>? syncCompleter;
   String? retryReplaceError;
+  SyncRunReport nextReport = const SyncRunReport();
 
   MockSyncService({this.customUser});
 
@@ -47,11 +48,12 @@ class MockSyncService extends Fake implements SyncService {
   }
 
   @override
-  Future<void> syncBidirectional({bool dryRun = false}) async {
+  Future<SyncRunReport> syncBidirectional({bool dryRun = false}) async {
     syncBidirectionalCalls++;
     if (syncCompleter != null) {
       await syncCompleter!.future;
     }
+    return nextReport;
   }
 }
 
@@ -276,6 +278,56 @@ void main() {
       expect(mockSync.syncBidirectionalCalls, equals(0));
       expect(coordinator.state.status, equals(SyncStatus.error));
       expect(coordinator.state.errorMessage, contains('Sin conexión'));
+    });
+
+    test('8. Error permission-denied en reporte activa shouldShowBanner desde el 1.er fallo con copy humano', () async {
+      mockSync.nextReport = const SyncRunReport(
+        gastosPushErrors: 1,
+        primaryErrorCode: 'permission-denied',
+      );
+
+      final coordinator = SyncCoordinator(
+        syncService: mockSync,
+        repository: mockRepo,
+        connectivityService: connectivityService,
+        nowProvider: () => currentTime,
+      );
+
+      await coordinator.request(SyncTrigger.manual, forzar: true);
+      expect(coordinator.state.status, equals(SyncStatus.error));
+      expect(coordinator.state.isPermissionDenied, isTrue);
+      expect(coordinator.state.shouldShowBanner, isTrue);
+      expect(coordinator.state.errorMessage, contains('Google Play'));
+    });
+
+    test('9. Error parcial activa shouldShowBanner tras 2 fallos seguidos y se reinicia al tener éxito', () async {
+      mockSync.nextReport = const SyncRunReport(
+        gastosPulled: 2,
+        gastosPushErrors: 1,
+        primaryErrorCode: 'unknown',
+      );
+
+      final coordinator = SyncCoordinator(
+        syncService: mockSync,
+        repository: mockRepo,
+        connectivityService: connectivityService,
+        nowProvider: () => currentTime,
+      );
+
+      await coordinator.request(SyncTrigger.manual, forzar: true);
+      expect(coordinator.state.status, equals(SyncStatus.error));
+      expect(coordinator.state.consecutiveFailures, equals(1));
+      expect(coordinator.state.shouldShowBanner, isFalse);
+
+      await coordinator.request(SyncTrigger.manual, forzar: true);
+      expect(coordinator.state.consecutiveFailures, equals(2));
+      expect(coordinator.state.shouldShowBanner, isTrue);
+
+      mockSync.nextReport = const SyncRunReport(gastosPushed: 1);
+      await coordinator.request(SyncTrigger.manual, forzar: true);
+      expect(coordinator.state.status, equals(SyncStatus.completada));
+      expect(coordinator.state.consecutiveFailures, equals(0));
+      expect(coordinator.state.shouldShowBanner, isFalse);
     });
   });
 }

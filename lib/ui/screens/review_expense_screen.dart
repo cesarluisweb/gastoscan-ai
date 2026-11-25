@@ -1703,6 +1703,8 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
       categoria: predominantCat,
       rutaFotoLocal: rutaFotoFinal,
       creadoEn: widget.existingGasto?.creadoEn ?? DateTime.now().toIso8601String(),
+      firestoreId: widget.existingGasto?.firestoreId,
+      ocrText: widget.existingGasto?.ocrText,
     );
 
     bool success;

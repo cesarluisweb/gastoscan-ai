@@ -16,6 +16,7 @@ import '../../providers/scan_queue_provider.dart';
 import '../../services/connectivity_service.dart';
 import '../../services/export_service.dart';
 import '../../services/profile_avatar_service.dart';
+import '../../services/sync_coordinator.dart';
 import '../../services/update_service.dart';
 import '../widgets/update_dialog.dart';
 import '../widgets/global_scan_queue_banner.dart';
@@ -245,6 +246,40 @@ class MoreScreenState extends State<MoreScreen> {
         setState(() => _checkingUpdate = false);
       }
     }
+  }
+
+  Future<void> _sincronizarManualDesdeCuenta(GastoProvider gastoProvider) async {
+    await gastoProvider.sincronizarConFirestore();
+    if (!mounted) return;
+    final state = gastoProvider.syncState;
+    if (state.status == SyncStatus.error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            state.errorMessage ?? 'No se pudo sincronizar con la nube.',
+          ),
+          backgroundColor: AppColors.error,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } else if (state.status == SyncStatus.completada) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Respaldo al día con la nube',
+            style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
+          ),
+          backgroundColor: AppColors.primaryDark,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  String _formatSyncHour(DateTime dt) {
+    final hh = dt.hour.toString().padLeft(2, '0');
+    final mm = dt.minute.toString().padLeft(2, '0');
+    return '$hh:$mm';
   }
 
   Future<void> _abrirGooglePlay() async {
@@ -649,98 +684,250 @@ class MoreScreenState extends State<MoreScreen> {
 
       final File? activeAvatarFile =
           (_avatarRequestKey == requestKey && !_avatarImageFailed) ? _cachedAvatarFile : null;
+      final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
 
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: AppColors.card,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          children: [
-            CircleAvatar(
-              key: const Key('more_account_avatar'),
-              radius: 20,
-              backgroundColor: AppColors.primaryLight,
-              backgroundImage: activeAvatarFile != null ? FileImage(activeAvatarFile) : null,
-              onBackgroundImageError: activeAvatarFile != null
-                  ? (error, stackTrace) {
-                      debugPrint('MoreScreen: Error renderizando avatar local: $error');
-                      if (mounted) {
-                        setState(() {
-                          _avatarImageFailed = true;
-                          _avatarNeedsRetryWhenOnline = true;
-                        });
-                      }
-                    }
-                  : null,
-              child: activeAvatarFile == null
-                  ? Text(
-                      (displayName?.isNotEmpty == true
-                              ? displayName![0]
-                              : (email?.isNotEmpty == true ? email![0] : 'U'))
-                          .toUpperCase(),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                        fontSize: 15,
-                      ),
-                    )
-                  : null,
+      return ValueListenableBuilder<SyncState>(
+        valueListenable: gastoProvider.syncStateListenable,
+        builder: (context, syncState, _) {
+          final isSyncing = syncState.status == SyncStatus.enCurso ||
+              syncState.status == SyncStatus.programada;
+          final isError = syncState.status == SyncStatus.error;
+          final isPermissionDenied = syncState.isPermissionDenied;
+
+          final Color statusColor;
+          final IconData statusIcon;
+          final String statusLabel;
+          if (isSyncing) {
+            statusColor = AppColors.textSecondary;
+            statusIcon = Icons.sync;
+            statusLabel = 'Sincronizando con la nube…';
+          } else if (isError && isPermissionDenied) {
+            statusColor = AppColors.errorStrong;
+            statusIcon = Icons.error_outline_rounded;
+            statusLabel = 'Actualización requerida';
+          } else if (isError) {
+            statusColor = AppColors.caution;
+            statusIcon = Icons.warning_amber_rounded;
+            statusLabel = syncState.isOfflineError
+                ? 'Sin conexión a internet'
+                : 'No se pudo sincronizar';
+          } else {
+            statusColor = Colors.green;
+            statusIcon = Icons.check_circle;
+            statusLabel = syncState.lastSyncTime != null
+                ? 'Sincronización activa · ${_formatSyncHour(syncState.lastSyncTime!)}'
+                : 'Sincronización activa';
+          }
+
+          final Color syncBtnBg;
+          final Color syncBtnBorder;
+          final Color syncBtnIconColor;
+          if (isSyncing) {
+            syncBtnBg = AppColors.primaryLight;
+            syncBtnBorder = AppColors.primaryDark;
+            syncBtnIconColor = AppColors.textPrimary;
+          } else if (isError && isPermissionDenied) {
+            syncBtnBg = AppColors.errorTint;
+            syncBtnBorder = AppColors.errorBorder;
+            syncBtnIconColor = AppColors.errorStrong;
+          } else if (isError) {
+            syncBtnBg = const Color(0xFFFEF3C7);
+            syncBtnBorder = AppColors.warning;
+            syncBtnIconColor = AppColors.caution;
+          } else {
+            syncBtnBg = AppColors.background;
+            syncBtnBorder = AppColors.border;
+            syncBtnIconColor = AppColors.textPrimary;
+          }
+
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppColors.card,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (displayName != null && displayName.isNotEmpty)
-                    Text(
-                      displayName,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        color: AppColors.textPrimary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    CircleAvatar(
+                      key: const Key('more_account_avatar'),
+                      radius: 20,
+                      backgroundColor: AppColors.primaryLight,
+                      backgroundImage: activeAvatarFile != null ? FileImage(activeAvatarFile) : null,
+                      onBackgroundImageError: activeAvatarFile != null
+                          ? (error, stackTrace) {
+                              debugPrint('MoreScreen: Error renderizando avatar local: $error');
+                              if (mounted) {
+                                setState(() {
+                                  _avatarImageFailed = true;
+                                  _avatarNeedsRetryWhenOnline = true;
+                                });
+                              }
+                            }
+                          : null,
+                      child: activeAvatarFile == null
+                          ? Text(
+                              (displayName?.isNotEmpty == true
+                                      ? displayName![0]
+                                      : (email?.isNotEmpty == true ? email![0] : 'U'))
+                                  .toUpperCase(),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                                fontSize: 15,
+                              ),
+                            )
+                          : null,
                     ),
-                  Text(
-                    email ?? 'Cuenta vinculada',
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  const Row(
-                    children: [
-                      Icon(Icons.check_circle, size: 12, color: Colors.green),
-                      SizedBox(width: 4),
-                      Flexible(
-                        child: Text(
-                          'Sincronización activa',
-                          style: TextStyle(
-                            color: Colors.green,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (displayName != null && displayName.isNotEmpty)
+                            Text(
+                              displayName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                                color: AppColors.textPrimary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          Text(
+                            email ?? 'Cuenta vinculada',
+                            style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              Icon(statusIcon, size: 12, color: statusColor),
+                              const SizedBox(width: 4),
+                              Flexible(
+                                child: Text(
+                                  statusLabel,
+                                  style: TextStyle(
+                                    color: statusColor,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
+                    const SizedBox(width: 6),
+                    IconButton(
+                      key: const Key('btn_sincronizar_cuenta'),
+                      icon: isSyncing
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.textPrimary,
+                              ),
+                            )
+                          : Icon(Icons.sync, color: syncBtnIconColor, size: 18),
+                      tooltip: 'Sincronizar ahora',
+                      style: IconButton.styleFrom(
+                        backgroundColor: syncBtnBg,
+                        side: BorderSide(color: syncBtnBorder, width: 1),
+                        shape: const CircleBorder(),
+                        minimumSize: const Size(34, 34),
+                        maximumSize: const Size(34, 34),
+                        padding: EdgeInsets.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      onPressed: isSyncing
+                          ? null
+                          : () => _sincronizarManualDesdeCuenta(gastoProvider),
+                    ),
+                    const SizedBox(width: 6),
+                    IconButton(
+                      key: const Key('btn_ajustes_cuenta'),
+                      icon: const Icon(Icons.settings_outlined, color: AppColors.textSecondary, size: 18),
+                      tooltip: 'Ajustes de cuenta',
+                      style: IconButton.styleFrom(
+                        backgroundColor: AppColors.background,
+                        side: const BorderSide(color: AppColors.border, width: 1),
+                        shape: const CircleBorder(),
+                        minimumSize: const Size(34, 34),
+                        maximumSize: const Size(34, 34),
+                        padding: EdgeInsets.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      onPressed: () => _mostrarHojaCuenta(context, false),
+                    ),
+                  ],
+                ),
+                if (isError && !syncState.isOfflineError && syncState.errorMessage != null) ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    key: const Key('more_sync_error_box'),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isPermissionDenied ? AppColors.errorTint : const Color(0xFFFEF3C7),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isPermissionDenied ? AppColors.errorBorder : AppColors.warning,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            syncState.errorMessage!,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 12,
+                              height: 1.3,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: isPermissionDenied
+                              ? _abrirGooglePlay
+                              : () => _sincronizarManualDesdeCuenta(gastoProvider),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryDark,
+                            foregroundColor: Colors.black,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            minimumSize: const Size(0, 30),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Text(
+                            isPermissionDenied ? 'Google Play' : 'Reintentar',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
-              ),
+              ],
             ),
-            IconButton(
-              key: const Key('btn_ajustes_cuenta'),
-              icon: const Icon(Icons.settings_outlined, color: AppColors.textSecondary, size: 20),
-              tooltip: 'Ajustes de cuenta',
-              onPressed: () => _mostrarHojaCuenta(context, false),
-            ),
-          ],
-        ),
+          );
+        },
       );
     }
 

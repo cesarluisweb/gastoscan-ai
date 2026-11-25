@@ -18,6 +18,63 @@ import 'profile_avatar_service.dart';
 import 'receipt_photo_registry.dart';
 import 'sync_conflict_resolver.dart';
 
+/// Reporte estructurado del resultado de un ciclo de sincronización bidireccional.
+class SyncRunReport {
+  final int gastosPulled;
+  final int gastosPushed;
+  final int presupuestosPulled;
+  final int presupuestosPushed;
+  final int gastosPullErrors;
+  final int gastosPushErrors;
+  final int presupuestosPullErrors;
+  final int presupuestosPushErrors;
+  final bool gastosPullAborted;
+  final bool presupuestosPullAborted;
+  final String? primaryErrorCode;
+
+  const SyncRunReport({
+    this.gastosPulled = 0,
+    this.gastosPushed = 0,
+    this.presupuestosPulled = 0,
+    this.presupuestosPushed = 0,
+    this.gastosPullErrors = 0,
+    this.gastosPushErrors = 0,
+    this.presupuestosPullErrors = 0,
+    this.presupuestosPushErrors = 0,
+    this.gastosPullAborted = false,
+    this.presupuestosPullAborted = false,
+    this.primaryErrorCode,
+  });
+
+  int get totalProcessed =>
+      gastosPulled + gastosPushed + presupuestosPulled + presupuestosPushed;
+
+  int get totalErrors =>
+      gastosPullErrors +
+      gastosPushErrors +
+      presupuestosPullErrors +
+      presupuestosPushErrors +
+      (gastosPullAborted ? 1 : 0) +
+      (presupuestosPullAborted ? 1 : 0);
+
+  bool get hasErrors => totalErrors > 0;
+  bool get isPermissionDenied => primaryErrorCode == 'permission-denied';
+  bool get isPartialError =>
+      hasErrors && !gastosPullAborted && !presupuestosPullAborted && !isPermissionDenied;
+}
+
+class _SyncPhaseResult {
+  final int processed;
+  final int errors;
+  final String? errorCode;
+
+  const _SyncPhaseResult({
+    this.processed = 0,
+    this.errors = 0,
+    this.errorCode,
+  });
+}
+
 class SyncService {
   final GastoRepository _repository;
   final FirebaseAuth? _customAuth;
@@ -169,51 +226,153 @@ class SyncService {
   FlutterSecureStorage get _secureStorageInstance =>
       _customSecureStorage ?? const FlutterSecureStorage();
 
-  Future<void> syncBidirectional({bool dryRun = false}) async {
+  String _extractErrorCode(Object e) {
+    if (e is FirebaseException) {
+      return e.code;
+    }
+    final lower = e.toString().toLowerCase();
+    if (lower.contains('permission-denied') || lower.contains('permission_denied')) {
+      return 'permission-denied';
+    }
+    if (lower.contains('unauthenticated')) {
+      return 'unauthenticated';
+    }
+    if (lower.contains('unavailable') || lower.contains('network')) {
+      return 'unavailable';
+    }
+    return 'unknown';
+  }
+
+  String? _mergeErrorCode(String? current, String? next) {
+    if (next == null) return current;
+    if (current == null) return next;
+    const priority = ['permission-denied', 'unauthenticated', 'unavailable'];
+    final pCurrent = priority.indexOf(current);
+    final pNext = priority.indexOf(next);
+    if (pNext != -1 && (pCurrent == -1 || pNext < pCurrent)) {
+      return next;
+    }
+    return current;
+  }
+
+  Future<SyncRunReport> syncBidirectional({bool dryRun = false}) async {
+    int gastosPulled = 0;
+    int gastosPushed = 0;
+    int presupuestosPulled = 0;
+    int presupuestosPushed = 0;
+    int gastosPullErrors = 0;
+    int gastosPushErrors = 0;
+    int presupuestosPullErrors = 0;
+    int presupuestosPushErrors = 0;
+    bool gastosPullAborted = false;
+    bool presupuestosPullAborted = false;
+    String? primaryErrorCode;
+
     try {
       final user = _auth?.currentUser;
-      if (user == null || user.isAnonymous) return;
+      if (user == null || user.isAnonymous) return const SyncRunReport();
 
       if (await _isPendingReplace(user.uid)) {
         debugPrint("SyncService: Sincronización bloqueada por reemplazo pendiente");
-        return;
+        return const SyncRunReport();
       }
 
+      // Fase 1: Gastos (si falla el pull completo, se omite el push por seguridad anónimo->cuenta)
+      bool gastosPullCompleted = false;
       try {
-        await syncFromFirestore(user);
-        await syncToFirestore(user, dryRun: dryRun);
-      } catch (_) {
-        debugPrint("SyncService: Error sincronizando gastos con Firestore");
+        final pullRes = await _syncFromFirestoreWithReport(user);
+        gastosPulled = pullRes.processed;
+        gastosPullErrors = pullRes.errors;
+        primaryErrorCode = _mergeErrorCode(primaryErrorCode, pullRes.errorCode);
+        gastosPullCompleted = true;
+      } catch (e) {
+        gastosPullAborted = true;
+        primaryErrorCode = _mergeErrorCode(primaryErrorCode, _extractErrorCode(e));
+        debugPrint("SyncService: Error en pull completo de gastos: $e");
       }
 
-      try {
-        await syncPresupuestosFromFirestore(user);
-        if (!dryRun) {
-          await syncPresupuestosToFirestore(user);
+      if (gastosPullCompleted) {
+        try {
+          final pushRes = await _syncToFirestoreWithReport(user, dryRun: dryRun);
+          gastosPushed = pushRes.processed;
+          gastosPushErrors = pushRes.errors;
+          primaryErrorCode = _mergeErrorCode(primaryErrorCode, pushRes.errorCode);
+        } catch (e) {
+          gastosPushErrors++;
+          primaryErrorCode = _mergeErrorCode(primaryErrorCode, _extractErrorCode(e));
+          debugPrint("SyncService: Error en push de gastos a Firestore: $e");
         }
-      } catch (_) {
-        debugPrint("SyncService: Error sincronizando presupuestos con Firestore");
       }
-    } catch (_) {
-      debugPrint("SyncService: Error en sincronización bidireccional");
+
+      // Fase 2: Presupuestos (mismo aislamiento: pull completo fallido omite push)
+      bool presupuestosPullCompleted = false;
+      try {
+        final pullPresRes = await _syncPresupuestosFromFirestoreWithReport(user);
+        presupuestosPulled = pullPresRes.processed;
+        presupuestosPullErrors = pullPresRes.errors;
+        primaryErrorCode = _mergeErrorCode(primaryErrorCode, pullPresRes.errorCode);
+        presupuestosPullCompleted = true;
+      } catch (e) {
+        presupuestosPullAborted = true;
+        primaryErrorCode = _mergeErrorCode(primaryErrorCode, _extractErrorCode(e));
+        debugPrint("SyncService: Error en pull completo de presupuestos: $e");
+      }
+
+      if (presupuestosPullCompleted && !dryRun) {
+        try {
+          final pushPresRes = await _syncPresupuestosToFirestoreWithReport(user);
+          presupuestosPushed = pushPresRes.processed;
+          presupuestosPushErrors = pushPresRes.errors;
+          primaryErrorCode = _mergeErrorCode(primaryErrorCode, pushPresRes.errorCode);
+        } catch (e) {
+          presupuestosPushErrors++;
+          primaryErrorCode = _mergeErrorCode(primaryErrorCode, _extractErrorCode(e));
+          debugPrint("SyncService: Error en push de presupuestos a Firestore: $e");
+        }
+      }
+    } catch (e) {
+      gastosPullAborted = true;
+      primaryErrorCode = _mergeErrorCode(primaryErrorCode, _extractErrorCode(e));
+      debugPrint("SyncService: Error en sincronización bidireccional: $e");
     }
+
+    return SyncRunReport(
+      gastosPulled: gastosPulled,
+      gastosPushed: gastosPushed,
+      presupuestosPulled: presupuestosPulled,
+      presupuestosPushed: presupuestosPushed,
+      gastosPullErrors: gastosPullErrors,
+      gastosPushErrors: gastosPushErrors,
+      presupuestosPullErrors: presupuestosPullErrors,
+      presupuestosPushErrors: presupuestosPushErrors,
+      gastosPullAborted: gastosPullAborted,
+      presupuestosPullAborted: presupuestosPullAborted,
+      primaryErrorCode: primaryErrorCode,
+    );
   }
 
   Future<void> syncToFirestore(User user, {bool dryRun = false}) async {
+    await _syncToFirestoreWithReport(user, dryRun: dryRun);
+  }
+
+  Future<_SyncPhaseResult> _syncToFirestoreWithReport(User user, {bool dryRun = false}) async {
     final rds = _remoteDataSource;
-    if (rds == null) return;
+    if (rds == null) return const _SyncPhaseResult();
 
     if (dryRun) {
       debugPrint("SyncService: Push de gastos a Firestore omitido (dryRun = true)");
-      return;
+      return const _SyncPhaseResult();
     }
 
     if (await _isPendingReplace(user.uid)) {
       debugPrint("SyncService: Push de gastos bloqueado por reemplazo pendiente");
-      return;
+      return const _SyncPhaseResult();
     }
 
     final unsyncedGastos = await _repository.obtenerGastosNoSincronizados();
+    int processed = 0;
+    int errors = 0;
+    String? errorCode;
 
     for (var gasto in unsyncedGastos) {
       if (hasConflict(gasto.uuid)) {
@@ -227,14 +386,18 @@ class SyncService {
           if (gasto.id != null) {
             await _repository.eliminarGastoFisico(gasto.id!);
           }
+          processed++;
         } else {
           try {
             await rds.softDeleteGasto(user.uid, gasto.uuid, gasto.eliminadoEn!);
             if (gasto.id != null) {
               await _repository.eliminarGastoFisico(gasto.id!);
             }
-          } catch (_) {
-            debugPrint("SyncService: Error propagando soft delete de gasto a Firestore");
+            processed++;
+          } catch (e) {
+            errors++;
+            errorCode = _mergeErrorCode(errorCode, _extractErrorCode(e));
+            debugPrint("SyncService: Error propagando soft delete de ${gasto.uuid} a Firestore: $e");
           }
         }
       } else {
@@ -254,158 +417,225 @@ class SyncService {
             final syncedGasto = gasto.copyWith(firestoreId: gasto.uuid, synced: 1);
             await _repository.actualizarGastoSyncStatus(syncedGasto);
           }
-        } catch (_) {
-          debugPrint("SyncService: Error subiendo gasto activo a Firestore");
+          processed++;
+        } catch (e) {
+          errors++;
+          errorCode = _mergeErrorCode(errorCode, _extractErrorCode(e));
+          debugPrint("SyncService: Error subiendo gasto activo ${gasto.uuid} a Firestore: $e");
         }
       }
     }
+
+    return _SyncPhaseResult(processed: processed, errors: errors, errorCode: errorCode);
   }
 
   Future<void> syncFromFirestore(User user) async {
-    final rds = _remoteDataSource;
-    if (rds == null) return;
+    await _syncFromFirestoreWithReport(user);
+  }
 
+  Future<_SyncPhaseResult> _syncFromFirestoreWithReport(User user) async {
+    final rds = _remoteDataSource;
+    if (rds == null) return const _SyncPhaseResult();
+
+    // Si falla la descarga completa (red/auth), debe propagarse para bloquear el push
     final remoteDocs = await rds.fetchAllGastos(user.uid);
-    if (remoteDocs.isEmpty) return;
+    if (remoteDocs.isEmpty) return const _SyncPhaseResult();
 
     final localGastos = await _repository.obtenerTodosLosGastosConBorrados();
     final localMap = {for (var g in localGastos) g.uuid: g};
+    int processed = 0;
+    int errors = 0;
+    String? errorCode;
 
     for (var remoteDoc in remoteDocs) {
-      final gastoRemoto = GastoFirestoreMapper.fromPayload(remoteDoc.data, remoteDoc.id);
-      final localGasto = localMap[gastoRemoto.uuid];
+      try {
+        final gastoRemoto = GastoFirestoreMapper.fromPayload(remoteDoc.data, remoteDoc.id);
+        final localGasto = localMap[gastoRemoto.uuid];
 
-      // Auto-reparación de firestoreId local si el remoto existe
-      if (localGasto != null && localGasto.firestoreId == null && localGasto.id != null) {
-        await _repository.repararFirestoreId(localGasto.id!, gastoRemoto.firestoreId!);
-      }
+        // Auto-reparación de firestoreId local si el remoto existe
+        if (localGasto != null && localGasto.firestoreId == null && localGasto.id != null) {
+          await _repository.repararFirestoreId(localGasto.id!, gastoRemoto.firestoreId!);
+        }
 
-      final accion = resolverConflicto(localGasto, gastoRemoto);
+        final accion = resolverConflicto(localGasto, gastoRemoto);
 
-      switch (accion) {
-        case AccionReconciliacion.eliminarLocalFisico:
-          if (localGasto?.id != null) {
-            await _repository.eliminarGastoFisico(localGasto!.id!);
-          }
-          break;
+        switch (accion) {
+          case AccionReconciliacion.eliminarLocalFisico:
+            if (localGasto?.id != null) {
+              await _repository.eliminarGastoFisico(localGasto!.id!);
+            }
+            resolverConflictoTombstone(gastoRemoto.uuid);
+            resolverConflictoConcurrente(gastoRemoto.uuid);
+            processed++;
+            break;
 
-        case AccionReconciliacion.actualizarLocalDesdeRemoto:
-          if (localGasto?.id != null) {
-            await _repository.actualizarGasto(
-              gastoRemoto.copyWith(
-                id: localGasto!.id,
-                rutaFotoLocal: localGasto.rutaFotoLocal,
-                synced: 1,
-              ),
+          case AccionReconciliacion.actualizarLocalDesdeRemoto:
+            if (localGasto?.id != null) {
+              await _repository.actualizarGasto(
+                gastoRemoto.copyWith(
+                  id: localGasto!.id,
+                  rutaFotoLocal: localGasto.rutaFotoLocal,
+                  synced: 1,
+                ),
+                gastoRemoto.items,
+              );
+            }
+            resolverConflictoConcurrente(gastoRemoto.uuid);
+            processed++;
+            break;
+
+          case AccionReconciliacion.crearLocalDesdeRemoto:
+            await _repository.guardarGasto(
+              gastoRemoto.copyWith(synced: 1),
               gastoRemoto.items,
             );
-          }
-          break;
+            processed++;
+            break;
 
-        case AccionReconciliacion.crearLocalDesdeRemoto:
-          await _repository.guardarGasto(
-            gastoRemoto.copyWith(synced: 1),
-            gastoRemoto.items,
-          );
-          break;
+          case AccionReconciliacion.subirLocalANube:
+            if (localGasto != null) {
+              // Una nueva edición local cuyo timestamp supera al remoto desbloquea un conflicto concurrente previo
+              resolverConflictoConcurrente(localGasto.uuid);
+              if (localGasto.synced != 0 && localGasto.id != null) {
+                await _repository.marcarComoPendiente(localGasto.id!);
+              }
+            }
+            break;
 
-        case AccionReconciliacion.subirLocalANube:
-          if (localGasto != null && localGasto.synced != 0 && localGasto.id != null) {
-            await _repository.marcarComoPendiente(localGasto.id!);
-          }
-          break;
+          case AccionReconciliacion.marcarSynced:
+            if (localGasto?.id != null) {
+              await _repository.actualizarGastoSyncStatus(
+                localGasto!.copyWith(
+                  actualizadoEn: gastoRemoto.actualizadoEn,
+                  synced: 1,
+                ),
+              );
+              resolverConflictoConcurrente(localGasto.uuid);
+            }
+            processed++;
+            break;
 
-        case AccionReconciliacion.marcarSynced:
-          if (localGasto?.id != null) {
-            await _repository.actualizarGastoSyncStatus(
-              localGasto!.copyWith(
-                actualizadoEn: gastoRemoto.actualizadoEn,
-                synced: 1,
-              ),
-            );
-          }
-          break;
+          case AccionReconciliacion.conflictoTombstoneRemoto:
+            if (localGasto != null && gastoRemoto.eliminadoEn != null) {
+              registrarConflictoTombstone(
+                ConflictoTombstoneRemoto(
+                  uuid: localGasto.uuid,
+                  localSnapshot: localGasto,
+                  fechaEliminacionRemota: gastoRemoto.eliminadoEn!,
+                ),
+              );
+            }
+            break;
 
-        case AccionReconciliacion.conflictoTombstoneRemoto:
-          if (localGasto != null && gastoRemoto.eliminadoEn != null) {
-            registrarConflictoTombstone(
-              ConflictoTombstoneRemoto(
-                uuid: localGasto.uuid,
-                localSnapshot: localGasto,
-                fechaEliminacionRemota: gastoRemoto.eliminadoEn!,
-              ),
-            );
-          }
-          break;
+          case AccionReconciliacion.conflictoEdicionConcurrente:
+            if (localGasto != null) {
+              registrarConflictoConcurrente(
+                ConflictoEdicionConcurrente(
+                  uuid: localGasto.uuid,
+                  local: localGasto,
+                  remoto: gastoRemoto,
+                ),
+              );
+            }
+            break;
 
-        case AccionReconciliacion.conflictoEdicionConcurrente:
-          if (localGasto != null) {
-            registrarConflictoConcurrente(
-              ConflictoEdicionConcurrente(
-                uuid: localGasto.uuid,
-                local: localGasto,
-                remoto: gastoRemoto,
-              ),
-            );
-          }
-          break;
-
-        case AccionReconciliacion.descartarRemotoBorrado:
-        case AccionReconciliacion.mantenerLocal:
-          break;
+          case AccionReconciliacion.descartarRemotoBorrado:
+          case AccionReconciliacion.mantenerLocal:
+            break;
+        }
+      } catch (e) {
+        errors++;
+        errorCode = _mergeErrorCode(errorCode, _extractErrorCode(e));
+        debugPrint("SyncService: Error procesando gasto remoto ${remoteDoc.id}: $e");
       }
     }
 
-    await ReceiptPhotoRegistry.reconcileMissingPhotos(repository: _repository);
+    try {
+      await ReceiptPhotoRegistry.reconcileMissingPhotos(repository: _repository);
+    } catch (e) {
+      debugPrint("SyncService: Error reconciliando fotos de comprobantes: $e");
+    }
+
+    return _SyncPhaseResult(processed: processed, errors: errors, errorCode: errorCode);
   }
 
   Future<void> syncPresupuestosToFirestore(User user) async {
+    await _syncPresupuestosToFirestoreWithReport(user);
+  }
+
+  Future<_SyncPhaseResult> _syncPresupuestosToFirestoreWithReport(User user) async {
     final rds = _remoteDataSource;
-    if (rds == null) return;
+    if (rds == null) return const _SyncPhaseResult();
 
     if (await _isPendingReplace(user.uid)) {
       debugPrint("SyncService: Push de presupuestos bloqueado por reemplazo pendiente");
-      return;
+      return const _SyncPhaseResult();
     }
 
     final presupuestos = await _repository.obtenerTodosLosPresupuestosMensuales();
+    int processed = 0;
+    int errors = 0;
+    String? errorCode;
+
     for (var pres in presupuestos) {
       final anio = pres['anio'] as int;
       final mes = pres['mes'] as int;
       final general = (pres['presupuesto_general'] as num?)?.toDouble() ?? 0.0;
       final metaAhorro = (pres['meta_ahorro'] as num?)?.toDouble() ?? 0.0;
-      final moneda = (pres['moneda'] as String?) ?? 'USD';
-      final Map<String, dynamic> categorias = {};
+      final moneda = AppConstants.normalizarMoneda(pres['moneda'] as String?);
+      final Map<String, double> categorias = {};
       if (pres['categorias'] is Map) {
         (pres['categorias'] as Map).forEach((k, v) {
-          categorias[k.toString()] = v;
+          final monto = (v as num?)?.toDouble() ?? 0.0;
+          if (monto > 0) {
+            final canon = AppConstants.normalizarCategoria(k.toString());
+            categorias[canon] = (categorias[canon] ?? 0.0) + monto;
+          }
         });
       }
-      final actualizadoEn = pres['actualizado_en'] as String? ??
+      final rawActualizado = pres['actualizado_en'] as String?;
+      final actualizadoEn = rawActualizado ??
           pres['creado_en'] as String? ??
           DateTime.fromMillisecondsSinceEpoch(0).toIso8601String();
 
-      if (general <= 0 && metaAhorro <= 0 && categorias.isEmpty) continue;
+      // Omitir filas vacías sin marca explícita de actualización
+      if (general <= 0 && metaAhorro <= 0 && categorias.isEmpty && rawActualizado == null) {
+        continue;
+      }
 
       final docId = '${anio}_${mes.toString().padLeft(2, '0')}';
-      await rds.upsertPresupuesto(user.uid, docId, {
-        'anio': anio,
-        'mes': mes,
-        'presupuesto_general': general,
-        'meta_ahorro': metaAhorro,
-        'moneda': moneda,
-        'categorias': categorias,
-        'actualizado_en': actualizadoEn,
-      });
+      try {
+        await rds.upsertPresupuesto(user.uid, docId, {
+          'anio': anio,
+          'mes': mes,
+          'presupuesto_general': general,
+          'meta_ahorro': metaAhorro,
+          'moneda': moneda,
+          'categorias': categorias,
+          'actualizado_en': actualizadoEn,
+        });
+        processed++;
+      } catch (e) {
+        errors++;
+        errorCode = _mergeErrorCode(errorCode, _extractErrorCode(e));
+        debugPrint("SyncService: Error subiendo presupuesto $docId a Firestore: $e");
+      }
     }
+
+    return _SyncPhaseResult(processed: processed, errors: errors, errorCode: errorCode);
   }
 
   Future<void> syncPresupuestosFromFirestore(User user) async {
-    final rds = _remoteDataSource;
-    if (rds == null) return;
+    await _syncPresupuestosFromFirestoreWithReport(user);
+  }
 
+  Future<_SyncPhaseResult> _syncPresupuestosFromFirestoreWithReport(User user) async {
+    final rds = _remoteDataSource;
+    if (rds == null) return const _SyncPhaseResult();
+
+    // Si falla la descarga completa (red/auth), debe propagarse para bloquear el push
     final remoteDocs = await rds.fetchAllPresupuestos(user.uid);
-    if (remoteDocs.isEmpty) return;
+    if (remoteDocs.isEmpty) return const _SyncPhaseResult();
 
     final localPresupuestos = await _repository.obtenerTodosLosPresupuestosMensuales();
     final Map<String, Map<String, dynamic>> localMap = {};
@@ -415,29 +645,19 @@ class SyncService {
       localMap['${anio}_${mes.toString().padLeft(2, '0')}'] = p;
     }
 
+    int processed = 0;
+    int errors = 0;
+    String? errorCode;
+
     for (var doc in remoteDocs) {
-      final presRemoto = PresupuestoRemotoModel.fromFirestore(doc.data, doc.id);
-      if (presRemoto.anio == 0 || presRemoto.mes == 0) continue;
+      try {
+        final presRemoto = PresupuestoRemotoModel.fromFirestore(doc.data, doc.id);
+        if (presRemoto.anio == 0 || presRemoto.mes == 0) continue;
 
-      final docId = '${presRemoto.anio}_${presRemoto.mes.toString().padLeft(2, '0')}';
-      final localP = localMap[docId];
+        final docId = '${presRemoto.anio}_${presRemoto.mes.toString().padLeft(2, '0')}';
+        final localP = localMap[docId];
 
-      if (localP == null) {
-        await _repository.guardarPresupuestoMensualCompleto(
-          anio: presRemoto.anio,
-          mes: presRemoto.mes,
-          general: presRemoto.general,
-          moneda: presRemoto.moneda,
-          categorias: presRemoto.categorias,
-          metaAhorro: presRemoto.metaAhorro,
-          actualizadoEn: presRemoto.actualizadoEn,
-        );
-      } else {
-        final localActualizadoEn = localP['actualizado_en'] as String?;
-        final localTime = DateTime.tryParse(localActualizadoEn ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0);
-        final remoteTime = DateTime.tryParse(presRemoto.actualizadoEn) ?? DateTime.fromMillisecondsSinceEpoch(0);
-
-        if (remoteTime.isAfter(localTime)) {
+        if (localP == null) {
           await _repository.guardarPresupuestoMensualCompleto(
             anio: presRemoto.anio,
             mes: presRemoto.mes,
@@ -447,9 +667,33 @@ class SyncService {
             metaAhorro: presRemoto.metaAhorro,
             actualizadoEn: presRemoto.actualizadoEn,
           );
+          processed++;
+        } else {
+          final localActualizadoEn = localP['actualizado_en'] as String?;
+          final localTime = DateTime.tryParse(localActualizadoEn ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0);
+          final remoteTime = DateTime.tryParse(presRemoto.actualizadoEn) ?? DateTime.fromMillisecondsSinceEpoch(0);
+
+          if (remoteTime.isAfter(localTime)) {
+            await _repository.guardarPresupuestoMensualCompleto(
+              anio: presRemoto.anio,
+              mes: presRemoto.mes,
+              general: presRemoto.general,
+              moneda: presRemoto.moneda,
+              categorias: presRemoto.categorias,
+              metaAhorro: presRemoto.metaAhorro,
+              actualizadoEn: presRemoto.actualizadoEn,
+            );
+            processed++;
+          }
         }
+      } catch (e) {
+        errors++;
+        errorCode = _mergeErrorCode(errorCode, _extractErrorCode(e));
+        debugPrint("SyncService: Error procesando presupuesto remoto ${doc.id}: $e");
       }
     }
+
+    return _SyncPhaseResult(processed: processed, errors: errors, errorCode: errorCode);
   }
 
   Future<User?> intentarLoginSilencioso() async {

@@ -5,6 +5,7 @@ import 'package:gastoscan_ai/data/datasources/local/database_helper.dart';
 import 'package:gastoscan_ai/providers/gasto_provider.dart';
 import 'package:gastoscan_ai/providers/scan_queue_provider.dart';
 import 'package:gastoscan_ai/providers/settings_provider.dart';
+import 'package:gastoscan_ai/services/sync_coordinator.dart';
 import 'package:gastoscan_ai/ui/screens/dashboard_screen.dart';
 import 'package:gastoscan_ai/ui/widgets/category_chart.dart';
 
@@ -27,6 +28,14 @@ class FakeGastoProvider extends GastoProvider {
   Map<String, double> _customPresupuestos = {};
   double _customPresupuestoGeneral = 0.0;
   String _customMonedaPresupuesto = 'USD';
+  final ValueNotifier<SyncState> fakeSyncNotifier =
+      ValueNotifier<SyncState>(const SyncState.inactiva());
+
+  @override
+  SyncState get syncState => fakeSyncNotifier.value;
+
+  @override
+  ValueListenable<SyncState> get syncStateListenable => fakeSyncNotifier;
 
   void setTotales(Map<String, double> totales) {
     _customTotales = totales;
@@ -243,6 +252,45 @@ void main() {
       expect(chart.categoryBudgets['Alimentacion'], 50.0);
       expect(chart.presupuestoGeneral, 100.0);
       expect(chart.categoryTotals['Alimentacion'], 25.0);
+    });
+
+    testWidgets('Sync banner stays hidden on 1st generic error and appears on 2nd failure or permission-denied', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pump();
+
+      // 1.er fallo genérico: banner oculto
+      gastoProvider.fakeSyncNotifier.value = const SyncState.error(
+        message: 'No se pudo sincronizar con la nube.',
+        errorCode: 'unknown',
+        consecutiveFailures: 1,
+      );
+      await tester.pump();
+      expect(find.byKey(const Key('dashboard_sync_error_banner')), findsNothing);
+
+      // 2.º fallo consecutivo: banner visible con botón Reintentar
+      gastoProvider.fakeSyncNotifier.value = const SyncState.error(
+        message: 'No se pudo sincronizar con la nube.',
+        errorCode: 'unknown',
+        consecutiveFailures: 2,
+      );
+      await tester.pump();
+      expect(find.byKey(const Key('dashboard_sync_error_banner')), findsOneWidget);
+      expect(find.text('Reintentar'), findsOneWidget);
+
+      // Ocultar el banner del fallo genérico
+      await tester.tap(find.byKey(const Key('dashboard_sync_error_dismiss')));
+      await tester.pump();
+      expect(find.byKey(const Key('dashboard_sync_error_banner')), findsNothing);
+
+      // permission-denied (consecutiveFailures == 1) debe volver a mostrar el banner aunque antes se ocultó otro error
+      gastoProvider.fakeSyncNotifier.value = const SyncState.error(
+        message: 'Actualiza Rinde Más desde Google Play para seguir respaldando tus gastos.',
+        errorCode: 'permission-denied',
+        consecutiveFailures: 1,
+      );
+      await tester.pump();
+      expect(find.byKey(const Key('dashboard_sync_error_banner')), findsOneWidget);
+      expect(find.text('Ir a Google Play'), findsOneWidget);
     });
   });
 }

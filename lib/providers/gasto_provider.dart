@@ -572,6 +572,9 @@ class GastoProvider with ChangeNotifier {
     }
   }
 
+  SyncState get syncState => _syncCoordinator.state;
+  ValueListenable<SyncState> get syncStateListenable => _syncCoordinator.stateNotifier;
+
   Future<void> sincronizarConFirestore() async {
     await _syncCoordinator.request(SyncTrigger.manual, forzar: true);
     await cargarDatos();

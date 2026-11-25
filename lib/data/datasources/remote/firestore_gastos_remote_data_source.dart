@@ -61,11 +61,13 @@ class FirestoreGastosRemoteDataSource implements GastosRemoteDataSource {
 
   @override
   Future<void> upsertPresupuesto(String uid, String docId, Map<String, dynamic> data) async {
+    // Reemplazo completo del documento canónico (7 claves) para que eliminar
+    // una categoría en la app también la borre del mapa `categorias` en Firestore.
     await _firestore
         .collection('users')
         .doc(uid)
         .collection('presupuestos')
         .doc(docId)
-        .set(data, SetOptions(merge: true));
+        .set(data);
   }
 }

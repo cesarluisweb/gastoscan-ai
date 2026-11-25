@@ -15,6 +15,7 @@ class FakeRemoteDataSource implements GastosRemoteDataSource {
 
   bool throwOnFetchGastos = false;
   bool throwOnFetchPresupuestos = false;
+  bool throwPermissionDeniedOnUpsertGasto = false;
 
   final List<String> softDeletedUuids = [];
   final List<GastoModel> upsertedGastos = [];
@@ -34,6 +35,9 @@ class FakeRemoteDataSource implements GastosRemoteDataSource {
 
   @override
   Future<void> upsertGasto(String uid, GastoModel gasto) async {
+    if (throwPermissionDeniedOnUpsertGasto) {
+      throw Exception('cloud_firestore/permission-denied: Missing or insufficient permissions');
+    }
     upsertedGastos.add(gasto);
   }
 
@@ -579,6 +583,168 @@ void main() {
       // Debe haberse marcado como synced = 1 sin crear duplicados ni borrar
       expect(fakeRepo.localGastos.firstWhere((g) => g.id == 10).synced, equals(1));
       expect(fakeRepo.physicallyDeletedIds, isEmpty);
+    });
+
+    test('11. Un documento remoto corrupto en pull no aborta los demás ni bloquea el push', () async {
+      fakeRemote.remoteGastos = [
+        const RemoteGasto(
+          id: 'doc-corrupto',
+          data: {
+            'uuid': 'doc-corrupto',
+            'items': 'no-es-lista', // Fuerza TypeError en fromPayload
+          },
+        ),
+        const RemoteGasto(
+          id: 'doc-valido',
+          data: {
+            'uuid': 'doc-valido',
+            'fecha': '2026-11-20',
+            'comercio': 'Farmatodo',
+            'moneda': 'USD',
+            'total_original': 1500,
+            'total_usd': 1500,
+            'tasa_cambio': 45.0,
+            'categoria': 'Salud',
+            'creado_en': '2026-11-20T10:00:00.000Z',
+            'actualizado_en': '2026-11-20T10:00:00.000Z',
+          },
+        ),
+      ];
+
+      fakeRepo.localGastos = [
+        GastoModel(
+          id: 11,
+          uuid: 'local-nuevo-11',
+          fecha: '2026-11-21',
+          comercio: 'Panadería',
+          moneda: 'USD',
+          totalOriginal: 800,
+          totalUsd: 800,
+          tasaCambio: 45.0,
+          categoria: 'Alimentación',
+          creadoEn: '2026-11-21T10:00:00.000Z',
+          synced: 0,
+        ),
+      ];
+
+      final report = await syncService.syncBidirectional();
+
+      expect(report.gastosPullErrors, equals(1));
+      expect(report.gastosPulled, equals(1));
+      expect(report.gastosPushed, equals(1));
+      expect(report.isPartialError, isTrue);
+      expect(fakeRemote.upsertedGastos.map((g) => g.uuid), contains('local-nuevo-11'));
+      expect(fakeRepo.localGastos.any((g) => g.uuid == 'doc-valido'), isTrue);
+    });
+
+    test('12. Push rechazado con permission-denied se propaga en SyncRunReport', () async {
+      fakeRemote.throwPermissionDeniedOnUpsertGasto = true;
+      fakeRepo.localGastos = [
+        GastoModel(
+          id: 12,
+          uuid: 'u-denied-12',
+          fecha: '2026-11-21',
+          comercio: 'Mercado',
+          moneda: 'USD',
+          totalOriginal: 1200,
+          totalUsd: 1200,
+          tasaCambio: 45.0,
+          categoria: 'Alimentación',
+          creadoEn: '2026-11-21T10:00:00.000Z',
+          synced: 0,
+        ),
+      ];
+
+      final report = await syncService.syncBidirectional();
+
+      expect(report.hasErrors, isTrue);
+      expect(report.gastosPushErrors, equals(1));
+      expect(report.isPermissionDenied, isTrue);
+      expect(fakeRepo.localGastos.firstWhere((g) => g.id == 12).synced, equals(0));
+    });
+
+    test('13. Conflicto concurrente se desbloquea cuando una nueva edición local supera al remoto', () async {
+      final localOld = GastoModel(
+        id: 13,
+        uuid: 'u-concurrent-13',
+        fecha: '2026-11-21',
+        comercio: 'Tienda Editada',
+        moneda: 'USD',
+        totalOriginal: 2500,
+        totalUsd: 2500,
+        tasaCambio: 45.0,
+        categoria: 'Otros',
+        creadoEn: '2026-11-21T09:00:00.000Z',
+        actualizadoEn: '2026-11-21T12:00:00.000Z',
+        synced: 0,
+      );
+      fakeRepo.localGastos = [localOld];
+
+      // Registrar conflicto previo en memoria
+      syncService.registrarConflictoConcurrente(
+        ConflictoEdicionConcurrente(
+          uuid: 'u-concurrent-13',
+          local: localOld,
+          remoto: localOld.copyWith(comercio: 'Tienda Vieja'),
+        ),
+      );
+
+      fakeRemote.remoteGastos = [
+        const RemoteGasto(
+          id: 'u-concurrent-13',
+          data: {
+            'uuid': 'u-concurrent-13',
+            'fecha': '2026-11-21',
+            'comercio': 'Tienda Vieja',
+            'moneda': 'USD',
+            'total_original': 2000,
+            'total_usd': 2000,
+            'tasa_cambio': 45.0,
+            'categoria': 'Otros',
+            'creado_en': '2026-11-21T09:00:00.000Z',
+            'actualizado_en': '2026-11-21T11:00:00.000Z',
+          },
+        ),
+      ];
+
+      final report = await syncService.syncBidirectional();
+
+      expect(syncService.hasConflict('u-concurrent-13'), isFalse);
+      expect(report.gastosPushed, equals(1));
+      expect(fakeRemote.upsertedGastos.map((g) => g.uuid), contains('u-concurrent-13'));
+    });
+
+    test('14. syncPresupuestosToFirestore normaliza categorías legacy y sube presupuestos puestos en 0 con actualizado_en', () async {
+      fakeRepo.localPresupuestos = [
+        {
+          'anio': 2026,
+          'mes': 11,
+          'presupuesto_general': 300.0,
+          'meta_ahorro': 50.0,
+          'moneda': 'USD',
+          'categorias': {'Comida': 120.0},
+          'actualizado_en': '2026-11-21T10:00:00.000Z',
+        },
+        {
+          'anio': 2026,
+          'mes': 10,
+          'presupuesto_general': 0.0,
+          'meta_ahorro': 0.0,
+          'moneda': 'USD',
+          'categorias': <String, double>{},
+          'actualizado_en': '2026-11-21T10:05:00.000Z',
+        },
+      ];
+
+      await syncService.syncPresupuestosToFirestore(fakeAuth.user!);
+
+      expect(fakeRemote.upsertedPresupuestos.length, equals(2));
+      final nov = fakeRemote.upsertedPresupuestos.firstWhere((p) => p['docId'] == '2026_11');
+      expect((nov['categorias'] as Map).containsKey('Alimentación'), isTrue);
+      expect((nov['categorias'] as Map).containsKey('Comida'), isFalse);
+      final oct = fakeRemote.upsertedPresupuestos.firstWhere((p) => p['docId'] == '2026_10');
+      expect(oct['presupuesto_general'], equals(0.0));
+      expect((oct['categorias'] as Map).isEmpty, isTrue);
     });
   });
 }

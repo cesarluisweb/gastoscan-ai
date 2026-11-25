@@ -24,12 +24,16 @@ class SyncState {
   final SyncStatus status;
   final DateTime? lastSyncTime;
   final String? errorMessage;
+  final String? errorCode;
+  final int consecutiveFailures;
   final int docsProcessed;
 
   const SyncState({
     required this.status,
     this.lastSyncTime,
     this.errorMessage,
+    this.errorCode,
+    this.consecutiveFailures = 0,
     this.docsProcessed = 0,
   });
 
@@ -37,34 +41,57 @@ class SyncState {
       : status = SyncStatus.inactiva,
         lastSyncTime = lastSync,
         errorMessage = null,
+        errorCode = null,
+        consecutiveFailures = 0,
         docsProcessed = 0;
 
   const SyncState.programada({DateTime? lastSync})
       : status = SyncStatus.programada,
         lastSyncTime = lastSync,
         errorMessage = null,
+        errorCode = null,
+        consecutiveFailures = 0,
         docsProcessed = 0;
 
   const SyncState.enCurso({DateTime? lastSync})
       : status = SyncStatus.enCurso,
         lastSyncTime = lastSync,
         errorMessage = null,
+        errorCode = null,
+        consecutiveFailures = 0,
         docsProcessed = 0;
 
   const SyncState.completada({required DateTime lastSync, int docs = 0})
       : status = SyncStatus.completada,
         lastSyncTime = lastSync,
         errorMessage = null,
+        errorCode = null,
+        consecutiveFailures = 0,
         docsProcessed = docs;
 
-  const SyncState.error({required String message, DateTime? lastSync})
-      : status = SyncStatus.error,
+  const SyncState.error({
+    required String message,
+    DateTime? lastSync,
+    this.errorCode,
+    this.consecutiveFailures = 1,
+  })  : status = SyncStatus.error,
         lastSyncTime = lastSync,
         errorMessage = message,
         docsProcessed = 0;
 
+  bool get isPermissionDenied => errorCode == 'permission-denied';
+  bool get isOfflineError => errorCode == 'offline';
+
+  /// El banner de Dashboard solo se muestra ante fallo persistente (>= 2 fallos seguidos)
+  /// o de inmediato ante `permission-denied` (requiere actualizar desde Google Play).
+  bool get shouldShowBanner =>
+      status == SyncStatus.error &&
+      !isOfflineError &&
+      (isPermissionDenied || consecutiveFailures >= 2);
+
   @override
-  String toString() => 'SyncState(status: $status, lastSync: $lastSyncTime, error: $errorMessage)';
+  String toString() =>
+      'SyncState(status: $status, lastSync: $lastSyncTime, code: $errorCode, failures: $consecutiveFailures, error: $errorMessage)';
 }
 
 /// Coordinador central de sincronización con Cloud Firestore.
@@ -96,6 +123,7 @@ class SyncCoordinator {
   bool _isSyncing = false;
   bool _hasPendingRerun = false;
   DateTime? _lastSuccessfulSync;
+  int _consecutiveFailures = 0;
 
   final ValueNotifier<SyncState> stateNotifier =
       ValueNotifier<SyncState>(const SyncState.inactiva());
@@ -176,6 +204,8 @@ class SyncCoordinator {
       if (!hasNet) {
         stateNotifier.value = SyncState.error(
           message: 'Sin conexión a internet.',
+          errorCode: 'offline',
+          consecutiveFailures: 1,
           lastSync: _lastSuccessfulSync,
         );
         return;
@@ -237,18 +267,80 @@ class SyncCoordinator {
         }
       }
 
-      // 2. Ejecutar sincronización bidireccional
-      await _syncService.syncBidirectional();
+      // 2. Ejecutar sincronización bidireccional y evaluar el reporte real
+      final report = await _syncService.syncBidirectional();
+      if (report.hasErrors) {
+        _consecutiveFailures++;
+        final humanMessage = _mapReportToHumanMessage(report);
+        stateNotifier.value = SyncState.error(
+          message: humanMessage,
+          errorCode: report.primaryErrorCode,
+          consecutiveFailures: _consecutiveFailures,
+          lastSync: _lastSuccessfulSync,
+        );
+        debugPrint(
+          '[SyncCoordinator] Sincronización con errores (${report.totalErrors}, code: ${report.primaryErrorCode}, seguidos: $_consecutiveFailures).',
+        );
+        return;
+      }
+
+      _consecutiveFailures = 0;
       _lastSuccessfulSync = _now();
-      stateNotifier.value = SyncState.completada(lastSync: _lastSuccessfulSync!);
+      stateNotifier.value = SyncState.completada(
+        lastSync: _lastSuccessfulSync!,
+        docs: report.totalProcessed,
+      );
       final duration = _now().difference(startTime);
       debugPrint('[SyncCoordinator] Sincronización exitosa en ${duration.inMilliseconds} ms.');
     } catch (e) {
+      _consecutiveFailures++;
       debugPrint('[SyncCoordinator] Error en sincronización: $e');
+      final lower = e.toString().toLowerCase();
+      final String? code = lower.contains('permission-denied') || lower.contains('permission_denied')
+          ? 'permission-denied'
+          : (lower.contains('unauthenticated')
+              ? 'unauthenticated'
+              : (lower.contains('unavailable') || lower.contains('network')
+                  ? 'unavailable'
+                  : 'unknown'));
       stateNotifier.value = SyncState.error(
-        message: e.toString(),
+        message: _mapCodeToHumanMessage(code),
+        errorCode: code,
+        consecutiveFailures: _consecutiveFailures,
         lastSync: _lastSuccessfulSync,
       );
+    }
+  }
+
+  String _mapReportToHumanMessage(SyncRunReport report) {
+    if (report.isPermissionDenied) {
+      return 'Actualiza Rinde Más desde Google Play para seguir respaldando tus gastos.';
+    }
+    if (report.primaryErrorCode == 'unauthenticated') {
+      return 'Tu sesión venció. Inicia sesión nuevamente con Google en Más.';
+    }
+    if (report.primaryErrorCode == 'unavailable') {
+      return 'Sin conexión estable. Tus gastos siguen seguros en este teléfono.';
+    }
+    if (report.isPartialError) {
+      final n = report.totalErrors;
+      return n == 1
+          ? '1 registro no se pudo respaldar en la nube. Toca Reintentar.'
+          : '$n registros no se pudieron respaldar en la nube. Toca Reintentar.';
+    }
+    return 'No se pudo sincronizar con la nube. Tus gastos siguen seguros en este teléfono.';
+  }
+
+  String _mapCodeToHumanMessage(String? code) {
+    switch (code) {
+      case 'permission-denied':
+        return 'Actualiza Rinde Más desde Google Play para seguir respaldando tus gastos.';
+      case 'unauthenticated':
+        return 'Tu sesión venció. Inicia sesión nuevamente con Google en Más.';
+      case 'unavailable':
+        return 'Sin conexión estable. Tus gastos siguen seguros en este teléfono.';
+      default:
+        return 'No se pudo sincronizar con la nube. Tus gastos siguen seguros en este teléfono.';
     }
   }
 
@@ -259,6 +351,7 @@ class SyncCoordinator {
     _isSyncing = false;
     _hasPendingRerun = false;
     _lastSuccessfulSync = null;
+    _consecutiveFailures = 0;
     stateNotifier.value = const SyncState.inactiva();
   }
 }

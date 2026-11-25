@@ -10,6 +10,8 @@ import '../../providers/scan_queue_provider.dart';
 import 'dart:io';
 import '../../services/notification_service.dart';
 import '../../services/ai_insight_service.dart';
+import '../../services/sync_coordinator.dart';
+import '../../services/update_service.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/category_chart.dart';
 import '../widgets/expense_card.dart';
@@ -45,6 +47,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String? _cachedGeminiText;
   AiHiddenSignals? _hiddenSignals;
   String? _lastEvaluatedInsightSignature;
+  String? _dismissedSyncKey;
 
   static double _convertBudgetToLens(
     double amount,
@@ -230,6 +233,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
           await scanQueue.loadReadyItems();
           await scanQueue.loadPendingItems();
           await scanQueue.processPendingItems();
+          if (mounted) {
+            final syncState = gastoProvider.syncState;
+            if (syncState.status == SyncStatus.error && syncState.errorMessage != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(syncState.errorMessage!),
+                  backgroundColor: AppColors.error,
+                  duration: const Duration(seconds: 3),
+                ),
+              );
+            }
+          }
         },
         color: AppColors.primary,
         child: ListView(
@@ -321,6 +336,151 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
             ],
+            ValueListenableBuilder<SyncState>(
+              valueListenable: gastoProvider.syncStateListenable,
+              builder: (builderContext, syncState, _) {
+                final syncKey =
+                    '${syncState.errorCode ?? 'unknown'}:${syncState.consecutiveFailures}:${syncState.errorMessage ?? ''}';
+                final showBanner = !gastoProvider.hasPendingReplaceBlock &&
+                    syncState.shouldShowBanner &&
+                    syncKey != _dismissedSyncKey;
+                if (!showBanner) return const SizedBox.shrink();
+
+                final isPermissionDenied = syncState.isPermissionDenied;
+                return Container(
+                  key: const Key('dashboard_sync_error_banner'),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isPermissionDenied ? AppColors.errorTint : const Color(0xFFFEF3C7),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isPermissionDenied ? AppColors.errorBorder : AppColors.warning,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            isPermissionDenied
+                                ? Icons.error_outline_rounded
+                                : Icons.warning_amber_rounded,
+                            color: isPermissionDenied ? AppColors.errorStrong : AppColors.caution,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              isPermissionDenied
+                                  ? 'Actualiza Rinde Más desde Google Play'
+                                  : 'No se pudo sincronizar con la nube',
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (syncState.errorMessage != null) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          syncState.errorMessage!,
+                          style: const TextStyle(
+                            color: AppColors.textSpent,
+                            fontSize: 12,
+                            height: 1.3,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          ElevatedButton(
+                            key: const Key('dashboard_sync_error_action'),
+                            onPressed: () async {
+                              if (isPermissionDenied) {
+                                await UpdateService.openDownloadUrl();
+                              } else {
+                                setState(() {
+                                  _dismissedSyncKey = null;
+                                });
+                                await gastoProvider.sincronizarConFirestore();
+                                if (!mounted) return;
+                                final updated = gastoProvider.syncState;
+                                if (updated.status == SyncStatus.completada) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Respaldo al día con la nube',
+                                        style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
+                                      ),
+                                      backgroundColor: AppColors.primaryDark,
+                                      duration: Duration(seconds: 2),
+                                    ),
+                                  );
+                                } else if (updated.status == SyncStatus.error &&
+                                    updated.errorMessage != null) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(updated.errorMessage!),
+                                      backgroundColor: AppColors.error,
+                                      duration: const Duration(seconds: 3),
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primaryDark,
+                              foregroundColor: Colors.black,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              minimumSize: const Size(0, 32),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: Text(
+                              isPermissionDenied ? 'Ir a Google Play' : 'Reintentar',
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          TextButton(
+                            key: const Key('dashboard_sync_error_dismiss'),
+                            onPressed: () {
+                              setState(() {
+                                _dismissedSyncKey = syncKey;
+                              });
+                            },
+                            style: TextButton.styleFrom(
+                              foregroundColor: AppColors.textSpent,
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                              minimumSize: const Size(0, 32),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: const Text(
+                              'Ocultar',
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
             SummaryCard(
               totalUsd: gastoProvider.totalMesUsd,
               totalVes: gastoProvider.totalMesVes,
