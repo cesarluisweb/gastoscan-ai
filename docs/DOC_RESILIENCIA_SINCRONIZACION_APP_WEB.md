@@ -1,6 +1,7 @@
 # Resiliencia y Visibilidad de Sincronización App ↔ Panel Web
 
-> **Estado:** `Implementada 🔧` (tarea crítica: sincronización Firestore/SQLite y panel web).
+> **Estado:** `Pendiente de validación 🧪` (tarea crítica: sincronización Firestore/SQLite y panel web).
+> **CI en verde:** Móvil run `45646396832` (`build 740`, SHA `04b7ff4`) · Web run `45645575107` (`build 36`, SHA `46a01f7`) · Reglas Firestore run `45645575133` (`build 9`, SHA `46a01f7`).
 > **Reglas de Firestore:** sin cambios (`firestore.rules` se mantiene estricta).
 
 ## 1. Diagnóstico
