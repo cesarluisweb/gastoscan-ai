@@ -17,6 +17,7 @@ import '../../services/connectivity_service.dart';
 import '../../services/export_service.dart';
 import '../../services/profile_avatar_service.dart';
 import '../../services/update_service.dart';
+import '../widgets/update_dialog.dart';
 import '../widgets/global_scan_queue_banner.dart';
 import '../widgets/app_bar_month_selector.dart';
 import '../widgets/auth_modal_sheet.dart';
@@ -40,6 +41,7 @@ class MoreScreen extends StatefulWidget {
   final Stream<User?>? customUserStream;
   final ProfileAvatarService? profileAvatarService;
   final ConnectivityService? connectivityService;
+  final UpdateService? updateService;
   final Duration avatarReconnectDebounce;
 
   const MoreScreen({
@@ -51,6 +53,7 @@ class MoreScreen extends StatefulWidget {
     this.customUserStream,
     this.profileAvatarService,
     this.connectivityService,
+    this.updateService,
     this.avatarReconnectDebounce = const Duration(seconds: 2),
   }) : super(key: key);
 
@@ -67,6 +70,9 @@ class MoreScreenState extends State<MoreScreen> {
 
   late final ProfileAvatarService _avatarService;
   late final ConnectivityService _connectivityService;
+  late final UpdateService _updateService;
+  UpdateInfo? _cachedUpdateInfo;
+  bool _checkingUpdate = false;
   StreamSubscription<bool>? _connectivitySub;
   Timer? _avatarReconnectTimer;
   File? _cachedAvatarFile;
@@ -81,8 +87,10 @@ class MoreScreenState extends State<MoreScreen> {
     super.initState();
     _avatarService = widget.profileAvatarService ?? ProfileAvatarService.instance;
     _connectivityService = widget.connectivityService ?? ConnectivityService.instance;
+    _updateService = widget.updateService ?? UpdateService();
     _initAvatarConnectivityListener();
     _cargarVersionActual();
+    _cargarEstadoActualizacionCache();
     _cargarComprasPendientes();
   }
 
@@ -160,6 +168,9 @@ class MoreScreenState extends State<MoreScreen> {
   void dispose() {
     _avatarReconnectTimer?.cancel();
     _connectivitySub?.cancel();
+    if (widget.updateService == null) {
+      _updateService.dispose();
+    }
     super.dispose();
   }
 
@@ -187,6 +198,52 @@ class MoreScreenState extends State<MoreScreen> {
       }
     } catch (e) {
       debugPrint('Error cargando versión de la app: $e');
+    }
+  }
+
+  Future<void> _cargarEstadoActualizacionCache() async {
+    final cached = await _updateService.getCachedUpdateInfo();
+    if (mounted) {
+      setState(() {
+        _cachedUpdateInfo = cached;
+      });
+    }
+  }
+
+  Future<void> _comprobarActualizacionesManual() async {
+    if (_checkingUpdate) return;
+    setState(() => _checkingUpdate = true);
+    try {
+      final result = await _updateService.checkForUpdate(force: true);
+      if (!mounted) return;
+      if (result == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No se pudo verificar actualizaciones. Revisa tu conexión.'),
+          ),
+        );
+        return;
+      }
+      setState(() {
+        _cachedUpdateInfo = result;
+      });
+      if (result.hasUpdate) {
+        await UpdateDialog.show(context, result);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Ya tienes la versión más reciente (v$_currentAppVersion).',
+              style: const TextStyle(color: Colors.black),
+            ),
+            backgroundColor: AppColors.primary,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _checkingUpdate = false);
+      }
     }
   }
 
@@ -890,9 +947,36 @@ class MoreScreenState extends State<MoreScreen> {
           ListTile(
             key: const Key('more_group_about'),
             leading: const Icon(Icons.info_outline, color: AppColors.primaryDark, size: 22),
-            title: const Text(
-              'Sobre Rinde Más',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary),
+            title: Row(
+              children: [
+                const Flexible(
+                  child: Text(
+                    'Sobre Rinde Más',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (_cachedUpdateInfo?.hasUpdate == true) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    key: const Key('more_update_available_pill'),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: AppColors.primaryDark),
+                    ),
+                    child: Text(
+                      'Nueva v${_cachedUpdateInfo!.version}',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
             subtitle: const Text(
               'Google Play, privacidad, términos',
@@ -1168,14 +1252,18 @@ class MoreScreenState extends State<MoreScreen> {
       builder: (ctx) {
         return Padding(
           padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
-          child: Material(
-            key: const Key('sheet_surface_about'),
-            color: AppColors.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            clipBehavior: Clip.antiAlias,
-            child: SafeArea(
-              top: false,
-              child: SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(ctx).size.height * 0.78,
+            ),
+            child: Material(
+              key: const Key('sheet_surface_about'),
+              color: AppColors.surface,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              clipBehavior: Clip.antiAlias,
+              child: SafeArea(
+                top: false,
+                child: SingleChildScrollView(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
                   child: Column(
@@ -1202,7 +1290,35 @@ class MoreScreenState extends State<MoreScreen> {
                         key: const Key('btn_ver_google_play'),
                         contentPadding: EdgeInsets.zero,
                         leading: const Icon(Icons.shop_outlined, color: AppColors.primaryDark),
-                        title: const Text('Ver en Google Play', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                        title: Row(
+                          children: [
+                            const Flexible(
+                              child: Text(
+                                'Ver en Google Play',
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (_cachedUpdateInfo?.hasUpdate == true) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary,
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                child: const Text(
+                                  'Actualizar',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
                         subtitle: Text(
                           'Actualizaciones, reseñas · v$_currentAppVersion',
                           style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
@@ -1211,6 +1327,24 @@ class MoreScreenState extends State<MoreScreen> {
                         onTap: () {
                           Navigator.pop(ctx);
                           _abrirGooglePlay();
+                        },
+                      ),
+                      const Divider(height: 1, color: AppColors.border),
+                      ListTile(
+                        key: const Key('btn_comprobar_actualizaciones'),
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.system_update_outlined, color: AppColors.primaryDark),
+                        title: const Text('Comprobar actualizaciones', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                        subtitle: Text(
+                          _cachedUpdateInfo?.hasUpdate == true
+                              ? 'Versión v${_cachedUpdateInfo!.version} disponible en Google Play'
+                              : 'Verifica si hay una nueva versión disponible',
+                          style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                        ),
+                        trailing: const Icon(Icons.refresh, size: 16, color: AppColors.textSecondary),
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          _comprobarActualizacionesManual();
                         },
                       ),
                       const Divider(height: 1, color: AppColors.border),
@@ -1244,6 +1378,7 @@ class MoreScreenState extends State<MoreScreen> {
                 ),
               ),
             ),
+          ),
           ),
         );
       },

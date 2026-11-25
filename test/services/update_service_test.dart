@@ -107,5 +107,59 @@ void main() {
       expect(result, isNull);
       expect(networkCalled, isFalse);
     });
+
+    test('persists cached payload on HTTP 200 and getCachedUpdateInfo re-evaluates against current version', () async {
+      final mockClient = MockClient((request) async {
+        return http.Response(
+          jsonEncode({
+            'version': '1.6.0',
+            'buildNumber': 750,
+            'isMajor': false,
+            'releaseNotes': 'Duplicar gasto y mejoras.',
+            'apkUrl': UpdateService.playStoreWebUrl,
+          }),
+          200,
+        );
+      });
+
+      final updateService = UpdateService(client: mockClient);
+      final live = await updateService.checkForUpdate(
+        force: false,
+        currentVersion: '1.5.0',
+        currentBuildNumber: 739,
+      );
+      expect(live?.hasUpdate, isTrue);
+
+      // Dentro del throttle checkForUpdate devuelve null, pero la caché conserva el resultado
+      final throttled = await updateService.checkForUpdate(
+        force: false,
+        currentVersion: '1.5.0',
+        currentBuildNumber: 739,
+      );
+      expect(throttled, isNull);
+
+      final cachedOld = await updateService.getCachedUpdateInfo(
+        currentVersion: '1.5.0',
+        currentBuildNumber: 739,
+      );
+      expect(cachedOld?.hasUpdate, isTrue);
+      expect(cachedOld?.version, equals('1.6.0'));
+
+      // Al actualizar la app instalada a 1.6.0 (750), la caché reevalúa hasUpdate = false
+      final cachedUpdated = await updateService.getCachedUpdateInfo(
+        currentVersion: '1.6.0',
+        currentBuildNumber: 750,
+      );
+      expect(cachedUpdated?.hasUpdate, isFalse);
+    });
+
+    test('dismissBanner tracks dismissal per version+buildNumber', () async {
+      final updateService = UpdateService();
+      expect(await updateService.isBannerDismissed('1.6.0', 750), isFalse);
+
+      await updateService.dismissBanner('1.6.0', 750);
+      expect(await updateService.isBannerDismissed('1.6.0', 750), isTrue);
+      expect(await updateService.isBannerDismissed('1.6.1', 751), isFalse);
+    });
   });
 }

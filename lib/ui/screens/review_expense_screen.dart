@@ -37,6 +37,7 @@ class ReviewExpenseScreen extends StatefulWidget {
   final File? imageFile;
   final GeminiExtractionResult? extractedData;
   final GastoModel? existingGasto;
+  final GastoModel? templateGasto;
   final int? queueItemId;
   final DateTime? currentDate;
 
@@ -45,6 +46,7 @@ class ReviewExpenseScreen extends StatefulWidget {
     this.imageFile,
     this.extractedData,
     this.existingGasto,
+    this.templateGasto,
     this.queueItemId,
     this.currentDate,
   }) : super(key: key);
@@ -231,6 +233,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
   bool _hasUnsavedData() {
     if (_isSaving) return false;
     if (widget.existingGasto != null) return _isDirty();
+    if (widget.templateGasto != null) return _isDirty();
     if (widget.queueItemId != null) return _isDirty();
 
     final total = tryParseAmount(_totalOriginalCtrl.text, isPrice: false) ?? 0.0;
@@ -245,7 +248,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
 
   Future<void> _cargarTasasChips(String fecha) async {
     final requestId = ++_tasaRequestId;
-    final today = DateTime.now().toIso8601String().substring(0, 10);
+    final today = DateFormatter.toIsoDate(_effectiveReferenceDate);
     double tUsd;
     double tEur;
     double tUsdt;
@@ -325,23 +328,27 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
   void initState() {
     super.initState();
     final settings = Provider.of<SettingsProvider>(context, listen: false);
+    final GastoModel? sourceGasto = widget.existingGasto ?? widget.templateGasto;
+    final bool isDuplicate = widget.existingGasto == null && widget.templateGasto != null;
 
-    final double? existingTasaUsdt = widget.existingGasto?.tasaUsdt;
+    final double? existingTasaUsdt = isDuplicate ? null : widget.existingGasto?.tasaUsdt;
     final double defaultUsdt = (existingTasaUsdt != null && existingTasaUsdt > 0)
         ? existingTasaUsdt
         : settings.tasaCambioVesUsdt;
     _tasaUsdtCtrl = TextEditingController(text: defaultUsdt > 0 ? defaultUsdt.toStringAsFixed(2) : '');
 
-    final double? existingTasaEur = widget.existingGasto?.tasaEur;
+    final double? existingTasaEur = isDuplicate ? null : widget.existingGasto?.tasaEur;
     final double defaultEur = (existingTasaEur != null && existingTasaEur > 0)
         ? existingTasaEur
         : settings.tasaCambioVesEur;
     _tasaEurCtrl = TextEditingController(text: defaultEur > 0 ? defaultEur.toStringAsFixed(2) : '');
 
-    if (widget.existingGasto != null) {
-      final gasto = widget.existingGasto!;
+    if (sourceGasto != null) {
+      final gasto = sourceGasto;
       _comercioCtrl = TextEditingController(text: gasto.comercio);
-      _selectedFecha = gasto.fecha;
+      _selectedFecha = isDuplicate
+          ? DateFormatter.toIsoDate(_effectiveReferenceDate)
+          : gasto.fecha;
 
       final String fuente = gasto.fuenteTasaCambio ?? '';
       final bool isIndexedEur = gasto.moneda == 'VES' &&
@@ -367,8 +374,6 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
           tasa = (gasto.totalUsdDisplay * tasa) / gasto.totalOriginalDisplay;
         }
       }
-      _tasaCambioCtrl = TextEditingController(text: tasa.toStringAsFixed(2));
-      _fuenteTasa = gasto.fuenteTasaCambio ?? 'Tasa histórica del gasto';
 
       if (isIndexedBcv || isIndexedUsdt) {
         _selectedMoneda = isIndexedEur ? 'EUR' : 'USD';
@@ -376,22 +381,11 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
             ? MetodoLiquidacionUsd.pagadoEnBsUsdt
             : MetodoLiquidacionUsd.pagadoEnBsBcv;
         final double indexedAmount = isIndexedUsdt
-            ? (gasto.totalUsdtDisplay ?? (gasto.moneda == 'USD' ? gasto.totalUsdDisplay : 0.0))
+            ? (gasto.totalUsdtDisplay ?? gasto.totalUsdDisplay)
             : (isIndexedEur && tasa > 0
                 ? (gasto.totalOriginalDisplay / tasa)
                 : gasto.totalUsdDisplay);
         _totalOriginalCtrl = TextEditingController(text: _formatDouble(indexedAmount));
-        _totalBsManualCtrl = TextEditingController(text: gasto.totalOriginalDisplay.toStringAsFixed(2));
-        _bolivaresAjustadosManualmente = true;
-        _totalUsdCtrl = TextEditingController(text: gasto.totalUsdDisplay.toStringAsFixed(2));
-        if (isIndexedEur) {
-          _tasaEurFecha = tasa > 0 ? tasa : null;
-        } else {
-          _tasaUsdFecha = tasa > 0 ? tasa : null;
-        }
-        if (gasto.tasaUsdt != null && gasto.tasaUsdt! > 0) {
-          _tasaUsdtFecha = gasto.tasaUsdt;
-        }
 
         final double rateForItems = isIndexedUsdt
             ? ((gasto.tasaUsdt != null && gasto.tasaUsdt! > 0)
@@ -402,33 +396,131 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         _items = gasto.items.map((it) {
           final usdPrice = rateForItems > 0 ? (it.precioUnitarioDisplay / rateForItems) : it.precioUnitarioDisplay;
           final usdTotal = rateForItems > 0 ? (it.totalDisplay / rateForItems) : it.totalDisplay;
+          if (isDuplicate) {
+            return ItemGastoModel(
+              descripcion: it.descripcion,
+              cantidad: it.cantidad,
+              precioUnitario: (usdPrice * 100).round(),
+              total: (usdTotal * 100).round(),
+              categoria: it.categoria,
+              origenCategoria: it.origenCategoria,
+            );
+          }
           return it.copyWith(
             precioUnitario: (usdPrice * 100).round(),
             total: (usdTotal * 100).round(),
           );
         }).toList();
+
+        if (isDuplicate) {
+          final double tasaHoy = isIndexedEur
+              ? (settings.tasaCambioVesEur > 0 ? settings.tasaCambioVesEur : settings.tasaCambioVesUsd)
+              : (isIndexedUsdt
+                  ? (settings.tasaCambioVesUsdt > 0 ? settings.tasaCambioVesUsdt : settings.tasaCambioVesUsd)
+                  : settings.tasaCambioVesUsd);
+          _tasaCambioCtrl = TextEditingController(text: tasaHoy.toStringAsFixed(2));
+          _fuenteTasa = 'Buscando tasa de la fecha...';
+          _bolivaresAjustadosManualmente = false;
+          final double bsHoy = indexedAmount * (tasaHoy > 0 ? tasaHoy : 1.0);
+          _totalBsManualCtrl = TextEditingController(text: bsHoy > 0 ? bsHoy.toStringAsFixed(2) : '');
+          final double usdHoy;
+          if (isIndexedEur) {
+            final eurToUsd = (settings.tasaCambioVesUsd > 0 && tasaHoy > 0)
+                ? (tasaHoy / settings.tasaCambioVesUsd)
+                : 1.0;
+            usdHoy = indexedAmount * eurToUsd;
+          } else if (isIndexedUsdt) {
+            usdHoy = settings.tasaCambioVesUsd > 0 ? (bsHoy / settings.tasaCambioVesUsd) : indexedAmount;
+          } else {
+            usdHoy = indexedAmount;
+          }
+          _totalUsdCtrl = TextEditingController(text: usdHoy > 0 ? usdHoy.toStringAsFixed(2) : '');
+          _tasaUsdFecha = settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : null;
+          _tasaEurFecha = settings.tasaCambioVesEur > 0 ? settings.tasaCambioVesEur : null;
+          _tasaUsdtFecha = settings.tasaCambioVesUsdt > 0 ? settings.tasaCambioVesUsdt : null;
+        } else {
+          _tasaCambioCtrl = TextEditingController(text: tasa.toStringAsFixed(2));
+          _fuenteTasa = gasto.fuenteTasaCambio ?? 'Tasa histórica del gasto';
+          _totalBsManualCtrl = TextEditingController(text: gasto.totalOriginalDisplay.toStringAsFixed(2));
+          _bolivaresAjustadosManualmente = true;
+          _totalUsdCtrl = TextEditingController(text: gasto.totalUsdDisplay.toStringAsFixed(2));
+          if (isIndexedEur) {
+            _tasaEurFecha = tasa > 0 ? tasa : null;
+          } else {
+            _tasaUsdFecha = tasa > 0 ? tasa : null;
+          }
+          if (gasto.tasaUsdt != null && gasto.tasaUsdt! > 0) {
+            _tasaUsdtFecha = gasto.tasaUsdt;
+          }
+        }
       } else {
         _selectedMoneda = gasto.moneda;
-        _items = List.from(gasto.items);
+        _items = isDuplicate
+            ? gasto.items
+                .map((it) => ItemGastoModel(
+                      descripcion: it.descripcion,
+                      cantidad: it.cantidad,
+                      precioUnitario: it.precioUnitario,
+                      total: it.total,
+                      categoria: it.categoria,
+                      origenCategoria: it.origenCategoria,
+                    ))
+                .toList()
+            : List.from(gasto.items);
         _totalOriginalCtrl = TextEditingController(text: _formatDouble(gasto.totalOriginalDisplay));
-        _totalBsManualCtrl = TextEditingController(text: gasto.totalOriginalDisplay.toStringAsFixed(2));
-        _totalUsdCtrl = TextEditingController(text: gasto.totalUsdDisplay.toStringAsFixed(2));
-        if (gasto.moneda == 'EUR') {
-          _tasaEurFecha = tasa > 0 ? tasa : null;
-        } else {
-          _tasaUsdFecha = tasa > 0 ? tasa : null;
-        }
-        if (gasto.tasaUsdt != null && gasto.tasaUsdt! > 0) {
-          _tasaUsdtFecha = gasto.tasaUsdt;
-        }
 
         if (gasto.moneda == 'USD' || gasto.moneda == 'EUR') {
           _metodoLiquidacionUsd = MetodoLiquidacionUsd.pagadoEnDivisa;
         } else {
           _metodoLiquidacionUsd = MetodoLiquidacionUsd.pagadoEnBsBcv;
         }
+
+        if (isDuplicate) {
+          final double tasaHoy = _selectedMoneda == 'EUR'
+              ? (settings.tasaCambioVesEur > 0 ? settings.tasaCambioVesEur : settings.tasaCambioVesUsd)
+              : settings.tasaCambioVesUsd;
+          _tasaCambioCtrl = TextEditingController(text: tasaHoy.toStringAsFixed(2));
+          _fuenteTasa = 'Buscando tasa de la fecha...';
+          _bolivaresAjustadosManualmente = false;
+          final double origVal = gasto.totalOriginalDisplay;
+          final double bsHoy = _selectedMoneda == 'VES'
+              ? origVal
+              : (origVal * (tasaHoy > 0 ? tasaHoy : 1.0));
+          _totalBsManualCtrl = TextEditingController(text: bsHoy > 0 ? bsHoy.toStringAsFixed(2) : '');
+          final double usdHoy;
+          if (_selectedMoneda == 'VES') {
+            usdHoy = tasaHoy > 0 ? (origVal / tasaHoy) : origVal;
+          } else if (_selectedMoneda == 'EUR') {
+            final eurToUsd = (settings.tasaCambioVesUsd > 0 && tasaHoy > 0)
+                ? (tasaHoy / settings.tasaCambioVesUsd)
+                : 1.0;
+            usdHoy = origVal * eurToUsd;
+          } else {
+            usdHoy = origVal;
+          }
+          _totalUsdCtrl = TextEditingController(text: usdHoy > 0 ? usdHoy.toStringAsFixed(2) : '');
+          _tasaUsdFecha = settings.tasaCambioVesUsd > 0 ? settings.tasaCambioVesUsd : null;
+          _tasaEurFecha = settings.tasaCambioVesEur > 0 ? settings.tasaCambioVesEur : null;
+          _tasaUsdtFecha = settings.tasaCambioVesUsdt > 0 ? settings.tasaCambioVesUsdt : null;
+        } else {
+          _tasaCambioCtrl = TextEditingController(text: tasa.toStringAsFixed(2));
+          _fuenteTasa = gasto.fuenteTasaCambio ?? 'Tasa histórica del gasto';
+          _totalBsManualCtrl = TextEditingController(text: gasto.totalOriginalDisplay.toStringAsFixed(2));
+          _totalUsdCtrl = TextEditingController(text: gasto.totalUsdDisplay.toStringAsFixed(2));
+          if (gasto.moneda == 'EUR') {
+            _tasaEurFecha = tasa > 0 ? tasa : null;
+          } else {
+            _tasaUsdFecha = tasa > 0 ? tasa : null;
+          }
+          if (gasto.tasaUsdt != null && gasto.tasaUsdt! > 0) {
+            _tasaUsdtFecha = gasto.tasaUsdt;
+          }
+        }
       }
       _monedaItems = _selectedMoneda;
+      if (isDuplicate) {
+        _actualizarTasaPorFecha(_selectedFecha, esRellenoInicial: true);
+      }
     } else {
       final data = widget.extractedData;
       final rawComercio = data?.comercio.trim() ?? '';
@@ -894,7 +986,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
 
   Future<void> _actualizarTasaPorFecha(String fecha, {bool esRellenoInicial = false}) async {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
-    final today = DateTime.now().toIso8601String().substring(0, 10);
+    final today = DateFormatter.toIsoDate(_effectiveReferenceDate);
     final isToday = fecha.isEmpty || fecha == today;
     setState(() {
       _fuenteTasa = 'Buscando tasa del $fecha...';
@@ -919,7 +1011,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         if (_tasaEurFecha != null && _tasaEurFecha! > 0) {
           _tasaEurCtrl.text = _tasaEurFecha!.toStringAsFixed(2);
         }
-        final today = DateTime.now().toIso8601String().substring(0, 10);
+        final today = DateFormatter.toIsoDate(_effectiveReferenceDate);
         final isToday = fecha == today;
         final parsed = DateTime.tryParse(fecha) ?? DateTime.now();
         final now = DateTime.now();
@@ -1946,8 +2038,68 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         }
       } else {
         final isEdit = widget.existingGasto != null;
-        if (matchedIds.isNotEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
+        final isDuplicateSave = widget.existingGasto == null && widget.templateGasto != null;
+        int? duplicatedId;
+        if (isDuplicateSave) {
+          for (final g in gastoProvider.gastos) {
+            if (g.uuid == nuevoGasto.uuid && g.id != null) {
+              duplicatedId = g.id;
+              break;
+            }
+          }
+        }
+
+        final rootMessenger = ScaffoldMessenger.of(context);
+        if (isDuplicateSave && matchedIds.isEmpty) {
+          final int? undoGastoId = duplicatedId;
+          bool undoHandled = false;
+          rootMessenger.showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Gasto duplicado con éxito',
+                      style: TextStyle(color: Colors.black),
+                    ),
+                  ),
+                  if (undoGastoId != null)
+                    InkWell(
+                      key: const Key('snackbar_undo_duplicate'),
+                      onTap: () {
+                        if (undoHandled) return;
+                        undoHandled = true;
+                        rootMessenger.hideCurrentSnackBar();
+                        gastoProvider.eliminarGasto(undoGastoId);
+                      },
+                      borderRadius: BorderRadius.circular(6),
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.undo_rounded, size: 15, color: Colors.black87),
+                            SizedBox(width: 4),
+                            Text(
+                              'Deshacer',
+                              style: TextStyle(
+                                color: Colors.black87,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              backgroundColor: AppColors.primaryDark,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        } else if (matchedIds.isNotEmpty) {
+          rootMessenger.showSnackBar(
             SnackBar(
               content: Text(
                 isEdit
@@ -1959,7 +2111,7 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
             ),
           );
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
+          rootMessenger.showSnackBar(
             SnackBar(
               content: Text(
                 isEdit ? 'Gasto actualizado con éxito' : 'Gasto registrado con éxito',
@@ -3232,13 +3384,15 @@ class _ReviewExpenseScreenState extends State<ReviewExpenseScreen> {
         title: Text(
           widget.existingGasto != null
               ? 'Editar gasto'
-              : (isQueueItem && readyCount > 1
-                  ? (widget.imageFile != null
-                      ? 'Revisar Factura ($readyCount en cola)'
-                      : 'Revisar Gasto ($readyCount en cola)')
-                  : (widget.queueItemId != null || widget.imageFile != null
-                      ? (widget.imageFile != null ? 'Revisar Factura' : 'Revisar Gasto')
-                      : 'Registrar gasto')),
+              : (widget.templateGasto != null
+                  ? 'Duplicar gasto'
+                  : (isQueueItem && readyCount > 1
+                      ? (widget.imageFile != null
+                          ? 'Revisar Factura ($readyCount en cola)'
+                          : 'Revisar Gasto ($readyCount en cola)')
+                      : (widget.queueItemId != null || widget.imageFile != null
+                          ? (widget.imageFile != null ? 'Revisar Factura' : 'Revisar Gasto')
+                          : 'Registrar gasto'))),
         ),
         actions: [
           if (widget.existingGasto == null)

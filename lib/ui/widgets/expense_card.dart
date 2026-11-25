@@ -33,6 +33,7 @@ class ExpenseCard extends StatefulWidget {
   final GastoModel gasto;
   final VoidCallback onDelete;
   final VoidCallback onEdit;
+  final VoidCallback? onDuplicate;
   final String monedaPrincipal;
   final bool initiallyExpanded;
   final bool showDirectItemBreakdown;
@@ -46,6 +47,7 @@ class ExpenseCard extends StatefulWidget {
     required this.gasto,
     required this.onDelete,
     required this.onEdit,
+    this.onDuplicate,
     this.monedaPrincipal = 'USD',
     this.initiallyExpanded = false,
     this.showDirectItemBreakdown = false,
@@ -387,6 +389,9 @@ class _ExpenseCardState extends State<ExpenseCard> {
                     color: AppColors.surface,
                     onSelected: (val) {
                       if (val == 'edit') widget.onEdit();
+                      if (val == 'duplicate' && widget.onDuplicate != null) {
+                        widget.onDuplicate!();
+                      }
                       if (val == 'view_receipt' && widget.gasto.rutaFotoLocal != null && widget.gasto.rutaFotoLocal!.isNotEmpty) {
                         ReceiptViewerDialog.show(
                           context,
@@ -409,6 +414,18 @@ class _ExpenseCardState extends State<ExpenseCard> {
                           ],
                         ),
                       ),
+                      if (widget.onDuplicate != null)
+                        const PopupMenuItem(
+                          key: Key('expense_card_menu_duplicate'),
+                          value: 'duplicate',
+                          child: Row(
+                            children: [
+                              Icon(Icons.copy_rounded, color: AppColors.primaryDark, size: 18),
+                              SizedBox(width: 8),
+                              Text('Duplicar', style: TextStyle(color: AppColors.textPrimary)),
+                            ],
+                          ),
+                        ),
                       if (widget.gasto.rutaFotoLocal != null && widget.gasto.rutaFotoLocal!.isNotEmpty)
                         const PopupMenuItem(
                           value: 'view_receipt',

@@ -16,7 +16,31 @@ import 'package:gastoscan_ai/providers/settings_provider.dart';
 import 'package:gastoscan_ai/providers/chat_provider.dart';
 import 'package:gastoscan_ai/services/connectivity_service.dart';
 import 'package:gastoscan_ai/services/profile_avatar_service.dart';
+import 'package:gastoscan_ai/services/update_service.dart';
 import 'package:gastoscan_ai/ui/screens/more_screen.dart';
+
+class _FakeUpdateService extends UpdateService {
+  final UpdateInfo? cachedInfo;
+  final UpdateInfo? liveInfo;
+
+  _FakeUpdateService({this.cachedInfo, this.liveInfo});
+
+  @override
+  Future<UpdateInfo?> getCachedUpdateInfo({
+    String? currentVersion,
+    int? currentBuildNumber,
+  }) async =>
+      cachedInfo;
+
+  @override
+  Future<UpdateInfo?> checkForUpdate({
+    bool force = false,
+    Duration throttleDuration = const Duration(hours: 4),
+    String? currentVersion,
+    int? currentBuildNumber,
+  }) async =>
+      liveInfo;
+}
 
 final Uint8List _kAvatarTestPngBytes = Uint8List.fromList(<int>[
   0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
@@ -830,6 +854,49 @@ void main() {
       expect(avatar.backgroundImage, isNull);
       expect(find.descendant(of: find.byKey(const Key('more_account_avatar')), matching: find.text('U')), findsOneWidget);
       expect(httpCalls, 0);
+    });
+
+    testWidgets('REL-04: muestra píldora de nueva versión desde caché y abre diálogo al comprobar actualizaciones', (tester) async {
+      setLargeViewport(tester);
+      final fakeInfo = UpdateInfo(
+        version: '1.6.0',
+        buildNumber: 750,
+        releaseNotes: 'Duplicar gasto disponible.',
+        apkUrl: UpdateService.playStoreWebUrl,
+        hasUpdate: true,
+      );
+      final fakeUpdateService = _FakeUpdateService(
+        cachedInfo: fakeInfo,
+        liveInfo: fakeInfo,
+      );
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<GastoProvider>.value(value: gastoProvider),
+            ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+            ChangeNotifierProvider<ScanQueueProvider>.value(value: scanQueueProvider),
+            ChangeNotifierProvider<ChatProvider>(create: (_) => ChatProvider()),
+          ],
+          child: MaterialApp(
+            home: MoreScreen(updateService: fakeUpdateService),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('more_update_available_pill')), findsOneWidget);
+      expect(find.text('Nueva v1.6.0'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('more_group_about')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('btn_comprobar_actualizaciones')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('btn_comprobar_actualizaciones')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Actualización lista'), findsOneWidget);
+      expect(find.text('Duplicar gasto disponible.'), findsOneWidget);
     });
   });
 }

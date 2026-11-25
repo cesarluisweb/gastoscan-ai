@@ -15,6 +15,7 @@ import '../../services/notification_service.dart';
 import '../../services/document_scanner_service.dart';
 import '../../services/sync_coordinator.dart';
 import '../../services/sync_service.dart';
+import '../../services/update_service.dart';
 import 'dashboard_screen.dart';
 import 'expense_history_screen.dart';
 import 'analysis_screen.dart';
@@ -181,6 +182,63 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       SyncCoordinator.instance.request(SyncTrigger.arranque);
     } catch (e) {
       debugPrint('MainScreen: Error en arranque de SyncCoordinator: $e');
+    }
+
+    // 5. Verificación silenciosa de nueva versión disponible (REL-04, aviso único no bloqueante)
+    final updateService = UpdateService();
+    try {
+      final updateInfo = await updateService.checkForUpdate() ?? await updateService.getCachedUpdateInfo();
+      if (updateInfo != null &&
+          updateInfo.hasUpdate &&
+          mounted &&
+          !(await updateService.isBannerDismissed(updateInfo.version, updateInfo.buildNumber))) {
+        await updateService.dismissBanner(updateInfo.version, updateInfo.buildNumber);
+        if (mounted) {
+          final messenger = ScaffoldMessenger.of(context);
+          bool updateTapped = false;
+          messenger.showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Nueva versión v${updateInfo.version} disponible en Google Play.',
+                      style: const TextStyle(color: Colors.black),
+                    ),
+                  ),
+                  InkWell(
+                    key: const Key('snackbar_update_now'),
+                    onTap: () {
+                      if (updateTapped) return;
+                      updateTapped = true;
+                      messenger.hideCurrentSnackBar();
+                      UpdateService.openDownloadUrl(updateInfo.apkUrl);
+                    },
+                    borderRadius: BorderRadius.circular(6),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      child: Text(
+                        'Actualizar',
+                        style: TextStyle(
+                          color: Colors.black87,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: AppColors.primary,
+              duration: const Duration(seconds: 6),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('MainScreen: Error verificando actualización: $e');
+    } finally {
+      updateService.dispose();
     }
   }
 

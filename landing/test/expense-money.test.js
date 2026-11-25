@@ -5,6 +5,7 @@ import {
     computeItemCents,
     computeMonthTotals,
     calculateSavingsHealth,
+    buildDuplicateExpensePrefill,
 } from '../src/lib/expense-money.js';
 
 // Tasas canónicas de referencia para las pruebas
@@ -254,4 +255,111 @@ test('Entrega 0: calculateSavingsHealth estados sinMeta, protegida, enRiesgo y c
     });
     assert.equal(comprometida.status, 'comprometida');
     assert.equal(comprometida.disponibleParaGastar, 0);
+});
+
+test('UX-21: buildDuplicateExpensePrefill USD DIVISA conserva monto USD y usa fecha de hoy', () => {
+    const prefill = buildDuplicateExpensePrefill({
+        comercio: 'Comisión App',
+        fecha: '2026-11-03',
+        moneda: 'USD',
+        metodo_liquidacion: 'DIVISA',
+        total_original: 250,
+        total_usd: 250,
+        tasa_cambio: 40.0,
+        categoria: 'Servicios',
+        items: [{ descripcion: 'Comisión', cantidad: 1, precio_unitario: 250, total: 250, categoria: 'Servicios' }],
+    }, { todayCaracasIso: '2026-11-25' });
+
+    assert.equal(prefill.__isExpensePrefill, true);
+    assert.equal(prefill.isDuplicate, true);
+    assert.equal(prefill.fecha, '2026-11-25');
+    assert.equal(prefill.moneda, 'USD');
+    assert.equal(prefill.metodoLiquidacion, 'DIVISA');
+    assert.equal(prefill.totalOriginalFixed, '2.50');
+    assert.equal(prefill.items[0].precio, '2.50');
+    assert.equal(prefill.items[0].total, '2.50');
+});
+
+test('UX-21: buildDuplicateExpensePrefill USD indexado BS_BCV reconstruye monto e ítems en USD', () => {
+    const prefill = buildDuplicateExpensePrefill({
+        comercio: 'Supermercado',
+        fecha: '2026-11-03',
+        moneda: 'VES',
+        total_original: 40000,
+        total_usd: 1000,
+        tasa_cambio: 40.0,
+        fuente_tasa_cambio: 'BCV (Pago en Bs. indexado a USD)',
+        items: [{ descripcion: 'Arroz', cantidad: 2, precio_unitario: 20000, total: 40000, categoria: 'Alimentación' }],
+    }, { todayCaracasIso: '2026-11-25' });
+
+    assert.equal(prefill.moneda, 'USD');
+    assert.equal(prefill.metodoLiquidacion, 'BS_BCV');
+    assert.equal(prefill.totalOriginalFixed, '10.00');
+    assert.equal(prefill.items[0].precio, '5.00');
+    assert.equal(prefill.items[0].total, '10.00');
+});
+
+test('UX-21: buildDuplicateExpensePrefill USD indexado BS_USDT reconstruye monto e ítems en USDT', () => {
+    const prefill = buildDuplicateExpensePrefill({
+        comercio: 'Tienda Tech',
+        fecha: '2026-11-03',
+        moneda: 'VES',
+        total_original: 60000,
+        total_usd: 1500,
+        total_usdt: 1000,
+        tasa_cambio: 40.0,
+        tasa_usdt: 60.0,
+        fuente_tasa_cambio: 'Binance P2P (Pago en Bs. indexado a USDT)',
+        items: [{ descripcion: 'Cable', cantidad: 1, precio_unitario: 60000, total: 60000, categoria: 'Otros' }],
+    }, { todayCaracasIso: '2026-11-25' });
+
+    assert.equal(prefill.moneda, 'USD');
+    assert.equal(prefill.metodoLiquidacion, 'BS_USDT');
+    assert.equal(prefill.totalOriginalFixed, '10.00');
+    assert.equal(prefill.items[0].total, '10.00');
+});
+
+test('UX-21: buildDuplicateExpensePrefill EUR indexado BS_BCV y bloqueo de BS_USDT en EUR', () => {
+    const prefillIdx = buildDuplicateExpensePrefill({
+        comercio: 'Farmacia',
+        fecha: '2026-11-02',
+        moneda: 'VES',
+        total_original: 45000,
+        total_eur: 1000,
+        tasa_cambio: 45.0,
+        fuente_tasa_cambio: 'BCV (Pago en Bs. indexado a EUR)',
+        items: [{ descripcion: 'Vitamina', cantidad: 1, precio_unitario: 45000, total: 45000, categoria: 'Salud' }],
+    }, { todayCaracasIso: '2026-11-25' });
+
+    assert.equal(prefillIdx.moneda, 'EUR');
+    assert.equal(prefillIdx.metodoLiquidacion, 'BS_BCV');
+    assert.equal(prefillIdx.totalOriginalFixed, '10.00');
+    assert.equal(prefillIdx.items[0].total, '10.00');
+
+    const prefillGuard = buildDuplicateExpensePrefill({
+        comercio: 'Prueba EUR',
+        moneda: 'EUR',
+        metodo_liquidacion: 'BS_USDT',
+        total_original: 1200,
+    }, { todayCaracasIso: '2026-11-25' });
+
+    assert.equal(prefillGuard.moneda, 'EUR');
+    assert.equal(prefillGuard.metodoLiquidacion, 'BS_BCV');
+});
+
+test('UX-21: buildDuplicateExpensePrefill VES puro conserva monto nominal en bolívares', () => {
+    const prefill = buildDuplicateExpensePrefill({
+        comercio: 'Pasaje',
+        fecha: '2026-11-01',
+        moneda: 'VES',
+        total_original: 20000,
+        total_usd: 500,
+        tasa_cambio: 40.0,
+        fuente_tasa_cambio: 'BCV',
+        items: [{ descripcion: 'Pasaje', cantidad: 1, precio_unitario: 20000, total: 20000, categoria: 'Transporte' }],
+    }, { todayCaracasIso: '2026-11-25' });
+
+    assert.equal(prefill.moneda, 'VES');
+    assert.equal(prefill.totalOriginalFixed, '200.00');
+    assert.equal(prefill.items[0].total, '200.00');
 });

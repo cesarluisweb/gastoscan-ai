@@ -185,6 +185,19 @@ jobs:
           content = content.replace("targetSdk = flutter.targetSdkVersion", "targetSdk = 36")
           with open("android/app/build.gradle.kts", "w") as f:
               f.write(content)
+          # REL-03: declarar android.hardware.screen.portrait como no obligatorio para Play Console
+          manifest_path = "android/app/src/main/AndroidManifest.xml"
+          with open(manifest_path, "r") as f:
+              manifest = f.read()
+          portrait_tag = "<uses-feature android:name=\"android.hardware.screen.portrait\" android:required=\"false\"/>"
+          if "android.hardware.screen.portrait" not in manifest:
+              anchor = "<uses-feature android:name=\"android.hardware.camera\" android:required=\"false\"/>"
+              if anchor in manifest:
+                  manifest = manifest.replace(anchor, anchor + "\n    " + portrait_tag, 1)
+              else:
+                  manifest = manifest.replace("<application", "    " + portrait_tag + "\n\n    <application", 1)
+              with open(manifest_path, "w") as f:
+                  f.write(manifest)
           '
           cat android/app/proguard-rules.pro
           cat android/app/build.gradle.kts

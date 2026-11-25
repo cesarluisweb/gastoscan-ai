@@ -407,6 +407,21 @@ class ExpenseHistoryScreenState extends State<ExpenseHistoryScreen> {
                                 }
                               });
                             },
+                            onDuplicate: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ReviewExpenseScreen(
+                                    templateGasto: gasto,
+                                  ),
+                                ),
+                              ).then((_) {
+                                if (_isSearching) {
+                                  _allGastos = null;
+                                  _cargarTodosLosGastos();
+                                }
+                              });
+                            },
                             onDelete: () async {
                               final confirm = await showDialog<bool>(
                                 context: context,

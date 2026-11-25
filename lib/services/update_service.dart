@@ -71,13 +71,94 @@ class UpdateInfo {
 class UpdateService {
   static const String versionCheckUrl = 'https://rindemas.cesarluis.com/version.json';
   static const String prefLastCheckTime = 'update_last_check_timestamp';
+  static const String prefCachedUpdatePayload = 'update_cached_payload';
+  static const String prefDismissedBannerKey = 'update_dismissed_banner_key';
 
   final http.Client _client;
+  final bool _ownsClient;
 
-  UpdateService({http.Client? client}) : _client = client ?? http.Client();
+  UpdateService({http.Client? client})
+      : _client = client ?? http.Client(),
+        _ownsClient = client == null;
+
+  void dispose() {
+    if (_ownsClient) {
+      _client.close();
+    }
+  }
+
+  Future<(String, int)> _resolveCurrentVersion({
+    String? currentVersion,
+    int? currentBuildNumber,
+  }) async {
+    int activeBuildNumber = currentBuildNumber ?? 0;
+    String activeVersion = currentVersion ?? '';
+
+    if (currentBuildNumber == null || currentVersion == null) {
+      try {
+        final packageInfo = await PackageInfo.fromPlatform();
+        activeBuildNumber = int.tryParse(packageInfo.buildNumber) ?? activeBuildNumber;
+        activeVersion = packageInfo.version.isNotEmpty ? packageInfo.version : activeVersion;
+      } catch (e) {
+        debugPrint('Error obteniendo PackageInfo: $e');
+      }
+    }
+    return (activeVersion, activeBuildNumber);
+  }
+
+  /// Lee el último resultado guardado en caché sin realizar llamadas de red,
+  /// reevaluando `hasUpdate` frente a la versión instalada actualmente.
+  Future<UpdateInfo?> getCachedUpdateInfo({
+    String? currentVersion,
+    int? currentBuildNumber,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(prefCachedUpdatePayload);
+      if (raw == null || raw.isEmpty) return null;
+
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map<String, dynamic>) return null;
+
+      final (activeVersion, activeBuildNumber) = await _resolveCurrentVersion(
+        currentVersion: currentVersion,
+        currentBuildNumber: currentBuildNumber,
+      );
+
+      return UpdateInfo.fromJson(
+        decoded,
+        currentVersion: activeVersion,
+        currentBuildNumber: activeBuildNumber,
+      );
+    } catch (e) {
+      debugPrint('Error leyendo caché de actualización: $e');
+      return null;
+    }
+  }
+
+  static String _bannerVersionKey(String version, int buildNumber) => '$version+$buildNumber';
+
+  Future<bool> isBannerDismissed(String version, int buildNumber) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString(prefDismissedBannerKey) == _bannerVersionKey(version, buildNumber);
+    } catch (e) {
+      debugPrint('Error consultando estado de aviso de versión: $e');
+      return false;
+    }
+  }
+
+  Future<void> dismissBanner(String version, int buildNumber) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(prefDismissedBannerKey, _bannerVersionKey(version, buildNumber));
+    } catch (e) {
+      debugPrint('Error guardando descarte de aviso de versión: $e');
+    }
+  }
 
   /// Comprueba si existe una versión superior en el servidor.
-  /// Si [force] es false, puede omitirse si se verificó hace muy poco (ej. menos de 6 horas)
+  /// Si [force] es false, puede omitirse si se verificó hace muy poco (ej. menos de 4 horas)
   /// en comprobaciones automáticas de inicio para optimizar datos de red.
   Future<UpdateInfo?> checkForUpdate({
     bool force = false,
@@ -103,19 +184,12 @@ class UpdateService {
       if (response.statusCode == 200) {
         await prefs.setInt(prefLastCheckTime, now);
         final Map<String, dynamic> data = jsonDecode(response.body);
+        await prefs.setString(prefCachedUpdatePayload, response.body);
 
-        int activeBuildNumber = currentBuildNumber ?? 0;
-        String activeVersion = currentVersion ?? '';
-
-        if (currentBuildNumber == null || currentVersion == null) {
-          try {
-            final packageInfo = await PackageInfo.fromPlatform();
-            activeBuildNumber = int.tryParse(packageInfo.buildNumber) ?? activeBuildNumber;
-            activeVersion = packageInfo.version.isNotEmpty ? packageInfo.version : activeVersion;
-          } catch (e) {
-            debugPrint('Error obteniendo PackageInfo: $e');
-          }
-        }
+        final (activeVersion, activeBuildNumber) = await _resolveCurrentVersion(
+          currentVersion: currentVersion,
+          currentBuildNumber: currentBuildNumber,
+        );
 
         final updateInfo = UpdateInfo.fromJson(
           data,

@@ -308,3 +308,103 @@ export function calculateSavingsHealth({
         status,
     };
 }
+
+/**
+ * Construye un prefill limpio para duplicar un gasto en #modal-expense (UX-21).
+ * Mantiene paridad estricta con ReviewExpenseScreen(templateGasto: ...):
+ * - Fecha de hoy (hora VET), sin heredar tasa histórica ni bolívares bloqueados.
+ * - Divisa / indexado conserva monto nominal en divisa; VES puro conserva bolívares.
+ * - Bloquea BS_USDT cuando la moneda es EUR.
+ */
+export function buildDuplicateExpensePrefill(gasto, { todayCaracasIso }) {
+    const safeGasto = gasto && typeof gasto === 'object' ? gasto : {};
+    const fuente = String(safeGasto.fuente_tasa_cambio || '');
+    const monedaDoc = String(safeGasto.moneda || 'USD');
+
+    const esIndexadoEur = monedaDoc === 'VES' &&
+        (fuente.includes('indexado a EUR') || fuente === 'EUR_BCV_INDEXADO');
+    const esIndexadoUsdt = monedaDoc === 'VES' && !esIndexadoEur &&
+        (fuente.includes('indexado a USDT') || fuente.includes('Binance P2P') || fuente === 'USDT_INDEXADO');
+    const esIndexadoBcv = monedaDoc === 'VES' && !esIndexadoEur && !esIndexadoUsdt &&
+        (fuente.includes('indexado a USD') || fuente.includes('BCV (Pago en Bs.'));
+    const esIndexado = esIndexadoEur || esIndexadoBcv || esIndexadoUsdt;
+
+    const totalOrigDoc = Number(safeGasto.total_original || 0) / 100.0;
+    const totalUsdDoc = Number(safeGasto.total_usd || 0) / 100.0;
+    const totalUsdtDoc = Number(safeGasto.total_usdt || 0) / 100.0;
+    const totalEurDoc = Number(safeGasto.total_eur || 0) / 100.0;
+    const tasaCambioDoc = Number(safeGasto.tasa_cambio || 0);
+    const tasaUsdtDoc = Number(safeGasto.tasa_usdt || 0);
+    const tasaEurDoc = Number(safeGasto.tasa_eur || 0);
+
+    let moneda = 'USD';
+    let metodoLiquidacion = 'DIVISA';
+    let nominalTotal = totalOrigDoc;
+    let rateConversion = 1.0;
+
+    if (esIndexadoEur) {
+        moneda = 'EUR';
+        metodoLiquidacion = 'BS_BCV';
+        const tasaHist = tasaCambioDoc > 0 ? tasaCambioDoc : tasaEurDoc;
+        nominalTotal = tasaHist > 0 && totalOrigDoc > 0
+            ? (totalOrigDoc / tasaHist)
+            : totalEurDoc;
+        rateConversion = nominalTotal > 0 && totalOrigDoc > 0
+            ? (totalOrigDoc / nominalTotal)
+            : (tasaHist > 0 ? tasaHist : 1.0);
+    } else if (esIndexadoBcv) {
+        moneda = 'USD';
+        metodoLiquidacion = 'BS_BCV';
+        nominalTotal = totalUsdDoc > 0
+            ? totalUsdDoc
+            : (tasaCambioDoc > 0 ? totalOrigDoc / tasaCambioDoc : 0);
+        rateConversion = nominalTotal > 0 && totalOrigDoc > 0
+            ? (totalOrigDoc / nominalTotal)
+            : (tasaCambioDoc > 0 ? tasaCambioDoc : 1.0);
+    } else if (esIndexadoUsdt) {
+        moneda = 'USD';
+        metodoLiquidacion = 'BS_USDT';
+        nominalTotal = totalUsdtDoc > 0 ? totalUsdtDoc : totalUsdDoc;
+        const tasaHist = tasaUsdtDoc > 0 ? tasaUsdtDoc : tasaCambioDoc;
+        rateConversion = nominalTotal > 0 && totalOrigDoc > 0
+            ? (totalOrigDoc / nominalTotal)
+            : (tasaHist > 0 ? tasaHist : 1.0);
+    } else {
+        moneda = ['USD', 'VES', 'USDT', 'EUR'].includes(monedaDoc) ? monedaDoc : 'USD';
+        const rawLiq = safeGasto.metodo_liquidacion || ((moneda === 'USD' || moneda === 'EUR') ? 'DIVISA' : 'DIVISA');
+        metodoLiquidacion = (moneda === 'EUR' && rawLiq === 'BS_USDT') ? 'BS_BCV' : rawLiq;
+        nominalTotal = totalOrigDoc;
+        rateConversion = 1.0;
+    }
+
+    const rawItems = Array.isArray(safeGasto.items) ? safeGasto.items : [];
+    const items = rawItems.map((it) => {
+        const cant = Number(it.cantidad) > 0 ? Number(it.cantidad) : 1;
+        const totRaw = Number(it.total || 0) / 100.0;
+        const prRaw = Number(it.precio_unitario || 0) / 100.0;
+        const tot = esIndexado && rateConversion > 0 ? (totRaw / rateConversion) : totRaw;
+        const pr = esIndexado && rateConversion > 0
+            ? (prRaw / rateConversion)
+            : (prRaw > 0 ? prRaw : (cant > 0 ? tot / cant : tot));
+        return {
+            descripcion: String(it.descripcion || ''),
+            cantidad: cant,
+            precio: pr.toFixed(2),
+            total: tot.toFixed(2),
+            categoria: String(it.categoria || safeGasto.categoria || 'Otros'),
+            categoriaManual: true,
+        };
+    });
+
+    return {
+        __isExpensePrefill: true,
+        isDuplicate: true,
+        comercio: String(safeGasto.comercio || ''),
+        fecha: String(todayCaracasIso || ''),
+        moneda,
+        metodoLiquidacion,
+        totalOriginal: nominalTotal,
+        totalOriginalFixed: nominalTotal > 0 ? nominalTotal.toFixed(2) : '',
+        items,
+    };
+}

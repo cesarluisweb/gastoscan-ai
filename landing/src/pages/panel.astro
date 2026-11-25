@@ -829,7 +829,7 @@ import AiChatDrawer from '../components/AiChatDrawer.astro';
             updateDoc, 
             enableIndexedDbPersistence 
         } from 'firebase/firestore';
-        import { computeExpenseTotals, computeItemCents, computeMonthTotals, calculateSavingsHealth } from '../lib/expense-money.js';
+        import { computeExpenseTotals, computeItemCents, computeMonthTotals, calculateSavingsHealth, buildDuplicateExpensePrefill } from '../lib/expense-money.js';
         import { clasificarCategoria, sincronizarCategoriaImpuestos, isTaxDescription, normalizar as normalizarTexto } from '../lib/category-classifier.js';
         import {
             normalizeProductText,
@@ -2077,6 +2077,9 @@ import AiChatDrawer from '../components/AiChatDrawer.astro';
                         <button class="btn-edit-expense text-[11px] font-semibold text-slate-500 hover:text-slate-900 transition-colors flex items-center gap-1" data-id="${escapeHtml(gasto.id)}">
                             ✏️ Editar
                         </button>
+                        <button class="btn-duplicate-expense text-[11px] font-semibold text-slate-600 hover:text-slate-900 transition-colors flex items-center gap-1" data-id="${escapeHtml(gasto.id)}">
+                            ⧉ Duplicar
+                        </button>
                         <button class="btn-delete-expense text-[11px] font-semibold text-slate-400 hover:text-rose-600 transition-colors" data-id="${escapeHtml(gasto.id)}">
                             Eliminar factura
                         </button>
@@ -2089,6 +2092,19 @@ import AiChatDrawer from '../components/AiChatDrawer.astro';
                     const targetGasto = currentGastos.find(g => g.id === id);
                     if (targetGasto) {
                         openEditExpenseModal(targetGasto);
+                    }
+                });
+
+                // Listener para duplicar (UX-21)
+                card.querySelector('.btn-duplicate-expense')?.addEventListener('click', (e) => {
+                    const id = (e.currentTarget).getAttribute('data-id');
+                    const targetGasto = currentGastos.find(g => g.id === id);
+                    if (targetGasto) {
+                        openExpenseModal(
+                            buildDuplicateExpensePrefill(targetGasto, {
+                                todayCaracasIso: getVenezuelaTodayIso(),
+                            })
+                        );
                     }
                 });
 
@@ -3091,7 +3107,11 @@ import AiChatDrawer from '../components/AiChatDrawer.astro';
             activeQueueItemId = isValidPrefill && prefill.queueItemId ? String(prefill.queueItemId) : null;
 
             const modalTitle = document.getElementById('modal-expense-title');
-            if (modalTitle) modalTitle.textContent = isValidPrefill ? "Revisar y guardar gasto" : "Registrar gasto";
+            if (modalTitle) {
+                modalTitle.textContent = isValidPrefill
+                    ? (prefill.isDuplicate ? "Duplicar gasto" : "Revisar y guardar gasto")
+                    : "Registrar gasto";
+            }
             if (btnSaveExpenseModal) {
                 const sp = btnSaveExpenseModal.querySelector('span');
                 if (sp) sp.textContent = "Guardar Gasto";

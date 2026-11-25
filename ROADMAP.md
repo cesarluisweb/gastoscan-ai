@@ -49,6 +49,8 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 ---
 
 ## Fase 5: Marketing, Lanzamiento y Tracción (En Progreso 🔄)
+- `REL-03` **Advertencia `android.hardware.screen.portrait` y salto a `v1.6.0` (Actualización #2 Prueba Cerrada):** `Implementada 🔧` Inyección idempotente de `<uses-feature android:name="android.hardware.screen.portrait" android:required="false" />` en `AndroidManifest.xml` desde `.github/workflows/build_apk.yml` sobre `v1.6.0+5`.
+- `REL-04` **Infraestructura de Aviso de Actualización sin Bugs de *Throttle*:** `Implementada 🔧` Caché persistente en `UpdateService`, aviso único no bloqueante en `MainScreen`, píldora y `Comprobar actualizaciones` en `Más`, y `Cache-Control: no-cache` para `/version.json` en `firebase.json` (`version.json` se mantiene en `1.0.0 / 1` hasta Producción abierta por `ci-distribucion.md:30`).
 - **Código QR de Descarga en Landing (Desktop):** `Pendiente` Incorporar tarjeta con código QR dinámico en `rindemas.cesarluis.com` para escanear e instalar desde PC.
 - **Correo de Bienvenida Automatizado:** `Pendiente` Disparar correo de bienvenida y guía de primeros pasos al vincular cuenta de Google.
 - **Ejecución del Plan de Crecimiento (Primeros 100 Usuarios):** `Pendiente` Según `docs/DOC_BITACORA_MARKETING.md` y `.agents/skills/growth-first-100-users/SKILL.md`:
@@ -71,10 +73,15 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 - `UX-17` **Botón y Flujo de Referidos Simple ("Compartir Rinde Más por WhatsApp"):** `Pendiente` *(Diferida hasta tener el enlace público de Google Play Store)*. Planificado para App (`MoreScreen`), Panel Web y Landing + meta tags Open Graph. Ver [`docs/DOC_PLAN_UX17_COMPARTIR_WHATSAPP.md`](docs/DOC_PLAN_UX17_COMPARTIR_WHATSAPP.md).
 - `UX-18` **Evolución Mensual en Gráfica Única (Pantalla Análisis):** `Pendiente` Gráfica consolidada de los últimos 6 a 12 meses en una sola vista.
 - `UX-19` **(Idea en evaluación) Simplificación del Registro Manual:** `Pendiente` Evaluar agilización de gastos sueltos sin lista de ítems detallados, preservando el método de liquidación (`MetodoLiquidacion`) y chips frecuentes (`UX-15`).
+- `UX-21` **Duplicar Gasto en Móvil y Panel Web (`ReviewExpenseScreen` + `panel.astro`):** `Implementada 🔧` Acción **Duplicar** en menú `⋮` de `ExpenseCard` (Inicio/Historial) y tarjeta web, abriendo `ReviewExpenseScreen` / `#modal-expense` con fecha y tasas de hoy, sin foto heredada, nuevo `uuid` y `SnackBar` con **Deshacer**. Ver [`docs/DOC_UX21_DUPLICAR_GASTO.md`](docs/DOC_UX21_DUPLICAR_GASTO.md).
 
 ### Bloque C: Percepción con IA
 - `AI-07` **Refinamiento de UX en Chat del Asistente (Sugerencias Verticales y Botón Dinámico):** `Pendiente` Sugerencias apiladas verticalmente (2 a 3 opciones) y botón dinámico micrófono/enviar estilo WhatsApp.
 - `AI-09` **Detección Preventiva de Fotos y Facturas Duplicadas:** `Pendiente` Control en dos capas para evitar duplicados en la cola de escaneo (por hash SHA-256) y alertas semánticas en revisión/guardado (mismo comercio, fecha y monto) con opción de descarte inmediato. Ver [`docs/DOC_PLAN_DETECCION_DUPLICADOS.md`](docs/DOC_PLAN_DETECCION_DUPLICADOS.md).
+- `AI-11` **Evolución del Asistente IA Contextual (3 Etapas):** `Pendiente` Mejora progresiva del Asistente priorizando primero datos locales reales y luego contexto venezolano verificado (sin búsqueda web en vivo en el chat, sin bonos al inicio y sin D1/KV/RAG en v1):
+  - **Etapa 0 (Inteligencia local — primera prioridad):** Unificar señales `AI-08` entre Inicio y Chat normal con selector determinista por intención, coherencia fiscal `AI-06` en `top_productos_mes`, `contexto_temporal` en hora VE (`UTC-4`) y guarda `proyeccion_confiable` sobre `SavingsHealthSnapshot`. Auditoría y diseño en [`docs/DOC_PLAN_ASISTENTE_CONTEXTUAL_E0.md`](docs/DOC_PLAN_ASISTENTE_CONTEXTUAL_E0.md).
+  - **Etapa 1 (Contexto venezolano estructurado — tras validar Etapa 0):** Activar primero solo en `insight_inicio` y `Consultar ->` mediante JSON versionado en el Worker (`hecho`, `orientacion`, `fuente` y `vigente_hasta` obligatorios), fechas calculables en código + circulares anuales (SUDEBAN, calendario escolar, temporadas comerciales) y selector determinista con pruebas unitarias.
+  - **Etapa 2 (Investigadora asistida — post-Google Play con usuarios activos):** GitHub Action semanal sobre fuentes oficiales fijas (sin bonos ni rumores) que abre Pull Request para revisión humana antes de publicar.
 - `AI-11` **Alertas Automáticas de Reportes en `ai_reports`:** `Pendiente` Notificar a César cuando llegue un nuevo reporte de respuesta de IA sin salir de Firebase Spark (Opción A: `POST` al Cloudflare Worker `rindemas-gateway` con aviso instantáneo por Telegram o Resend; Opción B: GitHub Action diario consultando `ai_reports` sin tocar la app).
 
 ### Bloque D: Nuevas Herramientas Financieras
@@ -86,11 +93,12 @@ Este documento centraliza las iniciativas y mejoras activas de **Rinde Más**, o
 - `RADAR-01` **Radar de Precios e Historial de Variación:** `Pendiente` Pantalla dedicada de consulta sobre el historial de compras recientes (últimos 30–60 días) comparando precios unitarios en USD para reportar variaciones porcentuales y el mejor comercio registrado.
 
 ### Bloque E: Respaldo y Soberanía de Datos (Local-First Backup)
-- `BACKUP-01` **Exportación e Importación Completa con Comprobantes (.zip):** `Pendiente` Empaquetado de SQLite y `recibo_*.jpg` con restauración transaccional sin colisiones.
+- `BACKUP-01` **Exportación e Importación Completa con Comprobantes (.zip):** `Pendiente` Empaquetado JSON versionado (`gastos`, `items_gasto`, `categorias`, `presupuestos_mensuales`, `presupuestos_categorias_mensuales`, `shopping_items`) y `recibo_*.jpg` con restauración transaccional idempotente sin colisiones y política explícita de `synced` / `firestore_id`. Requiere aprobar `archive` y selector de archivos en `pubspec.yaml` (post-07/12).
 - `BACKUP-02` **Importación Masiva y Migración desde Otras Apps (MyMoney Pro / CSV / Excel):** `Pendiente` Plantilla oficial, detector de MyMoney Pro, cálculo histórico de tasas BCV desde 2023 y vista previa por lotes.
 
 ### Bloque F: Retención, Hábitos y Gamificación
 - `RET-01` **Sistema de Hábitos Financieros, Rachas Protegidas y Puntos Rinde:** `Pendiente` Puntos por registro/consulta (tope 5/día), botón *"Hoy no gasté nada 👍"*, *Streak Freeze*, puesta al día semanal y canje por días Pro o tokens de escaneo.
+- `RET-02` **Notificación Diaria Automática de Tasa de Cambio (L–V 8:30 AM VET):** `Pendiente de validación 🧪` *(CI verde: run `45450349971`, build `737`, SHA `47f661f`, Worker `0a387358-367f-4425-91da-07cdc4a87077`)*. Cron en Cloudflare Worker (`30 12 * * 1-5`) que consulta `USD BCV` y `USDT P2P`, deduplica en D1 y envía push vía FCM HTTP v1 al tema `tasa_diaria` con switch propio en `Más → Preferencias y datos → Notificaciones y avisos` y apertura directa de `CurrencyCalculatorScreen`. Ver [`docs/DOC_NOTIFICACION_TASA_DIARIA.md`](docs/DOC_NOTIFICACION_TASA_DIARIA.md).
 
 ---
 

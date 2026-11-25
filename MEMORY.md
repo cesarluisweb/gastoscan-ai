@@ -8,10 +8,13 @@
 - **Mapa de código:** `docs/CODE_MAP.md` se regenera con `node scripts/gen_code_map.js`; el hook de pre-commit lo actualiza.
 
 ## Tareas en Curso
+- **UX-21 + REL-04 + REL-03 (`v1.6.0`):** `Implementada 🔧` (móvil + panel web `35/35` tests + `UpdateService` caché + `portrait` en CI; `docs/DOC_UX21_DUPLICAR_GASTO.md`). `version.json` sigue en `1.0.0/1` hasta Producción abierta (`ci-distribucion.md:30`).
+- **RET-02 (Notificación diaria de tasa de cambio L–V 8:30 AM VET):** `Pendiente de validación 🧪` (CI verde: run `45450349971`, build `737`, SHA `47f661f`, `v1.6.0`; Worker `0a387358-367f-4425-91da-07cdc4a87077`, 22/22 tests; `docs/DOC_NOTIFICACION_TASA_DIARIA.md`). Pendiente `FIREBASE_SERVICE_ACCOUNT_JSON` y validar en dispositivo.
 - **Resiliencia Offline (avatar caché, tasas auto-refresco y Dictar gasto offline):** `Implementada 🔧` en `af9d076` (`docs/DOC_RESILIENCIA_OFFLINE.md`); `wait_ci.ps1` reportó `SIN RUN`, pendiente verificar CI y validar en dispositivo. Reglas graduadas a `.agents/rules/resiliencia-offline.md`, `ia-ocr-voz.md`, `dinero-datos.md` y `revisor-adversarial/SKILL.md`.
 - **AI-09 (detección fotos y facturas duplicadas):** Planificada en `ROADMAP.md` y documentada en `docs/DOC_PLAN_DETECCION_DUPLICADOS.md`. Pendiente definición de esquema SQLite (`v20`, candidato a agrupar `tasa_iva_pct INTEGER NULL` si hace falta).
+- **AI-11 (Asistente IA Contextual — Etapas 0, 1 y 2):** Planificada en `ROADMAP.md`; auditoría y diseño de Etapa 0 en `docs/DOC_PLAN_ASISTENTE_CONTEXTUAL_E0.md` (sin código aún). Hallazgos: Chat normal sin `hiddenSignals`, `top_productos_mes` sin normalización fiscal `AI-06`/orden `total_usd`, proyección enviada en días 1–3 y `brecha_capturada` residual en web `ai-assistant.js:456`.
 - **UX-17 (compartir Rinde Más por WhatsApp):** Planificada en `docs/DOC_PLAN_UX17_COMPARTIR_WHATSAPP.md` (App, Panel Web, Landing + Open Graph); diferida hasta tener el enlace público de Google Play.
-- **Pendientes de cierre administrativo:** firma P0 (rotar upload key tras aprobar Producción), solicitud de Producción en Google Play y `wrangler deploy` aparte para `'R'` (8%) en Worker.
+- **Pendientes de cierre administrativo:** firma P0 (rotar upload key tras aprobar Producción) y **Google Play Producción 3.ª ventana (21/11–06/12/2026): AAB `739 (1.5.0)` en envío; próxima actualización `REL-03` (~30/11) en `1.6.0` inyecta `android.hardware.screen.portrait` `required="false"` en CI**. *(Worker `'R'` 8% + cron `tasa_diaria` ya desplegados en `0a387358`).*
 
 ## Completadas
 - **AI-10 (reporte funcional de respuestas de IA):** ✅ Confirmada en Firebase por César (21/11/2026, APK build 731, reglas build 6, web build 34). Colección `ai_reports`, purga al borrar cuenta. Doc: `docs/DOC_REPORTE_RESPUESTAS_IA.md`.
@@ -25,8 +28,6 @@
 - **Resaltado de búsqueda en ExpenseCard:** ✅ build 708 (`0a37f8d`, run `43606952757`). Subraya y enmarca ítems y comercios coincidentes.
 - **Validadas en dispositivo por César (13/11/2026):** ✅ `UX-14` (build 704, `873367e`), Selector de Mes en AppBar (build 649), Fase 5 Web (build 20), Comparador de Precios v2 (build 700), MoreScreen `UI-02` (build 703) y Arquitectura de Arranque Local-First.
 - **Limpieza de ROADMAP.md y reorganización de docs:** ✅ builds 701 y 702 (`856aa67`, `e827d86`). Raíz con 6 `.md`, histórico en `docs/archive/2026-Q4/`, `docs/INDEX.md` y `docs/CODE_MAP.md`.
-- **Dictado por voz:** ✅ build 692, `1fdd815`.
-- **RM-03 E0-02, E0-03 y E0-04:** ✅ build 678.
 - **Reproducibilidad:** ✅ Flutter `3.47.9` y `pubspec.lock` versionado.
 
 ## Producción

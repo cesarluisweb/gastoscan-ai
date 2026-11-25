@@ -573,6 +573,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     );
                   },
+                  onDuplicate: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ReviewExpenseScreen(
+                          templateGasto: gasto,
+                        ),
+                      ),
+                    );
+                  },
                   onDelete: () async {
                     final confirm = await showDialog<bool>(
                       context: context,
