@@ -1,6 +1,6 @@
 # Auditoría y Diseño Técnico: Asistente IA Contextual — Etapa 0 (`AI-11`)
 
-> **Estado:** `Implementada 🔧` (código y pruebas listas; pendiente CI verde y validación en dispositivo físico).  
+> **Estado:** `Pendiente de validación 🧪` (CI en verde: APK build `743` run `45884706786`, Web build `37` run `45884706743`, Reglas build `10` run `45884707429`, SHA `1cc1772`; falta prueba manual de 6 prompts en dispositivo físico por César).  
 > **Alcance:** Etapa 0 — Inteligencia financiera local (unificación de señales `AI-08`, coherencia fiscal `AI-06`, contexto temporal determinista, selector de señales y paridad en Worker + Panel Web).  
 > **Etapas posteriores (diseño separado):** Etapa 1 (contexto venezolano estructurado en `insight_inicio` + `Consultar ->`) y Etapa 2 (investigadora asistida con fuentes oficiales fijas + PR, post-Google Play).
 
@@ -206,7 +206,22 @@ Sin modificar `/analyze-receipt` ni `modo: "dictado_gasto"`, en el prompt del Ch
    - Exclusión intacta de ítems fiscales (`isTaxItem`) en `top_productos_mes` y `gastos_hormiga`.
 
 ### 9.2 Validación Manual Contra Gemini Real (6 Prompts Post-Deploy)
-Ejecutar en dispositivo físico tras CI verde:
+**Build y artefactos verificados en CI:**
+- **Commit SHA:** `1cc1772`
+- **APK Android:** Build `743` (run `45884706786`, `conclusion: success`)
+- **Panel Web:** Build `37` (run `45884706743`, `conclusion: success`, `https://rindemas.cesarluis.com/panel`)
+- **Reglas Firestore:** Build `10` (run `45884707429`, `conclusion: success`)
+- **Cloudflare Worker (`rindemas-gateway`):** Desplegado en producción (`Version ID: 9782e792-cda7-4d08-894d-d1b89697bb1e`) con `buildChatSystemPrompt` (Etapa 0) y `quotaDayFor()`.
+
+**Rutas y controles reales verificados en `lib/ui/`:**
+- **Acceso al Chat desde cualquier pestaña principal:** Botón `✨` en AppBar abre `ChatScreen` en [`lib/ui/screens/main_screen.dart:776`](../lib/ui/screens/main_screen.dart#L776).
+- **Acceso desde tarjeta Asistente IA en Inicio:** Botón `Consultar ->` (`Key('ai_insight_card_consultar_btn')`) en [`lib/ui/widgets/ai_insight_card.dart:224`](../lib/ui/widgets/ai_insight_card.dart#L224) abre `ChatScreen` (`línea 96`).
+- **Controles de entrada en Chat (`lib/ui/screens/chat_screen.dart`):**
+  - Chips de sugerencias: `Key('chat_suggestion_chip_$index')` (`línea 1458`).
+  - Campo de texto del chat: `Key('chat_input_textfield')` (`línea 1498`).
+  - Botón enviar: `Icon(Icons.send)` (`línea 1539`).
+
+**Pruebas en dispositivo físico (*Rinde Más Dev*):**
 1. *"¿Cuánto gasté en farmacia?"* → respuesta directa sin consejos no pedidos.
 2. *"¿Qué gastos pequeños están sumando más?"* → cita el monto y comercio real de `gastos_hormiga` sin mencionar IVA.
 3. *"¿Dónde me salió más barato [producto frecuente]?"* → cita precios reales del comparador de 60 días.
