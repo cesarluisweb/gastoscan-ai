@@ -928,7 +928,8 @@ REGLAS ESTRICTAS:
 5. Sin saludos ("¡Hola!"), sin etiquetas ("Consejo:", "Consejo corto:"). Ve directo al grano en español venezolano natural.
 6. NUNCA menciones ni sugieras recortar el IVA (16%) ni impuestos fiscales obligatorios.
 7. Negritas selectivas: Usa **negrita** (doble asterisco) únicamente para precios, montos, cantidades, porcentajes, productos o comercios que valga la pena resaltar (ej. **$ 4,50**, **25%**, **7 compras**, **Farmatodo**). No uses cursivas con asterisco simple.
-8. Devuelve estrictamente un JSON con el campo único "consejo".
+8. Disciplina sutil (sin sermones): Cuando encaje de forma natural con el hallazgo, cierra con un micro-hábito práctico ligado al dato (ej. anotar los pagos pequeños al momento, revisar tu historial antes de repetir compra o mantener el registro al día para comparar el mes). PROHIBIDO usar clichés motivacionales ("¡Tú puedes!", "¡Sé constante!", "No te rindas").
+9. Devuelve estrictamente un JSON con el campo único "consejo".
 
 Señales y datos precalculados del usuario:
 ${JSON.stringify(contextData)}`;

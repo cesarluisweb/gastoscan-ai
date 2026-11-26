@@ -133,6 +133,21 @@ class AiInsightService {
       text:
           'Salir al mercado con tu **lista de compras** evita gastos impulsivos y viajes extra. Puedes dictármela en el chat y Rinde Más tachará automáticamente cada artículo cuando escanees o registres la factura.',
     ),
+    AiDashboardInsight(
+      source: 'curated',
+      text:
+          'Registrar cada gasto **al momento** toma menos de **10 segundos** y evita que se te olviden los pagos chicos. Cuando dejas pasar varios días, se pierde justo el rastro de las fugas.',
+    ),
+    AiDashboardInsight(
+      source: 'curated',
+      text:
+          'No hace falta tener un mes perfecto: basta con dedicar **un minuto antes de dormir** a anotar lo que salió hoy. La claridad sobre tu quincena llega por constancia, no por hacer cuentas largas.',
+    ),
+    AiDashboardInsight(
+      source: 'curated',
+      text:
+          'Los gastos de **\$ 1 o \$ 2** son los primeros que uno deja por fuera, y también los que más descuadran el presupuesto. Anotar **incluso lo pequeño** es lo que hace útiles tus reportes.',
+    ),
   ];
 
   /// Calcula el índice de día calendario del año de forma inmune a cambios de horario de verano (DST).

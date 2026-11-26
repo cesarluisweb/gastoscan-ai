@@ -806,5 +806,32 @@ void main() {
       );
       expect(sigDelim1, isNot(sigDelim2));
     });
+
+    test('kCuratedValueInsights includes subtle discipline tips, rotates deterministically, and respects terminology', () {
+      const tips = AiInsightService.kCuratedValueInsights;
+      expect(tips.length, 8);
+
+      final seenTexts = <String>{};
+      for (int day = 1; day <= tips.length; day++) {
+        final insight = AiInsightService.getCuratedInsightForDate(DateTime(2026, 1, day));
+        expect(insight.source, 'curated');
+        expect(insight.text.trim().length, greaterThanOrEqualTo(100));
+        expect(insight.text.toLowerCase(), isNot(contains('ticket')));
+        seenTexts.add(insight.text);
+      }
+      expect(seenTexts.length, tips.length);
+      expect(
+        tips.any((t) => t.text.contains('al momento') && t.text.contains('10 segundos')),
+        isTrue,
+      );
+      expect(
+        tips.any((t) => t.text.contains('un minuto antes de dormir')),
+        isTrue,
+      );
+      expect(
+        tips.any((t) => t.text.contains('incluso lo pequeño')),
+        isTrue,
+      );
+    });
   });
 }

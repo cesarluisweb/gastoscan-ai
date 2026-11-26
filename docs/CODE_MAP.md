@@ -12,10 +12,10 @@
 | `data/` | 12 | 5310 |
 | `domain/` | 11 | 2355 |
 | `providers/` | 4 | 2198 |
-| `services/` | 17 | 7147 |
+| `services/` | 17 | 7162 |
 | `ui/` | 31 | 22451 |
 | `(raiz)/` | 2 | 106 |
-| **Total** | **85** | **40525** |
+| **Total** | **85** | **40540** |
 
 ## core/
 
@@ -76,7 +76,7 @@
 
 | Archivo | Líneas | Símbolos | Pruebas |
 |---|---|---|---|
-| `lib/services/ai_insight_service.dart` | 1160 | `AiHiddenSignals`, `AiDashboardInsight`, `AiInsightService` | `dashboard_screen_test.dart`, `ai_insight_service_test.dart`, `ai_insight_card_test.dart` |
+| `lib/services/ai_insight_service.dart` | 1175 | `AiHiddenSignals`, `AiDashboardInsight`, `AiInsightService` | `dashboard_screen_test.dart`, `ai_insight_service_test.dart`, `ai_insight_card_test.dart` |
 | `lib/services/ai_report_service.dart` | 129 | `AiReportException`, `AiReportService` | `chat_screen_test.dart`, `ai_report_service_test.dart` |
 | `lib/services/category_classifier_service.dart` | 283 | `CategoryClassifierService` | `category_classifier_service_test.dart` |
 | `lib/services/connectivity_service.dart` | 86 | `ConnectivityService` | `scan_queue_provider_test.dart`, `settings_provider_rate_cache_test.dart`, `main_screen_launch_action_test.dart`, +5 |
