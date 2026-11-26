@@ -883,37 +883,13 @@ Si un dato no es legible o no aplica, coloca null. Si es un comprobante de Pago 
   }
 }
 
-// Controlador: Chat y Asistente Financiero / Voz
-async function handleChatAnalyst(request, geminiKey, isCustomKey = false) {
-  try {
-    const data = await readJsonBodyWithLimit(request, MAX_CHAT_BODY_BYTES);
-    const { messages, contextData, modo } = data;
-    const isDictadoGasto = modo === "dictado_gasto";
-    const isInsightInicio = modo === "insight_inicio";
-    const defaultMoneda = (contextData && contextData.moneda_principal) ? contextData.moneda_principal : "USD";
-    const fechaReferenciaHoy = (contextData && typeof contextData.fecha_hoy === "string" && contextData.fecha_hoy.trim())
-      ? contextData.fecha_hoy.trim()
-      : getVenezuelaDateString();
+// Constructor puro del prompt de sistema de /chat-analyst (exportado para pruebas deterministas)
+function buildChatSystemPrompt({ modo, contextData, defaultMoneda = "USD", fechaReferenciaHoy = quotaDayFor() }) {
+  const isDictadoGasto = modo === "dictado_gasto";
+  const isInsightInicio = modo === "insight_inicio";
 
-    if (!messages || !Array.isArray(messages)) {
-      return new Response(JSON.stringify({ error: "Faltan los mensajes o formato inválido." }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
-    }
-
-    if (messages.length > 50) {
-      return new Response(JSON.stringify({ error: "El historial de mensajes excede el límite permitido." }), {
-        status: 413,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
-    }
-
-    let modelIndex = 0;
-
-    let systemPrompt;
-    if (isInsightInicio) {
-      systemPrompt = `Eres el analista financiero inteligente de Rinde Más en Venezuela.
+  if (isInsightInicio) {
+    return `Eres el analista financiero inteligente de Rinde Más en Venezuela.
 Tu tarea es descubrir UN SOLO hallazgo de alto valor que el usuario NO ve a simple vista en su pantalla de Inicio y redactar un consejo práctico de 2 a 4 líneas (entre 160 y 300 caracteres).
 
 REGLAS ESTRICTAS:
@@ -933,8 +909,10 @@ REGLAS ESTRICTAS:
 
 Señales y datos precalculados del usuario:
 ${JSON.stringify(contextData)}`;
-    } else if (isDictadoGasto) {
-      systemPrompt = `Eres un extractor experto de gastos estructurados para la app Rinde Más en Venezuela.
+  }
+
+  if (isDictadoGasto) {
+    return `Eres un extractor experto de gastos estructurados para la app Rinde Más en Venezuela.
 Tu ÚNICA tarea es extraer con total fidelidad los datos de las compras o gastos dictados por el usuario y llamar obligatoriamente a la función "registrar_gasto".
 
 REGLAS DE EXTRACCIÓN DE PRODUCTOS (ESTRICTO):
@@ -973,8 +951,9 @@ REGLAS DE EXTRACCIÓN DE PRODUCTOS (ESTRICTO):
    - Si dice un día de la semana o fecha explícita (ej. "el lunes", "el 3 de noviembre"): calcula la fecha en formato YYYY-MM-DD tomando como ancla "${fechaReferenciaHoy}". NUNCA uses fechas futuras ni años distintos sin confirmación explícita.
    - En fechas numéricas latinoamericanas (DD/MM/YYYY), interpreta siempre el día primero (03/11/2026 -> 2026-11-03).
 `;
-    } else {
-      systemPrompt = `Eres un asistente financiero y de compras experto y amigable para un usuario en Venezuela dentro de la app Rinde Más.
+  }
+
+  return `Eres un asistente financiero y de compras experto y amigable para un usuario en Venezuela dentro de la app Rinde Más.
 Tu objetivo es analizar los gastos mensuales del usuario, responder sus dudas con base en los datos proporcionados y gestionar su lista de compras.
 Da respuestas cortas, directas y prácticas en español venezolano natural.
 Evita usar saludos largos o excesos de formalidad, ve directo al grano.
@@ -1025,6 +1004,12 @@ Regla para registrar gastos por voz:
 - Si el usuario menciona o dicta compras realizadas en MÚLTIPLES comercios, establecimientos o lugares distintos (ejemplo: "compré en la farmacia tal cosa en tanto y compré en el supermercado tal cosa en tanto"): DEBES desglosar cada compra por separado en el array "gastos". Cada elemento en "gastos" debe contener su propio comercio, fecha, moneda, monto_original, total_usd, metodo_liquidacion (si aplica), categoría adecuada e items.
 - Si el usuario menciona múltiples productos dentro del MISMO comercio o compra general, regístralo como un solo gasto con los productos en "items".
 
+REGLAS DE CONTEXTO TEMPORAL Y SEÑALES (ESTRICTO):
+- Usa 'periodo_consultado' como el mes analizado. Si 'contexto_temporal.proyeccion_confiable' es false o 'gasto_proyectado_fin_mes' es null, NUNCA extrapoles ni estimes el cierre del mes; explica con claridad que aún faltan días o compras suficientes (o que el mes ya cerró).
+- Si existe 'comparativa_mes_anterior', aclara que compara del día 1 al 'dia_corte' contra el mismo tramo del mes anterior.
+- Si 'diferencias_precios', 'gastos_hormiga' o 'comparativa_mes_anterior' no están en el JSON, NO inventes porcentajes ni asumas que existen.
+- Si el usuario hizo una consulta puntual (ej. cuánto gastó en una categoría o comercio), responde solo ese dato sin añadir consejos ni alertas no pedidas.
+
 Aquí están los datos financieros del usuario en formato JSON (resumen mensual compacto, totales por categoría en 'totales_categoria', productos más comprados en 'top_productos_mes', compras recientes en 'ultimas_compras', presupuesto y lista de compras):
 ${JSON.stringify(contextData)}
 
@@ -1035,7 +1020,42 @@ Contexto de Lentes Financieros del usuario:
 - 'total_ves': Total acumulado en bolívares.
 Nota de análisis cambiario (ESTRICTO): Los valores 'total_usd_bcv' y 'total_usdt_p2p' son solo dos lentes de visualización del mismo gasto mensual. NUNCA afirmes ni recomiendes por iniciativa propia que el usuario "ahorró dinero pagando en bolívares a tasa BCV en lugar de USDT" ni sugieras "aprovechar la brecha cambiaria". Solo explica la diferencia entre el lente USD BCV y el lente USDT P2P si el usuario te pregunta explícitamente por esa comparativa.
 `;
+}
+
+// Controlador: Chat y Asistente Financiero / Voz
+async function handleChatAnalyst(request, geminiKey, isCustomKey = false) {
+  try {
+    const data = await readJsonBodyWithLimit(request, MAX_CHAT_BODY_BYTES);
+    const { messages, contextData, modo } = data;
+    const isDictadoGasto = modo === "dictado_gasto";
+    const isInsightInicio = modo === "insight_inicio";
+    const defaultMoneda = (contextData && contextData.moneda_principal) ? contextData.moneda_principal : "USD";
+    const fechaReferenciaHoy = (contextData && typeof contextData.fecha_hoy === "string" && contextData.fecha_hoy.trim())
+      ? contextData.fecha_hoy.trim()
+      : quotaDayFor();
+
+    if (!messages || !Array.isArray(messages)) {
+      return new Response(JSON.stringify({ error: "Faltan los mensajes o formato inválido." }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
     }
+
+    if (messages.length > 50) {
+      return new Response(JSON.stringify({ error: "El historial de mensajes excede el límite permitido." }), {
+        status: 413,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    let modelIndex = 0;
+
+    const systemPrompt = buildChatSystemPrompt({
+      modo,
+      contextData,
+      defaultMoneda,
+      fechaReferenciaHoy
+    });
 
     const geminiMessages = [
       { role: "user", parts: [{ text: systemPrompt }] },
@@ -1410,5 +1430,6 @@ export {
   incrementUsage,
   DAILY_UID_LIMIT,
   DAILY_GLOBAL_LIMIT,
-  quotaDayFor
+  quotaDayFor,
+  buildChatSystemPrompt
 };

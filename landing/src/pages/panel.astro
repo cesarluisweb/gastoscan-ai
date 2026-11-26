@@ -4300,6 +4300,14 @@ import AiChatDrawer from '../components/AiChatDrawer.astro';
                 chatInputTextarea.style.height = 'auto';
             }
 
+            let previousUserMessage = '';
+            for (let i = chatMessages.length - 1; i >= 0; i--) {
+                if (chatMessages[i]?.role === 'user' && String(chatMessages[i]?.text || '').trim()) {
+                    previousUserMessage = String(chatMessages[i].text).trim();
+                    break;
+                }
+            }
+
             chatMessages.push({
                 id: `u_${Date.now()}`,
                 role: 'user',
@@ -4334,6 +4342,8 @@ import AiChatDrawer from '../components/AiChatDrawer.astro';
                     selectedYear,
                     selectedMonth,
                     todayCaracasIso,
+                    currentMessage: text,
+                    previousUserMessage,
                 });
                 const payloadMessages = sliceRecentChatMessages(chatMessages, 5);
 

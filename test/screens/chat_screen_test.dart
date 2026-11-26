@@ -11,6 +11,7 @@ import 'package:gastoscan_ai/providers/gasto_provider.dart';
 import 'package:gastoscan_ai/providers/settings_provider.dart';
 import 'package:gastoscan_ai/providers/chat_provider.dart';
 import 'package:gastoscan_ai/services/ai_report_service.dart';
+import 'package:gastoscan_ai/services/chat_context_builder.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:gastoscan_ai/ui/screens/chat_screen.dart';
 
@@ -53,13 +54,21 @@ class FakeSpeechToText extends Fake implements stt.SpeechToText {
 
 class FakeDatabaseHelper extends DatabaseHelper {
   final List<ShoppingItemModel> items = [];
+  List<GastoModel> prevMonthGastos = const [];
+  Map<String, PriceHistory> mockPriceHistory = const {};
+  int getGastosByMonthCalls = 0;
+  int findPriceHistoryCalls = 0;
+
   FakeDatabaseHelper() : super.test();
 
   @override
   Future<List<ShoppingItemModel>> getAllShoppingItems() async => List.from(items);
 
   @override
-  Future<List<GastoModel>> getGastosByMonth(int year, int month) async => const [];
+  Future<List<GastoModel>> getGastosByMonth(int year, int month) async {
+    getGastosByMonthCalls++;
+    return prevMonthGastos;
+  }
 
   @override
   Future<Map<String, PriceHistory>> findPriceHistory(
@@ -68,14 +77,29 @@ class FakeDatabaseHelper extends DatabaseHelper {
     String? comercioActual,
     int diasVentana = 60,
     DateTime? referenceDate,
-  }) async =>
-      const {};
+  }) async {
+    findPriceHistoryCalls++;
+    return mockPriceHistory;
+  }
 }
 
 class FakeGastoProvider extends GastoProvider {
   final List<GastoModel> _mockGastos = [];
+  int? mockSelectedYear;
+  int? mockSelectedMonth;
+
   @override
   List<GastoModel> get gastos => _mockGastos;
+
+  @override
+  int get selectedYear => mockSelectedYear ?? super.selectedYear;
+
+  @override
+  int get selectedMonth => mockSelectedMonth ?? super.selectedMonth;
+
+  @override
+  double get totalMesUsd =>
+      _mockGastos.fold(0.0, (sum, g) => sum + (g.totalUsd / 100.0));
 
   @override
   Future<void> cargarDatos() async {}
@@ -459,9 +483,14 @@ void main() {
       expect(contextData.containsKey('ultimas_compras'), isTrue);
 
       final topProducts = contextData['top_productos_mes'] as List;
-      expect(topProducts.isNotEmpty, isTrue);
-      expect(topProducts.first['producto'], 'Harina PAN');
-      expect(topProducts.first['cantidad'], 3.0);
+      expect(topProducts.length, 2);
+      // Ordenado por impacto en USD (Café $5.00 > Harina PAN $3.00)
+      expect(topProducts.first['producto'], 'Café');
+      expect(topProducts.first['total_usd'], 5.0);
+      expect(topProducts[1]['producto'], 'Harina PAN');
+      expect(topProducts[1]['cantidad'], 3.0);
+      expect(contextData.containsKey('periodo_consultado'), isTrue);
+      expect(contextData.containsKey('moneda_principal'), isTrue);
 
       // Comprobar que no se envió gastos_mes (que consumía miles de tokens redundantes)
       expect(contextData.containsKey('gastos_mes'), isFalse);
@@ -848,6 +877,95 @@ void main() {
 
       expect(find.byKey(const Key('chat_report_error_text')), findsOneWidget);
       expect(find.text('Enviar reporte'), findsOneWidget);
+    });
+
+    testWidgets('Etapa 0: consulta puntual directa evita consultas SQLite de señales ocultas y omite ruido', (tester) async {
+      fakeGastoProvider.gastos.add(
+        GastoModel(
+          id: 1,
+          uuid: 'uuid-direct-1',
+          fecha: '2026-11-10',
+          comercio: 'Panadería Sol',
+          moneda: 'USD',
+          totalOriginal: 500,
+          totalUsd: 500,
+          categoria: 'Alimentación',
+          creadoEn: '2026-11-10T10:00:00Z',
+          items: [
+            ItemGastoModel(descripcion: 'Pan', cantidad: 2, precioUnitario: 250, total: 500, categoria: 'Alimentación'),
+          ],
+        ),
+      );
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), '¿Cuánto gasté en pan?');
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.send));
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(fakeDb.getGastosByMonthCalls, 0);
+      expect(fakeDb.findPriceHistoryCalls, 0);
+      final ctx = fakeGeminiService.lastContextData!;
+      expect(ctx.containsKey('contexto_temporal'), isFalse);
+      expect(ctx.containsKey('comparativa_mes_anterior'), isFalse);
+      expect(ctx.containsKey('diferencias_precios'), isFalse);
+      expect(ctx.containsKey('gastos_hormiga'), isFalse);
+    });
+
+    testWidgets('Etapa 0: chat normal inyecta comparativa_mes_anterior y contexto_temporal ante consulta comparativa', (tester) async {
+      final now = ChatContextBuilder.resolveVenezuelaDate();
+      fakeGastoProvider.mockSelectedYear = now.year;
+      fakeGastoProvider.mockSelectedMonth = now.month;
+      final prevMonth = now.month == 1 ? 12 : now.month - 1;
+      final prevYear = now.month == 1 ? now.year - 1 : now.year;
+      final curDateStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-01';
+      final prevDateStr = '$prevYear-${prevMonth.toString().padLeft(2, '0')}-01';
+
+      fakeDb.prevMonthGastos = [
+        GastoModel(
+          id: 99,
+          uuid: 'uuid-prev-99',
+          fecha: prevDateStr,
+          comercio: 'Unicasa',
+          moneda: 'USD',
+          totalOriginal: 12000,
+          totalUsd: 12000,
+          categoria: 'Alimentación',
+          creadoEn: '${prevDateStr}T10:00:00Z',
+        ),
+      ];
+      fakeGastoProvider.gastos.add(
+        GastoModel(
+          id: 1,
+          uuid: 'uuid-cur-1',
+          fecha: curDateStr,
+          comercio: 'Unicasa',
+          moneda: 'USD',
+          totalOriginal: 4000,
+          totalUsd: 4000,
+          categoria: 'Alimentación',
+          creadoEn: '${curDateStr}T10:00:00Z',
+        ),
+      );
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), '¿Estoy gastando más que el mes pasado?');
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.send));
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(fakeDb.getGastosByMonthCalls, 1);
+      expect(fakeDb.findPriceHistoryCalls, 0);
+      final ctx = fakeGeminiService.lastContextData!;
+      expect(ctx.containsKey('contexto_temporal'), isTrue);
+      expect(ctx.containsKey('comparativa_mes_anterior'), isTrue);
+      expect(ctx.containsKey('diferencias_precios'), isFalse);
     });
   });
 }

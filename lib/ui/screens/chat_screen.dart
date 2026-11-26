@@ -17,6 +17,8 @@ import '../../providers/scan_queue_provider.dart';
 import '../../providers/chat_provider.dart';
 import '../../services/ai_insight_service.dart';
 import '../../services/ai_report_service.dart';
+import '../../services/chat_context_builder.dart';
+import '../../services/chat_signal_selector.dart';
 import '../widgets/voice_expense_sheet.dart';
 import 'review_expense_screen.dart';
 
@@ -148,18 +150,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         debugPrint('ChatScreen: Lista de compras omitida en profundización: $e');
       }
 
-      final Map<String, dynamic> contextData = (gastoProvider != null && settings != null)
-          ? _buildSemanticChatContext(
-              gastoProvider: gastoProvider,
-              settings: settings,
-              shoppingItems: shoppingItems,
-            )
-          : <String, dynamic>{
-              'fecha_hoy': DateTime.now().toIso8601String().substring(0, 10),
-            };
-
+      AiHiddenSignals? hiddenSignals;
       if (gastoProvider != null) {
-        final hiddenSignals = await AiInsightService.computeHiddenSignals(
+        hiddenSignals = await AiInsightService.computeHiddenSignals(
           gastos: gastoProvider.gastos,
           selectedYear: gastoProvider.selectedYear,
           selectedMonth: gastoProvider.selectedMonth,
@@ -167,10 +160,26 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           totalMesUsdt: gastoProvider.totalMesUsdt,
           dbHelper: _dbHelper,
         );
-        if (hiddenSignals.hasAnySignal) {
-          contextData.addAll(hiddenSignals.toJson());
-        }
       }
+
+      if (!mounted) return;
+
+      final Map<String, dynamic> contextData = (gastoProvider != null && settings != null)
+          ? _buildSemanticChatContext(
+              gastoProvider: gastoProvider,
+              settings: settings,
+              shoppingItems: shoppingItems,
+              selection: ChatSignalSelector.select(
+                currentMessage: insightText,
+                forceAllSignals: true,
+              ),
+              hiddenSignals: hiddenSignals,
+            )
+          : <String, dynamic>{
+              'fecha_hoy': ChatContextBuilder.formatIsoDate(
+                ChatContextBuilder.resolveVenezuelaDate(),
+              ),
+            };
 
       final allMsgs = chatProvider.messages;
       final recentMessages = allMsgs.length > 4
@@ -554,94 +563,42 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     required GastoProvider gastoProvider,
     required SettingsProvider settings,
     required List<ShoppingItemModel> shoppingItems,
+    required ChatSignalSelection selection,
+    AiHiddenSignals? hiddenSignals,
   }) {
-    final savingsSnapshot = gastoProvider.savingsSnapshot;
+    return ChatContextBuilder.buildSemanticChatContext(
+      gastos: gastoProvider.gastos,
+      selectedYear: gastoProvider.selectedYear,
+      selectedMonth: gastoProvider.selectedMonth,
+      totalMesUsd: gastoProvider.totalMesUsd,
+      totalMesUsdt: gastoProvider.totalMesUsdt,
+      totalMesVes: gastoProvider.totalMesVes,
+      tasaCambioVesUsd: settings.tasaCambioVesUsd,
+      tasaCambioVesEur: settings.tasaCambioVesEur,
+      tasaCambioVesUsdt: settings.tasaCambioVesUsdt,
+      presupuestoGeneral: gastoProvider.presupuestoGeneral,
+      metaAhorro: gastoProvider.metaAhorro,
+      monedaPresupuesto: gastoProvider.monedaPresupuesto,
+      monedaPrincipal: settings.monedaPrincipal,
+      presupuestosPorCategoria: gastoProvider.presupuestosPorCategoria,
+      savingsSnapshot: gastoProvider.savingsSnapshot,
+      shoppingItems: shoppingItems,
+      selection: selection,
+      hiddenSignalsJson:
+          (hiddenSignals != null && hiddenSignals.hasAnySignal)
+              ? hiddenSignals.toJson()
+              : null,
+    );
+  }
 
-    // 1. Totales acumulados por categoría en USD
-    final Map<String, double> totalesCategoria = {};
-    for (final g in gastoProvider.gastos) {
-      final cat = g.categoria;
-      final usd = g.totalUsd / 100.0;
-      totalesCategoria[cat] = (totalesCategoria[cat] ?? 0.0) + usd;
-    }
-
-    // 2. Top 10 productos más comprados del mes (cantidad y total USD)
-    final Map<String, Map<String, dynamic>> productMap = {};
-    for (final g in gastoProvider.gastos) {
-      for (final item in g.items) {
-        final name = item.descripcion.trim();
-        if (name.isEmpty) continue;
-        if (DatabaseHelper.isTaxItem(name)) continue;
-        final key = name.toLowerCase();
-        final existing = productMap[key] ?? {
-          'producto': name,
-          'cantidad': 0.0,
-          'total_usd': 0.0,
-          'veces_comprado': 0,
-        };
-        existing['cantidad'] = (existing['cantidad'] as double) + item.cantidad;
-        final double itemUsd = (g.totalOriginal > 0)
-            ? (item.total / g.totalOriginal) * (g.totalUsd / 100.0)
-            : (item.total / 100.0);
-        existing['total_usd'] = (existing['total_usd'] as double) + itemUsd;
-        existing['veces_comprado'] = (existing['veces_comprado'] as int) + 1;
-        productMap[key] = existing;
+  String? _findPreviousUserMessage(List<Map<String, dynamic>> messages) {
+    for (int i = messages.length - 1; i >= 0; i--) {
+      if (messages[i]['role'] == 'user') {
+        final txt = messages[i]['text']?.toString().trim();
+        if (txt != null && txt.isNotEmpty) return txt;
       }
     }
-    final sortedProducts = productMap.values.toList()
-      ..sort((a, b) => (b['cantidad'] as double).compareTo(a['cantidad'] as double));
-    final top10Productos = sortedProducts.take(10).map((p) => {
-      'producto': p['producto'],
-      'cantidad': double.parse((p['cantidad'] as double).toStringAsFixed(1)),
-      'total_usd': double.parse((p['total_usd'] as double).toStringAsFixed(2)),
-      'veces_comprado': p['veces_comprado'],
-    }).toList();
-
-    // 3. Últimas 5 compras del mes para contexto temporal
-    final sortedGastos = List<GastoModel>.from(gastoProvider.gastos)
-      ..sort((a, b) => b.fecha.compareTo(a.fecha));
-    final ultimasCompras = sortedGastos.take(5).map((g) => {
-      'fecha': g.fecha,
-      'comercio': g.comercio,
-      'categoria': g.categoria,
-      'moneda': g.moneda,
-      'monto_original': double.parse((g.totalOriginal / 100.0).toStringAsFixed(2)),
-      'total_usd': double.parse((g.totalUsd / 100.0).toStringAsFixed(2)),
-      'total_usdt': double.parse(((g.totalUsdt ?? g.totalUsd) / 100.0).toStringAsFixed(2)),
-    }).toList();
-
-    final double totalEurBcv = (settings.tasaCambioVesEur > 0 && gastoProvider.totalMesVes > 0)
-        ? double.parse((gastoProvider.totalMesVes / settings.tasaCambioVesEur).toStringAsFixed(2))
-        : (settings.tasaCambioVesEur > 0
-            ? double.parse((gastoProvider.totalMesUsd * settings.tasaCambioVesUsd / settings.tasaCambioVesEur).toStringAsFixed(2))
-            : gastoProvider.totalMesUsd);
-
-    return {
-      'fecha_hoy': DateTime.now().toIso8601String().substring(0, 10),
-      'tasa_bcv_usd': settings.tasaCambioVesUsd,
-      'tasa_bcv_eur': settings.tasaCambioVesEur,
-      'tasa_usdt': settings.tasaCambioVesUsdt,
-      'totales_categoria': totalesCategoria.map((k, v) => MapEntry(k, double.parse(v.toStringAsFixed(2)))),
-      'top_productos_mes': top10Productos,
-      'ultimas_compras': ultimasCompras,
-      'total_usd': gastoProvider.totalMesUsd,
-      'total_usd_bcv': gastoProvider.totalMesUsd,
-      'total_usdt_p2p': gastoProvider.totalMesUsdt,
-      'total_eur_bcv': totalEurBcv,
-      'total_ves': gastoProvider.totalMesVes,
-      'presupuesto_general': gastoProvider.presupuestoGeneral,
-      'meta_ahorro': gastoProvider.metaAhorro,
-      'limite_para_gastar': savingsSnapshot.limiteParaGastar,
-      'gasto_proyectado_fin_mes': savingsSnapshot.gastoProyectadoFinDeMes,
-      'estado_meta_ahorro': savingsSnapshot.status.name,
-      'moneda_presupuesto': gastoProvider.monedaPresupuesto,
-      'presupuestos_categoria': gastoProvider.presupuestosPorCategoria,
-      'lista_compras': shoppingItems.map((e) => {
-        'id': e.id,
-        'nombre': e.name,
-        'comprado': e.isPurchased == 1,
-      }).toList(),
-    };
+    return null;
   }
 
   Future<void> _sendMessage([String? textOverride]) async {
@@ -654,6 +611,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
 
     final chatProvider = _getChatProvider(context);
+    final previousUserMessage = _findPreviousUserMessage(chatProvider.messages);
     chatProvider.addMessage({'role': 'user', 'text': text});
     if (textOverride == null) {
       _textCtrl.clear();
@@ -674,10 +632,46 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       final gastoProvider = Provider.of<GastoProvider>(context, listen: false);
       final settings = Provider.of<SettingsProvider>(context, listen: false);
       final shoppingItems = await _dbHelper.getAllShoppingItems();
+      if (!mounted) return;
+
+      final knownProducts = <String>{};
+      for (final g in gastoProvider.gastos) {
+        for (final item in g.items) {
+          final desc = item.descripcion.trim();
+          if (desc.isNotEmpty && !DatabaseHelper.isTaxItem(desc)) {
+            knownProducts.add(desc);
+          }
+        }
+      }
+
+      final selection = ChatSignalSelector.select(
+        currentMessage: text,
+        previousUserMessage: previousUserMessage,
+        knownProductNames: knownProducts,
+      );
+
+      AiHiddenSignals? hiddenSignals;
+      if (selection.needsAnyHiddenSignal) {
+        hiddenSignals = await AiInsightService.computeHiddenSignals(
+          gastos: gastoProvider.gastos,
+          selectedYear: gastoProvider.selectedYear,
+          selectedMonth: gastoProvider.selectedMonth,
+          totalMesUsd: gastoProvider.totalMesUsd,
+          totalMesUsdt: gastoProvider.totalMesUsdt,
+          dbHelper: _dbHelper,
+          includeAntExpenses: selection.includeAntExpenses,
+          includePrevMonthComparison: selection.includePrevMonthComparison,
+          includePriceFindings: selection.includePriceFindings,
+        );
+        if (!mounted) return;
+      }
+
       final contextData = _buildSemanticChatContext(
         gastoProvider: gastoProvider,
         settings: settings,
         shoppingItems: shoppingItems,
+        selection: selection,
+        hiddenSignals: hiddenSignals,
       );
 
       // Ventana deslizante: enviar a la API solo los últimos 5 mensajes para proteger tokens

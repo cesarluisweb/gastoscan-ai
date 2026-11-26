@@ -9,6 +9,7 @@ import '../data/datasources/remote/gemini_service.dart';
 import '../data/models/gasto_model.dart';
 import '../domain/finance/savings_health_calculator.dart';
 import '../domain/finance/savings_health_models.dart';
+import 'chat_context_builder.dart';
 
 /// Señales financieras ocultas precalculadas desde los datos locales y SQLite
 /// que no se ven a simple vista en `SummaryCard` ni en `CategoryChart`.
@@ -230,7 +231,7 @@ class AiInsightService {
     return 1;
   }
 
-  /// Calcula las 4 señales financieras ocultas a partir de los gastos del mes actual
+  /// Calcula las señales financieras ocultas a partir de los gastos del mes actual
   /// y consultas ligeras a SQLite (con tolerancia total a entornos de test sin DB).
   static Future<AiHiddenSignals> computeHiddenSignals({
     required List<GastoModel> gastos,
@@ -240,16 +241,22 @@ class AiInsightService {
     required double totalMesUsdt,
     DateTime? currentDate,
     DatabaseHelper? dbHelper,
+    bool includeAntExpenses = true,
+    bool includePrevMonthComparison = true,
+    bool includePriceFindings = true,
   }) async {
-    final now = currentDate ?? DateTime.now();
+    final now = ChatContextBuilder.resolveVenezuelaDate(currentDate: currentDate);
     final isCurrentMonth = selectedYear == now.year && selectedMonth == now.month;
-    if (gastos.isEmpty) {
+    if (gastos.isEmpty ||
+        (!includeAntExpenses &&
+            !includePrevMonthComparison &&
+            !includePriceFindings)) {
       return const AiHiddenSignals();
     }
 
     // 1. Señal en memoria: Gastos hormiga (compras individuales < $10 USD)
     Map<String, dynamic>? antExpenses;
-    {
+    if (includeAntExpenses) {
       int smallCount = 0;
       double smallTotalUsd = 0.0;
       final Map<String, int> smallCommerceCounts = {};
@@ -286,6 +293,8 @@ class AiInsightService {
             'cantidad_compras': smallCount,
             'total_usd': double.parse(smallTotalUsd.toStringAsFixed(2)),
             'porcentaje_del_mes': pct,
+            'umbral_usd': 10.0,
+            'moneda': 'USD',
             if (topSmallCommerce != null && topSmallVisits >= 2)
               'comercio_mas_repetido': topSmallCommerce,
           };
@@ -293,7 +302,8 @@ class AiInsightService {
       }
     }
 
-    if (!isCurrentMonth) {
+    if (!isCurrentMonth ||
+        (!includePrevMonthComparison && !includePriceFindings)) {
       return AiHiddenSignals(
         antExpenses: antExpenses,
       );
@@ -303,173 +313,202 @@ class AiInsightService {
 
     // 3. Señal SQLite: Comparativa vs. mes anterior a la misma altura del mes (días 1..hoy)
     Map<String, dynamic>? prevMonthComparison;
-    try {
-      final prevYear = selectedMonth == 1 ? selectedYear - 1 : selectedYear;
-      final prevMonth = selectedMonth == 1 ? 12 : selectedMonth - 1;
-      final prevGastosAll = await db.getGastosByMonth(prevYear, prevMonth);
+    if (includePrevMonthComparison) {
+      try {
+        final prevYear = selectedMonth == 1 ? selectedYear - 1 : selectedYear;
+        final prevMonth = selectedMonth == 1 ? 12 : selectedMonth - 1;
+        final prevGastosAll = await db.getGastosByMonth(prevYear, prevMonth);
 
-      final prevGastosToDate = prevGastosAll
-          .where((g) => _extractDay(g.fecha) <= now.day)
-          .toList();
+        final prevGastosToDate = prevGastosAll
+            .where((g) => _extractDay(g.fecha) <= now.day)
+            .toList();
 
-      if (prevGastosToDate.isNotEmpty) {
-        final double prevTotalUsd = prevGastosToDate.fold(
-          0.0,
-          (sum, g) => sum + (g.totalUsd / 100.0),
-        );
+        if (prevGastosToDate.isNotEmpty) {
+          final double prevTotalUsd = prevGastosToDate.fold(
+            0.0,
+            (sum, g) => sum + (g.totalUsd / 100.0),
+          );
 
-        final Map<String, double> curByCat = {};
-        for (final g in gastos) {
-          curByCat[g.categoria] = (curByCat[g.categoria] ?? 0.0) + (g.totalUsd / 100.0);
-        }
-        final Map<String, double> prevByCat = {};
-        for (final g in prevGastosToDate) {
-          prevByCat[g.categoria] = (prevByCat[g.categoria] ?? 0.0) + (g.totalUsd / 100.0);
-        }
+          final Map<String, double> curByCat = {};
+          for (final g in gastos) {
+            curByCat[g.categoria] = (curByCat[g.categoria] ?? 0.0) + (g.totalUsd / 100.0);
+          }
+          final Map<String, double> prevByCat = {};
+          for (final g in prevGastosToDate) {
+            prevByCat[g.categoria] = (prevByCat[g.categoria] ?? 0.0) + (g.totalUsd / 100.0);
+          }
 
-        Map<String, dynamic>? biggestSpike;
-        int biggestSpikePct = 0;
-        Map<String, dynamic>? biggestSaving;
-        int biggestSavingPct = 0;
+          Map<String, dynamic>? biggestSpike;
+          int biggestSpikePct = 0;
+          Map<String, dynamic>? biggestSaving;
+          int biggestSavingPct = 0;
 
-        final allCats = <String>{...curByCat.keys, ...prevByCat.keys};
-        for (final cat in allCats) {
-          final curVal = curByCat[cat] ?? 0.0;
-          final prevVal = prevByCat[cat] ?? 0.0;
-          if (prevVal < 10.0) continue;
+          final allCats = <String>{...curByCat.keys, ...prevByCat.keys};
+          for (final cat in allCats) {
+            final curVal = curByCat[cat] ?? 0.0;
+            final prevVal = prevByCat[cat] ?? 0.0;
+            if (prevVal < 10.0) continue;
 
-          final deltaUsd = curVal - prevVal;
-          final deltaPct = ((deltaUsd / prevVal) * 100).round();
+            final deltaUsd = curVal - prevVal;
+            final deltaPct = ((deltaUsd / prevVal) * 100).round();
 
-          if (deltaPct >= 20 && deltaUsd >= 10.0 && deltaPct > biggestSpikePct) {
-            biggestSpikePct = deltaPct;
-            biggestSpike = {
-              'categoria': cat,
-              'actual_usd': double.parse(curVal.toStringAsFixed(2)),
-              'mes_anterior_usd': double.parse(prevVal.toStringAsFixed(2)),
-              'variacion_pct': deltaPct,
-            };
-          } else if (deltaPct <= -15 && (-deltaUsd) >= 10.0 && (-deltaPct) > biggestSavingPct) {
-            biggestSavingPct = -deltaPct;
-            biggestSaving = {
-              'categoria': cat,
-              'actual_usd': double.parse(curVal.toStringAsFixed(2)),
-              'mes_anterior_usd': double.parse(prevVal.toStringAsFixed(2)),
-              'ahorro_pct': -deltaPct,
+            if (deltaPct >= 20 && deltaUsd >= 10.0 && deltaPct > biggestSpikePct) {
+              biggestSpikePct = deltaPct;
+              biggestSpike = {
+                'categoria': cat,
+                'actual_usd': double.parse(curVal.toStringAsFixed(2)),
+                'mes_anterior_usd': double.parse(prevVal.toStringAsFixed(2)),
+                'variacion_pct': deltaPct,
+              };
+            } else if (deltaPct <= -15 && (-deltaUsd) >= 10.0 && (-deltaPct) > biggestSavingPct) {
+              biggestSavingPct = -deltaPct;
+              biggestSaving = {
+                'categoria': cat,
+                'actual_usd': double.parse(curVal.toStringAsFixed(2)),
+                'mes_anterior_usd': double.parse(prevVal.toStringAsFixed(2)),
+                'ahorro_pct': -deltaPct,
+              };
+            }
+          }
+
+          final int? totalDeltaPct = prevTotalUsd >= 15.0
+              ? (((totalMesUsd - prevTotalUsd) / prevTotalUsd) * 100).round()
+              : null;
+
+          if (biggestSpike != null ||
+              biggestSaving != null ||
+              (totalDeltaPct != null && totalDeltaPct.abs() >= 15)) {
+            final curLastDay = DateTime(selectedYear, selectedMonth + 1, 0).day;
+            final prevLastDay = DateTime(prevYear, prevMonth + 1, 0).day;
+            final curCutDay = now.day.clamp(1, curLastDay);
+            final prevCutDay = now.day.clamp(1, prevLastDay);
+            final curStart = ChatContextBuilder.formatIsoDate(
+              DateTime(selectedYear, selectedMonth, 1),
+            );
+            final curEnd = ChatContextBuilder.formatIsoDate(
+              DateTime(selectedYear, selectedMonth, curCutDay),
+            );
+            final prevStart = ChatContextBuilder.formatIsoDate(
+              DateTime(prevYear, prevMonth, 1),
+            );
+            final prevEnd = ChatContextBuilder.formatIsoDate(
+              DateTime(prevYear, prevMonth, prevCutDay),
+            );
+
+            prevMonthComparison = {
+              'mes_anterior': DateFormatter.getMonthName(prevMonth),
+              'dia_corte': curCutDay,
+              'periodo_actual': '$curStart..$curEnd',
+              'periodo_anterior': '$prevStart..$prevEnd',
+              'comparacion_parcial': true,
+              'moneda': 'USD',
+              'actual_a_la_fecha_usd': double.parse(totalMesUsd.toStringAsFixed(2)),
+              'anterior_a_la_fecha_usd': double.parse(prevTotalUsd.toStringAsFixed(2)),
+              if (totalDeltaPct != null) 'variacion_total_pct': totalDeltaPct,
+              if (biggestSpike != null) 'categoria_en_alza': biggestSpike,
+              if (biggestSaving != null) 'categoria_con_ahorro': biggestSaving,
             };
           }
         }
-
-        final int? totalDeltaPct = prevTotalUsd >= 15.0
-            ? (((totalMesUsd - prevTotalUsd) / prevTotalUsd) * 100).round()
-            : null;
-
-        if (biggestSpike != null ||
-            biggestSaving != null ||
-            (totalDeltaPct != null && totalDeltaPct.abs() >= 15)) {
-          prevMonthComparison = {
-            'mes_anterior': DateFormatter.getMonthName(prevMonth),
-            'dia_corte': now.day,
-            'actual_a_la_fecha_usd': double.parse(totalMesUsd.toStringAsFixed(2)),
-            'anterior_a_la_fecha_usd': double.parse(prevTotalUsd.toStringAsFixed(2)),
-            if (totalDeltaPct != null) 'variacion_total_pct': totalDeltaPct,
-            if (biggestSpike != null) 'categoria_en_alza': biggestSpike,
-            if (biggestSaving != null) 'categoria_con_ahorro': biggestSaving,
-          };
-        }
+      } catch (e) {
+        debugPrint('AiInsightService: Comparativa mes anterior omitida: $e');
       }
-    } catch (e) {
-      debugPrint('AiInsightService: Comparativa mes anterior omitida: $e');
     }
 
     // 4. Señal SQLite: Diferencias de precios entre comercios o subidas en los últimos 60 días
     final List<Map<String, dynamic>> priceFindings = [];
-    try {
-      final Map<String, String> normToDisplayName = {};
-      for (final g in gastos) {
-        for (final item in g.items) {
-          final clean = item.descripcion.trim();
-          if (clean.length <= 2 || DatabaseHelper.isTaxItem(clean)) continue;
-          final norm = DatabaseHelper.normalizeProductText(clean);
-          if (norm.length > 2 && !normToDisplayName.containsKey(norm)) {
-            normToDisplayName[norm] = clean;
-          }
-        }
-      }
-
-      if (normToDisplayName.isNotEmpty) {
-        final historyMap = await db.findPriceHistory(
-          normToDisplayName.keys.take(40).toList(),
-          diasVentana: 60,
-          referenceDate: now,
-        );
-
-        for (final entry in historyMap.entries) {
-          final history = entry.value;
-          if (history.entradas.length < 2) continue;
-
-          // Entradas vienen ordenadas por fecha DESC desde SQLite
-          final latest = history.entradas.first;
-          final best = history.mejorPrecio;
-          final displayName = normToDisplayName[entry.key] ?? entry.key;
-
-          if (best != null &&
-              best.precioUsd > 0 &&
-              latest.precioUsd > best.precioUsd &&
-              best.comercioNorm.isNotEmpty &&
-              latest.comercioNorm.isNotEmpty &&
-              best.comercioNorm != latest.comercioNorm) {
-            final diffUsd = latest.precioUsd - best.precioUsd;
-            final diffPct = ((diffUsd / best.precioUsd) * 100).round();
-            if (diffPct >= 10 && diffUsd >= 0.30) {
-              priceFindings.add({
-                'tipo': 'otro_comercio_mas_barato',
-                'producto': displayName,
-                'comercio_reciente': DatabaseHelper.formatCommerceDisplay(latest.comercio),
-                'precio_reciente_usd': double.parse(latest.precioUsd.toStringAsFixed(2)),
-                'comercio_mas_barato': DatabaseHelper.formatCommerceDisplay(best.comercio),
-                'precio_mas_barato_usd': double.parse(best.precioUsd.toStringAsFixed(2)),
-                'diferencia_pct': diffPct,
-              });
-              continue;
+    if (includePriceFindings) {
+      try {
+        final Map<String, String> normToDisplayName = {};
+        for (final g in gastos) {
+          for (final item in g.items) {
+            final clean = item.descripcion.trim();
+            if (clean.length <= 2 || DatabaseHelper.isTaxItem(clean)) continue;
+            final norm = DatabaseHelper.normalizeProductText(clean);
+            if (norm.length > 2 && !normToDisplayName.containsKey(norm)) {
+              normToDisplayName[norm] = clean;
             }
           }
+        }
 
-          // Fallback: subida notable en el mismo comercio
-          final prevSame = history.entradas.skip(1).firstWhere(
-            (e) => e.comercioNorm == latest.comercioNorm && e.precioUsd > 0,
-            orElse: () => const UnitPriceRef(
-              precioUsd: 0,
-              fecha: '',
-              comercio: '',
-              comercioNorm: '',
-              cantidad: 0,
-            ),
+        if (normToDisplayName.isNotEmpty) {
+          final historyMap = await db.findPriceHistory(
+            normToDisplayName.keys.take(40).toList(),
+            diasVentana: 60,
+            referenceDate: now,
           );
-          if (prevSame.precioUsd > 0 && latest.precioUsd > prevSame.precioUsd) {
-            final diffUsd = latest.precioUsd - prevSame.precioUsd;
-            final diffPct = ((diffUsd / prevSame.precioUsd) * 100).round();
-            if (diffPct >= 12 && diffUsd >= 0.30) {
-              priceFindings.add({
-                'tipo': 'subida_mismo_comercio',
-                'producto': displayName,
-                'comercio': DatabaseHelper.formatCommerceDisplay(latest.comercio),
-                'precio_reciente_usd': double.parse(latest.precioUsd.toStringAsFixed(2)),
-                'precio_anterior_usd': double.parse(prevSame.precioUsd.toStringAsFixed(2)),
-                'variacion_pct': diffPct,
-              });
+
+          for (final entry in historyMap.entries) {
+            final history = entry.value;
+            if (history.entradas.length < 2) continue;
+
+            // Entradas vienen ordenadas por fecha DESC desde SQLite
+            final latest = history.entradas.first;
+            final best = history.mejorPrecio;
+            final displayName = normToDisplayName[entry.key] ?? entry.key;
+
+            if (best != null &&
+                best.precioUsd > 0 &&
+                latest.precioUsd > best.precioUsd &&
+                best.comercioNorm.isNotEmpty &&
+                latest.comercioNorm.isNotEmpty &&
+                best.comercioNorm != latest.comercioNorm) {
+              final diffUsd = latest.precioUsd - best.precioUsd;
+              final diffPct = ((diffUsd / best.precioUsd) * 100).round();
+              if (diffPct >= 10 && diffUsd >= 0.30) {
+                priceFindings.add({
+                  'tipo': 'otro_comercio_mas_barato',
+                  'producto': displayName,
+                  'comercio_reciente': DatabaseHelper.formatCommerceDisplay(latest.comercio),
+                  'precio_reciente_usd': double.parse(latest.precioUsd.toStringAsFixed(2)),
+                  'comercio_mas_barato': DatabaseHelper.formatCommerceDisplay(best.comercio),
+                  'precio_mas_barato_usd': double.parse(best.precioUsd.toStringAsFixed(2)),
+                  'diferencia_pct': diffPct,
+                  'ventana_dias': 60,
+                  'moneda': 'USD',
+                });
+                continue;
+              }
+            }
+
+            // Fallback: subida notable en el mismo comercio
+            final prevSame = history.entradas.skip(1).firstWhere(
+              (e) => e.comercioNorm == latest.comercioNorm && e.precioUsd > 0,
+              orElse: () => const UnitPriceRef(
+                precioUsd: 0,
+                fecha: '',
+                comercio: '',
+                comercioNorm: '',
+                cantidad: 0,
+              ),
+            );
+            if (prevSame.precioUsd > 0 && latest.precioUsd > prevSame.precioUsd) {
+              final diffUsd = latest.precioUsd - prevSame.precioUsd;
+              final diffPct = ((diffUsd / prevSame.precioUsd) * 100).round();
+              if (diffPct >= 12 && diffUsd >= 0.30) {
+                priceFindings.add({
+                  'tipo': 'subida_mismo_comercio',
+                  'producto': displayName,
+                  'comercio': DatabaseHelper.formatCommerceDisplay(latest.comercio),
+                  'precio_reciente_usd': double.parse(latest.precioUsd.toStringAsFixed(2)),
+                  'precio_anterior_usd': double.parse(prevSame.precioUsd.toStringAsFixed(2)),
+                  'variacion_pct': diffPct,
+                  'ventana_dias': 60,
+                  'moneda': 'USD',
+                });
+              }
             }
           }
-        }
 
-        priceFindings.sort((a, b) {
-          final pctA = (a['diferencia_pct'] ?? a['variacion_pct'] ?? 0) as int;
-          final pctB = (b['diferencia_pct'] ?? b['variacion_pct'] ?? 0) as int;
-          return pctB.compareTo(pctA);
-        });
+          priceFindings.sort((a, b) {
+            final pctA = (a['diferencia_pct'] ?? a['variacion_pct'] ?? 0) as int;
+            final pctB = (b['diferencia_pct'] ?? b['variacion_pct'] ?? 0) as int;
+            return pctB.compareTo(pctA);
+          });
+        }
+      } catch (e) {
+        debugPrint('AiInsightService: Historial de precios omitido: $e');
       }
-    } catch (e) {
-      debugPrint('AiInsightService: Historial de precios omitido: $e');
     }
 
     return AiHiddenSignals(
@@ -793,59 +832,28 @@ class AiInsightService {
     required DateTime now,
     AiHiddenSignals? hiddenSignals,
   }) {
+    final vetNow = ChatContextBuilder.resolveVenezuelaDate(currentDate: now);
     final Map<String, double> totalesCat = {};
-    final Map<String, Map<String, dynamic>> comerciosMap = {};
-    final Map<String, Map<String, dynamic>> productosMap = {};
-
     for (final g in gastos) {
-      final usd = g.totalUsd / 100.0;
-      totalesCat[g.categoria] = (totalesCat[g.categoria] ?? 0.0) + usd;
-
-      final comName = DatabaseHelper.formatCommerceDisplay(g.comercio);
-      if (comName.isNotEmpty && comName.toLowerCase() != 'varios') {
-        final key = comName.toLowerCase();
-        final entry = comerciosMap[key] ?? {'comercio': comName, 'visitas': 0, 'total_usd': 0.0};
-        entry['visitas'] = (entry['visitas'] as int) + 1;
-        entry['total_usd'] = (entry['total_usd'] as double) + usd;
-        comerciosMap[key] = entry;
-      }
-
-      for (final item in g.items) {
-        final desc = item.descripcion.trim();
-        if (desc.isEmpty || DatabaseHelper.isTaxItem(desc)) continue;
-        final pKey = desc.toLowerCase();
-        final pEntry = productosMap[pKey] ?? {'producto': desc, 'veces': 0, 'total_usd': 0.0};
-        pEntry['veces'] = (pEntry['veces'] as int) + 1;
-        final double itemUsd = (g.totalOriginal > 0)
-            ? (item.total / g.totalOriginal) * usd
-            : (item.total / 100.0);
-        pEntry['total_usd'] = (pEntry['total_usd'] as double) + itemUsd;
-        productosMap[pKey] = pEntry;
-      }
+      totalesCat[g.categoria] = (totalesCat[g.categoria] ?? 0.0) + (g.totalUsd / 100.0);
     }
 
-    final topComercios = comerciosMap.values.toList()
-      ..sort((a, b) => (b['total_usd'] as double).compareTo(a['total_usd'] as double));
-    final topProductos = productosMap.values.toList()
-      ..sort((a, b) => (b['total_usd'] as double).compareTo(a['total_usd'] as double));
+    final topComercios = ChatContextBuilder.buildTopComercios(gastos, limit: 3);
+    final topProductos = ChatContextBuilder.buildTopProducts(
+      gastos,
+      limit: 5,
+      includeQuantity: false,
+    );
 
     final contextMap = <String, dynamic>{
-      'fecha_hoy': now.toIso8601String().substring(0, 10),
+      'fecha_hoy': ChatContextBuilder.formatIsoDate(vetNow),
       'moneda_principal': monedaLente,
       'cantidad_compras_mes': gastos.length,
       'totales_categoria_usd': totalesCat.map(
         (k, v) => MapEntry(k, double.parse(v.toStringAsFixed(2))),
       ),
-      'top_comercios': topComercios.take(3).map((c) => {
-        'comercio': c['comercio'],
-        'visitas': c['visitas'],
-        'total_usd': double.parse((c['total_usd'] as double).toStringAsFixed(2)),
-      }).toList(),
-      'top_productos_sin_iva': topProductos.take(5).map((p) => {
-        'producto': p['producto'],
-        'veces': p['veces'],
-        'total_usd': double.parse((p['total_usd'] as double).toStringAsFixed(2)),
-      }).toList(),
+      'top_comercios': topComercios,
+      'top_productos_sin_iva': topProductos,
     };
 
     if (hiddenSignals != null && hiddenSignals.hasAnySignal) {

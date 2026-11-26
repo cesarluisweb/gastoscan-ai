@@ -3,7 +3,14 @@
 
 import { computeMonthTotals, calculateSavingsHealth } from './expense-money.js';
 import { clasificarCategoria, CATEGORIAS_OFICIALES } from './category-classifier.js';
-import { isTaxItem } from './price-comparator.js';
+import {
+    isTaxItem,
+    normalizeProductText,
+    summarizeExpenseTaxContext,
+    shelfPriceTaxFactor,
+    formatCommerceDisplay,
+    normalizeCommerce,
+} from './price-comparator.js';
 import { parseAmount } from './currency-calculator.js';
 
 export const DEFAULT_GATEWAY_URL = 'https://rindemas-gateway.cesarluispuntocom.workers.dev';
@@ -335,9 +342,234 @@ export function buildSavingsHealthInBudgetCurrency({
     };
 }
 
+const MIN_DAYS_FOR_RELIABLE_PROJECTION = 3;
+const MIN_EXPENSES_FOR_RELIABLE_PROJECTION = 3;
+const TRAILING_FISCAL_SUFFIX_RE = /(?:\s*\([GERgerExX]+\)|\s*-(?:G|E|R))\s*$/i;
+
+function normalizeSelectorText(input) {
+    const lower = String(input || '').trim().toLowerCase();
+    if (!lower) return '';
+    return lower
+        .replace(/á/g, 'a')
+        .replace(/é/g, 'e')
+        .replace(/í/g, 'i')
+        .replace(/ó/g, 'o')
+        .replace(/ú/g, 'u')
+        .replace(/ü/g, 'u')
+        .replace(/ñ/g, 'n')
+        .replace(/ç/g, 'c')
+        .replace(/[^a-z0-9\s]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+const SELECTOR_SHOPPING_LIST_CUE = /\b(lista de compras|mi lista|a la lista|en la lista|de la lista|tengo que comprar|falta por comprar|pendiente en mi lista|pendientes en mi lista)\b/;
+const SELECTOR_SHOPPING_LIST_VERB = /^(agrega|agregar|anota|anotar|pon|poner|quita|quitar|elimina|eliminar|borra|borrar|marca|marcar|tacha|tachar|cambia|cambiar|renombra|renombrar)\b/;
+const SELECTOR_RECORD_EXPENSE_VERB = /\b(compre|gaste|pague|acabo de comprar|acabo de pagar|acabo de gastar|registra|registrar)\b/;
+const SELECTOR_QUESTION_CUE = /^(cuanto|cuantos|cuanta|cuantas|que|cual|cuales|donde|como|cuando|por que|estoy|voy|me alcanza|he gastado|llevo)\b/;
+const SELECTOR_DIRECT_LOOKUP = /^(cuanto|cuanta)\s+(gaste|he gastado|llevo gastado|llevo|pague|compre)\s+(en|de|por)\b/;
+const SELECTOR_PREV_MONTH = /\b(mes pasado|mes anterior|meses anteriores|respecto al mes|frente al mes|comparar|comparativa|comparacion|evolucion|mas que antes|menos que antes|mas que el mes|menos que el mes|he gastado mas|gastando mas|gastando menos|aumentando|aumentado|suelo comprar cada mes|aun no he comprado)\b/;
+const SELECTOR_PRICES = /\b(mas barato|mas barata|mas caro|mas cara|precio|precios|subido de precio|subieron de precio|subio de precio|aumento de precio|aumentaron de precio|donde comprar|donde me salio|donde consigo|mejor precio|mejores precios|comparador|inflacion|comercios|comercio mas barato|supermercado mas barato)\b/;
+const SELECTOR_PRODUCT_PRICE_WORD = /\b(caro|cara|barato|barata|subio|bajo|comercio|tienda|donde|mejor)\b/;
+const SELECTOR_ANT_EXPENSES = /\b(hormiga|gastos pequenos|gasto pequeno|compras pequenas|compra pequena|fuga|fugas|chucheria|chucherias|snack|snacks|menores a|pocos dolares|sumando mas de lo que parece|gastos chiquitos)\b/;
+const SELECTOR_FULL_ANALYSIS = /\b(ahorrar|ahorro|reducir|recortar|presupuesto|ritmo|en que se me va|en que se me esta yendo|se me fue el dinero|alcanza|alcanzara|proyeccion|cierro el mes|cerrar el mes|resumen|diagnostico|consejo|consejos|recomendacion|recomendaciones|como voy|organizar mis gastos|planificar|planificacion|diciembre|fin de mes|dias o momentos del mes|suelo gastar mas|sin afectar lo esencial|compromet[a-z]*|estirar mi dinero|estirar el presupuesto)\b/;
+const SELECTOR_SHORT_FOLLOWUP = /^(y\s+)?(por que|porque|dime mas|cuentame mas|explica|explicame|detalla|detallalo|cuales|cual|como asi|y eso|y el resto|mas detalle|a que se debe|donde|cuanto fue|que mas|y ahora)\b/;
+
+function classifyNormalizedMessage(normalized, rawMessage, knownProductNames) {
+    if (!normalized) {
+        return {
+            includeAntExpenses: false,
+            includePrevMonthComparison: false,
+            includePriceFindings: false,
+            includeTemporalContext: true,
+            includeTopComercios: false,
+            intentGroup: 'neutral',
+        };
+    }
+
+    const isQuestion = String(rawMessage || '').includes('?') || SELECTOR_QUESTION_CUE.test(normalized);
+    const wantsPrevMonth = SELECTOR_PREV_MONTH.test(normalized);
+    const mentionsKnownPrice = SELECTOR_PRODUCT_PRICE_WORD.test(normalized) && (knownProductNames || []).some((rawName) => {
+        const normProd = normalizeSelectorText(rawName);
+        return normProd.length >= 4 && normalized.includes(normProd);
+    });
+    const wantsPrices = SELECTOR_PRICES.test(normalized) || mentionsKnownPrice;
+    const wantsAnt = SELECTOR_ANT_EXPENSES.test(normalized);
+    const wantsFullAnalysis = SELECTOR_FULL_ANALYSIS.test(normalized);
+    const hasAnalyticalCue = wantsPrevMonth || wantsPrices || wantsAnt || wantsFullAnalysis;
+
+    if (!hasAnalyticalCue) {
+        if (SELECTOR_SHOPPING_LIST_CUE.test(normalized) || SELECTOR_SHOPPING_LIST_VERB.test(normalized)) {
+            return {
+                includeAntExpenses: false,
+                includePrevMonthComparison: false,
+                includePriceFindings: false,
+                includeTemporalContext: false,
+                includeTopComercios: false,
+                intentGroup: 'direct_or_action',
+            };
+        }
+        if (SELECTOR_DIRECT_LOOKUP.test(normalized) || (!isQuestion && SELECTOR_RECORD_EXPENSE_VERB.test(normalized))) {
+            return {
+                includeAntExpenses: false,
+                includePrevMonthComparison: false,
+                includePriceFindings: false,
+                includeTemporalContext: false,
+                includeTopComercios: false,
+                intentGroup: 'direct_or_action',
+            };
+        }
+    }
+
+    if (wantsFullAnalysis) {
+        return {
+            includeAntExpenses: true,
+            includePrevMonthComparison: true,
+            includePriceFindings: true,
+            includeTemporalContext: true,
+            includeTopComercios: true,
+            intentGroup: 'analysis_or_budget',
+        };
+    }
+
+    if (wantsPrevMonth || wantsPrices || wantsAnt) {
+        let intentGroup = 'analysis_or_budget';
+        if (wantsPrevMonth && !wantsPrices && !wantsAnt) intentGroup = 'prev_month';
+        else if (wantsPrices && !wantsPrevMonth && !wantsAnt) intentGroup = 'prices';
+        else if (wantsAnt && !wantsPrevMonth && !wantsPrices) intentGroup = 'ant_expenses';
+
+        return {
+            includeAntExpenses: wantsAnt,
+            includePrevMonthComparison: wantsPrevMonth,
+            includePriceFindings: wantsPrices,
+            includeTemporalContext: wantsPrevMonth,
+            includeTopComercios: wantsPrices,
+            intentGroup,
+        };
+    }
+
+    return {
+        includeAntExpenses: false,
+        includePrevMonthComparison: false,
+        includePriceFindings: false,
+        includeTemporalContext: true,
+        includeTopComercios: false,
+        intentGroup: 'neutral',
+    };
+}
+
+/**
+ * Selector determinista de señales para el Asistente IA (paridad 1:1 con ChatSignalSelector en Flutter).
+ */
+export function selectChatSignals({
+    currentMessage = '',
+    previousUserMessage = '',
+    forceAllSignals = false,
+    knownProductNames = [],
+} = {}) {
+    if (forceAllSignals) {
+        return {
+            includeAntExpenses: true,
+            includePrevMonthComparison: true,
+            includePriceFindings: true,
+            includeTemporalContext: true,
+            includeTopComercios: true,
+            intentGroup: 'analysis_or_budget',
+        };
+    }
+
+    const normalized = normalizeSelectorText(currentMessage);
+    if (!normalized) {
+        return {
+            includeAntExpenses: false,
+            includePrevMonthComparison: false,
+            includePriceFindings: false,
+            includeTemporalContext: true,
+            includeTopComercios: false,
+            intentGroup: 'neutral',
+        };
+    }
+
+    if (previousUserMessage && String(previousUserMessage).trim()) {
+        const wordCount = normalized.split(' ').length;
+        if (wordCount <= 5 && SELECTOR_SHORT_FOLLOWUP.test(normalized)) {
+            const prevSel = classifyNormalizedMessage(
+                normalizeSelectorText(previousUserMessage),
+                previousUserMessage,
+                knownProductNames
+            );
+            return { ...prevSel, intentGroup: 'followup_inherited' };
+        }
+    }
+
+    return classifyNormalizedMessage(normalized, currentMessage, knownProductNames);
+}
+
+/**
+ * Construye el bloque `contexto_temporal` con guarda `proyeccion_confiable`
+ * (paridad 1:1 con ChatContextBuilder.buildTemporalContext en Flutter).
+ */
+export function buildTemporalContext({
+    selectedYear,
+    selectedMonth,
+    cantidadComprasMes,
+    snapshot,
+    monedaPresupuesto = 'USD',
+    todayCaracasIso = getVenezuelaTodayIso(),
+}) {
+    const [todayY, todayM, todayD] = todayCaracasIso.split('-').map(Number);
+    const year = Number(selectedYear) || todayY;
+    const month = Number(selectedMonth) || todayM;
+    const isCurrentMonth = year === todayY && month === todayM;
+    const diasTotalesMes = new Date(Date.UTC(year, month, 0)).getUTCDate();
+    const diasTranscurridos = isCurrentMonth
+        ? Math.min(Math.max(1, todayD), diasTotalesMes)
+        : diasTotalesMes;
+    const diasRestantes = isCurrentMonth
+        ? Math.max(0, diasTotalesMes - diasTranscurridos)
+        : 0;
+    const porcentajeMes = Math.min(
+        100,
+        Math.max(0, Math.round((diasTranscurridos / diasTotalesMes) * 100))
+    );
+    const gastoAcumulado = Number(snapshot?.gastoAcumulado || 0);
+    const gastoDiarioRaw = diasTranscurridos > 0 ? gastoAcumulado / diasTranscurridos : 0;
+
+    let motivoSinProyeccion = null;
+    if (!isCurrentMonth) {
+        motivoSinProyeccion = 'mes_cerrado';
+    } else if (diasTranscurridos <= MIN_DAYS_FOR_RELIABLE_PROJECTION) {
+        motivoSinProyeccion = 'inicio_de_mes';
+    } else if (Number(cantidadComprasMes || 0) < MIN_EXPENSES_FOR_RELIABLE_PROJECTION) {
+        motivoSinProyeccion = 'pocos_gastos';
+    }
+
+    const proyeccionConfiable = motivoSinProyeccion === null;
+    const gastoProyectadoFinMes = proyeccionConfiable
+        ? Number((gastoDiarioRaw * diasTotalesMes).toFixed(2))
+        : null;
+
+    return {
+        fecha_hoy_ve: todayCaracasIso,
+        periodo_consultado: `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}`,
+        es_mes_actual: isCurrentMonth,
+        dias_transcurridos: diasTranscurridos,
+        dias_totales_mes: diasTotalesMes,
+        porcentaje_mes_transcurrido: porcentajeMes,
+        dias_restantes_mes: diasRestantes,
+        es_cierre_de_mes: isCurrentMonth && diasRestantes <= 3,
+        cantidad_compras_mes: Number(cantidadComprasMes || 0),
+        moneda_presupuesto: monedaPresupuesto,
+        gasto_diario_promedio: Number(gastoDiarioRaw.toFixed(2)),
+        proyeccion_confiable: proyeccionConfiable,
+        gasto_proyectado_fin_mes: gastoProyectadoFinMes,
+        motivo_sin_proyeccion: motivoSinProyeccion,
+    };
+}
+
 /**
  * Construye el contexto JSON enviado a POST /chat-analyst.
- * Paridad matemática con _buildSemanticChatContext (lib/ui/screens/chat_screen.dart:446-543).
+ * Paridad matemática con ChatContextBuilder.buildSemanticChatContext (Etapa 0).
  */
 export function buildSemanticChatContext({
     gastos = [],
@@ -346,6 +578,9 @@ export function buildSemanticChatContext({
     selectedYear,
     selectedMonth,
     todayCaracasIso = getVenezuelaTodayIso(),
+    currentMessage = null,
+    previousUserMessage = '',
+    selection = null,
 }) {
     const list = Array.isArray(gastos) ? gastos.filter(Boolean) : [];
     const { monthTotals, monedaPresupuesto, snapshot } = buildSavingsHealthInBudgetCurrency({
@@ -354,6 +589,15 @@ export function buildSemanticChatContext({
         liveRates,
         selectedYear,
         selectedMonth,
+        todayCaracasIso,
+    });
+
+    const temporalContext = buildTemporalContext({
+        selectedYear,
+        selectedMonth,
+        cantidadComprasMes: list.length,
+        snapshot,
+        monedaPresupuesto,
         todayCaracasIso,
     });
 
@@ -373,20 +617,25 @@ export function buildSemanticChatContext({
         totalesCategoria[k] = Number(v.toFixed(2));
     }
 
-    // 2. Top 10 productos más comprados del mes (excluyendo impuestos con isTaxItem)
+    // 2. Top 10 productos normalizados (AI-06) ordenados por impacto en USD (excluyendo impuestos)
     const productMap = new Map();
+    const knownProductNames = [];
     for (const g of list) {
         const items = Array.isArray(g.items) ? g.items : [];
         const gTotalOrigCents = Number(g.total_original || 0);
         const gTotalUsdCents = Number(g.total_usd || 0);
+        const taxCtx = summarizeExpenseTaxContext(items, { totalsInCents: true });
 
         for (const item of items) {
-            const name = String(item?.descripcion || '').trim();
-            if (!name || isTaxItem(name)) continue;
+            const rawName = String(item?.descripcion || '').trim();
+            if (!rawName || isTaxItem(rawName)) continue;
 
-            const key = name.toLowerCase();
+            knownProductNames.push(rawName);
+            const norm = normalizeProductText(rawName);
+            const key = norm || rawName.toLowerCase();
+            const cleanedDisplay = rawName.replace(TRAILING_FISCAL_SUFFIX_RE, '').trim() || rawName;
             const existing = productMap.get(key) || {
-                producto: name,
+                producto: cleanedDisplay,
                 cantidad: 0,
                 total_usd: 0,
                 veces_comprado: 0,
@@ -394,9 +643,24 @@ export function buildSemanticChatContext({
 
             const cant = Number(item.cantidad) || 1.0;
             const itemTotalCents = Number(item.total || 0);
-            const itemUsd = gTotalOrigCents > 0
+            const hasBaseImponible =
+                item?.base_imponible_original !== null &&
+                item?.base_imponible_original !== undefined;
+            const rawFactor = hasBaseImponible
+                ? 1.0
+                : shelfPriceTaxFactor({
+                      descripcion: rawName,
+                      taxCents: taxCtx.taxCents,
+                      gravadoBaseCents: taxCtx.gravadoBaseCents,
+                      gravadoItemCount: taxCtx.gravadoItemCount,
+                      reducidoBaseCents: taxCtx.reducidoBaseCents,
+                      reducidoItemCount: taxCtx.reducidoItemCount,
+                  });
+            const taxFactor = rawFactor === null ? 1.0 : rawFactor;
+            const rawItemUsd = gTotalOrigCents > 0
                 ? (itemTotalCents / gTotalOrigCents) * (gTotalUsdCents / 100.0)
                 : itemTotalCents / 100.0;
+            const itemUsd = rawItemUsd * taxFactor;
 
             existing.cantidad += cant;
             existing.total_usd += itemUsd;
@@ -406,13 +670,34 @@ export function buildSemanticChatContext({
     }
 
     const top10Productos = Array.from(productMap.values())
-        .sort((a, b) => b.cantidad - a.cantidad)
+        .sort((a, b) => (b.total_usd - a.total_usd) || (b.cantidad - a.cantidad))
         .slice(0, 10)
         .map((p) => ({
             producto: p.producto,
             cantidad: Number(p.cantidad.toFixed(1)),
             total_usd: Number(p.total_usd.toFixed(2)),
             veces_comprado: p.veces_comprado,
+        }));
+
+    // 2.1 Top 3 comercios del mes
+    const comerciosMap = new Map();
+    for (const g of list) {
+        const comName = formatCommerceDisplay(g.comercio);
+        const lower = comName.toLowerCase();
+        if (!comName || lower === 'varios' || lower === 'otro comercio') continue;
+        const normKey = normalizeCommerce(comName) || lower;
+        const entry = comerciosMap.get(normKey) || { comercio: comName, visitas: 0, total_usd: 0 };
+        entry.visitas += 1;
+        entry.total_usd += Number(g.total_usd || 0) / 100.0;
+        comerciosMap.set(normKey, entry);
+    }
+    const topComercios = Array.from(comerciosMap.values())
+        .sort((a, b) => b.total_usd - a.total_usd)
+        .slice(0, 3)
+        .map((c) => ({
+            comercio: c.comercio,
+            visitas: c.visitas,
+            total_usd: Number(c.total_usd.toFixed(2)),
         }));
 
     // 3. Últimas 5 compras del mes ordenadas por fecha descendente (comparador defensivo)
@@ -430,17 +715,25 @@ export function buildSemanticChatContext({
         }));
 
     const { sumUsd, sumVes, sumUsdt } = monthTotals;
-    const brechaCapturada = Number((sumUsd - sumUsdt).toFixed(2));
 
-    // Paridad exacta con chat_screen.dart:510-514
     const totalEurBcv = (tasaEur > 0 && sumVes > 0)
         ? Number((sumVes / tasaEur).toFixed(2))
         : (tasaEur > 0
             ? Number(((sumUsd * tasaUsd) / tasaEur).toFixed(2))
             : Number(sumUsd.toFixed(2)));
 
-    return {
+    const effectiveSelection = selection
+        || (currentMessage !== null
+            ? selectChatSignals({ currentMessage, previousUserMessage, knownProductNames })
+            : { includeTemporalContext: true, includeTopComercios: true });
+
+    const estadoMetaEfectivo = (!temporalContext.proyeccion_confiable && snapshot.status === 'enRiesgo')
+        ? 'protegida'
+        : snapshot.status;
+
+    const contextMap = {
         fecha_hoy: todayCaracasIso,
+        periodo_consultado: temporalContext.periodo_consultado,
         moneda_principal: monedaPresupuesto,
         tasa_bcv_usd: tasaUsd,
         tasa_bcv_eur: tasaEur,
@@ -453,17 +746,25 @@ export function buildSemanticChatContext({
         total_usdt_p2p: Number(sumUsdt.toFixed(2)),
         total_eur_bcv: totalEurBcv,
         total_ves: Number(sumVes.toFixed(2)),
-        brecha_capturada: brechaCapturada,
         presupuesto_general: Number(presupuesto?.general || 0),
         meta_ahorro: Number(presupuesto?.meta_ahorro || 0),
         limite_para_gastar: Number(snapshot.limiteParaGastar.toFixed(2)),
-        gasto_proyectado_fin_mes: Number(snapshot.gastoProyectadoFinDeMes.toFixed(2)),
-        estado_meta_ahorro: snapshot.status,
+        gasto_proyectado_fin_mes: temporalContext.gasto_proyectado_fin_mes,
+        estado_meta_ahorro: estadoMetaEfectivo,
         moneda_presupuesto: monedaPresupuesto,
         presupuestos_categoria: presupuesto?.categorias || {},
         lista_compras: null,
         lista_compras_disponible: false,
     };
+
+    if (effectiveSelection.includeTemporalContext) {
+        contextMap.contexto_temporal = temporalContext;
+    }
+    if (effectiveSelection.includeTopComercios && topComercios.length > 0) {
+        contextMap.top_comercios = topComercios;
+    }
+
+    return contextMap;
 }
 
 /**

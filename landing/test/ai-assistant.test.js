@@ -7,6 +7,8 @@ import {
     parseExtractionDate,
     resolveSpokenExpenseDate,
     buildSavingsHealthInBudgetCurrency,
+    buildTemporalContext,
+    selectChatSignals,
     buildSemanticChatContext,
     isShoppingListQuery,
     prepareChatExtractions,
@@ -122,19 +124,27 @@ test('buildSemanticChatContext calcula salud en moneda del presupuesto (VES) y e
 
     assert.equal(ctx.moneda_principal, 'VES');
     assert.equal(ctx.moneda_presupuesto, 'VES');
+    assert.equal(ctx.periodo_consultado, '2026-11');
+    assert.equal('brecha_capturada' in ctx, false);
     assert.equal(ctx.total_usd, 30);
     assert.equal(ctx.total_usd_bcv, 30);
     assert.equal(ctx.total_ves, 1500);
     assert.equal(ctx.limite_para_gastar, 4000);
-    assert.equal(ctx.gasto_proyectado_fin_mes, 3000);
+    // Con solo 2 gastos en el mes, la proyección debe bloquearse (pocos_gastos)
+    assert.equal(ctx.gasto_proyectado_fin_mes, null);
+    assert.equal(ctx.contexto_temporal.proyeccion_confiable, false);
+    assert.equal(ctx.contexto_temporal.motivo_sin_proyeccion, 'pocos_gastos');
     assert.equal(ctx.lista_compras, null);
     assert.equal(ctx.lista_compras_disponible, false);
 
     // Verificar exclusión de IVA 16%, IVA 8%, Impuesto y Tax en top_productos_mes
+    // Ordenado por total_usd DESC (Harina PAN $10 cant 2 -> Acetaminofen $10 cant 1 -> Queso blanco $3.20)
     const nombresTop = ctx.top_productos_mes.map((p) => p.producto);
-    assert.deepEqual(nombresTop, ['Harina PAN', 'Queso blanco', 'Acetaminofen']);
+    assert.deepEqual(nombresTop, ['Harina PAN', 'Acetaminofen', 'Queso blanco']);
     // Verificar prorrateo USD de Harina PAN: (50000 / 100000) * 20 = $10.00
     assert.equal(ctx.top_productos_mes[0].total_usd, 10);
+    // Verificar top_comercios
+    assert.equal(ctx.top_comercios[0].comercio, 'Excelsior Gama');
     // Verificar 7 campos exactos en ultimas_compras
     assert.deepEqual(Object.keys(ctx.ultimas_compras[0]), [
         'fecha',
@@ -318,4 +328,121 @@ test('Seguridad XSS en texto del asistente, comercio e ítems y mapeo de errores
     assert.match(mapChatHttpError(503), /alta demanda/i);
     assert.match(mapChatHttpError(504), /conexión/i);
     assert.match(mapChatHttpError(0, null, { isAbort: true }), /45 s/i);
+});
+
+test('AI-11 Etapa 0 Web: paridad de selector, proyección confiable, normalización AI-06 y cero brecha_capturada', () => {
+    // 1. Selector determinista
+    const directSel = selectChatSignals({ currentMessage: '¿Cuánto gasté en pan?' });
+    assert.equal(directSel.intentGroup, 'direct_or_action');
+    assert.equal(directSel.includeTemporalContext, false);
+    assert.equal(directSel.includeTopComercios, false);
+
+    const followupSel = selectChatSignals({
+        currentMessage: '¿y por qué?',
+        previousUserMessage: '¿Estoy gastando más que el mes pasado?',
+    });
+    assert.equal(followupSel.intentGroup, 'followup_inherited');
+    assert.equal(followupSel.includePrevMonthComparison, true);
+    assert.equal(followupSel.includeTemporalContext, true);
+
+    // 2. Normalización AI-06 (legada (G) + IVA 16% vs imputada) + proyección confiable con >= 3 gastos
+    const gastos = [
+        {
+            fecha: '2026-11-05',
+            comercio: 'Unicasa',
+            categoria: 'Alimentación',
+            moneda: 'USD',
+            total_original: 1160,
+            total_usd: 1160,
+            total_usdt: 1160,
+            items: [
+                { descripcion: 'Harina PAN (G)', cantidad: 1, total: 1000 },
+                { descripcion: 'IVA 16%', cantidad: 1, total: 160 },
+            ],
+        },
+        {
+            fecha: '2026-11-10',
+            comercio: 'Farmatodo',
+            categoria: 'Alimentación',
+            moneda: 'USD',
+            total_original: 1160,
+            total_usd: 1160,
+            total_usdt: 1160,
+            items: [
+                { descripcion: 'Harina PAN', cantidad: 1, total: 1160, base_imponible_original: 1000 },
+            ],
+        },
+        {
+            fecha: '2026-11-12',
+            comercio: 'Automercado',
+            categoria: 'Alimentación',
+            moneda: 'USD',
+            total_original: 3680,
+            total_usd: 3680,
+            total_usdt: 3680,
+            items: [
+                { descripcion: 'Carne de res', cantidad: 1, total: 3680 },
+            ],
+        },
+    ];
+
+    const presupuesto = { general: 300, meta_ahorro: 50, moneda: 'USD', categorias: {} };
+
+    // Día 15 con 3 gastos -> proyección confiable = (60 / 15) * 30 = 120
+    const ctxReliable = buildSemanticChatContext({
+        gastos,
+        presupuesto,
+        liveRates: LIVE_RATES,
+        selectedYear: 2026,
+        selectedMonth: 11,
+        todayCaracasIso: '2026-11-15',
+        currentMessage: '¿Cómo voy con mi presupuesto este mes?',
+    });
+    assert.equal('brecha_capturada' in ctxReliable, false);
+    assert.equal(ctxReliable.gasto_proyectado_fin_mes, 120);
+    assert.equal(ctxReliable.contexto_temporal.proyeccion_confiable, true);
+    assert.equal(ctxReliable.contexto_temporal.motivo_sin_proyeccion, null);
+    // Ordenado por total_usd DESC: Carne ($36.80) > Harina PAN unificada ($23.20)
+    assert.equal(ctxReliable.top_productos_mes[0].producto, 'Carne de res');
+    assert.equal(ctxReliable.top_productos_mes[1].producto, 'Harina PAN');
+    assert.equal(ctxReliable.top_productos_mes[1].total_usd, 23.2);
+    assert.equal(ctxReliable.top_productos_mes[1].cantidad, 2);
+
+    // Consulta puntual -> omite contexto_temporal y top_comercios
+    const ctxDirect = buildSemanticChatContext({
+        gastos,
+        presupuesto,
+        liveRates: LIVE_RATES,
+        selectedYear: 2026,
+        selectedMonth: 11,
+        todayCaracasIso: '2026-11-15',
+        currentMessage: '¿Cuánto gasté en pan?',
+    });
+    assert.equal('contexto_temporal' in ctxDirect, false);
+    assert.equal('top_comercios' in ctxDirect, false);
+
+    // Día 2 -> inicio_de_mes; mes pasado -> mes_cerrado
+    const tInicio = buildTemporalContext({
+        selectedYear: 2026,
+        selectedMonth: 11,
+        cantidadComprasMes: 5,
+        snapshot: { gastoAcumulado: 200 },
+        monedaPresupuesto: 'USD',
+        todayCaracasIso: '2026-11-02',
+    });
+    assert.equal(tInicio.proyeccion_confiable, false);
+    assert.equal(tInicio.motivo_sin_proyeccion, 'inicio_de_mes');
+    assert.equal(tInicio.gasto_proyectado_fin_mes, null);
+
+    const tCerrado = buildTemporalContext({
+        selectedYear: 2026,
+        selectedMonth: 10,
+        cantidadComprasMes: 10,
+        snapshot: { gastoAcumulado: 250 },
+        monedaPresupuesto: 'USD',
+        todayCaracasIso: '2026-11-21',
+    });
+    assert.equal(tCerrado.es_mes_actual, false);
+    assert.equal(tCerrado.motivo_sin_proyeccion, 'mes_cerrado');
+    assert.equal(tCerrado.gasto_proyectado_fin_mes, null);
 });
