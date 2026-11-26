@@ -30,6 +30,7 @@ de editar Dart o lanzar un build en GitHub Actions.
      - **Selector de ancho `360 dp` / `390 dp`** para verificar que títulos y subtítulos no desborden ni se corten en pantallas estrechas.
      - **Tokens exactos de `AppColors`** (`#F9FAFB`, `#FFFFFF`, `#FEF08A`, `#FACC15`, `#111827`, `#6B7280`, `#9CA3AF`, `#E5E7EB`, etc.) sobre contexto real de la app.
      - **Interactividad básica** (abrir/cerrar modal, tocar opciones o estados relevantes) para evaluar ergonomía.
+     - **Fidelidad a pantallas existentes:** Cuando una acción reutilice una pantalla ya existente de la app (ej. `ReviewExpenseScreen`), mostrar e indicar explícitamente la transición hacia esa pantalla existente antes del estado final (`SnackBar`), sin saltarse el paso ni sugerir un diálogo o pantalla nueva innecesaria.
    - **Ubicación:**
      - Componente compacto (`<= 450 px`, p. ej. `BottomSheet` o tarjeta): incrustar en línea con `<agent-embed>`.
      - Pantalla completa (`> 450 px`): entregar como artefacto independiente en el panel lateral.

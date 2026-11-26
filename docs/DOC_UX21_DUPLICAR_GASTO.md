@@ -1,6 +1,6 @@
 # DOC UX-21: Duplicar Gasto (Móvil + Panel Web) y REL-04 / REL-03
 
-> **Estado:** `Pendiente de validación 🧪` (CI en verde; falta prueba en dispositivo físico por César).
+> **Estado:** `Completada ✅` (Validada en dispositivo y web por César el 26/11/2026).
 > **Versión:** `v1.6.0` (`pubspec.yaml:4`).
 > **CI Móvil:** Run `45626426264` · CI build `738` (`versionCode 743`) · SHA `e1303bb`.
 > **CI Web:** Run `45626426224` · Web build `35` · SHA `e1303bb`.
