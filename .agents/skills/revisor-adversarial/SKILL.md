@@ -46,6 +46,7 @@ El subagente revisor debe auditar implacablemente los siguientes 6 vectores sobr
   - *Peligro crítico:* Sin `Key`, `MultiChildRenderObjectElement.updateChildren` evalúa `Widget.canUpdate(oldWidget, newWidget) == true` por coincidencia de `runtimeType`, reutiliza el primer `Element` y desmonta el último al final de la lista. Si el último contiene un `TextField` / `EditableTextState` activo, su `deactivate()` ejecuta `_closeInputConnectionIfNeeded()` (`TextInput.hide`) y cierra el teclado de Android en milisegundos.
 - **Unicidad de `Key`:** Verificar que ningún widget condicional duplique una `Key` que ya exista en otra parte activa del mismo árbol visual (`bottomNavigationBar` vs cuerpo scrollable).
 - **Ciclo de vida de `SnackBar` con `Deshacer`:** Capturar `final messenger = ScaffoldMessenger.of(context);` antes de `showSnackBar`, proteger `onTap` con bandera `bool undoHandled = false;` contra doble toque y verificar `if (!mounted) return;` antes de mutar estado (`setState`), pues el `SnackBar` vive en el `ScaffoldMessenger` raíz tras cerrar la pantalla.
+- **Invalidación sin `setState` en `build()` y limpieza de `Timer`:** Al disparar sincronización asíncrona desde `build()`, nunca limpiar estado obsoleto con `setState` dentro de `build()`. Guardar pares `(valor, clave)` en `State` y filtrar en el mismo frame (`_cachedKey == currentKey ? _cachedValue : null`), descartar respuestas tardías por `requestId` y cancelar cualquier `Timer` de *debounce* tanto en `dispose()` como al pasar `isLoading == true`.
 
 ### Vector 2: `Scaffold` Anidados e Insets del Teclado Virtual (`viewInsets.bottom`)
 - **Consumo de `MediaQuery` por `Scaffold` padre:**
@@ -94,6 +95,11 @@ El subagente revisor debe auditar implacablemente los siguientes 6 vectores sobr
 - **Pruebas deterministas de conectividad e I/O real en `testWidgets`:**
   - Al instanciar `ConnectivityService(testController: controller)` para probar arranque offline, exigir `testConnected: false` en el constructor (un `controller.add(false)` previo a `pumpWidget` se entrega en microtask posterior a `initState` y pierde la carrera).
   - En `testWidgets` con I/O real de disco + `setState` (p. ej. `FileImage`), prohibido salir de la espera apenas `file.exists()` o usar `Future.delayed` fijo: esperar en bucle acotado (`pump()` + `runAsync(15ms)`) hasta verificar el estado renderizado en el árbol de widgets.
+- **Cachés con cuota diaria, firmas deterministas y concurrencia (`SharedPreferences`):**
+  - *Validez vs. cuota:* Nunca mezclar validez del dato y límite diario en un mismo `if`. Reservar el cupo **sincrónicamente** en memoria antes del `await` de red y contar todo intento completado.
+  - *Cambio de día y cruce de medianoche:* Al cambiar de día calendario, persistir el contador reseteado (`prefFetchCountKey`) **antes** de actualizar la fecha (`prefLastFetchDateKey`) para evitar arrastrar el conteo de ayer (`max(1, 3_ayer) = 3`) o abrir ventanas `(hoy, count_ayer)`. Ignorar escrituras de peticiones rezagadas de un día anterior (`persistedDate > todayIso`).
+  - *Tokens en vuelo sin atascos:* Indexar locks en vuelo por clave compuesta (`fecha + firma`) con token de identidad (`Object()`) y liberar en `finally` mediante `identical(map[key], token)` sin condicionar a la época (evita firmas bloqueadas permanentemente).
+  - *Firmas estables entre reinicios:* Prohibido `Object.hash`/`.hashCode` o concatenar texto de usuario con delimitadores crudos (`|`, `,`, `\n`). Serializar con `jsonEncode` ordenado (excluyendo metadatos volátiles de sync) + hash determinista de 32 bits (FNV-1a).
 
 ### Vector 6: Seguridad de Árbol Git
 - Antes de ejecutar `git add`, verificar `git status -s` para no incluir archivos retenidos o de otras tareas que no correspondan al commit actual (prohibido `git add .` o `git add -A` a ciegas).
